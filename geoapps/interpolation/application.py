@@ -17,7 +17,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.grid_creation.application import GridCreation
+from geoapps.grid_creation.driver import GridCreationDriver
 from geoapps.shared_utils.utils import get_locations, weighted_average
 from geoapps.utils import warn_module_not_found
 
@@ -403,7 +403,7 @@ class DataInterpolation(ObjectDataSelection):
                     .tolist()
                 )
 
-                self.object_out = GridCreation.get_block_model(
+                self.object_out = GridCreationDriver.get_block_model(
                     workspace,
                     self.new_grid.value,
                     xyz_ref,

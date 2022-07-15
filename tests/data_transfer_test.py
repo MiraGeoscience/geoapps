@@ -7,7 +7,7 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.grid_creation.application import GridCreation
+from geoapps.grid_creation.driver import GridCreationDriver
 
 
 def test_truncate_locs_depths():
@@ -25,10 +25,10 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = GridCreation.truncate_locs_depths(locs, depth_core)
+    locs = GridCreationDriver.truncate_locs_depths(locs, depth_core)
     assert locs[:, 2].min() == (locs[:, 2].max() - depth_core)
 
-    depth_core = GridCreation.minimum_depth_core(locs, depth_core, z)
+    depth_core = GridCreationDriver.minimum_depth_core(locs, depth_core, z)
     assert depth_core == z
 
     # If z range of locs are the same as the depth_core then locations are unaffected
@@ -44,10 +44,10 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = GridCreation.truncate_locs_depths(locs, depth_core)
+    locs = GridCreationDriver.truncate_locs_depths(locs, depth_core)
     assert locs[:, 2].min() == (locs[:, 2].max() - depth_core)
 
-    depth_core = GridCreation.minimum_depth_core(locs, depth_core, z)
+    depth_core = GridCreationDriver.minimum_depth_core(locs, depth_core, z)
     assert depth_core == z
 
     # If z range of locs are less than the the depth core then the depth_core is
@@ -63,10 +63,10 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = GridCreation.truncate_locs_depths(locs, depth_core)
+    locs = GridCreationDriver.truncate_locs_depths(locs, depth_core)
     zrange = locs[:, 2].max() - locs[:, 2].min()
     assert zrange == top
-    depth_core_new = GridCreation.minimum_depth_core(locs, depth_core, z)
+    depth_core_new = GridCreationDriver.minimum_depth_core(locs, depth_core, z)
     assert zrange + depth_core_new == depth_core + z
 
 
@@ -85,9 +85,11 @@ def test_find_top_padding(tmp_path):
     pads = [0, 0, 0, 0, 0, 100]  # padding on the top
     h = [50, 50, 50]
 
-    obj = GridCreation.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+    obj = GridCreationDriver.get_block_model(
+        ws, "test2", locs, h, depth_core, pads, 1.1
+    )
 
-    top_padding = GridCreation.find_top_padding(obj, h[2])
+    top_padding = GridCreationDriver.find_top_padding(obj, h[2])
 
     assert top_padding >= pads[-1]
 
@@ -107,7 +109,7 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [100, 150, 200, 300, 0, 0]
     ws = Workspace("./FlinFlon.geoh5")
-    obj = GridCreation.get_block_model(
+    obj = GridCreationDriver.get_block_model(
         ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1
     )
     assert (obj.origin["z"] + obj.z_cell_delimiters).max() == top
@@ -129,7 +131,9 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 100, 0]  # padding on the bottom
     h = [50, 50, 50]
-    obj = GridCreation.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+    obj = GridCreationDriver.get_block_model(
+        ws, "test2", locs, h, depth_core, pads, 1.1
+    )
     assert top - (depth_core + h[2] + pads[4]) >= np.min(
         obj.origin["z"] + obj.z_cell_delimiters
     )
@@ -148,7 +152,7 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 0, 100]  # padding on the top
     h = [50, 50, 50]
-    obj = GridCreation.get_block_model(
+    obj = GridCreationDriver.get_block_model(
         ws, "test2", locs, h, depth_core, pads, expansion_rate
     )
 
