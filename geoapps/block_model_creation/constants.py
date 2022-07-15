@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+import os
 from copy import deepcopy
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
@@ -25,7 +26,7 @@ defaults = {
     "conda_environment_boolean": False,
     "run_command": "geoapps.block_model_creation.driver",
     "run_command_boolean": False,
-    "monitoring_directory": None,
+    "output_path": None,
     "live_link": False,
 }
 
@@ -41,7 +42,7 @@ default_ui_json.update(
             "tooltip": "Warning: launches process to run python model on save",
             "main": True,
         },
-        "monitoring_directory": "",
+        "output_path": "",
         "live_link": False,
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
@@ -124,7 +125,7 @@ default_ui_json.update(
 validations = {}
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "monitoring_directory": "../../assets/Temp",
+    "output_path": os.path.abspath("../../assets/Temp"),
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "xy_reference": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "cell_size_x": 50.0,

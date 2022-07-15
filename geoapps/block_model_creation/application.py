@@ -15,7 +15,6 @@ from time import time
 from dash import callback_context, dcc, html
 from dash.dependencies import Input, Output
 from geoh5py.objects.object_base import ObjectBase
-from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
@@ -197,12 +196,12 @@ class BlockModelCreation(BaseDashApplication):
                     },
                 ),
                 dcc.Markdown(
-                    children="Monitoring directory",
+                    children="Output path",
                     style={"width": "25%", "display": "inline-block"},
                 ),
                 dcc.Input(
-                    id="monitoring_directory",
-                    value=os.path.abspath(self.params.monitoring_directory),
+                    id="output_path",
+                    value=self.params.output_path,
                     style={
                         "width": "50%",
                         "display": "inline-block",
@@ -239,7 +238,7 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="horizontal_padding", component_property="value"),
             Output(component_id="bottom_padding", component_property="value"),
             Output(component_id="expansion_fact", component_property="value"),
-            Output(component_id="monitoring_directory", component_property="value"),
+            Output(component_id="output_path", component_property="value"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -255,7 +254,7 @@ class BlockModelCreation(BaseDashApplication):
             Input(component_id="bottom_padding", component_property="value"),
             Input(component_id="expansion_fact", component_property="value"),
             Input(component_id="live_link", component_property="value"),
-            Input(component_id="monitoring_directory", component_property="value"),
+            Input(component_id="output_path", component_property="value"),
         )(self.update_params)
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
@@ -265,35 +264,85 @@ class BlockModelCreation(BaseDashApplication):
 
     def update_params(
         self,
-        filename,
-        contents,
-        new_grid,
-        objects,
-        xy_reference,
-        cell_size_x,
-        cell_size_y,
-        cell_size_z,
-        depth_core,
-        horizontal_padding,
-        bottom_padding,
-        expansion_fact,
-        live_link,
-        monitoring_directory,
+        filename: str,
+        contents: bytes,
+        new_grid: str,
+        objects: ObjectBase,
+        xy_reference: ObjectBase,
+        cell_size_x: float,
+        cell_size_y: float,
+        cell_size_z: float,
+        depth_core: int,
+        horizontal_padding: float,
+        bottom_padding: float,
+        expansion_fact: float,
+        live_link: list,
+        output_path: str,
+    ) -> (
+        str,
+        str,
+        dict,
+        str,
+        dict,
+        float,
+        float,
+        float,
+        int,
+        float,
+        float,
+        float,
+        str,
+        str,
+        bytes,
     ):
+        """
+        Update self.params and dash components from user input, including ones that depend indirectly.
+        :param filename: Input file filename. Workspace or ui_json.
+        :param contents: Input file contents. Workspace or ui_json.
+        :param new_grid: Name for exported block model.
+        :param objects: Input object.
+        :param xy_reference: Lateral extent object for 3D grid.
+        :param cell_size_x: X cell size for the core mesh.
+        :param cell_size_y: Y cell size for the core mesh.
+        :param cell_size_z: Z cell size for the core mesh.
+        :param depth_core: Depth of core mesh below input object.
+        :param horizontal_padding: Horizontal padding distance.
+        :param bottom_padding: Bottom padding distance.
+        :param expansion_fact: Expansion factor for padding cells.
+        :param live_link: Checkbox for using monitoring directory.
+        :param output_path: Output path for exporting block model.
+        :return new_grid: Name for exported block model.
+        :return objects_name: Name for input object.
+        :return objects_options: Dropdown options for input object.
+        :return xy_reference_name: Name for lateral extent object.
+        :return xy_reference_options: Dropdown options for lateral extent object.
+        :return cell_size_x: X cell size for the core mesh.
+        :return cell_size_y: Y cell size for the core mesh.
+        :return cell_size_z: Z cell size for the core mesh.
+        :return depth_core: Depth of core mesh below input object.
+        :return horizontal_padding: Horizontal padding distance.
+        :return bottom_padding: Bottom padding distance.
+        :return expansion_fact: Expansion factor for padding cells.
+        :return output_path: Output path for exporting block model.
+        :return filename: Input file filename. Workspace or ui_json.
+        :return contents: Input file contents. Workspace or ui_json.
+        """
+        print(type(contents))
+        print(type(live_link))
         param_list = [
             "new_grid",
             "objects_name",
             "objects_options",
             "xy_reference_name",
             "xy_reference_options",
-            "call_size_x",
-            "call_size_y",
-            "call_size_z",
+            "cell_size_x",
+            "cell_size_y",
+            "cell_size_z",
             "depth_core",
             "horizontal_padding",
             "bottom_padding",
             "expansion_fact",
-            "monitoring_directory",
+            "output_path",
             "filename",
             "contents",
         ]
@@ -337,20 +386,20 @@ class BlockModelCreation(BaseDashApplication):
 
         return outputs
 
-    def create_block_model(self, _):
+    def trigger_click(self, _) -> list:
+        """
+        When the export button is pressed, run block model driver to export block model.
+        :return live_link: Checkbox for using monitoring directory.
+        """
         # self.params should be up to date whenever create_block_model is called.
         param_dict = self.params.to_dict()
         temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
 
         # Get output path.
-        if self.params.live_link:
-            if self.params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self.params.monitoring_directory)
-            ):
-                output_path = self.params.monitoring_directory
-            else:
-                print("Invalid monitoring directory path")
-                return []
+        if self.params.output_path is not None and os.path.exists(
+            os.path.abspath(self.params.output_path)
+        ):
+            output_path = os.path.abspath(self.params.output_path)
         else:
             output_path = os.path.dirname(self.params.geoh5.h5file)
 
@@ -366,11 +415,7 @@ class BlockModelCreation(BaseDashApplication):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
             # Write output uijson.
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-            new_params = BlockModelParams(input_file=ifile, **param_dict)
+            new_params = BlockModelParams(**param_dict)
             new_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=output_path,
