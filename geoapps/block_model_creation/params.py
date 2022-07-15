@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
 from __future__ import annotations
 
 from copy import deepcopy
@@ -11,11 +12,15 @@ from copy import deepcopy
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
+from geoapps.block_model_creation.constants import (
+    default_ui_json,
+    defaults,
+    validations,
+)
 from geoapps.driver_base.params import BaseParams
-from geoapps.grid_creation.constants import default_ui_json, defaults, validations
 
 
-class GridCreationParams(BaseParams):
+class BlockModelParams(BaseParams):
     """
     Parameter class for block model creation application.
     """
