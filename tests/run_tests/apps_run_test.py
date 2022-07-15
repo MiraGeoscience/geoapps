@@ -86,14 +86,18 @@ def test_create_surface(tmp_path):
 
 
 def test_clustering(tmp_path):
-    app = Clustering(output_path=str(tmp_path))
+    temp_workspace = path.join(tmp_path, "contour.geoh5")
+    with Workspace(temp_workspace) as workspace:
+        for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
+    app = Clustering(geoh5=temp_workspace, output_path=str(tmp_path))
     app.export_clusters(n_clicks=0)
 
     filename = list(
         filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
     )[0]
     with Workspace(path.join(tmp_path, filename)) as workspace:
-        print(workspace.get_entity("Clusters"))
         assert len(workspace.get_entity("Clusters")) == 1
 
 
