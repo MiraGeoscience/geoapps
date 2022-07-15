@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 import uuid
-from os import listdir, path
+from os import path
 
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
@@ -94,11 +94,9 @@ def test_clustering(tmp_path):
     app = Clustering(output_path=str(tmp_path))
     app.export_clusters(n_clicks=0)
 
-    filename = list(
-        filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
-    )[0]
+    ws, _ = Clustering.get_output_workspace(False, tmp_path)
 
-    with Workspace(path.join(tmp_path, filename)) as workspace:
+    with ws as workspace:
         assert len(workspace.get_entity("MyCluster")) == 1
 
 
