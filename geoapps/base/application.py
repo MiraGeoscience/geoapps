@@ -64,8 +64,8 @@ class BaseApplication:
         self.defaults = {}
         self.defaults.update(**kwargs)
         self._file_browser = FileChooser()
-        getattr(self._file_browser, "_select").on_click(self.file_browser_change)
-        getattr(self._file_browser, "_select").style = {"description_width": "initial"}
+        self._file_browser._select.on_click(self.file_browser_change)
+        self._file_browser._select.style = {"description_width": "initial"}
         self._copy_trigger = Button(
             description="Create copy:",
             style={"description_width": "initial"},
@@ -90,7 +90,7 @@ class BaseApplication:
         )
         self._live_link.observe(self.live_link_choice)
         self._export_directory = FileChooser(show_only_dirs=True)
-        getattr(self._export_directory, "_select").on_click(self.export_browser_change)
+        self._export_directory._select.on_click(self.export_browser_change)
         self.monitoring_panel = VBox(
             [
                 Label("Save to:", style={"description_width": "initial"}),
@@ -151,7 +151,7 @@ class BaseApplication:
         """
         Change the target h5file
         """
-        if not getattr(self.file_browser, "_select").disabled:
+        if not self.file_browser._select.disabled:  # pylint: disable="protected-access"
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
@@ -169,7 +169,9 @@ class BaseApplication:
         """
         Change the target h5file
         """
-        if not getattr(self.export_directory, "_select").disabled:
+        if (
+            not self.export_directory._select.disabled  # pylint: disable="protected-access"
+        ):
             self._monitoring_directory = self.export_directory.selected
 
     @staticmethod
