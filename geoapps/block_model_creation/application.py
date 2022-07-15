@@ -260,12 +260,12 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
             prevent_initial_call=True,
-        )(self.create_block_model)
+        )(self.trigger_click)
 
     def update_params(
         self,
         filename: str,
-        contents: bytes,
+        contents: str,
         new_grid: str,
         objects: ObjectBase,
         xy_reference: ObjectBase,
@@ -293,7 +293,7 @@ class BlockModelCreation(BaseDashApplication):
         float,
         str,
         str,
-        bytes,
+        str,
     ):
         """
         Update self.params and dash components from user input, including ones that depend indirectly.
@@ -327,8 +327,6 @@ class BlockModelCreation(BaseDashApplication):
         :return filename: Input file filename. Workspace or ui_json.
         :return contents: Input file contents. Workspace or ui_json.
         """
-        print(type(contents))
-        print(type(live_link))
         param_list = [
             "new_grid",
             "objects_name",
@@ -407,6 +405,7 @@ class BlockModelCreation(BaseDashApplication):
         ws, self.params.live_link = BaseApplication.get_output_workspace(
             self.params.live_link, output_path, temp_geoh5
         )
+
         with ws as workspace:
             # Put entities in output workspace.
             param_dict["geoh5"] = workspace

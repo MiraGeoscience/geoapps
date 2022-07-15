@@ -126,7 +126,6 @@ class BlockModelDriver:
         """
         Create block model and add to self.params.geoh5.
         """
-        self.params.geoh5.open("r+")
 
         xyz = get_locations(self.params.geoh5, self.params.objects)
         if xyz is None:
@@ -186,5 +185,6 @@ if __name__ == "__main__":
     params.geoh5.close()
     driver = BlockModelDriver(params)
     print("Loaded. Creating block model . . .")
+    params.geoh5.open("r+")
     driver.run()
     print("Saved to " + params.geoh5.h5file)
