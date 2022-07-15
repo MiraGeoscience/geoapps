@@ -21,6 +21,7 @@ from geoh5py.objects.object_base import ObjectBase
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.grid_creation.constants import app_initializer
 from geoapps.grid_creation.driver import GridCreationDriver
@@ -262,103 +263,6 @@ class GridCreation(BaseDashApplication):
             prevent_initial_call=True,
         )(self.create_block_model)
 
-    @staticmethod
-    def truncate_locs_depths(locs: np.ndarray, depth_core: int):
-        """
-        Sets locations below core to core bottom.
-        :param locs: Location points.
-        :param depth_core: Depth of core mesh below locs.
-        :return locs: locs with depths truncated.
-        """
-        zmax = locs[:, 2].max()  # top of locs
-        below_core_ind = (zmax - locs[:, 2]) > depth_core
-        core_bottom_elev = zmax - depth_core
-        locs[
-            below_core_ind, 2
-        ] = core_bottom_elev  # sets locations below core to core bottom
-        return locs
-
-    @staticmethod
-    def minimum_depth_core(locs: np.ndarray, depth_core: int, core_z_cell_size: int):
-        """
-        Get minimum depth core.
-        :param locs: Location points.
-        :param depth_core: Depth of core mesh below locs.
-        :param core_z_cell_size: Cell size in z direction.
-        :return depth_core: Minimum depth core.
-        """
-        zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
-        if depth_core >= zrange:
-            return depth_core - zrange + core_z_cell_size
-        else:
-            return depth_core
-
-    @staticmethod
-    def find_top_padding(obj: BlockModel, core_z_cell_size: int):
-        """
-        Loop through cell spacing and sum until core_z_cell_size is reached.
-        :param obj: Block model.
-        :param core_z_cell_size: Cell size in z direction.
-        :return pad_sum: Top padding.
-        """
-        f = np.abs(np.diff(obj.z_cell_delimiters))
-        pad_sum = 0
-        for h in np.abs(np.diff(obj.z_cell_delimiters)):
-            if h != core_z_cell_size:
-                pad_sum += h
-            else:
-                return pad_sum
-
-    @staticmethod
-    def get_block_model(
-        workspace: Workspace,
-        name: str,
-        locs: np.ndarray,
-        h: list,
-        depth_core: int,
-        pads: list,
-        expansion_factor: float,
-    ):
-        """
-        Get block model.
-        :param workspace: Workspace.
-        :param name: Block model name.
-        :param locs: Location points.
-        :param h: Cell size(s) for the core mesh.
-        :param depth_core: Depth of core mesh below locs.
-        :param pads: len(6) Padding distances [W, E, N, S, Down, Up]
-        :param expansion_factor: Expansion factor for padding cells.
-        :return object_out: Output block model.
-        """
-
-        locs = GridCreation.truncate_locs_depths(locs, depth_core)
-        depth_core = GridCreation.minimum_depth_core(locs, depth_core, h[2])
-        mesh = mesh_utils.mesh_builder_xyz(
-            locs,
-            h,
-            padding_distance=[
-                [pads[0], pads[1]],
-                [pads[2], pads[3]],
-                [pads[4], pads[5]],
-            ],
-            depth_core=depth_core,
-            expansion_factor=expansion_factor,
-        )
-
-        object_out = BlockModel.create(
-            workspace,
-            origin=[mesh.x0[0], mesh.x0[1], locs[:, 2].max()],
-            u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-            v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-            z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
-            name=name,
-        )
-
-        top_padding = GridCreation.find_top_padding(object_out, h[2])
-        object_out.origin["z"] += top_padding
-
-        return object_out
-
     def update_params(
         self,
         filename,
@@ -398,10 +302,11 @@ class GridCreation(BaseDashApplication):
             float(cell_size_y),
             float(cell_size_z),
         )
-        horizontal_padding, bottom_padding = float(horizontal_padding), float(
-            bottom_padding
+        horizontal_padding, bottom_padding, expansion_fact = (
+            float(horizontal_padding),
+            float(bottom_padding),
+            float(expansion_fact),
         )
-        depth_core, expansion_fact = float(depth_core), float(expansion_fact)
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         update_dict = {}
@@ -450,7 +355,7 @@ class GridCreation(BaseDashApplication):
             output_path = os.path.dirname(self.params.geoh5.h5file)
 
         # Get output workspace.
-        ws, self.params.live_link = self.get_output_workspace(
+        ws, self.params.live_link = BaseApplication.get_output_workspace(
             self.params.live_link, output_path, temp_geoh5
         )
         with ws as workspace:

@@ -124,7 +124,7 @@ class GridCreationParams(BaseParams):
         self.setter_validator("bottom_padding", val)
 
     @property
-    def depth_core(self) -> float | None:
+    def depth_core(self) -> int | None:
         """
         Core depth for 3D grid.
         """

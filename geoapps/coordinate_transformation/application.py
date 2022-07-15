@@ -93,9 +93,10 @@ class CoordinateTransformation(ObjectDataSelection):
                 ax2 = plt.subplot(1, 2, 2)
 
             temp_geoh5 = f"CoordinateTransformation_{time():.0f}.geoh5"
-            with self.get_output_workspace(
-                self.export_directory.selected_path, temp_geoh5
-            ) as workspace:
+            ws, self.live_link.value = self.get_output_workspace(
+                self.live_link.value, self.export_directory.selected_path, temp_geoh5
+            )
+            with ws as workspace:
                 out_entity = ContainerGroup.create(
                     workspace, name=self.ga_group_name.value
                 )
