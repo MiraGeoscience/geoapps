@@ -13,11 +13,9 @@ from os import environ
 
 from dash import no_update
 from flask import Flask
-from geoh5py.objects import ObjectBase
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
-from geoapps.base.application import BaseApplication
 from geoapps.driver_base.params import BaseParams
 
 

@@ -16,6 +16,7 @@ from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.grid_creation.driver import GridCreationDriver
 from geoapps.shared_utils.utils import get_locations, weighted_average
@@ -369,7 +370,7 @@ class DataInterpolation(ObjectDataSelection):
         tree = cKDTree(xyz)
 
         temp_geoh5 = f"Interpolation_{time():.0f}.geoh5"
-        ws, self.live_link.value = self.get_output_workspace(
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as workspace:

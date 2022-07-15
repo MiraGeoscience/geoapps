@@ -15,6 +15,7 @@ from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
 from geoapps.edge_detection.driver import EdgeDetectionDriver
@@ -195,7 +196,7 @@ class EdgeDetectionApp(PlotSelection2D):
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
         temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.0f}.geoh5"
-        ws, self.live_link.value = self.get_output_workspace(
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as workspace:
