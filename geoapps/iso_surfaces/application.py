@@ -102,9 +102,10 @@ class IsoSurface(ObjectDataSelection):
             except AttributeError:
                 continue
         temp_geoh5 = f"Isosurface_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
+        ws, self.live_link.value = self.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
 
             param_dict["objects"] = param_dict["objects"].copy(
                 parent=new_workspace, copy_children=False

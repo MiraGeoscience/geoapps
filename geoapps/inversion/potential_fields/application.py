@@ -1178,9 +1178,10 @@ class InversionApp(PlotSelection2D):
 
         # Create a new workapce and copy objects into it
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
+        ws, self.live_link.value = self.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
 
             param_dict["geoh5"] = new_workspace
 

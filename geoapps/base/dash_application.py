@@ -7,10 +7,9 @@
 import ast
 import base64
 import json
-import time
 import uuid
 import webbrowser
-from os import environ, makedirs, path
+from os import environ
 
 from dash import no_update
 from flask import Flask
@@ -142,37 +141,6 @@ class BaseDashApplication:
                 defaults[key] = value
 
         return defaults
-
-    @staticmethod
-    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
-        """
-        Create an active workspace with check for GA monitoring directory
-        """
-        if not name.endswith(".geoh5"):
-            name += ".geoh5"
-        workspace = Workspace(path.join(workpath, name))
-        workspace.close()
-        new_live_link = False
-        time.sleep(1)
-        # Check if GA digested the file already
-        if not path.exists(workspace.h5file):
-            workpath = path.join(workpath, ".working")
-            if not path.exists(workpath):
-                makedirs(workpath)
-            workspace = Workspace(path.join(workpath, name))
-            workspace.close()
-            new_live_link = True
-            if not live_link:
-                print(
-                    "ANALYST Pro active live link found. Switching to monitoring directory..."
-                )
-        elif live_link:
-            print(
-                "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
-            )
-        workspace.open()
-        # return new live link
-        return workspace, new_live_link
 
     def run(self):
         # The reloader has not yet run - open the browser

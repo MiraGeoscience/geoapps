@@ -302,9 +302,11 @@ class Surface2D(ObjectDataSelection):
                 self.models += [data_obj.values[ind]]
 
         temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as workspace:
+
+        ws, self.live_link.value = self.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as workspace:
             out_entity = ContainerGroup.create(workspace, name=self.ga_group_name.value)
 
             if len(model_cells) > 0:

@@ -10,14 +10,14 @@ from __future__ import annotations
 from time import time
 
 import numpy as np
-from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel, ObjectBase
+from geoh5py.objects import ObjectBase
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
+from geoapps.grid_creation.application import GridCreation
 from geoapps.shared_utils.utils import get_locations, weighted_average
 from geoapps.utils import warn_module_not_found
 
@@ -369,9 +369,10 @@ class DataInterpolation(ObjectDataSelection):
         tree = cKDTree(xyz)
 
         temp_geoh5 = f"Interpolation_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as workspace:
+        ws, self.live_link.value = self.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as workspace:
 
             if self.out_mode.value == "To Object":
 
@@ -402,7 +403,7 @@ class DataInterpolation(ObjectDataSelection):
                     .tolist()
                 )
 
-                self.object_out = DataInterpolation.get_block_model(
+                self.object_out = GridCreation.get_block_model(
                     workspace,
                     self.new_grid.value,
                     xyz_ref,
