@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import numpy as np
 from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel
+from geoh5py.objects import BlockModel, ObjectBase
+from geoh5py.workspace import Workspace
 
 from geoapps.shared_utils.utils import rotate_xyz
 
@@ -198,7 +199,7 @@ class RectangularBlock:
         return self._vertices
 
 
-def truncate_locs_depths(locs: np.ndarray, depth_core: int):
+def truncate_locs_depths(locs: np.ndarray, depth_core: int) -> np.ndarray:
     """
     Sets locations below core to core bottom.
 
@@ -215,7 +216,9 @@ def truncate_locs_depths(locs: np.ndarray, depth_core: int):
     return locs
 
 
-def minimum_depth_core(locs: np.ndarray, depth_core: int, core_z_cell_size: int):
+def minimum_depth_core(
+    locs: np.ndarray, depth_core: int, core_z_cell_size: int
+) -> float:
     """
     Get minimum depth core.
 
@@ -231,7 +234,7 @@ def minimum_depth_core(locs: np.ndarray, depth_core: int, core_z_cell_size: int)
         return depth_core
 
 
-def find_top_padding(obj: ObjectBase, core_z_cell_size: int):
+def find_top_padding(obj: BlockModel, core_z_cell_size: int) -> float:
     """
     Loop through cell spacing and sum until core_z_cell_size is reached.
 
@@ -240,7 +243,7 @@ def find_top_padding(obj: ObjectBase, core_z_cell_size: int):
     :return pad_sum: Top padding.
     """
     f = np.abs(np.diff(obj.z_cell_delimiters))
-    pad_sum = 0
+    pad_sum = 0.0
     for h in np.abs(np.diff(obj.z_cell_delimiters)):
         if h != core_z_cell_size:
             pad_sum += h
@@ -256,9 +259,9 @@ def get_block_model(
     depth_core: int,
     pads: list,
     expansion_factor: float,
-):
+) -> BlockModel:
     """
-    Get block model.
+    Create a BlockModel object from parameters.
 
     :param workspace: Workspace.
     :param name: Block model name.
