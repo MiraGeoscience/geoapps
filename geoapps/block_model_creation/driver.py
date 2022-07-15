@@ -17,13 +17,13 @@ from geoh5py.ui_json import InputFile, monitored_directory_copy
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
-from geoapps.grid_creation.params import GridCreationParams
+from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.shared_utils.utils import get_locations
 
 
-class GridCreationDriver:
-    def __init__(self, params: GridCreationParams):
-        self.params: GridCreationParams = params
+class BlockModelDriver:
+    def __init__(self, params: BlockModelParams):
+        self.params: BlockModelParams = params
 
     @staticmethod
     def truncate_locs_depths(locs: np.ndarray, depth_core: int):
@@ -94,8 +94,8 @@ class GridCreationDriver:
         :return object_out: Output block model.
         """
 
-        locs = GridCreationDriver.truncate_locs_depths(locs, depth_core)
-        depth_core = GridCreationDriver.minimum_depth_core(locs, depth_core, h[2])
+        locs = BlockModelDriver.truncate_locs_depths(locs, depth_core)
+        depth_core = BlockModelDriver.minimum_depth_core(locs, depth_core, h[2])
         mesh = mesh_utils.mesh_builder_xyz(
             locs,
             h,
@@ -117,7 +117,7 @@ class GridCreationDriver:
             name=name,
         )
 
-        top_padding = GridCreationDriver.find_top_padding(object_out, h[2])
+        top_padding = BlockModelDriver.find_top_padding(object_out, h[2])
         object_out.origin["z"] += top_padding
 
         return object_out
@@ -146,7 +146,7 @@ class GridCreationDriver:
             0.0,
         ]
 
-        object_out = GridCreationDriver.get_block_model(
+        object_out = BlockModelDriver.get_block_model(
             self.params.geoh5,
             self.params.new_grid,
             xyz_ref,
@@ -177,8 +177,8 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
-    params = GridCreationParams(ifile)
-    driver = GridCreationDriver(params)
+    params = BlockModelParams(ifile)
+    driver = BlockModelDriver(params)
     print("Loaded. Creating block model . . .")
     driver.run()
     print("Saved to " + params.geoh5.h5file)

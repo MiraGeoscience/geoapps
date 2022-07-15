@@ -20,13 +20,13 @@ from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.grid_creation.constants import app_initializer
-from geoapps.grid_creation.driver import GridCreationDriver
-from geoapps.grid_creation.params import GridCreationParams
+from geoapps.block_model_creation.constants import app_initializer
+from geoapps.block_model_creation.driver import BlockModelDriver
+from geoapps.block_model_creation.params import BlockModelParams
 
 
-class GridCreation(BaseDashApplication):
-    _param_class = GridCreationParams
+class BlockModelCreation(BaseDashApplication):
+    _param_class = BlockModelParams
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -337,7 +337,7 @@ class GridCreation(BaseDashApplication):
 
         return outputs
 
-    def create_block_model(self, n_clicks):
+    def create_block_model(self, _):
         # self.params should be up to date whenever create_block_model is called.
         param_dict = self.params.to_dict()
         temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
@@ -370,14 +370,14 @@ class GridCreation(BaseDashApplication):
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
             )
-            new_params = GridCreationParams(input_file=ifile, **param_dict)
+            new_params = BlockModelParams(input_file=ifile, **param_dict)
             new_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=output_path,
                 validate=False,
             )
             # Run driver.
-            driver = GridCreationDriver(new_params)
+            driver = BlockModelDriver(new_params)
             driver.run()
 
         if self.params.live_link:

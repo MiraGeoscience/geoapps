@@ -12,9 +12,9 @@ import argparse
 from geoh5py.ui_json import InputFile
 
 import geoapps
+from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
-from geoapps.grid_creation.params import GridCreationParams
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
@@ -90,7 +90,7 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     scatter_init = app_initializer if use_initializers else {}
 
-    from geoapps.grid_creation.constants import app_initializer
+    from geoapps.block_model_creation.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     grid_init = app_initializer if use_initializers else {}
@@ -150,7 +150,7 @@ def write_default_uijson(path, use_initializers=False):
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
         "scatter.ui.json": ScatterPlotParams(validate=False, **scatter_init),
-        "grid_creation.ui.json": GridCreationParams(validate=False, **grid_init),
+        "grid_creation.ui.json": BlockModelParams(validate=False, **grid_init),
         "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **iso_init),
         "edge_detection.ui.json": EdgeDetectionParams(validate=False, **edge_init),
         "contours.ui.json": ContoursParams(validate=False, **cont_init),

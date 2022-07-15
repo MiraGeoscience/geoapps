@@ -23,7 +23,7 @@ defaults = {
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
-    "run_command": "geoapps.grid_creation.driver",
+    "run_command": "geoapps.block_model_creation.driver",
     "run_command_boolean": False,
     "monitoring_directory": None,
     "live_link": False,
@@ -34,7 +34,7 @@ default_ui_json.update(
     {
         "title": "Block Model Creation",
         "geoh5": "",
-        "run_command": "geoapps.grid_creation.driver",
+        "run_command": "geoapps.block_model_creation.driver",
         "run_command_boolean": {
             "value": False,
             "label": "Run python module ",

@@ -53,7 +53,7 @@ class BaseDashApplication:
     def get_outputs(param_list, update_dict):
         outputs = []
         for param in param_list:
-            if param in update_dict.keys():
+            if param in update_dict:
                 outputs.append(update_dict[param])
             else:
                 outputs.append(no_update)
@@ -63,13 +63,13 @@ class BaseDashApplication:
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
         # Get ws for updating entities.
-        if "geoh5" in update_dict.keys():
+        if "geoh5" in update_dict:
             ws = update_dict["geoh5"]
         else:
             ws = self.params.geoh5
         # Loop through self.params and update self.params with update_dict.
-        for key in self.params.to_dict().keys():
-            if key in update_dict.keys():
+        for key in self.params.to_dict():
+            if key in update_dict:
                 if key == "live_link":
                     if not update_dict["live_link"]:
                         self.params.live_link = False
@@ -81,7 +81,7 @@ class BaseDashApplication:
                     setattr(self.params, key, list(ast.literal_eval(update_dict[key])))
                 else:
                     setattr(self.params, key, update_dict[key])
-            elif key + "_name" in update_dict.keys():
+            elif key + "_name" in update_dict:
                 setattr(self.params, key, ws.get_entity(update_dict[key + "_name"])[0])
 
     @staticmethod
@@ -92,7 +92,7 @@ class BaseDashApplication:
         ui_json = json.loads(decoded)
         update_dict = {}
         # Update workspace first, to use when assigning entities.
-        if "geoh5" in ui_json.keys():
+        if "geoh5" in ui_json:
             if ui_json["geoh5"] == "":
                 update_dict["geoh5"] = None
             elif type(ui_json["geoh5"]) == Workspace:
