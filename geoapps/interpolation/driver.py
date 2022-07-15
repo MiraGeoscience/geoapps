@@ -198,7 +198,9 @@ if __name__ == "__main__":
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     params = DataInterpolationParams(ifile)
+    params.geoh5.close()
     driver = DataInterpolationDriver(params)
     print("Loaded. Running data transfer . . .")
+    params.geoh5.open(mode="r+")
     driver.run()
     print("Saved to " + ifile.path)

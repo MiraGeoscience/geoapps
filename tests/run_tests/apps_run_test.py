@@ -110,7 +110,7 @@ def test_data_interpolation(tmp_path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = DataInterpolation(geoh5=temp_workspace)
-    app.trigger.click()
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         assert len(workspace.get_entity("Iteration_7_model_Interp")) == 1
