@@ -11,6 +11,8 @@ from __future__ import annotations
 import ast
 import os
 
+from geoh5py.workspace import Workspace
+
 os.environ["OMP_NUM_THREADS"] = "1"
 
 import numpy as np
@@ -30,10 +32,22 @@ class ClusteringDriver:
 
     @staticmethod
     def run_clustering(
-        n_clusters, dataframe_dict, full_scales, clusters, mapping, update_all_clusters
-    ):
+        n_clusters: int,
+        dataframe_dict: list[dict],
+        full_scales: dict,
+        clusters: dict,
+        mapping: np.ndarray,
+        update_all_clusters: bool,
+    ) -> dict:
         """
         Normalize the the selected data and perform the kmeans clustering.
+        :param n_clusters: Number of clusters.
+        :param dataframe_dict: Data names and values for selected data subset.
+        :param full_scales: Scaling factors for selected data subset.
+        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
+        :param mapping: Mapping between generated kmeans and data to plot.
+        :param update_all_clusters: Whether to update all clusters, or only n_clusters.
+        :return update_dict: Update values for kmeans and clusters.
         """
         dataframe = pd.DataFrame(dataframe_dict)
 
@@ -74,9 +88,15 @@ class ClusteringDriver:
         return {"kmeans": kmeans, "clusters": clusters}
 
     @staticmethod
-    def update_dataframe(downsampling, channels, workspace):
+    def update_dataframe(
+        downsampling: int, channels: list, workspace: Workspace
+    ) -> dict:
         """
         Normalize the the selected data and perform the kmeans clustering.
+        :param downsampling: Percent downsampling.
+        :param channels: Data subset.
+        :param workspace: Current workspace.
+        :return update_dict: Values for dataframe, kmeans, mapping, indices.
         """
         kmeans = None
 
@@ -122,7 +142,17 @@ class ClusteringDriver:
             }
 
     @staticmethod
-    def get_indices(channels, downsampling, workspace):
+    def get_indices(
+        channels: list, downsampling: int, workspace: Workspace
+    ) -> (np.ndarray, np.ndarray):
+        """
+        Get indices of data to plot, from downsampling.
+        :param channels: Data subset.
+        :param downsampling: Percent downsampling.
+        :param workspace: Current workspace.
+        :return indices: Active indices for plotting data.
+        :return values: Values for data in data subset.
+        """
         values = []
         non_nan = []
         for channel in channels:
