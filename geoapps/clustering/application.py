@@ -500,8 +500,11 @@ class Clustering(ScatterPlots):
             prevent_initial_call=True,
         )(self.export_clusters)
 
-    def get_cluster_defaults(self):
-        # Get initial values to initialize the dash components
+    def get_cluster_defaults(self) -> dict:
+        """
+        Get initial values from self.params to initialize the dash components.
+        :return defaults: Initial values for dash components.
+        """
         defaults = {}
         defaults["kmeans"] = None
         defaults["clusters"] = {}
@@ -597,23 +600,35 @@ class Clustering(ScatterPlots):
         return defaults
 
     @staticmethod
-    def update_color_select(checkbox):
-        # Updating visibility for cluster color picker
+    def update_color_select(checkbox: list) -> dict:
+        """
+        Updating visibility for cluster color picker.
+        :param checkbox: Checkbox to select cluster colors.
+        :return style: Return style for color_select_div. If display is "none", the div isn't visible.
+        """
         if not checkbox:
             return {"display": "none"}
         else:
             return {"width": "25%", "display": "inline-block", "vertical-align": "top"}
 
     @staticmethod
-    def update_norm_tabs(checkbox):
-        # Update visibility for normalization plots
+    def update_norm_tabs(checkbox: list) -> dict:
+        """
+        Updating visibility for normalization plots.
+        :param checkbox: Checkbox to show normalization plots.
+        :return style: Return style for norm_tabs. If display is "none", the div isn't visible.
+        """
         if not checkbox:
             return {"display": "none"}
         else:
             return {"display": "block"}
 
-    def get_data_channels(self, channels):
-        # Loop through channels and add them to the data channels dict with name and object of all the current data
+    def get_data_channels(self, channels: list) -> dict:
+        """
+        Loop through channels and add them to the data channels dict with name and object of all the current data.
+        :param channels: Subset of data used for clustering and available for plotting.
+        :return data_channels: Dictionary of data names and the corresponding Data objects.
+        """
         data_channels = {}
         for channel in channels:
             if channel not in data_channels:
@@ -626,15 +641,25 @@ class Clustering(ScatterPlots):
 
     def update_channels(
         self,
-        channel,
-        channels,
-        full_scales,
-        full_lower_bounds,
-        full_upper_bounds,
-        kmeans,
-        indices,
-    ):
-        # Update the data options for the scatter plot and histogram from the data subset
+        channel: str,
+        channels: list,
+        full_scales: dict,
+        full_lower_bounds: dict,
+        full_upper_bounds: dict,
+        kmeans: np.ndarray,
+        indices: np.ndarray,
+    ) -> dict:
+        """
+        Update the data options for the scatter plot and histogram from the data subset.
+        :param channel: Input data name for histogram, boxplot.
+        :param channels: Subset of data used for clustering and available for plotting.
+        :param full_scales: Dictionary of data names and the corresponding scales.
+        :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
+        :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
+        :param kmeans: K-means for the selected cluster number.
+        :param indices: Active indices from current downsampling.
+        :return update_dict: Dictionary of new channels and other affected parameters that need to be updated.
+        """
         if channels is None:
             self.data_channels = {}
             return {
@@ -651,12 +676,12 @@ class Clustering(ScatterPlots):
             channels = list(filter(None, channels))
             # Update the full scales and bounds dicts with the new data subset
             for chan in channels:
-                dict = self.update_properties(
+                properties_dict = self.update_properties(
                     chan, full_scales, full_lower_bounds, full_upper_bounds
                 )
-                full_scales = dict["full_scales"]
-                full_lower_bounds = dict["full_lower_bounds"]
-                full_upper_bounds = dict["full_upper_bounds"]
+                full_scales = properties_dict["full_scales"]
+                full_lower_bounds = properties_dict["full_lower_bounds"]
+                full_upper_bounds = properties_dict["full_upper_bounds"]
 
             new_scales = {}
             for chan, value in full_scales.items():
@@ -697,9 +722,20 @@ class Clustering(ScatterPlots):
             }
 
     def update_properties(
-        self, channel, full_scales, full_lower_bounds, full_upper_bounds
-    ):
-        # Get stored scale and bounds for a given channel. If there's no stored value, set a default.
+        self,
+        channel: str,
+        full_scales: dict,
+        full_lower_bounds: dict,
+        full_upper_bounds: dict,
+    ) -> dict:
+        """
+        Get stored scale and bounds for a given channel. If there's no stored value, set a default.
+        :param channel: Input data name for histogram, boxplot.
+        :param full_scales: Dictionary of data names and the corresponding scales.
+        :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
+        :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
+        :return update_dict: Dictionary of new scale and bounds.
+        """
         if channel is not None:
             if channel not in full_scales:
                 full_scales[channel] = 1
@@ -734,33 +770,63 @@ class Clustering(ScatterPlots):
 
     def update_cluster_params(
         self,
-        filename,
-        contents,
-        objects,
-        x,
-        y,
-        z,
-        color,
-        size,
-        channel,
-        channels,
-        scale,
-        lower_bounds,
-        upper_bounds,
-        downsampling,
-        select_cluster,
-        n_clusters,
-        full_scales,
-        full_lower_bounds,
-        full_upper_bounds,
-        color_picker,
-        color_pickers,
-        kmeans,
-        indices,
-        clusters,
-        output_path,
-        live_link,
-    ):
+        filename: str,
+        contents: str,
+        objects: str,
+        x: str,
+        y: str,
+        z: str,
+        color: str,
+        size: str,
+        channel: str,
+        channels: list,
+        scale: int,
+        lower_bounds: float,
+        upper_bounds: float,
+        downsampling: int,
+        select_cluster: int,
+        n_clusters: int,
+        full_scales: dict,
+        full_lower_bounds: dict,
+        full_upper_bounds: dict,
+        color_picker: dict,
+        color_pickers: list,
+        kmeans: list,
+        indices: list,
+        clusters: dict,
+        output_path: str,
+        live_link: list,
+    ) -> tuple:
+        """
+        Update self.params and dash components from user input.
+        :param filename: Input filename. Either workspace or ui_json.
+        :param contents: Input file contents. Either workspace or ui_json.
+        :param objects: Input object name.
+        :param x: Input x data name.
+        :param y: Input y data name.
+        :param z: Input z data name.
+        :param color: Input color data name.
+        :param size: Input size data name.
+        :param channel: Input channel data name. Data displayed on histogram and boxplot.
+        :param channels: The subset of data that is clustered and able to be plotted.
+        :param scale: Scale for channel data.
+        :param lower_bounds: Lower bounds for channel data.
+        :param upper_bounds: Upper bounds for channel data.
+        :param downsampling: Percent downsampling.
+        :param select_cluster: Selected cluster used for picking cluster color.
+        :param n_clusters: Number of clusters to make when running clustering.
+        :param full_scales: Dictionary of data names and the corresponding scales.
+        :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
+        :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
+        :param color_picker: Current selected color from color picker.
+        :param color_pickers: List of colors with index corresponding to cluster number.
+        :param kmeans: K-means values for n_clusters.
+        :param indices: Active indices for data, gotten from downsampling.
+        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
+        :param output_path: Output path for where to export clusters.
+        :param live_link: Checkbox to enable monitoring directory.
+        :return outputs: Values to update all the dash components in the callback.
+        """
         # List of params that will be outputted
         param_list = [
             "objects_options",
@@ -975,7 +1041,7 @@ class Clustering(ScatterPlots):
             )
         elif trigger == "select_cluster":
             # Update color displayed by the dash colorpicker
-            update_dict = Clustering.update_color_picker(select_cluster, color_pickers)
+            update_dict = {"color_picker": dict(hex=color_pickers[select_cluster])}
         elif trigger == "output_path":
             if output_path is not None:
                 update_dict.update({"output_path": output_path})
@@ -1071,7 +1137,11 @@ class Clustering(ScatterPlots):
 
         return tuple(outputs)
 
-    def update_param_dict(self, update_dict):
+    def update_param_dict(self, update_dict: dict):
+        """
+        Update self.params from update_dict.
+        :param update_dict: Dictionary of parameters to update and the new values to assign.
+        """
         if "plot_kmeans" in update_dict:
             plot_kmeans = update_dict["plot_kmeans"]
         else:
@@ -1129,43 +1199,88 @@ class Clustering(ScatterPlots):
 
     def update_plots(
         self,
-        n_clusters,
-        dataframe_dict,
-        channel,
-        lower_bounds,
-        upper_bounds,
-        x,
-        x_log,
-        x_thresh,
-        x_min,
-        x_max,
-        y,
-        y_log,
-        y_thresh,
-        y_min,
-        y_max,
-        z,
-        z_log,
-        z_thresh,
-        z_min,
-        z_max,
-        color,
-        color_log,
-        color_thresh,
-        color_min,
-        color_max,
-        color_maps,
-        color_pickers,
-        size,
-        size_log,
-        size_thresh,
-        size_min,
-        size_max,
-        size_markers,
-        kmeans,
-        indices,
-        clusters,
-    ):
+        n_clusters: int,
+        dataframe_dict: list[dict],
+        channel: str,
+        lower_bounds: float,
+        upper_bounds: float,
+        x: str,
+        x_log: list,
+        x_thresh: float,
+        x_min: float,
+        x_max: float,
+        y: str,
+        y_log: list,
+        y_thresh: float,
+        y_min: float,
+        y_max: float,
+        z: str,
+        z_log: list,
+        z_thresh: float,
+        z_min: float,
+        z_max: float,
+        color: str,
+        color_log: list,
+        color_thresh: float,
+        color_min: float,
+        color_max: float,
+        color_maps: list,
+        color_pickers: list,
+        size: str,
+        size_log: list,
+        size_thresh: float,
+        size_min: float,
+        size_max: float,
+        size_markers: int,
+        kmeans: list,
+        indices: list,
+        clusters: dict,
+    ) -> (go.Figure, list[dict], go.Figure, go.Figure, go.Figure, go.Figure):
+        """
+        Update plots.
+        :param n_clusters: Number of clusters.
+        :param dataframe_dict: Dataframe with all channels and their data values.
+        :param channel: Name of data displayed on histogram, boxplot.
+        :param lower_bounds: Lower bounds for channel data.
+        :param upper_bounds: Upper bounds for channel data.
+        :param x: Name of data for x-axis of scatter plot.
+        :param x_log: Checkbox for plotting log for x-axis of scatter plot.
+        :param x_thresh: Threshold for x-axis of scatter plot.
+        :param x_min: Min for x-axis of scatter plot.
+        :param x_max: Max for x-axis of scatter plot.
+        :param y: Name of data for y-axis of scatter plot.
+        :param y_log: Checkbox for plotting log for y-axis of scatter plot
+        :param y_thresh: Threshold for y-axis of scatter plot.
+        :param y_min: Min for y-axis of scatter plot.
+        :param y_max: Max for y-axis of scatter plot.
+        :param z: Name of data for z-axis of scatter plot.
+        :param z_log: Checkbox for plotting log for z-axis of scatter plot.
+        :param z_thresh: Threshold for z-axis of scatter plot.
+        :param z_min: Min for z-axis of scatter plot.
+        :param z_max: Max for z-axis of scatter plot.
+        :param color: Name of data for color-axis of scatter plot.
+        :param color_log: Checkbox for plotting log for color-axis of scatter plot.
+        :param color_thresh: Threshold for color-axis of scatter plot.
+        :param color_min: Min for color-axis of scatter plot.
+        :param color_max: Max for color-axis of scatter plot.
+        :param color_maps: Color map for scatter plot.
+        :param color_pickers: List of colors with index corresponding to cluster number.
+        :param size: Name of data for size-axis of scatter plot.
+        :param size_log: Checkbox for plotting log for size-axis of scatter plot.
+        :param size_thresh: Threshold for size-axis of scatter plot.
+        :param size_min: Min for size-axis of scatter plot.
+        :param size_max: Max for size-axis of scatter plot.
+        :param size_markers: Size of markers for scatter plot.
+        :param kmeans: K-means for n_clusters.
+        :param indices: Active indices for data, determined by downsampling.
+        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
+        :return crossplot: Scatter plot with axes x, y, z, color, size.
+        :return stats_table: Table of statistics: count, mean, std, min, max, etc. for data subset.
+        :return matrix: Confusion matrix for data subset.
+        :return histogram: Histogram of channel data.
+        :return boxplot: Boxplots for clusters for channel data.
+        :return inertia: Plot of kmeans inertia against number of clusters.
+        """
         # Read in stored dataframe.
         dataframe = pd.DataFrame(dataframe_dict)
         # Read in stored clusters. Convert keys from string back to int.
@@ -1244,48 +1359,63 @@ class Clustering(ScatterPlots):
             return go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), go.Figure()
 
     @staticmethod
-    def update_color_picker(select_cluster, color_pickers):
-        return {"color_picker": dict(hex=color_pickers[select_cluster])}
-
-    @staticmethod
-    def update_colormap(n_clusters, color_pickers):
+    def update_colormap(n_clusters: int, color_pickers: list) -> list:
         """
         Change the colormap for clusters
+        :param n_clusters: Number of clusters.
+        :param color_pickers: List of colors with index corresponding to cluster number.
+        :return color_map: Color map for plotting kmeans on scatter plot.
         """
-        cluster_map = {}
+        color_map = {}
         for ii in range(n_clusters):
             colorpicker = color_pickers[ii]
             if "#" in colorpicker:
                 color = colorpicker.lstrip("#")
-                cluster_map[ii] = [
+                color_map[ii] = [
                     np.min([ii / (n_clusters - 1), 1]),
                     "rgb("
                     + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
                     + ")",
                 ]
             else:
-                cluster_map[ii] = [
+                color_map[ii] = [
                     np.min([ii / (n_clusters - 1), 1]),
                     colorpicker,
                 ]
 
-        return list(cluster_map.values())
+        return list(color_map.values())
 
     def update_clustering(
         self,
-        channel,
-        channels,
-        full_scales,
-        full_lower_bounds,
-        full_upper_bounds,
-        downsampling,
-        n_clusters,
-        kmeans,
-        clusters,
-        indices,
-        workspace,
-        update_all_clusters,
-    ):
+        channel: str,
+        channels: list,
+        full_scales: dict,
+        full_lower_bounds: dict,
+        full_upper_bounds: dict,
+        downsampling: int,
+        n_clusters: int,
+        kmeans: np.ndarray,
+        clusters: dict,
+        indices: np.ndarray,
+        workspace: Workspace,
+        update_all_clusters: bool,
+    ) -> dict:
+        """
+        Update clustering and the dropdown data that depends on kmeans.
+        :param channel: Name of data displayed on histogram, boxplot.
+        :param channels: Subset of data used for clustering and plotting.
+        :param full_scales: Dictionary of data names and the corresponding scales.
+        :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
+        :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
+        :param downsampling: Percent downsampling of data.
+        :param n_clusters: Number of clusters.
+        :param kmeans: K-mean values for n_clusters.
+        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
+        :param indices: Active indices for data, determined by downsampling.
+        :param workspace: Workspace.
+        :param update_all_clusters: Whether to update all clusters values, or just n_clusters.
+        :return update_dict: Dictionary of parameters to update and their new values.
+        """
         # Update dataframe, data options for plots, and run clustering
         update_dict = self.update_channels(
             channel,
@@ -1323,9 +1453,12 @@ class Clustering(ScatterPlots):
         return update_dict
 
     @staticmethod
-    def make_inertia_plot(n_clusters, clusters):
+    def make_inertia_plot(n_clusters: int, clusters: dict) -> go.Figure:
         """
-        Generate an inertia plot
+        Generate an inertia plot.
+        :param n_clusters: Number of clusters.
+        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
+        :return inertia_plot: Inertia figure.
         """
         if n_clusters in clusters:
             ind = np.sort(list(clusters.keys()))
@@ -1349,9 +1482,16 @@ class Clustering(ScatterPlots):
             return go.Figure()
 
     @staticmethod
-    def make_hist_plot(dataframe, channel, lower_bounds, upper_bounds):
+    def make_hist_plot(
+        dataframe: pd.DataFrame, channel: str, lower_bounds: float, upper_bounds: float
+    ) -> go.Figure:
         """
         Generate an histogram plot for the selected data channel.
+        :param dataframe: Data names and values for the selected data subset.
+        :param channel: Name of data plotted on histogram, boxplot.
+        :param lower_bounds: Lower bounds for channel data.
+        :param upper_bounds: Upper bounds for channel data.
+        :return histogram: Histogram figure.
         """
         if channel is not None:
             histogram = go.Figure(
@@ -1368,11 +1508,23 @@ class Clustering(ScatterPlots):
         else:
             return go.Figure()
 
-    def make_boxplot(self, n_clusters, channel, color_pickers, kmeans, indices):
+    def make_boxplot(
+        self,
+        n_clusters: int,
+        channel: str,
+        color_pickers: list,
+        kmeans: np.ndarray,
+        indices: np.ndarray,
+    ) -> go.Figure:
         """
         Generate a box plot for each cluster.
+        :param n_clusters: Number of clusters.
+        :param channel: Name of data to be plotted on histogram, boxplot.
+        :param color_pickers: List of colors with index corresponding to cluster number.
+        :param kmeans: K-means values for n_clusters.
+        :param indices: Active indices for data, determined by downsampling.
+        :return boxplot: Boxplot figure.
         """
-
         if (kmeans is not None) and (channel is not None):
             boxes = []
             for ii in range(n_clusters):
@@ -1391,7 +1543,7 @@ class Clustering(ScatterPlots):
                     )
                 )
 
-            boxplot = go.FigureWidget()
+            boxplot = go.Figure()
 
             boxplot.data = []
             for box in boxes:
@@ -1410,18 +1562,22 @@ class Clustering(ScatterPlots):
             return go.Figure()
 
     @staticmethod
-    def make_stats_table(dataframe):
+    def make_stats_table(dataframe: pd.DataFrame) -> list[dict]:
         """
         Generate a table of statistics using pandas
+        :param dataframe: Data names and values for selected data subset.
+        :return stats_table: Table of stats: count, mean, std, min, max, etc.
         """
         stats_df = dataframe.describe(percentiles=None, include=None, exclude=None)
         stats_df.insert(0, "", stats_df.index)
         return stats_df.to_dict("records")
 
     @staticmethod
-    def make_heatmap(dataframe):
+    def make_heatmap(dataframe: pd.DataFrame):
         """
-        Generate a confusion matrix
+        Generate a confusion matrix.
+        :param dataframe: Data names and values for selected data subset.
+        :return matrix: Confusion matrix figure.
         """
         df = dataframe.copy()
         corrs = df.corr()
@@ -1529,9 +1685,10 @@ class Clustering(ScatterPlots):
         # return new live link
         return workspace, new_live_link
 
-    def export_clusters(self, n_clicks):
+    def export_clusters(self, _):
         """
         Write cluster groups to the target geoh5 object.
+        :return live_link: Checkbox value for dash live_link component.
         """
         param_dict = self.params.to_dict()
         temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"

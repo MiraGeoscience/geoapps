@@ -35,13 +35,13 @@ class ScatterPlotDriver:
             size = None
             if self.params.size is not None:
                 vals = self.params.size.values[indices]
-                min = self.params.size_min
-                max = self.params.size_max
-                if min is None:
-                    min = np.nanmin(vals)
-                if max is None:
-                    max = np.nanmax(vals)
-                inbound = (vals >= min) * (vals <= max)
+                size_min = self.params.size_min
+                size_max = self.params.size_max
+                if size_min is None:
+                    size_min = np.nanmin(vals)
+                if size_max is None:
+                    size_max = np.nanmax(vals)
+                inbound = (vals >= size_min) * (vals <= size_max)
                 if np.sum(inbound) > 0:
                     vals[~inbound] = np.nan
                     size = normalize(vals)
@@ -56,13 +56,13 @@ class ScatterPlotDriver:
                     color = self.params.color.values
                 else:
                     vals = self.params.color.values[indices]
-                    min = self.params.color_min
-                    max = self.params.color_max
-                    if min is None:
-                        min = np.nanmin(vals)
-                    if max is None:
-                        max = np.nanmax(vals)
-                    inbound = (vals >= min) * (vals <= max)
+                    color_min = self.params.color_min
+                    color_max = self.params.color_max
+                    if color_min is None:
+                        color_min = np.nanmin(vals)
+                    if color_max is None:
+                        color_max = np.nanmax(vals)
+                    inbound = (vals >= color_min) * (vals <= color_max)
                     if np.sum(inbound) > 0:
                         vals[~inbound] = np.nan
                         color = normalize(vals)
@@ -72,31 +72,31 @@ class ScatterPlotDriver:
             x_axis = self.params.x.values[indices]
             y_axis = self.params.y.values[indices]
 
-            min = self.params.x_min
-            max = self.params.x_max
-            if min is None:
-                min = np.nanmin(x_axis)
-            if max is None:
-                max = np.nanmax(x_axis)
-            inbound = (x_axis >= min) * (x_axis <= max)
+            x_min = self.params.x_min
+            x_max = self.params.x_max
+            if x_min is None:
+                x_min = np.nanmin(x_axis)
+            if x_max is None:
+                x_max = np.nanmax(x_axis)
+            inbound = (x_axis >= x_min) * (x_axis <= x_max)
             if np.sum(inbound) > 0:
                 x_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
+                x_axis, x_label, x_ticks, _ = format_axis(
                     self.params.x.name, x_axis, self.params.x_log, self.params.x_thresh
                 )
             else:
                 return figure
 
-            min = self.params.y_min
-            max = self.params.y_max
-            if min is None:
-                min = np.nanmin(y_axis)
-            if max is None:
-                max = np.nanmax(y_axis)
-            inbound = (y_axis >= min) * (y_axis <= max)
+            y_min = self.params.y_min
+            y_max = self.params.y_max
+            if y_min is None:
+                y_min = np.nanmin(y_axis)
+            if y_max is None:
+                y_max = np.nanmax(y_axis)
+            inbound = (y_axis >= y_min) * (y_axis <= y_max)
             if np.sum(inbound) > 0:
                 y_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
+                y_axis, y_label, y_ticks, _ = format_axis(
                     self.params.y.name, y_axis, self.params.y_log, self.params.y_thresh
                 )
             else:
@@ -105,16 +105,16 @@ class ScatterPlotDriver:
             if self.params.z is not None:
                 z_axis = self.params.z.values[indices]
 
-                min = self.params.z_min
-                max = self.params.z_max
-                if min is None:
-                    min = np.nanmin(z_axis)
-                if max is None:
-                    max = np.nanmax(z_axis)
-                inbound = (z_axis >= min) * (z_axis <= max)
+                z_min = self.params.z_min
+                z_max = self.params.z_max
+                if z_min is None:
+                    z_min = np.nanmin(z_axis)
+                if z_max is None:
+                    z_max = np.nanmax(z_axis)
+                inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 if np.sum(inbound) > 0:
                     z_axis[~inbound] = np.nan
-                    z_axis, z_label, z_ticks, z_ticklabels = format_axis(
+                    z_axis, z_label, z_ticks, _ = format_axis(
                         self.params.z.name,
                         z_axis,
                         self.params.z_log,
