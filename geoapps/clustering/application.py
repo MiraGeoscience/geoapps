@@ -498,7 +498,7 @@ class Clustering(ScatterPlots):
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
             prevent_initial_call=True,
-        )(self.export_clusters)
+        )(self.trigger_click)
 
     def get_cluster_defaults(self) -> dict:
         """
@@ -1685,7 +1685,7 @@ class Clustering(ScatterPlots):
         # return new live link
         return workspace, new_live_link
 
-    def export_clusters(self, _):
+    def trigger_click(self, _):
         """
         Write cluster groups to the target geoh5 object.
         :return live_link: Checkbox value for dash live_link component.
@@ -1719,9 +1719,9 @@ class Clustering(ScatterPlots):
                 path=output_path,
                 validate=False,
             )
-            # Run driver.
-            driver = ClusteringDriver(new_params)
-            driver.run()
+        # Run driver.
+        driver = ClusteringDriver(new_params)
+        driver.run()
 
         if self.params.live_link:
             print("Live link active. Check your ANALYST session for new mesh.")

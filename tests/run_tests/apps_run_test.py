@@ -92,7 +92,7 @@ def test_clustering(tmp_path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = Clustering(geoh5=temp_workspace, output_path=str(tmp_path))
-    app.export_clusters(None)
+    app.trigger_click(None)
 
     filename = list(
         filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
