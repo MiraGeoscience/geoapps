@@ -1,7 +1,7 @@
 {
     "title": "Block Model Creation",
     "geoh5": "",
-    "run_command": "geoapps.grid_creation.driver",
+    "run_command": "geoapps.block_model_creation.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
