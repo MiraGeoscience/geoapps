@@ -413,16 +413,16 @@ class BlockModelCreation(BaseDashApplication):
                 if isinstance(value, ObjectBase):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
-            # Write output uijson.
-            new_params = BlockModelParams(**param_dict)
-            new_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=output_path,
-                validate=False,
-            )
-            # Run driver.
-            driver = BlockModelDriver(new_params)
-            driver.run()
+        # Write output uijson.
+        new_params = BlockModelParams(**param_dict)
+        new_params.write_input_file(
+            name=temp_geoh5.replace(".geoh5", ".ui.json"),
+            path=output_path,
+            validate=False,
+        )
+        # Run driver.
+        driver = BlockModelDriver(new_params)
+        driver.run()
 
         if self.params.live_link:
             print("Live link active. Check your ANALYST session for new mesh.")
