@@ -54,7 +54,7 @@ class BaseDashApplication:
         }
 
     @staticmethod
-    def get_outputs(param_list: list[str], update_dict: dict) -> tuple:
+    def get_outputs(param_list: list, update_dict: dict) -> tuple:
         """
         Get the list of updated parameters to return to the dash callback and update the dash components.
         :param param_list: Parameters that need to be returned to the callback.
@@ -99,7 +99,7 @@ class BaseDashApplication:
                 setattr(self.params, key, ws.get_entity(update_dict[key + "_name"])[0])
 
     @staticmethod
-    def update_from_ui_json(contents: str, param_list: list[str]) -> dict:
+    def update_from_ui_json(contents: str, param_list: list) -> dict:
         """
         Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
         :param contents: The contents of an uploaded ui_json file.
