@@ -180,6 +180,7 @@ class ClusteringDriver:
         return indices, values.T
 
     def run(self):
+        self.params.geoh5.open(mode="r+")
         # Run clustering to get kmeans and indices.
         clustering_dict = {}
         clustering_dict.update(
