@@ -27,6 +27,8 @@ class DataInterpolationDriver:
         self.params: DataInterpolationParams = params
 
     def run(self):
+        self.params.geoh5.open(mode="r+")
+
         xyz = get_locations(self.params.geoh5, self.params.objects)
 
         if xyz is None:
@@ -201,6 +203,5 @@ if __name__ == "__main__":
     params.geoh5.close()
     driver = DataInterpolationDriver(params)
     print("Loaded. Running data transfer . . .")
-    params.geoh5.open(mode="r+")
     driver.run()
     print("Saved to " + ifile.path)
