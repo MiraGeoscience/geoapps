@@ -173,7 +173,7 @@ class DataInterpolationParams(BaseParams):
     @property
     def max_depth(self) -> float | None:
         """
-        Max depth for vertical extent.
+        Maximum depth for vertical extent.
         """
         return self._max_depth
 
