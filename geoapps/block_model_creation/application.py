@@ -44,169 +44,223 @@ class BlockModelCreation(BaseDashApplication):
                     children=html.Button("Upload Workspace/ui.json"),
                     style={"margin_bottom": "20px"},
                 ),
-                dcc.Markdown(
-                    children="Input object",
-                    style={"width": "25%", "display": "inline-block"},
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Input object",
+                            style={
+                                "width": "25%",
+                                "display": "inline-block",
+                                "margin-top": "20px",
+                            },
+                        ),
+                        dcc.Dropdown(
+                            id="objects",
+                            value=getattr(self.params.objects, "name", None),
+                            options=[
+                                {
+                                    "label": obj.parent.name + "/" + obj.name,
+                                    "value": obj.name,
+                                }
+                                for obj in self.params.geoh5.objects
+                            ],
+                            style={
+                                "width": "75%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Dropdown(
-                    id="objects",
-                    value=getattr(self.params.objects, "name", None),
-                    options=[
-                        {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                        for obj in self.params.geoh5.objects
-                    ],
-                    style={
-                        "width": "75%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Lateral extent",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Dropdown(
+                            id="xy_reference",
+                            value=getattr(self.params.xy_reference, "name", None),
+                            options=[
+                                {
+                                    "label": obj.parent.name + "/" + obj.name,
+                                    "value": obj.name,
+                                }
+                                for obj in self.params.geoh5.objects
+                            ],
+                            style={
+                                "width": "75%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Markdown(
-                    children="Lateral extent",
-                    style={"width": "25%", "display": "inline-block"},
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Name",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="new_grid",
+                            value=self.params.new_grid,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Dropdown(
-                    id="xy_reference",
-                    value=getattr(self.params.xy_reference, "name", None),
-                    options=[
-                        {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                        for obj in self.params.geoh5.objects
-                    ],
-                    style={
-                        "width": "75%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Minimum x cell size",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="cell_size_x",
+                            value=self.params.cell_size_x,
+                            type="number",
+                            min=0.0,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Markdown(
-                    children="Name",
-                    style={"width": "25%", "display": "inline-block"},
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Minimum y cell size",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="cell_size_y",
+                            value=self.params.cell_size_y,
+                            type="number",
+                            min=0.0,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Input(
-                    id="new_grid",
-                    value=self.params.new_grid,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Minimum z cell size",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="cell_size_z",
+                            value=self.params.cell_size_z,
+                            type="number",
+                            min=0.0,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Markdown(
-                    children="Minimum x cell size",
-                    style={"width": "25%", "display": "inline-block"},
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Core depth (m)",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="depth_core",
+                            type="number",
+                            value=self.params.depth_core,
+                            min=0.0,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Input(
-                    id="cell_size_x",
-                    value=self.params.cell_size_x,
-                    type="number",
-                    min=0.0,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Horizontal padding",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="horizontal_padding",
+                            value=self.params.horizontal_padding,
+                            type="number",
+                            min=0.0,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Markdown(
-                    children="Minimum y cell size",
-                    style={"width": "25%", "display": "inline-block"},
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Bottom padding",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="bottom_padding",
+                            value=self.params.bottom_padding,
+                            type="number",
+                            min=0.0,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Input(
-                    id="cell_size_y",
-                    value=self.params.cell_size_y,
-                    type="number",
-                    min=0.0,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Expansion factor",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="expansion_fact",
+                            type="number",
+                            value=self.params.expansion_fact,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Markdown(
-                    children="Minimum z cell size",
-                    style={"width": "25%", "display": "inline-block"},
-                ),
-                dcc.Input(
-                    id="cell_size_z",
-                    value=self.params.cell_size_z,
-                    type="number",
-                    min=0.0,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
-                ),
-                dcc.Markdown(
-                    children="Core depth (m)",
-                    style={"width": "25%", "display": "inline-block"},
-                ),
-                dcc.Input(
-                    id="depth_core",
-                    type="number",
-                    value=self.params.depth_core,
-                    min=0.0,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
-                ),
-                dcc.Markdown(
-                    children="Horizontal padding",
-                    style={"width": "25%", "display": "inline-block"},
-                ),
-                dcc.Input(
-                    id="horizontal_padding",
-                    value=self.params.horizontal_padding,
-                    type="number",
-                    min=0.0,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
-                ),
-                dcc.Markdown(
-                    children="Bottom padding",
-                    style={"width": "25%", "display": "inline-block"},
-                ),
-                dcc.Input(
-                    id="bottom_padding",
-                    value=self.params.bottom_padding,
-                    type="number",
-                    min=0.0,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
-                ),
-                dcc.Markdown(
-                    children="Expansion factor",
-                    style={"width": "25%", "display": "inline-block"},
-                ),
-                dcc.Input(
-                    id="expansion_fact",
-                    type="number",
-                    value=self.params.expansion_fact,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
-                ),
-                dcc.Markdown(
-                    children="Output path",
-                    style={"width": "25%", "display": "inline-block"},
-                ),
-                dcc.Input(
-                    id="output_path",
-                    value=self.params.output_path,
-                    style={
-                        "width": "50%",
-                        "display": "inline-block",
-                        "margin_bottom": "20px",
-                    },
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            children="Output path",
+                            style={"width": "25%", "display": "inline-block"},
+                        ),
+                        dcc.Input(
+                            id="output_path",
+                            value=self.params.output_path,
+                            style={
+                                "width": "50%",
+                                "display": "inline-block",
+                                "margin_bottom": "20px",
+                            },
+                        ),
+                    ]
                 ),
                 dcc.Checklist(
                     id="live_link",
