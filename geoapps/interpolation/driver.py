@@ -204,4 +204,4 @@ if __name__ == "__main__":
     driver = DataInterpolationDriver(params)
     print("Loaded. Running data transfer . . .")
     driver.run()
-    print("Saved to " + ifile.path)
+    print("Saved to " + params.geoh5.h5file)
