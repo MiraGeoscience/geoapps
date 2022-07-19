@@ -237,11 +237,6 @@ class DataInterpolation(ObjectDataSelection):
     def method_update(self, _):
         if self.method.value == "Inverse Distance":
             self.method_panel.children = [self.method, self.method_skew]
-        elif self.method.value == "Linear":
-            self.method_panel.children = [
-                self.method,
-                Label("Warning! Very slow on 3D objects"),
-            ]
         else:
             self.method_panel.children = [self.method]
 
@@ -268,6 +263,11 @@ class DataInterpolation(ObjectDataSelection):
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
             new_params = DataInterpolationParams(**param_dict)
+            if new_params.method == "Nearest":
+                new_params.input_file.ui_json["skew_factor"]["enabled"] = False
+            elif new_params.method == "Inverse Distance":
+                new_params.input_file.ui_json["skew_factor"]["enabled"] = True
+
             new_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"), validate=False
             )

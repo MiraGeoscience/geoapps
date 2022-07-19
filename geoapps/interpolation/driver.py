@@ -60,21 +60,27 @@ class DataInterpolationDriver:
 
         values_interp = {}
         rad, ind = tree.query(xyz_out)
-        if self.params.method == "Linear":
-
+        if (self.params.method == "Nearest") or (
+            self.params.skew_factor is None and self.params.skew_angle is None
+        ):
+            # Find nearest cells
             for key, value in values.items():
-                F = LinearNDInterpolator(xyz, value)
-                values_interp[key] = F(xyz_out)
+                values_interp[key] = value[ind]
+                sign[key] = sign[key][ind]
 
-        elif self.params.method == "Inverse Distance":
-            skew_angle = self.params.skew_angle
-            skew_factor = self.params.skew_factor
-            if skew_angle is None:
-                skew_angle = 0
-            if skew_factor is None:
-                skew_factor = 1
-
-            angle = np.deg2rad((450.0 - np.asarray(skew_angle)) % 360.0)
+            for key in values_interp.keys():
+                if self.params.space == "Log":
+                    values_interp[key] = sign[key] * np.exp(values_interp[key])
+                values_interp[key][
+                    np.isnan(values_interp[key])
+                ] = self.params.no_data_value
+                if self.params.max_distance is not None:
+                    values_interp[key][
+                        rad > self.params.max_distance
+                    ] = self.params.no_data_value
+        else:
+            # Inverse distance
+            angle = np.deg2rad((450.0 - np.asarray(self.params.skew_angle)) % 360.0)
             rotation = np.r_[
                 np.c_[np.cos(angle), np.sin(angle)],
                 np.c_[-np.sin(angle), np.cos(angle)],
@@ -82,10 +88,10 @@ class DataInterpolationDriver:
             center = np.mean(xyz, axis=0).reshape((3, 1))
             xyz -= np.kron(center, np.ones(xyz.shape[0])).T
             xyz[:, :2] = np.dot(rotation, xyz[:, :2].T).T
-            xyz[:, 1] *= skew_factor
+            xyz[:, 1] *= self.params.skew_factor
             xyz_out -= np.kron(center, np.ones(xyz_out.shape[0])).T
             xyz_out[:, :2] = np.dot(rotation, xyz_out[:, :2].T).T
-            xyz_out[:, 1] *= skew_factor
+            xyz_out[:, 1] *= self.params.skew_factor
 
             vals, ind_inv = weighted_average(
                 xyz,
@@ -99,22 +105,6 @@ class DataInterpolationDriver:
             for key, val in zip(list(values.keys()), vals):
                 values_interp[key] = val
                 sign[key] = sign[key][ind_inv[:, 0]]
-
-        else:
-            # Find nearest cells
-            for key, value in values.items():
-
-                values_interp[key] = value[ind]
-                sign[key] = sign[key][ind]
-
-        for key in values_interp.keys():
-            if self.params.space == "Log":
-                values_interp[key] = sign[key] * np.exp(values_interp[key])
-            values_interp[key][np.isnan(values_interp[key])] = self.params.no_data_value
-            if self.params.max_distance is not None:
-                values_interp[key][
-                    rad > self.params.max_distance
-                ] = self.params.no_data_value
 
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
