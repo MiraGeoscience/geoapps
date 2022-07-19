@@ -140,7 +140,7 @@ class DataInterpolationParams(BaseParams):
     @property
     def xy_extent(self) -> ObjectBase | None:
         """
-        Object hull.
+        Object hull used to limit the interpolation horizontal extent.
         """
         return self._xy_extent
 
