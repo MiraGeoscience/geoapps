@@ -183,9 +183,6 @@ if __name__ == "__main__":
     params = DataInterpolationParams(ifile)
     params.geoh5.close()
     driver = DataInterpolationDriver(params)
-    method_str = (
-        "nearest neighbor" if params.method == "Nearest" else "inverse distance"
-    )
-    print(f"Loaded. Computing {method_str} interpolation . . .")
+    print(f"Loaded. Starting data transfer . . .")
     driver.run()
     print("Saved to " + params.geoh5.h5file)
