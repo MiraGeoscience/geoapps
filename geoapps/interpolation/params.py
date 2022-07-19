@@ -129,7 +129,7 @@ class DataInterpolationParams(BaseParams):
     @property
     def max_distance(self) -> float | None:
         """
-        Max distance for horizontal extent.
+        Maximum distance for horizontal extent.
         """
         return self._max_distance
 
