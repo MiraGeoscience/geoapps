@@ -263,9 +263,14 @@ class DataInterpolation(ObjectDataSelection):
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
             new_params = DataInterpolationParams(**param_dict)
+
             if new_params.method == "Nearest":
+                new_params.skew_angle = None
+                new_params.skew_factor = None
+                new_params.input_file.ui_json["skew_angle"]["enabled"] = False
                 new_params.input_file.ui_json["skew_factor"]["enabled"] = False
             elif new_params.method == "Inverse Distance":
+                new_params.input_file.ui_json["skew_angle"]["enabled"] = True
                 new_params.input_file.ui_json["skew_factor"]["enabled"] = True
 
             new_params.write_input_file(
