@@ -14,7 +14,6 @@ defaults = {
     "geoh5": None,
     "objects": None,
     "data": None,
-    "method": None,
     "skew_angle": None,
     "skew_factor": None,
     "space": None,
@@ -189,7 +188,6 @@ default_ui_json.update(
             "value": "_Interp",
             "group": "Python run preferences",
         },
-        "method": "Nearest",
     }
 )
 
@@ -201,7 +199,6 @@ app_initializer = {
     "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
     "max_distance": 2e3,
     "max_depth": 1e3,
-    "method": "Nearest",
     "no_data_value": 1e-8,
     "out_object": "{7450be38-1327-4336-a9e4-5cff587b6715}",
     "skew_angle": 0.0,

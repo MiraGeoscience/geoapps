@@ -87,11 +87,18 @@ class DataInterpolationParams(BaseParams):
         """
         Method of interpolation: "nearest" or "inverse distance".
         """
-        return self._method
+
+        if self._method is None:
+            if self.input_file.ui_json["skew_angle"]["enabled"]:
+                return "Inverse Distance"
+            else:
+                return "Nearest"
+        else:
+            return self._method
 
     @method.setter
     def method(self, val):
-        self.setter_validator("method", val)
+        self._method = val
 
     @property
     def skew_angle(self) -> float | None:

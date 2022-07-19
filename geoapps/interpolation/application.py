@@ -263,6 +263,7 @@ class DataInterpolation(ObjectDataSelection):
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
             new_params = DataInterpolationParams(**param_dict)
+            new_params.method = self.method.value
 
             if new_params.method == "Nearest":
                 new_params.skew_angle = None
