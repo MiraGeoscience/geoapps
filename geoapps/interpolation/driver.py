@@ -181,7 +181,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     params = DataInterpolationParams(ifile)
-    print("params method", params.method)
     params.geoh5.close()
     driver = DataInterpolationDriver(params)
     method_str = (
