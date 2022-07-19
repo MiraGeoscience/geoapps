@@ -60,9 +60,9 @@ class DataInterpolationDriver:
 
         values_interp = {}
         rad, ind = tree.query(xyz_out)
-        if (self.params.method == "Nearest") or (
-            self.params.skew_factor is None and self.params.skew_angle is None
-        ):
+        if self.params.method == "Nearest":
+
+            print("Computing nearest neighbor interpolation")
             # Find nearest cells
             for key, value in values.items():
                 values_interp[key] = value[ind]
@@ -78,7 +78,8 @@ class DataInterpolationDriver:
                     values_interp[key][
                         rad > self.params.max_distance
                     ] = self.params.no_data_value
-        else:
+        elif self.params.method == "Inverse Distance":
+            print("Computing inverse distance interpolation")
             # Inverse distance
             angle = np.deg2rad((450.0 - np.asarray(self.params.skew_angle)) % 360.0)
             rotation = np.r_[
@@ -106,6 +107,8 @@ class DataInterpolationDriver:
                 values_interp[key] = val
                 sign[key] = sign[key][ind_inv[:, 0]]
 
+        else:
+            raise ValueError(f"Unrecognized method: {self.params.method}.")
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
         if self.params.topography[
@@ -190,8 +193,12 @@ if __name__ == "__main__":
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     params = DataInterpolationParams(ifile)
+    print("params method", params.method)
     params.geoh5.close()
     driver = DataInterpolationDriver(params)
-    print("Loaded. Running data transfer . . .")
+    method_str = (
+        "nearest neighbor" if params.method == "Nearest" else "inverse distance"
+    )
+    print(f"Loaded. Computing {method_str} interpolation . . .")
     driver.run()
     print("Saved to " + params.geoh5.h5file)
