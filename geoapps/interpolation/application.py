@@ -243,6 +243,13 @@ class DataInterpolation(ObjectDataSelection):
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
 
+        param_dict["topography_objects"] = self.params.geoh5.get_entity(
+            self._topography.objects.value
+        )[0]
+        param_dict["topography_data"] = self.params.geoh5.get_entity(
+            self._topography.data.value
+        )[0]
+
         temp_geoh5 = f"Interpolation_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
@@ -252,13 +259,6 @@ class DataInterpolation(ObjectDataSelection):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
             param_dict["geoh5"] = workspace
-            param_dict["topography_objects"] = workspace.get_entity(
-                self._topography.objects.value
-            )[0]
-            param_dict["topography_data"] = workspace.get_entity(
-                self._topography.data.value
-            )[0]
-
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 

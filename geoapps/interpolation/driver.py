@@ -108,26 +108,14 @@ class DataInterpolationDriver:
 
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
-        if self.params.topography[
-            "objects"
-        ] is not None and self.params.geoh5.get_entity(
-            self.params.topography["objects"].uid
-        ):
-            for entity in self.params.geoh5.get_entity(
-                self.params.topography["objects"].uid
-            ):
-                if isinstance(entity, ObjectBase):
-                    topo_obj = entity
-
-            if getattr(topo_obj, "vertices", None) is not None:
-                topo = topo_obj.vertices
+        if self.params.topography["objects"] is not None:
+            if getattr(self.params.topography["objects"], "vertices", None) is not None:
+                topo = self.params.topography["objects"].vertices
             else:
-                topo = topo_obj.centroids
+                topo = self.params.topography["objects"].centroids
 
             if self.params.topography["data"] is not None:
-                topo[:, 2] = self.params.geoh5.get_entity(
-                    self.params.topography["data"].uid
-                )[0].values
+                topo[:, 2] = self.params.topography["data"].values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
             z_interp = lin_interp(xyz_out_orig[:, :2])
