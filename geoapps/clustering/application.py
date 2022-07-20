@@ -300,7 +300,7 @@ class Clustering(ScatterPlots):
                         dcc.Markdown("Cluster: "),
                         dcc.Dropdown(
                             id="select_cluster",
-                            options=np.arange(0, 101, 1),
+                            options=np.arange(0, self.defaults["n_clusters"], 1),
                             value=0,
                             style={"margin-bottom": "20px"},
                         ),
@@ -360,6 +360,12 @@ class Clustering(ScatterPlots):
             Output(component_id="norm_tabs", component_property="style"),
             Input(component_id="show_norm_tabs", component_property="value"),
         )(Clustering.update_norm_tabs)
+
+        # Update cluster color picker options from n_clusters
+        self.app.callback(
+            Output(component_id="select_cluster", component_property="options"),
+            Input(component_id="n_clusters", component_property="value"),
+        )(Clustering.update_select_cluster_options)
 
         # Callback to update any params
         self.app.callback(
@@ -622,6 +628,10 @@ class Clustering(ScatterPlots):
             return {"display": "none"}
         else:
             return {"display": "block"}
+
+    @staticmethod
+    def update_select_cluster_options(n_clusters):
+        return np.arange(0, n_clusters, 1)
 
     def get_data_channels(self, channels: list) -> dict:
         """

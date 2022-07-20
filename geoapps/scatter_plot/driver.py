@@ -133,6 +133,7 @@ class ScatterPlotDriver:
                         "color": color,
                         "size": size,
                         "colorscale": self.params.color_maps,
+                        "line_width": 0,
                     },
                 )
 
@@ -164,6 +165,7 @@ class ScatterPlotDriver:
                         "color": color,
                         "size": size,
                         "colorscale": self.params.color_maps,
+                        "line_width": 0,
                     },
                 )
 
