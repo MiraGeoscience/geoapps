@@ -55,7 +55,7 @@ default_ui_json.update(
                 "{4EA87376-3ECE-438B-BF12-3479733DED46}",
                 "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             ],
-            "label": "Input object",
+            "label": "Object",
             "value": None,
         },
         "new_grid": {
