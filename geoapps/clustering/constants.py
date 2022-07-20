@@ -37,6 +37,7 @@ default_ui_json.update(
             "value": None,
             "enabled": False,
             "optional": True,
+            "visible": False,
         },
         "n_clusters": {
             "group": "data",
@@ -44,6 +45,7 @@ default_ui_json.update(
             "main": True,
             "value": 0,
             "lineEdit": False,
+            "visible": False,
         },
         "ga_group_name": {
             "main": True,
