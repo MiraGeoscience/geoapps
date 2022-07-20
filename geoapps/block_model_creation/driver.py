@@ -23,6 +23,10 @@ from geoapps.shared_utils.utils import get_locations
 
 
 class BlockModelDriver:
+    """
+    Create BlockModel from BlockModelParams.
+    """
+
     def __init__(self, params: BlockModelParams):
         self.params: BlockModelParams = params
 
@@ -30,8 +34,10 @@ class BlockModelDriver:
     def truncate_locs_depths(locs: np.ndarray, depth_core: int) -> np.ndarray:
         """
         Sets locations below core to core bottom.
+
         :param locs: Location points.
         :param depth_core: Depth of core mesh below locs.
+
         :return locs: locs with depths truncated.
         """
         zmax = locs[:, 2].max()  # top of locs
@@ -48,9 +54,11 @@ class BlockModelDriver:
     ) -> float:
         """
         Get minimum depth core.
+
         :param locs: Location points.
         :param depth_core: Depth of core mesh below locs.
         :param core_z_cell_size: Cell size in z direction.
+
         :return depth_core: Minimum depth core.
         """
         zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
@@ -63,8 +71,10 @@ class BlockModelDriver:
     def find_top_padding(obj: BlockModel, core_z_cell_size: int) -> float:
         """
         Loop through cell spacing and sum until core_z_cell_size is reached.
+
         :param obj: Block model.
         :param core_z_cell_size: Cell size in z direction.
+
         :return pad_sum: Top padding.
         """
         f = np.abs(np.diff(obj.z_cell_delimiters))
@@ -87,6 +97,7 @@ class BlockModelDriver:
     ) -> BlockModel:
         """
         Create a BlockModel object from parameters.
+
         :param workspace: Workspace.
         :param name: Block model name.
         :param locs: Location points.
@@ -94,6 +105,7 @@ class BlockModelDriver:
         :param depth_core: Depth of core mesh below locs.
         :param pads: len(6) Padding distances [W, E, N, S, Down, Up]
         :param expansion_factor: Expansion factor for padding cells.
+
         :return object_out: Output block model.
         """
 
@@ -137,11 +149,6 @@ class BlockModelDriver:
 
         tree = cKDTree(xyz)
 
-        xyz_ref = get_locations(self.params.geoh5, self.params.xy_reference)
-        if xyz_ref is None:
-            print("No object selected for 'Lateral Extent'. Defaults to input object.")
-            xyz_ref = xyz
-
         # Find extent of grid
         h = [self.params.cell_size_x, self.params.cell_size_y, self.params.cell_size_z]
         # pads: W, E, S, N, D, U
@@ -157,7 +164,7 @@ class BlockModelDriver:
         object_out = BlockModelDriver.get_block_model(
             self.params.geoh5,
             self.params.new_grid,
-            xyz_ref,
+            xyz,
             h,
             self.params.depth_core,
             pads,
