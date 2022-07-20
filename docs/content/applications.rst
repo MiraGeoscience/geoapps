@@ -122,11 +122,11 @@ Need help? Contact us at support@mirageoscience.com
     :align: center
     :width: 0
 
-
-.. figure:: applications/images/base_thumbnail.png
+.. figure:: applications/images/block_model_thumbnail.png
     :align: center
     :width: 0
 
-.. figure:: applications/images/block_model_thumbnail.png
+
+.. figure:: applications/images/base_thumbnail.png
     :align: center
     :width: 0
