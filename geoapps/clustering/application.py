@@ -1437,7 +1437,9 @@ class Clustering(ScatterPlots):
             indices,
         )
         update_dict.update(
-            ClusteringDriver.update_dataframe(downsampling, channels, workspace)
+            ClusteringDriver.update_dataframe(
+                downsampling, channels, workspace, downsample_min=5000
+            )
         )
         update_dict.update(
             ClusteringDriver.run_clustering(
