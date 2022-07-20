@@ -25,6 +25,10 @@ from geoapps.block_model_creation.params import BlockModelParams
 
 
 class BlockModelCreation(BaseDashApplication):
+    """
+    Dash app used for the creation of a BlockModel.
+    """
+
     _param_class = BlockModelParams
 
     def __init__(self, ui_json=None, **kwargs):
@@ -75,30 +79,6 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Lateral extent",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Dropdown(
-                            id="xy_reference",
-                            value=getattr(self.params.xy_reference, "name", None),
-                            options=[
-                                {
-                                    "label": obj.parent.name + "/" + obj.name,
-                                    "value": obj.name,
-                                }
-                                for obj in self.params.geoh5.objects
-                            ],
-                            style={
-                                "width": "75%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
                             children="Name",
                             style={"width": "25%", "display": "inline-block"},
                         ),
@@ -123,7 +103,7 @@ class BlockModelCreation(BaseDashApplication):
                             id="cell_size_x",
                             value=self.params.cell_size_x,
                             type="number",
-                            min=0.0,
+                            min=1e-14,
                             style={
                                 "width": "50%",
                                 "display": "inline-block",
@@ -142,7 +122,7 @@ class BlockModelCreation(BaseDashApplication):
                             id="cell_size_y",
                             value=self.params.cell_size_y,
                             type="number",
-                            min=0.0,
+                            min=1e-14,
                             style={
                                 "width": "50%",
                                 "display": "inline-block",
@@ -161,7 +141,7 @@ class BlockModelCreation(BaseDashApplication):
                             id="cell_size_z",
                             value=self.params.cell_size_z,
                             type="number",
-                            min=0.0,
+                            min=1e-14,
                             style={
                                 "width": "50%",
                                 "display": "inline-block",
@@ -283,8 +263,6 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="new_grid", component_property="value"),
             Output(component_id="objects", component_property="value"),
             Output(component_id="objects", component_property="options"),
-            Output(component_id="xy_reference", component_property="value"),
-            Output(component_id="xy_reference", component_property="options"),
             Output(component_id="cell_size_x", component_property="value"),
             Output(component_id="cell_size_y", component_property="value"),
             Output(component_id="cell_size_z", component_property="value"),
@@ -299,7 +277,6 @@ class BlockModelCreation(BaseDashApplication):
             Input(component_id="upload", component_property="contents"),
             Input(component_id="new_grid", component_property="value"),
             Input(component_id="objects", component_property="value"),
-            Input(component_id="xy_reference", component_property="value"),
             Input(component_id="cell_size_x", component_property="value"),
             Input(component_id="cell_size_y", component_property="value"),
             Input(component_id="cell_size_z", component_property="value"),
@@ -322,7 +299,6 @@ class BlockModelCreation(BaseDashApplication):
         contents: str,
         new_grid: str,
         objects: ObjectBase,
-        xy_reference: ObjectBase,
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
@@ -334,8 +310,6 @@ class BlockModelCreation(BaseDashApplication):
         output_path: str,
     ) -> (
         str,
-        str,
-        dict,
         str,
         dict,
         float,
@@ -351,11 +325,11 @@ class BlockModelCreation(BaseDashApplication):
     ):
         """
         Update self.params and dash components from user input, including ones that depend indirectly.
+
         :param filename: Input file filename. Workspace or ui_json.
         :param contents: Input file contents. Workspace or ui_json.
         :param new_grid: Name for exported block model.
         :param objects: Input object.
-        :param xy_reference: Lateral extent object for 3D grid.
         :param cell_size_x: X cell size for the core mesh.
         :param cell_size_y: Y cell size for the core mesh.
         :param cell_size_z: Z cell size for the core mesh.
@@ -365,11 +339,10 @@ class BlockModelCreation(BaseDashApplication):
         :param expansion_fact: Expansion factor for padding cells.
         :param live_link: Checkbox for using monitoring directory.
         :param output_path: Output path for exporting block model.
+
         :return new_grid: Name for exported block model.
         :return objects_name: Name for input object.
         :return objects_options: Dropdown options for input object.
-        :return xy_reference_name: Name for lateral extent object.
-        :return xy_reference_options: Dropdown options for lateral extent object.
         :return cell_size_x: X cell size for the core mesh.
         :return cell_size_y: Y cell size for the core mesh.
         :return cell_size_z: Z cell size for the core mesh.
@@ -385,8 +358,6 @@ class BlockModelCreation(BaseDashApplication):
             "new_grid",
             "objects_name",
             "objects_options",
-            "xy_reference_name",
-            "xy_reference_options",
             "cell_size_x",
             "cell_size_y",
             "cell_size_z",
@@ -409,7 +380,9 @@ class BlockModelCreation(BaseDashApplication):
             float(expansion_fact),
         )
 
+        # Get the dash component that triggered the callback
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
         update_dict = {}
         if trigger == "upload":
             if (filename.endswith("ui.json") or filename.endswith(".geoh5")) and (
@@ -417,13 +390,12 @@ class BlockModelCreation(BaseDashApplication):
             ):
                 if filename.endswith(".ui.json"):
                     update_dict.update(self.update_from_ui_json(contents, param_list))
-                    ws = update_dict["geoh5"]
                 elif filename.endswith(".geoh5"):
                     content_type, content_string = contents.split(",")
                     decoded = io.BytesIO(base64.b64decode(content_string))
-                    ws = Workspace(decoded)
-                update_dict.update(self.update_object_options(ws, "objects"))
-                update_dict.update(self.update_object_options(ws, "xy_reference"))
+                    update_dict["geoh5"] = Workspace(decoded)
+                ws = update_dict["geoh5"]
+                update_dict.update(self.update_object_options(ws))
                 update_dict["filename"] = None
                 update_dict["contents"] = None
             else:
@@ -433,6 +405,7 @@ class BlockModelCreation(BaseDashApplication):
         elif trigger != "":
             update_dict[trigger] = locals()[trigger]
 
+        # Update self.params with the new parameter values.
         self.update_param_dict(update_dict)
         outputs = self.get_outputs(param_list, update_dict)
 
@@ -441,6 +414,7 @@ class BlockModelCreation(BaseDashApplication):
     def trigger_click(self, _) -> list:
         """
         When the export button is pressed, run block model driver to export block model.
+
         :return live_link: Checkbox for using monitoring directory.
         """
         # self.params should be up to date whenever create_block_model is called.
@@ -476,6 +450,7 @@ class BlockModelCreation(BaseDashApplication):
         )
         # Run driver.
         driver = BlockModelDriver(new_params)
+        print("Creating block model . . .")
         driver.run()
 
         if self.params.live_link:

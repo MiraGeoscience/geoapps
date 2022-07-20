@@ -37,11 +37,12 @@ class BaseDashApplication:
         )
 
     @staticmethod
-    def update_object_options(ws: Workspace, obj_var_name: str) -> dict:
+    def update_object_options(ws: Workspace) -> dict:
         """
         Get dropdown options for an input object.
+
         :param ws: Current workspace.
-        :param obj_var_name: Name of the variable to return in the output dict.
+
         :return update_dict: New dropdown options.
         """
         options = [
@@ -49,16 +50,16 @@ class BaseDashApplication:
             for obj in ws.objects
         ]
 
-        return {
-            obj_var_name + "_options": options,
-        }
+        return {"objects_options": options}
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
         """
         Get the list of updated parameters to return to the dash callback and update the dash components.
+
         :param param_list: Parameters that need to be returned to the callback.
         :param update_dict: Dictionary of changed parameters and their new values.
+
         :return outputs: Outputs to return to dash callback.
         """
         outputs = []
@@ -72,6 +73,7 @@ class BaseDashApplication:
     def update_param_dict(self, update_dict: dict):
         """
         Update self.params from update_dict.
+
         :param update_dict: Parameters that need to be updated and their new values.
         """
         # Get validations to know expected type for keys in self.params.
@@ -102,8 +104,10 @@ class BaseDashApplication:
     def update_from_ui_json(contents: str, param_list: list) -> dict:
         """
         Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
+
         :param contents: The contents of an uploaded ui_json file.
         :param param_list: List of parameters that need to be updated.
+
         :return update_dict: Dictionary of updated parameters.
         """
         # Get update_dict from ui_json.
