@@ -51,7 +51,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Input object",
+                            children="Object:",
                             style={
                                 "width": "25%",
                                 "display": "inline-block",
@@ -79,7 +79,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Name",
+                            children="Name:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -96,7 +96,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Minimum x cell size",
+                            children="Minimum x cell size:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -115,7 +115,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Minimum y cell size",
+                            children="Minimum y cell size:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -134,7 +134,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Minimum z cell size",
+                            children="Minimum z cell size:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -153,7 +153,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Core depth (m)",
+                            children="Core depth (m):",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -172,7 +172,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Horizontal padding",
+                            children="Horizontal padding:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -191,7 +191,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Bottom padding",
+                            children="Bottom padding:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -210,7 +210,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Expansion factor",
+                            children="Expansion factor:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
@@ -228,7 +228,7 @@ class BlockModelCreation(BaseDashApplication):
                 html.Div(
                     [
                         dcc.Markdown(
-                            children="Output path",
+                            children="Output path:",
                             style={"width": "25%", "display": "inline-block"},
                         ),
                         dcc.Input(
