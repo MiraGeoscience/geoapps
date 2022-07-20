@@ -30,7 +30,6 @@ class BlockModelParams(BaseParams):
         self._defaults = deepcopy(defaults)
         self._validations = validations
         self._objects = None
-        self._xy_reference = None
         self._cell_size_x = None
         self._cell_size_y = None
         self._cell_size_z = None
@@ -61,17 +60,6 @@ class BlockModelParams(BaseParams):
     @objects.setter
     def objects(self, val):
         self.setter_validator("objects", val, fun=self._uuid_promoter)
-
-    @property
-    def xy_reference(self) -> ObjectBase | None:
-        """
-        Lateral extent object for 3D grid.
-        """
-        return self._xy_reference
-
-    @xy_reference.setter
-    def xy_reference(self, val):
-        self.setter_validator("xy_reference", val, fun=self._uuid_promoter)
 
     @property
     def cell_size_x(self) -> float | None:
