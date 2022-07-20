@@ -89,13 +89,17 @@ class ClusteringDriver:
 
     @staticmethod
     def update_dataframe(
-        downsampling: int, channels: list, workspace: Workspace
+        downsampling: int,
+        channels: list,
+        workspace: Workspace,
+        downsample_min: int | None = None,
     ) -> dict:
         """
         Normalize the the selected data and perform the kmeans clustering.
         :param downsampling: Percent downsampling.
         :param channels: Data subset.
         :param workspace: Current workspace.
+        :param downsample_min: Minimum number of data to downsample to.
         :return update_dict: Values for dataframe, kmeans, mapping, indices.
         """
         kmeans = None
@@ -109,7 +113,7 @@ class ClusteringDriver:
             }
         else:
             indices, values = ClusteringDriver.get_indices(
-                channels, downsampling, workspace
+                channels, downsampling, workspace, downsample_min=downsample_min
             )
             n_values = values.shape[0]
 
@@ -143,13 +147,17 @@ class ClusteringDriver:
 
     @staticmethod
     def get_indices(
-        channels: list, downsampling: int, workspace: Workspace
+        channels: list,
+        downsampling: int,
+        workspace: Workspace,
+        downsample_min: int | None = None,
     ) -> (np.ndarray, np.ndarray):
         """
         Get indices of data to plot, from downsampling.
         :param channels: Data subset.
         :param downsampling: Percent downsampling.
         :param workspace: Current workspace.
+        :param downsample_min: Minimum number of data to downsample to.
         :return indices: Active indices for plotting data.
         :return values: Values for data in data subset.
         """
@@ -168,7 +176,9 @@ class ClusteringDriver:
 
         # Number of values that are not nan along all three axes
         size = np.sum(np.all(non_nan, axis=0))
-        n_values = np.min([int(percent * size), 5000])
+        n_values = int(percent * size)
+        if downsample_min is not None:
+            n_values = np.min([n_values, downsample_min])
 
         indices = random_sampling(
             values.T,
