@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import ast
 import base64
 import io
 import json
@@ -35,7 +36,7 @@ from geoapps.scatter_plot.params import ScatterPlotParams
 class ScatterPlots:
     _param_class = ScatterPlotParams
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json=None, clustering=False, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and os.path.exists(ui_json.path):
             self.params = self._param_class(ui_json)
@@ -44,7 +45,12 @@ class ScatterPlots:
 
         self.data_channels = {}
         # Initial values for the dash components
-        defaults = self.get_defaults()
+        self.defaults = self.get_defaults()
+        if clustering:
+            self.defaults["color_maps_options"] = px.colors.named_colorscales() + [
+                "kmeans"
+            ]
+            self.defaults["data_options"].append("kmeans")
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -55,504 +61,536 @@ class ScatterPlots:
         )
 
         # Set up the layout with the dash components
-        self.app.layout = html.Div(
+        self.workspace_layout = html.Div(
             [
+                dcc.Upload(
+                    id="upload",
+                    children=html.Button("Upload Workspace/ui.json"),
+                    style={"margin-bottom": "20px"},
+                ),
+                dcc.Markdown(children="Object: "),
+                dcc.Dropdown(
+                    id="objects",
+                    options=self.defaults["objects_options"],
+                    value=self.defaults["objects_name"],
+                    style={"margin-bottom": "20px"},
+                    clearable=False,
+                ),
                 html.Div(
                     [
-                        html.Div(
-                            [
-                                dcc.Upload(
-                                    id="upload",
-                                    children=html.Button("Upload Workspace/ui.json"),
-                                    style={"margin-bottom": "20px"},
-                                ),
-                                dcc.Markdown(children="Object: "),
-                                dcc.Dropdown(
-                                    id="objects",
-                                    options=defaults["objects_options"],
-                                    value=defaults["objects_name"],
-                                    style={"margin-bottom": "20px"},
-                                    clearable=False,
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Population Downsampling (%): ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Slider(
-                                            id="downsampling",
-                                            value=defaults["downsampling"],
-                                            min=1,
-                                            max=100,
-                                            step=1,
-                                            marks=None,
-                                            tooltip={
-                                                "placement": "bottom",
-                                                "always_visible": True,
-                                            },
-                                        ),
-                                    ],
-                                    style={"margin-bottom": "20px"},
-                                ),
-                                dcc.Markdown(children="Axis: "),
-                                dcc.Dropdown(
-                                    id="axes_pannels",
-                                    options=[
-                                        {"label": "X-axis", "value": "x"},
-                                        {"label": "Y-axis", "value": "y"},
-                                        {"label": "Z-axis", "value": "z"},
-                                        {"label": "Color", "value": "color"},
-                                        {"label": "Size", "value": "size"},
-                                    ],
-                                    value="x",
-                                    style={"margin-bottom": "20px"},
-                                    clearable=False,
-                                ),
-                            ],
+                        dcc.Markdown(
+                            children="Population Downsampling (%): ",
                             style={
-                                "width": "40%",
-                                "display": "block",
-                                "vertical-align": "top",
+                                "display": "inline-block",
+                                "margin-right": "5px",
                             },
                         ),
-                        html.Div(
-                            id="x_div",
-                            children=[
-                                dcc.Markdown(children="Data: "),
-                                dcc.Dropdown(
-                                    id="x",
-                                    options=defaults["data_options"],
-                                    value=defaults["x_name"],
-                                    style={"width": "63.3%", "margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Threshold: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="x_thresh",
-                                            type="number",
-                                            value=defaults["x_thresh"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Checklist(
-                                            id="x_log",
-                                            options=["Log10"],
-                                            value=defaults["x_log"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                    style={"margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Min: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="x_min",
-                                            type="number",
-                                            value=defaults["x_min"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Markdown(
-                                            children="Max: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="x_max",
-                                            type="number",
-                                            value=defaults["x_max"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                ),
-                            ],
-                            style={
-                                "display": "block",
-                                "width": "40%",
-                                "vertical-align": "top",
-                                "margin-bottom": "20px",
-                            },
-                        ),
-                        html.Div(
-                            id="y_div",
-                            children=[
-                                dcc.Markdown(children="Data: "),
-                                dcc.Dropdown(
-                                    id="y",
-                                    options=defaults["data_options"],
-                                    value=defaults["y_name"],
-                                    style={"width": "63.3%", "margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Threshold: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="y_thresh",
-                                            type="number",
-                                            value=defaults["y_thresh"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Checklist(
-                                            id="y_log",
-                                            options=["Log10"],
-                                            value=defaults["y_log"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                    style={"margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Min: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="y_min",
-                                            type="number",
-                                            value=defaults["y_min"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Markdown(
-                                            children="Max: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="y_max",
-                                            type="number",
-                                            value=defaults["y_max"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                ),
-                            ],
-                            style={
-                                "display": "none",
-                                "width": "40%",
-                                "vertical-align": "top",
-                                "margin-bottom": "20px",
-                            },
-                        ),
-                        html.Div(
-                            id="z_div",
-                            children=[
-                                dcc.Markdown(children="Data: "),
-                                dcc.Dropdown(
-                                    id="z",
-                                    options=defaults["data_options"],
-                                    value=defaults["z_name"],
-                                    style={"width": "63.3%", "margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Threshold: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="z_thresh",
-                                            type="number",
-                                            value=defaults["z_thresh"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Checklist(
-                                            id="z_log",
-                                            options=["Log10"],
-                                            value=defaults["z_log"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                    style={"margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Min: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="z_min",
-                                            type="number",
-                                            value=defaults["z_min"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Markdown(
-                                            children="Max: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="z_max",
-                                            type="number",
-                                            value=defaults["z_max"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                ),
-                            ],
-                            style={
-                                "display": "none",
-                                "width": "40%",
-                                "vertical-align": "top",
-                                "margin-bottom": "20px",
-                            },
-                        ),
-                        html.Div(
-                            id="color_div",
-                            children=[
-                                dcc.Markdown(children="Data: "),
-                                dcc.Dropdown(
-                                    id="color",
-                                    options=defaults["data_options"],
-                                    value=defaults["color_name"],
-                                    style={"width": "63.3%", "margin-bottom": "20px"},
-                                ),
-                                dcc.Dropdown(
-                                    id="color_maps",
-                                    options=px.colors.named_colorscales(),
-                                    value=defaults["color_maps"],
-                                    style={"width": "63.3%", "margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Threshold: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="color_thresh",
-                                            type="number",
-                                            value=defaults["color_thresh"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Checklist(
-                                            id="color_log",
-                                            options=["Log10"],
-                                            value=defaults["color_log"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                    style={"margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Min: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="color_min",
-                                            type="number",
-                                            value=defaults["color_min"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Markdown(
-                                            children="Max: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="color_max",
-                                            type="number",
-                                            value=defaults["color_max"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                ),
-                            ],
-                            style={
-                                "display": "none",
-                                "width": "40%",
-                                "vertical-align": "top",
-                                "margin-bottom": "20px",
-                            },
-                        ),
-                        html.Div(
-                            id="size_div",
-                            children=[
-                                dcc.Markdown(children="Data: "),
-                                dcc.Dropdown(
-                                    id="size",
-                                    options=defaults["data_options"],
-                                    value=defaults["size_name"],
-                                    style={"width": "63.3%", "margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Marker Size: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Slider(
-                                            id="size_markers",
-                                            value=defaults["size_markers"],
-                                            min=1,
-                                            max=100,
-                                            step=1,
-                                            marks=None,
-                                            tooltip={
-                                                "placement": "bottom",
-                                                "always_visible": True,
-                                            },
-                                        ),
-                                    ],
-                                    style={"width": "40%", "margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Threshold: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="size_thresh",
-                                            type="number",
-                                            value=defaults["size_thresh"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Checklist(
-                                            id="size_log",
-                                            options=["Log10"],
-                                            value=defaults["size_log"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                    style={"margin-bottom": "20px"},
-                                ),
-                                html.Div(
-                                    [
-                                        dcc.Markdown(
-                                            children="Min: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="size_min",
-                                            type="number",
-                                            value=defaults["size_min"],
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "20px",
-                                            },
-                                        ),
-                                        dcc.Markdown(
-                                            children="Max: ",
-                                            style={
-                                                "display": "inline-block",
-                                                "margin-right": "5px",
-                                            },
-                                        ),
-                                        dcc.Input(
-                                            id="size_max",
-                                            type="number",
-                                            value=defaults["size_max"],
-                                            style={"display": "inline-block"},
-                                        ),
-                                    ],
-                                ),
-                            ],
-                            style={
-                                "display": "none",
-                                "width": "40%",
-                                "vertical-align": "top",
-                                "margin-bottom": "20px",
+                        dcc.Slider(
+                            id="downsampling",
+                            value=self.defaults["downsampling"],
+                            min=1,
+                            max=100,
+                            step=1,
+                            marks=None,
+                            tooltip={
+                                "placement": "bottom",
+                                "always_visible": True,
                             },
                         ),
                     ],
+                    style={"margin-bottom": "20px"},
+                ),
+            ]
+        )
+        self.axis_layout = html.Div(
+            [
+                html.Div(
+                    [
+                        dcc.Markdown(children="Axis: "),
+                        dcc.Dropdown(
+                            id="axes_pannels",
+                            options=[
+                                {"label": "X-axis", "value": "x"},
+                                {"label": "Y-axis", "value": "y"},
+                                {"label": "Z-axis", "value": "z"},
+                                {"label": "Color", "value": "color"},
+                                {"label": "Size", "value": "size"},
+                            ],
+                            value="x",
+                            style={"margin-bottom": "20px"},
+                            clearable=False,
+                        ),
+                    ],
                     style={
-                        "width": "55%",
+                        # "width": "40%",
+                        "display": "block",
+                        "vertical-align": "top",
+                    },
+                ),
+                html.Div(
+                    id="x_div",
+                    children=[
+                        dcc.Markdown(children="Data: "),
+                        dcc.Dropdown(
+                            id="x",
+                            options=self.defaults["data_options"],
+                            value=self.defaults["x_name"],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Threshold: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="x_thresh",
+                                    type="number",
+                                    value=self.defaults["x_thresh"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                                dcc.Checklist(
+                                    id="x_log",
+                                    options=["Log10"],
+                                    value=self.defaults["x_log"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Min: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="x_min",
+                                    type="number",
+                                    value=self.defaults["x_min"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Max: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="x_max",
+                                    type="number",
+                                    value=self.defaults["x_max"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                        ),
+                    ],
+                    style={
+                        "display": "block",
+                        "width": "40%",
+                        "vertical-align": "top",
+                        "margin-bottom": "20px",
+                    },
+                ),
+                html.Div(
+                    id="y_div",
+                    children=[
+                        dcc.Markdown(children="Data: "),
+                        dcc.Dropdown(
+                            id="y",
+                            options=self.defaults["data_options"],
+                            value=self.defaults["y_name"],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Threshold: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="y_thresh",
+                                    type="number",
+                                    value=self.defaults["y_thresh"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                                dcc.Checklist(
+                                    id="y_log",
+                                    options=["Log10"],
+                                    value=self.defaults["y_log"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Min: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="y_min",
+                                    type="number",
+                                    value=self.defaults["y_min"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Max: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="y_max",
+                                    type="number",
+                                    value=self.defaults["y_max"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                        ),
+                    ],
+                    style={
+                        "display": "none",
+                        "width": "40%",
+                        "vertical-align": "top",
+                        "margin-bottom": "20px",
+                    },
+                ),
+                html.Div(
+                    id="z_div",
+                    children=[
+                        dcc.Markdown(children="Data: "),
+                        dcc.Dropdown(
+                            id="z",
+                            options=self.defaults["data_options"],
+                            value=self.defaults["z_name"],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Threshold: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="z_thresh",
+                                    type="number",
+                                    value=self.defaults["z_thresh"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                                dcc.Checklist(
+                                    id="z_log",
+                                    options=["Log10"],
+                                    value=self.defaults["z_log"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Min: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="z_min",
+                                    type="number",
+                                    value=self.defaults["z_min"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Max: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="z_max",
+                                    type="number",
+                                    value=self.defaults["z_max"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                        ),
+                    ],
+                    style={
+                        "display": "none",
+                        "width": "40%",
+                        "vertical-align": "top",
+                        "margin-bottom": "20px",
+                    },
+                ),
+                html.Div(
+                    id="color_div",
+                    children=[
+                        dcc.Markdown(children="Data: "),
+                        dcc.Dropdown(
+                            id="color",
+                            options=self.defaults["data_options"],
+                            value=self.defaults["color_name"],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        dcc.Dropdown(
+                            id="color_maps",
+                            options=self.defaults["color_maps_options"],
+                            value=self.defaults["color_maps"],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Threshold: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="color_thresh",
+                                    type="number",
+                                    value=self.defaults["color_thresh"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                                dcc.Checklist(
+                                    id="color_log",
+                                    options=["Log10"],
+                                    value=self.defaults["color_log"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Min: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="color_min",
+                                    type="number",
+                                    value=self.defaults["color_min"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Max: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="color_max",
+                                    type="number",
+                                    value=self.defaults["color_max"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                        ),
+                    ],
+                    style={
+                        "display": "none",
+                        "width": "40%",
+                        "vertical-align": "top",
+                        "margin-bottom": "20px",
+                    },
+                ),
+                html.Div(
+                    id="size_div",
+                    children=[
+                        dcc.Markdown(children="Data: "),
+                        dcc.Dropdown(
+                            id="size",
+                            options=self.defaults["data_options"],
+                            value=self.defaults["size_name"],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Marker Size: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Slider(
+                                    id="size_markers",
+                                    value=self.defaults["size_markers"],
+                                    min=1,
+                                    max=100,
+                                    step=1,
+                                    marks=None,
+                                    tooltip={
+                                        "placement": "bottom",
+                                        "always_visible": True,
+                                    },
+                                ),
+                            ],
+                            style={"width": "80%", "margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Threshold: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="size_thresh",
+                                    type="number",
+                                    value=self.defaults["size_thresh"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                                dcc.Checklist(
+                                    id="size_log",
+                                    options=["Log10"],
+                                    value=self.defaults["size_log"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Min: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="size_min",
+                                    type="number",
+                                    value=self.defaults["size_min"],
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "20px",
+                                    },
+                                ),
+                            ],
+                            style={"margin-bottom": "20px"},
+                        ),
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    children="Max: ",
+                                    style={
+                                        "display": "inline-block",
+                                        "margin-right": "5px",
+                                    },
+                                ),
+                                dcc.Input(
+                                    id="size_max",
+                                    type="number",
+                                    value=self.defaults["size_max"],
+                                    style={"display": "inline-block"},
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+        self.plot_layout = html.Div(
+            [
+                dcc.Graph(
+                    id="crossplot",
+                    style={"margin-bottom": "20px"},
+                ),
+            ]
+        )
+        self.app.layout = html.Div(
+            [
+                html.Div(
+                    [self.workspace_layout, self.axis_layout],
+                    style={
+                        "width": "40%",
                         "display": "inline-block",
                         "margin-bottom": "20px",
                         "vertical-align": "bottom",
+                        "margin-right": "20px",
                     },
                 ),
                 html.Div(
                     [
-                        dcc.Graph(
-                            id="plot",
-                            style={"margin-bottom": "20px"},
-                        ),
+                        self.plot_layout,
                         html.A(
                             html.Button("Download as HTML"),
                             id="download",
@@ -561,7 +599,7 @@ class ScatterPlots:
                         ),
                     ],
                     style={
-                        "width": "45%",
+                        "width": "55%",
                         "display": "inline-block",
                         "margin-bottom": "20px",
                         "vertical-align": "bottom",
@@ -581,7 +619,7 @@ class ScatterPlots:
             Input(component_id="axes_pannels", component_property="value"),
         )(self.update_visibility)
         self.app.callback(
-            Output(component_id="plot", component_property="figure"),
+            Output(component_id="crossplot", component_property="figure"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
@@ -661,7 +699,7 @@ class ScatterPlots:
         )(self.update_params)
         self.app.callback(
             Output(component_id="download", component_property="href"),
-            Input(component_id="plot", component_property="figure"),
+            Input(component_id="crossplot", component_property="figure"),
         )(self.save_figure)
 
     def update_visibility(self, axis):
@@ -742,6 +780,15 @@ class ScatterPlots:
                         {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                         for obj in value.objects
                     ]
+        defaults["color_maps_options"] = px.colors.named_colorscales()
+
+        if "plot_kmeans" in self.params.to_dict().keys():
+            plot_kmeans = ast.literal_eval(self.params.plot_kmeans)
+            defaults["plot_kmeans"] = plot_kmeans
+            axis_list = ["x", "y", "z", "color", "size"]
+            for i in range(len(plot_kmeans)):
+                if plot_kmeans[i]:
+                    defaults[axis_list[i] + "_name"] = "kmeans"
 
         return defaults
 
@@ -775,6 +822,7 @@ class ScatterPlots:
         size_min,
         size_max,
         size_markers,
+        clustering=False,
     ):
         new_params_dict = {}
         for key, value in self.params.to_dict().items():
@@ -795,7 +843,7 @@ class ScatterPlots:
                 | (key == "z")
                 | (key == "color")
                 | (key == "size")
-            ):
+            ) & (clustering is False):
                 if (param != "None") & (param in self.data_channels.keys()):
                     new_params_dict[key] = self.data_channels[param]
                 else:
@@ -848,6 +896,8 @@ class ScatterPlots:
                         setattr(self.params, key, value["value"])
                     else:
                         setattr(self.params, key, None)
+                elif key == "channels":
+                    setattr(self.params, key, value.replace("'", "").split(", "))
                 else:
                     setattr(self.params, key, value)
 
@@ -924,12 +974,12 @@ class ScatterPlots:
         """
         self.get_channel(channel)
 
-        cmin, cmax = 0, 0
+        cmin, cmax = None, None
         if (channel in self.data_channels.keys()) & (channel != "None"):
             values = self.data_channels[channel].values
             values = values[~np.isnan(values)]
-            cmin = f"{np.min(values):.2e}"
-            cmax = f"{np.max(values):.2e}"
+            cmin = float(f"{np.min(values):.2e}")
+            cmax = float(f"{np.max(values):.2e}")
 
         return cmin, cmax
 

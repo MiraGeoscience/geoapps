@@ -68,8 +68,9 @@ class IsoSurfacesDriver:
             self.params.monitoring_directory
         ):
             monitored_directory_copy(self.params.monitoring_directory, container)
-        print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
+
         workspace.close()
+
         return result
 
     @staticmethod
