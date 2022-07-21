@@ -7,6 +7,7 @@
 import ast
 import base64
 import json
+import os
 import uuid
 import webbrowser
 from os import environ
@@ -139,6 +140,11 @@ class BaseDashApplication:
                     update_dict[key + "_name"] = ws.get_entity(
                         uuid.UUID(value["value"])
                     )[0].name
+
+        if "geoh5" in update_dict and update_dict["geoh5"] is not None:
+            update_dict["output_path"] = os.path.abspath(
+                os.path.dirname(update_dict["geoh5"].h5file)
+            )
 
         return update_dict
 
