@@ -415,22 +415,26 @@ class BlockModelCreation(BaseDashApplication):
 
         :return live_link: Checkbox for using monitoring directory.
         """
-        # self.params should be up to date whenever create_block_model is called.
-        param_dict = self.params.to_dict()
         temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
 
         # Get output path.
-        if self.params.output_path is not None and os.path.exists(
-            os.path.abspath(self.params.output_path)
+        if (
+            (self.params.output_path is not None)
+            and (self.params.output_path != "")
+            and (os.path.exists(os.path.abspath(self.params.output_path)))
         ):
-            output_path = os.path.abspath(self.params.output_path)
+            self.params.output_path = os.path.abspath(self.params.output_path)
         else:
-            output_path = os.path.dirname(self.params.geoh5.h5file)
+            self.params.output_path = os.path.abspath(
+                os.path.dirname(self.params.geoh5.h5file)
+            )
 
         # Get output workspace.
         ws, self.params.live_link = BaseApplication.get_output_workspace(
-            self.params.live_link, output_path, temp_geoh5
+            self.params.live_link, self.params.output_path, temp_geoh5
         )
+
+        param_dict = self.params.to_dict()
 
         with ws as workspace:
             # Put entities in output workspace.
@@ -443,7 +447,7 @@ class BlockModelCreation(BaseDashApplication):
         new_params = BlockModelParams(**param_dict)
         new_params.write_input_file(
             name=temp_geoh5.replace(".geoh5", ".ui.json"),
-            path=output_path,
+            path=self.params.output_path,
             validate=False,
         )
         # Run driver.
@@ -455,5 +459,5 @@ class BlockModelCreation(BaseDashApplication):
             print("Live link active. Check your ANALYST session for new mesh.")
             return ["Geoscience ANALYST Pro - Live link"]
         else:
-            print("Saved to " + os.path.abspath(output_path))
+            print("Saved to " + self.params.output_path)
             return []
