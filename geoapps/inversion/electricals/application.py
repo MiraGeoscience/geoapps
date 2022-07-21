@@ -96,7 +96,6 @@ class InversionApp(PlotSelection2D):
     _object_types = (PotentialElectrode,)
     _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
-    defaults = {}
 
     def __init__(self, ui_json=None, **kwargs):
         if "plot_result" in kwargs:

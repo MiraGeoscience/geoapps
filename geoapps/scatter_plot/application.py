@@ -40,7 +40,7 @@ class ScatterPlots(ObjectDataSelection):
     Application for 2D and 3D crossplots of data using symlog scaling
     """
 
-    defaults = {
+    _defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": [

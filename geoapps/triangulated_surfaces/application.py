@@ -45,7 +45,7 @@ class Surface2D(ObjectDataSelection):
     _object_types = (Curve,)
 
     def __init__(self, **kwargs):
-        self.defaults = app_initializer.copy()
+        self._defaults = app_initializer.copy()
         self.defaults.update(**kwargs)
         self._z_option = RadioButtons(
             options=["elevation", "depth"],
@@ -64,8 +64,6 @@ class Surface2D(ObjectDataSelection):
         self._export_as = Text("CDI_", description="Surface:")
         self._convert = ToggleButton(description="Convert >>", button_style="success")
 
-        super().__init__(**self.defaults)
-
         self._lines = ObjectDataSelection(
             add_groups=False,
             workspace=self.workspace,
@@ -83,6 +81,8 @@ class Surface2D(ObjectDataSelection):
             objects=self.objects,
             **self.defaults["elevations"],
         )
+
+        super().__init__(**self.defaults)
 
         self.ga_group_name.value = "CDI"
         self.lines.data.description = "Line field:"

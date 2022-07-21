@@ -40,7 +40,7 @@ class Export(ObjectDataSelection):
     shapefiles: *.shp
     """
 
-    defaults = {
+    _defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": [

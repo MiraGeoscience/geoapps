@@ -31,7 +31,7 @@ class ContourValues(PlotSelection2D):
     Application for 2D contouring of spatial data.
     """
 
-    defaults = {
+    _defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",

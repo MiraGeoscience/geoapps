@@ -51,7 +51,7 @@ class Clustering(ScatterPlots):
     # TODO: reorganize attributes of clustering app to reduce number of public
     # instance attributes, make clear what is allowed through kwargs
 
-    defaults = {
+    _defaults = {
         "h5file": r"../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": [
