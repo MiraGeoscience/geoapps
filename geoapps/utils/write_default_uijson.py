@@ -16,13 +16,13 @@ from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
-from geoapps.inversion.potential_fields import (
-    GravityParams,
-    MagneticScalarParams,
-    MagneticVectorParams,
-)
+from geoapps.inversion.electricals import (DirectCurrentParams,
+                                           InducedPolarizationParams)
+from geoapps.inversion.natural_sources import (MagnetotelluricsParams,
+                                               TipperParams)
+from geoapps.inversion.potential_fields import (GravityParams,
+                                                MagneticScalarParams,
+                                                MagneticVectorParams)
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
@@ -35,43 +35,44 @@ path_to_flinflon = lambda file: "\\".join(
 
 def write_default_uijson(path, use_initializers=False):
 
-    from geoapps.inversion.potential_fields.gravity.constants import app_initializer
+    from geoapps.inversion.potential_fields.gravity.constants import \
+        app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     grav_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
-        app_initializer,
-    )
+    from geoapps.inversion.potential_fields.magnetic_vector.constants import \
+        app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mag_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
-        app_initializer,
-    )
+    from geoapps.inversion.potential_fields.magnetic_vector.constants import \
+        app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mvi_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.electricals.direct_current.constants import app_initializer
+    from geoapps.inversion.electricals.direct_current.constants import \
+        app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.electricals.direct_current.constants import app_initializer
+    from geoapps.inversion.electricals.direct_current.constants import \
+        app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.natural_sources.magnetotellurics.constants import (
-        app_initializer,
-    )
+    from geoapps.inversion.natural_sources.magnetotellurics.constants import \
+        app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
     mt_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.natural_sources.tipper.constants import app_initializer
+    from geoapps.inversion.natural_sources.tipper.constants import \
+        app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
     tipper_init = app_initializer if use_initializers else {}
@@ -166,7 +167,8 @@ def write_default_uijson(path, use_initializers=False):
     for filename, params in filedict.items():
         params.write_input_file(name=filename, path=path, validate=False)
 
-    from geoapps.inversion.constants import default_octree_ui_json, octree_defaults
+    from geoapps.inversion.constants import (default_octree_ui_json,
+                                             octree_defaults)
 
     ifile = InputFile(
         ui_json=default_octree_ui_json,

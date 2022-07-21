@@ -46,7 +46,8 @@ class ReceiversFactory(SimPEGFactory):
             return receivers.Dipole
 
         elif self.factory_type == "induced polarization":
-            from SimPEG.electromagnetics.static.induced_polarization import receivers
+            from SimPEG.electromagnetics.static.induced_polarization import \
+                receivers
 
             return receivers.Dipole
 
@@ -135,11 +136,11 @@ class ReceiversFactory(SimPEGFactory):
 
         if np.all(locations_m == locations_n):
             if self.factory_type == "direct current":
-                from SimPEG.electromagnetics.static.resistivity import receivers
+                from SimPEG.electromagnetics.static.resistivity import \
+                    receivers
             else:
-                from SimPEG.electromagnetics.static.induced_polarization import (
-                    receivers,
-                )
+                from SimPEG.electromagnetics.static.induced_polarization import \
+                    receivers
             self.simpeg_object = receivers.Pole
         else:
             args.append(locations_n)

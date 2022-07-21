@@ -23,7 +23,8 @@ from geoapps.shared_utils.utils import get_locations, weighted_average
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
-    from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
+    from ipywidgets import (Dropdown, FloatText, HBox, Label, RadioButtons,
+                            Text, VBox)
 
 
 class DataInterpolation(ObjectDataSelection):

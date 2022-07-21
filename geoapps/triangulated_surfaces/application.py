@@ -24,15 +24,8 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
 with warn_module_not_found():
-    from ipywidgets import (
-        FloatText,
-        HBox,
-        Label,
-        RadioButtons,
-        Text,
-        ToggleButton,
-        VBox,
-    )
+    from ipywidgets import (FloatText, HBox, Label, RadioButtons, Text,
+                            ToggleButton, VBox)
 
 
 class Surface2D(ObjectDataSelection):

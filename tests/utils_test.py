@@ -23,16 +23,10 @@ from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.shared_utils.utils import (
-    downsample_grid,
-    downsample_xy,
-    filter_xy,
-    get_locations,
-    octree_2_treemesh,
-    rotate_xyz,
-    weighted_average,
-    window_xy,
-)
+from geoapps.shared_utils.utils import (downsample_grid, downsample_xy,
+                                        filter_xy, get_locations,
+                                        octree_2_treemesh, rotate_xyz,
+                                        weighted_average, window_xy)
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.models import RectangularBlock
@@ -249,7 +243,8 @@ def test_warn_module_not_found():
 
     with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
-            from nonexisting.nope import nada as test_import_from_nonexisting_submodule
+            from nonexisting.nope import \
+                nada as test_import_from_nonexisting_submodule
     with pytest.raises(NameError):
         noop(test_import_from_nonexisting_submodule)
 

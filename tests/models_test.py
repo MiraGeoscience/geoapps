@@ -13,14 +13,10 @@ from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion import default_ui_json
-from geoapps.inversion.components import (
-    InversionData,
-    InversionMesh,
-    InversionModel,
-    InversionModelCollection,
-    InversionTopography,
-    InversionWindow,
-)
+from geoapps.inversion.components import (InversionData, InversionMesh,
+                                          InversionModel,
+                                          InversionModelCollection,
+                                          InversionTopography, InversionWindow)
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.testing import Geoh5Tester
