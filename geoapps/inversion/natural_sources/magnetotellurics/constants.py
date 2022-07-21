@@ -9,8 +9,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from geoh5py.objects.surveys.electromagnetics.magnetotellurics import \
-    MTReceivers
+from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
