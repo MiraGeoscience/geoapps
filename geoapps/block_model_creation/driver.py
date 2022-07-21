@@ -31,7 +31,7 @@ class BlockModelDriver:
         self.params: BlockModelParams = params
 
     @staticmethod
-    def truncate_locs_depths(locs: np.ndarray, depth_core: int) -> np.ndarray:
+    def truncate_locs_depths(locs: np.ndarray, depth_core: float) -> np.ndarray:
         """
         Sets locations below core to core bottom.
 
@@ -50,7 +50,7 @@ class BlockModelDriver:
 
     @staticmethod
     def minimum_depth_core(
-        locs: np.ndarray, depth_core: int, core_z_cell_size: int
+        locs: np.ndarray, depth_core: float, core_z_cell_size: int
     ) -> float:
         """
         Get minimum depth core.
@@ -91,7 +91,7 @@ class BlockModelDriver:
         name: str,
         locs: np.ndarray,
         h: list,
-        depth_core: int,
+        depth_core: float,
         pads: list,
         expansion_factor: float,
     ) -> BlockModel:

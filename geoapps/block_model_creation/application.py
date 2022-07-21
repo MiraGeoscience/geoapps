@@ -369,16 +369,14 @@ class BlockModelCreation(BaseDashApplication):
             "filename",
             "contents",
         ]
-        cell_size_x, cell_size_y, cell_size_z = (
-            float(cell_size_x),
-            float(cell_size_y),
-            float(cell_size_z),
-        )
-        horizontal_padding, bottom_padding, expansion_fact = (
-            float(horizontal_padding),
-            float(bottom_padding),
-            float(expansion_fact),
-        )
+        # Dash converts .0 numbers to int. Making sure typing is correct for floats:
+        cell_size_x = float(cell_size_x)
+        cell_size_y = float(cell_size_y)
+        cell_size_z = float(cell_size_z)
+        horizontal_padding = float(horizontal_padding)
+        bottom_padding = float(bottom_padding)
+        expansion_fact = float(expansion_fact)
+        depth_core = float(depth_core)
 
         # Get the dash component that triggered the callback
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
