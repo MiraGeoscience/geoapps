@@ -111,7 +111,6 @@ class SensorOptions(ObjectDataSelection):
     Define the receiver spatial parameters
     """
 
-    defaults = {}
     _options = None
 
     def __init__(self, **kwargs):
@@ -391,8 +390,6 @@ class InversionOptions(BaseApplication):
     """
     Collection of widgets controlling the inversion parameters
     """
-
-    defaults = {}
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
@@ -698,7 +695,7 @@ def inversion_defaults():
 
 
 class InversionApp(PlotSelection2D):
-    defaults = {
+    _defaults = {
         "h5file": "../../../assets/FlinFlon.geoh5",
         "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
         "data": ["{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"],

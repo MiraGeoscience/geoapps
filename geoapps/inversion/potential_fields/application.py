@@ -94,7 +94,6 @@ class InversionApp(PlotSelection2D):
     _sensor = None
     _topography = None
     inversion_parameters = None
-    defaults = {}
 
     def __init__(self, ui_json=None, **kwargs):
         if "plot_result" in kwargs:
@@ -1547,8 +1546,6 @@ class ModelOptions(ObjectDataSelection):
     """
     Widgets for the selection of model options
     """
-
-    defaults = {}
 
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"

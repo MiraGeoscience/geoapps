@@ -38,7 +38,7 @@ with warn_module_not_found():
 class CoordinateTransformation(ObjectDataSelection):
     """"""
 
-    defaults = {
+    _defaults = {
         "ga_group_name": "CoordinateTransformation",
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": [

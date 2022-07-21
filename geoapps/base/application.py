@@ -58,10 +58,10 @@ class BaseApplication:
     _figure = None
     _refresh = None
     _params: BaseParams | None = None
+    _defaults: dict | None = None
     plot_result = False
 
     def __init__(self, **kwargs):
-        self.defaults = {}
         self.defaults.update(**kwargs)
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
@@ -146,6 +146,16 @@ class BaseApplication:
                         setattr(self, key, value)
                 except (AttributeError, TypeError, TraitError, AssertionError):
                     pass
+
+    @property
+    def defaults(self):
+        """
+        Dictionary of default values.
+        """
+        if self._defaults is None:
+            self._defaults = {}
+
+        return self._defaults
 
     def file_browser_change(self, _):
         """

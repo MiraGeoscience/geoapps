@@ -363,12 +363,13 @@ class LineOptions(ObjectDataSelection):
     Unique lines selection from selected data channel
     """
 
-    defaults = {"find_label": "line"}
-    _multiple_lines = None
-    _add_xyz = False
+    _defaults = {"find_label": "line"}
 
     def __init__(self, **kwargs):
 
+        self._multiple_lines = None
+        self._add_xyz = False
+        self._lines = None
         self.defaults.update(**kwargs)
 
         super().__init__(**self.defaults)
@@ -431,8 +432,6 @@ class TopographyOptions(ObjectDataSelection):
     """
     Define the topography used by the inversion
     """
-
-    defaults = {}
 
     def __init__(
         self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs

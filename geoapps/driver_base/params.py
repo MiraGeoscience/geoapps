@@ -38,10 +38,9 @@ class BaseParams:
     _default_ui_json = None
     _free_parameter_keys: list[str] | None = None
     _free_parameter_identifier: str | None = None
-    _input_file: InputFile = None
+    _input_file: InputFile | None = None
     _monitoring_directory = None
     _ui_json = None
-    _input_file = None
     _validations = None
     _validator: InputValidation = None
     validate = True
@@ -50,7 +49,7 @@ class BaseParams:
         self,
         input_file=None,
         validate=True,
-        validation_options={},
+        validation_options: dict | None = None,
         workpath=None,
         **kwargs,
     ):
@@ -64,7 +63,11 @@ class BaseParams:
         self.workpath = workpath
         self.input_file = input_file
         self.validate = validate
-        self.validation_options = validation_options
+
+        self.validation_options = {}
+        if isinstance(validation_options, dict):
+            self.validation_options = validation_options
+
         self._title = None
 
         self._initialize(**kwargs)
@@ -113,7 +116,9 @@ class BaseParams:
                 setattr(self, "geoh5", params_dict["geoh5"])
                 self.input_file.workspace = params_dict["geoh5"]
 
-        params_dict = self.input_file._promote(params_dict)
+        params_dict = self.input_file._promote(
+            params_dict
+        )  # pylint: disable=protected-access
         for key, value in params_dict.items():
             if key not in self.ui_json or key == "geoh5":
                 continue  # ignores keys not in default_ui_json
@@ -216,7 +221,7 @@ class BaseParams:
     def validations(self, validations: dict[str, Any]):
         assert isinstance(
             validations, dict
-        ), f"Input value must be a dictionary of validations."
+        ), "Input value must be a dictionary of validations."
         self._validations = validations
 
     @property
@@ -351,7 +356,6 @@ class BaseParams:
 
     def write_input_file(
         self,
-        ui_json: dict = None,
         name: str = None,
         path: str = None,
         validate: bool = True,

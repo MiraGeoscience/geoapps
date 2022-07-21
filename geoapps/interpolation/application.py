@@ -30,7 +30,7 @@ class DataInterpolation(ObjectDataSelection):
     Transfer data from one object to another, or onto a 3D BlockModel
     """
 
-    defaults = {
+    _defaults = {
         "h5file": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": ["{f3e36334-be0a-4210-b13e-06933279de25}"],
