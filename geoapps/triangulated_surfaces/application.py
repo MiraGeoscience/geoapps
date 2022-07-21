@@ -64,6 +64,8 @@ class Surface2D(ObjectDataSelection):
         self._export_as = Text("CDI_", description="Surface:")
         self._convert = ToggleButton(description="Convert >>", button_style="success")
 
+        super().__init__(**self.defaults)
+
         self._lines = ObjectDataSelection(
             add_groups=False,
             workspace=self.workspace,
@@ -82,8 +84,6 @@ class Surface2D(ObjectDataSelection):
             **self.defaults["elevations"],
         )
 
-        super().__init__(**self.defaults)
-
         self.ga_group_name.value = "CDI"
         self.lines.data.description = "Line field:"
         self.elevations.data.description = "Elevations:"
@@ -93,6 +93,7 @@ class Surface2D(ObjectDataSelection):
         self.z_option.observe(self.z_options_change, names="value")
         self.depth_panel = HBox([self.z_option, self.elevations.data])
         self.trigger.on_click(self.trigger_click)
+        self.models = []
 
     def trigger_click(self, _):
         obj, data_list = self.get_selected_entities()
@@ -320,7 +321,7 @@ class Surface2D(ObjectDataSelection):
             out_entity = ContainerGroup.create(workspace, name=self.ga_group_name.value)
 
             if len(model_cells) > 0:
-                self.surface = Surface.create(
+                surface = Surface.create(
                     workspace,
                     name=string_name(self.export_as.value),
                     vertices=np.vstack(model_vertices),
@@ -334,7 +335,7 @@ class Surface2D(ObjectDataSelection):
                 return
 
             if self.type.value == "Sections":
-                self.surface.add_data(
+                surface.add_data(
                     {
                         "Line": {"values": np.hstack(line_ids)},
                     }
@@ -342,14 +343,14 @@ class Surface2D(ObjectDataSelection):
 
                 if len(self.models) > 0:
                     for uid, model in zip(self.data.value, self.models):
-                        self.surface.add_data(
+                        surface.add_data(
                             {
                                 self.data.uid_name_map[uid]: {"values": model},
                             }
                         )
             else:
                 for data_obj, model in zip(data_list, self.models):
-                    self.surface.add_data(
+                    surface.add_data(
                         {
                             data_obj.name: {"values": model},
                         }
