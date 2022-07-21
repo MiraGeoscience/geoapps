@@ -7,7 +7,12 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.interpolation.application import DataInterpolation
+from geoapps.utils.models import (
+    find_top_padding,
+    get_block_model,
+    minimum_depth_core,
+    truncate_locs_depths,
+)
 
 
 def test_truncate_locs_depths():
@@ -25,10 +30,10 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = DataInterpolation.truncate_locs_depths(locs, depth_core)
+    locs = truncate_locs_depths(locs, depth_core)
     assert locs[:, 2].min() == (locs[:, 2].max() - depth_core)
 
-    depth_core = DataInterpolation.minimum_depth_core(locs, depth_core, z)
+    depth_core = minimum_depth_core(locs, depth_core, z)
     assert depth_core == z
 
     # If z range of locs are the same as the depth_core then locations are unaffected
@@ -44,10 +49,10 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = DataInterpolation.truncate_locs_depths(locs, depth_core)
+    locs = truncate_locs_depths(locs, depth_core)
     assert locs[:, 2].min() == (locs[:, 2].max() - depth_core)
 
-    depth_core = DataInterpolation.minimum_depth_core(locs, depth_core, z)
+    depth_core = minimum_depth_core(locs, depth_core, z)
     assert depth_core == z
 
     # If z range of locs are less than the the depth core then the depth_core is
@@ -63,10 +68,10 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = DataInterpolation.truncate_locs_depths(locs, depth_core)
+    locs = truncate_locs_depths(locs, depth_core)
     zrange = locs[:, 2].max() - locs[:, 2].min()
     assert zrange == top
-    depth_core_new = DataInterpolation.minimum_depth_core(locs, depth_core, z)
+    depth_core_new = minimum_depth_core(locs, depth_core, z)
     assert zrange + depth_core_new == depth_core + z
 
 
@@ -82,12 +87,12 @@ def test_find_top_padding(tmp_path):
     X, Y = np.meshgrid(np.arange(0, width, n), np.arange(0, height, n))
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
-    pads = [0, 0, 0, 0, 0, 100]  # padding on the top
+    pads = [0, 0, 0, 0, 100, 100]  # padding on the top
     h = [50, 50, 50]
 
-    obj = DataInterpolation.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+    obj = get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
 
-    top_padding = DataInterpolation.find_top_padding(obj, h[2])
+    top_padding = find_top_padding(obj, h[2])
 
     assert top_padding >= pads[-1]
 
@@ -107,9 +112,7 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [100, 150, 200, 300, 0, 0]
     ws = Workspace("./FlinFlon.geoh5")
-    obj = DataInterpolation.get_block_model(
-        ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1
-    )
+    obj = get_block_model(ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1)
     assert (obj.origin["z"] + obj.z_cell_delimiters).max() == top
     assert obj.origin["x"] < -pads[0]
     assert obj.origin["y"] < -pads[2]
@@ -129,7 +132,7 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 100, 0]  # padding on the bottom
     h = [50, 50, 50]
-    obj = DataInterpolation.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+    obj = get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
     assert top - (depth_core + h[2] + pads[4]) >= np.min(
         obj.origin["z"] + obj.z_cell_delimiters
     )
@@ -148,9 +151,7 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 0, 100]  # padding on the top
     h = [50, 50, 50]
-    obj = DataInterpolation.get_block_model(
-        ws, "test2", locs, h, depth_core, pads, expansion_rate
-    )
+    obj = get_block_model(ws, "test2", locs, h, depth_core, pads, expansion_rate)
 
     assert obj.origin["z"] >= top + pads[-1]
     depth_delimiters = obj.origin["z"] + obj.z_cell_delimiters
