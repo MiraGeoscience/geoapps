@@ -84,8 +84,8 @@ default_ui_json.update(
         "depth_core": {
             "main": True,
             "label": "Core depth (m)",
-            "value": 0,
-            "min": 0,
+            "value": 0.0,
+            "min": 0.0,
         },
         "horizontal_padding": {
             "main": True,
