@@ -26,8 +26,7 @@ from . import OctreeParams, app_initializer
 from .driver import OctreeDriver
 
 with warn_module_not_found():
-    from ipywidgets import (Dropdown, FloatText, Label, Layout, Text, VBox,
-                            Widget)
+    from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
     from ipywidgets.widgets.widget_selection import TraitError
 
 

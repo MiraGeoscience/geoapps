@@ -46,8 +46,7 @@ class SourcesFactory(SimPEGFactory):
             return sources.Dipole
 
         elif self.factory_type == "induced polarization":
-            from SimPEG.electromagnetics.static.induced_polarization import \
-                sources
+            from SimPEG.electromagnetics.static.induced_polarization import sources
 
             return sources.Dipole
 
@@ -112,8 +111,7 @@ class SourcesFactory(SimPEGFactory):
             if self.factory_type == "direct current":
                 from SimPEG.electromagnetics.static.resistivity import sources
             else:
-                from SimPEG.electromagnetics.static.induced_polarization import \
-                    sources
+                from SimPEG.electromagnetics.static.induced_polarization import sources
             self.simpeg_object = sources.Pole
         else:
             args.append(locations_b)
