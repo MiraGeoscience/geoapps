@@ -121,6 +121,19 @@ class Clustering(ScatterPlots):
                             ],
                         ),
                         dcc.Tab(
+                            label="Boxplot",
+                            children=[
+                                html.Div(
+                                    [
+                                        dcc.Graph(
+                                            id="boxplot",
+                                        )
+                                    ],
+                                    style={"width": "50%", "margin": "auto"},
+                                )
+                            ],
+                        ),
+                        dcc.Tab(
                             label="Statistics",
                             children=[
                                 html.Div(
@@ -195,19 +208,6 @@ class Clustering(ScatterPlots):
                                         "vertical-align": "middle",
                                     },
                                 ),
-                            ],
-                        ),
-                        dcc.Tab(
-                            label="Boxplot",
-                            children=[
-                                html.Div(
-                                    [
-                                        dcc.Graph(
-                                            id="boxplot",
-                                        )
-                                    ],
-                                    style={"width": "50%", "margin": "auto"},
-                                )
                             ],
                         ),
                         dcc.Tab(
