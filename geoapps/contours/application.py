@@ -61,6 +61,14 @@ class ContourValues(PlotSelection2D):
                 "fixed_contours": self.fixed_contours,
             },
         )
+        self.contours = VBox(
+            [
+                self.interval_min,
+                self.interval_max,
+                self.interval_spacing,
+                self.fixed_contours,
+            ]
+        )
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export"
@@ -102,10 +110,7 @@ class ContourValues(PlotSelection2D):
                                 [
                                     Label("Input options:"),
                                     self.data_panel,
-                                    self.interval_min,
-                                    self.interval_max,
-                                    self.interval_spacing,
-                                    self.fixed_contours,
+                                    self.contours,
                                     self.window_selection,
                                 ]
                             ),
