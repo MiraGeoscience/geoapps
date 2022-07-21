@@ -56,8 +56,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DNodal
         if self.factory_type == "induced polarization":
-            from SimPEG.electromagnetics.static.induced_polarization import \
-                simulation
+            from SimPEG.electromagnetics.static.induced_polarization import simulation
 
             return simulation.Simulation3DNodal
 

@@ -24,8 +24,7 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
 with warn_module_not_found():
-    from ipywidgets import (Button, FloatSlider, HBox, IntSlider, Layout, Text,
-                            VBox)
+    from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
 
 with warn_module_not_found():
     from matplotlib import collections
