@@ -24,17 +24,15 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import dask, inverse_problem, inversion, maps, optimization, regularization
+from SimPEG import (dask, inverse_problem, inversion, maps, optimization,
+                    regularization)
 from SimPEG.utils import tile_locations
 
-from geoapps.inversion.components import (
-    InversionData,
-    InversionMesh,
-    InversionModelCollection,
-    InversionTopography,
-    InversionWindow,
-)
-from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.components import (InversionData, InversionMesh,
+                                          InversionModelCollection,
+                                          InversionTopography, InversionWindow)
+from geoapps.inversion.components.factories import (DirectivesFactory,
+                                                    MisfitFactory)
 from geoapps.inversion.params import InversionBaseParams
 
 
@@ -437,8 +435,10 @@ def start_inversion(filepath=None, **kwargs):
         from .potential_fields.magnetic_scalar.constants import validations
 
     elif inversion_type == "gravity":
-        from geoapps.inversion.potential_fields import GravityParams as ParamClass
-        from geoapps.inversion.potential_fields.gravity.constants import validations
+        from geoapps.inversion.potential_fields import \
+            GravityParams as ParamClass
+        from geoapps.inversion.potential_fields.gravity.constants import \
+            validations
 
     elif inversion_type == "magnetotellurics":
         from .natural_sources import MagnetotelluricsParams as ParamClass

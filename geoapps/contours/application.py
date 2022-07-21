@@ -12,7 +12,8 @@ from time import time
 
 from geoh5py.objects.object_base import Entity, ObjectBase
 from geoh5py.ui_json.input_file import InputFile
-from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
+from ipywidgets import (Checkbox, HBox, Label, Layout, Text, VBox,
+                        interactive_output)
 
 from geoapps.base.plot import PlotSelection2D
 from geoapps.contours.constants import app_initializer

@@ -77,7 +77,8 @@ class SurveyFactory(SimPEGFactory):
             from SimPEG.electromagnetics.static.resistivity import survey
 
         elif self.factory_type == "induced polarization":
-            from SimPEG.electromagnetics.static.induced_polarization import survey
+            from SimPEG.electromagnetics.static.induced_polarization import \
+                survey
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import survey

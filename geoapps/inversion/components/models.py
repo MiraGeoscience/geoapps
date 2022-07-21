@@ -10,11 +10,8 @@ from __future__ import annotations
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.workspace import Workspace
-from SimPEG.utils.mat_utils import (
-    cartesian2amplitude_dip_azimuth,
-    dip_azimuth2cartesian,
-    mkvc,
-)
+from SimPEG.utils.mat_utils import (cartesian2amplitude_dip_azimuth,
+                                    dip_azimuth2cartesian, mkvc)
 
 from geoapps.driver_base.params import BaseParams
 from geoapps.shared_utils.utils import rotate_xyz, weighted_average
