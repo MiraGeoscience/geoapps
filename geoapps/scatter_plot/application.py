@@ -363,6 +363,7 @@ class ScatterPlots:
                                     value=defaults["color_name"],
                                     style={"width": "63.3%", "margin-bottom": "20px"},
                                 ),
+                                dcc.Markdown(children="Colormap: "),
                                 dcc.Dropdown(
                                     id="color_maps",
                                     options=px.colors.named_colorscales(),
