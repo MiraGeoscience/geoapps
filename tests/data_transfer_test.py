@@ -15,7 +15,7 @@ def test_truncate_locs_depths():
     # If z range of locations is larger than depth_core then locations are truncated
     # to the depth_core and the depth_core is reduced to w_cell_size
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -34,7 +34,7 @@ def test_truncate_locs_depths():
     # If z range of locs are the same as the depth_core then locations are unaffected
     # but depth_core is reduced to w_cell_size
     top = 500
-    depth_core = 500
+    depth_core = 500.0
     height = 300
     width = 1000
     n = 100
@@ -53,7 +53,7 @@ def test_truncate_locs_depths():
     # If z range of locs are less than the the depth core then the depth_core is
     # reduced by the z range
     top = 400
-    depth_core = 500
+    depth_core = 500.0
     height = 300
     width = 1000
     n = 100
@@ -73,7 +73,7 @@ def test_truncate_locs_depths():
 def test_find_top_padding(tmp_path):
 
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -97,7 +97,7 @@ def test_get_block_model(tmp_path):
     # padding in the W/E/N/S directions should make create locs at least as
     # far as the core hull plus the padding distances
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -119,7 +119,7 @@ def test_get_block_model(tmp_path):
     # padding in the down direction should create locs at least as deep as the top
     # minus the sum of depth_core, h[2], and bottom padding.
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -137,7 +137,7 @@ def test_get_block_model(tmp_path):
     # padding in the up direction should shift the origin so that the core area
     # envelopes the locs (adjusted by depth_core).
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100

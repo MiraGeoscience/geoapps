@@ -5,7 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from __future__ import annotations
 
-from .constants import app_initializer
-from .params import ClusteringParams
+class PlotData:
+    def __init__(self, name=None, values=None):
+        self.name = name
+        self.values = values
