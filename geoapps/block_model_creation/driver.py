@@ -31,7 +31,7 @@ class BlockModelDriver:
         self.params: BlockModelParams = params
 
     @staticmethod
-    def truncate_locs_depths(locs: np.ndarray, depth_core: int) -> np.ndarray:
+    def truncate_locs_depths(locs: np.ndarray, depth_core: float) -> np.ndarray:
         """
         Sets locations below core to core bottom.
 
@@ -50,7 +50,7 @@ class BlockModelDriver:
 
     @staticmethod
     def minimum_depth_core(
-        locs: np.ndarray, depth_core: int, core_z_cell_size: int
+        locs: np.ndarray, depth_core: float, core_z_cell_size: int
     ) -> float:
         """
         Get minimum depth core.
@@ -91,7 +91,7 @@ class BlockModelDriver:
         name: str,
         locs: np.ndarray,
         h: list,
-        depth_core: int,
+        depth_core: float,
         pads: list,
         expansion_factor: float,
     ) -> BlockModel:
@@ -180,8 +180,10 @@ class BlockModelDriver:
 
         object_out.origin = np.r_[object_out.origin.tolist()] - d_xyz
 
-        if self.params.output_path is not None and path.exists(
-            os.path.abspath(self.params.output_path)
+        if (
+            self.params.live_link
+            and self.params.output_path is not None
+            and path.exists(os.path.abspath(self.params.output_path))
         ):
             monitored_directory_copy(
                 os.path.abspath(self.params.output_path), object_out
