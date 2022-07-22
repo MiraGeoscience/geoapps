@@ -18,6 +18,7 @@ from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import warn_module_not_found
 
@@ -227,9 +228,10 @@ class OctreeMesh(ObjectDataSelection):
                 continue
 
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
 
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):

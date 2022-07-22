@@ -78,15 +78,19 @@ default_ui_json.update(
             "min": 1,
             "max": 100,
             "value": 100,
+            "visible": False,
         },
         "x": {
-            "association": ["Vertex"],
+            "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "group": "x axis",
             "label": "Data",
+            "optional": True,
+            "enabled": True,
             "main": True,
             "parent": "objects",
             "value": None,
+            "visible": False,
         },
         "x_min": {
             "group": "x axis",
@@ -97,6 +101,7 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "x_max": {
             "group": "x axis",
@@ -107,12 +112,14 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "x_log": {
             "group": "x axis",
             "label": "Log10",
             "main": True,
             "value": False,
+            "visible": False,
         },
         "x_thresh": {
             "group": "x axis",
@@ -121,15 +128,19 @@ default_ui_json.update(
             "value": 0.1,
             "dependency": "x_log",
             "dependencyType": "enabled",
+            "visible": False,
         },
         "y": {
-            "association": ["Vertex"],
+            "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "group": "y axis",
             "label": "Data",
+            "optional": True,
+            "enabled": True,
             "main": True,
             "parent": "objects",
             "value": None,
+            "visible": False,
         },
         "y_min": {
             "group": "y axis",
@@ -140,6 +151,7 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "y_max": {
             "group": "y axis",
@@ -150,12 +162,14 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "y_log": {
             "group": "y axis",
             "label": "Log10",
             "main": True,
             "value": False,
+            "visible": False,
         },
         "y_thresh": {
             "group": "y axis",
@@ -164,9 +178,10 @@ default_ui_json.update(
             "value": 0.1,
             "dependency": "y_log",
             "dependencyType": "enabled",
+            "visible": False,
         },
         "z": {
-            "association": ["Vertex"],
+            "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "group": "z axis",
             "optional": True,
@@ -175,6 +190,7 @@ default_ui_json.update(
             "main": True,
             "parent": "objects",
             "value": None,
+            "visible": False,
         },
         "z_min": {
             "group": "z axis",
@@ -185,6 +201,7 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "z_max": {
             "group": "z axis",
@@ -195,12 +212,14 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "z_log": {
             "group": "z axis",
             "label": "Log10",
             "main": True,
             "value": False,
+            "visible": False,
         },
         "z_thresh": {
             "group": "z axis",
@@ -209,9 +228,10 @@ default_ui_json.update(
             "value": 0.1,
             "dependency": "z_log",
             "dependencyType": "enabled",
+            "visible": False,
         },
         "color": {
-            "association": ["Vertex"],
+            "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "group": "Color",
             "optional": True,
@@ -220,6 +240,7 @@ default_ui_json.update(
             "main": True,
             "parent": "objects",
             "value": None,
+            "visible": False,
         },
         "color_min": {
             "group": "Color",
@@ -230,6 +251,7 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "color_max": {
             "group": "Color",
@@ -240,12 +262,14 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "color_log": {
             "group": "Color",
             "label": "Log10",
             "main": True,
             "value": False,
+            "visible": False,
         },
         "color_thresh": {
             "group": "Color",
@@ -254,6 +278,7 @@ default_ui_json.update(
             "value": 0.1,
             "dependency": "color_log",
             "dependencyType": "enabled",
+            "visible": False,
         },
         "color_maps": {
             "choiceList": px.colors.named_colorscales(),
@@ -263,9 +288,10 @@ default_ui_json.update(
             "value": None,
             "enabled": False,
             "optional": True,
+            "visible": False,
         },
         "size": {
-            "association": ["Vertex"],
+            "association": ["Vertex", "Cell"],
             "dataType": "Float",
             "group": "Size",
             "optional": True,
@@ -274,6 +300,7 @@ default_ui_json.update(
             "main": True,
             "parent": "objects",
             "value": None,
+            "visible": False,
         },
         "size_min": {
             "group": "Size",
@@ -284,6 +311,7 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "size_max": {
             "group": "Size",
@@ -294,12 +322,14 @@ default_ui_json.update(
             "value": 0.0,
             "precision": 1,
             "lineEdit": False,
+            "visible": False,
         },
         "size_log": {
             "group": "Size",
             "label": "Log10",
             "main": True,
             "value": False,
+            "visible": False,
         },
         "size_thresh": {
             "group": "Size",
@@ -308,6 +338,7 @@ default_ui_json.update(
             "value": 0.1,
             "dependency": "size_log",
             "dependencyType": "enabled",
+            "visible": False,
         },
         "size_markers": {
             "group": "Size",
@@ -318,6 +349,7 @@ default_ui_json.update(
             "value": 20,
             "enabled": False,
             "optional": True,
+            "visible": False,
         },
         "conda_environment": "geoapps",
         "run_command": "geoapps.scatter_plot.application",
