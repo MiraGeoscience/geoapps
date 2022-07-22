@@ -251,9 +251,12 @@ class DataInterpolation(ObjectDataSelection):
         )[0]
 
         temp_geoh5 = f"Interpolation_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as workspace:
+
+        ws, self.live_link.value = self.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+
+        with ws as workspace:
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
