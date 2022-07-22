@@ -276,6 +276,7 @@ class ObjectDataSelection(BaseApplication):
         if getattr(self, "_workspace", None) is not None:
             obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
             if obj is None or getattr(obj, "get_data_list", None) is None:
+                self.refresh.value = refresh
                 return
 
             options = [["", None]]

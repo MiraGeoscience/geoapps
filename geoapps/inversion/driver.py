@@ -58,23 +58,16 @@ class InversionDriver:
         sys.stdout = self.logger
         self.logger.start()
 
-        self.initialize()
+        with self.workspace.open(mode="r+"):
+            self.initialize()
 
     @property
     def window(self):
         return self.inversion_window.window
 
     @property
-    def data(self):
-        return self.inversion_data.observed
-
-    @property
     def locations(self):
         return self.inversion_data.locations
-
-    @property
-    def topography(self):
-        return self.inversion_topography.locations
 
     @property
     def mesh(self):
@@ -189,7 +182,6 @@ class InversionDriver:
 
         # If forward only option enabled, stop here
         if self.params.forward_only:
-            self.workspace.close()
             return
 
         # Add a list of directives to the inversion
@@ -206,7 +198,6 @@ class InversionDriver:
         self.inversion = inversion.BaseInversion(
             self.inverse_problem, directiveList=self.directive_list
         )
-        self.workspace.close()
 
     def run(self):
         """Run inversion from params"""
@@ -403,7 +394,7 @@ class InversionLogger:
         return os.path.join(root_directory, file)
 
 
-def start_inversion(filepath=None, **kwargs):
+def start_inversion(filepath=None, **kwargs) -> InversionDriver:
     """Starts inversion with parameters defined in input file."""
 
     if filepath is not None:
@@ -446,9 +437,11 @@ def start_inversion(filepath=None, **kwargs):
 
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
+    params.geoh5.close()
     driver = InversionDriver(params)
-
     driver.run()
+
+    return driver
 
 
 if __name__ == "__main__":
