@@ -113,8 +113,8 @@ class InversionApp(PlotSelection2D):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
-        self.defaults["tmi_channel_bool"] = True
 
+        self.defaults["tmi_channel_bool"] = True
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -226,8 +226,13 @@ class InversionApp(PlotSelection2D):
         self._sensor = SensorOptions(
             objects=self._objects,
             add_xyz=False,
-            **self.defaults,
+            receivers_offset_x=self.defaults["receivers_offset_x"],
+            receivers_offset_y=self.defaults["receivers_offset_y"],
+            receivers_offset_z=self.defaults["receivers_offset_z"],
+            z_from_topo=self.defaults["z_from_topo"],
+            receivers_radar_drape=self.defaults["receivers_radar_drape"],
         )
+
         self._detrend_type = Dropdown(
             description="Method", options=["", "all", "perimeter"], value="all"
         )
@@ -1344,7 +1349,6 @@ class SensorOptions(ObjectDataSelection):
     """
 
     _options = None
-    defaults = {}
     params_keys = [
         "receivers_offset_x",
         "receivers_offset_y",
