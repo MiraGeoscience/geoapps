@@ -12,6 +12,7 @@ import argparse
 from geoh5py.ui_json import InputFile
 
 import geoapps
+from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
@@ -90,6 +91,11 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     scatter_init = app_initializer if use_initializers else {}
 
+    from geoapps.block_model_creation.constants import app_initializer
+
+    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    block_init = app_initializer if use_initializers else {}
+
     from geoapps.clustering.constants import app_initializer
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
@@ -150,6 +156,7 @@ def write_default_uijson(path, use_initializers=False):
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
         "scatter.ui.json": ScatterPlotParams(validate=False, **scatter_init),
+        "block_model_creation.ui.json": BlockModelParams(validate=False, **block_init),
         "cluster.ui.json": ClusteringParams(validate=False, **cluster_init),
         "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **iso_init),
         "edge_detection.ui.json": EdgeDetectionParams(validate=False, **edge_init),
