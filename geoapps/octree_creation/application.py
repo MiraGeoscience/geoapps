@@ -231,22 +231,18 @@ class OctreeMesh(ObjectDataSelection):
             self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:
 
+            param_dict["geoh5"] = new_workspace
+
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
                     param_dict[key] = value.copy(
                         parent=new_workspace, copy_children=True
                     )
 
-            param_dict["geoh5"] = new_workspace
-
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-            new_params = OctreeParams(input_file=ifile, **param_dict)
+            new_params = OctreeParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
             self.run(new_params)
 

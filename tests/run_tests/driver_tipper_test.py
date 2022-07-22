@@ -9,11 +9,9 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.driver import start_inversion
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
-
-# import pytest
-# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
@@ -136,10 +134,8 @@ def test_tipper_run(
         prctile=100,
         **data_kwargs,
     )
-    params.workpath = tmp_path
-    driver = InversionDriver(params)
-
-    driver.run()
+    params.write_input_file(path=tmp_path, name="Inv_run")
+    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
