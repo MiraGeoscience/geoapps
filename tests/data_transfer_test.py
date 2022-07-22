@@ -7,12 +7,7 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.utils.models import (
-    find_top_padding,
-    get_block_model,
-    minimum_depth_core,
-    truncate_locs_depths,
-)
+from geoapps.block_model_creation.driver import BlockModelDriver
 
 
 def test_truncate_locs_depths():
@@ -20,7 +15,7 @@ def test_truncate_locs_depths():
     # If z range of locations is larger than depth_core then locations are truncated
     # to the depth_core and the depth_core is reduced to w_cell_size
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -30,16 +25,16 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = truncate_locs_depths(locs, depth_core)
+    locs = BlockModelDriver.truncate_locs_depths(locs, depth_core)
     assert locs[:, 2].min() == (locs[:, 2].max() - depth_core)
 
-    depth_core = minimum_depth_core(locs, depth_core, z)
+    depth_core = BlockModelDriver.minimum_depth_core(locs, depth_core, z)
     assert depth_core == z
 
     # If z range of locs are the same as the depth_core then locations are unaffected
     # but depth_core is reduced to w_cell_size
     top = 500
-    depth_core = 500
+    depth_core = 500.0
     height = 300
     width = 1000
     n = 100
@@ -49,16 +44,16 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = truncate_locs_depths(locs, depth_core)
+    locs = BlockModelDriver.truncate_locs_depths(locs, depth_core)
     assert locs[:, 2].min() == (locs[:, 2].max() - depth_core)
 
-    depth_core = minimum_depth_core(locs, depth_core, z)
+    depth_core = BlockModelDriver.minimum_depth_core(locs, depth_core, z)
     assert depth_core == z
 
     # If z range of locs are less than the the depth core then the depth_core is
     # reduced by the z range
     top = 400
-    depth_core = 500
+    depth_core = 500.0
     height = 300
     width = 1000
     n = 100
@@ -68,17 +63,17 @@ def test_truncate_locs_depths():
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     z = 50
 
-    locs = truncate_locs_depths(locs, depth_core)
+    locs = BlockModelDriver.truncate_locs_depths(locs, depth_core)
     zrange = locs[:, 2].max() - locs[:, 2].min()
     assert zrange == top
-    depth_core_new = minimum_depth_core(locs, depth_core, z)
+    depth_core_new = BlockModelDriver.minimum_depth_core(locs, depth_core, z)
     assert zrange + depth_core_new == depth_core + z
 
 
 def test_find_top_padding(tmp_path):
 
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -90,9 +85,9 @@ def test_find_top_padding(tmp_path):
     pads = [0, 0, 0, 0, 100, 100]  # padding on the top
     h = [50, 50, 50]
 
-    obj = get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+    obj = BlockModelDriver.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
 
-    top_padding = find_top_padding(obj, h[2])
+    top_padding = BlockModelDriver.find_top_padding(obj, h[2])
 
     assert top_padding >= pads[-1]
 
@@ -102,7 +97,7 @@ def test_get_block_model(tmp_path):
     # padding in the W/E/N/S directions should make create locs at least as
     # far as the core hull plus the padding distances
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -112,7 +107,9 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [100, 150, 200, 300, 0, 0]
     ws = Workspace("./FlinFlon.geoh5")
-    obj = get_block_model(ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1)
+    obj = BlockModelDriver.get_block_model(
+        ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1
+    )
     assert (obj.origin["z"] + obj.z_cell_delimiters).max() == top
     assert obj.origin["x"] < -pads[0]
     assert obj.origin["y"] < -pads[2]
@@ -122,7 +119,7 @@ def test_get_block_model(tmp_path):
     # padding in the down direction should create locs at least as deep as the top
     # minus the sum of depth_core, h[2], and bottom padding.
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -132,7 +129,9 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 100, 0]  # padding on the bottom
     h = [50, 50, 50]
-    obj = get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+
+    obj = BlockModelDriver.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+
     assert top - (depth_core + h[2] + pads[4]) >= np.min(
         obj.origin["z"] + obj.z_cell_delimiters
     )
@@ -140,7 +139,7 @@ def test_get_block_model(tmp_path):
     # padding in the up direction should shift the origin so that the core area
     # envelopes the locs (adjusted by depth_core).
     top = 500
-    depth_core = 300
+    depth_core = 300.0
     height = 300
     width = 1000
     n = 100
@@ -151,7 +150,10 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 0, 100]  # padding on the top
     h = [50, 50, 50]
-    obj = get_block_model(ws, "test2", locs, h, depth_core, pads, expansion_rate)
+
+    obj = BlockModelDriver.get_block_model(
+        ws, "test2", locs, h, depth_core, pads, expansion_rate
+    )
 
     assert obj.origin["z"] >= top + pads[-1]
     depth_delimiters = obj.origin["z"] + obj.z_cell_delimiters

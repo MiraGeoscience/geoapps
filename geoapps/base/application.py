@@ -274,38 +274,36 @@ class BaseApplication:
         else:
             raise ValueError
 
-    def get_output_workspace(self, workpath: str = "./", name: str = "Temp.geoh5"):
+    @staticmethod
+    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
         """
         Create an active workspace with check for GA monitoring directory
         """
         if not name.endswith(".geoh5"):
             name += ".geoh5"
-
         workspace = Workspace(path.join(workpath, name))
         workspace.close()
-        live_link = False
+        new_live_link = False
         time.sleep(1)
         # Check if GA digested the file already
         if not path.exists(workspace.h5file):
-            temp_path = path.join(workpath, ".working")
-            if not path.exists(temp_path):
-                makedirs(temp_path)
-            workspace = Workspace(path.join(temp_path, name))
+            workpath = path.join(workpath, ".working")
+            if not path.exists(workpath):
+                makedirs(workpath)
+            workspace = Workspace(path.join(workpath, name))
             workspace.close()
-            live_link = True
-            if not self.live_link.value:
+            new_live_link = True
+            if not live_link:
                 print(
                     "ANALYST Pro active live link found. Switching to monitoring directory..."
                 )
-        elif self.live_link.value:
+        elif live_link:
             print(
                 "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
             )
-
-        self.live_link.value = live_link
-
         workspace.open()
-        return workspace
+        # return new live link
+        return workspace, new_live_link
 
     @property
     def h5file(self):

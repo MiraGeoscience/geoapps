@@ -14,6 +14,7 @@ from time import time
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.iso_surfaces.constants import app_initializer
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
@@ -110,9 +111,10 @@ class IsoSurface(ObjectDataSelection):
             except AttributeError:
                 continue
         temp_geoh5 = f"Isosurface_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
 
             param_dict["objects"] = param_dict["objects"].copy(
                 parent=new_workspace, copy_children=False
