@@ -18,7 +18,6 @@ import sys
 from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
 from time import time
-from uuid import UUID
 
 import numpy as np
 from dask import config as dconf
@@ -58,23 +57,16 @@ class InversionDriver:
         sys.stdout = self.logger
         self.logger.start()
 
-        self.initialize()
+        with self.workspace.open(mode="r+"):
+            self.initialize()
 
     @property
     def window(self):
         return self.inversion_window.window
 
     @property
-    def data(self):
-        return self.inversion_data.observed
-
-    @property
     def locations(self):
         return self.inversion_data.locations
-
-    @property
-    def topography(self):
-        return self.inversion_topography.topography
 
     @property
     def mesh(self):
@@ -189,7 +181,6 @@ class InversionDriver:
 
         # If forward only option enabled, stop here
         if self.params.forward_only:
-            self.workspace.close()
             return
 
         # Add a list of directives to the inversion
@@ -206,7 +197,6 @@ class InversionDriver:
         self.inversion = inversion.BaseInversion(
             self.inverse_problem, directiveList=self.directiveList
         )
-        self.workspace.close()
 
     def run(self):
         """Run inversion from params"""
@@ -347,20 +337,6 @@ class InversionDriver:
 
         return tiles
 
-    def fetch(self, p: str | UUID):
-        """Fetch the object addressed by uuid from the workspace."""
-
-        if isinstance(p, str):
-            try:
-                p = UUID(p)
-            except:
-                p = self.params.__getattribute__(p)
-
-        try:
-            return self.workspace.get_entity(p)[0].values
-        except AttributeError:
-            return self.workspace.get_entity(p)[0]
-
     def configure_dask(self):
         """Sets Dask config settings."""
 
@@ -417,7 +393,7 @@ class InversionLogger:
         return os.path.join(root_directory, file)
 
 
-def start_inversion(filepath=None, **kwargs):
+def start_inversion(filepath=None, **kwargs) -> InversionDriver:
     """Starts inversion with parameters defined in input file."""
 
     if filepath is not None:
@@ -460,9 +436,11 @@ def start_inversion(filepath=None, **kwargs):
 
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
+    params.geoh5.close()
     driver = InversionDriver(params)
-
     driver.run()
+
+    return driver
 
 
 if __name__ == "__main__":

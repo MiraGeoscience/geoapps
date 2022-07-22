@@ -436,7 +436,7 @@ class PeakFinder(ObjectDataSelection):
                 continuous_update=False,
                 description="Minimum # channels",
                 style={"description_width": "initial"},
-                disabled=True,
+                disabled=False,
             )
 
         return self._min_channels
@@ -964,8 +964,8 @@ class PeakFinder(ObjectDataSelection):
 
             self.lines.profile.values = channel["values"][self.survey.line_indices]
             values = self.lines.profile.values_resampled
-            y_min = np.min([values[sub_ind].min(), y_min])
-            y_max = np.max([values[sub_ind].max(), y_max])
+            y_min = np.nanmin([values[sub_ind].min(), y_min])
+            y_max = np.nanmax([values[sub_ind].max(), y_max])
             axs.plot(locs, values, color=[0.5, 0.5, 0.5, 1])
             for group in self.lines.anomalies:
                 query = np.where(group["channels"] == cc)[0]
@@ -1032,7 +1032,7 @@ class PeakFinder(ObjectDataSelection):
             center - width / 2.0,
             center + width / 2.0,
         ]
-        y_lims = [np.max([y_min, self.min_value.value]), y_max]
+        y_lims = [np.nanmax([y_min, self.min_value.value]), y_max]
         axs.set_xlim(x_lims)
         axs.set_ylim(y_lims)
         axs.set_ylabel("Data")
@@ -1257,8 +1257,12 @@ class PeakFinder(ObjectDataSelection):
                             ),
                         ]
                     )
-                    d_min = np.min([d_min, self.active_channels[uid]["values"].min()])
-                    d_max = np.max([d_max, self.active_channels[uid]["values"].max()])
+                    d_min = np.nanmin(
+                        [d_min, self.active_channels[uid]["values"].min()]
+                    )
+                    d_max = np.nanmax(
+                        [d_max, self.active_channels[uid]["values"].max()]
+                    )
                 except KeyError:
                     continue
 
@@ -1293,7 +1297,7 @@ class PeakFinder(ObjectDataSelection):
 
         for label, group in self._channel_groups.items():
             for member in ["data", "color"]:
-                name = f"{label} {member}"
+                name = f"Group {label} {member}"
                 ui_json[name] = deepcopy(template_dict[member])
                 ui_json[name]["group"] = f"Group {label}"
                 param_dict[name] = group[member]
@@ -1319,13 +1323,7 @@ class PeakFinder(ObjectDataSelection):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=ui_json,
-                validations=self.params.validations,
-                validation_options={"disabled": True},
-            )
-
-            new_params = PeakFinderParams(input_file=ifile, **param_dict)
+            new_params = PeakFinderParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
             self.run(new_params)
 
@@ -1344,7 +1342,7 @@ class PeakFinder(ObjectDataSelection):
         """
         Create an octree mesh from input values
         """
-
+        params.geoh5.close()
         driver = PeakFinderDriver(params)
         driver.run(output_group)
 
