@@ -17,7 +17,7 @@ from geoapps.contours.application import ContourValues
 from geoapps.coordinate_transformation import CoordinateTransformation
 from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
-from geoapps.interpolation import DataInterpolation
+from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
@@ -130,8 +130,8 @@ def test_data_interpolation(tmp_path):
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = DataInterpolation(h5file=temp_workspace)
-    app.trigger.click()
+    app = DataInterpolation(geoh5=temp_workspace)
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         assert len(workspace.get_entity("Iteration_7_model_Interp")) == 1
