@@ -29,6 +29,7 @@ from geoh5py.objects import (
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
@@ -1008,9 +1009,10 @@ class InversionApp(PlotSelection2D):
 
         # Create a new workapce and copy objects into it
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
 
             param_dict["geoh5"] = new_workspace
 
