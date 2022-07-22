@@ -434,7 +434,7 @@ class TopographyOptions(ObjectDataSelection):
     """
 
     def __init__(
-        self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
+        self, option_list=("None", "Object", "Relative to Sensor", "Constant"), **kwargs
     ):
         self.defaults.update(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]

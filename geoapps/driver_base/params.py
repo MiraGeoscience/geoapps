@@ -116,9 +116,9 @@ class BaseParams:
                 setattr(self, "geoh5", params_dict["geoh5"])
                 self.input_file.workspace = params_dict["geoh5"]
 
-        params_dict = self.input_file._promote(
+        params_dict = self.input_file._promote(  # pylint: disable=protected-access
             params_dict
-        )  # pylint: disable=protected-access
+        )
         for key, value in params_dict.items():
             if key not in self.ui_json or key == "geoh5":
                 continue  # ignores keys not in default_ui_json
