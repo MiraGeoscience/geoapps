@@ -50,7 +50,7 @@ def random_sampling(
     probabilities[np.any(np.isnan(values), axis=1)] = 0
     probabilities /= probabilities.sum()
 
-    np.random.seed = 0
+    np.random.seed(0)
     return np.random.choice(
         np.arange(values.shape[0]), replace=False, p=probabilities, size=size
     )
