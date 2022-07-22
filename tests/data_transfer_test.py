@@ -82,7 +82,7 @@ def test_find_top_padding(tmp_path):
     X, Y = np.meshgrid(np.arange(0, width, n), np.arange(0, height, n))
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
-    pads = [0, 0, 0, 0, 0, 100]  # padding on the top
+    pads = [0, 0, 0, 0, 100, 100]  # padding on the top
     h = [50, 50, 50]
 
     obj = BlockModelDriver.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
@@ -129,7 +129,9 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 100, 0]  # padding on the bottom
     h = [50, 50, 50]
+
     obj = BlockModelDriver.get_block_model(ws, "test2", locs, h, depth_core, pads, 1.1)
+
     assert top - (depth_core + h[2] + pads[4]) >= np.min(
         obj.origin["z"] + obj.z_cell_delimiters
     )
@@ -148,6 +150,7 @@ def test_get_block_model(tmp_path):
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [0, 0, 0, 0, 0, 100]  # padding on the top
     h = [50, 50, 50]
+
     obj = BlockModelDriver.get_block_model(
         ws, "test2", locs, h, depth_core, pads, expansion_rate
     )
