@@ -51,8 +51,11 @@ class CoordinateTransformation(ObjectDataSelection):
 
     def __init__(self, **kwargs):
 
+        self._code_in = Text(description="Input Projection:", continuous_update=False)
+        self._code_out = Text(description="Output Projection:", continuous_update=False)
+        self._wkt_in = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        self._wkt_out = Textarea(description="<=> WKT", layout=Layout(width="50%"))
         self.defaults.update(**kwargs)
-
         self.code_out.observe(self.set_wkt_out, names="value")
         self.code_in.observe(self.set_wkt_in, names="value")
         self.wkt_in.observe(self.set_authority_in, names="value")
@@ -88,7 +91,7 @@ class CoordinateTransformation(ObjectDataSelection):
         if self.wkt_in.value != "" and self.wkt_out.value != "":
 
             if self.plot_result:
-                self.figure = plt.figure(figsize=(12, 8))
+                self._figure = plt.figure(figsize=(12, 8))
                 ax1 = plt.subplot(1, 2, 1)
                 ax2 = plt.subplot(1, 2, 2)
 
@@ -204,30 +207,24 @@ class CoordinateTransformation(ObjectDataSelection):
 
     @property
     def code_in(self):
-        if getattr(self, "_code_in", None) is None:
-            self._code_in = Text(
-                description="Input Projection:", continuous_update=False
-            )
+        """Input EPSG or ESRI code."""
         return self._code_in
 
     @property
     def code_out(self):
-        if getattr(self, "_code_out", None) is None:
-            self._code_out = Text(
-                description="Output Projection:", continuous_update=False
-            )
+        """
+        Output EPSG or ESRI code.
+        """
         return self._code_out
 
     @property
     def wkt_in(self):
-        if getattr(self, "_wkt_in", None) is None:
-            self._wkt_in = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        """Input Well-Known-Text (WKT) string."""
         return self._wkt_in
 
     @property
     def wkt_out(self):
-        if getattr(self, "_wkt_out", None) is None:
-            self._wkt_out = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        """Output Well-Known-Text (WKT) string."""
         return self._wkt_out
 
     def set_wkt_in(self, _):

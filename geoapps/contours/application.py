@@ -134,7 +134,7 @@ class ContourValues(PlotSelection2D):
         """
         Get current selection and trigger update
         """
-        entity, data = self.get_selected_entities()
+        _, data = self.get_selected_entities()
         if data is None:
             return
         if contour_values is not None:
