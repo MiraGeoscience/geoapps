@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=W0221
+
 from __future__ import annotations
 
 import numpy as np
@@ -140,7 +143,7 @@ class DirectivesFactory:
                     )
                 )
 
-        for directive_name in self.params._directive_list:
+        for directive_name in self.params.directive_list:
             for attr in self._directive_2_attr[directive_name]:
                 directive = getattr(self, attr)
                 if directive is not None:
@@ -230,7 +233,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "save_objective_function": save_objective_function,
                 "label": "model",
                 "association": "CEll",
-                "sorting": inversion_object.mesh._ubc_order,
+                "sorting": inversion_object.mesh._ubc_order,  # pylint: disable=W0212
                 "transforms": [active_cells_map],
             }
 
@@ -265,7 +268,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "attribute_type": "predicted",
             "data_type": {
                 comp: {channel: dtype for channel in channels}
-                for comp, dtype in inversion_object._observed_data_types.items()
+                for comp, dtype in inversion_object.observed_data_types.items()
             },
             "transforms": [
                 np.tile(
@@ -318,7 +321,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "attribute_type": "predicted",
             "data_type": {
                 comp: {channel: dtype for channel in channels}
-                for comp, dtype in inversion_object._observed_data_types.items()
+                for comp, dtype in inversion_object.observed_data_types.items()
             },
             "transforms": [
                 np.hstack(
@@ -342,13 +345,13 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].append(inversion_object.transformations["potential"])
-            property = "resistivity"
-            kwargs["channels"] = [f"apparent_{property}"]
+            phys_prop = "resistivity"
+            kwargs["channels"] = [f"apparent_{phys_prop}"]
             apparent_measurement_entity_type = self.params.geoh5.get_entity(
-                f"Observed_apparent_{property}"
+                f"Observed_apparent_{phys_prop}"
             )[0].entity_type
             kwargs["data_type"] = {
-                component: {f"apparent_{property}": apparent_measurement_entity_type}
+                component: {f"apparent_{phys_prop}": apparent_measurement_entity_type}
             }
 
         if name == "Residual":
@@ -380,7 +383,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",
-            "data_type": inversion_object._observed_data_types,
+            "data_type": inversion_object.observed_data_types,
             "association": "VERTEX",
             "transforms": [
                 np.tile(

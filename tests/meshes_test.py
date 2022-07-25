@@ -5,14 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from copy import deepcopy
 
 import numpy as np
 import pytest
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion import default_ui_json
 from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
@@ -26,9 +24,7 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
-    geotest = Geoh5Tester(
-        geoh5, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
-    )
+    geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", MagneticVectorParams)
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")

@@ -318,5 +318,5 @@ if __name__ == "__main__":
         "'geoapps.octree_creation.driver' in version 0.7.0. "
         "This warning is likely due to the execution of older ui.json files. Please update."
     )
-    params = OctreeParams(InputFile.read_ui_json(file))
-    OctreeMesh.run(params)
+    params_class = OctreeParams(InputFile.read_ui_json(file))
+    OctreeMesh.run(params_class)

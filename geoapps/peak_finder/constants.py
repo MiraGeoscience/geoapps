@@ -15,9 +15,7 @@ from __future__ import annotations
 from copy import deepcopy
 from uuid import UUID
 
-import numpy as np
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
-from geoh5py.workspace import Workspace
 
 from geoapps.utils.geophysical_systems import parameters
 

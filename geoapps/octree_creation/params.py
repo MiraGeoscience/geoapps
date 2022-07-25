@@ -39,7 +39,7 @@ class OctreeParams(BaseParams):
 
         if input_file is None:
             free_param_dict = {}
-            for key, value in kwargs.items():
+            for key in kwargs:
                 if (
                     self._free_parameter_identifier in key.lower()
                     and "object" in key.lower()

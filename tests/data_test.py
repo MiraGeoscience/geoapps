@@ -6,7 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
-from copy import deepcopy
 
 import numpy as np
 import SimPEG
@@ -14,7 +13,6 @@ from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components import InversionData
-from geoapps.inversion.constants import default_ui_json
 from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
@@ -23,10 +21,7 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
-    d_u_j = deepcopy(default_ui_json)
-    geotest = Geoh5Tester(
-        geoh5, tmp, "test.geoh5", ui=d_u_j, params_class=MagneticVectorParams
-    )
+    geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", params_class=MagneticVectorParams)
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
@@ -163,21 +158,21 @@ def test_parse_ignore_values(tmp_path):
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.ignore_values = "<99"
     data = InversionData(ws, params, window)
-    val, type = data.parse_ignore_values()
+    val, logic = data.parse_ignore_values()
     assert val == 99
-    assert type == "<"
+    assert logic == "<"
 
     params.ignore_values = ">99"
     data = InversionData(ws, params, window)
-    val, type = data.parse_ignore_values()
+    val, logic = data.parse_ignore_values()
     assert val == 99
-    assert type == ">"
+    assert logic == ">"
 
     params.ignore_values = "99"
     data = InversionData(ws, params, window)
-    val, type = data.parse_ignore_values()
+    val, logic = data.parse_ignore_values()
     assert val == 99
-    assert type == "="
+    assert logic == "="
 
 
 def test_set_infinity_uncertainties(tmp_path):

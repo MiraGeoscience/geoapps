@@ -6,13 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-from copy import deepcopy
-
 import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion import default_ui_json
 from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
@@ -29,10 +26,7 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(path):
-
-    geotest = Geoh5Tester(
-        geoh5, path, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
-    )
+    geotest = Geoh5Tester(geoh5, path, "test.geoh5", MagneticVectorParams)
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
