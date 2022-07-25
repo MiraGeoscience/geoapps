@@ -26,7 +26,7 @@ class Calculator(ObjectDataSelection):
     assert numpy  # to make sure numpy is imported here, as it is required to eval the equation
 
     _defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
+        "geoh5": "../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": ["Al2O3", "CaO"],
         "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",

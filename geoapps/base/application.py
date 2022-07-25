@@ -344,7 +344,9 @@ class BaseApplication:
         self._h5file = value
         self._workspace_geoh5 = value
         self._working_directory = None
-        self.workspace = Workspace(self._h5file, mode="r")
+
+        if value is not None:
+            self.workspace = Workspace(self._h5file, mode="r")
 
     @property
     def live_link(self) -> Checkbox:
