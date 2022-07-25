@@ -28,12 +28,13 @@ from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
+from geoapps.base.dash_application import BaseDashApplication
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.params import ScatterPlotParams
 
 
-class ScatterPlots:
+class ScatterPlots(BaseDashApplication):
     _param_class = ScatterPlotParams
 
     def __init__(self, ui_json=None, clustering=False, **kwargs):
@@ -43,6 +44,8 @@ class ScatterPlots:
         else:
             self.params = self._param_class(**app_initializer)
 
+        super().__init__(**kwargs)
+
         self.data_channels = {}
         # Initial values for the dash components
         self.defaults = self.get_defaults()
@@ -51,14 +54,6 @@ class ScatterPlots:
                 "kmeans"
             ]
             self.defaults["data_options"].append("kmeans")
-
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-        server = Flask(__name__)
-        self.app = JupyterDash(
-            server=server,
-            url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
-            external_stylesheets=external_stylesheets,
-        )
 
         # Set up the layout with the dash components
         self.workspace_layout = html.Div(
@@ -652,6 +647,49 @@ class ScatterPlots:
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+            prevent_initial_call=True,
+        )(self.update_objects)
+        self.app.callback(
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="x", component_property="options"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="y", component_property="options"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="z", component_property="options"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="color", component_property="options"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="size", component_property="options"),
+            Output(component_id="size", component_property="value"),
+            Input(component_id="objects", component_property="value"),
+            prevent_initial_call=True,
+        )(self.update_data)
+        self.app.callback(
+            Output(component_id="x_min", component_property="value"),
+            Output(component_id="x_max", component_property="value"),
+            Output(component_id="y_min", component_property="value"),
+            Output(component_id="y_max", component_property="value"),
+            Output(component_id="z_min", component_property="value"),
+            Output(component_id="z_max", component_property="value"),
+            Output(component_id="color_min", component_property="value"),
+            Output(component_id="color_max", component_property="value"),
+            Output(component_id="size_min", component_property="value"),
+            Output(component_id="size_max", component_property="value"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            prevent_initial_call=True,
+        )(self.update_channel_bounds)
+        self.app.callback(
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
             Output(component_id="downsampling", component_property="value"),
             Output(component_id="x", component_property="options"),
             Output(component_id="x", component_property="value"),
@@ -689,20 +727,15 @@ class ScatterPlots:
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
-            Input(component_id="objects", component_property="value"),
-            Input(component_id="x", component_property="value"),
-            Input(component_id="y", component_property="value"),
-            Input(component_id="z", component_property="value"),
-            Input(component_id="color", component_property="value"),
-            Input(component_id="size", component_property="value"),
             prevent_initial_call=True,
-        )(self.update_params)
+        )(self.update_from_ui_json)
         self.app.callback(
             Output(component_id="download", component_property="href"),
             Input(component_id="crossplot", component_property="figure"),
         )(self.save_figure)
 
-    def update_visibility(self, axis):
+    @staticmethod
+    def update_visibility(axis):
         # Change the visibility of the dash components depending on the axis selected
         if axis == "x":
             return (
