@@ -275,6 +275,10 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
+        )(self.upload_file)
+        self.app.callback(
+            Output(component_id="live_link", component_property="value"),
+            Input(component_id="export", component_property="n_clicks"),
             Input(component_id="new_grid", component_property="value"),
             Input(component_id="objects", component_property="value"),
             Input(component_id="cell_size_x", component_property="value"),
@@ -286,28 +290,13 @@ class BlockModelCreation(BaseDashApplication):
             Input(component_id="expansion_fact", component_property="value"),
             Input(component_id="live_link", component_property="value"),
             Input(component_id="output_path", component_property="value"),
-        )(self.update_params)
-        self.app.callback(
-            Output(component_id="live_link", component_property="value"),
-            Input(component_id="export", component_property="n_clicks"),
             prevent_initial_call=True,
         )(self.trigger_click)
 
-    def update_params(
+    def upload_file(
         self,
         filename: str,
         contents: str,
-        new_grid: str,
-        objects: ObjectBase,
-        cell_size_x: float,
-        cell_size_y: float,
-        cell_size_z: float,
-        depth_core: int,
-        horizontal_padding: float,
-        bottom_padding: float,
-        expansion_fact: float,
-        live_link: list,
-        output_path: str,
     ) -> (
         str,
         str,
@@ -328,17 +317,6 @@ class BlockModelCreation(BaseDashApplication):
 
         :param filename: Input file filename. Workspace or ui_json.
         :param contents: Input file contents. Workspace or ui_json.
-        :param new_grid: Name for exported block model.
-        :param objects: Input object.
-        :param cell_size_x: X cell size for the core mesh.
-        :param cell_size_y: Y cell size for the core mesh.
-        :param cell_size_z: Z cell size for the core mesh.
-        :param depth_core: Depth of core mesh below input object.
-        :param horizontal_padding: Horizontal padding distance.
-        :param bottom_padding: Bottom padding distance.
-        :param expansion_fact: Expansion factor for padding cells.
-        :param live_link: Checkbox for using monitoring directory.
-        :param output_path: Output path for exporting block model.
 
         :return new_grid: Name for exported block model.
         :return objects_name: Name for input object.
@@ -369,95 +347,113 @@ class BlockModelCreation(BaseDashApplication):
             "filename",
             "contents",
         ]
-        # Dash converts .0 numbers to int. Making sure typing is correct for floats:
-        cell_size_x = float(cell_size_x)
-        cell_size_y = float(cell_size_y)
-        cell_size_z = float(cell_size_z)
-        horizontal_padding = float(horizontal_padding)
-        bottom_padding = float(bottom_padding)
-        expansion_fact = float(expansion_fact)
-        depth_core = float(depth_core)
-
-        # Get the dash component that triggered the callback
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
         update_dict = {}
-        if trigger == "upload":
-            if (filename.endswith("ui.json") or filename.endswith(".geoh5")) and (
-                contents is not None
-            ):
-                if filename.endswith(".ui.json"):
-                    update_dict.update(self.update_from_ui_json(contents, param_list))
-                elif filename.endswith(".geoh5"):
-                    content_type, content_string = contents.split(",")
-                    decoded = io.BytesIO(base64.b64decode(content_string))
-                    update_dict["geoh5"] = Workspace(decoded)
-                ws = update_dict["geoh5"]
-                update_dict.update(self.update_object_options(ws))
-                update_dict["filename"] = None
-                update_dict["contents"] = None
-            else:
-                print("Uploaded file must be a workspace or ui.json.")
-        elif trigger + "_name" in param_list:
-            update_dict[trigger + "_name"] = locals()[trigger]
-        elif trigger != "":
-            update_dict[trigger] = locals()[trigger]
+        if (filename.endswith("ui.json") or filename.endswith(".geoh5")) and (
+            contents is not None
+        ):
+            if filename.endswith(".ui.json"):
+                update_dict.update(self.update_from_ui_json(contents, param_list))
+            elif filename.endswith(".geoh5"):
+                content_type, content_string = contents.split(",")
+                decoded = io.BytesIO(base64.b64decode(content_string))
+                update_dict["geoh5"] = Workspace(decoded)
+            self.params.geoh5 = update_dict["geoh5"]
+            update_dict.update(self.update_object_options(self.params.geoh5))
+            update_dict["filename"] = None
+            update_dict["contents"] = None
+        else:
+            print("Uploaded file must be a workspace or ui.json.")
 
-        # Update self.params with the new parameter values.
-        self.update_param_dict(update_dict)
         outputs = self.get_outputs(param_list, update_dict)
 
         return outputs
 
-    def trigger_click(self, _) -> list:
+    def trigger_click(
+        self,
+        n_clicks: int,
+        new_grid: str,
+        objects: ObjectBase,
+        cell_size_x: float,
+        cell_size_y: float,
+        cell_size_z: float,
+        depth_core: int,
+        horizontal_padding: float,
+        bottom_padding: float,
+        expansion_fact: float,
+        live_link: list,
+        output_path: str,
+    ) -> list:
         """
         When the export button is pressed, run block model driver to export block model.
 
+        :param n_clicks: Triggers callback for pressing export button.
+        :param new_grid: Name for exported block model.
+        :param objects: Input object.
+        :param cell_size_x: X cell size for the core mesh.
+        :param cell_size_y: Y cell size for the core mesh.
+        :param cell_size_z: Z cell size for the core mesh.
+        :param depth_core: Depth of core mesh below input object.
+        :param horizontal_padding: Horizontal padding distance.
+        :param bottom_padding: Bottom padding distance.
+        :param expansion_fact: Expansion factor for padding cells.
+        :param live_link: Checkbox for using monitoring directory.
+        :param output_path: Output path for exporting block model.
+
         :return live_link: Checkbox for using monitoring directory.
         """
-        temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
 
-        # Get output path.
-        if (
-            (self.params.output_path is not None)
-            and (self.params.output_path != "")
-            and (os.path.exists(os.path.abspath(self.params.output_path)))
-        ):
-            self.params.output_path = os.path.abspath(self.params.output_path)
-        else:
-            self.params.output_path = os.path.abspath(
-                os.path.dirname(self.params.geoh5.h5file)
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
+        if trigger == "export":
+            # Update self.params from dash component values
+            self.update_params(locals())
+
+            temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
+
+            # Get output path.
+            if (
+                (self.params.output_path is not None)
+                and (self.params.output_path != "")
+                and (os.path.exists(os.path.abspath(self.params.output_path)))
+            ):
+                self.params.output_path = os.path.abspath(self.params.output_path)
+            else:
+                self.params.output_path = os.path.abspath(
+                    os.path.dirname(self.params.geoh5.h5file)
+                )
+
+            # Get output workspace.
+            ws, self.params.live_link = BaseApplication.get_output_workspace(
+                self.params.live_link, self.params.output_path, temp_geoh5
             )
 
-        # Get output workspace.
-        ws, self.params.live_link = BaseApplication.get_output_workspace(
-            self.params.live_link, self.params.output_path, temp_geoh5
-        )
+            param_dict = self.params.to_dict()
 
-        param_dict = self.params.to_dict()
+            with ws as workspace:
+                # Put entities in output workspace.
+                param_dict["geoh5"] = workspace
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
 
-        with ws as workspace:
-            # Put entities in output workspace.
-            param_dict["geoh5"] = workspace
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+            # Write output uijson.
+            new_params = BlockModelParams(**param_dict)
+            new_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=self.params.output_path,
+                validate=False,
+            )
+            # Run driver.
+            driver = BlockModelDriver(new_params)
+            print("Creating block model . . .")
+            driver.run()
 
-        # Write output uijson.
-        new_params = BlockModelParams(**param_dict)
-        new_params.write_input_file(
-            name=temp_geoh5.replace(".geoh5", ".ui.json"),
-            path=self.params.output_path,
-            validate=False,
-        )
-        # Run driver.
-        driver = BlockModelDriver(new_params)
-        print("Creating block model . . .")
-        driver.run()
-
-        if self.params.live_link:
-            print("Live link active. Check your ANALYST session for new mesh.")
-            return ["Geoscience ANALYST Pro - Live link"]
-        else:
-            print("Saved to " + self.params.output_path)
-            return []
+            if self.params.live_link:
+                print("Live link active. Check your ANALYST session for new mesh.")
+                return ["Geoscience ANALYST Pro - Live link"]
+            else:
+                print("Saved to " + self.params.output_path)
+                return []
