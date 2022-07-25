@@ -171,12 +171,12 @@ def plot_plan_data_selection(entity, data, **kwargs):
         and getattr(data.entity_type, "color_map", None) is not None
     ):
         new_cmap = data.entity_type.color_map.values
-        map_vals = new_cmap["Value"].copy()
+        map_vals = new_cmap[0].copy()
         cmap = colors.ListedColormap(
             np.c_[
-                new_cmap["Red"] / 255,
-                new_cmap["Green"] / 255,
-                new_cmap["Blue"] / 255,
+                new_cmap[1] / 255,
+                new_cmap[2] / 255,
+                new_cmap[3] / 255,
             ]
         )
         color_norm = colors.BoundaryNorm(map_vals, cmap.N)
@@ -255,8 +255,14 @@ def plot_plan_data_selection(entity, data, **kwargs):
     if np.any(x) and np.any(y):
         width = x.max() - x.min()
         height = y.max() - y.min()
-
-        format_labels(x, y, axis, **kwargs)
+        format_labels(
+            x,
+            y,
+            axis,
+            labels=kwargs.get("labels"),
+            aspect=kwargs.get("aspect", "equal"),
+            tick_format=kwargs.get("tick_format", "%i"),
+        )
         axis.set_xlim([x.min() - width * 0.1, x.max() + width * 0.1])
         axis.set_ylim([y.min() - height * 0.1, y.max() + height * 0.1])
 
