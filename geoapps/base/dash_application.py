@@ -4,7 +4,6 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-import ast
 import base64
 import json
 import os
@@ -71,35 +70,28 @@ class BaseDashApplication:
                 outputs.append(no_update)
         return tuple(outputs)
 
-    def update_param_dict(self, update_dict: dict):
+    def update_params(self, locals: dict):
         """
-        Update self.params from update_dict.
+        Update self.params from locals.
 
-        :param update_dict: Parameters that need to be updated and their new values.
+        :param locals: Parameters that need to be updated and their new values.
         """
-        # Get validations to know expected type for keys in self.params.
-        validations = self.params.validations
-        # Get ws for updating entities.
-        if "geoh5" in update_dict:
-            ws = update_dict["geoh5"]
-        else:
-            ws = self.params.geoh5
-        # Loop through self.params and update self.params with update_dict.
+        # Loop through self.params and update self.params with locals.
         for key in self.params.to_dict():
-            if key in update_dict:
+            if key in locals:
                 if key == "live_link":
-                    if not update_dict["live_link"]:
+                    if not locals["live_link"]:
                         self.params.live_link = False
                     else:
                         self.params.live_link = True
-                elif (
-                    list in validations[key]["types"] and type(update_dict[key]) == str
-                ):
-                    setattr(self.params, key, list(ast.literal_eval(update_dict[key])))
                 else:
-                    setattr(self.params, key, update_dict[key])
-            elif key + "_name" in update_dict:
-                setattr(self.params, key, ws.get_entity(update_dict[key + "_name"])[0])
+                    setattr(self.params, key, locals[key])
+            elif key + "_name" in locals:
+                setattr(
+                    self.params,
+                    key,
+                    self.params.geoh5.get_entity(locals[key + "_name"])[0],
+                )
 
     @staticmethod
     def update_from_ui_json(contents: str, param_list: list) -> dict:
