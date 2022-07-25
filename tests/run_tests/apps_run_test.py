@@ -62,7 +62,7 @@ def test_contour_values(tmp_path):
         )
 
     app = ContourValues(h5file=temp_workspace, plot_result=False)
-    app.trigger.click()
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("Airborne_TMI")[0]

@@ -59,17 +59,17 @@ def export_grid_2_geotiff(
         if data.entity_type.color_map is not None:
             cmap = data.entity_type.color_map.values
             red = interp1d(
-                cmap["Value"], cmap["Red"], bounds_error=False, fill_value="extrapolate"
+                cmap[0], cmap[1], bounds_error=False, fill_value="extrapolate"
             )(values)
             blue = interp1d(
-                cmap["Value"],
-                cmap["Blue"],
+                cmap[0],
+                cmap[3],
                 bounds_error=False,
                 fill_value="extrapolate",
             )(values)
             green = interp1d(
-                cmap["Value"],
-                cmap["Green"],
+                cmap[0],
+                cmap[2],
                 bounds_error=False,
                 fill_value="extrapolate",
             )(values)
@@ -81,7 +81,7 @@ def export_grid_2_geotiff(
 
             np.savetxt(
                 file_name[:-4] + "_RGB.txt",
-                np.c_[cmap["Value"], cmap["Red"], cmap["Green"], cmap["Blue"]],
+                np.c_[cmap[0], cmap[1], cmap[2], cmap[3]],
                 fmt="%.5e %i %i %i",
             )
         else:
