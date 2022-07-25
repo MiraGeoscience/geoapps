@@ -53,6 +53,8 @@ class LineDataDerivatives:
         self._smoothing = smoothing
         self._residual = residual
         self._sampling = sampling
+        self._values_resampled_raw = None
+        self._values_resampled = None
         self.Fx = None
         self.Fy = None
         self.Fz = None
@@ -174,7 +176,6 @@ class LineDataDerivatives:
             if self._locations[0] == self._locations[-1]:
                 return
 
-            width = self._locations[-1] - self._locations[0]
             dx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
             self._sampling_width = np.ceil(
                 (self._locations[-1] - self._locations[0]) / dx
@@ -182,7 +183,6 @@ class LineDataDerivatives:
             self._locations_resampled = np.linspace(
                 self._locations[0], self._locations[-1], self.sampling_width
             )
-            # self._locations_resampled = self._locations_padded[self.sampling_width: -self.sampling_width]
 
     @property
     def locations_resampled(self):
@@ -244,6 +244,13 @@ class LineDataDerivatives:
         self._values_resampled_raw = None
 
     @property
+    def values_resampled_raw(self):
+        """
+        Resampled values prior to smoothing
+        """
+        return self._values_resampled_raw
+
+    @property
     def interpolation(self):
         """
         Method of interpolation: ['linear'], 'nearest', 'slinear', 'quadratic' or 'cubic'
@@ -291,7 +298,7 @@ class LineDataDerivatives:
         Compute and return the first order derivative.
         """
         deriv = self.values_resampled
-        for i in range(order):
+        for _ in range(order):
             deriv = (
                 deriv[1:] - deriv[:-1]  # pylint: disable=unsubscriptable-object
             ) / self.sampling
@@ -366,7 +373,7 @@ def find_anomalies(
     channel_groups,
     smoothing=1,
     use_residual=False,
-    data_normalization=[1],
+    data_normalization=(1.0,),
     min_amplitude=25,
     min_value=-np.inf,
     min_width=200,

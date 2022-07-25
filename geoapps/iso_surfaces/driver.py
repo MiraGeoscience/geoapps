@@ -49,7 +49,7 @@ class IsoSurfacesDriver:
 
         container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
         result = []
-        for i, (surface, level) in enumerate(zip(surfaces, levels)):
+        for surface, level in zip(surfaces, levels):
             if len(surface[0]) > 0 and len(surface[1]) > 0:
                 result += [
                     Surface.create(
@@ -189,6 +189,6 @@ class IsoSurfacesDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = IsoSurfacesParams(InputFile.read_ui_json(file))
-    driver = IsoSurfacesDriver(params)
+    params_class = IsoSurfacesParams(InputFile.read_ui_json(file))
+    driver = IsoSurfacesDriver(params_class)
     driver.run()

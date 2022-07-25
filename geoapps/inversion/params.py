@@ -226,6 +226,11 @@ class InversionBaseParams(BaseParams):
         ]
 
     @property
+    def directive_list(self):
+        """List of directives"""
+        return self._directive_list
+
+    @property
     def forward_defaults(self):
         if getattr(self, "_forward_defaults", None) is None:
             raise NotImplementedError(

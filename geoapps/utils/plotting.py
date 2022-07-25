@@ -45,7 +45,7 @@ def inv_symlog(values, threshold):
     return np.sign(values) * threshold * (-1.0 + 10.0 ** np.abs(values))
 
 
-def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs):
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
     if labels is None:
         axs.set_ylabel("Northing (m)")
         axs.set_xlabel("Easting (m)")
@@ -170,7 +170,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         and getattr(data, "entity_type", None) is not None
         and getattr(data.entity_type, "color_map", None) is not None
     ):
-        new_cmap = data.entity_type.color_map._values
+        new_cmap = data.entity_type.color_map.values
         map_vals = new_cmap["Value"].copy()
         cmap = colors.ListedColormap(
             np.c_[
@@ -298,22 +298,25 @@ def plot_profile_data_selection(
     entity,
     field_list,
     uncertainties=None,
-    selection={},
+    selection=None,
     resolution=None,
     plot_legend=False,
     ax=None,
-    color=[0, 0, 0],
+    color=(0, 0, 0),
 ):
 
     locations = entity.vertices
 
     if ax is None:
-        fig = plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(8, 8))
         ax = plt.subplot()
 
-    pos = ax.get_position()
     xx, yy = [], []
     threshold = 1e-14
+
+    if selection is None:
+        return ax, threshold
+
     for key, values in selection.items():
 
         for line in values:
@@ -404,7 +407,7 @@ def plotly_scatter(
     """
     assert (
         getattr(points, "vertices", None) is not None
-    ), f"Input object must have vertices"
+    ), "Input object must have vertices"
 
     if figure is None:
         figure = go.FigureWidget()
@@ -474,9 +477,9 @@ def plotly_block_model(
     block_model,
     figure=None,
     value=None,
-    x_slice=[],
-    y_slice=[],
-    z_slice=[],
+    x_slice=None,
+    y_slice=None,
+    z_slice=None,
     colorscale="Portland",
     **kwargs,
 ):
@@ -490,13 +493,13 @@ def plotly_block_model(
     if figure is None:
         figure = go.FigureWidget()
 
-    if not x_slice:
+    if x_slice is None:
         x_slice = [block_model.centroids[:, 0].mean()]
 
-    if not y_slice:
+    if y_slice is None:
         y_slice = [block_model.centroids[:, 1].mean()]
 
-    if not z_slice:
+    if z_slice is None:
         z_slice = [block_model.centroids[:, 2].mean()]
 
     figure.add_trace(go.Volume())

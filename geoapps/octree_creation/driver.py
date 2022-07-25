@@ -92,9 +92,9 @@ class OctreeDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = OctreeParams(InputFile.read_ui_json(file))
-    params.geoh5.close()
+    params_class = OctreeParams(InputFile.read_ui_json(file))
+    params_class.geoh5.close()
 
-    with params.geoh5.open(model="r+"):
-        driver = OctreeDriver(params)
+    with params_class.geoh5.open(model="r+"):
+        driver = OctreeDriver(params_class)
         driver.run()

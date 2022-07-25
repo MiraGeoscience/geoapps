@@ -183,7 +183,11 @@ class InversionApp(PlotSelection2D):
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
             add_xyz=False,
-            **self.defaults,
+            receivers_offset_x=self.defaults["receivers_offset_x"],
+            receivers_offset_y=self.defaults["receivers_offset_y"],
+            receivers_offset_z=self.defaults["receivers_offset_z"],
+            z_from_topo=self.defaults["z_from_topo"],
+            receivers_radar_drape=self.defaults["receivers_radar_drape"],
         )
         self._alpha_s = widgets.FloatText(
             min=0,
@@ -1012,12 +1016,12 @@ class InversionApp(PlotSelection2D):
             except AttributeError:
                 continue
 
+        self.workspace.open(mode="r")
         # Create a new workapce and copy objects into it
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:
-
             param_dict["geoh5"] = new_workspace
 
             for elem in [
@@ -1107,6 +1111,7 @@ class InversionApp(PlotSelection2D):
 
         self.write.button_style = ""
         self.trigger.button_style = "success"
+        self.workspace.close()
 
     @staticmethod
     def run(params):

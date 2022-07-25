@@ -88,6 +88,7 @@ class PeakFinder(ObjectDataSelection):
     _system = None
     _tem_checkbox = None
     _width = None
+    _x_label = None
     _object_types = (Curve,)
     all_anomalies = []
     active_channels = {}
@@ -99,6 +100,7 @@ class PeakFinder(ObjectDataSelection):
     plot_result = True
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
+        self.figure = None
         self.plot_result = plot_result
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
@@ -920,8 +922,8 @@ class PeakFinder(ObjectDataSelection):
 
         if (
             self.pause_refresh
-            or not self.refresh.value
-            or self.plot_trigger.value is False
+            or not refresh
+            or plot_trigger is False
             or not self.plot_result
         ):
             return
@@ -956,7 +958,7 @@ class PeakFinder(ObjectDataSelection):
         up_markers_x, up_markers_y = [], []
         dwn_markers_x, dwn_markers_y = [], []
 
-        for cc, (uid, channel) in enumerate(self.active_channels.items()):
+        for cc, channel in enumerate(self.active_channels.values()):
 
             if "values" not in channel:
                 continue
@@ -1013,7 +1015,7 @@ class PeakFinder(ObjectDataSelection):
                     dwn_markers_y += [values[group["inflx_dwn"][i]]]
 
             if residual:
-                raw = self.lines.profile._values_resampled_raw
+                raw = self.lines.profile.values_resampled_raw
                 axs.fill_between(
                     locs, values, raw, where=raw > values, color=[1, 0, 0, 0.5]
                 )
@@ -1126,7 +1128,7 @@ class PeakFinder(ObjectDataSelection):
             return
 
         if (
-            self.plot_trigger.value
+            plot_trigger
             or self.refresh.value
             and hasattr(self.lines, "profile")
             and self.tem_checkbox.value
@@ -1362,5 +1364,5 @@ if __name__ == "__main__":
         "'geoapps.peak_finder.driver' in version 0.7.0. "
         "This warning is likely due to the execution of older ui.json files. Please update."
     )
-    params = PeakFinderParams(InputFile(file))
-    PeakFinder.run(params)
+    params_class = PeakFinderParams(InputFile(file))
+    PeakFinder.run(params_class)
