@@ -32,7 +32,7 @@ class ContourValues(PlotSelection2D):
     """
 
     _defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
+        "geoh5": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
         "contours": "-400:2000:100,-240",

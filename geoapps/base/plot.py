@@ -30,21 +30,23 @@ with warn_module_not_found():
         VBox,
     )
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+}
+
 
 class PlotSelection2D(ObjectDataSelection):
     """
     Application for selecting data in 2D plan map view
     """
 
-    _defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
-    }
     plot_result = True
 
     def __init__(self, **kwargs):
-        self.defaults.update(**kwargs)
+        app_initializer.update(kwargs)
+        self.defaults.update(**app_initializer)
         self.axis = None
         self.indices = None
         self.highlight_selection = None

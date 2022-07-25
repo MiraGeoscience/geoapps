@@ -40,7 +40,7 @@ class CoordinateTransformation(ObjectDataSelection):
 
     _defaults = {
         "ga_group_name": "CoordinateTransformation",
-        "h5file": "../../assets/FlinFlon.geoh5",
+        "geoh5": "../../assets/FlinFlon.geoh5",
         "objects": [
             "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
             "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",

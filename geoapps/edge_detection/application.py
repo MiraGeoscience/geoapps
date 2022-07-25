@@ -49,7 +49,7 @@ class EdgeDetectionApp(PlotSelection2D):
     """
 
     _defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
+        "geoh5": "../../assets/FlinFlon.geoh5",
         "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
         "resolution": 50,

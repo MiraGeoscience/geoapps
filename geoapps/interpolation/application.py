@@ -31,7 +31,7 @@ class DataInterpolation(ObjectDataSelection):
     """
 
     _defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
+        "geoh5": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": ["{f3e36334-be0a-4210-b13e-06933279de25}"],
         "core_cell_size": "50, 50, 50",
