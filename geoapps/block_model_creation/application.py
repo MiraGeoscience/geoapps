@@ -7,13 +7,12 @@
 
 from __future__ import annotations
 
-import base64
-import io
 import os
 from time import time
 
-from dash import callback_context, dcc, html
+from dash import callback_context, dcc, html, no_update
 from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
 
@@ -250,6 +249,7 @@ class BlockModelCreation(BaseDashApplication):
                 ),
                 html.Button("Export", id="export"),
                 dcc.Markdown(id="output_message"),
+                dcc.Store(id="ui_json", data={}),
             ],
             style={
                 "margin_left": "20px",
@@ -260,9 +260,15 @@ class BlockModelCreation(BaseDashApplication):
 
         # Set up callbacks
         self.app.callback(
+            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="objects", component_property="options"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+            prevent_initial_call=True,
+        )(self.update_object_options)
+        self.app.callback(
             Output(component_id="new_grid", component_property="value"),
             Output(component_id="objects", component_property="value"),
-            Output(component_id="objects", component_property="options"),
             Output(component_id="cell_size_x", component_property="value"),
             Output(component_id="cell_size_y", component_property="value"),
             Output(component_id="cell_size_z", component_property="value"),
@@ -271,11 +277,9 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="bottom_padding", component_property="value"),
             Output(component_id="expansion_fact", component_property="value"),
             Output(component_id="output_path", component_property="value"),
-            Output(component_id="upload", component_property="filename"),
-            Output(component_id="upload", component_property="contents"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-        )(self.upload_file)
+            Input(component_id="ui_json", component_property="data"),
+            prevent_initial_call=True,
+        )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
@@ -293,49 +297,10 @@ class BlockModelCreation(BaseDashApplication):
             prevent_initial_call=True,
         )(self.trigger_click)
 
-    def upload_file(
-        self,
-        filename: str,
-        contents: str,
-    ) -> (
-        str,
-        str,
-        dict,
-        float,
-        float,
-        float,
-        int,
-        float,
-        float,
-        float,
-        str,
-        str,
-        str,
-    ):
-        """
-        Update self.params and dash components from user input, including ones that depend indirectly.
-
-        :param filename: Input file filename. Workspace or ui_json.
-        :param contents: Input file contents. Workspace or ui_json.
-
-        :return new_grid: Name for exported block model.
-        :return objects_name: Name for input object.
-        :return objects_options: Dropdown options for input object.
-        :return cell_size_x: X cell size for the core mesh.
-        :return cell_size_y: Y cell size for the core mesh.
-        :return cell_size_z: Z cell size for the core mesh.
-        :return depth_core: Depth of core mesh below input object.
-        :return horizontal_padding: Horizontal padding distance.
-        :return bottom_padding: Bottom padding distance.
-        :return expansion_fact: Expansion factor for padding cells.
-        :return output_path: Output path for exporting block model.
-        :return filename: Input file filename. Workspace or ui_json.
-        :return contents: Input file contents. Workspace or ui_json.
-        """
+    def update_remainder_from_ui_json(self, ui_json):
         param_list = [
             "new_grid",
             "objects_name",
-            "objects_options",
             "cell_size_x",
             "cell_size_y",
             "cell_size_z",
@@ -344,28 +309,10 @@ class BlockModelCreation(BaseDashApplication):
             "bottom_padding",
             "expansion_fact",
             "output_path",
-            "filename",
-            "contents",
         ]
 
-        update_dict = {}
-        if (filename.endswith("ui.json") or filename.endswith(".geoh5")) and (
-            contents is not None
-        ):
-            if filename.endswith(".ui.json"):
-                update_dict.update(self.update_from_ui_json(contents, param_list))
-            elif filename.endswith(".geoh5"):
-                content_type, content_string = contents.split(",")
-                decoded = io.BytesIO(base64.b64decode(content_string))
-                update_dict["geoh5"] = Workspace(decoded)
-            self.params.geoh5 = update_dict["geoh5"]
-            update_dict.update(self.update_object_options(self.params.geoh5))
-            update_dict["filename"] = None
-            update_dict["contents"] = None
-        else:
-            print("Uploaded file must be a workspace or ui.json.")
-
-        outputs = self.get_outputs(param_list, update_dict)
+        update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
+        outputs = BaseDashApplication.get_outputs(param_list, update_dict)
 
         return outputs
 
@@ -373,7 +320,7 @@ class BlockModelCreation(BaseDashApplication):
         self,
         n_clicks: int,
         new_grid: str,
-        objects: ObjectBase,
+        objects_name: str,
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
@@ -389,7 +336,7 @@ class BlockModelCreation(BaseDashApplication):
 
         :param n_clicks: Triggers callback for pressing export button.
         :param new_grid: Name for exported block model.
-        :param objects: Input object.
+        :param objects_name: Input object name.
         :param cell_size_x: X cell size for the core mesh.
         :param cell_size_y: Y cell size for the core mesh.
         :param cell_size_z: Z cell size for the core mesh.
@@ -419,9 +366,8 @@ class BlockModelCreation(BaseDashApplication):
             ):
                 self.params.output_path = os.path.abspath(self.params.output_path)
             else:
-                self.params.output_path = os.path.abspath(
-                    os.path.dirname(self.params.geoh5.h5file)
-                )
+                print("Invalid output path.")
+                raise PreventUpdate
 
             # Get output workspace.
             ws, self.params.live_link = BaseApplication.get_output_workspace(
@@ -457,3 +403,5 @@ class BlockModelCreation(BaseDashApplication):
             else:
                 print("Saved to " + self.params.output_path)
                 return []
+        else:
+            return no_update
