@@ -33,8 +33,12 @@ class InversionBaseParams(BaseParams):
     _inversion_type = None
     _ga_group = None
 
-    def __init__(self, input_file=None, forward_only=False, **kwargs):
-        self._forward_only: bool = forward_only
+    def __init__(
+        self, input_file: InputFile | None = None, forward_only: bool = False, **kwargs
+    ):
+        self._forward_only: bool = (
+            forward_only if input_file is None else input_file.data["forward_only"]
+        )
         self._topography_object: UUID = None
         self._topography: UUID | float = None
         self._data_object: UUID = None

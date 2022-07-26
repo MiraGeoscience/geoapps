@@ -303,6 +303,15 @@ class BaseParams:
         self.setter_validator("title", val)
 
     @property
+    def workspace_geoh5(self):
+        """Reference to the source geoh5 file."""
+        return self._workspace_geoh5
+
+    @workspace_geoh5.setter
+    def workspace_geoh5(self, val):
+        self.setter_validator("workspace_geoh5", val)
+
+    @property
     def input_file(self) -> InputFile | None:
         """
         An InputFile class holding the associated ui_json and validations.
