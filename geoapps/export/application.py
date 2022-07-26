@@ -32,6 +32,18 @@ with warn_module_not_found():
 
 from .utils import export_curve_2_shapefile, object_2_dataframe
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": [
+        "{44822654-b6ae-45b0-8886-2d845f80f422}",
+        "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+    ],
+    "epsg_code": "EPSG:26914",
+    "file_type": "geotiff",
+    "data_type": "RGB",
+}
+
 
 class Export(ObjectDataSelection):
     """
@@ -40,21 +52,10 @@ class Export(ObjectDataSelection):
     shapefiles: *.shp
     """
 
-    _defaults = {
-        "geoh5": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": [
-            "{44822654-b6ae-45b0-8886-2d845f80f422}",
-            "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
-        ],
-        "epsg_code": "EPSG:26914",
-        "file_type": "geotiff",
-        "data_type": "RGB",
-    }
-
     _select_multiple = True
 
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self._file_type = Dropdown(
             options=["ESRI shapefile", "csv", "geotiff", "UBC format"],

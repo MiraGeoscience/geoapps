@@ -35,22 +35,24 @@ with warn_module_not_found():
     from .utils import geotiff_2_grid
 
 
-class CoordinateTransformation(ObjectDataSelection):
-    """"""
+app_initializer = {
+    "ga_group_name": "CoordinateTransformation",
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": [
+        "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+        "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+    ],
+    "code_in": "EPSG:26914",
+    "code_out": "EPSG:4326",
+}
 
-    _defaults = {
-        "ga_group_name": "CoordinateTransformation",
-        "geoh5": "../../assets/FlinFlon.geoh5",
-        "objects": [
-            "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-            "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
-        ],
-        "code_in": "EPSG:26914",
-        "code_out": "EPSG:4326",
-    }
+
+class CoordinateTransformation(ObjectDataSelection):
+    """Re-project entities between known coordinate systems."""
 
     def __init__(self, **kwargs):
-
+        self.defaults.update(**app_initializer)
+        self.defaults.update(**kwargs)
         self._code_in = Text(description="Input Projection:", continuous_update=False)
         self._code_out = Text(description="Output Projection:", continuous_update=False)
         self._wkt_in = Textarea(description="<=> WKT", layout=Layout(width="50%"))
