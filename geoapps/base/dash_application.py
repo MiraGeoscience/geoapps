@@ -14,6 +14,7 @@ from os import environ
 
 import dash
 from dash import no_update
+from dash.exceptions import PreventUpdate
 from flask import Flask
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
@@ -38,48 +39,7 @@ class BaseDashApplication:
             external_stylesheets=external_stylesheets,
         )
 
-    @staticmethod
-    def update_ui_json(filename: str, contents: str) -> dict:
-        if contents is not None and filename.endswith(".ui.json"):
-            content_type, content_string = contents.split(",")
-            decoded = base64.b64decode(content_string)
-            ui_json = json.loads(decoded)
-
-            return ui_json
-
-    @staticmethod
-    def update_workspace(
-        ui_json: dict,
-        filename: str,
-        contents: str,
-    ) -> str:
-        """
-        Update self.params and dash components from user input, including ones that depend indirectly.
-
-        :param filename: Input file filename. Workspace or ui_json.
-        :param contents: Input file contents. Workspace or ui_json.
-
-        :return geoh5:
-        """
-        trigger = dash.ctx.triggered[0]["prop_id"].split(".")[0]
-        ws = no_update
-
-        if trigger == "ui_json":
-            if "geoh5" in ui_json:
-                if type(ui_json["geoh5"]) == Workspace:
-                    ws = ui_json["geoh5"].h5file
-                else:
-                    ws = ui_json["geoh5"]
-        elif trigger == "upload":
-            if contents is not None and filename.endswith(".geoh5"):
-                content_type, content_string = contents.split(",")
-                decoded = io.BytesIO(base64.b64decode(content_string))
-                ws = Workspace(decoded).h5file
-
-        return ws
-
-    @staticmethod
-    def update_object_options(ws_path: str) -> list:
+    def update_object_options(self, filename, contents) -> (list, dict):
         """
         Get dropdown options for an input object.
 
@@ -87,14 +47,29 @@ class BaseDashApplication:
 
         :return update_dict: New dropdown options.
         """
-        if ws_path is not None and ws_path != "":
-            ws = Workspace(ws_path)
-            options = [
-                {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                for obj in ws.objects
-            ]
 
-            return options
+        if contents is not None:
+            if filename.endswith(".ui.json"):
+                content_type, content_string = contents.split(",")
+                decoded = base64.b64decode(content_string)
+                ui_json = json.loads(decoded)
+                self.params.geoh5 = Workspace(ui_json["geoh5"])
+                options = [
+                    {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+                    for obj in self.params.geoh5.objects
+                ]
+                return ui_json, options
+            elif filename.endswith(".geoh5"):
+                content_type, content_string = contents.split(",")
+                decoded = io.BytesIO(base64.b64decode(content_string))
+                self.params.geoh5 = Workspace(decoded)
+                options = [
+                    {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+                    for obj in self.params.geoh5.objects
+                ]
+                return no_update, options
+        else:
+            return no_update, no_update
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
@@ -120,6 +95,9 @@ class BaseDashApplication:
 
         :param locals: Parameters that need to be updated and their new values.
         """
+        # Get validations to know expected type for keys in self.params.
+        validations = self.params.validations
+
         # Loop through self.params and update self.params with locals.
         for key in self.params.to_dict():
             if key in locals:
@@ -128,6 +106,9 @@ class BaseDashApplication:
                         self.params.live_link = False
                     else:
                         self.params.live_link = True
+                elif float in validations[key]["types"] and type(locals[key]) == int:
+                    # Checking for values that Dash has given as int when they should be float.
+                    setattr(self.params, key, float(locals[key]))
                 else:
                     setattr(self.params, key, locals[key])
             elif key + "_name" in locals:
@@ -137,10 +118,7 @@ class BaseDashApplication:
                     self.params.geoh5.get_entity(locals[key + "_name"])[0],
                 )
 
-    @staticmethod
-    def update_param_list_from_ui_json(
-        ui_json: dict, ws: Workspace, param_list: list
-    ) -> dict:
+    def update_param_list_from_ui_json(self, ui_json: dict, param_list: list) -> dict:
         """
         Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
 
@@ -150,10 +128,9 @@ class BaseDashApplication:
         :return update_dict: Dictionary of updated parameters.
         """
         # Get update_dict from ui_json.
+        update_dict = {}
 
-        trigger = dash.ctx.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json":
-            update_dict = {}
+        if ui_json is not None:
             # Update workspace first, to use when assigning entities.
             # Loop through uijson, and add items that are also in param_list
             for key, value in ui_json.items():
@@ -164,17 +141,23 @@ class BaseDashApplication:
                         update_dict[key] = value
                 # Objects and Data.
                 elif key + "_name" in param_list:
-                    if (value["value"] is None) | (value["value"] == "") | (ws is None):
+                    if (
+                        (value["value"] is None)
+                        | (value["value"] == "")
+                        | (self.params.geoh5 is None)
+                    ):
                         update_dict[key + "_name"] = None
-                    elif ws.get_entity(uuid.UUID(value["value"])):
-                        update_dict[key + "_name"] = ws.get_entity(
+                    elif self.params.geoh5.get_entity(uuid.UUID(value["value"])):
+                        update_dict[key + "_name"] = self.params.geoh5.get_entity(
                             uuid.UUID(value["value"])
                         )[0].name
 
-            if ws is not None:
-                update_dict["output_path"] = os.path.abspath(os.path.dirname(ws.h5file))
+            if self.params.geoh5 is not None:
+                update_dict["output_path"] = os.path.abspath(
+                    os.path.dirname(self.params.geoh5.h5file)
+                )
 
-            return update_dict
+        return update_dict
 
     def run(self):
         """

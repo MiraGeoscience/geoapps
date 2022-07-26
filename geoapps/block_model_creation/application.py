@@ -10,8 +10,9 @@ from __future__ import annotations
 import os
 from time import time
 
-from dash import callback_context, dcc, html
+from dash import callback_context, dcc, html, no_update
 from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
 
@@ -248,7 +249,6 @@ class BlockModelCreation(BaseDashApplication):
                 ),
                 html.Button("Export", id="export"),
                 dcc.Markdown(id="output_message"),
-                dcc.Store(id="geoh5", data="../../assets/FlinFlon.geoh5"),
                 dcc.Store(id="ui_json", data={}),
             ],
             style={
@@ -261,21 +261,11 @@ class BlockModelCreation(BaseDashApplication):
         # Set up callbacks
         self.app.callback(
             Output(component_id="ui_json", component_property="data"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-            prevent_initial_call=True,
-        )(BaseDashApplication.update_ui_json)
-        self.app.callback(
-            Output(component_id="geoh5", component_property="data"),
-            Input(component_id="ui_json", component_property="data"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-            prevent_initial_call=True,
-        )(BaseDashApplication.update_workspace)
-        self.app.callback(
             Output(component_id="objects", component_property="options"),
-            Input(component_id="geoh5", component_property="data"),
-        )(BaseDashApplication.update_object_options)
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+            prevent_initial_call=True,
+        )(self.update_object_options)
         self.app.callback(
             Output(component_id="new_grid", component_property="value"),
             Output(component_id="objects", component_property="value"),
@@ -288,13 +278,11 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="expansion_fact", component_property="value"),
             Output(component_id="output_path", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
-            Input(component_id="geoh5", component_property="data"),
             prevent_initial_call=True,
-        )(BlockModelCreation.update_remainder_from_ui_json)
+        )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="geoh5", component_property="data"),
             Input(component_id="new_grid", component_property="value"),
             Input(component_id="objects", component_property="value"),
             Input(component_id="cell_size_x", component_property="value"),
@@ -309,8 +297,7 @@ class BlockModelCreation(BaseDashApplication):
             prevent_initial_call=True,
         )(self.trigger_click)
 
-    @staticmethod
-    def update_remainder_from_ui_json(ui_json, ws):
+    def update_remainder_from_ui_json(self, ui_json):
         param_list = [
             "new_grid",
             "objects_name",
@@ -322,22 +309,18 @@ class BlockModelCreation(BaseDashApplication):
             "bottom_padding",
             "expansion_fact",
             "output_path",
-            "ui_json",
-            "geoh5",
         ]
 
-        update_dict = BaseDashApplication.update_param_list_from_ui_json(
-            ui_json, ws, param_list
-        )
+        update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
         outputs = BaseDashApplication.get_outputs(param_list, update_dict)
+
         return outputs
 
     def trigger_click(
         self,
         n_clicks: int,
-        geoh5: str,
         new_grid: str,
-        objects: ObjectBase,
+        objects_name: str,
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
@@ -353,7 +336,7 @@ class BlockModelCreation(BaseDashApplication):
 
         :param n_clicks: Triggers callback for pressing export button.
         :param new_grid: Name for exported block model.
-        :param objects: Input object.
+        :param objects_name: Input object name.
         :param cell_size_x: X cell size for the core mesh.
         :param cell_size_y: Y cell size for the core mesh.
         :param cell_size_z: Z cell size for the core mesh.
@@ -383,9 +366,8 @@ class BlockModelCreation(BaseDashApplication):
             ):
                 self.params.output_path = os.path.abspath(self.params.output_path)
             else:
-                self.params.output_path = os.path.abspath(
-                    os.path.dirname(self.params.geoh5.h5file)
-                )
+                print("Invalid output path.")
+                raise PreventUpdate
 
             # Get output workspace.
             ws, self.params.live_link = BaseApplication.get_output_workspace(
@@ -421,3 +403,5 @@ class BlockModelCreation(BaseDashApplication):
             else:
                 print("Saved to " + self.params.output_path)
                 return []
+        else:
+            return no_update
