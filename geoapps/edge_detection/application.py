@@ -29,6 +29,18 @@ with warn_module_not_found():
     from skimage.feature import canny
     from skimage.transform import probabilistic_hough_line
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+    "resolution": 50,
+    "sigma": 0.5,
+    "window": {
+        "azimuth": -20,
+    },
+    "ga_group_name": "Edges",
+}
+
 
 class EdgeDetectionApp(PlotSelection2D):
     """
@@ -48,20 +60,10 @@ class EdgeDetectionApp(PlotSelection2D):
     :param line_gap [Hough]: Maximum gap between pixels to still form a line.
     """
 
-    _defaults = {
-        "geoh5": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
-        "resolution": 50,
-        "sigma": 0.5,
-        "window": {
-            "azimuth": -20,
-        },
-        "ga_group_name": "Edges",
-    }
     _object_types = (Grid2D,)
 
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self._compute = Button(
             description="Compute",
