@@ -155,8 +155,7 @@ Release 0.5.0 - 2021/07/15
 
 New application for the creation of octree meshes with arbitrary refinements around entities.
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - Major update to the Peak Finder algorithm and application. New selection panel for the query of channel groups. Faster plotting.
 - Implementation of the *ui.json* for Peak Finder and Octree Mesh Creation. Parameters can be re-loaded in the Notebook app from the Project Panel.
@@ -194,8 +193,7 @@ In order to protect the applications from breaking between releases, we will now
 of most third-party packages. Users will be notified if an update of the requirements is needed.
 
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - Fix numpy warnings for deprecated conversion to numpy.float
 - Fix issues with gdal and osr imports
@@ -227,8 +225,7 @@ Documentation Updates
 Major re-work of the documentation to solve limitations with ReadTheDocs.
 
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - Coordinate Transformation app now supports (and relies) on Well-Known-Text strings. ESRI and EPSG codes are also allowed.
 - New option for Surface Creation of horizons (2.5D surfaces)
