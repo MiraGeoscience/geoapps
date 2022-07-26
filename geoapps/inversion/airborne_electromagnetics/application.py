@@ -694,27 +694,29 @@ def inversion_defaults():
     return defaults
 
 
+app_initializer = {
+    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
+    "data": ["{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"],
+    "resolution": 50,
+    "window_width": 1500,
+    "window_height": 1500,
+    "ga_group_name": "EM1DInversion_",
+    "inversion_parameters": {"max_iterations": 25},
+    "topography": {
+        "options": "Object",
+        "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+        "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    },
+    "lines": {
+        "data": "{c004eda2-70f6-4181-9a55-e7b2e1b25da8}",
+        "lines": [6072400.0, 6072600.0, 6072800.0, 6073000.0, 6073200.0],
+    },
+    "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
+}
+
+
 class InversionApp(PlotSelection2D):
-    _defaults = {
-        "geoh5": "../../../assets/FlinFlon.geoh5",
-        "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-        "data": ["{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"],
-        "resolution": 50,
-        "window_width": 1500,
-        "window_height": 1500,
-        "ga_group_name": "EM1DInversion_",
-        "inversion_parameters": {"max_iterations": 25},
-        "topography": {
-            "options": "Object",
-            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-            "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
-        },
-        "lines": {
-            "data": "{c004eda2-70f6-4181-9a55-e7b2e1b25da8}",
-            "lines": [6072400.0, 6072600.0, 6072800.0, 6073000.0, 6073200.0],
-        },
-        "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
-    }
 
     _select_multiple = True
     _add_groups = True
@@ -724,6 +726,7 @@ class InversionApp(PlotSelection2D):
     _inversion_parameters = None
 
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
@@ -757,7 +760,7 @@ class InversionApp(PlotSelection2D):
         self.plotting_data = None
         super().__init__(**self.defaults)
 
-        if "lines" in self.defaults:
+        if "lines" in app_initializer:
             self.lines.__populate__(**self.defaults["lines"])
 
         self.output_panel = VBox([self.export_directory, self.write, self.trigger])
