@@ -14,7 +14,6 @@ from dash import callback_context, dcc, html, no_update
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 from geoh5py.objects.object_base import ObjectBase
-from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -59,14 +58,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Dropdown(
                             id="objects",
-                            value=getattr(self.params.objects, "name", None),
-                            options=[
-                                {
-                                    "label": obj.parent.name + "/" + obj.name,
-                                    "value": obj.name,
-                                }
-                                for obj in self.params.geoh5.objects
-                            ],
                             style={
                                 "width": "75%",
                                 "display": "inline-block",
@@ -83,7 +74,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Input(
                             id="new_grid",
-                            value=self.params.new_grid,
                             style={
                                 "width": "50%",
                                 "display": "inline-block",
@@ -100,7 +90,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Input(
                             id="cell_size_x",
-                            value=self.params.cell_size_x,
                             type="number",
                             min=1e-14,
                             style={
@@ -119,7 +108,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Input(
                             id="cell_size_y",
-                            value=self.params.cell_size_y,
                             type="number",
                             min=1e-14,
                             style={
@@ -138,7 +126,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Input(
                             id="cell_size_z",
-                            value=self.params.cell_size_z,
                             type="number",
                             min=1e-14,
                             style={
@@ -158,7 +145,6 @@ class BlockModelCreation(BaseDashApplication):
                         dcc.Input(
                             id="depth_core",
                             type="number",
-                            value=self.params.depth_core,
                             min=0.0,
                             style={
                                 "width": "50%",
@@ -176,7 +162,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Input(
                             id="horizontal_padding",
-                            value=self.params.horizontal_padding,
                             type="number",
                             min=0.0,
                             style={
@@ -195,7 +180,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Input(
                             id="bottom_padding",
-                            value=self.params.bottom_padding,
                             type="number",
                             min=0.0,
                             style={
@@ -215,7 +199,6 @@ class BlockModelCreation(BaseDashApplication):
                         dcc.Input(
                             id="expansion_fact",
                             type="number",
-                            value=self.params.expansion_fact,
                             style={
                                 "width": "50%",
                                 "display": "inline-block",
@@ -232,7 +215,6 @@ class BlockModelCreation(BaseDashApplication):
                         ),
                         dcc.Input(
                             id="output_path",
-                            value=self.params.output_path,
                             style={
                                 "width": "50%",
                                 "display": "inline-block",
@@ -249,7 +231,7 @@ class BlockModelCreation(BaseDashApplication):
                 ),
                 html.Button("Export", id="export"),
                 dcc.Markdown(id="output_message"),
-                dcc.Store(id="ui_json", data={}),
+                dcc.Store(id="ui_json"),
             ],
             style={
                 "margin_left": "20px",
@@ -264,7 +246,6 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="objects", component_property="options"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
-            prevent_initial_call=True,
         )(self.update_object_options)
         self.app.callback(
             Output(component_id="new_grid", component_property="value"),
@@ -278,7 +259,6 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="expansion_fact", component_property="value"),
             Output(component_id="output_path", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
-            prevent_initial_call=True,
         )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
