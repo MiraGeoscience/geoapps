@@ -124,8 +124,8 @@ if __name__ == "__main__":
     m_start, m_rec = test_gravity_run(
         "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
     )
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
+        model_residual < 50.0
+    ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"
     print("Density model is within 15% of the answer. Let's go!!")
