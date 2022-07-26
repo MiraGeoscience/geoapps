@@ -14,7 +14,7 @@ from os import environ
 
 import dash
 import numpy as np
-from dash import no_update
+from dash import callback_context, no_update
 from dash.exceptions import PreventUpdate
 from flask import Flask
 from geoh5py.workspace import Workspace
@@ -48,29 +48,29 @@ class BaseDashApplication:
 
         :return update_dict: New dropdown options.
         """
+        ui_json, options = no_update, no_update
 
-        if contents is not None:
-            if filename.endswith(".ui.json"):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
+        if contents is not None or trigger == "":
+            if filename is not None and filename.endswith(".ui.json"):
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
                 self.params.geoh5 = Workspace(ui_json["geoh5"])
-                options = [
-                    {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                    for obj in self.params.geoh5.objects
-                ]
-                return ui_json, options
-            elif filename.endswith(".geoh5"):
+            elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.params.geoh5 = Workspace(decoded)
-                options = [
-                    {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                    for obj in self.params.geoh5.objects
-                ]
-                return no_update, options
-        else:
-            return no_update, no_update
+                ui_json = no_update
+            elif trigger == "":
+                ui_json = self.params.input_file.ui_json
+            options = [
+                {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+                for obj in self.params.geoh5.objects
+            ]
+
+        return ui_json, options
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
