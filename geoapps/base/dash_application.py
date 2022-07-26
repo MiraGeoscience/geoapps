@@ -13,6 +13,7 @@ import webbrowser
 from os import environ
 
 import dash
+import numpy as np
 from dash import no_update
 from dash.exceptions import PreventUpdate
 from flask import Flask
@@ -159,16 +160,36 @@ class BaseDashApplication:
 
         return update_dict
 
+    @staticmethod
+    def is_port_in_use(port: int) -> bool:
+        import socket
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(("localhost", port)) == 0
+
+    @staticmethod
+    def get_port():
+        port = None
+        for p in np.arange(8050, 8101):
+            if BaseDashApplication.is_port_in_use(p) is False:
+                port = p
+                break
+        return port
+
     def run(self):
         """
         Open a browser with the correct url and run the dash.
         """
-        # The reloader has not yet run - open the browser
-        if not environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new("http://127.0.0.1:8050/")
+        port = BaseDashApplication.get_port()
+        if port is not None:
+            # The reloader has not yet run - open the browser
+            if not environ.get("WERKZEUG_RUN_MAIN"):
+                webbrowser.open_new("http://127.0.0.1:" + str(port) + "/")
 
-        # Otherwise, continue as normal
-        self.app.run_server(host="127.0.0.1", port=8050, debug=False)
+            # Otherwise, continue as normal
+            self.app.run_server(host="127.0.0.1", port=port, debug=False)
+        else:
+            print("No open port found.")
 
     @property
     def params(self) -> BaseParams:
