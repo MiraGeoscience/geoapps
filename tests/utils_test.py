@@ -93,7 +93,7 @@ def test_sorted_alphanumeric_list():
 
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
-        import os as test_import
+        import os as test_import  # pylint: disable=W0404
     assert test_import == os
 
     with warn_module_not_found():
@@ -101,7 +101,7 @@ def test_no_warn_module_not_found(recwarn):
     assert test_import_from == os.system
 
     with warn_module_not_found():
-        import geoh5py.objects as test_import_submodule
+        import geoh5py.objects as test_import_submodule  # pylint: disable=W0404
     assert test_import_submodule == geoh5py.objects
 
     with warn_module_not_found():
@@ -384,7 +384,7 @@ def test_downsample_xy():
     x_grid, y_grid = np.meshgrid(np.arange(11), np.arange(11))
     x = x_grid.ravel()
     y = y_grid.ravel()
-    ind, x_down, y_down = downsample_xy(x, y, 0)
+    _, x_down, y_down = downsample_xy(x, y, 0)
     assert np.all(x == x_down)
     assert np.all(y == y_down)
 
