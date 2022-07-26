@@ -283,7 +283,7 @@ default_ui_json.update(
         "color_maps": {
             "choiceList": px.colors.named_colorscales(),
             "group": "Color",
-            "label": "Colormaps",
+            "label": "Colormap",
             "main": True,
             "value": None,
             "enabled": False,
