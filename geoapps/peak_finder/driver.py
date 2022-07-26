@@ -329,7 +329,6 @@ class PeakFinderDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params_class = PeakFinderParams(InputFile.read_ui_json(file))
-    params_class.geoh5.close()
-    driver = PeakFinderDriver(params_class)
+    params = PeakFinderParams(InputFile.read_ui_json(file))
+    driver = PeakFinderDriver(params)
     driver.run()

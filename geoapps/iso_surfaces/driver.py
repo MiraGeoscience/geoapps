@@ -34,6 +34,7 @@ class IsoSurfacesDriver:
         Create iso surfaces from input values
         """
 
+        workspace = self.params.geoh5.open(mode="r+")
         levels = input_string_2_float(self.params.contours)
 
         if levels is None:
@@ -65,6 +66,7 @@ class IsoSurfacesDriver:
         ):
             monitored_directory_copy(self.params.monitoring_directory, container)
         print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
+        workspace.close()
         return result
 
     @staticmethod
