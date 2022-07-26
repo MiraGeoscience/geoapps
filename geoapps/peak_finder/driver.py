@@ -329,6 +329,6 @@ class PeakFinderDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = PeakFinderParams(InputFile.read_ui_json(file))
-    driver = PeakFinderDriver(params)
+    params_class = PeakFinderParams(InputFile.read_ui_json(file))
+    driver = PeakFinderDriver(params_class)
     driver.run()
