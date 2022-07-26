@@ -117,7 +117,11 @@ def test_params_initialize():
     ]:
         check = []
         for k, v in params.defaults.items():
-            if " " in k:
+            if " " in k or k in [
+                "starting_model",
+                "conductivity_model",
+                "min_value",
+            ]:
                 continue
             check.append(getattr(params, k) == v)
         assert all(check)
