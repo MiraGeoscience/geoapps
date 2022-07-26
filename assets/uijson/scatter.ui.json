@@ -316,7 +316,7 @@
             "mygbm"
         ],
         "group": "Color",
-        "label": "Colormaps",
+        "label": "Colormap",
         "main": true,
         "value": "",
         "enabled": false,

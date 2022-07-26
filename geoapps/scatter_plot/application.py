@@ -386,6 +386,7 @@ class ScatterPlots:
                             value=self.defaults["color_name"],
                             style={"margin-bottom": "20px"},
                         ),
+                        dcc.Markdown(children="Colormap: "),
                         dcc.Dropdown(
                             id="color_maps",
                             options=self.defaults["color_maps_options"],
