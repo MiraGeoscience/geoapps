@@ -7,26 +7,17 @@
 
 from __future__ import annotations
 
-import ast
 import base64
 import io
-import json
 import os
 import sys
-import uuid
-import webbrowser
-from os import environ
 
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from dash import callback_context, dcc, html, no_update
 from dash.dependencies import Input, Output
-from flask import Flask
-from geoh5py.objects.object_base import ObjectBase
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
-from jupyter_dash import JupyterDash
 
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.scatter_plot.constants import app_initializer
@@ -46,15 +37,6 @@ class ScatterPlots(BaseDashApplication):
 
         super().__init__(**kwargs)
 
-        self.data_channels = {}
-        # Initial values for the dash components
-        self.defaults = self.get_defaults()
-        if clustering:
-            self.defaults["color_maps_options"] = px.colors.named_colorscales() + [
-                "kmeans"
-            ]
-            self.defaults["data_options"].append("kmeans")
-
         # Set up the layout with the dash components
         self.workspace_layout = html.Div(
             [
@@ -66,8 +48,6 @@ class ScatterPlots(BaseDashApplication):
                 dcc.Markdown(children="Object: "),
                 dcc.Dropdown(
                     id="objects",
-                    options=self.defaults["objects_options"],
-                    value=self.defaults["objects_name"],
                     style={"margin-bottom": "20px"},
                     clearable=False,
                 ),
@@ -82,7 +62,6 @@ class ScatterPlots(BaseDashApplication):
                         ),
                         dcc.Slider(
                             id="downsampling",
-                            value=self.defaults["downsampling"],
                             min=1,
                             max=100,
                             step=1,
@@ -117,7 +96,6 @@ class ScatterPlots(BaseDashApplication):
                         ),
                     ],
                     style={
-                        # "width": "40%",
                         "display": "block",
                         "vertical-align": "top",
                     },
@@ -128,8 +106,6 @@ class ScatterPlots(BaseDashApplication):
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="x",
-                            options=self.defaults["data_options"],
-                            value=self.defaults["x_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -144,7 +120,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="x_thresh",
                                     type="number",
-                                    value=self.defaults["x_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -152,8 +127,7 @@ class ScatterPlots(BaseDashApplication):
                                 ),
                                 dcc.Checklist(
                                     id="x_log",
-                                    options=["Log10"],
-                                    value=self.defaults["x_log"],
+                                    options=[{"label": "Log10", "value": True}],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -171,7 +145,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="x_min",
                                     type="number",
-                                    value=self.defaults["x_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -192,7 +165,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="x_max",
                                     type="number",
-                                    value=self.defaults["x_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -211,8 +183,6 @@ class ScatterPlots(BaseDashApplication):
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="y",
-                            options=self.defaults["data_options"],
-                            value=self.defaults["y_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -227,7 +197,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="y_thresh",
                                     type="number",
-                                    value=self.defaults["y_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -235,8 +204,7 @@ class ScatterPlots(BaseDashApplication):
                                 ),
                                 dcc.Checklist(
                                     id="y_log",
-                                    options=["Log10"],
-                                    value=self.defaults["y_log"],
+                                    options=[{"label": "Log10", "value": True}],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -254,7 +222,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="y_min",
                                     type="number",
-                                    value=self.defaults["y_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -275,7 +242,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="y_max",
                                     type="number",
-                                    value=self.defaults["y_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -294,8 +260,6 @@ class ScatterPlots(BaseDashApplication):
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="z",
-                            options=self.defaults["data_options"],
-                            value=self.defaults["z_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -310,7 +274,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="z_thresh",
                                     type="number",
-                                    value=self.defaults["z_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -318,8 +281,7 @@ class ScatterPlots(BaseDashApplication):
                                 ),
                                 dcc.Checklist(
                                     id="z_log",
-                                    options=["Log10"],
-                                    value=self.defaults["z_log"],
+                                    options=[{"label": "Log10", "value": True}],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -337,7 +299,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="z_min",
                                     type="number",
-                                    value=self.defaults["z_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -358,7 +319,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="z_max",
                                     type="number",
-                                    value=self.defaults["z_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -377,14 +337,10 @@ class ScatterPlots(BaseDashApplication):
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="color",
-                            options=self.defaults["data_options"],
-                            value=self.defaults["color_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         dcc.Dropdown(
                             id="color_maps",
-                            options=self.defaults["color_maps_options"],
-                            value=self.defaults["color_maps"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -399,7 +355,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="color_thresh",
                                     type="number",
-                                    value=self.defaults["color_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -407,8 +362,7 @@ class ScatterPlots(BaseDashApplication):
                                 ),
                                 dcc.Checklist(
                                     id="color_log",
-                                    options=["Log10"],
-                                    value=self.defaults["color_log"],
+                                    options=[{"label": "Log10", "value": True}],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -426,7 +380,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="color_min",
                                     type="number",
-                                    value=self.defaults["color_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -447,7 +400,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="color_max",
                                     type="number",
-                                    value=self.defaults["color_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -466,8 +418,6 @@ class ScatterPlots(BaseDashApplication):
                         dcc.Markdown(children="Data: "),
                         dcc.Dropdown(
                             id="size",
-                            options=self.defaults["data_options"],
-                            value=self.defaults["size_name"],
                             style={"margin-bottom": "20px"},
                         ),
                         html.Div(
@@ -481,7 +431,6 @@ class ScatterPlots(BaseDashApplication):
                                 ),
                                 dcc.Slider(
                                     id="size_markers",
-                                    value=self.defaults["size_markers"],
                                     min=1,
                                     max=100,
                                     step=1,
@@ -506,7 +455,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="size_thresh",
                                     type="number",
-                                    value=self.defaults["size_thresh"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -514,8 +462,7 @@ class ScatterPlots(BaseDashApplication):
                                 ),
                                 dcc.Checklist(
                                     id="size_log",
-                                    options=["Log10"],
-                                    value=self.defaults["size_log"],
+                                    options=[{"label": "Log10", "value": True}],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -533,7 +480,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="size_min",
                                     type="number",
-                                    value=self.defaults["size_min"],
                                     style={
                                         "display": "inline-block",
                                         "margin-right": "20px",
@@ -554,7 +500,6 @@ class ScatterPlots(BaseDashApplication):
                                 dcc.Input(
                                     id="size_max",
                                     type="number",
-                                    value=self.defaults["size_max"],
                                     style={"display": "inline-block"},
                                 ),
                             ],
@@ -600,6 +545,7 @@ class ScatterPlots(BaseDashApplication):
                         "vertical-align": "bottom",
                     },
                 ),
+                dcc.Store(id="ui_json"),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
@@ -613,6 +559,63 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_div", component_property="style"),
             Input(component_id="axes_pannels", component_property="value"),
         )(self.update_visibility)
+        self.app.callback(
+            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+        self.app.callback(
+            Output(component_id="x", component_property="options"),
+            Output(component_id="y", component_property="options"),
+            Output(component_id="z", component_property="options"),
+            Output(component_id="color", component_property="options"),
+            Output(component_id="size", component_property="options"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="objects", component_property="value"),
+        )(self.update_data_options)
+        self.app.callback(
+            Output(component_id="x_min", component_property="value"),
+            Output(component_id="x_max", component_property="value"),
+            Output(component_id="y_min", component_property="value"),
+            Output(component_id="y_max", component_property="value"),
+            Output(component_id="z_min", component_property="value"),
+            Output(component_id="z_max", component_property="value"),
+            Output(component_id="color_min", component_property="value"),
+            Output(component_id="color_max", component_property="value"),
+            Output(component_id="size_min", component_property="value"),
+            Output(component_id="size_max", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
+        )(self.update_channel_bounds)
+        self.app.callback(
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="downsampling", component_property="value"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="x_log", component_property="value"),
+            Output(component_id="x_thresh", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="y_log", component_property="value"),
+            Output(component_id="y_thresh", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="z_log", component_property="value"),
+            Output(component_id="z_thresh", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="color_log", component_property="value"),
+            Output(component_id="color_thresh", component_property="value"),
+            Output(component_id="color_maps", component_property="value"),
+            Output(component_id="size", component_property="value"),
+            Output(component_id="size_log", component_property="value"),
+            Output(component_id="size_thresh", component_property="value"),
+            Output(component_id="size_markers", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+        )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
             Input(component_id="downsampling", component_property="value"),
@@ -645,93 +648,9 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="size_markers", component_property="value"),
         )(self.update_plot)
         self.app.callback(
-            Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
-            Output(component_id="upload", component_property="filename"),
-            Output(component_id="upload", component_property="contents"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-            prevent_initial_call=True,
-        )(self.update_objects)
-        self.app.callback(
-            Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
-            Output(component_id="x", component_property="options"),
-            Output(component_id="x", component_property="value"),
-            Output(component_id="y", component_property="options"),
-            Output(component_id="y", component_property="value"),
-            Output(component_id="z", component_property="options"),
-            Output(component_id="z", component_property="value"),
-            Output(component_id="color", component_property="options"),
-            Output(component_id="color", component_property="value"),
-            Output(component_id="size", component_property="options"),
-            Output(component_id="size", component_property="value"),
-            Input(component_id="objects", component_property="value"),
-            prevent_initial_call=True,
-        )(self.update_data)
-        self.app.callback(
-            Output(component_id="x_min", component_property="value"),
-            Output(component_id="x_max", component_property="value"),
-            Output(component_id="y_min", component_property="value"),
-            Output(component_id="y_max", component_property="value"),
-            Output(component_id="z_min", component_property="value"),
-            Output(component_id="z_max", component_property="value"),
-            Output(component_id="color_min", component_property="value"),
-            Output(component_id="color_max", component_property="value"),
-            Output(component_id="size_min", component_property="value"),
-            Output(component_id="size_max", component_property="value"),
-            Input(component_id="x", component_property="value"),
-            Input(component_id="y", component_property="value"),
-            Input(component_id="z", component_property="value"),
-            Input(component_id="color", component_property="value"),
-            Input(component_id="size", component_property="value"),
-            prevent_initial_call=True,
-        )(self.update_channel_bounds)
-        self.app.callback(
-            Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
-            Output(component_id="downsampling", component_property="value"),
-            Output(component_id="x", component_property="options"),
-            Output(component_id="x", component_property="value"),
-            Output(component_id="x_log", component_property="value"),
-            Output(component_id="x_thresh", component_property="value"),
-            Output(component_id="x_min", component_property="value"),
-            Output(component_id="x_max", component_property="value"),
-            Output(component_id="y", component_property="options"),
-            Output(component_id="y", component_property="value"),
-            Output(component_id="y_log", component_property="value"),
-            Output(component_id="y_thresh", component_property="value"),
-            Output(component_id="y_min", component_property="value"),
-            Output(component_id="y_max", component_property="value"),
-            Output(component_id="z", component_property="options"),
-            Output(component_id="z", component_property="value"),
-            Output(component_id="z_log", component_property="value"),
-            Output(component_id="z_thresh", component_property="value"),
-            Output(component_id="z_min", component_property="value"),
-            Output(component_id="z_max", component_property="value"),
-            Output(component_id="color", component_property="options"),
-            Output(component_id="color", component_property="value"),
-            Output(component_id="color_log", component_property="value"),
-            Output(component_id="color_thresh", component_property="value"),
-            Output(component_id="color_min", component_property="value"),
-            Output(component_id="color_max", component_property="value"),
-            Output(component_id="color_maps", component_property="value"),
-            Output(component_id="size", component_property="options"),
-            Output(component_id="size", component_property="value"),
-            Output(component_id="size_log", component_property="value"),
-            Output(component_id="size_thresh", component_property="value"),
-            Output(component_id="size_min", component_property="value"),
-            Output(component_id="size_max", component_property="value"),
-            Output(component_id="size_markers", component_property="value"),
-            Output(component_id="upload", component_property="filename"),
-            Output(component_id="upload", component_property="contents"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-            prevent_initial_call=True,
-        )(self.update_from_ui_json)
-        self.app.callback(
             Output(component_id="download", component_property="href"),
             Input(component_id="crossplot", component_property="figure"),
+            prevent_initial_call=True,
         )(self.save_figure)
 
     @staticmethod
@@ -778,78 +697,106 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def get_defaults(self):
-        defaults = {}
-        # Get initial values to initialize the dash components
-        for key, value in self.params.to_dict().items():
-            if key in ["x", "y", "z", "color", "size"]:
-                defaults[key + "_name"] = getattr(value, "name", None)
-            elif key == "objects":
-                if value is None:
-                    defaults[key + "_name"] = None
-                    defaults["data_options"] = []
-                else:
-                    defaults[key + "_name"] = value.name
-                    data_options = ["None"]
-                    data_options.extend(value.get_data_list())
-                    if "Visual Parameters" in data_options:
-                        data_options.remove("Visual Parameters")
-                    defaults["data_options"] = data_options
-                for channel in defaults["data_options"]:
-                    self.get_channel(channel)
-            elif key in ["x_log", "y_log", "z_log", "color_log", "size_log"]:
-                if value is True:
-                    defaults[key] = ["Log10"]
-                else:
-                    defaults[key] = []
-            else:
-                defaults[key] = value
+    def get_channel_bounds(self, channel):
+        """
+        Set the min and max values for the given axis channel
+        """
+        cmin, cmax = None, None
+        if self.params.geoh5.get_entity(channel)[0] is not None:
+            data = self.params.geoh5.get_entity(channel)[0]
+            cmin = float(f"{np.nanmin(data.values):.2e}")
+            cmax = float(f"{np.nanmax(data.values):.2e}")
 
-            if key == "geoh5":
-                if value is None:
-                    defaults["objects_options"] = []
-                else:
-                    defaults["objects_options"] = [
-                        {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                        for obj in value.objects
-                    ]
-        defaults["color_maps_options"] = px.colors.named_colorscales()
+        return cmin, cmax
 
-        if "plot_kmeans" in self.params.to_dict().keys():
-            plot_kmeans = ast.literal_eval(self.params.plot_kmeans)
-            defaults["plot_kmeans"] = plot_kmeans
-            axis_list = ["x", "y", "z", "color", "size"]
-            for i in range(len(plot_kmeans)):
-                if plot_kmeans[i]:
-                    defaults[axis_list[i] + "_name"] = "kmeans"
+    def update_channel_bounds(self, ui_json, x, y, z, color, size):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
-        return defaults
+        if trigger == "ui_json":
+            x_min, x_max = ui_json["x_min"]["value"], ui_json["x_max"]["value"]
+            y_min, y_max = ui_json["y_min"]["value"], ui_json["y_max"]["value"]
+            z_min, z_max = ui_json["z_min"]["value"], ui_json["z_max"]["value"]
+            color_min, color_max = (
+                ui_json["color_min"]["value"],
+                ui_json["color_max"]["value"],
+            )
+            size_min, size_max = (
+                ui_json["size_min"]["value"],
+                ui_json["size_max"]["value"],
+            )
+        else:
+            x_min, x_max = self.get_channel_bounds(x)
+            y_min, y_max = self.get_channel_bounds(y)
+            z_min, z_max = self.get_channel_bounds(z)
+            color_min, color_max = self.get_channel_bounds(color)
+            size_min, size_max = self.get_channel_bounds(size)
+
+        return (
+            x_min,
+            x_max,
+            y_min,
+            y_max,
+            z_min,
+            z_max,
+            color_min,
+            color_max,
+            size_min,
+            size_max,
+        )
+
+    def update_remainder_from_ui_json(self, ui_json):
+        param_list = [
+            "objects_name",
+            "downsampling",
+            "x_name",
+            "x_log",
+            "x_thresh",
+            "y_name",
+            "y_log",
+            "y_thresh",
+            "z_name",
+            "z_log",
+            "z_thresh",
+            "color_name",
+            "color_log",
+            "color_thresh",
+            "color_maps",
+            "size_name",
+            "size_log",
+            "size_thresh",
+            "size_markers",
+        ]
+
+        update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
+        outputs = BaseDashApplication.get_outputs(param_list, update_dict)
+
+        return outputs
 
     def update_plot(
         self,
         downsampling,
-        x,
+        x_name,
         x_log,
         x_thresh,
         x_min,
         x_max,
-        y,
+        y_name,
         y_log,
         y_thresh,
         y_min,
         y_max,
-        z,
+        z_name,
         z_log,
         z_thresh,
         z_min,
         z_max,
-        color,
+        color_name,
         color_log,
         color_thresh,
         color_min,
         color_max,
         color_maps,
-        size,
+        size_name,
         size_log,
         size_thresh,
         size_min,
@@ -857,262 +804,14 @@ class ScatterPlots(BaseDashApplication):
         size_markers,
         clustering=False,
     ):
-        new_params_dict = {}
-        for key, value in self.params.to_dict().items():
+        self.update_params(locals())
 
-            if key in locals():
-                param = locals()[key]
-            else:
-                param = None
-
-            if param is None:
-                if key in ["x", "y", "z", "color", "size"]:
-                    new_params_dict[key] = None
-                else:
-                    new_params_dict[key] = value
-            elif (
-                (key == "x")
-                | (key == "y")
-                | (key == "z")
-                | (key == "color")
-                | (key == "size")
-            ) & (clustering is False):
-                if (param != "None") & (param in self.data_channels.keys()):
-                    new_params_dict[key] = self.data_channels[param]
-                else:
-                    new_params_dict[key] = None
-            else:
-                new_params_dict[key] = param
-
-        ifile = InputFile(
-            ui_json=self.params.input_file.ui_json,
-            validation_options={"disabled": True},
-        )
-
-        ifile.data = new_params_dict
-        new_params = ScatterPlotParams(input_file=ifile)
-
+        new_params = ScatterPlotParams(**self.params.to_dict())
+        # Run driver.
         driver = ScatterPlotDriver(new_params)
         figure = go.FigureWidget(driver.run())
 
         return figure
-
-    def update_from_uijson(self, contents):
-        content_type, content_string = contents.split(",")
-        decoded = base64.b64decode(content_string)
-        ui_json = json.loads(decoded)
-
-        for key, value in ui_json.items():
-            if hasattr(self.params, key):
-                if key == "geoh5":
-                    if value == "":
-                        setattr(self.params, key, None)
-                    else:
-                        setattr(self.params, key, value)
-                elif type(value) is dict:
-                    if key in ["objects", "x", "y", "z", "color", "size"]:
-                        if (
-                            (value["value"] is None)
-                            | (value["value"] == "")
-                            | (self.params.geoh5 is None)
-                        ):
-                            setattr(self.params, key, None)
-                        elif self.params.geoh5.get_entity(uuid.UUID(value["value"])):
-                            setattr(
-                                self.params,
-                                key,
-                                self.params.geoh5.get_entity(uuid.UUID(value["value"]))[
-                                    0
-                                ],
-                            )
-                    elif value["value"]:
-                        setattr(self.params, key, value["value"])
-                    else:
-                        setattr(self.params, key, None)
-                elif key == "channels":
-                    setattr(self.params, key, value.replace("'", "").split(", "))
-                else:
-                    setattr(self.params, key, value)
-
-        self.data_channels = {}
-        defaults = self.get_defaults()
-
-        return defaults
-
-    def update_object_options(self, contents):
-        objects, value = None, None
-        if contents is not None:
-            content_type, content_string = contents.split(",")
-            decoded = io.BytesIO(base64.b64decode(content_string))
-            self.params.geoh5 = Workspace(decoded)
-
-        obj_list = self.params.geoh5.objects
-
-        options = [
-            {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-            for obj in obj_list
-        ]
-        if len(options) > 0:
-            value = options[0]["value"]
-
-        return {"objects_options": options, "objects_name": value}
-
-    def update_data_options(self, object):
-        obj = None
-        if getattr(
-            self.params, "geoh5", None
-        ) is not None and self.params.geoh5.get_entity(object):
-            for entity in self.params.geoh5.get_entity(object):
-                if isinstance(entity, ObjectBase):
-                    obj = entity
-
-        channel_list = ["None"]
-        channel_list.extend(obj.get_data_list())
-
-        if "Visual Parameters" in channel_list:
-            channel_list.remove("Visual Parameters")
-
-        self.data_channels = {}
-        for channel in channel_list:
-            self.get_channel(channel)
-
-        options = list(self.data_channels.keys())
-
-        return {
-            "data_options": options,
-            "x_name": "None",
-            "y_name": "None",
-            "z_name": "None",
-            "color_name": "None",
-            "size_name": "None",
-        }
-
-    def get_channel(self, channel):
-        if channel is None:
-            return None
-
-        if channel not in self.data_channels.keys():
-            if channel == "None":
-                data = None
-            elif self.params.geoh5.get_entity(channel):
-                data = self.params.geoh5.get_entity(channel)[0]
-            else:
-                return
-
-            self.data_channels[channel] = data
-
-    def get_channel_bounds(self, channel):
-        """
-        Set the min and max values for the given axis channel
-        """
-        self.get_channel(channel)
-
-        cmin, cmax = None, None
-        if (channel in self.data_channels.keys()) & (channel != "None"):
-            values = self.data_channels[channel].values
-            values = values[~np.isnan(values)]
-            cmin = float(f"{np.min(values):.2e}")
-            cmax = float(f"{np.max(values):.2e}")
-
-        return cmin, cmax
-
-    def set_channel_bounds(self, x, y, z, color, size):
-        x_min, x_max = self.get_channel_bounds(x)
-        y_min, y_max = self.get_channel_bounds(y)
-        z_min, z_max = self.get_channel_bounds(z)
-        color_min, color_max = self.get_channel_bounds(color)
-        size_min, size_max = self.get_channel_bounds(size)
-
-        return {
-            "x_min": x_min,
-            "x_max": x_max,
-            "y_min": y_min,
-            "y_max": y_max,
-            "z_min": z_min,
-            "z_max": z_max,
-            "color_min": color_min,
-            "color_max": color_max,
-            "size_min": size_min,
-            "size_max": size_max,
-        }
-
-    def update_params(
-        self,
-        filename,
-        contents,
-        objects,
-        x,
-        y,
-        z,
-        color,
-        size,
-    ):
-        param_list = [
-            "objects_options",
-            "objects_name",
-            "downsampling",
-            "data_options",
-            "x_name",
-            "x_log",
-            "x_thresh",
-            "x_min",
-            "x_max",
-            "data_options",
-            "y_name",
-            "y_log",
-            "y_thresh",
-            "y_min",
-            "y_max",
-            "data_options",
-            "z_name",
-            "z_log",
-            "z_thresh",
-            "z_min",
-            "z_max",
-            "data_options",
-            "color_name",
-            "color_log",
-            "color_thresh",
-            "color_min",
-            "color_max",
-            "color_maps",
-            "data_options",
-            "size_name",
-            "size_log",
-            "size_thresh",
-            "size_min",
-            "size_max",
-            "size_markers",
-            "filename",
-            "contents",
-        ]
-
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        update_dict = {}
-        if trigger == "upload":
-            if filename.endswith(".ui.json"):
-                update_dict = self.update_from_uijson(contents)
-            elif filename.endswith(".geoh5"):
-                update_dict = self.update_object_options(contents)
-                update_dict.update(
-                    self.update_data_options(update_dict["objects_name"])
-                )
-            else:
-                print("Uploaded file must be a workspace or ui.json.")
-            update_dict["filename"] = None
-            update_dict["contents"] = None
-        elif trigger == "objects":
-            update_dict = self.update_data_options(objects)
-        elif trigger in ["x", "y", "z", "color", "size"]:
-            update_dict = self.set_channel_bounds(x, y, z, color, size)
-
-        outputs = []
-        for param in param_list:
-            if param in update_dict.keys():
-                outputs.append(update_dict[param])
-            else:
-                outputs.append(no_update)
-        return tuple(outputs)
 
     def save_figure(self, fig):
         buffer = io.StringIO()
@@ -1122,14 +821,6 @@ class ScatterPlots(BaseDashApplication):
         href = "data:text/html;base64," + encoded
 
         return href
-
-    def run(self):
-        # The reloader has not yet run - open the browser
-        if not environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new("http://127.0.0.1:8050/")
-
-        # Otherwise, continue as normal
-        self.app.run_server(host="127.0.0.1", port=8050, debug=False)
 
 
 if __name__ == "__main__":

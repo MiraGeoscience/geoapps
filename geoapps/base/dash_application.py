@@ -17,6 +17,7 @@ import numpy as np
 from dash import callback_context, no_update
 from dash.exceptions import PreventUpdate
 from flask import Flask
+from geoh5py.objects import ObjectBase
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
@@ -40,7 +41,7 @@ class BaseDashApplication:
             external_stylesheets=external_stylesheets,
         )
 
-    def update_object_options(self, filename, contents) -> (list, dict):
+    def update_object_options(self, filename, contents) -> (list, dict, None, None):
         """
         Get dropdown options for an input object.
 
@@ -64,13 +65,38 @@ class BaseDashApplication:
                 self.params.geoh5 = Workspace(decoded)
                 ui_json = no_update
             elif trigger == "":
+                print("test")
                 ui_json = self.params.input_file.ui_json
             options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                 for obj in self.params.geoh5.objects
             ]
 
-        return ui_json, options
+        return ui_json, options, None, None
+
+    def update_data_options(self, ui_json, object_name):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
+        if trigger == "ui_json" and "objects" in ui_json:
+            if self.params.geoh5.get_entity(ui_json["objects"])[0] is not None:
+                object_name = self.params.geoh5.get_entity(ui_json["objects"])[0].name
+            else:
+                return [], [], [], [], []
+
+        obj = None
+        if getattr(
+            self.params, "geoh5", None
+        ) is not None and self.params.geoh5.get_entity(object_name):
+            for entity in self.params.geoh5.get_entity(object_name):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
+
+        options = obj.get_data_list()
+
+        if "Visual Parameters" in options:
+            options.remove("Visual Parameters")
+
+        return options, options, options, options, options
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
@@ -102,11 +128,11 @@ class BaseDashApplication:
         # Loop through self.params and update self.params with locals.
         for key in self.params.to_dict():
             if key in locals:
-                if key == "live_link":
-                    if not locals["live_link"]:
-                        self.params.live_link = False
+                if bool in validations[key]["types"] and type(locals[key]) == list:
+                    if not locals[key]:
+                        setattr(self.params, key, False)
                     else:
-                        self.params.live_link = True
+                        setattr(self.params, key, True)
                 elif float in validations[key]["types"] and type(locals[key]) == int:
                     # Checking for values that Dash has given as int when they should be float.
                     setattr(self.params, key, float(locals[key]))
@@ -137,7 +163,13 @@ class BaseDashApplication:
             for key, value in ui_json.items():
                 if key in param_list:
                     if type(value) is dict:
-                        update_dict[key] = value["value"]
+                        if type(value["value"]) is bool:
+                            if value:
+                                update_dict[key] = [True]
+                            else:
+                                update_dict[key] = []
+                        else:
+                            update_dict[key] = value["value"]
                     else:
                         update_dict[key] = value
                 # Objects and Data.
