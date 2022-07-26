@@ -225,7 +225,9 @@ class BlockModelCreation(BaseDashApplication):
                 ),
                 dcc.Checklist(
                     id="live_link",
-                    options=["Geoscience ANALYST Pro - Live link"],
+                    options=[
+                        {"label": "Geoscience ANALYST Pro - Live link", "value": True}
+                    ],
                     value=[],
                     style={"margin_bottom": "20px"},
                 ),
@@ -244,6 +246,8 @@ class BlockModelCreation(BaseDashApplication):
         self.app.callback(
             Output(component_id="ui_json", component_property="data"),
             Output(component_id="objects", component_property="options"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
         )(self.update_object_options)
