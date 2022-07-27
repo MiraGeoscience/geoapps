@@ -4,20 +4,21 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
 import base64
 import io
 import json
 import os
-import uuid
+import socket
 import webbrowser
 from os import environ
 
-import dash
 import numpy as np
 from dash import callback_context, no_update
-from dash.exceptions import PreventUpdate
 from flask import Flask
+from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
@@ -43,11 +44,14 @@ class BaseDashApplication:
 
     def update_object_options(self, filename, contents) -> (list, dict, None, None):
         """
-        Get dropdown options for an input object.
+        This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
+        and sets the new object options.
 
-        :param ws_path: Current workspace path.
+        :param filename: Uploaded filename. Workspace or ui.json.
+        :param contents: Uploaded file contents. Workspace or ui.json.
 
-        :return update_dict: New dropdown options.
+        :return ui_json: Uploaded ui_json.
+        :return options: New dropdown options.
         """
         ui_json, options = no_update, no_update
 
@@ -58,6 +62,9 @@ class BaseDashApplication:
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
+                ui_json = json.loads(
+                    json.dumps(ui_json, default=BaseDashApplication.serialize_ui_json)
+                )
                 self.params.geoh5 = Workspace(ui_json["geoh5"])
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
@@ -65,8 +72,16 @@ class BaseDashApplication:
                 self.params.geoh5 = Workspace(decoded)
                 ui_json = no_update
             elif trigger == "":
-                print("test")
-                ui_json = self.params.input_file.ui_json
+                ifile = InputFile(
+                    ui_json=self.params.input_file.ui_json,
+                    validation_options={"disabled": True},
+                )
+                ifile.update_ui_values(self.params.to_dict())
+                ui_json = json.loads(
+                    json.dumps(
+                        ifile.ui_json, default=BaseDashApplication.serialize_ui_json
+                    )
+                )
             options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                 for obj in self.params.geoh5.objects
@@ -99,6 +114,20 @@ class BaseDashApplication:
         return options, options, options, options, options
 
     @staticmethod
+    def serialize_ui_json(item):
+        """
+        Default function for json.dumps.
+
+        :param item: Item in input ui_json which can't be serialized.
+
+        :return serialized_item: A serialized version of the input item.
+        """
+        if isinstance(item, ObjectBase) | isinstance(item, Data):
+            return getattr(item, "name", None)
+        elif type(item) == np.ndarray:
+            return item.tolist()
+
+    @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
         """
         Get the list of updated parameters to return to the dash callback and update the dash components.
@@ -116,47 +145,49 @@ class BaseDashApplication:
                 outputs.append(no_update)
         return tuple(outputs)
 
-    def update_params(self, locals: dict):
+    def update_params(self, locals_dict: dict):
         """
         Update self.params from locals.
 
-        :param locals: Parameters that need to be updated and their new values.
+        :param locals_dict: Dict of parameters with new values to assign to self.params.
         """
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
 
-        # Loop through self.params and update self.params with locals.
+        # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
-            if key in locals:
-                if bool in validations[key]["types"] and type(locals[key]) == list:
-                    if not locals[key]:
+            if key in locals_dict:
+                if bool in validations[key]["types"] and type(locals_dict[key]) == list:
+                    if not locals_dict[key]:
                         setattr(self.params, key, False)
                     else:
                         setattr(self.params, key, True)
-                elif float in validations[key]["types"] and type(locals[key]) == int:
+                elif (
+                    float in validations[key]["types"] and type(locals_dict[key]) == int
+                ):
+
                     # Checking for values that Dash has given as int when they should be float.
-                    setattr(self.params, key, float(locals[key]))
+                    setattr(self.params, key, float(locals_dict[key]))
                 else:
-                    setattr(self.params, key, locals[key])
-            elif key + "_name" in locals:
+                    setattr(self.params, key, locals_dict[key])
+            elif key + "_name" in locals_dict:
                 setattr(
                     self.params,
                     key,
-                    self.params.geoh5.get_entity(locals[key + "_name"])[0],
+                    self.params.geoh5.get_entity(locals_dict[key + "_name"])[0],
                 )
 
     def update_param_list_from_ui_json(self, ui_json: dict, param_list: list) -> dict:
         """
         Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
 
-        :param contents: The contents of an uploaded ui_json file.
+        :param ui_json: An uploaded ui_json file.
         :param param_list: List of parameters that need to be updated.
 
         :return update_dict: Dictionary of updated parameters.
         """
         # Get update_dict from ui_json.
         update_dict = {}
-
         if ui_json is not None:
             # Update workspace first, to use when assigning entities.
             # Loop through uijson, and add items that are also in param_list
@@ -174,16 +205,7 @@ class BaseDashApplication:
                         update_dict[key] = value
                 # Objects and Data.
                 elif key + "_name" in param_list:
-                    if (
-                        (value["value"] is None)
-                        | (value["value"] == "")
-                        | (self.params.geoh5 is None)
-                    ):
-                        update_dict[key + "_name"] = None
-                    elif self.params.geoh5.get_entity(uuid.UUID(value["value"])):
-                        update_dict[key + "_name"] = self.params.geoh5.get_entity(
-                            uuid.UUID(value["value"])
-                        )[0].name
+                    update_dict[key + "_name"] = value["value"]
 
             if self.params.geoh5 is not None:
                 update_dict["output_path"] = os.path.abspath(
@@ -193,19 +215,21 @@ class BaseDashApplication:
         return update_dict
 
     @staticmethod
-    def is_port_in_use(port: int) -> bool:
-        import socket
+    def get_port() -> int:
+        """
+        Loop through a list of ports to find an available port.
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            return s.connect_ex(("localhost", port)) == 0
-
-    @staticmethod
-    def get_port():
+        :return port: Available port.
+        """
         port = None
         for p in np.arange(8050, 8101):
-            if BaseDashApplication.is_port_in_use(p) is False:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                in_use = s.connect_ex(("localhost", p)) == 0
+            if in_use is False:
                 port = p
                 break
+        if port is None:
+            print("No open port found.")
         return port
 
     def run(self):
@@ -220,8 +244,6 @@ class BaseDashApplication:
 
             # Otherwise, continue as normal
             self.app.run_server(host="127.0.0.1", port=port, debug=False)
-        else:
-            print("No open port found.")
 
     @property
     def params(self) -> BaseParams:
