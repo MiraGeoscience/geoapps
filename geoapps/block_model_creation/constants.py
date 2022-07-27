@@ -110,7 +110,7 @@ default_ui_json.update(
 validations = {}
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "output_path": os.path.abspath("../../assets/Temp"),
+    "output_path": os.path.abspath("../../assets"),
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "cell_size_x": 50.0,
     "cell_size_y": 50.0,
