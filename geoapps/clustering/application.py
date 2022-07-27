@@ -7,12 +7,9 @@
 
 from __future__ import annotations
 
-import ast
 import os
 import sys
 import time
-import webbrowser
-from os import environ, makedirs, path
 
 import dash_daq as daq
 import numpy as np
@@ -45,18 +42,7 @@ class Clustering(ScatterPlots):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.data_channels = {}
-        super().__init__(clustering=True, **self.params.to_dict())
-        # Initial values for the dash components
-        self.defaults.update(self.get_cluster_defaults())
-
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-        server = Flask(__name__)
-        self.app = JupyterDash(
-            server=server,
-            url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
-            external_stylesheets=external_stylesheets,
-        )
+        super().__init__(**self.params.to_dict())
 
         # Layout for histogram, stats table, confusion matrix
         self.norm_tabs_layout = html.Div(
@@ -74,8 +60,6 @@ class Clustering(ScatterPlots):
                                                 dcc.Markdown("Data: "),
                                                 dcc.Dropdown(
                                                     id="channel",
-                                                    value=self.defaults["channel"],
-                                                    options=self.defaults["channels"],
                                                 ),
                                                 dcc.Markdown("Scale: "),
                                                 dcc.Slider(
@@ -83,7 +67,6 @@ class Clustering(ScatterPlots):
                                                     min=1,
                                                     max=10,
                                                     step=1,
-                                                    value=self.defaults["scale"],
                                                     marks=None,
                                                     tooltip={
                                                         "placement": "bottom",
@@ -93,12 +76,10 @@ class Clustering(ScatterPlots):
                                                 dcc.Markdown("Lower bound: "),
                                                 dcc.Input(
                                                     id="lower_bounds",
-                                                    value=self.defaults["lower_bounds"],
                                                 ),
                                                 dcc.Markdown("Upper bound: "),
                                                 dcc.Input(
                                                     id="upper_bounds",
-                                                    value=self.defaults["upper_bounds"],
                                                 ),
                                             ],
                                             style={
@@ -237,9 +218,7 @@ class Clustering(ScatterPlots):
                         self.workspace_layout,
                         dcc.Markdown("Data subset: "),
                         dcc.Dropdown(
-                            id="channels",
-                            value=self.defaults["channels"],
-                            options=self.defaults["channels_options"],
+                            id="data_subset",
                             multi=True,
                         ),
                     ],
@@ -260,7 +239,6 @@ class Clustering(ScatterPlots):
                             min=2,
                             max=100,
                             step=1,
-                            value=self.defaults["n_clusters"],
                             marks=None,
                             tooltip={
                                 "placement": "bottom",
@@ -283,7 +261,6 @@ class Clustering(ScatterPlots):
                         dcc.Input(
                             id="output_path",
                             style={"margin-bottom": "20px"},
-                            value=self.defaults["output_path"],
                         ),
                         html.Button("Export", id="export"),
                         dcc.Markdown(id="export_message"),
@@ -300,8 +277,6 @@ class Clustering(ScatterPlots):
                         dcc.Markdown("Cluster: "),
                         dcc.Dropdown(
                             id="select_cluster",
-                            options=np.arange(0, self.defaults["n_clusters"], 1),
-                            value=0,
                             style={"margin-bottom": "20px"},
                         ),
                         daq.ColorPicker(
@@ -325,20 +300,17 @@ class Clustering(ScatterPlots):
                 self.norm_tabs_layout,
                 self.cluster_tabs_layout,
                 # Creating stored variables that can be passed through callbacks.
-                dcc.Store(id="dataframe", data=self.defaults["dataframe"]),
-                dcc.Store(id="full_scales", data=self.defaults["full_scales"]),
-                dcc.Store(
-                    id="full_lower_bounds", data=self.defaults["full_lower_bounds"]
-                ),
-                dcc.Store(
-                    id="full_upper_bounds", data=self.defaults["full_upper_bounds"]
-                ),
-                dcc.Store(id="color_pickers", data=self.defaults["color_pickers"]),
-                dcc.Store(id="plot_kmeans", data=self.defaults["plot_kmeans"]),
-                dcc.Store(id="kmeans", data=self.defaults["kmeans"]),
-                dcc.Store(id="clusters", data=self.defaults["clusters"]),
-                dcc.Store(id="indices", data=self.defaults["indices"]),
-                dcc.Store(id="mapping", data=self.defaults["mapping"]),
+                dcc.Store(id="dataframe"),
+                dcc.Store(id="full_scales"),
+                dcc.Store(id="full_lower_bounds"),
+                dcc.Store(id="full_upper_bounds"),
+                dcc.Store(id="color_pickers"),
+                dcc.Store(id="plot_kmeans"),
+                dcc.Store(id="kmeans"),
+                dcc.Store(id="clusters"),
+                dcc.Store(id="indices"),
+                dcc.Store(id="mapping"),
+                dcc.Store(id="ui_json"),
             ],
             style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
         )
@@ -350,7 +322,7 @@ class Clustering(ScatterPlots):
             Output(component_id="z_div", component_property="style"),
             Output(component_id="color_div", component_property="style"),
             Output(component_id="size_div", component_property="style"),
-            Input(component_id="axes_pannels", component_property="value"),
+            Input(component_id="axes_panels", component_property="value"),
         )(self.update_visibility)
         self.app.callback(
             Output(component_id="color_select_div", component_property="style"),
@@ -361,62 +333,115 @@ class Clustering(ScatterPlots):
             Input(component_id="show_norm_tabs", component_property="value"),
         )(Clustering.update_norm_tabs)
 
-        # Update cluster color picker options from n_clusters
+        # Callbacks to update params
         self.app.callback(
             Output(component_id="select_cluster", component_property="options"),
             Input(component_id="n_clusters", component_property="value"),
         )(Clustering.update_select_cluster_options)
-
-        # Callback to update any params
         self.app.callback(
+            Output(component_id="ui_json", component_property="data"),
             Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
-            Output(component_id="downsampling", component_property="value"),
-            Output(component_id="x", component_property="options"),
-            Output(component_id="x", component_property="value"),
-            Output(component_id="x_log", component_property="value"),
-            Output(component_id="x_thresh", component_property="value"),
-            Output(component_id="x_min", component_property="value"),
-            Output(component_id="x_max", component_property="value"),
-            Output(component_id="y", component_property="options"),
-            Output(component_id="y", component_property="value"),
-            Output(component_id="y_log", component_property="value"),
-            Output(component_id="y_thresh", component_property="value"),
-            Output(component_id="y_min", component_property="value"),
-            Output(component_id="y_max", component_property="value"),
-            Output(component_id="z", component_property="options"),
-            Output(component_id="z", component_property="value"),
-            Output(component_id="z_log", component_property="value"),
-            Output(component_id="z_thresh", component_property="value"),
-            Output(component_id="z_min", component_property="value"),
-            Output(component_id="z_max", component_property="value"),
-            Output(component_id="color", component_property="options"),
-            Output(component_id="color", component_property="value"),
-            Output(component_id="color_log", component_property="value"),
-            Output(component_id="color_thresh", component_property="value"),
-            Output(component_id="color_min", component_property="value"),
-            Output(component_id="color_max", component_property="value"),
-            Output(component_id="color_maps", component_property="value"),
-            Output(component_id="size", component_property="options"),
-            Output(component_id="size", component_property="value"),
-            Output(component_id="size_log", component_property="value"),
-            Output(component_id="size_thresh", component_property="value"),
-            Output(component_id="size_min", component_property="value"),
-            Output(component_id="size_max", component_property="value"),
-            Output(component_id="size_markers", component_property="value"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+        self.app.callback(
+            Output(component_id="data_subset", component_property="options"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="objects", component_property="value"),
+        )(self.get_data_options)
+        self.app.callback(
+            Output(component_id="x", component_property="options"),
+            Output(component_id="y", component_property="options"),
+            Output(component_id="z", component_property="options"),
+            Output(component_id="color", component_property="options"),
+            Output(component_id="size", component_property="options"),
             Output(component_id="channel", component_property="options"),
-            Output(component_id="channel", component_property="value"),
-            Output(component_id="channels", component_property="options"),
-            Output(component_id="channels", component_property="value"),
+            Input(component_id="data_subset", component_property="options"),
+        )(self.update_data_options)
+        self.app.callback(
+            Output(component_id="x_min", component_property="value"),
+            Output(component_id="x_max", component_property="value"),
+            Output(component_id="y_min", component_property="value"),
+            Output(component_id="y_max", component_property="value"),
+            Output(component_id="z_min", component_property="value"),
+            Output(component_id="z_max", component_property="value"),
+            Output(component_id="color_min", component_property="value"),
+            Output(component_id="color_max", component_property="value"),
+            Output(component_id="size_min", component_property="value"),
+            Output(component_id="size_max", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
+        )(self.update_channel_bounds)
+        self.app.callback(
+            Output(component_id="dataframe", component_property="data"),
+            Output(component_id="kmeans", component_property="data"),
+            Output(component_id="mapping", component_property="data"),
+            Output(component_id="indices", component_property="data"),
+            Input(component_id="downsampling", component_property="data"),
+            Input(component_id="data_subset", component_property="value"),
+        )(ClusteringDriver.update_dataframe)
+        self.app.callback(
+            Output(component_id="kmeans", component_property="data"),
+            Output(component_id="clusters", component_property="data"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="dataframe", component_property="data"),
+            Input(component_id="full_scales", component_property="data"),
+            Input(component_id="clusters", component_property="data"),
+            Input(component_id="mapping", component_property="data"),
+        )(ClusteringDriver.run_clustering)
+        self.app.callback(
+            Output(component_id="color_picker", component_property="value"),
+            Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="select_cluster", component_property="value"),
+        )(Clustering.update_color_picker)
+        self.app.callback(
+            Output(component_id="color_pickers", component_property="data"),
+            Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="color_picker", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
+        )(Clustering.update_color_pickers)
+        self.app.callback(
             Output(component_id="scale", component_property="value"),
             Output(component_id="lower_bounds", component_property="value"),
             Output(component_id="upper_bounds", component_property="value"),
+            Output(component_id="full_scales", component_property="data"),
+            Output(component_id="full_lower_bounds", component_property="data"),
+            Output(component_id="full_upper_bounds", component_property="data"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="full_scales", component_property="data"),
+            Input(component_id="full_lower_bounds", component_property="data"),
+            Input(component_id="full_upper_bounds", component_property="data"),
+        )(Clustering.update_properties)
+        self.app.callback(
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="downsampling", component_property="value"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="x_log", component_property="value"),
+            Output(component_id="x_thresh", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="y_log", component_property="value"),
+            Output(component_id="y_thresh", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="z_log", component_property="value"),
+            Output(component_id="z_thresh", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="color_log", component_property="value"),
+            Output(component_id="color_thresh", component_property="value"),
+            Output(component_id="color_maps", component_property="value"),
+            Output(component_id="size", component_property="value"),
+            Output(component_id="size_log", component_property="value"),
+            Output(component_id="size_thresh", component_property="value"),
+            Output(component_id="size_markers", component_property="value"),
+            Output(component_id="channel", component_property="value"),
+            Output(component_id="data_subset", component_property="value"),
             Output(component_id="color_maps", component_property="options"),
-            Output(component_id="color_picker", component_property="value"),
             Output(component_id="n_clusters", component_property="value"),
-            Output(component_id="dataframe", component_property="data"),
             Output(component_id="full_scales", component_property="data"),
             Output(component_id="full_lower_bounds", component_property="data"),
             Output(component_id="full_upper_bounds", component_property="data"),
@@ -427,34 +452,10 @@ class Clustering(ScatterPlots):
             Output(component_id="indices", component_property="data"),
             Output(component_id="mapping", component_property="data"),
             Output(component_id="output_path", component_property="value"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-            Input(component_id="objects", component_property="value"),
-            Input(component_id="x", component_property="value"),
-            Input(component_id="y", component_property="value"),
-            Input(component_id="z", component_property="value"),
-            Input(component_id="color", component_property="value"),
-            Input(component_id="size", component_property="value"),
-            Input(component_id="channel", component_property="value"),
-            Input(component_id="channels", component_property="value"),
-            Input(component_id="scale", component_property="value"),
-            Input(component_id="lower_bounds", component_property="value"),
-            Input(component_id="upper_bounds", component_property="value"),
-            Input(component_id="downsampling", component_property="value"),
-            Input(component_id="select_cluster", component_property="value"),
-            Input(component_id="n_clusters", component_property="value"),
-            Input(component_id="full_scales", component_property="data"),
-            Input(component_id="full_lower_bounds", component_property="data"),
-            Input(component_id="full_upper_bounds", component_property="data"),
-            Input(component_id="color_picker", component_property="value"),
-            Input(component_id="color_pickers", component_property="data"),
-            Input(component_id="kmeans", component_property="data"),
-            Input(component_id="indices", component_property="data"),
-            Input(component_id="clusters", component_property="data"),
-            Input(component_id="output_path", component_property="value"),
-            Input(component_id="live_link", component_property="value"),
-        )(self.update_cluster_params)
-        # Callback to update all the plots
+            Input(component_id="ui_json", component_property="data"),
+        )(self.update_remainder_from_ui_json)
+
+        # Callbacks to update the plots
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
             Output(component_id="stats_table", component_property="data"),
@@ -464,9 +465,6 @@ class Clustering(ScatterPlots):
             Output(component_id="inertia", component_property="figure"),
             Input(component_id="n_clusters", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
-            Input(component_id="channel", component_property="value"),
-            Input(component_id="lower_bounds", component_property="value"),
-            Input(component_id="upper_bounds", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -495,115 +493,41 @@ class Clustering(ScatterPlots):
             Input(component_id="size_min", component_property="value"),
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
+        )(self.make_scatter_plot)
+        self.app.callback(
+            Output(component_id="stats_table", component_property="data"),
+            Input(component_id="dataframe", component_property="data"),
+        )(self.make_stats_table)
+        self.app.callback(
+            Output(component_id="matrix", component_property="figure"),
+            Input(component_id="dataframe", component_property="data"),
+        )(self.make_heatmap)
+        self.app.callback(
+            Output(component_id="histogram", component_property="figure"),
+            Input(component_id="dataframe", component_property="data"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="lower_bounds", component_property="value"),
+            Input(component_id="upper_bounds", component_property="value"),
+        )(self.make_hist_plot)
+        self.app.callback(
+            Output(component_id="boxplot", component_property="figure"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="color_pickers", component_property="data"),
             Input(component_id="kmeans", component_property="data"),
             Input(component_id="indices", component_property="data"),
+        )(self.make_boxplot)
+        self.app.callback(
+            Output(component_id="inertia", component_property="figure"),
+            Input(component_id="n_clusters", component_property="value"),
             Input(component_id="clusters", component_property="data"),
-        )(self.update_plots)
+        )(self.make_inertia_plot)
         # Callback to export the clusters as a geoh5 file
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
             prevent_initial_call=True,
         )(self.trigger_click)
-
-    def get_cluster_defaults(self) -> dict:
-        """
-        Get initial values from self.params to initialize the dash components.
-        :return defaults: Initial values for dash components.
-        """
-        defaults = {}
-        defaults["kmeans"] = None
-        defaults["clusters"] = {}
-        defaults["mapping"] = None
-        defaults["indices"] = None
-        # If there is no default data subset list, set it from selected scatter plot data
-        self.params.channels = ast.literal_eval(self.params.channels)
-        if not self.params.channels:
-            plot_data = [
-                self.defaults["x_name"],
-                self.defaults["y_name"],
-                self.defaults["z_name"],
-                self.defaults["color_name"],
-                self.defaults["size_name"],
-            ]
-            self.params.channels = list(filter(None, plot_data))
-        defaults["channels"] = self.params.channels
-
-        # Set the initial histogram data to be the first data in the data subset
-        if len(defaults["channels"]) > 0:
-            self.params.channel = defaults["channels"][0]
-        else:
-            self.params.channel = None
-        defaults["channel"] = self.params.channel
-
-        # Loop through self.params to set defaults
-        for key, value in self.params.to_dict().items():
-            if (key != "channels") & (key != "channel"):
-                if key == "objects":
-                    # Get default data subset from self.params.objects
-                    if value is None:
-                        defaults["channels_options"] = []
-                    else:
-                        channels_options = value.get_data_list()
-                        if "Visual Parameters" in channels_options:
-                            channels_options.remove("Visual Parameters")
-                        defaults["channels_options"] = channels_options
-                    for channel in defaults["channels_options"]:
-                        self.get_channel(channel)
-                elif key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
-                    # Reconstruct scaling and bounds dicts from uijson input lists.
-                    out_dict = {}
-                    full_list = ast.literal_eval(value)
-                    for i in range(len(defaults["channels"])):
-                        if (full_list is None) | (not full_list):
-                            if key == "full_scales":
-                                out_dict[defaults["channels"][i]] = 1
-                            else:
-                                out_dict[defaults["channels"][i]] = None
-                        else:
-                            out_dict[defaults["channels"][i]] = full_list[i]
-                    defaults[key] = out_dict
-                elif key == "color_pickers":
-                    full_list = ast.literal_eval(value)
-                    if (full_list is None) | (not full_list):
-                        defaults[key] = colors
-                    else:
-                        defaults[key] = full_list
-                else:
-                    defaults[key] = value
-
-        channel = defaults["channel"]
-        # Set up initial dataframe and clustering
-        defaults.update(
-            self.update_clustering(
-                channel,
-                defaults["channels"],
-                defaults["full_scales"],
-                defaults["full_lower_bounds"],
-                defaults["full_upper_bounds"],
-                defaults["downsampling"],
-                defaults["n_clusters"],
-                defaults["kmeans"],
-                defaults["clusters"],
-                defaults["indices"],
-                defaults["geoh5"],
-                True,
-            )
-        )
-        # Get initial scale and bounds for histogram plot
-        defaults["scale"], defaults["lower_bounds"], defaults["upper_bounds"] = (
-            None,
-            None,
-            None,
-        )
-        if channel in defaults["full_scales"]:
-            defaults["scale"] = defaults["full_scales"][channel]
-        if channel in defaults["full_lower_bounds"]:
-            defaults["lower_bounds"] = defaults["full_lower_bounds"][channel]
-        if channel in defaults["full_upper_bounds"]:
-            defaults["upper_bounds"] = defaults["full_upper_bounds"][channel]
-
-        return defaults
 
     @staticmethod
     def update_color_select(checkbox: list) -> dict:
@@ -633,103 +557,24 @@ class Clustering(ScatterPlots):
     def update_select_cluster_options(n_clusters):
         return np.arange(0, n_clusters, 1)
 
-    def get_data_channels(self, channels: list) -> dict:
-        """
-        Loop through channels and add them to the data channels dict with name and object of all the current data.
-        :param channels: Subset of data used for clustering and available for plotting.
-        :return data_channels: Dictionary of data names and the corresponding Data objects.
-        """
-        data_channels = {}
-        for channel in channels:
-            if channel not in data_channels:
-                if channel == "None":
-                    data_channels[channel] = None
-                elif self.params.geoh5.get_entity(channel):
-                    data_channels[channel] = self.params.geoh5.get_entity(channel)[0]
+    @staticmethod
+    def update_color_pickers(color_pickers, color_picker, select_cluster):
+        color_pickers[select_cluster] = color_picker["hex"]
+        return color_pickers
 
-        return data_channels
+    @staticmethod
+    def update_color_picker(color_pickers, select_cluster):
+        return dict(hex=color_pickers[select_cluster])
 
-    def update_channels(
-        self,
-        channel: str,
-        channels: list,
-        full_scales: dict,
-        full_lower_bounds: dict,
-        full_upper_bounds: dict,
-        kmeans: np.ndarray,
-        indices: np.ndarray,
-    ) -> dict:
-        """
-        Update the data options for the scatter plot and histogram from the data subset.
-        :param channel: Input data name for histogram, boxplot.
-        :param channels: Subset of data used for clustering and available for plotting.
-        :param full_scales: Dictionary of data names and the corresponding scales.
-        :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
-        :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
-        :param kmeans: K-means for the selected cluster number.
-        :param indices: Active indices from current downsampling.
-        :return update_dict: Dictionary of new channels and other affected parameters that need to be updated.
-        """
-        if channels is None:
-            self.data_channels = {}
-            return {
-                "channel_options": [],
-                "color_maps_options": px.colors.named_colorscales(),
-                "data_options": {},
-                "full_scales": {},
-                "full_lower_bounds": {},
-                "full_upper_bounds": {},
-                "channel": None,
-            }
-        else:
-            self.data_channels = self.get_data_channels(channels)
-            channels = list(filter(None, channels))
-            # Update the full scales and bounds dicts with the new data subset
-            for chan in channels:
-                properties_dict = self.update_properties(
-                    chan, full_scales, full_lower_bounds, full_upper_bounds
-                )
-                full_scales = properties_dict["full_scales"]
-                full_lower_bounds = properties_dict["full_lower_bounds"]
-                full_upper_bounds = properties_dict["full_upper_bounds"]
-
-            new_scales = {}
-            for chan, value in full_scales.items():
-                if chan in channels:
-                    new_scales[chan] = value
-            new_lower_bounds = {}
-            for chan, value in full_lower_bounds.items():
-                if chan in channels:
-                    new_lower_bounds[chan] = value
-            new_upper_bounds = {}
-            for chan, value in full_upper_bounds.items():
-                if chan in channels:
-                    new_upper_bounds[chan] = value
-
-            if channel not in channels:
-                channel = None
-
-            # Add kmeans to the data selection for the scatter plot
-            if kmeans is not None:
-                data_options = channels + ["kmeans"]
-                color_maps_options = px.colors.named_colorscales() + ["kmeans"]
-                self.data_channels.update(
-                    {"kmeans": PlotData("kmeans", kmeans[np.array(indices)])}
-                )
-            else:
-                data_options = channels
-                color_maps_options = px.colors.named_colorscales()
-                self.data_channels.pop("kmeans", None)
-
-            return {
-                "channel_options": channels,
-                "color_maps_options": color_maps_options,
-                "data_options": data_options,
-                "full_scales": new_scales,
-                "full_lower_bounds": new_lower_bounds,
-                "full_upper_bounds": new_upper_bounds,
-                "channel": channel,
-            }
+    def update_data_options(self, data_subset):
+        return (
+            data_subset,
+            data_subset,
+            data_subset,
+            data_subset,
+            data_subset,
+            data_subset,
+        )
 
     def update_properties(
         self,
@@ -737,7 +582,7 @@ class Clustering(ScatterPlots):
         full_scales: dict,
         full_lower_bounds: dict,
         full_upper_bounds: dict,
-    ) -> dict:
+    ) -> tuple:
         """
         Get stored scale and bounds for a given channel. If there's no stored value, set a default.
         :param channel: Input data name for histogram, boxplot.
@@ -755,7 +600,7 @@ class Clustering(ScatterPlots):
                 full_lower_bounds[channel] is None
             ):
                 full_lower_bounds[channel] = np.nanmin(
-                    self.data_channels[channel].values
+                    self.params.geoh5.get_entity(channel)[0].values
                 )
             lower_bounds = float(full_lower_bounds[channel])
 
@@ -763,457 +608,52 @@ class Clustering(ScatterPlots):
                 full_upper_bounds[channel] is None
             ):
                 full_upper_bounds[channel] = np.nanmax(
-                    self.data_channels[channel].values
+                    self.params.geoh5.get_entity(channel)[0].values
                 )
             upper_bounds = float(full_upper_bounds[channel])
         else:
             scale, lower_bounds, upper_bounds = None, None, None
 
-        return {
-            "scale": scale,
-            "lower_bounds": lower_bounds,
-            "upper_bounds": upper_bounds,
-            "full_scales": full_scales,
-            "full_lower_bounds": full_lower_bounds,
-            "full_upper_bounds": full_upper_bounds,
-        }
+        return (
+            scale,
+            lower_bounds,
+            upper_bounds,
+            full_scales,
+            full_lower_bounds,
+            full_upper_bounds,
+        )
 
-    def update_cluster_params(
-        self,
-        filename: str,
-        contents: str,
-        objects: str,
-        x: str,
-        y: str,
-        z: str,
-        color: str,
-        size: str,
-        channel: str,
-        channels: list,
-        scale: int,
-        lower_bounds: float,
-        upper_bounds: float,
-        downsampling: int,
-        select_cluster: int,
-        n_clusters: int,
-        full_scales: dict,
-        full_lower_bounds: dict,
-        full_upper_bounds: dict,
-        color_picker: dict,
-        color_pickers: list,
-        kmeans: list,
-        indices: list,
-        clusters: dict,
-        output_path: str,
-        live_link: list,
-    ) -> tuple:
+    @staticmethod
+    def update_colormap(n_clusters: int, color_pickers: list) -> list:
         """
-        Update self.params and dash components from user input.
-        :param filename: Input filename. Either workspace or ui_json.
-        :param contents: Input file contents. Either workspace or ui_json.
-        :param objects: Input object name.
-        :param x: Input x data name.
-        :param y: Input y data name.
-        :param z: Input z data name.
-        :param color: Input color data name.
-        :param size: Input size data name.
-        :param channel: Input channel data name. Data displayed on histogram and boxplot.
-        :param channels: The subset of data that is clustered and able to be plotted.
-        :param scale: Scale for channel data.
-        :param lower_bounds: Lower bounds for channel data.
-        :param upper_bounds: Upper bounds for channel data.
-        :param downsampling: Percent downsampling.
-        :param select_cluster: Selected cluster used for picking cluster color.
-        :param n_clusters: Number of clusters to make when running clustering.
-        :param full_scales: Dictionary of data names and the corresponding scales.
-        :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
-        :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
-        :param color_picker: Current selected color from color picker.
+        Change the colormap for clusters
+        :param n_clusters: Number of clusters.
         :param color_pickers: List of colors with index corresponding to cluster number.
-        :param kmeans: K-means values for n_clusters.
-        :param indices: Active indices for data, gotten from downsampling.
-        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
-        :param output_path: Output path for where to export clusters.
-        :param live_link: Checkbox to enable monitoring directory.
-        :return outputs: Values to update all the dash components in the callback.
+        :return color_map: Color map for plotting kmeans on scatter plot.
         """
-        # List of params that will be outputted
-        param_list = [
-            "objects_options",
-            "objects_name",
-            "downsampling",
-            "data_options",
-            "x_name",
-            "x_log",
-            "x_thresh",
-            "x_min",
-            "x_max",
-            "data_options",
-            "y_name",
-            "y_log",
-            "y_thresh",
-            "y_min",
-            "y_max",
-            "data_options",
-            "z_name",
-            "z_log",
-            "z_thresh",
-            "z_min",
-            "z_max",
-            "data_options",
-            "color_name",
-            "color_log",
-            "color_thresh",
-            "color_min",
-            "color_max",
-            "color_maps",
-            "data_options",
-            "size_name",
-            "size_log",
-            "size_thresh",
-            "size_min",
-            "size_max",
-            "size_markers",
-            "filename",
-            "contents",
-            "channel_options",
-            "channel",
-            "channels_options",
-            "channels",
-            "scale",
-            "lower_bounds",
-            "upper_bounds",
-            "color_maps_options",
-            "color_picker",
-            "n_clusters",
-            "dataframe",
-            "full_scales",
-            "full_lower_bounds",
-            "full_upper_bounds",
-            "color_pickers",
-            "plot_kmeans",
-            "kmeans",
-            "clusters",
-            "indices",
-            "mapping",
-            "output_path",
-        ]
-        # Trigger is which variable triggered the callback
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
-        if full_scales is None:
-            full_scales = {}
-        if full_lower_bounds is None:
-            full_lower_bounds = {}
-        if full_upper_bounds is None:
-            full_upper_bounds = {}
-
-        # Read in dcc.Store variables
-        if indices is not None:
-            indices = np.array(indices)
-        if kmeans is not None:
-            kmeans = np.array(kmeans)
-        clusters = {int(k): v for k, v in clusters.items()}
-
-        update_dict = {}
-        if trigger == "upload":
-            if filename.endswith(".ui.json"):
-                # Update params from uploaded uijson
-                update_dict = self.update_from_uijson(contents)
-                if "plot_kmeans" in update_dict:
-                    plot_kmeans = update_dict["plot_kmeans"]
-                    if type(plot_kmeans) != list:
-                        plot_kmeans = ast.literal_eval(update_dict["plot_kmeans"])
-                    update_dict.update({"plot_kmeans": plot_kmeans})
-                    axis_list = ["x", "y", "z", "color", "size"]
-                    for i in range(len(plot_kmeans)):
-                        if plot_kmeans[i]:
-                            update_dict.update({axis_list[i] + "_name": "kmeans"})
-                if "color_pickers" in update_dict:
-                    color_pickers = ast.literal_eval(update_dict["color_pickers"])
-                    if color_pickers:
-                        update_dict.update({"color_pickers": color_pickers})
-                    else:
-                        update_dict.update({"color_pickers": colors})
-                if (
-                    "output_path" in update_dict
-                    and update_dict["output_path"] is not None
-                ):
-                    update_dict.update({"output_path": update_dict["output_path"]})
-                # Update full scales, bounds
-                if "channels" in update_dict:
-                    channels = update_dict["channels"]
-                    if not channels:
-                        update_dict.update(
-                            {
-                                "full_scales": {},
-                                "full_lower_bounds": {},
-                                "full_upper_bounds": {},
-                            }
-                        )
-                    else:
-                        for key in [
-                            "full_scales",
-                            "full_lower_bounds",
-                            "full_upper_bounds",
-                        ]:
-                            # Reconstruct full scales and bounds dict from lists in uijson.
-                            if key in update_dict:
-                                out_dict = {}
-                                full_list = ast.literal_eval(update_dict[key])
-                                if full_list:
-                                    for i in range(len(channels)):
-                                        out_dict[channels[i]] = full_list[i]
-                                update_dict.update({key: out_dict})
-                if "downsampling" in update_dict:
-                    downsampling = update_dict["downsampling"]
-                if "n_clusters" in update_dict:
-                    n_clusters = update_dict["n_clusters"]
-                # Create new dataframe and run clustering for new variables.
-                self.params.geoh5 = update_dict["geoh5"]
-                update_dict.update(
-                    self.update_clustering(
-                        channel,
-                        channels,
-                        update_dict["full_scales"],
-                        update_dict["full_lower_bounds"],
-                        update_dict["full_upper_bounds"],
-                        downsampling,
-                        n_clusters,
-                        kmeans,
-                        clusters,
-                        indices,
-                        self.params.geoh5,
-                        True,
-                    )
-                )
-
-            elif filename.endswith(".geoh5"):
-                # Update object and data subset options from uploaded workspace
-                update_dict = self.update_object_options(contents)
-                data_update_dict = self.update_data_options(update_dict["objects_name"])
-                update_dict.update(
-                    {
-                        "data_options": data_update_dict["data_options"],
-                        "channel_options": data_update_dict["data_options"],
-                        "channel": None,
-                        "x_name": None,
-                        "y_name": None,
-                        "z_name": None,
-                        "color_name": None,
-                        "size_name": None,
-                    }
-                )
-                update_dict.update(
-                    {
-                        "objects_name": update_dict["objects_name"],
-                        "channels_options": data_update_dict["data_options"],
-                        "channels": None,
-                    }
-                )
-                update_dict.update(
-                    self.update_channels(
-                        None,
-                        None,
-                        full_scales,
-                        full_lower_bounds,
-                        full_upper_bounds,
-                        kmeans,
-                        indices,
-                    )
-                )
+        color_map = {}
+        for ii in range(n_clusters):
+            colorpicker = color_pickers[ii]
+            if "#" in colorpicker:
+                color = colorpicker.lstrip("#")
+                color_map[ii] = [
+                    np.min([ii / (n_clusters - 1), 1]),
+                    "rgb("
+                    + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
+                    + ")",
+                ]
             else:
-                print("Uploaded file must be a workspace or ui.json.")
-            # Reset file properties so the same file can be uploaded twice in a row.
-            update_dict["filename"] = None
-            update_dict["contents"] = None
-        elif trigger == "objects":
-            # Update data subset options from object change
-            data_update_dict = self.update_data_options(objects)
-            update_dict.update(
-                {
-                    "data_options": data_update_dict["data_options"],
-                    "channel_options": data_update_dict["data_options"],
-                    "channel": None,
-                    "x_name": None,
-                    "y_name": None,
-                    "z_name": None,
-                    "color_name": None,
-                    "size_name": None,
-                }
-            )
-            update_dict.update(
-                {
-                    "objects_name": objects,
-                    "channels_options": data_update_dict["data_options"],
-                    "channels": None,
-                }
-            )
-        elif trigger == "select_cluster":
-            # Update color displayed by the dash colorpicker
-            update_dict = {"color_picker": dict(hex=color_pickers[select_cluster])}
-        elif trigger == "output_path":
-            if output_path is not None:
-                update_dict.update({"output_path": output_path})
-        elif trigger == "live_link":
-            if not live_link:
-                self.params.live_link = False
-            else:
-                self.params.live_link = True
-        elif trigger == "color_picker":
-            # Update color_pickers with new color selection
-            color_pickers[select_cluster] = color_picker["hex"]
-            update_dict.update({"color_pickers": color_pickers})
-        elif trigger in ["x", "y", "z", "color", "size"]:
-            # Update min, max values in scatter plot
-            update_dict = {
-                "x_name": x,
-                "y_name": y,
-                "z_name": z,
-                "color_name": color,
-                "size_name": size,
-            }
-            update_dict.update(self.set_channel_bounds(x, y, z, color, size))
-            update_dict.update(
-                {"plot_kmeans": [i == "kmeans" for i in [x, y, z, color, size]]}
-            )
-        elif trigger in [
-            "downsampling",
-            "channel",
-            "channels",
-            "scale",
-            "lower_bounds",
-            "upper_bounds",
-            "n_clusters",
-            "",
-        ]:
-            update_dict.update({"channel_name": channel})
+                color_map[ii] = [
+                    np.min([ii / (n_clusters - 1), 1]),
+                    colorpicker,
+                ]
 
-            if trigger in ["scale", "lower_bounds", "upper_bounds"]:
-                full_scales[channel] = scale
-                full_lower_bounds[channel] = lower_bounds
-                full_upper_bounds[channel] = upper_bounds
-                update_dict.update(
-                    {
-                        "full_scales": full_scales,
-                        "full_lower_bounds": full_lower_bounds,
-                        "full_upper_bounds": full_upper_bounds,
-                    }
-                )
-            elif trigger in ["channels", "downsampling", "n_clusters", ""]:
-                update_dict.update(
-                    {
-                        "channels": channels,
-                        "downsampling": downsampling,
-                        "n_clusters": n_clusters,
-                    }
-                )
-                # Update data options from data subset
-                update_all_clusters = trigger != "n_clusters"
-                update_dict.update(
-                    self.update_clustering(
-                        channel,
-                        channels,
-                        full_scales,
-                        full_lower_bounds,
-                        full_upper_bounds,
-                        downsampling,
-                        n_clusters,
-                        kmeans,
-                        clusters,
-                        indices,
-                        self.params.geoh5,
-                        update_all_clusters,
-                    )
-                )
-            elif trigger == "channel":
-                update_dict.update({"channel": channel})
-                # Update displayed scale and bounds from stored values
-                update_dict.update(
-                    self.update_properties(
-                        channel, full_scales, full_lower_bounds, full_upper_bounds
-                    )
-                )
+        return list(color_map.values())
 
-        # Update param dict from update_dict
-        self.update_param_dict(update_dict)
-
-        outputs = []
-        for param in param_list:
-            if param in update_dict:
-                outputs.append(update_dict[param])
-            else:
-                outputs.append(no_update)
-
-        return tuple(outputs)
-
-    def update_param_dict(self, update_dict: dict):
-        """
-        Update self.params from update_dict.
-        :param update_dict: Dictionary of parameters to update and the new values to assign.
-        """
-        if "plot_kmeans" in update_dict:
-            plot_kmeans = update_dict["plot_kmeans"]
-        else:
-            plot_kmeans = ast.literal_eval(self.params.plot_kmeans)
-        if len(plot_kmeans) == 0:
-            plot_kmeans = [False, False, False, False, False]
-        axis_list = ["x", "y", "z", "color", "size"]
-        # Update self.params from update_dict.
-        for key, value in self.params.to_dict().items():
-            if key in update_dict:
-                if key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
-                    # Convert dict of scales and bounds to lists to store in uijson.
-                    if "channels" in update_dict:
-                        channels = update_dict["channels"]
-                    else:
-                        channels = self.params.channels
-                    outlist = []
-                    if bool(channels) & bool(update_dict[key]):
-                        for channel in channels:
-                            outlist.append(update_dict[key][channel])
-                    setattr(self.params, key, str(outlist))
-                elif key == "color_pickers":
-                    setattr(self.params, key, str(update_dict[key]))
-                elif key in ["x_log", "y_log", "z_log", "color_log", "size_log"]:
-                    if value is None:
-                        setattr(self.params, key, False)
-                    else:
-                        setattr(self.params, key, value)
-                elif key == "plot_kmeans":
-                    setattr(self.params, key, str(update_dict[key]))
-                else:
-                    setattr(self.params, key, update_dict[key])
-            elif key in ["x", "y", "z", "color", "size"]:
-                if key + "_name" in update_dict:
-                    if update_dict[key + "_name"] is None:
-                        setattr(self.params, key, None)
-                    elif update_dict[key + "_name"] in self.data_channels:
-                        if (
-                            self.data_channels[update_dict[key + "_name"]].name
-                            == "kmeans"
-                        ):
-                            index = axis_list.index(key)
-                            plot_kmeans[index] = True
-                            setattr(self.params, key, None)
-                        else:
-                            setattr(
-                                self.params,
-                                key,
-                                self.data_channels[update_dict[key + "_name"]],
-                            )
-            elif key == "objects":
-                if "objects_name" in update_dict:
-                    obj = self.params.geoh5.get_entity(update_dict["objects_name"])[0]
-                    self.params.objects = obj
-
-    def update_plots(
+    def make_scatter_plot(
         self,
         n_clusters: int,
         dataframe_dict: list[dict],
-        channel: str,
-        lower_bounds: float,
-        upper_bounds: float,
         x: str,
         x_log: list,
         x_thresh: float,
@@ -1242,10 +682,7 @@ class Clustering(ScatterPlots):
         size_min: float,
         size_max: float,
         size_markers: int,
-        kmeans: list,
-        indices: list,
-        clusters: dict,
-    ) -> (go.Figure, list[dict], go.Figure, go.Figure, go.Figure, go.Figure):
+    ) -> go.Figure:
         """
         Update plots.
         :param n_clusters: Number of clusters.
@@ -1293,12 +730,6 @@ class Clustering(ScatterPlots):
         """
         # Read in stored dataframe.
         dataframe = pd.DataFrame(dataframe_dict)
-        # Read in stored clusters. Convert keys from string back to int.
-        clusters = {int(k): v for k, v in clusters.items()}
-        if kmeans is not None:
-            kmeans = np.array(kmeans)
-        if indices is not None:
-            indices = np.array(indices)
 
         if not dataframe.empty:
             if color_maps == "kmeans":
@@ -1348,121 +779,11 @@ class Clustering(ScatterPlots):
                 size_min,
                 size_max,
                 size_markers,
-                clustering=True,
             )
-            stats_table = self.make_stats_table(dataframe)
-            matrix = self.make_heatmap(dataframe)
-            histogram = self.make_hist_plot(
-                dataframe, channel, lower_bounds, upper_bounds
-            )
-            boxplot = self.make_boxplot(
-                n_clusters,
-                channel,
-                color_pickers,
-                kmeans,
-                indices,
-            )
-            inertia = self.make_inertia_plot(n_clusters, clusters)
-            return crossplot, stats_table, matrix, histogram, boxplot, inertia
+            return crossplot
 
         else:
-            return go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), go.Figure()
-
-    @staticmethod
-    def update_colormap(n_clusters: int, color_pickers: list) -> list:
-        """
-        Change the colormap for clusters
-        :param n_clusters: Number of clusters.
-        :param color_pickers: List of colors with index corresponding to cluster number.
-        :return color_map: Color map for plotting kmeans on scatter plot.
-        """
-        color_map = {}
-        for ii in range(n_clusters):
-            colorpicker = color_pickers[ii]
-            if "#" in colorpicker:
-                color = colorpicker.lstrip("#")
-                color_map[ii] = [
-                    np.min([ii / (n_clusters - 1), 1]),
-                    "rgb("
-                    + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
-                    + ")",
-                ]
-            else:
-                color_map[ii] = [
-                    np.min([ii / (n_clusters - 1), 1]),
-                    colorpicker,
-                ]
-
-        return list(color_map.values())
-
-    def update_clustering(
-        self,
-        channel: str,
-        channels: list,
-        full_scales: dict,
-        full_lower_bounds: dict,
-        full_upper_bounds: dict,
-        downsampling: int,
-        n_clusters: int,
-        kmeans: np.ndarray,
-        clusters: dict,
-        indices: np.ndarray,
-        workspace: Workspace,
-        update_all_clusters: bool,
-    ) -> dict:
-        """
-        Update clustering and the dropdown data that depends on kmeans.
-        :param channel: Name of data displayed on histogram, boxplot.
-        :param channels: Subset of data used for clustering and plotting.
-        :param full_scales: Dictionary of data names and the corresponding scales.
-        :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
-        :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
-        :param downsampling: Percent downsampling of data.
-        :param n_clusters: Number of clusters.
-        :param kmeans: K-mean values for n_clusters.
-        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
-        :param indices: Active indices for data, determined by downsampling.
-        :param workspace: Workspace.
-        :param update_all_clusters: Whether to update all clusters values, or just n_clusters.
-        :return update_dict: Dictionary of parameters to update and their new values.
-        """
-        # Update dataframe, data options for plots, and run clustering
-        update_dict = self.update_channels(
-            channel,
-            channels,
-            full_scales,
-            full_lower_bounds,
-            full_upper_bounds,
-            kmeans,
-            indices,
-        )
-        update_dict.update(
-            ClusteringDriver.update_dataframe(
-                downsampling, channels, workspace, downsample_min=5000
-            )
-        )
-        update_dict.update(
-            ClusteringDriver.run_clustering(
-                n_clusters,
-                update_dict["dataframe"],
-                update_dict["full_scales"],
-                clusters,
-                update_dict["mapping"],
-                update_all_clusters,
-            )
-        )
-        update_dict.update(
-            self.update_channels(
-                channel,
-                channels,
-                update_dict["full_scales"],
-                update_dict["full_lower_bounds"],
-                update_dict["full_upper_bounds"],
-                update_dict["kmeans"],
-                update_dict["indices"],
-            )
-        )
-        return update_dict
+            return go.Figure()
 
     @staticmethod
     def make_inertia_plot(n_clusters: int, clusters: dict) -> go.Figure:
@@ -1472,6 +793,9 @@ class Clustering(ScatterPlots):
         :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
         :return inertia_plot: Inertia figure.
         """
+        # Read in stored clusters. Convert keys from string back to int.
+        clusters = {int(k): v for k, v in clusters.items()}
+
         if n_clusters in clusters:
             ind = np.sort(list(clusters.keys()))
             inertias = [clusters[ii]["inertia"] for ii in ind]
@@ -1495,7 +819,7 @@ class Clustering(ScatterPlots):
 
     @staticmethod
     def make_hist_plot(
-        dataframe: pd.DataFrame, channel: str, lower_bounds: float, upper_bounds: float
+        dataframe_dict: dict, channel: str, lower_bounds: float, upper_bounds: float
     ) -> go.Figure:
         """
         Generate an histogram plot for the selected data channel.
@@ -1505,6 +829,8 @@ class Clustering(ScatterPlots):
         :param upper_bounds: Upper bounds for channel data.
         :return histogram: Histogram figure.
         """
+        dataframe = pd.DataFrame(dataframe_dict)
+
         if channel is not None:
             histogram = go.Figure(
                 data=[
@@ -1525,8 +851,8 @@ class Clustering(ScatterPlots):
         n_clusters: int,
         channel: str,
         color_pickers: list,
-        kmeans: np.ndarray,
-        indices: np.ndarray,
+        kmeans: list,
+        indices: list,
     ) -> go.Figure:
         """
         Generate a box plot for each cluster.
@@ -1537,6 +863,11 @@ class Clustering(ScatterPlots):
         :param indices: Active indices for data, determined by downsampling.
         :return boxplot: Boxplot figure.
         """
+        if kmeans is not None:
+            kmeans = np.array(kmeans)
+        if indices is not None:
+            indices = np.array(indices)
+
         if (kmeans is not None) and (channel is not None):
             boxes = []
             for ii in range(n_clusters):
@@ -1574,25 +905,26 @@ class Clustering(ScatterPlots):
             return go.Figure()
 
     @staticmethod
-    def make_stats_table(dataframe: pd.DataFrame) -> list[dict]:
+    def make_stats_table(dataframe_dict: dict) -> list[dict]:
         """
         Generate a table of statistics using pandas
         :param dataframe: Data names and values for selected data subset.
         :return stats_table: Table of stats: count, mean, std, min, max, etc.
         """
+        dataframe = pd.DataFrame(dataframe_dict)
         stats_df = dataframe.describe(percentiles=None, include=None, exclude=None)
         stats_df.insert(0, "", stats_df.index)
         return stats_df.to_dict("records")
 
     @staticmethod
-    def make_heatmap(dataframe: pd.DataFrame):
+    def make_heatmap(dataframe_dict: dict):
         """
         Generate a confusion matrix.
         :param dataframe: Data names and values for selected data subset.
         :return matrix: Confusion matrix figure.
         """
-        df = dataframe.copy()
-        corrs = df.corr()
+        dataframe = pd.DataFrame(dataframe_dict)
+        corrs = dataframe.corr()
 
         matrix = go.Figure(
             data=[
@@ -1664,39 +996,6 @@ class Clustering(ScatterPlots):
         )
         return matrix
 
-    @staticmethod
-    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
-        """
-        Create an active workspace with check for GA monitoring directory
-        """
-        if not name.endswith(".geoh5"):
-            name += ".geoh5"
-
-        workspace = Workspace(path.join(workpath, name))
-        workspace.close()
-        new_live_link = False
-        time.sleep(1)
-        # Check if GA digested the file already
-        if not path.exists(workspace.h5file):
-            workpath = path.join(workpath, ".working")
-            if not path.exists(workpath):
-                makedirs(workpath)
-            workspace = Workspace(path.join(workpath, name))
-            workspace.close()
-            new_live_link = True
-            if not live_link:
-                print(
-                    "ANALYST Pro active live link found. Switching to monitoring directory..."
-                )
-        elif live_link:
-            print(
-                "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
-            )
-
-        workspace.open()
-        # return new live link
-        return workspace, new_live_link
-
     def trigger_click(self, _):
         """
         Write cluster groups to the target geoh5 object.
@@ -1741,14 +1040,6 @@ class Clustering(ScatterPlots):
         else:
             print("Saved to " + os.path.abspath(output_path))
             return []
-
-    def run(self):
-        # The reloader has not yet run - open the browser
-        if not environ.get("WERKZEUG_RUN_MAIN"):
-            webbrowser.open_new("http://127.0.0.1:8050/")
-
-        # Otherwise, continue as normal
-        self.app.run_server(host="127.0.0.1", port=8050, debug=False)
 
 
 if __name__ == "__main__":

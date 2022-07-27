@@ -89,17 +89,7 @@ class BaseDashApplication:
 
         return ui_json, options, None, None
 
-    def update_data_options(self, ui_json, object_name):
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json" and "objects" in ui_json:
-            if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
-                object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
-                    0
-                ].name
-            else:
-                return [], [], [], [], []
-
-        obj = None
+    def get_data_options(self, object_name):
         if getattr(
             self.params, "geoh5", None
         ) is not None and self.params.geoh5.get_entity(object_name):
@@ -107,12 +97,14 @@ class BaseDashApplication:
                 if isinstance(entity, ObjectBase):
                     obj = entity
 
-        options = obj.get_data_list()
+            options = obj.get_data_list()
 
-        if "Visual Parameters" in options:
-            options.remove("Visual Parameters")
+            if "Visual Parameters" in options:
+                options.remove("Visual Parameters")
 
-        return options, options, options, options, options
+            return options
+        else:
+            return []
 
     @staticmethod
     def serialize_ui_json(item):

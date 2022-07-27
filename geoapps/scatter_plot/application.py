@@ -716,6 +716,18 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
+    def update_data_options(self, ui_json, object_name):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "ui_json" and "objects" in ui_json:
+            if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
+                object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
+                    0
+                ].name
+
+        options = self.get_data_options(object_name)
+
+        return options, options, options, options, options
+
     def get_channel_bounds(self, channel: str) -> (float, float):
         """
         Set the min and max values for the given axis channel.
