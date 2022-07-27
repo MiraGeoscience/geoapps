@@ -13,7 +13,7 @@
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock --lockfile conda-py-3.9-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
-#     conda-lock -f C:\Users\JamieB\Documents\GIT\geoapps\pyproject.toml -f C:\Users\JamieB\Documents\GIT\geoapps\environments\env-python-3.9.yml --lockfile conda-py-3.9-lock.yml
+#     conda-lock -f pyproject.toml -f environments/env-python-3.9.yml --lockfile conda-py-3.9-lock.yml
 metadata:
   channels:
   - url: conda-forge
@@ -21,16 +21,16 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: d3357b29385d5fad989f1f9e617204a2a2e378bc434ef448e8af3a4e6a2814f3
-    osx-64: b2a5f2e3c6eaf61b2d41b48d75cd31d869c3c2334b74abb0f8402d311c9d67ff
-    win-64: 8e4fbbc46039ff64efdb90eb13513644325e7741e55bed1aae64dad5082f4cd8
+    linux-64: 02bf33fe2212e5af5997f66381411d5a1327e3d7cbc1aee723c96b222118ca8a
+    osx-64: 4f65db709b8881d92a6621a596fa2834ff12f552cf08d24f7509f7520608941f
+    win-64: bc5dda176caf3671a0ed31fd9a7c257340b8c8609e958ce951e3909531a0b37d
   platforms:
   - win-64
   - osx-64
   - linux-64
   sources:
-  - C:\Users\JamieB\Documents\GIT\geoapps\pyproject.toml
-  - C:\Users\JamieB\Documents\GIT\geoapps\environments\env-python-3.9.yml
+  - pyproject.toml
+  - environments/env-python-3.9.yml
 package:
 - category: main
   dependencies: {}
