@@ -278,23 +278,18 @@ class BlockModelCreation(BaseDashApplication):
             Input(component_id="expansion_fact", component_property="value"),
             Input(component_id="live_link", component_property="value"),
             Input(component_id="output_path", component_property="value"),
-            prevent_initial_call=True,
         )(self.trigger_click)
 
-    def update_remainder_from_ui_json(self, ui_json):
-        param_list = [
-            "new_grid",
-            "objects_name",
-            "cell_size_x",
-            "cell_size_y",
-            "cell_size_z",
-            "depth_core",
-            "horizontal_padding",
-            "bottom_padding",
-            "expansion_fact",
-            "output_path",
-        ]
+    def update_remainder_from_ui_json(self, ui_json: dict) -> tuple:
+        """
+        Update parameters from uploaded ui_json that aren't involved in another callback.
 
+        :param ui_json: Uploaded ui_json.
+
+        :return outputs: List of outputs corresponding to the callback expected outputs.
+        """
+        # List of outputs for the callback
+        param_list = [i["id"] for i in callback_context.outputs_list]
         update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
         outputs = BaseDashApplication.get_outputs(param_list, update_dict)
 
