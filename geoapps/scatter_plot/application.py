@@ -40,8 +40,8 @@ class ScatterPlots(ObjectDataSelection):
     Application for 2D and 3D crossplots of data using symlog scaling
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
+    _defaults = {
+        "geoh5": "../../assets/FlinFlon.geoh5",
         "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         "data": [
             "{18c2560c-6161-468a-8571-5d9d59649535}",
@@ -64,7 +64,6 @@ class ScatterPlots(ObjectDataSelection):
         "size": "{41d51965-3670-43ba-8a10-d399070689e3}",
         "size_active": True,
         "color_maps": "inferno",
-        "refresh": True,
         "refresh": True,
     }
 
@@ -617,7 +616,7 @@ class ScatterPlots(ObjectDataSelection):
         if channel is None:
             return None
 
-        if channel not in self.data_channels.keys():
+        if channel not in self.data_channels:
 
             if self.workspace.get_entity(channel):
                 values = np.asarray(
@@ -644,7 +643,7 @@ class ScatterPlots(ObjectDataSelection):
         channel = getattr(self, "_" + name).value
         self.get_channel(channel)
 
-        if channel in self.data_channels.keys():
+        if channel in self.data_channels:
 
             values = self.data_channels[channel]
             values = values[~np.isnan(values)]
@@ -688,7 +687,7 @@ class ScatterPlots(ObjectDataSelection):
         size_markers,
         size_min,
         size_max,
-        refresh,
+        refresh,  # pylint: disable=unused-argument
     ):
 
         if not self.refresh.value or self.indices is None:
@@ -754,33 +753,33 @@ class ScatterPlots(ObjectDataSelection):
             if x_axis is not None:
                 inbound = (x_axis >= x_min) * (x_axis <= x_max)
                 x_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
+                x_axis, x_label, x_ticks, _ = format_axis(
                     self.data.uid_name_map[x], x_axis, x_log, x_thresh
                 )
             else:
                 inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, x_ticklabels = format_axis(
+                x_axis, x_label, x_ticks, _ = format_axis(
                     self.data.uid_name_map[z], z_axis, z_log, z_thresh
                 )
 
             if y_axis is not None:
                 inbound = (y_axis >= y_min) * (y_axis <= y_max)
                 y_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
+                y_axis, y_label, y_ticks, _ = format_axis(
                     self.data.uid_name_map[y], y_axis, y_log, y_thresh
                 )
             else:
                 inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, y_ticklabels = format_axis(
+                y_axis, y_label, y_ticks, _ = format_axis(
                     self.data.uid_name_map[z], z_axis, z_log, z_thresh
                 )
 
             if z_axis is not None:
                 inbound = (z_axis >= z_min) * (z_axis <= z_max)
                 z_axis[~inbound] = np.nan
-                z_axis, z_label, z_ticks, z_ticklabels = format_axis(
+                z_axis, z_label, z_ticks, _ = format_axis(
                     self.data.uid_name_map[z], z_axis, z_log, z_thresh
                 )
 
@@ -879,7 +878,7 @@ class ScatterPlots(ObjectDataSelection):
         for channel in self.data.value:
             self.get_channel(channel)
 
-        keys = list(self.data_channels.keys())
+        keys = list(self.data_channels)
         for key in keys:
             if key not in self.data.value:
                 del self.data_channels[key]

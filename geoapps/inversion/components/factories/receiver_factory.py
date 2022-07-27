@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=W0221
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -92,7 +95,7 @@ class ReceiversFactory(SimPEGFactory):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
-            kwargs["components"] = list(data.keys())
+            kwargs["components"] = list(data)
         if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
             kwargs["component"] = list(data.keys())[0].split("_")[1]

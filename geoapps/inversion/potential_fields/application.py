@@ -94,7 +94,6 @@ class InversionApp(PlotSelection2D):
     _sensor = None
     _topography = None
     inversion_parameters = None
-    defaults = {}
 
     def __init__(self, ui_json=None, **kwargs):
         if "plot_result" in kwargs:
@@ -114,8 +113,8 @@ class InversionApp(PlotSelection2D):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
-        self.defaults["tmi_channel_bool"] = True
 
+        self.defaults["tmi_channel_bool"] = True
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -227,8 +226,13 @@ class InversionApp(PlotSelection2D):
         self._sensor = SensorOptions(
             objects=self._objects,
             add_xyz=False,
-            **self.defaults,
+            receivers_offset_x=self.defaults["receivers_offset_x"],
+            receivers_offset_y=self.defaults["receivers_offset_y"],
+            receivers_offset_z=self.defaults["receivers_offset_z"],
+            z_from_topo=self.defaults["z_from_topo"],
+            receivers_radar_drape=self.defaults["receivers_radar_drape"],
         )
+
         self._detrend_type = Dropdown(
             description="Method", options=["", "all", "perimeter"], value="all"
         )
@@ -327,8 +331,8 @@ class InversionApp(PlotSelection2D):
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
-            options=list(self.inversion_options.keys()),
-            value=list(self.inversion_options.keys())[0],
+            options=list(self.inversion_options),
+            value=list(self.inversion_options)[0],
             disabled=False,
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
@@ -340,6 +344,7 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
+        self.plotting_data = None
         super().__init__(**self.defaults)
 
         for item in ["window_width", "window_height", "resolution"]:
@@ -1113,7 +1118,7 @@ class InversionApp(PlotSelection2D):
         if hasattr(
             self.data_channel_choices, "data_channel_options"
         ) and self.data_channel_choices.value in (
-            self.data_channel_choices.data_channel_options.keys()
+            self.data_channel_choices.data_channel_options
         ):
             data_widget = self.data_channel_choices.data_channel_options[
                 self.data_channel_choices.value
@@ -1311,13 +1316,13 @@ class InversionApp(PlotSelection2D):
         """
         Change the target h5file
         """
-        if not self.file_browser._select.disabled:
+        if not self.file_browser._select.disabled:  # pylint: disable=protected-access
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
 
                 # Read the inversion type first...
-                with open(self.file_browser.selected) as f:
+                with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)
 
                 if data["inversion_type"] == "gravity":
@@ -1344,7 +1349,6 @@ class SensorOptions(ObjectDataSelection):
     """
 
     _options = None
-    defaults = {}
     params_keys = [
         "receivers_offset_x",
         "receivers_offset_y",
@@ -1543,8 +1547,6 @@ class ModelOptions(ObjectDataSelection):
     """
     Widgets for the selection of model options
     """
-
-    defaults = {}
 
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"

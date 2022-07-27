@@ -23,7 +23,8 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import dask, inverse_problem, inversion, maps, optimization, regularization
+from SimPEG import dask  # pylint: disable=unused-import
+from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
 from geoapps.inversion.components import (
@@ -136,7 +137,7 @@ class InversionDriver:
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
         # Create SimPEG Survey object
-        self.survey = self.inversion_data._survey
+        self.survey = self.inversion_data._survey  # pylint: disable=protected-access
 
         # Tile locations
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
@@ -148,7 +149,7 @@ class InversionDriver:
         self.global_misfit, self.sorting = MisfitFactory(
             self.params, models=self.models
         ).build(self.tiles, self.inversion_data, self.mesh, self.active_cells)
-        print(f"Done.")
+        print("Done.")
 
         # Create regularization
         self.regularization = self.get_regularization()
@@ -175,7 +176,7 @@ class InversionDriver:
 
         if self.warmstart and not self.params.forward_only:
             print("Pre-computing sensitivities ...")
-            self.inverse_problem.dpred = self.inversion_data.simulate(
+            self.inverse_problem.dpred = self.inversion_data.simulate(  # pylint: disable=assignment-from-no-return
                 self.starting_model, self.inverse_problem, self.sorting
             )
 
@@ -184,7 +185,7 @@ class InversionDriver:
             return
 
         # Add a list of directives to the inversion
-        self.directiveList = DirectivesFactory(self.params).build(
+        self.directive_list = DirectivesFactory(self.params).build(
             self.inversion_data,
             self.inversion_mesh,
             self.active_cells,
@@ -195,7 +196,7 @@ class InversionDriver:
 
         # Put all the parts together
         self.inversion = inversion.BaseInversion(
-            self.inverse_problem, directiveList=self.directiveList
+            self.inverse_problem, directiveList=self.directive_list
         )
 
     def run(self):
@@ -245,7 +246,7 @@ class InversionDriver:
             reg_p = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
-                mapping=wires.p,
+                mapping=wires.p,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
                 alpha_x=self.params.alpha_x,
@@ -257,7 +258,7 @@ class InversionDriver:
             reg_s = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
-                mapping=wires.s,
+                mapping=wires.s,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
                 alpha_x=self.params.alpha_x,
@@ -270,7 +271,7 @@ class InversionDriver:
             reg_t = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
-                mapping=wires.t,
+                mapping=wires.t,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
                 alpha_x=self.params.alpha_x,
@@ -352,7 +353,7 @@ class InversionLogger:
     def __init__(self, logfile, driver):
         self.driver = driver
         self.terminal = sys.stdout
-        self.log = open(self.get_path(logfile), "w")
+        self.log = open(self.get_path(logfile), "w", encoding="utf8")
         self.initial_time = time()
 
     def start(self):
@@ -444,6 +445,5 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
 
 
 if __name__ == "__main__":
-    filepath = sys.argv[1]
-    start_inversion(filepath)
+    start_inversion(sys.argv[1])
     sys.stdout.close()

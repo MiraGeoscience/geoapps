@@ -5,6 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=too-many-public-methods
+# pylint: disable=too-many-instance-attributes
+
+
 from __future__ import annotations
 
 from copy import deepcopy

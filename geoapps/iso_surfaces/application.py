@@ -41,7 +41,6 @@ class IsoSurface(ObjectDataSelection):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults = {}
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
@@ -120,13 +119,6 @@ class IsoSurface(ObjectDataSelection):
 
         if self.data.value:
             self.export_as.value = "Iso_" + self.data.uid_name_map[self.data.value]
-
-    @property
-    def convert(self):
-        """
-        ipywidgets.ToggleButton()
-        """
-        return self._convert
 
     @property
     def contours(self):

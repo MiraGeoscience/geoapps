@@ -29,6 +29,18 @@ with warn_module_not_found():
     from skimage.feature import canny
     from skimage.transform import probabilistic_hough_line
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+    "resolution": 50,
+    "sigma": 0.5,
+    "window": {
+        "azimuth": -20,
+    },
+    "ga_group_name": "Edges",
+}
+
 
 class EdgeDetectionApp(PlotSelection2D):
     """
@@ -48,20 +60,10 @@ class EdgeDetectionApp(PlotSelection2D):
     :param line_gap [Hough]: Maximum gap between pixels to still form a line.
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
-        "resolution": 50,
-        "sigma": 0.5,
-        "window": {
-            "azimuth": -20,
-        },
-        "ga_group_name": "Edges",
-    }
     _object_types = (Grid2D,)
 
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self._compute = Button(
             description="Compute",
@@ -192,7 +194,7 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
-        entity, _ = self.get_selected_entities()
+
         if getattr(self.trigger, "vertices", None) is not None:
             name = string_name(self.export_as.value)
             temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
