@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
+# TODO Redesign simpeg factory to avoid pylint arguments-differ complaint
+
 
 class SimPEGFactory:
     """
@@ -72,11 +74,11 @@ class SimPEGFactory:
     def concrete_object(self):
         """To be over-ridden in factory implementations."""
 
-    def assemble_arguments(self, **kwargs):
+    def assemble_arguments(self, **kwargs):  # pylint: disable=unused-argument
         """To be over-ridden in factory implementations."""
         return []
 
-    def assemble_keyword_arguments(self, **kwargs):
+    def assemble_keyword_arguments(self, **kwargs):  # pylint: disable=unused-argument
         """To be over-ridden in factory implementations."""
         return {}
 
@@ -85,4 +87,6 @@ class SimPEGFactory:
 
         class_args = self.assemble_arguments(**kwargs)
         class_kwargs = self.assemble_keyword_arguments(**kwargs)
-        return self.simpeg_object(*class_args, **class_kwargs)
+        return self.simpeg_object(  # pylint: disable=not-callable
+            *class_args, **class_kwargs
+        )

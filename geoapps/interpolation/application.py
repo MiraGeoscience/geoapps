@@ -30,8 +30,8 @@ class DataInterpolation(ObjectDataSelection):
     Transfer data from one object to another, or onto a 3D BlockModel
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
+    _defaults = {
+        "geoh5": "../../assets/FlinFlon.geoh5",
         "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
         "data": ["{f3e36334-be0a-4210-b13e-06933279de25}"],
         "core_cell_size": "50, 50, 50",
@@ -59,6 +59,7 @@ class DataInterpolation(ObjectDataSelection):
     _topography = None
 
     def __init__(self, use_defaults=True, **kwargs):
+        self.object_out: ObjectBase | None = None
 
         if use_defaults:
             self.defaults.update(**kwargs)
@@ -138,7 +139,7 @@ class DataInterpolation(ObjectDataSelection):
 
         self.parameter_choices = Dropdown(
             description="Interpolation Parameters",
-            options=list(self.parameters.keys()),
+            options=list(self.parameters),
             style={"description_width": "initial"},
         )
 
@@ -348,8 +349,8 @@ class DataInterpolation(ObjectDataSelection):
         else:
             self.destination_panel.children = [self.out_mode, self.new_grid_panel]
 
-    def object_base(self, object):
-        for entity in self._workspace.get_entity(object):
+    def object_base(self, object_uid):
+        for entity in self._workspace.get_entity(object_uid):
             if isinstance(entity, ObjectBase):
                 return entity
         return None
@@ -532,7 +533,7 @@ class DataInterpolation(ObjectDataSelection):
                 return_indices=True,
             )
 
-            for key, val in zip(list(values.keys()), vals):
+            for key, val in zip(list(values), vals):
                 values_interp[key] = val
                 sign[key] = sign[key][ind_inv[:, 0]]
 
@@ -543,12 +544,14 @@ class DataInterpolation(ObjectDataSelection):
                 values_interp[key] = value[ind]
                 sign[key] = sign[key][ind]
 
-        for key in values_interp.keys():
-            if self.space.value == "Log":
-                values_interp[key] = sign[key] * np.exp(values_interp[key])
+        for key, values in values_interp.items():
 
-            values_interp[key][np.isnan(values_interp[key])] = self.no_data_value.value
-            values_interp[key][rad > self.max_distance.value] = self.no_data_value.value
+            if self.space.value == "Log":
+                values = sign[key] * np.exp(values)
+
+            values[np.isnan(values)] = self.no_data_value.value
+            values[rad > self.max_distance.value] = self.no_data_value.value
+            values_interp[key] = values
 
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
@@ -594,7 +597,7 @@ class DataInterpolation(ObjectDataSelection):
                     > self.max_depth.value
                 )
 
-        for key in values_interp.keys():
+        for key in values_interp:
             values_interp[key][top] = self.no_data_value.value
             values_interp[key][bottom] = self.no_data_value.value
 
@@ -612,19 +615,19 @@ class DataInterpolation(ObjectDataSelection):
 
             tree = cKDTree(xy_ref[:, :2])
             rad, _ = tree.query(xyz_out_orig[:, :2])
-            for key in values_interp.keys():
+            for key in values_interp:
                 values_interp[key][
                     rad > self.max_distance.value
                 ] = self.no_data_value.value
 
         self.object_out.workspace.open()
-        for key in values_interp.keys():
-            if dtype[field] == np.dtype("int32"):
+        for key in values_interp:
+            if dtype[key] == np.dtype("int32"):
                 primitive = "integer"
-                vals = np.round(values_interp[key]).astype(dtype[field])
+                vals = np.round(values_interp[key]).astype(dtype[key])
             else:
                 primitive = "float"
-                vals = values_interp[key].astype(dtype[field])
+                vals = values_interp[key].astype(dtype[key])
 
             self.object_out.add_data(
                 {

@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0221
+# pylint: disable=W0622
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
@@ -458,9 +461,9 @@ class InversionData(InversionLocations):
         simulation_factory = SimulationFactory(self.params)
 
         if tile_id is None:
-            map = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
+            mapping = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
             sim = simulation_factory.build(
-                survey=survey, global_mesh=mesh, active_cells=active_cells, map=map
+                survey=survey, global_mesh=mesh, active_cells=active_cells, map=mapping
             )
 
         else:
@@ -473,18 +476,18 @@ class InversionData(InversionLocations):
             )
 
             kwargs = {"components": 3} if self.vector else {}
-            map = maps.TileMap(
+            mapping = maps.TileMap(
                 mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
             )
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,
                 local_mesh=nested_mesh,
-                active_cells=map.local_active,
-                map=map,
+                active_cells=mapping.local_active,
+                mapping=mapping,
                 tile_id=tile_id,
             )
-        return sim, map
+        return sim, mapping
 
     def simulate(self, model, inverse_problem, sorting):
         """Simulate fields for a particular model."""
@@ -497,3 +500,10 @@ class InversionData(InversionLocations):
                 sorting=np.argsort(np.hstack(sorting)),
             )
             save_directive.save_components(0, dpred)
+
+    @property
+    def observed_data_types(self):
+        """
+        Stored data types
+        """
+        return self._observed_data_types

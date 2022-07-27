@@ -78,7 +78,7 @@ class ChannelOptions:
             if hasattr(self, "_" + key):
                 try:
                     getattr(self, key).value = value
-                except:
+                except AttributeError:
                     pass
 
     @property
@@ -111,7 +111,6 @@ class SensorOptions(ObjectDataSelection):
     Define the receiver spatial parameters
     """
 
-    defaults = {}
     _options = None
 
     def __init__(self, **kwargs):
@@ -120,7 +119,7 @@ class SensorOptions(ObjectDataSelection):
         self._constant = FloatText(
             description="Constant elevation (m)",
         )
-        if "offset" in self.defaults.keys():
+        if "offset" in self.defaults:
             self._offset.value = self.defaults["offset"]
 
         self.option_list = {
@@ -223,7 +222,7 @@ class MeshOctreeOptions:
             if hasattr(self, "_" + key):
                 try:
                     getattr(self, key).value = value
-                except:
+                except AttributeError:
                     pass
 
     @property
@@ -295,7 +294,7 @@ class Mesh1DOptions:
             if hasattr(self, "_" + key):
                 try:
                     getattr(self, key).value = value
-                except:
+                except AttributeError:
                     pass
 
     def count_cells(self):
@@ -392,8 +391,6 @@ class InversionOptions(BaseApplication):
     Collection of widgets controlling the inversion parameters
     """
 
-    defaults = {}
-
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
         self._chi_factor = FloatText(
@@ -485,8 +482,8 @@ class InversionOptions(BaseApplication):
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
-            options=list(self.inversion_options.keys()),
-            value=list(self.inversion_options.keys())[0],
+            options=list(self.inversion_options),
+            value=list(self.inversion_options)[0],
             disabled=False,
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
@@ -697,27 +694,29 @@ def inversion_defaults():
     return defaults
 
 
+app_initializer = {
+    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
+    "data": ["{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"],
+    "resolution": 50,
+    "window_width": 1500,
+    "window_height": 1500,
+    "ga_group_name": "EM1DInversion_",
+    "inversion_parameters": {"max_iterations": 25},
+    "topography": {
+        "options": "Object",
+        "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+        "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    },
+    "lines": {
+        "data": "{c004eda2-70f6-4181-9a55-e7b2e1b25da8}",
+        "lines": [6072400.0, 6072600.0, 6072800.0, 6073000.0, 6073200.0],
+    },
+    "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
+}
+
+
 class InversionApp(PlotSelection2D):
-    defaults = {
-        "h5file": "../../../assets/FlinFlon.geoh5",
-        "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-        "data": ["{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"],
-        "resolution": 50,
-        "window_width": 1500,
-        "window_height": 1500,
-        "ga_group_name": "EM1DInversion_",
-        "inversion_parameters": {"max_iterations": 25},
-        "topography": {
-            "options": "Object",
-            "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-            "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
-        },
-        "lines": {
-            "data": "{c004eda2-70f6-4181-9a55-e7b2e1b25da8}",
-            "lines": [6072400.0, 6072600.0, 6072800.0, 6073000.0, 6073200.0],
-        },
-        "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
-    }
 
     _select_multiple = True
     _add_groups = True
@@ -727,6 +726,7 @@ class InversionApp(PlotSelection2D):
     _inversion_parameters = None
 
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
@@ -736,7 +736,7 @@ class InversionApp(PlotSelection2D):
         )
         self._starting_channel = (IntText(value=None, description="Starting Channel"),)
         self._system = Dropdown(
-            options=list(self.em_system_specs.keys()),
+            options=list(self.em_system_specs),
             description="Survey Type: ",
         )
         self._write = Button(
@@ -757,10 +757,10 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
-
+        self.plotting_data = None
         super().__init__(**self.defaults)
 
-        if "lines" in self.defaults:
+        if "lines" in app_initializer:
             self.lines.__populate__(**self.defaults["lines"])
 
         self.output_panel = VBox([self.export_directory, self.write, self.trigger])
@@ -980,7 +980,9 @@ class InversionApp(PlotSelection2D):
         self.inversion_parameters.ignore_values.value = "<0"
 
         # Switch mesh options
-        self.inversion_parameters._mesh = self.mesh_1D
+        self.inversion_parameters._mesh = (  # pylint: disable=protected-access
+            self.mesh_1D
+        )
         self.inversion_parameters.inversion_options["mesh"] = self.mesh_1D.main
         flag = "EM1D"
 
@@ -1051,8 +1053,8 @@ class InversionApp(PlotSelection2D):
             data_channel_options[key].children[1].value = channel
 
         if len(data_channel_options) > 0:
-            self.data_channel_choices.options = list(data_channel_options.keys())
-            self.data_channel_choices.value = list(data_channel_options.keys())[0]
+            self.data_channel_choices.options = list(data_channel_options)
+            self.data_channel_choices.value = list(data_channel_options)[0]
             self.data_channel_choices.data_channel_options = data_channel_options
             self.data_channel_panel.children = [
                 self.data_channel_choices,
@@ -1063,12 +1065,12 @@ class InversionApp(PlotSelection2D):
 
         if self.em_system_specs[self.system.value]["type"] == "frequency":
             self.inversion_parameters.option_choices.options = list(
-                self.inversion_parameters.inversion_options.keys()
+                self.inversion_parameters.inversion_options
             )
         else:
             self.inversion_parameters.option_choices.options = [
                 key
-                for key in self.inversion_parameters.inversion_options.keys()
+                for key in self.inversion_parameters.inversion_options
                 if key != "background susceptibility"
             ]
 
@@ -1132,7 +1134,7 @@ class InversionApp(PlotSelection2D):
         if hasattr(
             self.data_channel_choices, "data_channel_options"
         ) and self.data_channel_choices.value in (
-            self.data_channel_choices.data_channel_options.keys()
+            self.data_channel_choices.data_channel_options
         ):
             data_widget = self.data_channel_choices.data_channel_options[
                 self.data_channel_choices.value
@@ -1328,7 +1330,7 @@ class InversionApp(PlotSelection2D):
 
         checks = [key for key, val in input_dict.items() if val is None]
 
-        if len(list(input_dict["data"]["channels"].keys())) == 0:
+        if len(list(input_dict["data"]["channels"])) == 0:
             checks += ["'Channel' for at least one data component."]
 
         if len(checks) > 0:
@@ -1379,7 +1381,7 @@ class InversionApp(PlotSelection2D):
         input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)
 
         file = f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
-        with open(file, "w") as f:
+        with open(file, "w", encoding="utf8") as f:
             json.dump(input_dict, f, indent=4)
 
         self.write.button_style = ""
