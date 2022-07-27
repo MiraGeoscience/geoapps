@@ -299,12 +299,13 @@ class BlockModelCreation(BaseDashApplication):
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
-        depth_core: int,
+        depth_core: float,
         horizontal_padding: float,
         bottom_padding: float,
         expansion_fact: float,
         live_link: list,
         output_path: str,
+        test: bool = False,
     ) -> list:
         """
         When the export button is pressed, run block model driver to export block model.
@@ -325,9 +326,7 @@ class BlockModelCreation(BaseDashApplication):
         :return live_link: Checkbox for using monitoring directory.
         """
 
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
-        if trigger == "export":
+        if test or callback_context.triggered[0]["prop_id"].split(".")[0] == "export":
             # Update self.params from dash component values
             self.update_params(locals())
 
