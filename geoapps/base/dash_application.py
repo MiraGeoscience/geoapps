@@ -91,10 +91,11 @@ class BaseDashApplication:
 
     def update_data_options(self, ui_json, object_name):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
         if trigger == "ui_json" and "objects" in ui_json:
-            if self.params.geoh5.get_entity(ui_json["objects"])[0] is not None:
-                object_name = self.params.geoh5.get_entity(ui_json["objects"])[0].name
+            if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
+                object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
+                    0
+                ].name
             else:
                 return [], [], [], [], []
 
@@ -177,7 +178,7 @@ class BaseDashApplication:
                     self.params.geoh5.get_entity(locals_dict[key + "_name"])[0],
                 )
 
-    def update_param_list_from_ui_json(self, ui_json: dict, param_list: list) -> dict:
+    def update_param_list_from_ui_json(self, ui_json: dict, output_ids: list) -> dict:
         """
         Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
 
@@ -192,20 +193,22 @@ class BaseDashApplication:
             # Update workspace first, to use when assigning entities.
             # Loop through uijson, and add items that are also in param_list
             for key, value in ui_json.items():
-                if key in param_list:
+                if key + "_value" in output_ids:
                     if type(value) is dict:
                         if type(value["value"]) is bool:
                             if value:
-                                update_dict[key] = [True]
+                                update_dict[key + "_value"] = [True]
                             else:
-                                update_dict[key] = []
+                                update_dict[key + "_value"] = []
                         else:
-                            update_dict[key] = value["value"]
+                            update_dict[key + "_value"] = value["value"]
                     else:
-                        update_dict[key] = value
-                # Objects and Data.
-                elif key + "_name" in param_list:
-                    update_dict[key + "_name"] = value["value"]
+                        update_dict[key + "_value"] = value
+                if key + "_options" in output_ids:
+                    if type(value) is dict and "choiceList" in value:
+                        update_dict[key + "_options"] = value["choiceList"]
+                    else:
+                        update_dict[key + "_options"] = []
 
             if self.params.geoh5 is not None:
                 update_dict["output_path"] = os.path.abspath(

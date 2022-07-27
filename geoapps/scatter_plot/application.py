@@ -609,6 +609,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="color", component_property="value"),
             Output(component_id="color_log", component_property="value"),
             Output(component_id="color_thresh", component_property="value"),
+            Output(component_id="color_maps", component_property="options"),
             Output(component_id="color_maps", component_property="value"),
             Output(component_id="size", component_property="value"),
             Output(component_id="size_log", component_property="value"),
@@ -745,30 +746,13 @@ class ScatterPlots(BaseDashApplication):
         )
 
     def update_remainder_from_ui_json(self, ui_json):
-        param_list = [
-            "objects_name",
-            "downsampling",
-            "x_name",
-            "x_log",
-            "x_thresh",
-            "y_name",
-            "y_log",
-            "y_thresh",
-            "z_name",
-            "z_log",
-            "z_thresh",
-            "color_name",
-            "color_log",
-            "color_thresh",
-            "color_maps",
-            "size_name",
-            "size_log",
-            "size_thresh",
-            "size_markers",
+        # List of outputs for the callback'
+        output_ids = [
+            item["id"] + "_" + item["property"]
+            for item in callback_context.outputs_list
         ]
-
-        update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
-        outputs = BaseDashApplication.get_outputs(param_list, update_dict)
+        update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
+        outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
 
         return outputs
 
