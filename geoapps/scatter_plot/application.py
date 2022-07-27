@@ -17,7 +17,6 @@ from dash import callback_context, dcc, html
 from dash.dependencies import Input, Output
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -27,6 +26,10 @@ from geoapps.scatter_plot.params import ScatterPlotParams
 
 
 class ScatterPlots(BaseDashApplication):
+    """
+    Dash app to make a scatter plot.
+    """
+
     _param_class = ScatterPlotParams
 
     def __init__(self, ui_json=None, **kwargs):
@@ -83,7 +86,7 @@ class ScatterPlots(BaseDashApplication):
                     [
                         dcc.Markdown(children="Axis: "),
                         dcc.Dropdown(
-                            id="axes_pannels",
+                            id="axes_panels",
                             options=[
                                 {"label": "X-axis", "value": "x"},
                                 {"label": "Y-axis", "value": "y"},
@@ -559,7 +562,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="z_div", component_property="style"),
             Output(component_id="color_div", component_property="style"),
             Output(component_id="size_div", component_property="style"),
-            Input(component_id="axes_pannels", component_property="value"),
+            Input(component_id="axes_panels", component_property="value"),
         )(ScatterPlots.update_visibility)
         self.app.callback(
             Output(component_id="ui_json", component_property="data"),
@@ -660,8 +663,18 @@ class ScatterPlots(BaseDashApplication):
         )(self.save_figure)
 
     @staticmethod
-    def update_visibility(axis):
-        # Change the visibility of the dash components depending on the axis selected
+    def update_visibility(axis: str) -> (dict, dict, dict, dict, dict):
+        """
+        Change the visibility of the dash components depending on the axis selected.
+
+        :param axis: Selected data axis.
+
+        :return x-style: X axis style dict.
+        :return y-style: Y axis style dict.
+        :return z-style: Z axis style dict.
+        :return color-style: Color axis style dict.
+        :return size-style: Size axis style dict.
+        """
         if axis == "x":
             return (
                 {"display": "block"},
@@ -703,9 +716,14 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def get_channel_bounds(self, channel):
+    def get_channel_bounds(self, channel: str) -> (float, float):
         """
-        Set the min and max values for the given axis channel
+        Set the min and max values for the given axis channel.
+
+        :param channel: Name of channel to find data for.
+
+        :return cmin: Minimum value for input channel.
+        :return cmax: Maximum value for input channel.
         """
         cmin, cmax = None, None
         if self.params.geoh5.get_entity(channel)[0] is not None:
@@ -715,7 +733,30 @@ class ScatterPlots(BaseDashApplication):
 
         return cmin, cmax
 
-    def update_channel_bounds(self, ui_json, x, y, z, color, size):
+    def update_channel_bounds(
+        self, ui_json: dict, x: str, y: str, z: str, color: str, size: str
+    ):
+        """
+        Update min and max for all channels, either from uploaded ui.json or from change of data.
+
+        :param ui_json: Uploaded ui.json.
+        :param x: Name of selected x data.
+        :param y: Name of selected y data.
+        :param z: Name of selected z data.
+        :param color: Name of selected color data.
+        :param size: Name of selected size data.
+
+        :return x_min: Minimum value for x data.
+        :return x_max: Maximum value for x data.
+        :return y_min: Minimum value for y data.
+        :return y_max: Maximum value for y data.
+        :return z_min: Minimum value for z data.
+        :return z_max: Maximum value for z data.
+        :return color_min: Minimum value for color data.
+        :return color_max: Maximum value for color data.
+        :return size_min: Minimum value for size data.
+        :return size_max: Maximum value for size data.
+        """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
         if trigger == "ui_json":
@@ -750,8 +791,59 @@ class ScatterPlots(BaseDashApplication):
             size_max,
         )
 
-    def update_remainder_from_ui_json(self, ui_json):
-        # List of outputs for the callback'
+    def update_remainder_from_ui_json(
+        self, ui_json: dict
+    ) -> (
+        str,
+        int,
+        str,
+        list,
+        float,
+        str,
+        list,
+        float,
+        str,
+        list,
+        float,
+        str,
+        list,
+        float,
+        list,
+        str,
+        str,
+        list,
+        float,
+        int,
+        str,
+    ):
+        """
+        Update parameters from uploaded ui.json, which aren't involved in other callbacks.
+
+        :param ui_json: Uploaded ui.json.
+
+        :return objects: Name of selected object.
+        :return downsampling: Percent of total values to plot.
+        :return x: Name of selected x data.
+        :return x_log: Whether or not to plot the log of x data.
+        :return x_thresh: X threshold.
+        :return y: Name of selected y data.
+        :return y_log: Whether or not to plot the log of y data.
+        :return y_thresh: Y threshold.
+        :return z: Name of selected z data.
+        :return z_log: Whether or not to plot the log of z data.
+        :return z_thresh: Z threshold.
+        :return color: Name of selected color data.
+        :return color_log: Whether or not to plot the log of color data.
+        :return color_thresh: Color threshold.
+        :return color_maps_options: Color map dropdown options.
+        :return color_maps: Selected color map.
+        :return size: Name of selected size data.
+        :return size_log: Whether or not to plot the log of size data.
+        :return size_thresh: Size threshold.
+        :return size_markers: Max marker size.
+        :return output_path: Output path for exporting scatter plot.
+        """
+        # List of outputs for the callback
         output_ids = [
             item["id"] + "_" + item["property"]
             for item in callback_context.outputs_list
@@ -763,36 +855,69 @@ class ScatterPlots(BaseDashApplication):
 
     def update_plot(
         self,
-        downsampling,
-        x_name,
-        x_log,
-        x_thresh,
-        x_min,
-        x_max,
-        y_name,
-        y_log,
-        y_thresh,
-        y_min,
-        y_max,
-        z_name,
-        z_log,
-        z_thresh,
-        z_min,
-        z_max,
-        color_name,
-        color_log,
-        color_thresh,
-        color_min,
-        color_max,
-        color_maps,
-        size_name,
-        size_log,
-        size_thresh,
-        size_min,
-        size_max,
-        size_markers,
-        clustering=False,
-    ):
+        downsampling: int,
+        x_name: str,
+        x_log: list,
+        x_thresh: float,
+        x_min: float,
+        x_max: float,
+        y_name: str,
+        y_log: list,
+        y_thresh: float,
+        y_min: float,
+        y_max: float,
+        z_name: str,
+        z_log: list,
+        z_thresh: float,
+        z_min: float,
+        z_max: float,
+        color_name: str,
+        color_log: list,
+        color_thresh: float,
+        color_min: float,
+        color_max: float,
+        color_maps: str,
+        size_name: str,
+        size_log: list,
+        size_thresh: float,
+        size_min: float,
+        size_max: float,
+        size_markers: int,
+    ) -> go.FigureWidget:
+        """
+        Update self.params, then run the scatter plot driver with the new params.
+
+        :param downsampling: Percent of total values to plot.
+        :param x_name: Name of selected x data.
+        :param x_log: Whether or not to plot the log of x data.
+        :param x_thresh: X threshold.
+        :param x_min: Minimum value for x data.
+        :param x_max: Maximum value for x data.
+        :param y_name: Name of selected y data.
+        :param y_log: Whether or not to plot the log of y data.
+        :param y_thresh: Y threshold.
+        :param y_min: Minimum value for y data.
+        :param y_max: Maximum value for y data.
+        :param z_name: Name of selected z data.
+        :param z_log: Whether or not to plot the log of z data.
+        :param z_thresh: Z threshold.
+        :param z_min: Minimum value for z data.
+        :param z_max: Maximum value for x data.
+        :param color_name: Name of selected color data.
+        :param color_log: Whether or not to plot the log of color data.
+        :param color_thresh: Color threshold.
+        :param color_min: Minimum value for color data.
+        :param color_max: Maximum value for color data.
+        :param color_maps: Color map.
+        :param size_name: Name of selected size data.
+        :param size_log: Whether or not to plot the log of size data.
+        :param size_thresh: Size threshold.
+        :param size_min: Minimum value for size data.
+        :param size_max: Maximum value for size data.
+        :param size_markers: Max size for markers.
+
+        :return figure: Scatter plot.
+        """
         self.update_params(locals())
 
         new_params = ScatterPlotParams(**self.params.to_dict())
@@ -802,7 +927,16 @@ class ScatterPlots(BaseDashApplication):
 
         return figure
 
-    def save_figure(self, n_clicks, output_path, figure):
+    def save_figure(self, n_clicks: int, output_path: str, figure: go.FigureWidget):
+        """
+        Save scatter plot to output path as html.
+
+        :param n_clicks: Triggers callback for pressing export button.
+        :param output_path: Path to download scatter plot.
+        :param figure: Scatter plot.
+
+        :return n_clicks: Placeholder for callback.
+        """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
         if trigger == "export":
