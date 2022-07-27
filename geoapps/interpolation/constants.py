@@ -205,4 +205,5 @@ app_initializer = {
     "skew_factor": 1.0,
     "space": "Linear",
     "topography_objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
+    "topography_data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
 }
