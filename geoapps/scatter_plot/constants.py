@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 from copy import deepcopy
 
 import plotly.express as px
@@ -46,7 +47,7 @@ defaults = {
     "size_markers": None,
     "run_command": "geoapps.scatter_plot.application",
     "run_command_boolean": False,
-    "monitoring_directory": None,
+    "output_path": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -57,6 +58,7 @@ default_ui_json.update(
     {
         "title": "Scatter Plot",
         "geoh5": "",
+        "output_path": "./",
         "objects": {
             "group": "Data Selection",
             "label": "Object",
@@ -384,4 +386,5 @@ app_initializer = {
     "size_max": 24.8,
     "downsampling": 80,
     "size_markers": 20,
+    "output_path": os.path.abspath("../../assets"),
 }
