@@ -13,7 +13,7 @@
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock --lockfile conda-py-3.8-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
-#     conda-lock -f pyproject.toml -f environments/env-python-3.8.yml --lockfile conda-py-3.8-lock.yml
+#     conda-lock -f C:\Users\JamieB\Documents\GIT\geoapps\pyproject.toml -f C:\Users\JamieB\Documents\GIT\geoapps\environments\env-python-3.8.yml --lockfile conda-py-3.8-lock.yml
 metadata:
   channels:
   - url: conda-forge
@@ -21,16 +21,16 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 11909fcb9dca8021a32b256d162e023d17a030a9904c52dc216b0d6bf940792c
-    osx-64: 6c4f03f2629da24efc664646857b9c827a44651e2a8267ed290c11d40d98cc18
-    win-64: b0137a4e73d74b6a0bba70f89df55bdb27a3e5db4b81e123f39953aefbcd3b6f
+    linux-64: 7cb3027e5ba3718a124075d3a9cb5602e160facd64df394ba5581c3430229301
+    osx-64: 7ba6ccd67811e242fb6d5e43abd862fc13eef3cc0544e3485e97eb596893790c
+    win-64: faff5ec8595c42fed7a90c769c1f0a64c6375bbf9b8576fd801d1a5091b6ada1
   platforms:
   - win-64
   - osx-64
   - linux-64
   sources:
-  - pyproject.toml
-  - environments/env-python-3.8.yml
+  - C:\Users\JamieB\Documents\GIT\geoapps\pyproject.toml
+  - C:\Users\JamieB\Documents\GIT\geoapps\environments\env-python-3.8.yml
 package:
 - category: main
   dependencies: {}
@@ -1695,7 +1695,7 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/dill-0.3.5.1-pyhd8ed1ab_0.tar.bz2
   version: 0.3.5.1
-- category: full
+- category: main
   dependencies:
     python: '>=3.6'
   hash:
@@ -1703,7 +1703,7 @@ package:
     sha256: 2ec4a0900a4a9f42615fc04d0fb3286b796abe56590e8e042f6ec25e102dd5af
   manager: conda
   name: entrypoints
-  optional: true
+  optional: false
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/entrypoints-0.4-pyhd8ed1ab_0.tar.bz2
   version: '0.4'
@@ -3468,6 +3468,7 @@ package:
   version: 0.51.2
 - category: main
   dependencies:
+    entrypoints: ''
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     msgpack-python: ''
@@ -3476,14 +3477,14 @@ package:
     python_abi: 3.8.* *_cp38
     typing-extensions: '>=3.7.4'
   hash:
-    md5: b84d9b4ade23dae5a8b9a94e7b493672
-    sha256: 3f9736794c2aad90018c133c85228ba1daf746ffbb90cd610d56573f33b467a4
+    md5: 2b3b2a650bdc965c77b491211cb23882
+    sha256: 99b3532170dc884a875f0ecfcde55d20ecc676ee97792fddc11c6992a1d07e26
   manager: conda
   name: numcodecs
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/numcodecs-0.10.0-py38hfa26641_1.tar.bz2
-  version: 0.10.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/numcodecs-0.10.1-py38hfa26641_0.tar.bz2
+  version: 0.10.1
 - category: main
   dependencies:
     libgcc-ng: '>=12'
@@ -3870,20 +3871,20 @@ package:
   version: 0.6.1
 - category: main
   dependencies:
-    libgcc-ng: '>=9.4.0'
-    mkl: '>=2022.0.1,<2023.0a0'
-    numpy: '>=1.18.5,<2.0a0'
+    libgcc-ng: '>=12'
+    mkl: '>=2022.1.0,<2023.0a0'
+    numpy: '>=1.19.5,<2.0a0'
     python: '>=3.8,<3.9.0a0'
     python_abi: 3.8.* *_cp38
     scipy: '>=0.13'
   hash:
-    md5: e6d87d03d76b499a72f01d01ef0ec817
-    sha256: 623e459a0e8b45749ebcbcd8de08c2d47a202863a084c90baaee5fe17410e702
+    md5: 5eeb1749828e5974027679aa265d4eba
+    sha256: 2351fb6f98807580332ba9813287b2d36aa19ac1a4f261087688dc1198ca9b55
   manager: conda
   name: pydiso
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pydiso-0.0.3-py38hbf39d42_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/pydiso-0.0.3-py38h887cb03_3.tar.bz2
   version: 0.0.3
 - category: dev
   dependencies:
@@ -5819,7 +5820,7 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/dill-0.3.5.1-pyhd8ed1ab_0.tar.bz2
   version: 0.3.5.1
-- category: full
+- category: main
   dependencies:
     python: '>=3.6'
   hash:
@@ -5827,7 +5828,7 @@ package:
     sha256: 2ec4a0900a4a9f42615fc04d0fb3286b796abe56590e8e042f6ec25e102dd5af
   manager: conda
   name: entrypoints
-  optional: true
+  optional: false
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/entrypoints-0.4-pyhd8ed1ab_0.tar.bz2
   version: '0.4'
@@ -7607,6 +7608,7 @@ package:
   version: 0.53.0
 - category: main
   dependencies:
+    entrypoints: ''
     libcxx: '>=13.0.1'
     msgpack-python: ''
     numpy: '>=1.7'
@@ -7614,14 +7616,14 @@ package:
     python_abi: 3.8.* *_cp38
     typing-extensions: '>=3.7.4'
   hash:
-    md5: b533ff68eb833dc4af73d6aa8feceb64
-    sha256: 0cb90130eb086588d9ed8aa2575f2873399c2387c13a559948d5c4cf55a2e5bf
+    md5: 4178d88603f831ceed83d625b94c6a14
+    sha256: 913dc22746413b63b601da32475742c848f610f6634c5b4277c34c9463a1225d
   manager: conda
   name: numcodecs
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/numcodecs-0.10.0-py38h1c67a95_1.tar.bz2
-  version: 0.10.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/numcodecs-0.10.1-py38h1c67a95_0.tar.bz2
+  version: 0.10.1
 - category: main
   dependencies:
     libcxx: '>=13.0.1'
@@ -9694,7 +9696,7 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/dill-0.3.5.1-pyhd8ed1ab_0.tar.bz2
   version: 0.3.5.1
-- category: full
+- category: main
   dependencies:
     python: '>=3.6'
   hash:
@@ -9702,7 +9704,7 @@ package:
     sha256: 2ec4a0900a4a9f42615fc04d0fb3286b796abe56590e8e042f6ec25e102dd5af
   manager: conda
   name: entrypoints
-  optional: true
+  optional: false
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/entrypoints-0.4-pyhd8ed1ab_0.tar.bz2
   version: '0.4'
@@ -11957,6 +11959,7 @@ package:
   version: 0.53.0
 - category: main
   dependencies:
+    entrypoints: ''
     msgpack-python: ''
     numpy: '>=1.7'
     python: '>=3.8,<3.9.0a0'
@@ -11965,14 +11968,14 @@ package:
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: 82ef71e8a559f9e7792f6a21b45ac6d9
-    sha256: a60d6244f4903d653e2657d5b9f2cba180568f523d4fff2ec45f66a24b6e2f90
+    md5: 8a23532921970e9cd4f16cf9730e6900
+    sha256: 1d3488aebade2d70164c4a76a964ebab307f8504f8a7c5867e98fa15f123b39c
   manager: conda
   name: numcodecs
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/numcodecs-0.10.0-py38h885f38d_1.tar.bz2
-  version: 0.10.0
+  url: https://conda.anaconda.org/conda-forge/win-64/numcodecs-0.10.1-py38h885f38d_0.tar.bz2
+  version: 0.10.1
 - category: main
   dependencies:
     numpy: '>=1.19.5,<2.0a0'
