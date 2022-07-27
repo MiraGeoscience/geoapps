@@ -4,19 +4,20 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
 import base64
 import io
 import json
 import os
-import uuid
 import webbrowser
 from os import environ
 
-import dash
 import numpy as np
 from dash import callback_context, no_update
-from dash.exceptions import PreventUpdate
 from flask import Flask
+from geoh5py.data import Data
+from geoh5py.objects import ObjectBase
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
@@ -57,6 +58,9 @@ class BaseDashApplication:
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
+                ui_json = json.loads(
+                    json.dumps(ui_json, default=BaseDashApplication.serialize_ui_json)
+                )
                 self.params.geoh5 = Workspace(ui_json["geoh5"])
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
@@ -64,13 +68,29 @@ class BaseDashApplication:
                 self.params.geoh5 = Workspace(decoded)
                 ui_json = no_update
             elif trigger == "":
-                ui_json = self.params.input_file.ui_json
+                ifile = InputFile(
+                    ui_json=self.params.input_file.ui_json,
+                    validation_options={"disabled": True},
+                )
+                ifile.update_ui_values(self.params.to_dict())
+                ui_json = json.loads(
+                    json.dumps(
+                        ifile.ui_json, default=BaseDashApplication.serialize_ui_json
+                    )
+                )
             options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                 for obj in self.params.geoh5.objects
             ]
 
         return ui_json, options
+
+    @staticmethod
+    def serialize_ui_json(item):
+        if isinstance(item, ObjectBase) | isinstance(item, Data):
+            return getattr(item, "name", None)
+        elif type(item) == np.ndarray:
+            return item.tolist()
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
@@ -130,7 +150,6 @@ class BaseDashApplication:
         """
         # Get update_dict from ui_json.
         update_dict = {}
-
         if ui_json is not None:
             # Update workspace first, to use when assigning entities.
             # Loop through uijson, and add items that are also in param_list
@@ -142,16 +161,7 @@ class BaseDashApplication:
                         update_dict[key] = value
                 # Objects and Data.
                 elif key + "_name" in param_list:
-                    if (
-                        (value["value"] is None)
-                        | (value["value"] == "")
-                        | (self.params.geoh5 is None)
-                    ):
-                        update_dict[key + "_name"] = None
-                    elif self.params.geoh5.get_entity(uuid.UUID(value["value"])):
-                        update_dict[key + "_name"] = self.params.geoh5.get_entity(
-                            uuid.UUID(value["value"])
-                        )[0].name
+                    update_dict[key + "_name"] = value["value"]
 
             if self.params.geoh5 is not None:
                 update_dict["output_path"] = os.path.abspath(
