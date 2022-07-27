@@ -7,18 +7,19 @@
 
 from __future__ import annotations
 
-import base64
-import io
 import os
 import sys
+from time import time
 
 import numpy as np
-import plotly.express as px
 import plotly.graph_objects as go
-from dash import callback_context, dcc, html, no_update
+from dash import callback_context, dcc, html
 from dash.dependencies import Input, Output
+from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
@@ -28,7 +29,7 @@ from geoapps.scatter_plot.params import ScatterPlotParams
 class ScatterPlots(BaseDashApplication):
     _param_class = ScatterPlotParams
 
-    def __init__(self, ui_json=None, clustering=False, **kwargs):
+    def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and os.path.exists(ui_json.path):
             self.params = self._param_class(ui_json)
@@ -531,11 +532,12 @@ class ScatterPlots(BaseDashApplication):
                 html.Div(
                     [
                         self.plot_layout,
-                        html.A(
-                            html.Button("Download as HTML"),
-                            id="download",
-                            download="Crossplot.html",
-                            style={"margin-left": "30%"},
+                        dcc.Markdown("Output path: "),
+                        html.Div(
+                            [
+                                dcc.Input(id="output_path"),
+                                html.Button("Download as html", id="export"),
+                            ]
                         ),
                     ],
                     style={
@@ -558,7 +560,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="color_div", component_property="style"),
             Output(component_id="size_div", component_property="style"),
             Input(component_id="axes_pannels", component_property="value"),
-        )(self.update_visibility)
+        )(ScatterPlots.update_visibility)
         self.app.callback(
             Output(component_id="ui_json", component_property="data"),
             Output(component_id="objects", component_property="options"),
@@ -615,6 +617,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
+            Output(component_id="output_path", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
@@ -649,7 +652,9 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="size_markers", component_property="value"),
         )(self.update_plot)
         self.app.callback(
-            Output(component_id="download", component_property="href"),
+            Output(component_id="export", component_property="n_clicks"),
+            Input(component_id="export", component_property="n_clicks"),
+            Input(component_id="output_path", component_property="value"),
             Input(component_id="crossplot", component_property="figure"),
             prevent_initial_call=True,
         )(self.save_figure)
@@ -797,14 +802,52 @@ class ScatterPlots(BaseDashApplication):
 
         return figure
 
-    def save_figure(self, fig):
-        buffer = io.StringIO()
-        go.Figure(fig).write_html(buffer)
-        html_bytes = buffer.getvalue().encode()
-        encoded = base64.b64encode(html_bytes).decode()
-        href = "data:text/html;base64," + encoded
+    def save_figure(self, n_clicks, output_path, figure):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
-        return href
+        if trigger == "export":
+            # Get output path.
+            if (
+                (output_path is not None)
+                and (output_path != "")
+                and (os.path.exists(os.path.abspath(output_path)))
+            ):
+                temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
+
+                output_path = os.path.abspath(output_path)
+                go.Figure(figure).write_html(
+                    os.path.join(output_path, temp_geoh5.replace(".geoh5", ".html"))
+                )
+
+                param_dict = self.params.to_dict()
+
+                ws, _ = BaseApplication.get_output_workspace(
+                    False, output_path, temp_geoh5
+                )
+
+                with ws as workspace:
+                    # Put entities in output workspace.
+                    param_dict["geoh5"] = workspace
+
+                    for key, value in param_dict.items():
+                        if isinstance(value, ObjectBase):
+                            param_dict[key] = value.copy(
+                                parent=workspace, copy_children=True
+                            )
+
+                    # Write output uijson.
+                    new_params = ScatterPlotParams(**param_dict)
+                    new_params.write_input_file(
+                        name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                        path=output_path,
+                        validate=False,
+                    )
+
+                print("Saved to " + output_path)
+            else:
+                print("Invalid output path.")
+
+        return 0
 
 
 if __name__ == "__main__":
