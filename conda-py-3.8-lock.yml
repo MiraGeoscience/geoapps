@@ -13,7 +13,7 @@
 # To update a single package to the latest version compatible with the version constraints in the source:
 #     conda-lock lock --lockfile conda-py-3.8-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
-#     conda-lock -f C:\Users\JamieB\Documents\GIT\geoapps\pyproject.toml -f C:\Users\JamieB\Documents\GIT\geoapps\environments\env-python-3.8.yml --lockfile conda-py-3.8-lock.yml
+#     conda-lock -f pyproject.toml -f environments/env-python-3.8.yml --lockfile conda-py-3.8-lock.yml
 metadata:
   channels:
   - url: conda-forge
@@ -21,16 +21,16 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 7cb3027e5ba3718a124075d3a9cb5602e160facd64df394ba5581c3430229301
-    osx-64: 7ba6ccd67811e242fb6d5e43abd862fc13eef3cc0544e3485e97eb596893790c
-    win-64: faff5ec8595c42fed7a90c769c1f0a64c6375bbf9b8576fd801d1a5091b6ada1
+    linux-64: 1ae6fd9d0d9d18375101ab3890ea459bbd6d7226a6952b7d1221c7bb1eefec26
+    osx-64: 4d9049a98129fe5f59f49f430f952d4953dfdd12df9c054bf141b1a5929f4b85
+    win-64: 112666de0a8a223fc7535f67f558191cccce992dd188ef8d2bcf3131928bcd95
   platforms:
   - win-64
   - osx-64
   - linux-64
   sources:
-  - C:\Users\JamieB\Documents\GIT\geoapps\pyproject.toml
-  - C:\Users\JamieB\Documents\GIT\geoapps\environments\env-python-3.8.yml
+  - pyproject.toml
+  - environments/env-python-3.8.yml
 package:
 - category: main
   dependencies: {}
@@ -3509,14 +3509,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 2e92a2c7eb81581410550bec3f28560d
-    sha256: b4b7931f95b94c028fe55e9df25ad75a7b2d1afd7d271dad3faf90b92aa837bc
+    md5: 0cbcd1fa7291fe72dc8f848907510498
+    sha256: 6893304387cef98e74bf6558943c3ae1eb25754aa94b43e2c429af5b437750bd
   manager: conda
   name: pip
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2-pyhd8ed1ab_0.tar.bz2
-  version: '22.2'
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2.1-pyhd8ed1ab_0.tar.bz2
+  version: 22.2.1
 - category: full
   dependencies:
     boost-cpp: '>=1.74.0,<1.74.1.0a0'
@@ -4439,15 +4439,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+    sha256: None
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
@@ -7647,14 +7647,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 2e92a2c7eb81581410550bec3f28560d
-    sha256: b4b7931f95b94c028fe55e9df25ad75a7b2d1afd7d271dad3faf90b92aa837bc
+    md5: 0cbcd1fa7291fe72dc8f848907510498
+    sha256: 6893304387cef98e74bf6558943c3ae1eb25754aa94b43e2c429af5b437750bd
   manager: conda
   name: pip
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2-pyhd8ed1ab_0.tar.bz2
-  version: '22.2'
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2.1-pyhd8ed1ab_0.tar.bz2
+  version: 22.2.1
 - category: full
   dependencies:
     boost-cpp: '>=1.74.0,<1.74.1.0a0'
@@ -8565,15 +8565,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+    sha256: None
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
@@ -11548,14 +11548,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 2e92a2c7eb81581410550bec3f28560d
-    sha256: b4b7931f95b94c028fe55e9df25ad75a7b2d1afd7d271dad3faf90b92aa837bc
+    md5: 0cbcd1fa7291fe72dc8f848907510498
+    sha256: 6893304387cef98e74bf6558943c3ae1eb25754aa94b43e2c429af5b437750bd
   manager: conda
   name: pip
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2-pyhd8ed1ab_0.tar.bz2
-  version: '22.2'
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2.1-pyhd8ed1ab_0.tar.bz2
+  version: 22.2.1
 - category: full
   dependencies:
     libcurl: '>=7.83.1,<8.0a0'
@@ -12771,15 +12771,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+    sha256: None
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
