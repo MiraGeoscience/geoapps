@@ -66,7 +66,7 @@ zarr = "^2.8.1" # from simpgeg using Dask
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=None" }
 # Note - conda-lock does not support the syntaxe: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
-geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef" }
+geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz#sha256=None" }
 #geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="branch_or_tag" }
 simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725" }
 #simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag" }
