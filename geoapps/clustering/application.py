@@ -288,6 +288,7 @@ class Clustering(ScatterPlots):
                         dcc.Dropdown(
                             id="select_cluster",
                             style={"margin-bottom": "20px"},
+                            clearable=False,
                         ),
                         daq.ColorPicker(
                             id="color_picker",
@@ -346,7 +347,9 @@ class Clustering(ScatterPlots):
         # Callbacks to update params
         self.app.callback(
             Output(component_id="select_cluster", component_property="options"),
+            Output(component_id="select_cluster", component_property="value"),
             Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
         )(Clustering.update_select_cluster_options)
         self.app.callback(
             Output(component_id="ui_json", component_property="data"),
@@ -453,8 +456,8 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="kmeans", component_property="data"),
             Output(component_id="clusters", component_property="data"),
-            Input(component_id="n_clusters", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
+            Input(component_id="n_clusters", component_property="value"),
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="clusters", component_property="data"),
             Input(component_id="mapping", component_property="data"),
@@ -555,8 +558,11 @@ class Clustering(ScatterPlots):
             return {"display": "block"}
 
     @staticmethod
-    def update_select_cluster_options(n_clusters):
-        return np.arange(0, n_clusters, 1)
+    def update_select_cluster_options(n_clusters, select_cluster):
+        options = np.arange(0, n_clusters, 1)
+        if select_cluster is None and len(options) > 0:
+            select_cluster = options[0]
+        return options, select_cluster
 
     @staticmethod
     def update_color_pickers(ui_json, color_pickers, color_picker, select_cluster):
@@ -567,16 +573,17 @@ class Clustering(ScatterPlots):
                 color_pickers = colors
             else:
                 color_pickers = full_list
-        else:
+        elif trigger == "color_picker":
             color_pickers[select_cluster] = color_picker["hex"]
         return color_pickers
 
     @staticmethod
     def update_color_picker(color_pickers, select_cluster):
-        if color_pickers:
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "select_cluster" and color_pickers:
             return dict(hex=color_pickers[select_cluster])
         else:
-            return None
+            return no_update
 
     def update_data_subset(self, ui_json, object_name):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -633,25 +640,25 @@ class Clustering(ScatterPlots):
                             out_dict[data_subset[i]] = full_list[i]
                     full_dicts.append(out_dict)
                 full_scales, full_lower_bounds, full_upper_bounds = full_list
-        elif channel is not None:
+        if channel is not None:
             if channel not in full_scales:
                 full_scales[channel] = 1
+            scale = full_scales[channel]
+
             if (channel not in full_lower_bounds) or (
                 full_lower_bounds[channel] is None
             ):
                 full_lower_bounds[channel] = np.nanmin(
                     self.params.geoh5.get_entity(channel)[0].values
                 )
+            lower_bounds = float(full_lower_bounds[channel])
+
             if (channel not in full_upper_bounds) or (
                 full_upper_bounds[channel] is None
             ):
                 full_upper_bounds[channel] = np.nanmax(
                     self.params.geoh5.get_entity(channel)[0].values
                 )
-
-        if channel is not None:
-            scale = full_scales[channel]
-            lower_bounds = float(full_lower_bounds[channel])
             upper_bounds = float(full_upper_bounds[channel])
         else:
             scale, lower_bounds, upper_bounds = None, None, None
@@ -679,6 +686,7 @@ class Clustering(ScatterPlots):
             item["id"] + "_" + item["property"]
             for item in callback_context.outputs_list
         ]
+
         update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
 
         # Add parameters that are specific to clustering.
@@ -694,6 +702,7 @@ class Clustering(ScatterPlots):
             ]
             data_subset = list(filter(None, plot_data))
         update_dict.update({"data_subset_value": data_subset})
+        update_dict.update({"channel_value": update_dict["x_value"]})
 
         outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
 
@@ -706,12 +715,12 @@ class Clustering(ScatterPlots):
         return dataframe, mapping, indices
 
     @staticmethod
-    def run_clustering(n_clusters, dataframe_dict, full_scales, clusters, mapping):
+    def run_clustering(dataframe_dict, n_clusters, full_scales, clusters, mapping):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "n_clusters":
-            update_all_clusters = False
-        else:
+        if trigger != "n_clusters" or clusters == {}:
             update_all_clusters = True
+        else:
+            update_all_clusters = False
 
         kmeans, clusters = ClusteringDriver.run_clustering(
             n_clusters,
@@ -832,7 +841,9 @@ class Clustering(ScatterPlots):
         # Read in stored dataframe.
         dataframe = pd.DataFrame(dataframe_dict)
 
-        if not dataframe.empty:
+        # if not dataframe.empty:
+        run = False
+        if run:
             if color_maps == "kmeans":
                 # Update color_maps
                 color_maps = Clustering.update_colormap(n_clusters, color_pickers)
