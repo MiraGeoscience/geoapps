@@ -97,7 +97,6 @@ app_initializer = {
     "size_max": 24.8,
     "downsampling": 80,
     "size_markers": 20,
-    "data": "{41d51965-3670-43ba-8a10-d399070689e3}",
     "n_clusters": 8,
     "ga_group_name": "Clusters",
 }

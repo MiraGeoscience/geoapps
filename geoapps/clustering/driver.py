@@ -184,11 +184,11 @@ class ClusteringDriver:
         clustering_dict = {}
         clustering_dict.update(
             ClusteringDriver.update_dataframe(
-                self.params.downsampling, self.params.channels, self.params.geoh5
+                self.params.downsampling, self.params.data_subset, self.params.geoh5
             )
         )
         full_scales_dict = dict(
-            zip(self.params.channels, ast.literal_eval(self.params.full_scales))
+            zip(self.params.data_subset, ast.literal_eval(self.params.full_scales))
         )
         clustering_dict.update(
             ClusteringDriver.run_clustering(
