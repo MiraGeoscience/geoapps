@@ -15,8 +15,10 @@ import numpy as np
 import plotly.graph_objects as go
 from dash import callback_context, dcc, html
 from dash.dependencies import Input, Output
+from flask import Flask
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
+from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -38,6 +40,14 @@ class ScatterPlots(BaseDashApplication):
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
+
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
+        )
 
         super().__init__(**kwargs)
 
@@ -718,13 +728,7 @@ class ScatterPlots(BaseDashApplication):
 
     def update_data_options(self, ui_json, object_name):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json" and "objects" in ui_json:
-            if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
-                object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
-                    0
-                ].name
-
-        options = self.get_data_options(object_name)
+        options = self.get_data_options(trigger, ui_json, object_name)
 
         return options, options, options, options, options
 
@@ -888,7 +892,7 @@ class ScatterPlots(BaseDashApplication):
         color_thresh: float,
         color_min: float,
         color_max: float,
-        color_maps: str,
+        color_maps: str | list,
         size_name: str,
         size_log: list,
         size_thresh: float,

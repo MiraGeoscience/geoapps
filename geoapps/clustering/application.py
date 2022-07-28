@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 import sys
 import time
@@ -24,6 +25,7 @@ from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
+from geoapps.base.dash_application import BaseDashApplication
 from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.params import ClusteringParams
@@ -43,6 +45,14 @@ class Clustering(ScatterPlots):
             self.params = self._param_class(**app_initializer)
 
         super().__init__(**self.params.to_dict())
+
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
+        )
 
         # Layout for histogram, stats table, confusion matrix
         self.norm_tabs_layout = html.Div(
@@ -301,13 +311,13 @@ class Clustering(ScatterPlots):
                 self.cluster_tabs_layout,
                 # Creating stored variables that can be passed through callbacks.
                 dcc.Store(id="dataframe"),
-                dcc.Store(id="full_scales"),
-                dcc.Store(id="full_lower_bounds"),
-                dcc.Store(id="full_upper_bounds"),
+                dcc.Store(id="full_scales", data={}),
+                dcc.Store(id="full_lower_bounds", data={}),
+                dcc.Store(id="full_upper_bounds", data={}),
                 dcc.Store(id="color_pickers"),
                 dcc.Store(id="plot_kmeans"),
                 dcc.Store(id="kmeans"),
-                dcc.Store(id="clusters"),
+                dcc.Store(id="clusters", data={}),
                 dcc.Store(id="indices"),
                 dcc.Store(id="mapping"),
                 dcc.Store(id="ui_json"),
@@ -350,7 +360,7 @@ class Clustering(ScatterPlots):
             Output(component_id="data_subset", component_property="options"),
             Input(component_id="ui_json", component_property="data"),
             Input(component_id="objects", component_property="value"),
-        )(self.get_data_options)
+        )(self.update_data_subset)
         self.app.callback(
             Output(component_id="x", component_property="options"),
             Output(component_id="y", component_property="options"),
@@ -358,8 +368,8 @@ class Clustering(ScatterPlots):
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
             Output(component_id="channel", component_property="options"),
-            Input(component_id="data_subset", component_property="options"),
-        )(self.update_data_options)
+            Input(component_id="data_subset", component_property="value"),
+        )(Clustering.update_data_options)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
             Output(component_id="x_max", component_property="value"),
@@ -379,33 +389,17 @@ class Clustering(ScatterPlots):
             Input(component_id="size", component_property="value"),
         )(self.update_channel_bounds)
         self.app.callback(
-            Output(component_id="dataframe", component_property="data"),
-            Output(component_id="kmeans", component_property="data"),
-            Output(component_id="mapping", component_property="data"),
-            Output(component_id="indices", component_property="data"),
-            Input(component_id="downsampling", component_property="data"),
-            Input(component_id="data_subset", component_property="value"),
-        )(ClusteringDriver.update_dataframe)
-        self.app.callback(
-            Output(component_id="kmeans", component_property="data"),
-            Output(component_id="clusters", component_property="data"),
-            Input(component_id="n_clusters", component_property="value"),
-            Input(component_id="dataframe", component_property="data"),
-            Input(component_id="full_scales", component_property="data"),
-            Input(component_id="clusters", component_property="data"),
-            Input(component_id="mapping", component_property="data"),
-        )(ClusteringDriver.run_clustering)
+            Output(component_id="color_pickers", component_property="data"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="color_picker", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
+        )(Clustering.update_color_pickers)
         self.app.callback(
             Output(component_id="color_picker", component_property="value"),
             Input(component_id="color_pickers", component_property="data"),
             Input(component_id="select_cluster", component_property="value"),
         )(Clustering.update_color_picker)
-        self.app.callback(
-            Output(component_id="color_pickers", component_property="data"),
-            Input(component_id="color_pickers", component_property="data"),
-            Input(component_id="color_picker", component_property="value"),
-            Input(component_id="select_cluster", component_property="value"),
-        )(Clustering.update_color_pickers)
         self.app.callback(
             Output(component_id="scale", component_property="value"),
             Output(component_id="lower_bounds", component_property="value"),
@@ -413,11 +407,12 @@ class Clustering(ScatterPlots):
             Output(component_id="full_scales", component_property="data"),
             Output(component_id="full_lower_bounds", component_property="data"),
             Output(component_id="full_upper_bounds", component_property="data"),
+            Input(component_id="ui_json", component_property="data"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="full_lower_bounds", component_property="data"),
             Input(component_id="full_upper_bounds", component_property="data"),
-        )(Clustering.update_properties)
+        )(self.update_properties)
         self.app.callback(
             Output(component_id="objects", component_property="value"),
             Output(component_id="downsampling", component_property="value"),
@@ -438,33 +433,39 @@ class Clustering(ScatterPlots):
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
-            Output(component_id="channel", component_property="value"),
             Output(component_id="data_subset", component_property="value"),
+            Output(component_id="channel", component_property="value"),
             Output(component_id="color_maps", component_property="options"),
             Output(component_id="n_clusters", component_property="value"),
-            Output(component_id="full_scales", component_property="data"),
-            Output(component_id="full_lower_bounds", component_property="data"),
-            Output(component_id="full_upper_bounds", component_property="data"),
-            Output(component_id="color_pickers", component_property="data"),
             Output(component_id="plot_kmeans", component_property="data"),
-            Output(component_id="kmeans", component_property="data"),
-            Output(component_id="clusters", component_property="data"),
-            Output(component_id="indices", component_property="data"),
-            Output(component_id="mapping", component_property="data"),
             Output(component_id="output_path", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
+        # Clustering callbacks
+        self.app.callback(
+            Output(component_id="dataframe", component_property="data"),
+            Output(component_id="mapping", component_property="data"),
+            Output(component_id="indices", component_property="data"),
+            Input(component_id="downsampling", component_property="value"),
+            Input(component_id="data_subset", component_property="value"),
+        )(self.update_dataframe)
+        self.app.callback(
+            Output(component_id="kmeans", component_property="data"),
+            Output(component_id="clusters", component_property="data"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="dataframe", component_property="data"),
+            Input(component_id="full_scales", component_property="data"),
+            Input(component_id="clusters", component_property="data"),
+            Input(component_id="mapping", component_property="data"),
+        )(Clustering.run_clustering)
+
         # Callbacks to update the plots
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
-            Output(component_id="stats_table", component_property="data"),
-            Output(component_id="matrix", component_property="figure"),
-            Output(component_id="histogram", component_property="figure"),
-            Output(component_id="boxplot", component_property="figure"),
-            Output(component_id="inertia", component_property="figure"),
             Input(component_id="n_clusters", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
+            Input(component_id="kmeans", component_property="data"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -558,15 +559,33 @@ class Clustering(ScatterPlots):
         return np.arange(0, n_clusters, 1)
 
     @staticmethod
-    def update_color_pickers(color_pickers, color_picker, select_cluster):
-        color_pickers[select_cluster] = color_picker["hex"]
+    def update_color_pickers(ui_json, color_pickers, color_picker, select_cluster):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "ui_json":
+            full_list = ast.literal_eval(ui_json["color_pickers"])
+            if (full_list is None) | (not full_list):
+                color_pickers = colors
+            else:
+                color_pickers = full_list
+        else:
+            color_pickers[select_cluster] = color_picker["hex"]
         return color_pickers
 
     @staticmethod
     def update_color_picker(color_pickers, select_cluster):
-        return dict(hex=color_pickers[select_cluster])
+        if color_pickers:
+            return dict(hex=color_pickers[select_cluster])
+        else:
+            return None
 
-    def update_data_options(self, data_subset):
+    def update_data_subset(self, ui_json, object_name):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        options = self.get_data_options(trigger, ui_json, object_name)
+
+        return options
+
+    @staticmethod
+    def update_data_options(data_subset):
         return (
             data_subset,
             data_subset,
@@ -578,6 +597,7 @@ class Clustering(ScatterPlots):
 
     def update_properties(
         self,
+        ui_json: dict,
         channel: str,
         full_scales: dict,
         full_lower_bounds: dict,
@@ -591,25 +611,47 @@ class Clustering(ScatterPlots):
         :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
         :return update_dict: Dictionary of new scale and bounds.
         """
-        if channel is not None:
+
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "ui_json":
+            # Reconstruct scaling and bounds dicts from uijson input lists.
+            data_subset = ast.literal_eval(ui_json["data_subset"])
+            if len(data_subset) == 0:
+                full_scales, full_lower_bounds, full_upper_bounds = {}, {}, {}
+            else:
+                full_dicts = []
+                for key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
+                    out_dict = {}
+                    full_list = ast.literal_eval(ui_json[key])
+                    for i in range(len(data_subset)):
+                        if (full_list is None) | (not full_list):
+                            if key == "full_scales":
+                                out_dict[data_subset[i]] = 1
+                            else:
+                                out_dict[data_subset[i]] = None
+                        else:
+                            out_dict[data_subset[i]] = full_list[i]
+                    full_dicts.append(out_dict)
+                full_scales, full_lower_bounds, full_upper_bounds = full_list
+        elif channel is not None:
             if channel not in full_scales:
                 full_scales[channel] = 1
-            scale = full_scales[channel]
-
             if (channel not in full_lower_bounds) or (
                 full_lower_bounds[channel] is None
             ):
                 full_lower_bounds[channel] = np.nanmin(
                     self.params.geoh5.get_entity(channel)[0].values
                 )
-            lower_bounds = float(full_lower_bounds[channel])
-
             if (channel not in full_upper_bounds) or (
                 full_upper_bounds[channel] is None
             ):
                 full_upper_bounds[channel] = np.nanmax(
                     self.params.geoh5.get_entity(channel)[0].values
                 )
+
+        if channel is not None:
+            scale = full_scales[channel]
+            lower_bounds = float(full_lower_bounds[channel])
             upper_bounds = float(full_upper_bounds[channel])
         else:
             scale, lower_bounds, upper_bounds = None, None, None
@@ -622,6 +664,64 @@ class Clustering(ScatterPlots):
             full_lower_bounds,
             full_upper_bounds,
         )
+
+    def update_remainder_from_ui_json(self, ui_json: dict) -> tuple:
+        """
+        Update parameters from uploaded ui_json that aren't involved in another callback.
+
+        :param ui_json: Uploaded ui_json.
+
+        :return outputs: List of outputs corresponding to the callback expected outputs.
+        """
+
+        # List of outputs for the callback
+        output_ids = [
+            item["id"] + "_" + item["property"]
+            for item in callback_context.outputs_list
+        ]
+        update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
+
+        # Add parameters that are specific to clustering.
+        # Get initial data subset values. If the subset is empty, set it from the selected axis data.
+        data_subset = ast.literal_eval(ui_json["data_subset"])
+        if not data_subset:
+            plot_data = [
+                update_dict["x_value"],
+                update_dict["y_value"],
+                update_dict["z_value"],
+                update_dict["color_value"],
+                update_dict["size_value"],
+            ]
+            data_subset = list(filter(None, plot_data))
+        update_dict.update({"data_subset_value": data_subset})
+
+        outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
+
+        return outputs
+
+    def update_dataframe(self, downsampling, data_subset):
+        dataframe, mapping, indices = ClusteringDriver.update_dataframe(
+            downsampling, data_subset, self.params.geoh5, downsample_min=5000
+        )
+        return dataframe, mapping, indices
+
+    @staticmethod
+    def run_clustering(n_clusters, dataframe_dict, full_scales, clusters, mapping):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "n_clusters":
+            update_all_clusters = False
+        else:
+            update_all_clusters = True
+
+        kmeans, clusters = ClusteringDriver.run_clustering(
+            n_clusters,
+            dataframe_dict,
+            full_scales,
+            clusters,
+            mapping,
+            update_all_clusters,
+        )
+        return kmeans, clusters
 
     @staticmethod
     def update_colormap(n_clusters: int, color_pickers: list) -> list:
@@ -654,6 +754,7 @@ class Clustering(ScatterPlots):
         self,
         n_clusters: int,
         dataframe_dict: list[dict],
+        kmeans: list,
         x: str,
         x_log: list,
         x_thresh: float,
@@ -742,7 +843,7 @@ class Clustering(ScatterPlots):
             axis_values = []
             for axis in [x, y, z, color, size]:
                 if axis == "kmeans":
-                    axis_values.append(self.data_channels["kmeans"])
+                    axis_values.append(PlotData(axis, kmeans))
                 elif axis is not None:
                     axis_values.append(PlotData(axis, dataframe[axis].values))
                 else:
@@ -780,6 +881,7 @@ class Clustering(ScatterPlots):
                 size_max,
                 size_markers,
             )
+            print("test")
             return crossplot
 
         else:
@@ -793,29 +895,30 @@ class Clustering(ScatterPlots):
         :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
         :return inertia_plot: Inertia figure.
         """
-        # Read in stored clusters. Convert keys from string back to int.
-        clusters = {int(k): v for k, v in clusters.items()}
+        inertia_plot = go.Figure()
 
-        if n_clusters in clusters:
-            ind = np.sort(list(clusters.keys()))
-            inertias = [clusters[ii]["inertia"] for ii in ind]
-            line = go.Scatter(x=ind, y=inertias, mode="lines")
-            point = go.Scatter(
-                x=[n_clusters],
-                y=[clusters[n_clusters]["inertia"]],
-            )
+        if clusters is not None:
+            # Read in stored clusters. Convert keys from string back to int.
+            clusters = {int(k): v for k, v in clusters.items()}
 
-            inertia_plot = go.Figure([line, point])
+            if n_clusters in clusters:
+                ind = np.sort(list(clusters.keys()))
+                inertias = [clusters[ii]["inertia"] for ii in ind]
+                line = go.Scatter(x=ind, y=inertias, mode="lines")
+                point = go.Scatter(
+                    x=[n_clusters],
+                    y=[clusters[n_clusters]["inertia"]],
+                )
 
-            inertia_plot.update_layout(
-                {
-                    "xaxis": {"title": "Number of clusters"},
-                    "showlegend": False,
-                }
-            )
-            return inertia_plot
-        else:
-            return go.Figure()
+                inertia_plot = go.Figure([line, point])
+
+                inertia_plot.update_layout(
+                    {
+                        "xaxis": {"title": "Number of clusters"},
+                        "showlegend": False,
+                    }
+                )
+        return inertia_plot
 
     @staticmethod
     def make_hist_plot(
@@ -873,7 +976,9 @@ class Clustering(ScatterPlots):
             for ii in range(n_clusters):
                 cluster_ind = kmeans[indices] == ii
                 x = np.ones(np.sum(cluster_ind)) * ii
-                y = self.data_channels[channel].values[indices][cluster_ind]
+                y = self.params.geoh5.get_entity(channel)[0].values[indices][
+                    cluster_ind
+                ]
 
                 boxes.append(
                     go.Box(
@@ -912,9 +1017,12 @@ class Clustering(ScatterPlots):
         :return stats_table: Table of stats: count, mean, std, min, max, etc.
         """
         dataframe = pd.DataFrame(dataframe_dict)
-        stats_df = dataframe.describe(percentiles=None, include=None, exclude=None)
-        stats_df.insert(0, "", stats_df.index)
-        return stats_df.to_dict("records")
+        if not dataframe.empty:
+            stats_df = dataframe.describe(percentiles=None, include=None, exclude=None)
+            stats_df.insert(0, "", stats_df.index)
+            return stats_df.to_dict("records")
+        else:
+            return None
 
     @staticmethod
     def make_heatmap(dataframe_dict: dict):
