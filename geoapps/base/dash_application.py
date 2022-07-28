@@ -33,14 +33,7 @@ class BaseDashApplication:
     _params = None
 
     def __init__(self, **kwargs):
-
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-        server = Flask(__name__)
-        self.app = JupyterDash(
-            server=server,
-            url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
-            external_stylesheets=external_stylesheets,
-        )
+        pass
 
     def update_object_options(self, filename, contents) -> (list, dict, None, None):
         """
@@ -89,7 +82,13 @@ class BaseDashApplication:
 
         return ui_json, options, None, None
 
-    def get_data_options(self, object_name):
+    def get_data_options(self, trigger, ui_json, object_name):
+        if trigger == "ui_json" and "objects" in ui_json:
+            if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
+                object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
+                    0
+                ].name
+
         if getattr(
             self.params, "geoh5", None
         ) is not None and self.params.geoh5.get_entity(object_name):
@@ -150,6 +149,8 @@ class BaseDashApplication:
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
             if key in locals_dict:
+                # if key == "color_maps":
+                #    self.params.update({"color_maps": locals_dict["color_maps"]}, False)
                 if bool in validations[key]["types"] and type(locals_dict[key]) == list:
                     if not locals_dict[key]:
                         setattr(self.params, key, False)

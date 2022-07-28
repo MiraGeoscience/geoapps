@@ -55,7 +55,7 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
-        "channels": "[]",
+        "data_subset": "[]",
         "full_scales": "[]",
         "full_lower_bounds": "[]",
         "full_upper_bounds": "[]",

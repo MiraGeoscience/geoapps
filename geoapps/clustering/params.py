@@ -27,7 +27,7 @@ class ClusteringParams(ScatterPlotParams):
         self._validations = validations
         self._n_clusters = None
         self._ga_group_name = None
-        self._channels = None
+        self._data_subset = None
         self._full_scales = None
         self._full_lower_bounds = None
         self._full_upper_bounds = None
@@ -58,15 +58,15 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("n_clusters", val)
 
     @property
-    def channels(self) -> str | None:
+    def data_subset(self) -> str | None:
         """
-        List of channels.
+        List of data used for clustering.
         """
-        return self._channels
+        return self._data_subset
 
-    @channels.setter
-    def channels(self, val):
-        self.setter_validator("channels", val)
+    @data_subset.setter
+    def data_subset(self, val):
+        self.setter_validator("data_subset", val)
 
     @property
     def full_scales(self) -> str | None:

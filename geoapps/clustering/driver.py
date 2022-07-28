@@ -38,7 +38,7 @@ class ClusteringDriver:
         clusters: dict,
         mapping: np.ndarray,
         update_all_clusters: bool,
-    ) -> dict:
+    ) -> tuple:
         """
         Normalize the the selected data and perform the kmeans clustering.
         :param n_clusters: Number of clusters.
@@ -52,7 +52,7 @@ class ClusteringDriver:
         dataframe = pd.DataFrame(dataframe_dict)
 
         if dataframe.empty:
-            return {"kmeans": None, "clusters": {}}
+            return None, {}
         # Prime the app with clusters
         # Normalize values and run
 
@@ -85,7 +85,7 @@ class ClusteringDriver:
         cluster_ids = clusters[n_clusters]["labels"].astype(float)
         kmeans = cluster_ids[mapping]
 
-        return {"kmeans": kmeans, "clusters": clusters}
+        return kmeans, clusters
 
     @staticmethod
     def update_dataframe(
@@ -93,7 +93,7 @@ class ClusteringDriver:
         channels: list,
         workspace: Workspace,
         downsample_min: int | None = None,
-    ) -> dict:
+    ) -> tuple:
         """
         Normalize the the selected data and perform the kmeans clustering.
         :param downsampling: Percent downsampling.
@@ -102,15 +102,9 @@ class ClusteringDriver:
         :param downsample_min: Minimum number of data to downsample to.
         :return update_dict: Values for dataframe, kmeans, mapping, indices.
         """
-        kmeans = None
 
         if (channels is None) | (not channels):
-            return {
-                "dataframe": None,
-                "kmeans": kmeans,
-                "mapping": None,
-                "indices": None,
-            }
+            return None, None, None
         else:
             indices, values = ClusteringDriver.get_indices(
                 channels, downsampling, workspace, downsample_min=downsample_min
@@ -138,12 +132,7 @@ class ClusteringDriver:
             mapping[inactive_set] = ind_out
             mapping[indices] = np.arange(len(indices))
 
-            return {
-                "dataframe": dataframe.to_dict("records"),
-                "kmeans": kmeans,
-                "mapping": mapping,
-                "indices": indices,
-            }
+            return dataframe.to_dict("records"), mapping, indices
 
     @staticmethod
     def get_indices(

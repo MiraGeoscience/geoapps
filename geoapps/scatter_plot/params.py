@@ -45,11 +45,13 @@ class ScatterPlotParams(BaseParams):
         self._z_max = None
         self._z_thresh = None
         self._color = None
+        self._color_log = None
         self._color_min = None
         self._color_max = None
         self._color_maps = None
         self._color_thresh = None
         self._size = None
+        self._size_log = None
         self._size_min = None
         self._size_max = None
         self._size_thresh = None
