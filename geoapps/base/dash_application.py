@@ -106,14 +106,13 @@ class BaseDashApplication:
         return ui_json, options, None, None
 
     def update_data_options(self, ui_json, object_name):
+        options = []
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json" and "objects" in ui_json:
             if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
                 object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
                     0
                 ].name
-            else:
-                return [], [], [], [], []
 
         obj = None
         if getattr(
@@ -123,10 +122,11 @@ class BaseDashApplication:
                 if isinstance(entity, ObjectBase):
                     obj = entity
 
-        options = obj.get_data_list()
+        if obj:
+            options = obj.get_data_list()
 
-        if "Visual Parameters" in options:
-            options.remove("Visual Parameters")
+            if "Visual Parameters" in options:
+                options.remove("Visual Parameters")
 
         return options, options, options, options, options
 
@@ -206,6 +206,7 @@ class BaseDashApplication:
 
         :param locals_dict: Dict of parameters with new values to assign to self.params.
         """
+        print(locals_dict)
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
 
@@ -265,7 +266,7 @@ class BaseDashApplication:
                         update_dict[key + "_options"] = []
 
             if self.params.geoh5 is not None:
-                update_dict["output_path"] = os.path.abspath(
+                update_dict["output_path_value"] = os.path.abspath(
                     os.path.dirname(self.params.geoh5.h5file)
                 )
 

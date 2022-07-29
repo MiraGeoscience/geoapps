@@ -437,9 +437,11 @@ class ScatterPlots(BaseDashApplication):
             ):
                 temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 
-                output_path = os.path.abspath(output_path)
+                self.params.output_path = os.path.abspath(output_path)
                 go.Figure(figure).write_html(
-                    os.path.join(output_path, temp_geoh5.replace(".geoh5", ".html"))
+                    os.path.join(
+                        self.params.output_path, temp_geoh5.replace(".geoh5", ".html")
+                    )
                 )
 
                 param_dict = self.params.to_dict()
@@ -466,7 +468,7 @@ class ScatterPlots(BaseDashApplication):
                         validate=False,
                     )
 
-                print("Saved to " + output_path)
+                print("Saved to " + self.params.output_path)
             else:
                 print("Invalid output path.")
 
