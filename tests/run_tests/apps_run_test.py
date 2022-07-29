@@ -36,7 +36,7 @@ def test_block_model(tmp_path):
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    block_model = BlockModelCreation()
+    block_model = BlockModelCreation(geoh5=temp_workspace)
     # Test initialization
     ui_json, object_options = block_model.update_object_options(None, None, trigger="")
     param_list = [
@@ -74,9 +74,13 @@ def test_block_model(tmp_path):
     assert bottom_padding == block_model.params.bottom_padding
     assert expansion_fact == block_model.params.expansion_fact
 
-    # Test file uploads
+    # Create a second workspace to test file uploads
+    temp_workspace2 = path.join(tmp_path, "contour2.geoh5")
+    with Workspace(temp_workspace2) as workspace:
+        for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
     # Reproduce output of dcc.Upload Component
-    with open(temp_workspace, "rb") as file:
+    with open(temp_workspace2, "rb") as file:
         decoded = file.read()
     content_bytes = base64.b64encode(decoded)
     content_string = content_bytes.decode("utf-8")
