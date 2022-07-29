@@ -66,7 +66,7 @@ class IsoSurface(ObjectDataSelection):
         )
         self._fixed_contours = Text(
             value="",
-            description="Fixed contours",
+            description="Fixed contours:",
             disabled=False,
             continuous_update=False,
         )
@@ -80,6 +80,14 @@ class IsoSurface(ObjectDataSelection):
         self.defaults["fixed_contours"] = str(self.defaults["fixed_contours"])[1:-1]
         super().__init__(**self.defaults)
 
+        self.contours = VBox(
+            [
+                self.interval_min,
+                self.interval_max,
+                self.interval_spacing,
+                self.fixed_contours,
+            ]
+        )
         self.output_panel = VBox([self.export_as, self.output_panel])
 
     def trigger_click(self, _) -> str:
@@ -189,10 +197,7 @@ class IsoSurface(ObjectDataSelection):
                         [
                             self.project_panel,
                             self.data_panel,
-                            self.interval_min,
-                            self.interval_max,
-                            self.interval_spacing,
-                            self.fixed_contours,
+                            self.contours,
                             self.max_distance,
                             self.resolution,
                             Label("Output"),

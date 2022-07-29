@@ -1282,8 +1282,8 @@ class InversionApp(PlotSelection2D):
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
-                workspace=new_workspace,
             )
+            param_dict["geoh5"] = new_workspace
             param_dict["resolution"] = None  # No downsampling for dcip
             self._run_params = self.params.__class__(input_file=ifile, **param_dict)
             self._run_params.write_input_file(
