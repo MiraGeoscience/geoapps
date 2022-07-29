@@ -64,9 +64,7 @@ class BaseDashApplication:
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
-                ui_json = json.loads(
-                    json.dumps(ui_json, default=BaseDashApplication.serialize_ui_json)
-                )
+                ui_json = BaseDashApplication.load_ui_json(ui_json)
                 self.params.geoh5 = Workspace(ui_json["geoh5"])
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
@@ -79,11 +77,7 @@ class BaseDashApplication:
                     validation_options={"disabled": True},
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json = json.loads(
-                    json.dumps(
-                        ifile.ui_json, default=BaseDashApplication.serialize_ui_json
-                    )
-                )
+                ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
             options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                 for obj in self.params.geoh5.objects
@@ -92,7 +86,7 @@ class BaseDashApplication:
         return ui_json, options
 
     @staticmethod
-    def serialize_ui_json(item):
+    def serialize_item(item):
         """
         Default function for json.dumps.
 
@@ -100,10 +94,32 @@ class BaseDashApplication:
 
         :return serialized_item: A serialized version of the input item.
         """
-        if isinstance(item, ObjectBase) | isinstance(item, Data):
+        if isinstance(item, Workspace):
+            return getattr(item, "h5file", None)
+        elif isinstance(item, ObjectBase) | isinstance(item, Data):
             return getattr(item, "name", None)
         elif type(item) == np.ndarray:
             return item.tolist()
+        else:
+            return item
+
+    @staticmethod
+    def load_ui_json(ui_json):
+        """
+        Default function for json.dumps.
+
+        :param item: Item in input ui_json which can't be serialized.
+
+        :return serialized_item: A serialized version of the input item.
+        """
+        for key, value in ui_json.items():
+            if type(value) == dict:
+                for inner_key, inner_value in value.items():
+                    value[inner_key] = BaseDashApplication.serialize_item(inner_value)
+            else:
+                ui_json[key] = BaseDashApplication.serialize_item(value)
+
+        return ui_json
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
