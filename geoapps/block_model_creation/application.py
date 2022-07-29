@@ -15,11 +15,11 @@ from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 from geoh5py.objects.object_base import ObjectBase
 
-from geoapps.block_model_creation.layout import block_model_layout
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.block_model_creation.constants import app_initializer
 from geoapps.block_model_creation.driver import BlockModelDriver
+from geoapps.block_model_creation.layout import block_model_layout
 from geoapps.block_model_creation.params import BlockModelParams
 
 

@@ -8,7 +8,6 @@
 
 from dash import dcc, html
 
-
 block_model_layout = html.Div(
     [
         dcc.Upload(
