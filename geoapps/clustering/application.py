@@ -31,6 +31,7 @@ from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.application import ScatterPlots
+from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.shared_utils.utils import colors
 
 
@@ -371,7 +372,9 @@ class Clustering(ScatterPlots):
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
             Output(component_id="channel", component_property="options"),
+            Output(component_id="color_maps", component_property="options"),
             Input(component_id="data_subset", component_property="value"),
+            Input(component_id="kmeans", component_property="data"),
         )(Clustering.update_data_options)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
@@ -390,6 +393,7 @@ class Clustering(ScatterPlots):
             Input(component_id="z", component_property="value"),
             Input(component_id="color", component_property="value"),
             Input(component_id="size", component_property="value"),
+            Input(component_id="kmeans", component_property="data"),
         )(self.update_channel_bounds)
         self.app.callback(
             Output(component_id="color_pickers", component_property="data"),
@@ -438,7 +442,6 @@ class Clustering(ScatterPlots):
             Output(component_id="size_markers", component_property="value"),
             Output(component_id="data_subset", component_property="value"),
             Output(component_id="channel", component_property="value"),
-            Output(component_id="color_maps", component_property="options"),
             Output(component_id="n_clusters", component_property="value"),
             Output(component_id="plot_kmeans", component_property="data"),
             Output(component_id="output_path", component_property="value"),
@@ -469,6 +472,7 @@ class Clustering(ScatterPlots):
             Input(component_id="n_clusters", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
             Input(component_id="kmeans", component_property="data"),
+            Input(component_id="indices", component_property="data"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -568,7 +572,10 @@ class Clustering(ScatterPlots):
     def update_color_pickers(ui_json, color_pickers, color_picker, select_cluster):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json":
-            full_list = ast.literal_eval(ui_json["color_pickers"])
+            if type(ui_json["color_pickers"]) == list:
+                full_list = ui_json["color_pickers"]
+            else:
+                full_list = ast.literal_eval(ui_json["color_pickers"])
             if (full_list is None) | (not full_list):
                 color_pickers = colors
             else:
@@ -592,14 +599,24 @@ class Clustering(ScatterPlots):
         return options
 
     @staticmethod
-    def update_data_options(data_subset):
+    def update_data_options(data_subset, kmeans):
+        channel_options = data_subset
+
+        if kmeans is not None:
+            axis_options = data_subset + ["kmeans"]
+            color_maps_options = px.colors.named_colorscales() + ["kmeans"]
+        else:
+            axis_options = data_subset
+            color_maps_options = px.colors.named_colorscales()
+
         return (
-            data_subset,
-            data_subset,
-            data_subset,
-            data_subset,
-            data_subset,
-            data_subset,
+            axis_options,
+            axis_options,
+            axis_options,
+            axis_options,
+            axis_options,
+            channel_options,
+            color_maps_options,
         )
 
     def update_properties(
@@ -740,53 +757,57 @@ class Clustering(ScatterPlots):
         :param color_pickers: List of colors with index corresponding to cluster number.
         :return color_map: Color map for plotting kmeans on scatter plot.
         """
-        color_map = {}
-        for ii in range(n_clusters):
-            colorpicker = color_pickers[ii]
-            if "#" in colorpicker:
-                color = colorpicker.lstrip("#")
-                color_map[ii] = [
-                    np.min([ii / (n_clusters - 1), 1]),
-                    "rgb("
-                    + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
-                    + ")",
-                ]
-            else:
-                color_map[ii] = [
-                    np.min([ii / (n_clusters - 1), 1]),
-                    colorpicker,
-                ]
+        if color_pickers:
+            color_map = {}
+            for ii in range(n_clusters):
+                colorpicker = color_pickers[ii]
+                if "#" in colorpicker:
+                    color = colorpicker.lstrip("#")
+                    color_map[ii] = [
+                        np.min([ii / (n_clusters - 1), 1]),
+                        "rgb("
+                        + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
+                        + ")",
+                    ]
+                else:
+                    color_map[ii] = [
+                        np.min([ii / (n_clusters - 1), 1]),
+                        colorpicker,
+                    ]
 
-        return list(color_map.values())
+            return list(color_map.values())
+        else:
+            return None
 
     def make_scatter_plot(
         self,
         n_clusters: int,
         dataframe_dict: list[dict],
         kmeans: list,
-        x: str,
+        indices: list,
+        x_name: str,
         x_log: list,
         x_thresh: float,
         x_min: float,
         x_max: float,
-        y: str,
+        y_name: str,
         y_log: list,
         y_thresh: float,
         y_min: float,
         y_max: float,
-        z: str,
+        z_name: str,
         z_log: list,
         z_thresh: float,
         z_min: float,
         z_max: float,
-        color: str,
+        color_name: str,
         color_log: list,
         color_thresh: float,
         color_min: float,
         color_max: float,
         color_maps: list,
         color_pickers: list,
-        size: str,
+        size_name: str,
         size_log: list,
         size_thresh: float,
         size_min: float,
@@ -841,20 +862,25 @@ class Clustering(ScatterPlots):
         # Read in stored dataframe.
         dataframe = pd.DataFrame(dataframe_dict)
 
-        # if not dataframe.empty:
-        run = False
-        if run:
+        if not dataframe.empty:
+            self.update_params(locals())
+
+            if kmeans is not None:
+                kmeans = np.array(kmeans)
+            if indices is not None:
+                indices = np.array(indices)
+
             if color_maps == "kmeans":
                 # Update color_maps
                 color_maps = Clustering.update_colormap(n_clusters, color_pickers)
-            elif color_maps is None:
+            if color_maps is None:
                 color_maps = [[0.0, "rgb(0,0,0)"]]
 
             # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
             axis_values = []
-            for axis in [x, y, z, color, size]:
+            for axis in [x_name, y_name, z_name, color_name, size_name]:
                 if axis == "kmeans":
-                    axis_values.append(PlotData(axis, kmeans))
+                    axis_values.append(PlotData(axis, kmeans[indices].astype(float)))
                 elif axis is not None:
                     axis_values.append(PlotData(axis, dataframe[axis].values))
                 else:
@@ -862,40 +888,25 @@ class Clustering(ScatterPlots):
 
             x, y, z, color, size = tuple(axis_values)
 
-            crossplot = self.update_plot(
-                100,
-                x,
-                x_log,
-                x_thresh,
-                x_min,
-                x_max,
-                y,
-                y_log,
-                y_thresh,
-                y_min,
-                y_max,
-                z,
-                z_log,
-                z_thresh,
-                z_min,
-                z_max,
-                color,
-                color_log,
-                color_thresh,
-                color_min,
-                color_max,
-                color_maps,
-                size,
-                size_log,
-                size_thresh,
-                size_min,
-                size_max,
-                size_markers,
+            new_params = ClusteringParams(**self.params.to_dict())
+            new_params.update(
+                {
+                    "downsampling": 100,
+                    "color_maps": color_maps,
+                    "x": x,
+                    "y": y,
+                    "z": z,
+                    "color": color,
+                    "size": size,
+                },
+                validate=False,
             )
-            print("test")
-            return crossplot
+            driver = ScatterPlotDriver(new_params)
+            crossplot = go.Figure(driver.run())
 
+            return crossplot
         else:
+
             return go.Figure()
 
     @staticmethod
@@ -977,12 +988,15 @@ class Clustering(ScatterPlots):
         :param indices: Active indices for data, determined by downsampling.
         :return boxplot: Boxplot figure.
         """
-        if kmeans is not None:
-            kmeans = np.array(kmeans)
-        if indices is not None:
-            indices = np.array(indices)
 
-        if (kmeans is not None) and (channel is not None):
+        if (
+            (kmeans is not None)
+            and (channel is not None)
+            and (indices is not None)
+            and (color_pickers is not None)
+        ):
+            kmeans = np.array(kmeans)
+            indices = np.array(indices)
             boxes = []
             for ii in range(n_clusters):
                 cluster_ind = kmeans[indices] == ii

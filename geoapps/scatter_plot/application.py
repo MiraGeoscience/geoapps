@@ -732,25 +732,35 @@ class ScatterPlots(BaseDashApplication):
 
         return options, options, options, options, options
 
-    def get_channel_bounds(self, channel: str) -> (float, float):
+    def get_channel_bounds(self, channel: str, data: list = None) -> (float, float):
         """
         Set the min and max values for the given axis channel.
 
         :param channel: Name of channel to find data for.
+        :param data: Optional data to use instead of channel name.
 
         :return cmin: Minimum value for input channel.
         :return cmax: Maximum value for input channel.
         """
         cmin, cmax = None, None
         if self.params.geoh5.get_entity(channel)[0] is not None:
-            data = self.params.geoh5.get_entity(channel)[0]
-            cmin = float(f"{np.nanmin(data.values):.2e}")
-            cmax = float(f"{np.nanmax(data.values):.2e}")
+            data = self.params.geoh5.get_entity(channel)[0].values
+
+        if data is not None:
+            cmin = float(f"{np.nanmin(data):.2e}")
+            cmax = float(f"{np.nanmax(data):.2e}")
 
         return cmin, cmax
 
     def update_channel_bounds(
-        self, ui_json: dict, x: str, y: str, z: str, color: str, size: str
+        self,
+        ui_json: dict,
+        x: str,
+        y: str,
+        z: str,
+        color: str,
+        size: str,
+        data: list = None,
     ):
         """
         Update min and max for all channels, either from uploaded ui.json or from change of data.
@@ -761,6 +771,7 @@ class ScatterPlots(BaseDashApplication):
         :param z: Name of selected z data.
         :param color: Name of selected color data.
         :param size: Name of selected size data.
+        :param data: Optional data to use instead of channel name.
 
         :return x_min: Minimum value for x data.
         :return x_max: Maximum value for x data.
@@ -788,11 +799,11 @@ class ScatterPlots(BaseDashApplication):
                 ui_json["size_max"]["value"],
             )
         else:
-            x_min, x_max = self.get_channel_bounds(x)
-            y_min, y_max = self.get_channel_bounds(y)
-            z_min, z_max = self.get_channel_bounds(z)
-            color_min, color_max = self.get_channel_bounds(color)
-            size_min, size_max = self.get_channel_bounds(size)
+            x_min, x_max = self.get_channel_bounds(x, data)
+            y_min, y_max = self.get_channel_bounds(y, data)
+            z_min, z_max = self.get_channel_bounds(z, data)
+            color_min, color_max = self.get_channel_bounds(color, data)
+            size_min, size_max = self.get_channel_bounds(size, data)
 
         return (
             x_min,
@@ -935,7 +946,6 @@ class ScatterPlots(BaseDashApplication):
         :return figure: Scatter plot.
         """
         self.update_params(locals())
-
         new_params = ScatterPlotParams(**self.params.to_dict())
         # Run driver.
         driver = ScatterPlotDriver(new_params)
