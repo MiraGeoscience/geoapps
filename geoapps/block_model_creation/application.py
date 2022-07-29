@@ -79,17 +79,18 @@ class BlockModelCreation(BaseDashApplication):
         )(self.trigger_click)
 
     def update_remainder_from_ui_json(
-        self, ui_json: dict, param_list: list = []
+        self, ui_json: dict, param_list: list | None = None
     ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
 
         :param ui_json: Uploaded ui_json.
+        :param param_list: List of parameters to update. Used by tests.
 
         :return outputs: List of outputs corresponding to the callback expected outputs.
         """
         # List of outputs for the callback
-        if not param_list:
+        if param_list is None:
             param_list = [i["id"] for i in callback_context.outputs_list]
         update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
         outputs = BaseDashApplication.get_outputs(param_list, update_dict)
@@ -127,6 +128,7 @@ class BlockModelCreation(BaseDashApplication):
         :param expansion_fact: Expansion factor for padding cells.
         :param live_link: Checkbox for using monitoring directory.
         :param output_path: Output path for exporting block model.
+        :param trigger: Dash component which triggered the callback.
 
         :return live_link: Checkbox for using monitoring directory.
         """
