@@ -35,8 +35,22 @@ def test_block_model(tmp_path):
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = BlockModelCreation(geoh5=temp_workspace, output_path=str(tmp_path))
-    app.trigger_click(None)
+    app = BlockModelCreation(geoh5=temp_workspace)
+    app.trigger_click(
+        n_clicks=0,
+        new_grid="BlockModel",
+        objects_name="Inversion_VTEM_Model",
+        cell_size_x=50.0,
+        cell_size_y=50.0,
+        cell_size_z=50.0,
+        depth_core=500.0,
+        horizontal_padding=500.0,
+        bottom_padding=500.0,
+        expansion_fact=1.05,
+        live_link=[],
+        output_path=str(tmp_path),
+        test=True,
+    )
 
     filename = list(
         filter(lambda x: ("BlockModel_" in x) and ("geoh5" in x), listdir(tmp_path))
