@@ -78,7 +78,9 @@ class BlockModelCreation(BaseDashApplication):
             Input(component_id="output_path", component_property="value"),
         )(self.trigger_click)
 
-    def update_remainder_from_ui_json(self, ui_json: dict) -> tuple:
+    def update_remainder_from_ui_json(
+        self, ui_json: dict, param_list: list = []
+    ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
 
@@ -87,7 +89,8 @@ class BlockModelCreation(BaseDashApplication):
         :return outputs: List of outputs corresponding to the callback expected outputs.
         """
         # List of outputs for the callback
-        param_list = [i["id"] for i in callback_context.outputs_list]
+        if not param_list:
+            param_list = [i["id"] for i in callback_context.outputs_list]
         update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
         outputs = BaseDashApplication.get_outputs(param_list, update_dict)
 
@@ -107,7 +110,7 @@ class BlockModelCreation(BaseDashApplication):
         expansion_fact: float,
         live_link: list,
         output_path: str,
-        test: bool = False,
+        trigger: str = None,
     ) -> list:
         """
         When the export button is pressed, run block model driver to export block model.
@@ -127,8 +130,9 @@ class BlockModelCreation(BaseDashApplication):
 
         :return live_link: Checkbox for using monitoring directory.
         """
-
-        if test or callback_context.triggered[0]["prop_id"].split(".")[0] == "export":
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "export":
             # Update self.params from dash component values
             self.update_params(locals())
 
