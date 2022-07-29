@@ -343,6 +343,7 @@ class ScatterPlots(BaseDashApplication):
                             id="color",
                             style={"margin-bottom": "20px"},
                         ),
+                        dcc.Markdown(children="Colormap: "),
                         dcc.Dropdown(
                             id="color_maps",
                             style={"margin-bottom": "20px"},

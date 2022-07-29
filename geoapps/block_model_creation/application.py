@@ -10,7 +10,7 @@ from __future__ import annotations
 import os
 from time import time
 
-from dash import callback_context, dcc, html, no_update
+from dash import callback_context, no_update
 from dash.dependencies import Input, Output
 from dash.exceptions import PreventUpdate
 from geoh5py.objects.object_base import ObjectBase
@@ -19,6 +19,7 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.block_model_creation.constants import app_initializer
 from geoapps.block_model_creation.driver import BlockModelDriver
+from geoapps.block_model_creation.layout import block_model_layout
 from geoapps.block_model_creation.params import BlockModelParams
 
 
@@ -38,209 +39,7 @@ class BlockModelCreation(BaseDashApplication):
 
         super().__init__(**kwargs)
 
-        # Set up the layout with the dash components
-        self.app.layout = html.Div(
-            [
-                dcc.Upload(
-                    id="upload",
-                    children=html.Button("Upload Workspace/ui.json"),
-                    style={"margin_bottom": "20px"},
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Object:",
-                            style={
-                                "width": "25%",
-                                "display": "inline-block",
-                                "margin-top": "20px",
-                            },
-                        ),
-                        dcc.Dropdown(
-                            id="objects",
-                            style={
-                                "width": "75%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Name:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="new_grid",
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Minimum x cell size:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="cell_size_x",
-                            type="number",
-                            min=1e-14,
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Minimum y cell size:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="cell_size_y",
-                            type="number",
-                            min=1e-14,
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Minimum z cell size:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="cell_size_z",
-                            type="number",
-                            min=1e-14,
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Core depth (m):",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="depth_core",
-                            type="number",
-                            min=0.0,
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Horizontal padding:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="horizontal_padding",
-                            type="number",
-                            min=0.0,
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Bottom padding:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="bottom_padding",
-                            type="number",
-                            min=0.0,
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Expansion factor:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="expansion_fact",
-                            type="number",
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            children="Output path:",
-                            style={"width": "25%", "display": "inline-block"},
-                        ),
-                        dcc.Input(
-                            id="output_path",
-                            style={
-                                "width": "50%",
-                                "display": "inline-block",
-                                "margin_bottom": "20px",
-                            },
-                        ),
-                    ]
-                ),
-                dcc.Checklist(
-                    id="live_link",
-                    options=[
-                        {"label": "Geoscience ANALYST Pro - Live link", "value": True}
-                    ],
-                    value=[],
-                    style={"margin_bottom": "20px"},
-                ),
-                html.Button("Export", id="export"),
-                dcc.Markdown(id="output_message"),
-                dcc.Store(id="ui_json"),
-            ],
-            style={
-                "margin_left": "20px",
-                "margin_top": "20px",
-                "width": "75%",
-            },
-        )
+        self.app.layout = block_model_layout
 
         # Set up callbacks
         self.app.callback(
@@ -303,12 +102,13 @@ class BlockModelCreation(BaseDashApplication):
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
-        depth_core: int,
+        depth_core: float,
         horizontal_padding: float,
         bottom_padding: float,
         expansion_fact: float,
         live_link: list,
         output_path: str,
+        test: bool = False,
     ) -> list:
         """
         When the export button is pressed, run block model driver to export block model.
@@ -329,9 +129,7 @@ class BlockModelCreation(BaseDashApplication):
         :return live_link: Checkbox for using monitoring directory.
         """
 
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
-        if trigger == "export":
+        if test or callback_context.triggered[0]["prop_id"].split(".")[0] == "export":
             # Update self.params from dash component values
             self.update_params(locals())
 
