@@ -10,6 +10,7 @@ import io
 import json
 import os
 import socket
+import uuid
 import webbrowser
 from os import environ
 
@@ -42,33 +43,52 @@ class BaseDashApplication:
             external_stylesheets=external_stylesheets,
         )
 
-    def update_object_options(self, filename, contents) -> (list, dict, None, None):
+    def update_object_options(
+        self, filename: str, contents: str, trigger: str = None
+    ) -> (list, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
         and sets the new object options.
 
         :param filename: Uploaded filename. Workspace or ui.json.
         :param contents: Uploaded file contents. Workspace or ui.json.
+        :param trigger: Dash component which triggered the callback.
 
         :return ui_json: Uploaded ui_json.
         :return options: New dropdown options.
         """
         ui_json, options = no_update, no_update
 
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if contents is not None or trigger == "":
             if filename is not None and filename.endswith(".ui.json"):
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
-                ui_json = json.loads(
-                    json.dumps(ui_json, default=BaseDashApplication.serialize_ui_json)
+                """
+                ifile = InputFile(
+                    ui_json=self.params.input_file.ui_json,
+                    validation_options={"disabled": True},
                 )
+                param_dict = self.params.to_dict()
+                param_dict["geoh5"] = Workspace(ui_json["geoh5"])
+                self.params = self.params.__class__(input_file=ifile, **param_dict)
+                """
                 self.params.geoh5 = Workspace(ui_json["geoh5"])
+                ui_json = self.load_ui_json(ui_json)
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
+                """
+                ifile = InputFile(
+                    ui_json=self.params.input_file.ui_json,
+                    validation_options={"disabled": True},
+                )
+                param_dict = self.params.to_dict()
+                param_dict["geoh5"] = Workspace(decoded)
+                self.params = self.params.__class__(input_file=ifile, **param_dict)
+                """
                 self.params.geoh5 = Workspace(decoded)
                 ui_json = no_update
             elif trigger == "":
@@ -77,11 +97,7 @@ class BaseDashApplication:
                     validation_options={"disabled": True},
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json = json.loads(
-                    json.dumps(
-                        ifile.ui_json, default=BaseDashApplication.serialize_ui_json
-                    )
-                )
+                ui_json = self.load_ui_json(ifile.ui_json)
             options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                 for obj in self.params.geoh5.objects
@@ -115,18 +131,56 @@ class BaseDashApplication:
         return options, options, options, options, options
 
     @staticmethod
-    def serialize_ui_json(item):
+    def is_valid_uuid(val: str):
+        """
+        Check if input string is a valid uuid.
+
+        :param val: Input string.
+
+        :returns bool: If the input is a valid uuid.
+        """
+        try:
+            uuid.UUID(str(val))
+            return True
+        except ValueError:
+            return False
+
+    def serialize_item(self, item):
         """
         Default function for json.dumps.
 
-        :param item: Item in input ui_json which can't be serialized.
+        :param item: Item in ui_json to serialize.
 
         :return serialized_item: A serialized version of the input item.
         """
-        if isinstance(item, ObjectBase) | isinstance(item, Data):
+        if isinstance(item, Workspace):
+            return getattr(item, "h5file", None)
+        elif isinstance(item, ObjectBase) | isinstance(item, Data):
             return getattr(item, "name", None)
+        elif BaseDashApplication.is_valid_uuid(item):
+            return self.params.geoh5.get_entity(uuid.UUID(item))[0].name
         elif type(item) == np.ndarray:
             return item.tolist()
+        else:
+            return item
+
+    def load_ui_json(self, ui_json):
+        """
+        Loop through a ui_json and serialize objects, np.arrays, etc. so the ui_json can be stored as a dcc.Store
+        variable.
+
+        :param ui_json: Input ui_json.
+
+        :return serialized_item: The ui_json, now able to store as a dcc.Store variable.
+        """
+        for key, value in ui_json.items():
+            if type(value) == dict:
+                for inner_key, inner_value in value.items():
+                    value[inner_key] = self.serialize_item(inner_value)
+            else:
+                ui_json[key] = self.serialize_item(value)
+
+        return ui_json
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
