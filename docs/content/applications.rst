@@ -110,7 +110,7 @@ Need help? Contact us at support@mirageoscience.com
     :align: center
     :width: 0
 
-.. figure:: applications/images/cluster_thumbnail.png
+.. figure:: applications/images/cluster/cluster_thumbnail.png
     :align: center
     :width: 0
 
@@ -122,7 +122,7 @@ Need help? Contact us at support@mirageoscience.com
     :align: center
     :width: 0
 
-.. figure:: applications/images/block_model_thumbnail.png
+.. figure:: applications/images/block_model/block_model_thumbnail.png
     :align: center
     :width: 0
 
