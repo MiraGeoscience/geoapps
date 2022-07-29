@@ -42,7 +42,9 @@ class BaseDashApplication:
             external_stylesheets=external_stylesheets,
         )
 
-    def update_object_options(self, filename, contents) -> (dict, list):
+    def update_object_options(
+        self, filename: str, contents: str, trigger: str = None
+    ) -> (dict, list):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
         and sets the new object options.
@@ -55,8 +57,8 @@ class BaseDashApplication:
         """
         ui_json, options = no_update, no_update
 
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if contents is not None or trigger == "":
             if filename is not None and filename.endswith(".ui.json"):
                 content_type, content_string = contents.split(",")
