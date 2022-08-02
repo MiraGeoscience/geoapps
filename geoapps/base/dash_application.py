@@ -161,9 +161,11 @@ class BaseDashApplication:
 
     def get_params_dict(self, update_dict: dict):
         """
-        Update self.params from locals.
+        Get dict of current params.
 
-        :param update_dict: Dict of parameters with new values to assign to self.params.
+        :param update_dict: Dict of parameters with new values to convert to a params dict.
+
+        :return output_dict: Dict of current params.
         """
         output_dict = {}
         # Get validations to know expected type for keys in self.params.
@@ -266,6 +268,9 @@ class BaseDashApplication:
 
     @property
     def workspace(self):
+        """
+        Current workspace.
+        """
         return self._workspace
 
     @workspace.setter
