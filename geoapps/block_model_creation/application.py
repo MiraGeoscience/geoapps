@@ -136,28 +136,25 @@ class BlockModelCreation(BaseDashApplication):
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "export":
-            # Update self.params from dash component values
-            self.update_params(locals())
-
-            temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
-
             # Get output path.
             if (
-                (self.params.output_path is not None)
-                and (self.params.output_path != "")
-                and (os.path.exists(os.path.abspath(self.params.output_path)))
+                (output_path is not None)
+                and (output_path != "")
+                and (os.path.exists(os.path.abspath(output_path)))
             ):
-                self.params.output_path = os.path.abspath(self.params.output_path)
+                output_path = os.path.abspath(output_path)
             else:
                 print("Invalid output path.")
                 raise PreventUpdate
 
-            # Get output workspace.
-            ws, self.params.live_link = BaseApplication.get_output_workspace(
-                self.params.live_link, self.params.output_path, temp_geoh5
-            )
+            # Update self.params from dash component values
+            param_dict = self.get_params_dict(locals())
 
-            param_dict = self.params.to_dict()
+            # Get output workspace.
+            temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
+            ws, param_dict["live_link"] = BaseApplication.get_output_workspace(
+                param_dict["live_link"], output_path, temp_geoh5
+            )
 
             with ws as workspace:
                 # Put entities in output workspace.
@@ -172,7 +169,7 @@ class BlockModelCreation(BaseDashApplication):
             new_params = BlockModelParams(**param_dict)
             new_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=self.params.output_path,
+                path=new_params.output_path,
                 validate=False,
             )
             # Run driver.
@@ -180,11 +177,11 @@ class BlockModelCreation(BaseDashApplication):
             print("Creating block model . . .")
             driver.run()
 
-            if self.params.live_link:
+            if new_params.live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return ["Geoscience ANALYST Pro - Live link"]
             else:
-                print("Saved to " + self.params.output_path)
+                print("Saved to " + new_params.output_path)
                 return []
         else:
             return no_update
