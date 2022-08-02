@@ -105,7 +105,19 @@ class BaseDashApplication:
 
         return ui_json, options, None, None
 
-    def update_data_options(self, ui_json, object_name):
+    def update_data_options(self, ui_json: dict, object_name: str):
+        """
+        Update data dropdown options after object change.
+
+        :param ui_json: Uploaded ui.json.
+        :param object_name: Selected object in object dropdown.
+
+        :return options: Data dropdown options for x-axis of scatter plot.
+        :return options: Data dropdown options for y-axis of scatter plot.
+        :return options: Data dropdown options for z-axis of scatter plot.
+        :return options: Data dropdown options for color axis of scatter plot.
+        :return options: Data dropdown options for size axis of scatter plot.
+        """
         options = []
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json" and "objects" in ui_json:
@@ -164,7 +176,7 @@ class BaseDashApplication:
         else:
             return item
 
-    def load_ui_json(self, ui_json):
+    def load_ui_json(self, ui_json: dict):
         """
         Loop through a ui_json and serialize objects, np.arrays, etc. so the ui_json can be stored as a dcc.Store
         variable.
@@ -206,7 +218,6 @@ class BaseDashApplication:
 
         :param locals_dict: Dict of parameters with new values to assign to self.params.
         """
-        print(locals_dict)
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
 
@@ -238,7 +249,7 @@ class BaseDashApplication:
         Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
 
         :param ui_json: An uploaded ui_json file.
-        :param param_list: List of parameters that need to be updated.
+        :param output_ids: List of parameters that need to be updated.
 
         :return update_dict: Dictionary of updated parameters.
         """
