@@ -151,8 +151,8 @@ class BlockModelCreation(BaseDashApplication):
 
             # Get output workspace.
             temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
-            ws, live_link = BaseApplication.get_output_workspace(
-                live_link, output_path, temp_geoh5
+            ws, param_dict["live_link"] = BaseApplication.get_output_workspace(
+                param_dict["live_link"], output_path, temp_geoh5
             )
 
             with ws as workspace:
