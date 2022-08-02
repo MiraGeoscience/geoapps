@@ -32,8 +32,10 @@ class BaseDashApplication:
     """
 
     _params = None
+    _workspace = None
 
     def __init__(self, **kwargs):
+        self.workspace = self.params.geoh5
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -66,30 +68,12 @@ class BaseDashApplication:
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
-                """
-                ifile = InputFile(
-                    ui_json=self.params.input_file.ui_json,
-                    validation_options={"disabled": True},
-                )
-                param_dict = self.params.to_dict()
-                param_dict["geoh5"] = Workspace(ui_json["geoh5"])
-                self.params = self.params.__class__(input_file=ifile, **param_dict)
-                """
-                self.params.geoh5 = Workspace(ui_json["geoh5"])
+                self.workspace = Workspace(ui_json["geoh5"])
                 ui_json = self.load_ui_json(ui_json)
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
-                """
-                ifile = InputFile(
-                    ui_json=self.params.input_file.ui_json,
-                    validation_options={"disabled": True},
-                )
-                param_dict = self.params.to_dict()
-                param_dict["geoh5"] = Workspace(decoded)
-                self.params = self.params.__class__(input_file=ifile, **param_dict)
-                """
-                self.params.geoh5 = Workspace(decoded)
+                self.workspace = Workspace(decoded)
                 ui_json = no_update
             elif trigger == "":
                 ifile = InputFile(
@@ -100,7 +84,7 @@ class BaseDashApplication:
                 ui_json = self.load_ui_json(ifile.ui_json)
             options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                for obj in self.params.geoh5.objects
+                for obj in self.workspace.objects
             ]
 
         return ui_json, options
@@ -133,7 +117,7 @@ class BaseDashApplication:
         elif isinstance(item, ObjectBase) | isinstance(item, Data):
             return getattr(item, "name", None)
         elif BaseDashApplication.is_valid_uuid(item):
-            return self.params.geoh5.get_entity(uuid.UUID(item))[0].name
+            return self.workspace.get_entity(uuid.UUID(item))[0].name
         elif type(item) == np.ndarray:
             return item.tolist()
         else:
@@ -175,36 +159,36 @@ class BaseDashApplication:
                 outputs.append(no_update)
         return tuple(outputs)
 
-    def update_params(self, locals_dict: dict):
+    def get_params_dict(self, update_dict: dict):
         """
         Update self.params from locals.
 
-        :param locals_dict: Dict of parameters with new values to assign to self.params.
+        :param update_dict: Dict of parameters with new values to assign to self.params.
         """
+        output_dict = {}
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
 
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
-            if key in locals_dict:
+            if key in update_dict:
                 if key == "live_link":
-                    if not locals_dict["live_link"]:
-                        self.params.live_link = False
+                    if not update_dict["live_link"]:
+                        output_dict[key] = False
                     else:
-                        self.params.live_link = True
+                        output_dict[key] = True
                 elif (
-                    float in validations[key]["types"] and type(locals_dict[key]) == int
+                    float in validations[key]["types"] and type(update_dict[key]) == int
                 ):
                     # Checking for values that Dash has given as int when they should be float.
-                    setattr(self.params, key, float(locals_dict[key]))
+                    output_dict[key] = float(update_dict[key])
                 else:
-                    setattr(self.params, key, locals_dict[key])
-            elif key + "_name" in locals_dict:
-                setattr(
-                    self.params,
-                    key,
-                    self.params.geoh5.get_entity(locals_dict[key + "_name"])[0],
-                )
+                    output_dict[key] = update_dict[key]
+            elif key + "_name" in update_dict:
+                output_dict[key] = self.workspace.get_entity(
+                    update_dict[key + "_name"]
+                )[0]
+        return output_dict
 
     def update_param_list_from_ui_json(self, ui_json: dict, param_list: list) -> dict:
         """
@@ -227,9 +211,9 @@ class BaseDashApplication:
                     else:
                         update_dict[key] = value
 
-            if self.params.geoh5 is not None:
+            if self.workspace is not None:
                 update_dict["output_path"] = os.path.abspath(
-                    os.path.dirname(self.params.geoh5.h5file)
+                    os.path.dirname(self.workspace.h5file)
                 )
 
         return update_dict
@@ -279,3 +263,11 @@ class BaseDashApplication:
         ), f"Input parameters must be an instance of {BaseParams}"
 
         self._params = params
+
+    @property
+    def workspace(self):
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, value):
+        self._workspace = value
