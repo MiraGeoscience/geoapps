@@ -32,10 +32,12 @@ class BaseDashApplication:
     """
 
     _params = None
+    _param_class = None
     _workspace = None
 
     def __init__(self, **kwargs):
         self.workspace = self.params.geoh5
+        self.workspace.close()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -58,6 +60,8 @@ class BaseDashApplication:
 
         :return ui_json: Uploaded ui_json.
         :return options: New dropdown options.
+        :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
+        :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
         ui_json, options = no_update, no_update
 
@@ -69,11 +73,15 @@ class BaseDashApplication:
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"])
+                self.params = self._param_class(**{"geoh5": self.workspace})
+                self.workspace.close()
                 ui_json = self.load_ui_json(ui_json)
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded)
+                self.params = self._param_class(**{"geoh5": self.workspace})
+                self.workspace.close()
                 ui_json = no_update
             elif trigger == "":
                 ifile = InputFile(
@@ -82,6 +90,7 @@ class BaseDashApplication:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json = self.load_ui_json(ifile.ui_json)
+
             options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
                 for obj in self.workspace.objects
@@ -89,11 +98,10 @@ class BaseDashApplication:
 
         return ui_json, options, None, None
 
-    def update_data_options(self, ui_json: dict, object_name: str):
+    def update_data_options(self, object_name: str):
         """
         Update data dropdown options after object change.
 
-        :param ui_json: Uploaded ui.json.
         :param object_name: Selected object in object dropdown.
 
         :return options: Data dropdown options for x-axis of scatter plot.
@@ -103,26 +111,17 @@ class BaseDashApplication:
         :return options: Data dropdown options for size axis of scatter plot.
         """
         options = []
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json" and "objects" in ui_json:
-            if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
-                object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
-                    0
-                ].name
-
         obj = None
-        if getattr(
-            self.params, "geoh5", None
-        ) is not None and self.params.geoh5.get_entity(object_name):
-            for entity in self.params.geoh5.get_entity(object_name):
+
+        if self.workspace.get_entity(object_name):
+            for entity in self.workspace.get_entity(object_name):
                 if isinstance(entity, ObjectBase):
                     obj = entity
-
         if obj:
             options = obj.get_data_list()
 
-            if "Visual Parameters" in options:
-                options.remove("Visual Parameters")
+        if "Visual Parameters" in options:
+            options.remove("Visual Parameters")
 
         return options, options, options, options, options
 
@@ -143,9 +142,9 @@ class BaseDashApplication:
 
     def serialize_item(self, item):
         """
-        Default function for json.dumps.
+        Serialize item in input ui.json.
 
-        :param item: Item in ui_json to serialize.
+        :param item: Item in ui.json to serialize.
 
         :return serialized_item: A serialized version of the input item.
         """
@@ -323,5 +322,5 @@ class BaseDashApplication:
         return self._workspace
 
     @workspace.setter
-    def workspace(self, value):
-        self._workspace = value
+    def workspace(self, workspace):
+        self._workspace = workspace

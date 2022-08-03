@@ -20,6 +20,7 @@ from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
 from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
+from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
 
@@ -38,18 +39,20 @@ def test_block_model(tmp_path):
 
     block_model = BlockModelCreation(geoh5=temp_workspace)
     # Test initialization
-    ui_json, object_options = block_model.update_object_options(None, None, trigger="")
+    ui_json, object_options, _, _ = block_model.update_object_options(
+        None, None, trigger=""
+    )
     param_list = [
-        "new_grid",
-        "objects",
-        "cell_size_x",
-        "cell_size_y",
-        "cell_size_z",
-        "depth_core",
-        "horizontal_padding",
-        "bottom_padding",
-        "expansion_fact",
-        "output_path",
+        "new_grid_value",
+        "objects_value",
+        "cell_size_x_value",
+        "cell_size_y_value",
+        "cell_size_z_value",
+        "depth_core_value",
+        "horizontal_padding_value",
+        "bottom_padding_value",
+        "expansion_fact_value",
+        "output_path_value",
     ]
     (
         new_grid,
@@ -85,7 +88,7 @@ def test_block_model(tmp_path):
     content_bytes = base64.b64encode(decoded)
     content_string = content_bytes.decode("utf-8")
     contents = "".join(["content_type", ",", content_string])
-    ui_json, object_options = block_model.update_object_options(
+    ui_json, object_options, _, _ = block_model.update_object_options(
         "ws.geoh5", contents, trigger="upload"
     )
 
