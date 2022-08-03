@@ -53,7 +53,7 @@ def test_block_model(tmp_path):
     ]
     (
         new_grid,
-        objects_name,
+        objects_uid,
         cell_size_x,
         cell_size_y,
         cell_size_z,
@@ -65,7 +65,7 @@ def test_block_model(tmp_path):
     ) = block_model.update_remainder_from_ui_json(ui_json, param_list)
 
     assert new_grid == block_model.params.new_grid
-    assert objects_name == block_model.params.objects.name
+    assert objects_uid == str(block_model.params.objects.uid)
     assert cell_size_x == block_model.params.cell_size_x
     assert cell_size_y == block_model.params.cell_size_y
     assert cell_size_z == block_model.params.cell_size_z
@@ -93,7 +93,7 @@ def test_block_model(tmp_path):
     block_model.trigger_click(
         n_clicks=0,
         new_grid=new_grid,
-        objects_name=object_options[0]["value"],
+        objects_uid=object_options[0]["value"],
         cell_size_x=cell_size_x,
         cell_size_y=cell_size_y,
         cell_size_z=cell_size_z,
