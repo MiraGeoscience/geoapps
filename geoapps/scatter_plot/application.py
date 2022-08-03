@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import sys
+import uuid
 from time import time
 
 import numpy as np
@@ -212,8 +213,11 @@ class ScatterPlots(BaseDashApplication):
         :return cmax: Maximum value for input channel.
         """
         cmin, cmax = None, None
-        if workspace.get_entity(channel)[0] is not None:
-            data = workspace.get_entity(channel)[0]
+        if (
+            channel is not None
+            and workspace.get_entity(uuid.UUID(channel))[0] is not None
+        ):
+            data = workspace.get_entity(uuid.UUID(channel))[0]
             cmin = float(f"{np.nanmin(data.values):.2e}")
             cmax = float(f"{np.nanmax(data.values):.2e}")
 
@@ -343,28 +347,28 @@ class ScatterPlots(BaseDashApplication):
         self,
         n_clicks: int,
         downsampling: int,
-        x_name: str,
+        x: str,
         x_log: list,
         x_thresh: float,
         x_min: float,
         x_max: float,
-        y_name: str,
+        y: str,
         y_log: list,
         y_thresh: float,
         y_min: float,
         y_max: float,
-        z_name: str,
+        z: str,
         z_log: list,
         z_thresh: float,
         z_min: float,
         z_max: float,
-        color_name: str,
+        color: str,
         color_log: list,
         color_thresh: float,
         color_min: float,
         color_max: float,
         color_maps: str,
-        size_name: str,
+        size: str,
         size_log: list,
         size_thresh: float,
         size_min: float,
@@ -377,28 +381,28 @@ class ScatterPlots(BaseDashApplication):
 
         :param n_clicks: Trigger for export button.
         :param downsampling: Percent of total values to plot.
-        :param x_name: Name of selected x data.
+        :param x: Name of selected x data.
         :param x_log: Whether or not to plot the log of x data.
         :param x_thresh: X threshold.
         :param x_min: Minimum value for x data.
         :param x_max: Maximum value for x data.
-        :param y_name: Name of selected y data.
+        :param y: Name of selected y data.
         :param y_log: Whether or not to plot the log of y data.
         :param y_thresh: Y threshold.
         :param y_min: Minimum value for y data.
         :param y_max: Maximum value for y data.
-        :param z_name: Name of selected z data.
+        :param z: Name of selected z data.
         :param z_log: Whether or not to plot the log of z data.
         :param z_thresh: Z threshold.
         :param z_min: Minimum value for z data.
         :param z_max: Maximum value for x data.
-        :param color_name: Name of selected color data.
+        :param color: Name of selected color data.
         :param color_log: Whether or not to plot the log of color data.
         :param color_thresh: Color threshold.
         :param color_min: Minimum value for color data.
         :param color_max: Maximum value for color data.
         :param color_maps: Color map.
-        :param size_name: Name of selected size data.
+        :param size: Name of selected size data.
         :param size_log: Whether or not to plot the log of size data.
         :param size_thresh: Size threshold.
         :param size_min: Minimum value for size data.
@@ -408,7 +412,9 @@ class ScatterPlots(BaseDashApplication):
 
         :return figure: Scatter plot.
         """
+
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        print(trigger)
         if trigger == "":
             param_dict = self.get_params_dict(locals())
         else:

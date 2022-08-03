@@ -19,6 +19,8 @@ from dash import callback_context, no_update
 from flask import Flask
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
+from geoh5py.shared import Entity
+from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
@@ -75,7 +77,7 @@ class BaseDashApplication:
                 self.workspace = Workspace(ui_json["geoh5"])
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.workspace.close()
-                ui_json = self.load_ui_json(ui_json)
+                ui_json = BaseDashApplication.load_ui_json(ui_json)
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
@@ -89,20 +91,21 @@ class BaseDashApplication:
                     validation_options={"disabled": True},
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json = self.load_ui_json(ifile.ui_json)
+
+                ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
 
             options = [
-                {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
+                {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
                 for obj in self.workspace.objects
             ]
 
         return ui_json, options, None, None
 
-    def update_data_options(self, object_name: str):
+    def update_data_options(self, object_uid: str):
         """
         Update data dropdown options after object change.
 
-        :param object_name: Selected object in object dropdown.
+        :param object_uid: Selected object in object dropdown.
 
         :return options: Data dropdown options for x-axis of scatter plot.
         :return options: Data dropdown options for y-axis of scatter plot.
@@ -110,37 +113,26 @@ class BaseDashApplication:
         :return options: Data dropdown options for color axis of scatter plot.
         :return options: Data dropdown options for size axis of scatter plot.
         """
+        print("update data")
         options = []
         obj = None
 
-        if self.workspace.get_entity(object_name):
-            for entity in self.workspace.get_entity(object_name):
+        if self.workspace.get_entity(object_uid):
+            for entity in self.workspace.get_entity(uuid.UUID(object_uid)):
                 if isinstance(entity, ObjectBase):
                     obj = entity
         if obj:
-            options = obj.get_data_list()
-
-        if "Visual Parameters" in options:
-            options.remove("Visual Parameters")
+            options = []
+            for child in obj.children:
+                if isinstance(child, Data):
+                    if child.name != "Visual Parameters":
+                        options.append({"label": child.name, "value": str(child.uid)})
+            options = sorted(options, key=lambda d: d["label"])
 
         return options, options, options, options, options
 
     @staticmethod
-    def is_valid_uuid(val: str):
-        """
-        Check if input string is a valid uuid.
-
-        :param val: Input string.
-
-        :returns bool: If the input is a valid uuid.
-        """
-        try:
-            uuid.UUID(str(val))
-            return True
-        except ValueError:
-            return False
-
-    def serialize_item(self, item):
+    def serialize_item(item):
         """
         Serialize item in input ui.json.
 
@@ -150,16 +142,17 @@ class BaseDashApplication:
         """
         if isinstance(item, Workspace):
             return getattr(item, "h5file", None)
-        elif isinstance(item, ObjectBase) | isinstance(item, Data):
-            return getattr(item, "name", None)
-        elif BaseDashApplication.is_valid_uuid(item):
-            return self.workspace.get_entity(uuid.UUID(item))[0].name
+        elif isinstance(item, Entity):
+            return str(getattr(item, "uid", None))
+        elif is_uuid(item):
+            return str(item).replace("{", "").replace("}", "")
         elif type(item) == np.ndarray:
             return item.tolist()
         else:
             return item
 
-    def load_ui_json(self, ui_json: dict):
+    @staticmethod
+    def load_ui_json(ui_json):
         """
         Loop through a ui_json and serialize objects, np.arrays, etc. so the ui_json can be stored as a dcc.Store
         variable.
@@ -171,9 +164,9 @@ class BaseDashApplication:
         for key, value in ui_json.items():
             if type(value) == dict:
                 for inner_key, inner_value in value.items():
-                    value[inner_key] = self.serialize_item(inner_value)
+                    value[inner_key] = BaseDashApplication.serialize_item(inner_value)
             else:
-                ui_json[key] = self.serialize_item(value)
+                ui_json[key] = BaseDashApplication.serialize_item(value)
 
         return ui_json
 
@@ -221,12 +214,13 @@ class BaseDashApplication:
 
                     # Checking for values that Dash has given as int when they should be float.
                     output_dict[key] = float(update_dict[key])
+                elif is_uuid(update_dict[key]):
+                    output_dict[key] = self.workspace.get_entity(
+                        uuid.UUID(update_dict[key])
+                    )[0]
                 else:
                     output_dict[key] = update_dict[key]
-            elif key + "_name" in update_dict:
-                output_dict[key] = self.workspace.get_entity(
-                    update_dict[key + "_name"]
-                )[0]
+
         return output_dict
 
     def update_param_list_from_ui_json(self, ui_json: dict, output_ids: list) -> dict:
@@ -251,6 +245,8 @@ class BaseDashApplication:
                                 update_dict[key + "_value"] = [True]
                             else:
                                 update_dict[key + "_value"] = []
+                        elif is_uuid(value["value"]):
+                            update_dict[key + "_value"] = str(value["value"])
                         else:
                             update_dict[key + "_value"] = value["value"]
                     else:
