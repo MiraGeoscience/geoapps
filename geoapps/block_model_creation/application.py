@@ -101,7 +101,7 @@ class BlockModelCreation(BaseDashApplication):
         self,
         n_clicks: int,
         new_grid: str,
-        objects_name: str,
+        objects_uid: str,
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
@@ -118,7 +118,7 @@ class BlockModelCreation(BaseDashApplication):
 
         :param n_clicks: Triggers callback for pressing export button.
         :param new_grid: Name for exported block model.
-        :param objects_name: Input object name.
+        :param objects_uid: Input object uid.
         :param cell_size_x: X cell size for the core mesh.
         :param cell_size_y: Y cell size for the core mesh.
         :param cell_size_z: Z cell size for the core mesh.
