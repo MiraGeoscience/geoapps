@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import ast
 import os
+import uuid
 
 from geoh5py.workspace import Workspace
 
@@ -90,30 +91,33 @@ class ClusteringDriver:
     @staticmethod
     def update_dataframe(
         downsampling: int,
-        channels: list,
+        channels_dict: dict,
         workspace: Workspace,
         downsample_min: int | None = None,
     ) -> tuple:
         """
         Normalize the the selected data and perform the kmeans clustering.
         :param downsampling: Percent downsampling.
-        :param channels: Data subset.
+        :param channels_dict: Data subset.
         :param workspace: Current workspace.
         :param downsample_min: Minimum number of data to downsample to.
         :return update_dict: Values for dataframe, kmeans, mapping, indices.
         """
 
-        if (channels is None) | (not channels):
+        if (channels_dict is None) | (not channels_dict):
             return None, None, None
         else:
             indices, values = ClusteringDriver.get_indices(
-                channels, downsampling, workspace, downsample_min=downsample_min
+                list(channels_dict.values()),
+                downsampling,
+                workspace,
+                downsample_min=downsample_min,
             )
             n_values = values.shape[0]
 
             dataframe = pd.DataFrame(
                 values[indices, :],
-                columns=list(filter(None, channels)),
+                columns=list(filter(None, list(channels_dict.keys()))),
             )
 
             tree = cKDTree(dataframe.values)
@@ -154,9 +158,10 @@ class ClusteringDriver:
         non_nan = []
         for channel in channels:
             if channel is not None:
-                channel_values = workspace.get_entity(channel)[0].values
-                values.append(np.asarray(channel_values, dtype=float))
-                non_nan.append(~np.isnan(channel_values))
+                with workspace.open("r"):
+                    channel_values = workspace.get_entity(uuid.UUID(channel))[0].values
+                    values.append(np.asarray(channel_values, dtype=float))
+                    non_nan.append(~np.isnan(channel_values))
 
         values = np.vstack(values)
         non_nan = np.vstack(non_nan)

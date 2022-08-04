@@ -41,7 +41,7 @@ class BaseDashApplication:
 
     def update_object_options(
         self, filename: str, contents: str, trigger: str = None
-    ) -> (list, dict, str, None, None):
+    ) -> (list, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
         and sets the new object options.
@@ -56,7 +56,7 @@ class BaseDashApplication:
         :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
         :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
-        ui_json, object_options, object_value = no_update, no_update, no_update
+        ui_json, object_options = no_update, no_update
 
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -69,7 +69,6 @@ class BaseDashApplication:
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.workspace.close()
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
-                object_value = ui_json["objects"]["value"]
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
@@ -77,7 +76,6 @@ class BaseDashApplication:
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.workspace.close()
                 ui_json = no_update
-                object_value = None
             elif trigger == "":
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
@@ -85,16 +83,15 @@ class BaseDashApplication:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
-                object_value = ui_json["objects"]["value"]
 
             object_options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
                 for obj in self.workspace.objects
             ]
 
-        return object_options, object_value, ui_json, None, None
+        return object_options, ui_json, None, None
 
-    def update_data_options(self, trigger, ui_json, object_uid: str):
+    def get_data_options(self, trigger, ui_json, object_uid: str):
         """
         Update data dropdown options after object change.
 
@@ -109,8 +106,8 @@ class BaseDashApplication:
         obj = None
 
         if trigger == "ui_json" and "objects" in ui_json:
-            if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
-                object_uid = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
+            if self.workspace.get_entity(ui_json["objects"]["value"])[0] is not None:
+                object_uid = self.workspace.get_entity(ui_json["objects"]["value"])[
                     0
                 ].uid
 

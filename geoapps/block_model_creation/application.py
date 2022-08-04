@@ -54,7 +54,6 @@ class BlockModelCreation(BaseDashApplication):
         # Set up callbacks
         self.app.callback(
             Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
             Output(component_id="ui_json", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
