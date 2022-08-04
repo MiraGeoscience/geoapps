@@ -13,11 +13,12 @@ from time import time
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import callback_context
+from dash import callback_context, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
@@ -52,6 +53,7 @@ class ScatterPlots(BaseDashApplication):
 
         super().__init__(**kwargs)
 
+        self.driver = ScatterPlotDriver(self.params)
         self.app.layout = scatter_layout
 
         # Set up callbacks
@@ -64,8 +66,9 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="axes_panels", component_property="value"),
         )(ScatterPlots.update_visibility)
         self.app.callback(
-            Output(component_id="ui_json", component_property="data"),
             Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="ui_json", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -77,7 +80,6 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="z", component_property="options"),
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
-            Input(component_id="ui_json", component_property="data"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
         self.app.callback(
@@ -99,7 +101,6 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="size", component_property="value"),
         )(self.update_channel_bounds)
         self.app.callback(
-            Output(component_id="objects", component_property="value"),
             Output(component_id="downsampling", component_property="value"),
             Output(component_id="x", component_property="value"),
             Output(component_id="x_log", component_property="value"),
@@ -125,6 +126,7 @@ class ScatterPlots(BaseDashApplication):
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
             Input(component_id="downsampling", component_property="value"),
+            Input(component_id="objects", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -158,8 +160,7 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="export", component_property="n_clicks"),
             Input(component_id="output_path", component_property="value"),
             Input(component_id="crossplot", component_property="figure"),
-            prevent_initial_call=True,
-        )(self.save_figure)
+        )(self.trigger_click)
 
     @staticmethod
     def update_visibility(axis: str) -> (dict, dict, dict, dict, dict):
@@ -221,10 +222,14 @@ class ScatterPlots(BaseDashApplication):
 
         return options, options, options, options, options
 
-    def get_channel_bounds(self, channel: str, data: list = None) -> (float, float):
+    @staticmethod
+    def get_channel_bounds(
+        workspace: Workspace, channel: str, data: list = None
+    ) -> (float, float):
         """
         Set the min and max values for the given axis channel.
 
+        :param workspace: Current workspace.
         :param channel: Name of channel to find data for.
         :param data: Optional data to use instead of channel name.
 
@@ -232,8 +237,9 @@ class ScatterPlots(BaseDashApplication):
         :return cmax: Maximum value for input channel.
         """
         cmin, cmax = None, None
-        if self.params.geoh5.get_entity(channel)[0] is not None:
-            data = self.params.geoh5.get_entity(channel)[0].values
+
+        if workspace.get_entity(channel)[0] is not None:
+            data = workspace.get_entity(channel)[0].values
 
         if data is not None:
             cmin = float(f"{np.nanmin(data):.2e}")
@@ -274,7 +280,6 @@ class ScatterPlots(BaseDashApplication):
         :return size_max: Maximum value for size data.
         """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
         if trigger == "ui_json":
             x_min, x_max = ui_json["x_min"]["value"], ui_json["x_max"]["value"]
             y_min, y_max = ui_json["y_min"]["value"], ui_json["y_max"]["value"]
@@ -288,11 +293,12 @@ class ScatterPlots(BaseDashApplication):
                 ui_json["size_max"]["value"],
             )
         else:
-            x_min, x_max = self.get_channel_bounds(x, data)
-            y_min, y_max = self.get_channel_bounds(y, data)
-            z_min, z_max = self.get_channel_bounds(z, data)
-            color_min, color_max = self.get_channel_bounds(color, data)
-            size_min, size_max = self.get_channel_bounds(size, data)
+            with self.workspace.open("r") as ws:
+                x_min, x_max = ScatterPlots.get_channel_bounds(ws, x)
+                y_min, y_max = ScatterPlots.get_channel_bounds(ws, y)
+                z_min, z_max = ScatterPlots.get_channel_bounds(ws, z)
+                color_min, color_max = ScatterPlots.get_channel_bounds(ws, color)
+                size_min, size_max = ScatterPlots.get_channel_bounds(ws, size)
 
         return (
             x_min,
@@ -372,28 +378,29 @@ class ScatterPlots(BaseDashApplication):
     def update_plot(
         self,
         downsampling: int,
-        x_name: str,
+        objects: str,
+        x: str,
         x_log: list,
         x_thresh: float,
         x_min: float,
         x_max: float,
-        y_name: str,
+        y: str,
         y_log: list,
         y_thresh: float,
         y_min: float,
         y_max: float,
-        z_name: str,
+        z: str,
         z_log: list,
         z_thresh: float,
         z_min: float,
         z_max: float,
-        color_name: str,
+        color: str,
         color_log: list,
         color_thresh: float,
         color_min: float,
         color_max: float,
         color_maps: str | list,
-        size_name: str,
+        size: str,
         size_log: list,
         size_thresh: float,
         size_min: float,
@@ -401,31 +408,32 @@ class ScatterPlots(BaseDashApplication):
         size_markers: int,
     ) -> go.FigureWidget:
         """
-        Update self.params, then run the scatter plot driver with the new params.
+        Run scatter plot driver, and if export was clicked save the figure as html.
 
         :param downsampling: Percent of total values to plot.
-        :param x_name: Name of selected x data.
+        :param objects: UUID of selected object.
+        :param x: UUID of selected x data.
         :param x_log: Whether or not to plot the log of x data.
         :param x_thresh: X threshold.
         :param x_min: Minimum value for x data.
         :param x_max: Maximum value for x data.
-        :param y_name: Name of selected y data.
+        :param y: UUID of selected y data.
         :param y_log: Whether or not to plot the log of y data.
         :param y_thresh: Y threshold.
         :param y_min: Minimum value for y data.
         :param y_max: Maximum value for y data.
-        :param z_name: Name of selected z data.
+        :param z: UUID of selected z data.
         :param z_log: Whether or not to plot the log of z data.
         :param z_thresh: Z threshold.
         :param z_min: Minimum value for z data.
         :param z_max: Maximum value for x data.
-        :param color_name: Name of selected color data.
+        :param color: UUID of selected color data.
         :param color_log: Whether or not to plot the log of color data.
         :param color_thresh: Color threshold.
         :param color_min: Minimum value for color data.
         :param color_max: Maximum value for color data.
         :param color_maps: Color map.
-        :param size_name: Name of selected size data.
+        :param size: UUID of selected size data.
         :param size_log: Whether or not to plot the log of size data.
         :param size_thresh: Size threshold.
         :param size_min: Minimum value for size data.
@@ -434,69 +442,79 @@ class ScatterPlots(BaseDashApplication):
 
         :return figure: Scatter plot.
         """
-        self.update_params(locals())
-        new_params = ScatterPlotParams(**self.params.to_dict())
-        # Run driver.
-        driver = ScatterPlotDriver(new_params)
-        figure = go.FigureWidget(driver.run())
+        update_dict = {}
+        for item in callback_context.triggered:
+            update_dict[item["prop_id"].split(".")[0]] = item["value"]
+
+        if "objects" in update_dict and len(update_dict) == 1:
+            return no_update
+        elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
+            update_dict.update({"objects": objects})
+
+        with self.workspace.open():
+            param_dict = self.get_params_dict(update_dict)
+            self.params.update(param_dict)
+            self.driver.params = self.params
+            figure = go.FigureWidget(self.driver.run())
 
         return figure
 
-    def save_figure(self, n_clicks: int, output_path: str, figure: go.FigureWidget):
+    def trigger_click(self, n_clicks: int, output_path: str, figure: go.FigureWidget):
         """
-        Save scatter plot to output path as html.
+        Save the plot as html, write out ui.json.
 
-        :param n_clicks: Triggers callback for pressing export button.
-        :param output_path: Path to download scatter plot.
-        :param figure: Scatter plot.
-
-        :return n_clicks: Placeholder for callback.
+        :param n_clicks: Trigger export from button.
+        :param output_path: Output path.
+        :param figure: Figure created by update_plots.
         """
+
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
         if trigger == "export":
+            param_dict = self.params.to_dict()
+
             # Get output path.
             if (
                 (output_path is not None)
                 and (output_path != "")
                 and (os.path.exists(os.path.abspath(output_path)))
             ):
+                param_dict["output_path"] = os.path.abspath(output_path)
                 temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 
-                output_path = os.path.abspath(output_path)
-                go.Figure(figure).write_html(
-                    os.path.join(output_path, temp_geoh5.replace(".geoh5", ".html"))
-                )
-
-                param_dict = self.params.to_dict()
-
+                # Get output workspace.
                 ws, _ = BaseApplication.get_output_workspace(
-                    False, output_path, temp_geoh5
+                    False, param_dict["output_path"], temp_geoh5
                 )
 
-                with ws as workspace:
-                    # Put entities in output workspace.
-                    param_dict["geoh5"] = workspace
+                with self.workspace.open():
+                    with ws as new_workspace:
+                        # Put entities in output workspace.
+                        param_dict["geoh5"] = new_workspace
+                        for key, value in param_dict.items():
+                            if isinstance(value, ObjectBase):
+                                param_dict[key] = value.copy(
+                                    parent=new_workspace, copy_children=True
+                                )
 
-                    for key, value in param_dict.items():
-                        if isinstance(value, ObjectBase):
-                            param_dict[key] = value.copy(
-                                parent=workspace, copy_children=True
+                        # Write output uijson.
+                        new_params = ScatterPlotParams(**param_dict)
+                        new_params.write_input_file(
+                            name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                            path=param_dict["output_path"],
+                            validate=False,
+                        )
+
+                        go.Figure(figure).write_html(
+                            os.path.join(
+                                param_dict["output_path"],
+                                temp_geoh5.replace(".geoh5", ".html"),
                             )
-
-                    # Write output uijson.
-                    new_params = ScatterPlotParams(**param_dict)
-                    new_params.write_input_file(
-                        name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                        path=output_path,
-                        validate=False,
-                    )
-
-                print("Saved to " + output_path)
+                        )
+                print("Saved to " + param_dict["output_path"])
             else:
                 print("Invalid output path.")
 
-        return 0
+        return no_update
 
 
 if __name__ == "__main__":
