@@ -43,8 +43,9 @@ class BlockModelCreation(BaseDashApplication):
 
         # Set up callbacks
         self.app.callback(
-            Output(component_id="ui_json", component_property="data"),
             Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="ui_json", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -52,7 +53,6 @@ class BlockModelCreation(BaseDashApplication):
         )(self.update_object_options)
         self.app.callback(
             Output(component_id="new_grid", component_property="value"),
-            Output(component_id="objects", component_property="value"),
             Output(component_id="cell_size_x", component_property="value"),
             Output(component_id="cell_size_y", component_property="value"),
             Output(component_id="cell_size_z", component_property="value"),

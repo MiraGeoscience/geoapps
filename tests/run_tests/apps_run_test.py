@@ -39,12 +39,11 @@ def test_block_model(tmp_path):
 
     block_model = BlockModelCreation(geoh5=temp_workspace)
     # Test initialization
-    ui_json, object_options, _, _ = block_model.update_object_options(
+    object_options, objects_uid, ui_json, _, _ = block_model.update_object_options(
         None, None, trigger=""
     )
     param_list = [
         "new_grid_value",
-        "objects_value",
         "cell_size_x_value",
         "cell_size_y_value",
         "cell_size_z_value",
@@ -56,7 +55,6 @@ def test_block_model(tmp_path):
     ]
     (
         new_grid,
-        objects_uid,
         cell_size_x,
         cell_size_y,
         cell_size_z,
