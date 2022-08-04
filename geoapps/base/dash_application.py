@@ -51,7 +51,7 @@ class BaseDashApplication:
 
     def update_object_options(
         self, filename: str, contents: str, trigger: str = None
-    ) -> (list, dict, None, None):
+    ) -> (list, dict, str, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
         and sets the new object options.
@@ -61,11 +61,12 @@ class BaseDashApplication:
         :param trigger: Dash component which triggered the callback.
 
         :return ui_json: Uploaded ui_json.
-        :return options: New dropdown options.
+        :return object_options: New object dropdown options.
+        :return object_value: New object value.
         :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
         :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
-        ui_json, options = no_update, no_update
+        ui_json, object_options, object_value = no_update, no_update, no_update
 
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -78,6 +79,7 @@ class BaseDashApplication:
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.workspace.close()
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
+                object_value = ui_json["objects"]["value"]
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
@@ -85,21 +87,22 @@ class BaseDashApplication:
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.workspace.close()
                 ui_json = no_update
+                object_value = None
             elif trigger == "":
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
                     validation_options={"disabled": True},
                 )
                 ifile.update_ui_values(self.params.to_dict())
-
                 ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
+                object_value = ui_json["objects"]["value"]
 
-            options = [
+            object_options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
                 for obj in self.workspace.objects
             ]
 
-        return ui_json, options, None, None
+        return object_options, object_value, ui_json, None, None
 
     def update_data_options(self, object_uid: str):
         """
@@ -113,11 +116,10 @@ class BaseDashApplication:
         :return options: Data dropdown options for color axis of scatter plot.
         :return options: Data dropdown options for size axis of scatter plot.
         """
-        print("update data")
         options = []
         obj = None
 
-        if self.workspace.get_entity(object_uid):
+        if object_uid is not None:
             for entity in self.workspace.get_entity(uuid.UUID(object_uid)):
                 if isinstance(entity, ObjectBase):
                     obj = entity
