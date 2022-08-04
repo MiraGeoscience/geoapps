@@ -10,17 +10,18 @@ import io
 import json
 import os
 import socket
+import uuid
 import webbrowser
 from os import environ
 
 import numpy as np
 from dash import callback_context, no_update
-from flask import Flask
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
+from geoh5py.shared import Entity
+from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from jupyter_dash import JupyterDash
 
 from geoapps.driver_base.params import BaseParams
 
@@ -31,93 +32,143 @@ class BaseDashApplication:
     """
 
     _params = None
+    _param_class = None
+    _workspace = None
 
     def __init__(self, **kwargs):
-        pass
+        self.workspace = self.params.geoh5
+        self.workspace.close()
 
-    def update_object_options(self, filename, contents) -> (list, dict, None, None):
+    def update_object_options(
+        self, filename: str, contents: str, trigger: str = None
+    ) -> (list, dict, str, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
         and sets the new object options.
 
         :param filename: Uploaded filename. Workspace or ui.json.
         :param contents: Uploaded file contents. Workspace or ui.json.
+        :param trigger: Dash component which triggered the callback.
 
         :return ui_json: Uploaded ui_json.
-        :return options: New dropdown options.
+        :return object_options: New object dropdown options.
+        :return object_value: New object value.
+        :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
+        :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
-        ui_json, options = no_update, no_update
+        ui_json, object_options, object_value = no_update, no_update, no_update
 
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if contents is not None or trigger == "":
             if filename is not None and filename.endswith(".ui.json"):
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
-                ui_json = json.loads(
-                    json.dumps(ui_json, default=BaseDashApplication.serialize_ui_json)
-                )
-                self.params.geoh5 = Workspace(ui_json["geoh5"])
+                self.workspace = Workspace(ui_json["geoh5"])
+                self.params = self._param_class(**{"geoh5": self.workspace})
+                self.workspace.close()
+                ui_json = BaseDashApplication.load_ui_json(ui_json)
+                object_value = ui_json["objects"]["value"]
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
-                self.params.geoh5 = Workspace(decoded)
+                self.workspace = Workspace(decoded)
+                self.params = self._param_class(**{"geoh5": self.workspace})
+                self.workspace.close()
                 ui_json = no_update
+                object_value = None
             elif trigger == "":
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
                     validation_options={"disabled": True},
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json = json.loads(
-                    json.dumps(
-                        ifile.ui_json, default=BaseDashApplication.serialize_ui_json
-                    )
-                )
-            options = [
-                {"label": obj.parent.name + "/" + obj.name, "value": obj.name}
-                for obj in self.params.geoh5.objects
+                ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
+                object_value = ui_json["objects"]["value"]
+
+            object_options = [
+                {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
+                for obj in self.workspace.objects
             ]
 
-        return ui_json, options, None, None
+        return object_options, object_value, ui_json, None, None
 
-    def get_data_options(self, trigger, ui_json, object_name):
+    def update_data_options(self, trigger, ui_json, object_uid: str):
+        """
+        Update data dropdown options after object change.
+
+        :param object_uid: Selected object in object dropdown.
+
+        :return options: Data dropdown options for x-axis of scatter plot.
+        :return options: Data dropdown options for y-axis of scatter plot.
+        :return options: Data dropdown options for z-axis of scatter plot.
+        :return options: Data dropdown options for color axis of scatter plot.
+        :return options: Data dropdown options for size axis of scatter plot.
+        """
+        obj = None
+
         if trigger == "ui_json" and "objects" in ui_json:
             if self.params.geoh5.get_entity(ui_json["objects"]["value"])[0] is not None:
-                object_name = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
+                object_uid = self.params.geoh5.get_entity(ui_json["objects"]["value"])[
                     0
-                ].name
+                ].uid
 
-        if getattr(
-            self.params, "geoh5", None
-        ) is not None and self.params.geoh5.get_entity(object_name):
-            for entity in self.params.geoh5.get_entity(object_name):
+        if object_uid is not None:
+            for entity in self.workspace.get_entity(uuid.UUID(object_uid)):
                 if isinstance(entity, ObjectBase):
                     obj = entity
 
-            options = obj.get_data_list()
-
-            if "Visual Parameters" in options:
-                options.remove("Visual Parameters")
+        if obj:
+            options = []
+            for child in obj.children:
+                if isinstance(child, Data):
+                    if child.name != "Visual Parameters":
+                        options.append({"label": child.name, "value": str(child.uid)})
+            options = sorted(options, key=lambda d: d["label"])
 
             return options
         else:
             return []
 
     @staticmethod
-    def serialize_ui_json(item):
+    def serialize_item(item):
         """
-        Default function for json.dumps.
+        Serialize item in input ui.json.
 
-        :param item: Item in input ui_json which can't be serialized.
+        :param item: Item in ui.json to serialize.
 
         :return serialized_item: A serialized version of the input item.
         """
-        if isinstance(item, ObjectBase) | isinstance(item, Data):
-            return getattr(item, "name", None)
+        if isinstance(item, Workspace):
+            return getattr(item, "h5file", None)
+        elif isinstance(item, Entity):
+            return str(getattr(item, "uid", None))
+        elif is_uuid(item):
+            return str(item).replace("{", "").replace("}", "")
         elif type(item) == np.ndarray:
             return item.tolist()
+        else:
+            return item
+
+    @staticmethod
+    def load_ui_json(ui_json):
+        """
+        Loop through a ui_json and serialize objects, np.arrays, etc. so the ui_json can be stored as a dcc.Store
+        variable.
+
+        :param ui_json: Input ui_json.
+
+        :return serialized_item: The ui_json, now able to store as a dcc.Store variable.
+        """
+        for key, value in ui_json.items():
+            if type(value) == dict:
+                for inner_key, inner_value in value.items():
+                    value[inner_key] = BaseDashApplication.serialize_item(inner_value)
+            else:
+                ui_json[key] = BaseDashApplication.serialize_item(value)
+
+        return ui_json
 
     @staticmethod
     def get_outputs(param_list: list, update_dict: dict) -> tuple:
@@ -137,46 +188,47 @@ class BaseDashApplication:
                 outputs.append(no_update)
         return tuple(outputs)
 
-    def update_params(self, locals_dict: dict):
+    def get_params_dict(self, update_dict: dict):
         """
-        Update self.params from locals.
+        Get dict of current params.
 
-        :param locals_dict: Dict of parameters with new values to assign to self.params.
+        :param update_dict: Dict of parameters with new values to convert to a params dict.
+
+        :return output_dict: Dict of current params.
         """
+        output_dict = {}
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
 
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
-            if key in locals_dict:
-                # if key == "color_maps":
-                #    self.params.update({"color_maps": locals_dict["color_maps"]}, False)
-                if bool in validations[key]["types"] and type(locals_dict[key]) == list:
-                    if not locals_dict[key]:
-                        setattr(self.params, key, False)
+            if key in update_dict:
+                if bool in validations[key]["types"] and type(update_dict[key]) == list:
+                    if not update_dict[key]:
+                        output_dict[key] = False
                     else:
-                        setattr(self.params, key, True)
+                        output_dict[key] = True
                 elif (
-                    float in validations[key]["types"] and type(locals_dict[key]) == int
+                    float in validations[key]["types"] and type(update_dict[key]) == int
                 ):
 
                     # Checking for values that Dash has given as int when they should be float.
-                    setattr(self.params, key, float(locals_dict[key]))
+                    output_dict[key] = float(update_dict[key])
+                elif is_uuid(update_dict[key]):
+                    output_dict[key] = self.workspace.get_entity(
+                        uuid.UUID(update_dict[key])
+                    )[0]
                 else:
-                    setattr(self.params, key, locals_dict[key])
-            elif key + "_name" in locals_dict:
-                setattr(
-                    self.params,
-                    key,
-                    self.params.geoh5.get_entity(locals_dict[key + "_name"])[0],
-                )
+                    output_dict[key] = update_dict[key]
+
+        return output_dict
 
     def update_param_list_from_ui_json(self, ui_json: dict, output_ids: list) -> dict:
         """
         Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
 
         :param ui_json: An uploaded ui_json file.
-        :param param_list: List of parameters that need to be updated.
+        :param output_ids: List of parameters that need to be updated.
 
         :return update_dict: Dictionary of updated parameters.
         """
@@ -193,6 +245,8 @@ class BaseDashApplication:
                                 update_dict[key + "_value"] = [True]
                             else:
                                 update_dict[key + "_value"] = []
+                        elif is_uuid(value["value"]):
+                            update_dict[key + "_value"] = str(value["value"])
                         else:
                             update_dict[key + "_value"] = value["value"]
                     else:
@@ -203,9 +257,9 @@ class BaseDashApplication:
                     else:
                         update_dict[key + "_options"] = []
 
-            if self.params.geoh5 is not None:
-                update_dict["output_path"] = os.path.abspath(
-                    os.path.dirname(self.params.geoh5.h5file)
+            if self.workspace is not None:
+                update_dict["output_path_value"] = os.path.abspath(
+                    os.path.dirname(self.workspace.h5file)
                 )
 
         return update_dict
@@ -255,3 +309,14 @@ class BaseDashApplication:
         ), f"Input parameters must be an instance of {BaseParams}"
 
         self._params = params
+
+    @property
+    def workspace(self):
+        """
+        Current workspace.
+        """
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, workspace):
+        self._workspace = workspace

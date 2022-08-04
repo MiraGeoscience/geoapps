@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+import base64
 import uuid
 from os import listdir, path
 
@@ -19,6 +20,7 @@ from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
 from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
+from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
 
@@ -35,21 +37,74 @@ def test_block_model(tmp_path):
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = BlockModelCreation(geoh5=temp_workspace)
-    app.trigger_click(
+    block_model = BlockModelCreation(geoh5=temp_workspace)
+    # Test initialization
+    object_options, objects_uid, ui_json, _, _ = block_model.update_object_options(
+        None, None, trigger=""
+    )
+    param_list = [
+        "new_grid_value",
+        "cell_size_x_value",
+        "cell_size_y_value",
+        "cell_size_z_value",
+        "depth_core_value",
+        "horizontal_padding_value",
+        "bottom_padding_value",
+        "expansion_fact_value",
+        "output_path_value",
+    ]
+    (
+        new_grid,
+        cell_size_x,
+        cell_size_y,
+        cell_size_z,
+        depth_core,
+        horizontal_padding,
+        bottom_padding,
+        expansion_fact,
+        output_path,
+    ) = block_model.update_remainder_from_ui_json(ui_json, param_list)
+
+    assert new_grid == block_model.params.new_grid
+    assert objects_uid == str(block_model.params.objects.uid)
+    assert cell_size_x == block_model.params.cell_size_x
+    assert cell_size_y == block_model.params.cell_size_y
+    assert cell_size_z == block_model.params.cell_size_z
+    assert depth_core == block_model.params.depth_core
+    assert horizontal_padding == block_model.params.horizontal_padding
+    assert bottom_padding == block_model.params.bottom_padding
+    assert expansion_fact == block_model.params.expansion_fact
+
+    # Create a second workspace to test file uploads
+    temp_workspace2 = path.join(tmp_path, "contour2.geoh5")
+    with Workspace(temp_workspace2) as workspace:
+        for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
+            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+    # Reproduce output of dcc.Upload Component
+    with open(temp_workspace2, "rb") as file:
+        decoded = file.read()
+    content_bytes = base64.b64encode(decoded)
+    content_string = content_bytes.decode("utf-8")
+    contents = "".join(["content_type", ",", content_string])
+    object_options, _, ui_json, _, _ = block_model.update_object_options(
+        "ws.geoh5", contents, trigger="upload"
+    )
+
+    # Test export
+    block_model.trigger_click(
         n_clicks=0,
-        new_grid="BlockModel",
-        objects_name="Inversion_VTEM_Model",
-        cell_size_x=50.0,
-        cell_size_y=50.0,
-        cell_size_z=50.0,
-        depth_core=500.0,
-        horizontal_padding=500.0,
-        bottom_padding=500.0,
-        expansion_fact=1.05,
+        new_grid=new_grid,
+        objects=object_options[0]["value"],
+        cell_size_x=cell_size_x,
+        cell_size_y=cell_size_y,
+        cell_size_z=cell_size_z,
+        depth_core=depth_core,
+        horizontal_padding=horizontal_padding,
+        bottom_padding=bottom_padding,
+        expansion_fact=expansion_fact,
         live_link=[],
         output_path=str(tmp_path),
-        test=True,
+        trigger="export",
     )
 
     filename = list(
