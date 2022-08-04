@@ -57,8 +57,9 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="axes_panels", component_property="value"),
         )(ScatterPlots.update_visibility)
         self.app.callback(
-            Output(component_id="ui_json", component_property="data"),
             Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="ui_json", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -111,13 +112,12 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
             Output(component_id="output_path", component_property="value"),
-            Output(component_id="objects", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
-            Input(component_id="export", component_property="n_clicks"),
             Input(component_id="downsampling", component_property="value"),
+            Input(component_id="objects", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -145,8 +145,13 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="size_min", component_property="value"),
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
-            Input(component_id="output_path", component_property="value"),
         )(self.update_plot)
+        self.app.callback(
+            Output(component_id="export", component_property="n_clicks"),
+            Input(component_id="export", component_property="n_clicks"),
+            Input(component_id="output_path", component_property="value"),
+            Input(component_id="crossplot", component_property="figure"),
+        )(self.trigger_click)
 
     @staticmethod
     def update_visibility(axis: str) -> (dict, dict, dict, dict, dict):
@@ -207,6 +212,7 @@ class ScatterPlots(BaseDashApplication):
         """
         Set the min and max values for the given axis channel.
 
+        :param workspace: Current workspace.
         :param channel: Name of channel to find data for.
 
         :return cmin: Minimum value for input channel.
@@ -345,8 +351,8 @@ class ScatterPlots(BaseDashApplication):
 
     def update_plot(
         self,
-        n_clicks: int,
         downsampling: int,
+        objects: str,
         x: str,
         x_log: list,
         x_thresh: float,
@@ -374,67 +380,71 @@ class ScatterPlots(BaseDashApplication):
         size_min: float,
         size_max: float,
         size_markers: int,
-        output_path: str,
     ) -> go.FigureWidget:
         """
         Run scatter plot driver, and if export was clicked save the figure as html.
 
-        :param n_clicks: Trigger for export button.
         :param downsampling: Percent of total values to plot.
-        :param x: Name of selected x data.
+        :param objects: UUID of selected object.
+        :param x: UUID of selected x data.
         :param x_log: Whether or not to plot the log of x data.
         :param x_thresh: X threshold.
         :param x_min: Minimum value for x data.
         :param x_max: Maximum value for x data.
-        :param y: Name of selected y data.
+        :param y: UUID of selected y data.
         :param y_log: Whether or not to plot the log of y data.
         :param y_thresh: Y threshold.
         :param y_min: Minimum value for y data.
         :param y_max: Maximum value for y data.
-        :param z: Name of selected z data.
+        :param z: UUID of selected z data.
         :param z_log: Whether or not to plot the log of z data.
         :param z_thresh: Z threshold.
         :param z_min: Minimum value for z data.
         :param z_max: Maximum value for x data.
-        :param color: Name of selected color data.
+        :param color: UUID of selected color data.
         :param color_log: Whether or not to plot the log of color data.
         :param color_thresh: Color threshold.
         :param color_min: Minimum value for color data.
         :param color_max: Maximum value for color data.
         :param color_maps: Color map.
-        :param size: Name of selected size data.
+        :param size: UUID of selected size data.
         :param size_log: Whether or not to plot the log of size data.
         :param size_thresh: Size threshold.
         :param size_min: Minimum value for size data.
         :param size_max: Maximum value for size data.
         :param size_markers: Max size for markers.
-        :param output_path: Output path.
 
         :return figure: Scatter plot.
         """
+        update_dict = {}
+        for item in callback_context.triggered:
+            update_dict[item["prop_id"].split(".")[0]] = item["value"]
 
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        print(trigger)
-        if trigger == "":
-            param_dict = self.get_params_dict(locals())
-        else:
-            param_dict = self.get_params_dict({trigger: locals()[trigger]})
+        if "objects" in update_dict and len(update_dict) == 1:
+            return no_update
+        elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
+            update_dict.update({"objects": objects})
 
-        with self.workspace.open("r") as workspace:
-            # param_dict["geoh5"] = self.workspace
-            # new_params = ScatterPlotParams(**param_dict)
+        with self.workspace.open():
+            param_dict = self.get_params_dict(update_dict)
             self.params.update(param_dict)
-            # Run driver.
             self.driver.params = self.params
             figure = go.FigureWidget(self.driver.run())
 
         return figure
 
-    def trigger_click(self, n_clicks, output_path, figure):
+    def trigger_click(self, n_clicks: int, output_path: str, figure: go.FigureWidget):
+        """
+        Save the plot as html, write out ui.json.
+
+        :param n_clicks: Trigger export from button.
+        :param output_path: Output path.
+        :param figure: Figure created by update_plots.
+        """
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "export":
-            param_dict = self.get_params_dict(locals())
+            param_dict = self.params.to_dict()
 
             # Get output path.
             if (
