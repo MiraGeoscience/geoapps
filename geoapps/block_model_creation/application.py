@@ -80,7 +80,7 @@ class BlockModelCreation(BaseDashApplication):
         )(self.trigger_click)
 
     def update_remainder_from_ui_json(
-        self, ui_json: dict, param_list: list | None = None
+        self, ui_json: dict, output_ids: list | None = None
     ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
@@ -91,10 +91,13 @@ class BlockModelCreation(BaseDashApplication):
         :return outputs: List of outputs corresponding to the callback expected outputs.
         """
         # List of outputs for the callback
-        if param_list is None:
-            param_list = [i["id"] for i in callback_context.outputs_list]
-        update_dict = self.update_param_list_from_ui_json(ui_json, param_list)
-        outputs = BaseDashApplication.get_outputs(param_list, update_dict)
+        if output_ids is None:
+            output_ids = [
+                item["id"] + "_" + item["property"]
+                for item in callback_context.outputs_list
+            ]
+        update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
+        outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
 
         return outputs
 
@@ -102,7 +105,7 @@ class BlockModelCreation(BaseDashApplication):
         self,
         n_clicks: int,
         new_grid: str,
-        objects_uid: str,
+        objects: str,
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
@@ -156,14 +159,15 @@ class BlockModelCreation(BaseDashApplication):
                 param_dict["live_link"], output_path, temp_geoh5
             )
 
-            with ws as workspace:
-                # Put entities in output workspace.
-                param_dict["geoh5"] = workspace
-                for key, value in param_dict.items():
-                    if isinstance(value, ObjectBase):
-                        param_dict[key] = value.copy(
-                            parent=workspace, copy_children=True
-                        )
+            with self.workspace.open():
+                with ws as new_workspace:
+                    # Put entities in output workspace.
+                    param_dict["geoh5"] = new_workspace
+                    for key, value in param_dict.items():
+                        if isinstance(value, ObjectBase):
+                            param_dict[key] = value.copy(
+                                parent=new_workspace, copy_children=True
+                            )
 
             # Write output uijson.
             new_params = BlockModelParams(**param_dict)

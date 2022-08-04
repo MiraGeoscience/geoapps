@@ -86,7 +86,7 @@ def test_block_model(tmp_path):
     content_bytes = base64.b64encode(decoded)
     content_string = content_bytes.decode("utf-8")
     contents = "".join(["content_type", ",", content_string])
-    ui_json, object_options, _, _ = block_model.update_object_options(
+    object_options, _, ui_json, _, _ = block_model.update_object_options(
         "ws.geoh5", contents, trigger="upload"
     )
 
@@ -94,7 +94,7 @@ def test_block_model(tmp_path):
     block_model.trigger_click(
         n_clicks=0,
         new_grid=new_grid,
-        objects_uid=object_options[0]["value"],
+        objects=object_options[0]["value"],
         cell_size_x=cell_size_x,
         cell_size_y=cell_size_y,
         cell_size_z=cell_size_z,
