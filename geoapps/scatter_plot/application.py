@@ -67,7 +67,6 @@ class ScatterPlots(BaseDashApplication):
         )(ScatterPlots.update_visibility)
         self.app.callback(
             Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
             Output(component_id="ui_json", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
@@ -80,6 +79,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="z", component_property="options"),
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
+            Input(component_id="ui_json", component_property="data"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
         self.app.callback(
@@ -216,16 +216,13 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def update_data_options(self, ui_json, object_name):
+    def update_data_options(self, ui_json: dict, object_name: str):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         options = self.get_data_options(trigger, ui_json, object_name)
 
         return options, options, options, options, options
 
-    @staticmethod
-    def get_channel_bounds(
-        workspace: Workspace, channel: str, data: list = None
-    ) -> (float, float):
+    def get_channel_bounds(self, channel: str, data: list = None) -> (float, float):
         """
         Set the min and max values for the given axis channel.
 
@@ -238,8 +235,9 @@ class ScatterPlots(BaseDashApplication):
         """
         cmin, cmax = None, None
 
-        if workspace.get_entity(channel)[0] is not None:
-            data = workspace.get_entity(channel)[0].values
+        with self.workspace.open("r"):
+            if self.workspace.get_entity(channel)[0] is not None:
+                data = self.workspace.get_entity(channel)[0].values
 
         if data is not None:
             cmin = float(f"{np.nanmin(data):.2e}")
@@ -279,6 +277,30 @@ class ScatterPlots(BaseDashApplication):
         :return size_min: Minimum value for size data.
         :return size_max: Maximum value for size data.
         """
+        (
+            x_min,
+            x_max,
+            y_min,
+            y_max,
+            z_min,
+            z_max,
+            color_min,
+            color_max,
+            size_min,
+            size_max,
+        ) = (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+        )
+
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json":
             x_min, x_max = ui_json["x_min"]["value"], ui_json["x_max"]["value"]
@@ -292,14 +314,16 @@ class ScatterPlots(BaseDashApplication):
                 ui_json["size_min"]["value"],
                 ui_json["size_max"]["value"],
             )
-        else:
-            with self.workspace.open("r") as ws:
-                x_min, x_max = ScatterPlots.get_channel_bounds(ws, x)
-                y_min, y_max = ScatterPlots.get_channel_bounds(ws, y)
-                z_min, z_max = ScatterPlots.get_channel_bounds(ws, z)
-                color_min, color_max = ScatterPlots.get_channel_bounds(ws, color)
-                size_min, size_max = ScatterPlots.get_channel_bounds(ws, size)
-
+        elif trigger == "x":
+            x_min, x_max = self.get_channel_bounds(x, data)
+        elif trigger == "y":
+            y_min, y_max = self.get_channel_bounds(y, data)
+        elif trigger == "z":
+            z_min, z_max = self.get_channel_bounds(z, data)
+        elif trigger == "color":
+            color_min, color_max = self.get_channel_bounds(color, data)
+        elif trigger == "size":
+            size_min, size_max = self.get_channel_bounds(size, data)
         return (
             x_min,
             x_max,
@@ -399,7 +423,7 @@ class ScatterPlots(BaseDashApplication):
         color_thresh: float,
         color_min: float,
         color_max: float,
-        color_maps: str | list,
+        color_maps: str,
         size: str,
         size_log: list,
         size_thresh: float,
