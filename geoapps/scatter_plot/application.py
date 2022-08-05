@@ -111,7 +111,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
-            Output(component_id="output_path", component_property="value"),
+            Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
@@ -149,7 +149,7 @@ class ScatterPlots(BaseDashApplication):
         self.app.callback(
             Output(component_id="export", component_property="n_clicks"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="output_path", component_property="value"),
+            Input(component_id="monitoring_directory", component_property="value"),
             Input(component_id="crossplot", component_property="figure"),
         )(self.trigger_click)
 
@@ -371,12 +371,14 @@ class ScatterPlots(BaseDashApplication):
 
         return figure
 
-    def trigger_click(self, n_clicks: int, output_path: str, figure: go.FigureWidget):
+    def trigger_click(
+        self, n_clicks: int, monitoring_directory: str, figure: go.FigureWidget
+    ):
         """
         Save the plot as html, write out ui.json.
 
         :param n_clicks: Trigger export from button.
-        :param output_path: Output path.
+        :param monitoring_directory: Output path.
         :param figure: Figure created by update_plots.
         """
 
@@ -386,16 +388,18 @@ class ScatterPlots(BaseDashApplication):
 
             # Get output path.
             if (
-                (output_path is not None)
-                and (output_path != "")
-                and (os.path.exists(os.path.abspath(output_path)))
+                (monitoring_directory is not None)
+                and (monitoring_directory != "")
+                and (os.path.exists(os.path.abspath(monitoring_directory)))
             ):
-                param_dict["output_path"] = os.path.abspath(output_path)
+                param_dict["monitoring_directory"] = os.path.abspath(
+                    monitoring_directory
+                )
                 temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 
                 # Get output workspace.
                 ws, _ = BaseApplication.get_output_workspace(
-                    False, param_dict["output_path"], temp_geoh5
+                    False, param_dict["monitoring_directory"], temp_geoh5
                 )
 
                 with self.workspace.open():
@@ -412,17 +416,17 @@ class ScatterPlots(BaseDashApplication):
                         new_params = ScatterPlotParams(**param_dict)
                         new_params.write_input_file(
                             name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                            path=param_dict["output_path"],
+                            path=param_dict["monitoring_directory"],
                             validate=False,
                         )
 
                         go.Figure(figure).write_html(
                             os.path.join(
-                                param_dict["output_path"],
+                                param_dict["monitoring_directory"],
                                 temp_geoh5.replace(".geoh5", ".html"),
                             )
                         )
-                print("Saved to " + param_dict["output_path"])
+                print("Saved to " + param_dict["monitoring_directory"])
             else:
                 print("Invalid output path.")
 
