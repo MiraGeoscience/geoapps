@@ -183,7 +183,7 @@ class BaseDashApplication:
         return output_dict
 
     def update_remainder_from_ui_json(
-        self, ui_json: dict, param_list: list = None
+        self, ui_json: dict, param_list: list = None, trigger: str = None
     ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
@@ -200,7 +200,6 @@ class BaseDashApplication:
         # Get update_dict from ui_json.
         update_dict = {}
         if ui_json is not None:
-            # Update workspace first, to use when assigning entities.
             # Loop through uijson, and add items that are also in param_list
             for key, value in ui_json.items():
                 if key in param_list:
@@ -212,10 +211,17 @@ class BaseDashApplication:
                     else:
                         update_dict[key] = value
 
-            if self.workspace is not None:
-                update_dict["output_path"] = os.path.abspath(
-                    os.path.dirname(self.workspace.h5file)
-                )
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "ui_json":
+            if (
+                "monitoring_directory" in update_dict
+                and update_dict["monitoring_directory"] == ""
+            ):
+                if self.workspace is not None:
+                    update_dict["monitoring_directory"] = os.path.abspath(
+                        os.path.dirname(self.workspace.h5file)
+                    )
 
         # Format updated params to return to the callback
         outputs = []
