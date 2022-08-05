@@ -47,7 +47,7 @@ defaults = {
     "size_markers": None,
     "run_command": "geoapps.scatter_plot.application",
     "run_command_boolean": False,
-    "output_path": None,
+    "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -58,7 +58,7 @@ default_ui_json.update(
     {
         "title": "Scatter Plot",
         "geoh5": "",
-        "output_path": "./",
+        "monitoring_directory": "",
         "objects": {
             "group": "Data Selection",
             "label": "Object",
@@ -386,5 +386,5 @@ app_initializer = {
     "size_max": 24.8,
     "downsampling": 80,
     "size_markers": 20,
-    "output_path": os.path.abspath("../../assets"),
+    "monitoring_directory": os.path.abspath("../../assets"),
 }

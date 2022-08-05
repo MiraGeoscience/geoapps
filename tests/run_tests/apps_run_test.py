@@ -51,7 +51,7 @@ def test_block_model(tmp_path):
         "horizontal_padding_value",
         "bottom_padding_value",
         "expansion_fact_value",
-        "output_path_value",
+        "monitoring_directory_value",
     ]
     (
         new_grid,
@@ -62,8 +62,8 @@ def test_block_model(tmp_path):
         horizontal_padding,
         bottom_padding,
         expansion_fact,
-        output_path,
-    ) = block_model.update_remainder_from_ui_json(ui_json, param_list)
+        monitoring_directory,
+    ) = block_model.update_remainder_from_ui_json(ui_json, param_list, trigger="test")
 
     assert new_grid == block_model.params.new_grid
     assert objects_uid == str(block_model.params.objects.uid)
@@ -103,7 +103,7 @@ def test_block_model(tmp_path):
         bottom_padding=bottom_padding,
         expansion_fact=expansion_fact,
         live_link=[],
-        output_path=str(tmp_path),
+        monitoring_directory=str(tmp_path),
         trigger="export",
     )
 

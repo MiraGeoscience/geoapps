@@ -183,7 +183,7 @@ block_model_layout = html.Div(
                     style={"width": "25%", "display": "inline-block"},
                 ),
                 dcc.Input(
-                    id="output_path",
+                    id="monitoring_directory",
                     style={
                         "width": "50%",
                         "display": "inline-block",
