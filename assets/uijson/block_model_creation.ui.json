@@ -12,8 +12,6 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
-    "output_path": "./",
-    "live_link": false,
     "objects": {
         "main": true,
         "meshType": [
