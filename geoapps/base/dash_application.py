@@ -36,6 +36,7 @@ class BaseDashApplication:
 
     def __init__(self, **kwargs):
         self.workspace = self.params.geoh5
+        self.workspace.close()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -69,11 +70,13 @@ class BaseDashApplication:
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"])
+                self.workspace.close()
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded)
+                self.workspace.close()
                 ui_json = no_update
             elif trigger == "":
                 ifile = InputFile(
@@ -179,15 +182,21 @@ class BaseDashApplication:
                 )[0]
         return output_dict
 
-    def update_param_list_from_ui_json(self, ui_json: dict, param_list: list) -> dict:
+    def update_remainder_from_ui_json(
+        self, ui_json: dict, param_list: list = None
+    ) -> tuple:
         """
-        Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
+        Update parameters from uploaded ui_json that aren't involved in another callback.
 
-        :param ui_json: An uploaded ui_json file.
-        :param param_list: List of parameters that need to be updated.
+        :param ui_json: Uploaded ui_json.
+        :param param_list: List of parameters to update. Used by tests.
 
-        :return update_dict: Dictionary of updated parameters.
+        :return outputs: List of outputs corresponding to the callback expected outputs.
         """
+        # Get list of needed outputs from the callback.
+        if param_list is None:
+            param_list = [i["id"] for i in callback_context.outputs_list]
+
         # Get update_dict from ui_json.
         update_dict = {}
         if ui_json is not None:
@@ -208,7 +217,14 @@ class BaseDashApplication:
                     os.path.dirname(self.workspace.h5file)
                 )
 
-        return update_dict
+        # Format updated params to return to the callback
+        outputs = []
+        for param in param_list:
+            if param in update_dict:
+                outputs.append(update_dict[param])
+            else:
+                outputs.append(no_update)
+        return tuple(outputs)
 
     @staticmethod
     def get_port() -> int:
