@@ -220,19 +220,27 @@ class BaseDashApplication:
 
         return output_dict
 
-    def update_param_list_from_ui_json(self, ui_json: dict, output_ids: list) -> dict:
+    def update_remainder_from_ui_json(
+        self, ui_json: dict, output_ids: list = None, trigger: str = None
+    ) -> tuple:
         """
-        Read in a ui_json from a dash upload, and get a dictionary of updated parameters.
+        Update parameters from uploaded ui_json that aren't involved in another callback.
 
-        :param ui_json: An uploaded ui_json file.
-        :param output_ids: List of parameters that need to be updated.
+        :param ui_json: Uploaded ui_json.
+        :param output_ids: List of parameters to update. Used by tests.
 
-        :return update_dict: Dictionary of updated parameters.
+        :return outputs: List of outputs corresponding to the callback expected outputs.
         """
+        # Get list of needed outputs from the callback.
+        if output_ids is None:
+            output_ids = [
+                item["id"] + "_" + item["property"]
+                for item in callback_context.outputs_list
+            ]
+
         # Get update_dict from ui_json.
         update_dict = {}
         if ui_json is not None:
-            # Update workspace first, to use when assigning entities.
             # Loop through uijson, and add items that are also in param_list
             for key, value in ui_json.items():
                 if key + "_value" in output_ids:
@@ -254,12 +262,26 @@ class BaseDashApplication:
                     else:
                         update_dict[key + "_options"] = []
 
-            if self.workspace is not None:
-                update_dict["output_path_value"] = os.path.abspath(
-                    os.path.dirname(self.workspace.h5file)
-                )
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "ui_json":
+            if (
+                "monitoring_directory" in update_dict
+                and update_dict["monitoring_directory"] == ""
+            ):
+                if self.workspace is not None:
+                    update_dict["monitoring_directory"] = os.path.abspath(
+                        os.path.dirname(self.workspace.h5file)
+                    )
 
-        return update_dict
+        # Format updated params to return to the callback
+        outputs = []
+        for param in output_ids:
+            if param in update_dict:
+                outputs.append(update_dict[param])
+            else:
+                outputs.append(no_update)
+        return tuple(outputs)
 
     @staticmethod
     def get_port() -> int:

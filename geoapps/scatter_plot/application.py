@@ -120,7 +120,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
-            Output(component_id="output_path", component_property="value"),
+            Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
@@ -158,7 +158,7 @@ class ScatterPlots(BaseDashApplication):
         self.app.callback(
             Output(component_id="export", component_property="n_clicks"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="output_path", component_property="value"),
+            Input(component_id="monitoring_directory", component_property="value"),
             Input(component_id="crossplot", component_property="figure"),
         )(self.trigger_click)
 
@@ -337,68 +337,6 @@ class ScatterPlots(BaseDashApplication):
             size_max,
         )
 
-    def update_remainder_from_ui_json(
-        self, ui_json: dict
-    ) -> (
-        str,
-        int,
-        str,
-        list,
-        float,
-        str,
-        list,
-        float,
-        str,
-        list,
-        float,
-        str,
-        list,
-        float,
-        list,
-        str,
-        str,
-        list,
-        float,
-        int,
-        str,
-    ):
-        """
-        Update parameters from uploaded ui.json, which aren't involved in other callbacks.
-
-        :param ui_json: Uploaded ui.json.
-
-        :return objects: Name of selected object.
-        :return downsampling: Percent of total values to plot.
-        :return x: Name of selected x data.
-        :return x_log: Whether or not to plot the log of x data.
-        :return x_thresh: X threshold.
-        :return y: Name of selected y data.
-        :return y_log: Whether or not to plot the log of y data.
-        :return y_thresh: Y threshold.
-        :return z: Name of selected z data.
-        :return z_log: Whether or not to plot the log of z data.
-        :return z_thresh: Z threshold.
-        :return color: Name of selected color data.
-        :return color_log: Whether or not to plot the log of color data.
-        :return color_thresh: Color threshold.
-        :return color_maps_options: Color map dropdown options.
-        :return color_maps: Selected color map.
-        :return size: Name of selected size data.
-        :return size_log: Whether or not to plot the log of size data.
-        :return size_thresh: Size threshold.
-        :return size_markers: Max marker size.
-        :return output_path: Output path for exporting scatter plot.
-        """
-        # List of outputs for the callback
-        output_ids = [
-            item["id"] + "_" + item["property"]
-            for item in callback_context.outputs_list
-        ]
-        update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
-        outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
-
-        return outputs
-
     def update_plot(
         self,
         downsampling: int,
@@ -483,12 +421,14 @@ class ScatterPlots(BaseDashApplication):
 
         return figure
 
-    def trigger_click(self, n_clicks: int, output_path: str, figure: go.FigureWidget):
+    def trigger_click(
+        self, n_clicks: int, monitoring_directory: str, figure: go.FigureWidget
+    ):
         """
         Save the plot as html, write out ui.json.
 
         :param n_clicks: Trigger export from button.
-        :param output_path: Output path.
+        :param monitoring_directory: Output path.
         :param figure: Figure created by update_plots.
         """
 
@@ -498,16 +438,18 @@ class ScatterPlots(BaseDashApplication):
 
             # Get output path.
             if (
-                (output_path is not None)
-                and (output_path != "")
-                and (os.path.exists(os.path.abspath(output_path)))
+                (monitoring_directory is not None)
+                and (monitoring_directory != "")
+                and (os.path.exists(os.path.abspath(monitoring_directory)))
             ):
-                param_dict["output_path"] = os.path.abspath(output_path)
+                param_dict["monitoring_directory"] = os.path.abspath(
+                    monitoring_directory
+                )
                 temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 
                 # Get output workspace.
                 ws, _ = BaseApplication.get_output_workspace(
-                    False, param_dict["output_path"], temp_geoh5
+                    False, param_dict["monitoring_directory"], temp_geoh5
                 )
 
                 with self.workspace.open():
@@ -524,17 +466,17 @@ class ScatterPlots(BaseDashApplication):
                         new_params = ScatterPlotParams(**param_dict)
                         new_params.write_input_file(
                             name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                            path=param_dict["output_path"],
+                            path=param_dict["monitoring_directory"],
                             validate=False,
                         )
 
                         go.Figure(figure).write_html(
                             os.path.join(
-                                param_dict["output_path"],
+                                param_dict["monitoring_directory"],
                                 temp_geoh5.replace(".geoh5", ".html"),
                             )
                         )
-                print("Saved to " + param_dict["output_path"])
+                print("Saved to " + param_dict["monitoring_directory"])
             else:
                 print("Invalid output path.")
 

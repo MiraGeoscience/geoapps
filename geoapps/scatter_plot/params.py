@@ -56,7 +56,7 @@ class ScatterPlotParams(BaseParams):
         self._size_max = None
         self._size_thresh = None
         self._size_markers = None
-        self._output_path = None
+        self._monitoring_directory = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -388,12 +388,12 @@ class ScatterPlotParams(BaseParams):
         self.setter_validator("size_markers", val)
 
     @property
-    def output_path(self) -> str | None:
+    def monitoring_directory(self) -> str | None:
         """
         Output path.
         """
-        return self._output_path
+        return self._monitoring_directory
 
-    @output_path.setter
-    def output_path(self, val):
-        self.setter_validator("output_path", val)
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        self.setter_validator("monitoring_directory", val)
