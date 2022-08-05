@@ -33,6 +33,7 @@ project_dcip = "./FlinFlon_dcip.geoh5"
 
 def test_mag_inversion(tmp_path):
     """Tests the jupyter application for mag-mvi"""
+
     ws = Workspace(project)
     new_geoh5 = Workspace(path.join(tmp_path, "invtest.geoh5"))
 

@@ -110,7 +110,6 @@ class BaseParams:
         if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
-                self.input_file.workspace = params_dict["geoh5"]
 
         params_dict = self.input_file._promote(params_dict)
         for key, value in params_dict.items():
@@ -243,7 +242,8 @@ class BaseParams:
         self.setter_validator(
             "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
         )
-        self.input_file.workspace = self.geoh5
+        if self.input_file.workspace != self.geoh5:
+            self.input_file.workspace = self.geoh5
 
     @property
     def run_command(self):
