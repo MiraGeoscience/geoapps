@@ -38,8 +38,6 @@ class BaseDashApplication:
     _workspace = None
 
     def __init__(self, **kwargs):
-        print("init ws")
-        print(self.params.geoh5)
         self.workspace = self.params.geoh5
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]

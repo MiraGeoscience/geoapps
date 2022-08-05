@@ -142,27 +142,26 @@ class BlockModelCreation(BaseDashApplication):
                 live_link, monitoring_directory, temp_geoh5
             )
 
-            with self.workspace.open():
-                with ws as new_workspace:
-                    # Put entities in output workspace.
-                    param_dict["geoh5"] = new_workspace
-                    for key, value in param_dict.items():
-                        if isinstance(value, ObjectBase):
-                            param_dict[key] = value.copy(
-                                parent=new_workspace, copy_children=True
-                            )
+            with ws as new_workspace:
+                # Put entities in output workspace.
+                param_dict["geoh5"] = new_workspace
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=new_workspace, copy_children=True
+                        )
 
-            # Write output uijson.
-            new_params = BlockModelParams(**param_dict)
-            new_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=monitoring_directory,
-                validate=False,
-            )
-            # Run driver.
-            driver = BlockModelDriver(new_params)
-            print("Creating block model . . .")
-            driver.run()
+                # Write output uijson.
+                new_params = BlockModelParams(**param_dict)
+                new_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=monitoring_directory,
+                    validate=False,
+                )
+                # Run driver.
+                driver = BlockModelDriver(new_params)
+                print("Creating block model . . .")
+                driver.run()
 
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
