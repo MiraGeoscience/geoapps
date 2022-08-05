@@ -79,28 +79,6 @@ class BlockModelCreation(BaseDashApplication):
             Input(component_id="output_path", component_property="value"),
         )(self.trigger_click)
 
-    def update_remainder_from_ui_json(
-        self, ui_json: dict, output_ids: list | None = None
-    ) -> tuple:
-        """
-        Update parameters from uploaded ui_json that aren't involved in another callback.
-
-        :param ui_json: Uploaded ui_json.
-        :param param_list: List of parameters to update. Used by tests.
-
-        :return outputs: List of outputs corresponding to the callback expected outputs.
-        """
-        # List of outputs for the callback
-        if output_ids is None:
-            output_ids = [
-                item["id"] + "_" + item["property"]
-                for item in callback_context.outputs_list
-            ]
-        update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
-        outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
-
-        return outputs
-
     def trigger_click(
         self,
         n_clicks: int,
@@ -122,7 +100,7 @@ class BlockModelCreation(BaseDashApplication):
 
         :param n_clicks: Triggers callback for pressing export button.
         :param new_grid: Name for exported block model.
-        :param objects_uid: Input object uid.
+        :param objects: Input object uid.
         :param cell_size_x: X cell size for the core mesh.
         :param cell_size_y: Y cell size for the core mesh.
         :param cell_size_z: Z cell size for the core mesh.
