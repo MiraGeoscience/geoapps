@@ -95,6 +95,7 @@ class Clustering(ScatterPlots):
         )(self.update_object_options)
         self.app.callback(
             Output(component_id="data_subset", component_property="options"),
+            Output(component_id="data_subset", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_subset)
@@ -175,7 +176,6 @@ class Clustering(ScatterPlots):
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
-            Output(component_id="data_subset", component_property="value"),
             Output(component_id="channel", component_property="value"),
             Output(component_id="n_clusters", component_property="value"),
             Output(component_id="plot_kmeans", component_property="data"),
@@ -253,7 +253,7 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="live_link", component_property="n_clicks"),
+            Input(component_id="live_link", component_property="value"),
             prevent_initial_call=True,
         )(self.trigger_click)
 
@@ -325,7 +325,21 @@ class Clustering(ScatterPlots):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         options = self.get_data_options(trigger, ui_json, object_name)
 
-        return options
+        if trigger == "ui_json":
+            value = ast.literal_eval(ui_json["data_subset"])
+            if not value:
+                plot_data = [
+                    str(ui_json["x"]["value"]),
+                    str(ui_json["y"]["value"]),
+                    str(ui_json["z"]["value"]),
+                    str(ui_json["color"]["value"]),
+                    str(ui_json["size"]["value"]),
+                ]
+                value = list(filter(None, plot_data))
+        else:
+            value = []
+
+        return options, value
 
     @staticmethod
     def update_data_options(data_subset: list, full_options: list, kmeans: list):
@@ -428,42 +442,6 @@ class Clustering(ScatterPlots):
             full_lower_bounds,
             full_upper_bounds,
         )
-
-    def update_remainder_from_ui_json(self, ui_json: dict) -> tuple:
-        """
-        Update parameters from uploaded ui_json that aren't involved in another callback.
-
-        :param ui_json: Uploaded ui_json.
-
-        :return outputs: List of outputs corresponding to the callback expected outputs.
-        """
-
-        # List of outputs for the callback
-        output_ids = [
-            item["id"] + "_" + item["property"]
-            for item in callback_context.outputs_list
-        ]
-
-        update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
-
-        # Add parameters that are specific to clustering.
-        # Get initial data subset values. If the subset is empty, set it from the selected axis data.
-        data_subset = ast.literal_eval(ui_json["data_subset"])
-        if not data_subset:
-            plot_data = [
-                update_dict["x_value"],
-                update_dict["y_value"],
-                update_dict["z_value"],
-                update_dict["color_value"],
-                update_dict["size_value"],
-            ]
-            data_subset = list(filter(None, plot_data))
-        update_dict.update({"data_subset_value": data_subset})
-        update_dict.update({"channel_value": update_dict["x_value"]})
-
-        outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
-
-        return outputs
 
     def update_dataframe(self, downsampling, data_subset, full_options):
         data_subset_dict = {}
@@ -998,8 +976,8 @@ class Clustering(ScatterPlots):
                 monitoring_directory = os.path.dirname(self.workspace.h5file)
 
             # Get output workspace.
-            ws, self.params.live_link = Clustering.get_output_workspace(
-                self.params.live_link, monitoring_directory, temp_geoh5
+            ws, live_link = Clustering.get_output_workspace(
+                live_link, monitoring_directory, temp_geoh5
             )
 
             with ws as workspace:
@@ -1022,9 +1000,9 @@ class Clustering(ScatterPlots):
             driver = ClusteringDriver(new_params)
             driver.run()
 
-            if self.params.live_link:
+            if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
-                return ["Geoscience ANALYST Pro - Live link"]
+                return [True]
             else:
                 print("Saved to " + os.path.abspath(monitoring_directory))
                 return []

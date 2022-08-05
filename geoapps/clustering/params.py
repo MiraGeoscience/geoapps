@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from geoh5py.data import Data
 from geoh5py.ui_json import InputFile
 
 from geoapps.scatter_plot.params import ScatterPlotParams
@@ -28,6 +29,7 @@ class ClusteringParams(ScatterPlotParams):
         self._n_clusters = None
         self._ga_group_name = None
         self._data_subset = None
+        self._channel = None
         self._full_scales = None
         self._full_lower_bounds = None
         self._full_upper_bounds = None
@@ -54,6 +56,17 @@ class ClusteringParams(ScatterPlotParams):
     @n_clusters.setter
     def n_clusters(self, val):
         self.setter_validator("n_clusters", val)
+
+    @property
+    def channel(self) -> Data | None:
+        """
+        Histogram and boxplot data
+        """
+        return self._channel
+
+    @channel.setter
+    def channel(self, val):
+        self.setter_validator("channel", val)
 
     @property
     def data_subset(self) -> str | None:

@@ -175,7 +175,7 @@ class BlockModelCreation(BaseDashApplication):
 
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
-                return ["Geoscience ANALYST Pro - Live link"]
+                return [True]
             else:
                 print("Saved to " + monitoring_directory)
                 return []
