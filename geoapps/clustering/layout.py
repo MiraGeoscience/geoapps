@@ -227,7 +227,7 @@ cluster_layout = html.Div(
                 ),
                 dcc.Markdown("Output path:"),
                 dcc.Input(
-                    id="output_path",
+                    id="monitoring_directory",
                     style={"margin-bottom": "20px"},
                 ),
                 html.Button("Export", id="export"),

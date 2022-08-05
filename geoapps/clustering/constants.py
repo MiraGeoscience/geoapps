@@ -22,6 +22,7 @@ defaults = {
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
+    "channel": None,
 }
 
 default_ui_json = deepcopy(base_default_ui_json)
@@ -54,6 +55,18 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
+        "channel": {
+            "association": ["Vertex", "Cell"],
+            "dataType": "Float",
+            "group": "x axis",
+            "label": "Data",
+            "optional": True,
+            "enabled": True,
+            "main": True,
+            "parent": "objects",
+            "value": None,
+            "visible": False,
+        },
         "data_subset": "[]",
         "full_scales": "[]",
         "full_lower_bounds": "[]",
@@ -71,6 +84,7 @@ app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "monitoring_directory": os.path.abspath("../../assets/Temp"),
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
+    "channel": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x_log": False,
     "x_min": -17.0,

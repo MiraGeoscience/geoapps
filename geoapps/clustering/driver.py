@@ -245,8 +245,10 @@ class ClusteringDriver:
                 "values": color_map,
             }
 
-            if self.params.live_link:
+            if self.params.monitoring_directory is not None and os.path.exists(
+                os.path.abspath(self.params.monitoring_directory)
+            ):
                 monitored_directory_copy(
-                    os.path.abspath(self.params.output_path),
+                    os.path.abspath(self.params.monitoring_directory),
                     self.params.objects,
                 )
