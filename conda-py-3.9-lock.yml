@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 02bf33fe2212e5af5997f66381411d5a1327e3d7cbc1aee723c96b222118ca8a
-    osx-64: 4f65db709b8881d92a6621a596fa2834ff12f552cf08d24f7509f7520608941f
-    win-64: bc5dda176caf3671a0ed31fd9a7c257340b8c8609e958ce951e3909531a0b37d
+    linux-64: 4591b9a0ccb52d0b1e1f2c259519f9061fe213492b0e44f05d3485271cf01914
+    osx-64: eb45897178df086c390efacba9b9a0343bb1442ac47ef13430494a5ce3f42354
+    win-64: c6e99d4d212ccda6f22409f3f4e98f9f752b841cad70fe328b35fb19c68fc73a
   platforms:
   - win-64
   - osx-64
@@ -1696,7 +1696,7 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/dill-0.3.5.1-pyhd8ed1ab_0.tar.bz2
   version: 0.3.5.1
-- category: full
+- category: main
   dependencies:
     python: '>=3.6'
   hash:
@@ -1704,7 +1704,7 @@ package:
     sha256: 2ec4a0900a4a9f42615fc04d0fb3286b796abe56590e8e042f6ec25e102dd5af
   manager: conda
   name: entrypoints
-  optional: true
+  optional: false
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/entrypoints-0.4-pyhd8ed1ab_0.tar.bz2
   version: '0.4'
@@ -3470,6 +3470,7 @@ package:
   version: 0.55.2
 - category: main
   dependencies:
+    entrypoints: ''
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     msgpack-python: ''
@@ -3478,14 +3479,14 @@ package:
     python_abi: 3.9.* *_cp39
     typing-extensions: '>=3.7.4'
   hash:
-    md5: a714b8c4e2968b003ec34ae101851fa7
-    sha256: 2c112418b4fc9a2bde037c479faf7f1ea4b7493dcaf30ac07daabd5b7cb95530
+    md5: c6d54f326b42a5bb8f50ed8a8622a2d0
+    sha256: d066a9f65e7e6788badd787b123d9321a56de2b4aaca88b11a78b38ddee30cff
   manager: conda
   name: numcodecs
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/numcodecs-0.10.0-py39h5a03fae_1.tar.bz2
-  version: 0.10.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/numcodecs-0.10.1-py39h5a03fae_0.tar.bz2
+  version: 0.10.1
 - category: main
   dependencies:
     libgcc-ng: '>=12'
@@ -3510,14 +3511,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 2e92a2c7eb81581410550bec3f28560d
-    sha256: b4b7931f95b94c028fe55e9df25ad75a7b2d1afd7d271dad3faf90b92aa837bc
+    md5: 0cbcd1fa7291fe72dc8f848907510498
+    sha256: 6893304387cef98e74bf6558943c3ae1eb25754aa94b43e2c429af5b437750bd
   manager: conda
   name: pip
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2-pyhd8ed1ab_0.tar.bz2
-  version: '22.2'
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2.1-pyhd8ed1ab_0.tar.bz2
+  version: 22.2.1
 - category: full
   dependencies:
     boost-cpp: '>=1.74.0,<1.74.1.0a0'
@@ -4440,15 +4441,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+    sha256: None
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
@@ -5822,7 +5823,7 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/dill-0.3.5.1-pyhd8ed1ab_0.tar.bz2
   version: 0.3.5.1
-- category: full
+- category: main
   dependencies:
     python: '>=3.6'
   hash:
@@ -5830,7 +5831,7 @@ package:
     sha256: 2ec4a0900a4a9f42615fc04d0fb3286b796abe56590e8e042f6ec25e102dd5af
   manager: conda
   name: entrypoints
-  optional: true
+  optional: false
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/entrypoints-0.4-pyhd8ed1ab_0.tar.bz2
   version: '0.4'
@@ -7610,6 +7611,7 @@ package:
   version: 0.53.0
 - category: main
   dependencies:
+    entrypoints: ''
     libcxx: '>=13.0.1'
     msgpack-python: ''
     numpy: '>=1.7'
@@ -7617,14 +7619,14 @@ package:
     python_abi: 3.9.* *_cp39
     typing-extensions: '>=3.7.4'
   hash:
-    md5: 41f11d7211758662741f93b9a75b63aa
-    sha256: fa178bb03b505b1a7962c23e150d19c978b6713b85554c898415496105dc44eb
+    md5: 5737342c2a12d912ad83f67f9e8ad886
+    sha256: cfd088aafe8c746fa24b266d010c2ea32c4079f13ab7ddd04113413b3b8ef48a
   manager: conda
   name: numcodecs
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/numcodecs-0.10.0-py39hd408605_1.tar.bz2
-  version: 0.10.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/numcodecs-0.10.1-py39hd408605_0.tar.bz2
+  version: 0.10.1
 - category: main
   dependencies:
     libcxx: '>=13.0.1'
@@ -7648,14 +7650,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 2e92a2c7eb81581410550bec3f28560d
-    sha256: b4b7931f95b94c028fe55e9df25ad75a7b2d1afd7d271dad3faf90b92aa837bc
+    md5: 0cbcd1fa7291fe72dc8f848907510498
+    sha256: 6893304387cef98e74bf6558943c3ae1eb25754aa94b43e2c429af5b437750bd
   manager: conda
   name: pip
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2-pyhd8ed1ab_0.tar.bz2
-  version: '22.2'
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2.1-pyhd8ed1ab_0.tar.bz2
+  version: 22.2.1
 - category: full
   dependencies:
     boost-cpp: '>=1.74.0,<1.74.1.0a0'
@@ -8566,15 +8568,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+    sha256: None
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz
   version: 0.3.0
 - category: main
   dependencies:
@@ -9709,7 +9711,7 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/dill-0.3.5.1-pyhd8ed1ab_0.tar.bz2
   version: 0.3.5.1
-- category: full
+- category: main
   dependencies:
     python: '>=3.6'
   hash:
@@ -9717,7 +9719,7 @@ package:
     sha256: 2ec4a0900a4a9f42615fc04d0fb3286b796abe56590e8e042f6ec25e102dd5af
   manager: conda
   name: entrypoints
-  optional: true
+  optional: false
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/entrypoints-0.4-pyhd8ed1ab_0.tar.bz2
   version: '0.4'
@@ -11561,14 +11563,14 @@ package:
     setuptools: ''
     wheel: ''
   hash:
-    md5: 2e92a2c7eb81581410550bec3f28560d
-    sha256: b4b7931f95b94c028fe55e9df25ad75a7b2d1afd7d271dad3faf90b92aa837bc
+    md5: 0cbcd1fa7291fe72dc8f848907510498
+    sha256: 6893304387cef98e74bf6558943c3ae1eb25754aa94b43e2c429af5b437750bd
   manager: conda
   name: pip
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2-pyhd8ed1ab_0.tar.bz2
-  version: '22.2'
+  url: https://conda.anaconda.org/conda-forge/noarch/pip-22.2.1-pyhd8ed1ab_0.tar.bz2
+  version: 22.2.1
 - category: full
   dependencies:
     libcurl: '>=7.83.1,<8.0a0'
@@ -11972,6 +11974,7 @@ package:
   version: 0.53.0
 - category: main
   dependencies:
+    entrypoints: ''
     msgpack-python: ''
     numpy: '>=1.7'
     python: '>=3.9,<3.10.0a0'
@@ -11980,14 +11983,14 @@ package:
     vc: '>=14.1,<15'
     vs2015_runtime: '>=14.16.27033'
   hash:
-    md5: bf3bd60a7736afbe8f68a66e9cbe3a35
-    sha256: 5ec397f19f9276e3a18f743f66e745135525c8163bff85c585eba244cab6ef89
+    md5: ff1b64d4d2cd3541c46927013a3c86c9
+    sha256: 7657a2654b7f49ea834b864d715efece2162692e468bdc8d0ec3624fad9fd746
   manager: conda
   name: numcodecs
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/numcodecs-0.10.0-py39h415ef7b_1.tar.bz2
-  version: 0.10.0
+  url: https://conda.anaconda.org/conda-forge/win-64/numcodecs-0.10.1-py39h415ef7b_0.tar.bz2
+  version: 0.10.1
 - category: main
   dependencies:
     numpy: '>=1.19.5,<2.0a0'
@@ -12783,15 +12786,15 @@ package:
     numpy: '!=1.19.4'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
+    sha256: None
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz#sha256=e61a92b2b486ff8c4f3aa8acb0faeca0cc0febe4ef31526ffe4c7bc5c9c398ef
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.3.0.tar.gz
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.3.1.tar.gz
   version: 0.3.0
 - category: main
   dependencies:

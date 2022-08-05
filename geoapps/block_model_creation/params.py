@@ -150,23 +150,12 @@ class BlockModelParams(BaseParams):
         self.setter_validator("new_grid", val)
 
     @property
-    def live_link(self) -> bool:
-        """
-        Live link.
-        """
-        return self._live_link
-
-    @live_link.setter
-    def live_link(self, val):
-        self.setter_validator("live_link", val)
-
-    @property
-    def output_path(self) -> str | None:
+    def monitoring_directory(self) -> str | None:
         """
         Output path.
         """
-        return self._output_path
+        return self._monitoring_directory
 
-    @output_path.setter
-    def output_path(self, val):
-        self.setter_validator("output_path", val)
+    @monitoring_directory.setter
+    def monitoring_directory(self, val):
+        self.setter_validator("monitoring_directory", val)
