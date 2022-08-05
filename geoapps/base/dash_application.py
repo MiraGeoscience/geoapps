@@ -38,8 +38,9 @@ class BaseDashApplication:
     _workspace = None
 
     def __init__(self, **kwargs):
+        print("init ws")
+        print(self.params.geoh5)
         self.workspace = self.params.geoh5
-        self.workspace.close()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -77,7 +78,6 @@ class BaseDashApplication:
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"])
                 self.params = self._param_class(**{"geoh5": self.workspace})
-                self.workspace.close()
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
                 object_value = ui_json["objects"]["value"]
             elif filename is not None and filename.endswith(".geoh5"):
@@ -85,7 +85,6 @@ class BaseDashApplication:
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded)
                 self.params = self._param_class(**{"geoh5": self.workspace})
-                self.workspace.close()
                 ui_json = no_update
                 object_value = None
             elif trigger == "":
@@ -343,4 +342,8 @@ class BaseDashApplication:
 
     @workspace.setter
     def workspace(self, workspace):
+        if self._workspace is not None:
+            self._workspace.close()
+        if workspace is not None:
+            workspace.mode = "r"
         self._workspace = workspace

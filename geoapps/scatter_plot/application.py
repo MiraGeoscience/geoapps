@@ -207,8 +207,7 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    @staticmethod
-    def get_channel_bounds(workspace: Workspace, channel: str) -> (float, float):
+    def get_channel_bounds(self, channel: str) -> (float, float):
         """
         Set the min and max values for the given axis channel.
 
@@ -221,9 +220,9 @@ class ScatterPlots(BaseDashApplication):
         cmin, cmax = None, None
         if (
             channel is not None
-            and workspace.get_entity(uuid.UUID(channel))[0] is not None
+            and self.workspace.get_entity(uuid.UUID(channel))[0] is not None
         ):
-            data = workspace.get_entity(uuid.UUID(channel))[0]
+            data = self.workspace.get_entity(uuid.UUID(channel))[0]
             cmin = float(f"{np.nanmin(data.values):.2e}")
             cmax = float(f"{np.nanmax(data.values):.2e}")
 
@@ -267,12 +266,11 @@ class ScatterPlots(BaseDashApplication):
                 ui_json["size_max"]["value"],
             )
         else:
-            with self.workspace.open("r") as ws:
-                x_min, x_max = ScatterPlots.get_channel_bounds(ws, x)
-                y_min, y_max = ScatterPlots.get_channel_bounds(ws, y)
-                z_min, z_max = ScatterPlots.get_channel_bounds(ws, z)
-                color_min, color_max = ScatterPlots.get_channel_bounds(ws, color)
-                size_min, size_max = ScatterPlots.get_channel_bounds(ws, size)
+            x_min, x_max = self.get_channel_bounds(x)
+            y_min, y_max = self.get_channel_bounds(y)
+            z_min, z_max = self.get_channel_bounds(z)
+            color_min, color_max = self.get_channel_bounds(color)
+            size_min, size_max = self.get_channel_bounds(size)
 
         return (
             x_min,
@@ -363,11 +361,10 @@ class ScatterPlots(BaseDashApplication):
         elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
             update_dict.update({"objects": objects})
 
-        with self.workspace.open():
-            param_dict = self.get_params_dict(update_dict)
-            self.params.update(param_dict)
-            self.driver.params = self.params
-            figure = go.FigureWidget(self.driver.run())
+        param_dict = self.get_params_dict(update_dict)
+        self.params.update(param_dict)
+        self.driver.params = self.params
+        figure = go.FigureWidget(self.driver.run())
 
         return figure
 
@@ -402,30 +399,29 @@ class ScatterPlots(BaseDashApplication):
                     False, param_dict["monitoring_directory"], temp_geoh5
                 )
 
-                with self.workspace.open():
-                    with ws as new_workspace:
-                        # Put entities in output workspace.
-                        param_dict["geoh5"] = new_workspace
-                        for key, value in param_dict.items():
-                            if isinstance(value, ObjectBase):
-                                param_dict[key] = value.copy(
-                                    parent=new_workspace, copy_children=True
-                                )
-
-                        # Write output uijson.
-                        new_params = ScatterPlotParams(**param_dict)
-                        new_params.write_input_file(
-                            name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                            path=param_dict["monitoring_directory"],
-                            validate=False,
-                        )
-
-                        go.Figure(figure).write_html(
-                            os.path.join(
-                                param_dict["monitoring_directory"],
-                                temp_geoh5.replace(".geoh5", ".html"),
+                with ws as new_workspace:
+                    # Put entities in output workspace.
+                    param_dict["geoh5"] = new_workspace
+                    for key, value in param_dict.items():
+                        if isinstance(value, ObjectBase):
+                            param_dict[key] = value.copy(
+                                parent=new_workspace, copy_children=True
                             )
+
+                    # Write output uijson.
+                    new_params = ScatterPlotParams(**param_dict)
+                    new_params.write_input_file(
+                        name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                        path=param_dict["monitoring_directory"],
+                        validate=False,
+                    )
+
+                    go.Figure(figure).write_html(
+                        os.path.join(
+                            param_dict["monitoring_directory"],
+                            temp_geoh5.replace(".geoh5", ".html"),
                         )
+                    )
                 print("Saved to " + param_dict["monitoring_directory"])
             else:
                 print("Invalid output path.")
@@ -437,6 +433,7 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
+    ifile.workspace.open("r")
     app = ScatterPlots(ui_json=ifile)
     print("Loaded. Building the plotly scatterplot . . .")
     app.run()
