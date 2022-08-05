@@ -179,7 +179,7 @@ class Clustering(ScatterPlots):
             Output(component_id="channel", component_property="value"),
             Output(component_id="n_clusters", component_property="value"),
             Output(component_id="plot_kmeans", component_property="data"),
-            Output(component_id="output_path", component_property="value"),
+            Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
@@ -253,6 +253,7 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
+            Input(component_id="live_link", component_property="n_clicks"),
             prevent_initial_call=True,
         )(self.trigger_click)
 
@@ -974,50 +975,61 @@ class Clustering(ScatterPlots):
         )
         return matrix
 
-    def trigger_click(self, _):
+    def trigger_click(self, _, live_link):
         """
         Write cluster groups to the target geoh5 object.
         :return live_link: Checkbox value for dash live_link component.
         """
-        param_dict = self.params.to_dict()
-        temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "export":
+            if not live_link:
+                live_link = False
+            else:
+                live_link = True
 
-        if self.params.output_path is not None and os.path.exists(
-            os.path.abspath(self.params.output_path)
-        ):
-            output_path = os.path.abspath(self.params.output_path)
-        else:
-            output_path = os.path.dirname(self.workspace.h5file)
+            param_dict = self.params.to_dict()
+            temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
 
-        # Get output workspace.
-        ws, self.params.live_link = Clustering.get_output_workspace(
-            self.params.live_link, output_path, temp_geoh5
-        )
+            if self.params.monitoring_directory is not None and os.path.exists(
+                os.path.abspath(self.params.monitoring_directory)
+            ):
+                monitoring_directory = os.path.abspath(self.params.monitoring_directory)
+            else:
+                monitoring_directory = os.path.dirname(self.workspace.h5file)
 
-        with ws as workspace:
-            # Put entities in output workspace.
-            param_dict["geoh5"] = workspace
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
-
-            # Write output uijson.
-            new_params = ClusteringParams(**param_dict)
-            new_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=output_path,
-                validate=False,
+            # Get output workspace.
+            ws, self.params.live_link = Clustering.get_output_workspace(
+                self.params.live_link, monitoring_directory, temp_geoh5
             )
-        # Run driver.
-        driver = ClusteringDriver(new_params)
-        driver.run()
 
-        if self.params.live_link:
-            print("Live link active. Check your ANALYST session for new mesh.")
-            return ["Geoscience ANALYST Pro - Live link"]
+            with ws as workspace:
+                # Put entities in output workspace.
+                param_dict["geoh5"] = workspace
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
+
+                # Write output uijson.
+                new_params = ClusteringParams(**param_dict)
+                new_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=monitoring_directory,
+                    validate=False,
+                )
+            # Run driver.
+            driver = ClusteringDriver(new_params)
+            driver.run()
+
+            if self.params.live_link:
+                print("Live link active. Check your ANALYST session for new mesh.")
+                return ["Geoscience ANALYST Pro - Live link"]
+            else:
+                print("Saved to " + os.path.abspath(monitoring_directory))
+                return []
         else:
-            print("Saved to " + os.path.abspath(output_path))
-            return []
+            return no_update
 
 
 if __name__ == "__main__":

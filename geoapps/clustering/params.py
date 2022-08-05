@@ -33,8 +33,6 @@ class ClusteringParams(ScatterPlotParams):
         self._full_upper_bounds = None
         self._color_pickers = None
         self._plot_kmeans = None
-        self._live_link = None
-        self._output_path = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -133,25 +131,3 @@ class ClusteringParams(ScatterPlotParams):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
-
-    @property
-    def live_link(self) -> bool | None:
-        """
-        Live link.
-        """
-        return self._live_link
-
-    @live_link.setter
-    def live_link(self, val):
-        self.setter_validator("live_link", val)
-
-    @property
-    def output_path(self) -> str | None:
-        """
-        Output path.
-        """
-        return self._output_path
-
-    @output_path.setter
-    def output_path(self, val):
-        self.setter_validator("output_path", val)

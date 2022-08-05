@@ -194,7 +194,7 @@ block_model_layout = html.Div(
         ),
         dcc.Checklist(
             id="live_link",
-            options=["Geoscience ANALYST Pro - Live link"],
+            options=[{"label": "Geoscience ANALYST Pro - Live link", "value": True}],
             value=[],
             style={"margin_bottom": "20px"},
         ),
