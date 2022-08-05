@@ -287,68 +287,6 @@ class ScatterPlots(BaseDashApplication):
             size_max,
         )
 
-    def update_remainder_from_ui_json(
-        self, ui_json: dict
-    ) -> (
-        str,
-        int,
-        str,
-        list,
-        float,
-        str,
-        list,
-        float,
-        str,
-        list,
-        float,
-        str,
-        list,
-        float,
-        list,
-        str,
-        str,
-        list,
-        float,
-        int,
-        str,
-    ):
-        """
-        Update parameters from uploaded ui.json, which aren't involved in other callbacks.
-
-        :param ui_json: Uploaded ui.json.
-
-        :return objects: Name of selected object.
-        :return downsampling: Percent of total values to plot.
-        :return x: Name of selected x data.
-        :return x_log: Whether or not to plot the log of x data.
-        :return x_thresh: X threshold.
-        :return y: Name of selected y data.
-        :return y_log: Whether or not to plot the log of y data.
-        :return y_thresh: Y threshold.
-        :return z: Name of selected z data.
-        :return z_log: Whether or not to plot the log of z data.
-        :return z_thresh: Z threshold.
-        :return color: Name of selected color data.
-        :return color_log: Whether or not to plot the log of color data.
-        :return color_thresh: Color threshold.
-        :return color_maps_options: Color map dropdown options.
-        :return color_maps: Selected color map.
-        :return size: Name of selected size data.
-        :return size_log: Whether or not to plot the log of size data.
-        :return size_thresh: Size threshold.
-        :return size_markers: Max marker size.
-        :return output_path: Output path for exporting scatter plot.
-        """
-        # List of outputs for the callback
-        output_ids = [
-            item["id"] + "_" + item["property"]
-            for item in callback_context.outputs_list
-        ]
-        update_dict = self.update_param_list_from_ui_json(ui_json, output_ids)
-        outputs = BaseDashApplication.get_outputs(output_ids, update_dict)
-
-        return outputs
-
     def update_plot(
         self,
         downsampling: int,
