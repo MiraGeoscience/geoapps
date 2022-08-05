@@ -504,7 +504,7 @@ scatter_layout = html.Div(
                 dcc.Markdown("Output path: "),
                 html.Div(
                     [
-                        dcc.Input(id="output_path"),
+                        dcc.Input(id="monitoring_directory"),
                         html.Button("Download as html", id="export"),
                     ]
                 ),
