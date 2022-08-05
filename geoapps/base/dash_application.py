@@ -37,7 +37,6 @@ class BaseDashApplication:
 
     def __init__(self, **kwargs):
         self.workspace = self.params.geoh5
-        self.workspace.close()
 
     def update_object_options(
         self, filename: str, contents: str, trigger: str = None
@@ -67,14 +66,12 @@ class BaseDashApplication:
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"])
                 self.params = self._param_class(**{"geoh5": self.workspace})
-                self.workspace.close()
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded)
                 self.params = self._param_class(**{"geoh5": self.workspace})
-                self.workspace.close()
                 ui_json = no_update
             elif trigger == "":
                 ifile = InputFile(
@@ -338,4 +335,8 @@ class BaseDashApplication:
 
     @workspace.setter
     def workspace(self, workspace):
+        if self._workspace is not None:
+            self._workspace.close()
+        if workspace is not None:
+            workspace.mode = "r"
         self._workspace = workspace
