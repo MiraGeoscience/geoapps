@@ -12,6 +12,7 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
+    "output_path": "./",
     "objects": {
         "group": "Data Selection",
         "label": "Object",
@@ -439,6 +440,5 @@
     "full_upper_bounds": "[]",
     "color_pickers": "[]",
     "plot_kmeans": "[]",
-    "live_link": false,
-    "output_path": "./"
+    "live_link": false
 }
