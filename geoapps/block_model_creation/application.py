@@ -60,7 +60,7 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="horizontal_padding", component_property="value"),
             Output(component_id="bottom_padding", component_property="value"),
             Output(component_id="expansion_fact", component_property="value"),
-            Output(component_id="output_path", component_property="value"),
+            Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
@@ -76,7 +76,7 @@ class BlockModelCreation(BaseDashApplication):
             Input(component_id="bottom_padding", component_property="value"),
             Input(component_id="expansion_fact", component_property="value"),
             Input(component_id="live_link", component_property="value"),
-            Input(component_id="output_path", component_property="value"),
+            Input(component_id="monitoring_directory", component_property="value"),
         )(self.trigger_click)
 
     def trigger_click(
@@ -92,7 +92,7 @@ class BlockModelCreation(BaseDashApplication):
         bottom_padding: float,
         expansion_fact: float,
         live_link: list,
-        output_path: str,
+        monitoring_directory: str,
         trigger: str = None,
     ) -> list:
         """
@@ -109,7 +109,7 @@ class BlockModelCreation(BaseDashApplication):
         :param bottom_padding: Bottom padding distance.
         :param expansion_fact: Expansion factor for padding cells.
         :param live_link: Checkbox for using monitoring directory.
-        :param output_path: Output path for exporting block model.
+        :param monitoring_directory: Output path for exporting block model.
         :param trigger: Dash component which triggered the callback.
 
         :return live_link: Checkbox for using monitoring directory.
@@ -117,13 +117,18 @@ class BlockModelCreation(BaseDashApplication):
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "export":
+            if not live_link:
+                live_link = False
+            else:
+                live_link = True
+
             # Get output path.
             if (
-                (output_path is not None)
-                and (output_path != "")
-                and (os.path.exists(os.path.abspath(output_path)))
+                (monitoring_directory is not None)
+                and (monitoring_directory != "")
+                and (os.path.exists(os.path.abspath(monitoring_directory)))
             ):
-                output_path = os.path.abspath(output_path)
+                monitoring_directory = os.path.abspath(monitoring_directory)
             else:
                 print("Invalid output path.")
                 raise PreventUpdate
@@ -133,8 +138,8 @@ class BlockModelCreation(BaseDashApplication):
 
             # Get output workspace.
             temp_geoh5 = f"BlockModel_{time():.0f}.geoh5"
-            ws, param_dict["live_link"] = BaseApplication.get_output_workspace(
-                param_dict["live_link"], output_path, temp_geoh5
+            ws, live_link = BaseApplication.get_output_workspace(
+                live_link, monitoring_directory, temp_geoh5
             )
 
             with self.workspace.open():
@@ -151,7 +156,7 @@ class BlockModelCreation(BaseDashApplication):
             new_params = BlockModelParams(**param_dict)
             new_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=new_params.output_path,
+                path=monitoring_directory,
                 validate=False,
             )
             # Run driver.
@@ -159,11 +164,11 @@ class BlockModelCreation(BaseDashApplication):
             print("Creating block model . . .")
             driver.run()
 
-            if new_params.live_link:
+            if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return ["Geoscience ANALYST Pro - Live link"]
             else:
-                print("Saved to " + new_params.output_path)
+                print("Saved to " + monitoring_directory)
                 return []
         else:
             return no_update

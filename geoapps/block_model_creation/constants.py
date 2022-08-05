@@ -25,8 +25,7 @@ defaults = {
     "conda_environment_boolean": False,
     "run_command": "geoapps.block_model_creation.driver",
     "run_command_boolean": False,
-    "output_path": None,
-    "live_link": False,
+    "monitoring_directory": None,
 }
 
 default_ui_json = deepcopy(base_ui_json)
@@ -41,8 +40,7 @@ default_ui_json.update(
             "tooltip": "Warning: launches process to run python model on save",
             "main": True,
         },
-        "output_path": "./",
-        "live_link": False,
+        "monitoring_directory": "./",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
         "objects": {
@@ -110,7 +108,7 @@ default_ui_json.update(
 validations = {}
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "output_path": os.path.abspath("../../assets"),
+    "monitoring_directory": os.path.abspath("../../assets"),
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "cell_size_x": 50.0,
     "cell_size_y": 50.0,

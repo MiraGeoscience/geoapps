@@ -183,13 +183,11 @@ class BlockModelDriver:
 
             object_out.origin = np.r_[object_out.origin.tolist()] - d_xyz
 
-            if (
-                self.params.live_link
-                and self.params.output_path is not None
-                and path.exists(os.path.abspath(self.params.output_path))
+            if self.params.monitoring_directory is not None and path.exists(
+                os.path.abspath(self.params.monitoring_directory)
             ):
                 monitored_directory_copy(
-                    os.path.abspath(self.params.output_path), object_out
+                    os.path.abspath(self.params.monitoring_directory), object_out
                 )
 
 
