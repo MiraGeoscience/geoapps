@@ -236,14 +236,15 @@ class ScatterPlots(BaseDashApplication):
         cmin, cmax = None, None
 
         if (
-            channel is not None
+            data is None
+            and channel is not None
             and self.workspace.get_entity(uuid.UUID(channel))[0] is not None
         ):
-            data = self.workspace.get_entity(uuid.UUID(channel))[0]
+            data = self.workspace.get_entity(uuid.UUID(channel))[0].values
 
         if data is not None:
-            cmin = float(f"{np.nanmin(data.values):.2e}")
-            cmax = float(f"{np.nanmax(data.values):.2e}")
+            cmin = float(f"{np.nanmin(data):.2e}")
+            cmax = float(f"{np.nanmax(data):.2e}")
 
         return cmin, cmax
 

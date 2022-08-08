@@ -50,6 +50,7 @@ class ClusteringDriver:
         :param update_all_clusters: Whether to update all clusters, or only n_clusters.
         :return update_dict: Update values for kmeans and clusters.
         """
+        print("run clustering")
         dataframe = pd.DataFrame(dataframe_dict)
 
         if dataframe.empty:
@@ -85,7 +86,6 @@ class ClusteringDriver:
 
         cluster_ids = clusters[n_clusters]["labels"].astype(float)
         kmeans = cluster_ids[mapping]
-
         return kmeans, clusters
 
     @staticmethod
@@ -103,7 +103,6 @@ class ClusteringDriver:
         :param downsample_min: Minimum number of data to downsample to.
         :return update_dict: Values for dataframe, kmeans, mapping, indices.
         """
-
         if (channels_dict is None) | (not channels_dict):
             return None, None, None
         else:

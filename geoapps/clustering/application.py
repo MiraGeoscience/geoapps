@@ -100,6 +100,18 @@ class Clustering(ScatterPlots):
             Input(component_id="objects", component_property="value"),
         )(self.update_data_subset)
         self.app.callback(
+            Output(component_id="color_pickers", component_property="data"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="color_picker", component_property="value"),
+            Input(component_id="select_cluster", component_property="value"),
+        )(Clustering.update_color_pickers)
+        self.app.callback(
+            Output(component_id="color_picker", component_property="value"),
+            Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="select_cluster", component_property="value"),
+        )(Clustering.update_color_picker)
+        self.app.callback(
             Output(component_id="x", component_property="options"),
             Output(component_id="y", component_property="options"),
             Output(component_id="z", component_property="options"),
@@ -110,6 +122,7 @@ class Clustering(ScatterPlots):
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="data_subset", component_property="options"),
             Input(component_id="kmeans", component_property="data"),
+            prevent_initial_call=True,
         )(Clustering.update_data_options)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
@@ -130,18 +143,6 @@ class Clustering(ScatterPlots):
             Input(component_id="size", component_property="value"),
             Input(component_id="kmeans", component_property="data"),
         )(self.update_channel_bounds)
-        self.app.callback(
-            Output(component_id="color_pickers", component_property="data"),
-            Input(component_id="ui_json", component_property="data"),
-            Input(component_id="color_pickers", component_property="data"),
-            Input(component_id="color_picker", component_property="value"),
-            Input(component_id="select_cluster", component_property="value"),
-        )(Clustering.update_color_pickers)
-        self.app.callback(
-            Output(component_id="color_picker", component_property="value"),
-            Input(component_id="color_pickers", component_property="data"),
-            Input(component_id="select_cluster", component_property="value"),
-        )(Clustering.update_color_picker)
         self.app.callback(
             Output(component_id="scale", component_property="value"),
             Output(component_id="lower_bounds", component_property="value"),
@@ -359,7 +360,6 @@ class Clustering(ScatterPlots):
                 value = list(filter(None, plot_data))
         else:
             value = []
-
         return options, value
 
     @staticmethod
@@ -369,15 +369,18 @@ class Clustering(ScatterPlots):
             if item["value"] in data_subset:
                 data_subset_options.append(item)
         channel_options = data_subset_options
+        axis_options = data_subset_options
+        color_maps_options = px.colors.named_colorscales()
 
         if kmeans is not None:
-            axis_options = data_subset_options.append(
-                {"label": "kmeans", "value": "kmeans"}
-            )
-            color_maps_options = px.colors.named_colorscales() + ["kmeans"]
-        else:
-            axis_options = data_subset_options
-            color_maps_options = px.colors.named_colorscales()
+            axis_options.append({"label": "kmeans", "value": "kmeans"})
+            color_maps_options.insert(0, "kmeans")
+
+        # replace empty lists with empty dictionary
+        if not axis_options:
+            axis_options = {}
+        if not channel_options:
+            channel_options = {}
         return (
             axis_options,
             axis_options,
