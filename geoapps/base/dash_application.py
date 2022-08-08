@@ -33,10 +33,12 @@ class BaseDashApplication:
 
     _params = None
     _param_class = None
+    _driver_class = None
     _workspace = None
 
     def __init__(self, **kwargs):
         self.workspace = self.params.geoh5
+        self.driver = self._driver_class(self.params)
 
     def update_object_options(
         self, filename: str, contents: str, trigger: str = None
@@ -66,12 +68,14 @@ class BaseDashApplication:
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"])
                 self.params = self._param_class(**{"geoh5": self.workspace})
+                self.driver.params = self.params
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded)
                 self.params = self._param_class(**{"geoh5": self.workspace})
+                self.driver.params = self.params
                 ui_json = no_update
             elif trigger == "":
                 ifile = InputFile(

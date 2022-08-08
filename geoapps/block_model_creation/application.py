@@ -31,6 +31,7 @@ class BlockModelCreation(BaseDashApplication):
     """
 
     _param_class = BlockModelParams
+    _driver_class = BlockModelDriver
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -168,9 +169,9 @@ class BlockModelCreation(BaseDashApplication):
                     validate=False,
                 )
                 # Run driver.
-                driver = BlockModelDriver(new_params)
+                self.driver.params = new_params
                 print("Creating block model . . .")
-                driver.run()
+                self.driver.run()
 
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
