@@ -158,10 +158,9 @@ class ClusteringDriver:
         non_nan = []
         for channel in channels:
             if channel is not None:
-                with workspace.open("r"):
-                    channel_values = workspace.get_entity(uuid.UUID(channel))[0].values
-                    values.append(np.asarray(channel_values, dtype=float))
-                    non_nan.append(~np.isnan(channel_values))
+                channel_values = workspace.get_entity(uuid.UUID(channel))[0].values
+                values.append(np.asarray(channel_values, dtype=float))
+                non_nan.append(~np.isnan(channel_values))
 
         values = np.vstack(values)
         non_nan = np.vstack(non_nan)

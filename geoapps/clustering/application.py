@@ -24,7 +24,7 @@ from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
-from geoapps.base.dash_application import BaseDashApplication
+from geoapps.base.application import BaseApplication
 from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.layout import cluster_layout
@@ -37,6 +37,7 @@ from geoapps.shared_utils.utils import colors
 
 class Clustering(ScatterPlots):
     _param_class = ClusteringParams
+    _driver_class = ClusteringDriver
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -48,7 +49,6 @@ class Clustering(ScatterPlots):
         super().__init__(**self.params.to_dict())
 
         self.scatter_driver = ScatterPlotDriver(self.params)
-        self.cluster_driver = ClusteringDriver(self.params)
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -205,21 +205,12 @@ class Clustering(ScatterPlots):
         # Callbacks to update the plots
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
-            Output(component_id="stats_table", component_property="data"),
-            Output(component_id="matrix", component_property="figure"),
-            Output(component_id="histogram", component_property="figure"),
-            Output(component_id="boxplot", component_property="figure"),
-            Output(component_id="inertia", component_property="figure"),
             Input(component_id="n_clusters", component_property="value"),
             Input(component_id="dataframe", component_property="data"),
             Input(component_id="kmeans", component_property="data"),
             Input(component_id="indices", component_property="data"),
             Input(component_id="color_pickers", component_property="data"),
-            Input(component_id="clusters", component_property="data"),
-            Input(component_id="channel", component_property="value"),
             Input(component_id="channel", component_property="options"),
-            Input(component_id="lower_bounds", component_property="value"),
-            Input(component_id="upper_bounds", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -247,7 +238,37 @@ class Clustering(ScatterPlots):
             Input(component_id="size_min", component_property="value"),
             Input(component_id="size_max", component_property="value"),
             Input(component_id="size_markers", component_property="value"),
-        )(self.update_plots)
+        )(self.make_scatter_plot)
+        self.app.callback(
+            Output(component_id="stats_table", component_property="data"),
+            Input(component_id="dataframe", component_property="data"),
+        )(Clustering.make_stats_table)
+        self.app.callback(
+            Output(component_id="matrix", component_property="figure"),
+            Input(component_id="dataframe", component_property="data"),
+        )(Clustering.make_heatmap)
+        self.app.callback(
+            Output(component_id="histogram", component_property="figure"),
+            Input(component_id="dataframe", component_property="data"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="channel", component_property="options"),
+            Input(component_id="lower_bounds", component_property="value"),
+            Input(component_id="upper_bounds", component_property="value"),
+        )(Clustering.make_hist_plot)
+        self.app.callback(
+            Output(component_id="boxplot", component_property="figure"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="channel", component_property="options"),
+            Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="kmeans", component_property="data"),
+            Input(component_id="indices", component_property="data"),
+        )(self.make_boxplot)
+        self.app.callback(
+            Output(component_id="inertia", component_property="figure"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="clusters", component_property="data"),
+        )(Clustering.make_inertia_plot)
 
         # Callback to export the clusters as a geoh5 file
         self.app.callback(
@@ -357,7 +378,6 @@ class Clustering(ScatterPlots):
         else:
             axis_options = data_subset_options
             color_maps_options = px.colors.named_colorscales()
-
         return (
             axis_options,
             axis_options,
@@ -385,7 +405,6 @@ class Clustering(ScatterPlots):
         :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
         :return update_dict: Dictionary of new scale and bounds.
         """
-
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json":
             # Reconstruct scaling and bounds dicts from uijson input lists.
@@ -417,23 +436,20 @@ class Clustering(ScatterPlots):
             if (channel_name not in full_lower_bounds) or (
                 full_lower_bounds[channel_name] is None
             ):
-                with self.workspace.open("r"):
-                    full_lower_bounds[channel_name] = np.nanmin(
-                        self.workspace.get_entity(uuid.UUID(channel))[0].values
-                    )
+                full_lower_bounds[channel_name] = np.nanmin(
+                    self.workspace.get_entity(uuid.UUID(channel))[0].values
+                )
             lower_bounds = float(full_lower_bounds[channel_name])
 
             if (channel_name not in full_upper_bounds) or (
                 full_upper_bounds[channel_name] is None
             ):
-                with self.workspace.open("r"):
-                    full_upper_bounds[channel_name] = np.nanmax(
-                        self.workspace.get_entity(uuid.UUID(channel))[0].values
-                    )
+                full_upper_bounds[channel_name] = np.nanmax(
+                    self.workspace.get_entity(uuid.UUID(channel))[0].values
+                )
             upper_bounds = float(full_upper_bounds[channel_name])
         else:
             scale, lower_bounds, upper_bounds = None, None, None
-
         return (
             scale,
             lower_bounds,
@@ -504,98 +520,13 @@ class Clustering(ScatterPlots):
         else:
             return None
 
-    def update_plots(
-        self,
-        n_clusters,
-        dataframe_dict,
-        kmeans,
-        indices,
-        color_pickers,
-        clusters,
-        channel,
-        channel_options,
-        lower_bounds,
-        upper_bounds,
-        x,
-        x_log,
-        x_thresh,
-        x_min,
-        x_max,
-        y,
-        y_log,
-        y_thresh,
-        y_min,
-        y_max,
-        z,
-        z_log,
-        z_thresh,
-        z_min,
-        z_max,
-        color,
-        color_log,
-        color_thresh,
-        color_min,
-        color_max,
-        color_maps,
-        size,
-        size_log,
-        size_thresh,
-        size_min,
-        size_max,
-        size_markers,
-    ):
-
-        scatter_plot = self.make_scatter_plot(
-            n_clusters,
-            dataframe_dict,
-            kmeans,
-            indices,
-            channel_options,
-            x,
-            x_log,
-            x_thresh,
-            x_min,
-            x_max,
-            y,
-            y_log,
-            y_thresh,
-            y_min,
-            y_max,
-            z,
-            z_log,
-            z_thresh,
-            z_min,
-            z_max,
-            color,
-            color_log,
-            color_thresh,
-            color_min,
-            color_max,
-            color_maps,
-            color_pickers,
-            size,
-            size_log,
-            size_thresh,
-            size_min,
-            size_max,
-            size_markers,
-        )
-        stats_table = Clustering.make_stats_table(dataframe_dict)
-        matrix = Clustering.make_heatmap(dataframe_dict)
-        histogram = Clustering.make_hist_plot(
-            dataframe_dict, channel, channel_options, lower_bounds, upper_bounds
-        )
-        boxplot = self.make_boxplot(n_clusters, channel, color_pickers, kmeans, indices)
-        inertia = Clustering.make_inertia_plot(n_clusters, clusters)
-
-        return scatter_plot, stats_table, matrix, histogram, boxplot, inertia
-
     def make_scatter_plot(
         self,
         n_clusters: int,
         dataframe_dict: list[dict],
         kmeans: list,
         indices: list,
+        color_pickers: list,
         channel_options: list,
         x: str,
         x_log: list,
@@ -618,7 +549,6 @@ class Clustering(ScatterPlots):
         color_min: float,
         color_max: float,
         color_maps: list,
-        color_pickers: list,
         size: str,
         size_log: list,
         size_thresh: float,
@@ -707,23 +637,23 @@ class Clustering(ScatterPlots):
             #    return no_update
             # elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
             #    update_dict.update({"objects": objects})
-            with self.workspace.open():
-                params_dict = self.get_params_dict(update_dict)
-                params_dict.update(
-                    {
-                        "downsampling": 100,
-                        "color_maps": color_maps,
-                        "x": x,
-                        "y": y,
-                        "z": z,
-                        "color": color,
-                        "size": size,
-                    }
-                )
-                self.params.update(params_dict, validate=False)
-                self.scatter_driver.params = self.params
+            # self.workspace.mode = "r+"
+            params_dict = self.get_params_dict(update_dict)
+            params_dict.update(
+                {
+                    "downsampling": 100,
+                    "color_maps": color_maps,
+                    "x": x,
+                    "y": y,
+                    "z": z,
+                    "color": color,
+                    "size": size,
+                }
+            )
+            self.params.update(params_dict, validate=False)
+            self.scatter_driver.params = self.params
+            # self.workspace.mode = "r"
             crossplot = go.Figure(self.scatter_driver.run())
-
             return crossplot
         else:
 
@@ -800,6 +730,7 @@ class Clustering(ScatterPlots):
         self,
         n_clusters: int,
         channel: str,
+        channel_options: list,
         color_pickers: list,
         kmeans: list,
         indices: list,
@@ -821,9 +752,9 @@ class Clustering(ScatterPlots):
         ):
             kmeans = np.array(kmeans)
             indices = np.array(indices)
+            channel_name = Clustering.get_name(channel, channel_options)
             boxes = []
-            with self.workspace.open("r"):
-                y_data = self.workspace.get_entity(uuid.UUID(channel))[0].values
+            y_data = self.workspace.get_entity(uuid.UUID(channel))[0].values
             for ii in range(n_clusters):
                 cluster_ind = kmeans[indices] == ii
                 x = np.ones(np.sum(cluster_ind)) * ii
@@ -849,7 +780,7 @@ class Clustering(ScatterPlots):
             boxplot.update_layout(
                 {
                     "xaxis": {"title": "Cluster #"},
-                    "yaxis": {"title": channel},
+                    "yaxis": {"title": channel_name},
                     "height": 600,
                     "width": 600,
                 }
@@ -976,7 +907,7 @@ class Clustering(ScatterPlots):
                 monitoring_directory = os.path.dirname(self.workspace.h5file)
 
             # Get output workspace.
-            ws, live_link = Clustering.get_output_workspace(
+            ws, live_link = BaseApplication.get_output_workspace(
                 live_link, monitoring_directory, temp_geoh5
             )
 
@@ -997,9 +928,8 @@ class Clustering(ScatterPlots):
                     validate=False,
                 )
             # Run driver.
-            driver = ClusteringDriver(new_params)
-            driver.run()
-
+            self.driver.params = new_params
+            self.driver.run()
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return [True]
@@ -1014,6 +944,7 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
+    ifile.workspace.open("r")
     app = Clustering(ui_json=ifile)
     print("Loaded. Building the clustering app . . .")
     app.run()
