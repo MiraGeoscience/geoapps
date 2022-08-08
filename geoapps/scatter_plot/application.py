@@ -19,7 +19,6 @@ from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
@@ -36,6 +35,7 @@ class ScatterPlots(BaseDashApplication):
     """
 
     _param_class = ScatterPlotParams
+    _driver_class = ScatterPlotDriver
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -54,7 +54,6 @@ class ScatterPlots(BaseDashApplication):
 
         super().__init__(**kwargs)
 
-        self.driver = ScatterPlotDriver(self.params)
         self.app.layout = scatter_layout
 
         # Set up callbacks
@@ -420,7 +419,7 @@ class ScatterPlots(BaseDashApplication):
 
         param_dict = self.get_params_dict(update_dict)
         self.params.update(param_dict)
-        self.driver.params = self.params
+
         figure = go.FigureWidget(self.driver.run())
 
         return figure
