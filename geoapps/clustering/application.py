@@ -21,6 +21,7 @@ from dash import callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.objects import ObjectBase
+from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
@@ -152,34 +153,37 @@ class Clustering(ScatterPlots):
             Output(component_id="full_upper_bounds", component_property="data"),
             Input(component_id="ui_json", component_property="data"),
             Input(component_id="channel", component_property="value"),
-            Input(component_id="channel", component_property="options"),
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="full_lower_bounds", component_property="data"),
             Input(component_id="full_upper_bounds", component_property="data"),
         )(self.update_properties)
         self.app.callback(
+            Output(component_id="x", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="size", component_property="value"),
+            Output(component_id="plot_kmeans", component_property="data"),
+            Input(component_id="ui_json", component_property="data"),
+        )(self.update_data_values)
+        self.app.callback(
             Output(component_id="objects", component_property="value"),
             Output(component_id="downsampling", component_property="value"),
-            Output(component_id="x", component_property="value"),
             Output(component_id="x_log", component_property="value"),
             Output(component_id="x_thresh", component_property="value"),
-            Output(component_id="y", component_property="value"),
             Output(component_id="y_log", component_property="value"),
             Output(component_id="y_thresh", component_property="value"),
-            Output(component_id="z", component_property="value"),
             Output(component_id="z_log", component_property="value"),
             Output(component_id="z_thresh", component_property="value"),
-            Output(component_id="color", component_property="value"),
             Output(component_id="color_log", component_property="value"),
             Output(component_id="color_thresh", component_property="value"),
             Output(component_id="color_maps", component_property="value"),
-            Output(component_id="size", component_property="value"),
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
             Output(component_id="channel", component_property="value"),
             Output(component_id="n_clusters", component_property="value"),
-            Output(component_id="plot_kmeans", component_property="data"),
+            Output(component_id="ga_group_name", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
@@ -191,7 +195,6 @@ class Clustering(ScatterPlots):
             Output(component_id="indices", component_property="data"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="data_subset", component_property="value"),
-            Input(component_id="data_subset", component_property="options"),
         )(self.update_dataframe)
         self.app.callback(
             Output(component_id="kmeans", component_property="data"),
@@ -276,6 +279,45 @@ class Clustering(ScatterPlots):
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
             Input(component_id="live_link", component_property="value"),
+            Input(component_id="n_clusters", component_property="value"),
+            Input(component_id="objects", component_property="value"),
+            Input(component_id="data_subset", component_property="value"),
+            Input(component_id="color_pickers", component_property="data"),
+            Input(component_id="plot_kmeans", component_property="data"),
+            Input(component_id="downsampling", component_property="value"),
+            Input(component_id="full_scales", component_property="data"),
+            Input(component_id="full_lower_bounds", component_property="data"),
+            Input(component_id="full_upper_bounds", component_property="data"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="x_log", component_property="value"),
+            Input(component_id="x_thresh", component_property="value"),
+            Input(component_id="x_min", component_property="value"),
+            Input(component_id="x_max", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="y_log", component_property="value"),
+            Input(component_id="y_thresh", component_property="value"),
+            Input(component_id="y_min", component_property="value"),
+            Input(component_id="y_max", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="z_log", component_property="value"),
+            Input(component_id="z_thresh", component_property="value"),
+            Input(component_id="z_min", component_property="value"),
+            Input(component_id="z_max", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="color_log", component_property="value"),
+            Input(component_id="color_thresh", component_property="value"),
+            Input(component_id="color_min", component_property="value"),
+            Input(component_id="color_max", component_property="value"),
+            Input(component_id="color_maps", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            Input(component_id="size_log", component_property="value"),
+            Input(component_id="size_thresh", component_property="value"),
+            Input(component_id="size_min", component_property="value"),
+            Input(component_id="size_max", component_property="value"),
+            Input(component_id="size_markers", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="ga_group_name", component_property="value"),
+            Input(component_id="monitoring_directory", component_property="value"),
             prevent_initial_call=True,
         )(self.trigger_click)
 
@@ -326,7 +368,7 @@ class Clustering(ScatterPlots):
             if type(ui_json["color_pickers"]) == list:
                 full_list = ui_json["color_pickers"]
             else:
-                full_list = ast.literal_eval(ui_json["color_pickers"])
+                full_list = ast.literal_eval(ui_json["color_pickers"]["value"])
             if (full_list is None) | (not full_list):
                 color_pickers = colors
             else:
@@ -345,21 +387,14 @@ class Clustering(ScatterPlots):
 
     def update_data_subset(self, ui_json, object_name):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        options = self.get_data_options(trigger, ui_json, object_name)
 
         if trigger == "ui_json":
-            value = ast.literal_eval(ui_json["data_subset"])
-            if not value:
-                plot_data = [
-                    str(ui_json["x"]["value"]),
-                    str(ui_json["y"]["value"]),
-                    str(ui_json["z"]["value"]),
-                    str(ui_json["color"]["value"]),
-                    str(ui_json["size"]["value"]),
-                ]
-                value = list(filter(None, plot_data))
+            object_name = ui_json["objects"]["value"]
+            value = ast.literal_eval(ui_json["data_subset"]["value"])
         else:
             value = []
+
+        options = self.get_data_options(trigger, ui_json, object_name)
         return options, value
 
     @staticmethod
@@ -391,11 +426,30 @@ class Clustering(ScatterPlots):
             color_maps_options,
         )
 
+    def update_data_values(self, ui_json):
+        """
+        Read in axes values from ui.json.
+        """
+        plot_kmeans = ast.literal_eval(ui_json["plot_kmeans"]["value"])
+        if not plot_kmeans:
+            plot_kmeans = [False, False, False, False, False]
+        output_axes = []
+        axes_names = ["x", "y", "z", "color", "size"]
+        for i in range(len(axes_names)):
+            axis_val = ui_json[axes_names[i]]["value"]
+            if is_uuid(axis_val):
+                output_axes.append(str(axis_val))
+            elif axis_val == "" and plot_kmeans[i]:
+                output_axes.append("kmeans")
+            else:
+                output_axes.append(None)
+
+        return tuple(output_axes + [plot_kmeans])
+
     def update_properties(
         self,
         ui_json: dict,
         channel: str,
-        channel_options: list,
         full_scales: dict,
         full_lower_bounds: dict,
         full_upper_bounds: dict,
@@ -411,14 +465,14 @@ class Clustering(ScatterPlots):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json":
             # Reconstruct scaling and bounds dicts from uijson input lists.
-            data_subset = ast.literal_eval(ui_json["data_subset"])
+            data_subset = ast.literal_eval(ui_json["data_subset"]["value"])
             if len(data_subset) == 0:
                 full_scales, full_lower_bounds, full_upper_bounds = {}, {}, {}
             else:
                 full_dicts = []
                 for key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
                     out_dict = {}
-                    full_list = ast.literal_eval(ui_json[key])
+                    full_list = ast.literal_eval(ui_json[key]["value"])
                     for i in range(len(data_subset)):
                         if (full_list is None) | (not full_list):
                             if key == "full_scales":
@@ -428,31 +482,31 @@ class Clustering(ScatterPlots):
                         else:
                             out_dict[data_subset[i]] = full_list[i]
                     full_dicts.append(out_dict)
-                full_scales, full_lower_bounds, full_upper_bounds = full_list
+                full_scales, full_lower_bounds, full_upper_bounds = full_dicts
 
-        channel_name = Clustering.get_name(channel, channel_options)
-        if channel_name is not None:
-            if channel_name not in full_scales:
-                full_scales[channel_name] = 1
-            scale = full_scales[channel_name]
+        if channel is not None:
+            if channel not in full_scales:
+                full_scales[channel] = 1
+            scale = full_scales[channel]
 
-            if (channel_name not in full_lower_bounds) or (
-                full_lower_bounds[channel_name] is None
+            if (channel not in full_lower_bounds) or (
+                full_lower_bounds[channel] is None
             ):
-                full_lower_bounds[channel_name] = np.nanmin(
+                full_lower_bounds[channel] = np.nanmin(
                     self.workspace.get_entity(uuid.UUID(channel))[0].values
                 )
-            lower_bounds = float(full_lower_bounds[channel_name])
+            lower_bounds = float(full_lower_bounds[channel])
 
-            if (channel_name not in full_upper_bounds) or (
-                full_upper_bounds[channel_name] is None
+            if (channel not in full_upper_bounds) or (
+                full_upper_bounds[channel] is None
             ):
-                full_upper_bounds[channel_name] = np.nanmax(
+                full_upper_bounds[channel] = np.nanmax(
                     self.workspace.get_entity(uuid.UUID(channel))[0].values
                 )
-            upper_bounds = float(full_upper_bounds[channel_name])
+            upper_bounds = float(full_upper_bounds[channel])
         else:
             scale, lower_bounds, upper_bounds = None, None, None
+
         return (
             scale,
             lower_bounds,
@@ -462,14 +516,10 @@ class Clustering(ScatterPlots):
             full_upper_bounds,
         )
 
-    def update_dataframe(self, downsampling, data_subset, full_options):
-        data_subset_dict = {}
-        if full_options:
-            for item in full_options:
-                if item["value"] in data_subset:
-                    data_subset_dict[item["label"]] = item["value"]
+    def update_dataframe(self, downsampling, data_subset):
+        if data_subset:
             dataframe, mapping, indices = ClusteringDriver.update_dataframe(
-                downsampling, data_subset_dict, self.workspace, downsample_min=5000
+                downsampling, data_subset, self.workspace, downsample_min=5000
             )
             return dataframe, mapping, indices
         else:
@@ -887,7 +937,50 @@ class Clustering(ScatterPlots):
         )
         return matrix
 
-    def trigger_click(self, _, live_link):
+    def trigger_click(
+        self,
+        export: int,
+        live_link: list,
+        n_clusters: int,
+        objects: str,
+        data_subset: list,
+        color_pickers: list,
+        plot_kmeans: list,
+        downsampling: int,
+        full_scales: dict,
+        full_lower_bounds: dict,
+        full_upper_bounds: dict,
+        x: str,
+        x_log: list,
+        x_thresh: float,
+        x_min: float,
+        x_max: float,
+        y: str,
+        y_log: list,
+        y_thresh: float,
+        y_min: float,
+        y_max: float,
+        z: str,
+        z_log: list,
+        z_thresh: float,
+        z_min: float,
+        z_max: float,
+        color: str,
+        color_log: list,
+        color_thresh: float,
+        color_min: float,
+        color_max: float,
+        color_maps: str,
+        size: str,
+        size_log: list,
+        size_thresh: float,
+        size_min: float,
+        size_max: float,
+        size_markers: int,
+        channel: str,
+        ga_group_name: str,
+        monitoring_directory: str,
+    ):
         """
         Write cluster groups to the target geoh5 object.
         :return live_link: Checkbox value for dash live_link component.
@@ -899,17 +992,41 @@ class Clustering(ScatterPlots):
             else:
                 live_link = True
 
-            param_dict = self.params.to_dict()
-            temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
+            param_dict = self.get_params_dict(locals())
+            # Convert dicts to lists to save in the ui.json.
+            param_dict.update(
+                {
+                    "data_subset": str(sorted(data_subset)),
+                    "full_scales": str([x[1] for x in sorted(full_scales.items())]),
+                    "full_lower_bounds": str(
+                        [x[1] for x in sorted(full_lower_bounds.items())]
+                    ),
+                    "full_upper_bounds": str(
+                        [x[1] for x in sorted(full_upper_bounds.items())]
+                    ),
+                }
+            )
 
-            if self.params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self.params.monitoring_directory)
+            # Save axes that are plotting kmeans.
+            plot_kmeans = []
+            for axis in ["x", "y", "z", "color", "size"]:
+                if locals()[axis] == "kmeans":
+                    param_dict[axis] = None
+                    plot_kmeans.append(True)
+                else:
+                    plot_kmeans.append(False)
+            param_dict["plot_kmeans"] = str(plot_kmeans)
+
+            # Get output path
+            if monitoring_directory is not None and os.path.exists(
+                os.path.abspath(monitoring_directory)
             ):
-                monitoring_directory = os.path.abspath(self.params.monitoring_directory)
+                monitoring_directory = os.path.abspath(monitoring_directory)
             else:
                 monitoring_directory = os.path.dirname(self.workspace.h5file)
 
             # Get output workspace.
+            temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
             ws, live_link = BaseApplication.get_output_workspace(
                 live_link, monitoring_directory, temp_geoh5
             )

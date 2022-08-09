@@ -50,7 +50,6 @@ class ClusteringDriver:
         :param update_all_clusters: Whether to update all clusters, or only n_clusters.
         :return update_dict: Update values for kmeans and clusters.
         """
-        print("run clustering")
         dataframe = pd.DataFrame(dataframe_dict)
 
         if dataframe.empty:
@@ -91,23 +90,27 @@ class ClusteringDriver:
     @staticmethod
     def update_dataframe(
         downsampling: int,
-        channels_dict: dict,
+        data_subset: list,
         workspace: Workspace,
         downsample_min: int | None = None,
     ) -> tuple:
         """
         Normalize the the selected data and perform the kmeans clustering.
         :param downsampling: Percent downsampling.
-        :param channels_dict: Data subset.
+        :param channels: Data subset.
         :param workspace: Current workspace.
         :param downsample_min: Minimum number of data to downsample to.
         :return update_dict: Values for dataframe, kmeans, mapping, indices.
         """
-        if (channels_dict is None) | (not channels_dict):
+        if not data_subset:
             return None, None, None
         else:
+            data_subset_names = [
+                workspace.get_entity(uuid.UUID(data))[0].name for data in data_subset
+            ]
+
             indices, values = ClusteringDriver.get_indices(
-                list(channels_dict.values()),
+                data_subset,
                 downsampling,
                 workspace,
                 downsample_min=downsample_min,
@@ -116,7 +119,7 @@ class ClusteringDriver:
 
             dataframe = pd.DataFrame(
                 values[indices, :],
-                columns=list(filter(None, list(channels_dict.keys()))),
+                columns=list(data_subset_names),
             )
 
             tree = cKDTree(dataframe.values)
@@ -185,26 +188,20 @@ class ClusteringDriver:
         self.params.geoh5.open(mode="r+")
         # Run clustering to get kmeans and indices.
         clustering_dict = {}
-        clustering_dict.update(
-            ClusteringDriver.update_dataframe(
-                self.params.downsampling, self.params.data_subset, self.params.geoh5
-            )
+        dataframe, mapping, indices = ClusteringDriver.update_dataframe(
+            self.params.downsampling,
+            ast.literal_eval(self.params.data_subset),
+            self.params.geoh5,
         )
-        full_scales_dict = dict(
-            zip(self.params.data_subset, ast.literal_eval(self.params.full_scales))
+        full_scales_dict = dict(zip(self.params.data_subset, self.params.full_scales))
+        kmeans, clusters = ClusteringDriver.run_clustering(
+            self.params.n_clusters,
+            dataframe,
+            full_scales_dict,
+            {},
+            mapping,
+            False,
         )
-        clustering_dict.update(
-            ClusteringDriver.run_clustering(
-                self.params.n_clusters,
-                clustering_dict["dataframe"],
-                full_scales_dict,
-                {},
-                clustering_dict["mapping"],
-                False,
-            )
-        )
-        kmeans = clustering_dict["kmeans"]
-        indices = clustering_dict["indices"]
 
         if kmeans is not None:
             # Create reference values and color_map
@@ -214,7 +211,7 @@ class ClusteringDriver:
             inactive_set[indices] = False
             cluster_values[inactive_set] = 0
 
-            color_pickers = ast.literal_eval(self.params.color_pickers)
+            color_pickers = self.params.color_pickers
             if not color_pickers:
                 color_pickers = colors
 

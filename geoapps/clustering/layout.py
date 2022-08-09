@@ -225,6 +225,11 @@ cluster_layout = html.Div(
                     value=[],
                     style={"margin-bottom": "20px"},
                 ),
+                dcc.Markdown("Group name:"),
+                dcc.Input(
+                    id="ga_group_name",
+                    style={"margin-bottom": "20px"},
+                ),
                 dcc.Markdown("Output path:"),
                 dcc.Input(
                     id="monitoring_directory",
