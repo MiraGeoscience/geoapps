@@ -31,6 +31,7 @@ from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.layout import cluster_layout
 from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
+from geoapps.scatter_plot import ScatterPlotParams
 from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.shared_utils.utils import colors
@@ -49,7 +50,8 @@ class Clustering(ScatterPlots):
 
         super().__init__(**self.params.to_dict())
 
-        self.scatter_driver = ScatterPlotDriver(self.params)
+        self.scatter_params = self._param_class(**self.params.to_dict())
+        self.scatter_driver = ScatterPlotDriver(self.scatter_params)
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -691,11 +693,6 @@ class Clustering(ScatterPlots):
             for item in callback_context.triggered:
                 update_dict[item["prop_id"].split(".")[0]] = item["value"]
 
-            # if "objects" in update_dict and len(update_dict) == 1:
-            #    return no_update
-            # elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
-            #    update_dict.update({"objects": objects})
-            # self.workspace.mode = "r+"
             params_dict = self.get_params_dict(update_dict)
             params_dict.update(
                 {
@@ -708,9 +705,7 @@ class Clustering(ScatterPlots):
                     "size": size,
                 }
             )
-            self.params.update(params_dict, validate=False)
-            self.scatter_driver.params = self.params
-            # self.workspace.mode = "r"
+            self.scatter_params.update(params_dict, validate=False)
             crossplot = go.Figure(self.scatter_driver.run())
             return crossplot
         else:

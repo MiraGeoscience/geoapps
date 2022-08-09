@@ -55,6 +55,7 @@ class BlockModelCreation(BaseDashApplication):
         # Set up callbacks
         self.app.callback(
             Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
             Output(component_id="ui_json", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
@@ -151,6 +152,8 @@ class BlockModelCreation(BaseDashApplication):
             ws, live_link = BaseApplication.get_output_workspace(
                 live_link, monitoring_directory, temp_geoh5
             )
+            if not live_link:
+                param_dict["monitoring_directory"] = ""
 
             with ws as new_workspace:
                 # Put entities in output workspace.
