@@ -417,7 +417,14 @@ class Clustering(ScatterPlots):
         if "ui_json" in triggers:
             axis_values = Clustering.update_data_values(ui_json)
         else:
-            axis_values = no_update, no_update, no_update, no_update, no_update
+            axis_values = (
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+            )
 
         # replace empty lists with empty dictionary
         if not axis_options:
@@ -991,12 +998,14 @@ class Clustering(ScatterPlots):
         channel: str,
         ga_group_name: str,
         monitoring_directory: str,
+        trigger: str = None,
     ):
         """
         Write cluster groups to the target geoh5 object.
         :return live_link: Checkbox value for dash live_link component.
         """
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "export":
             if not live_link:
                 live_link = False
