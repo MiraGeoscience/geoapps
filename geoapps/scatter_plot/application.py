@@ -217,9 +217,21 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def update_data_options(self, ui_json: dict, object_name: str):
+    def update_data_options(self, ui_json: dict, object_uid: str):
+        """
+        Get data dropdown options from a given object.
+
+        :param ui_json: Uploaded ui.json to read object from.
+        :param object_uid: Selected object in object dropdown.
+
+        :return options: Data dropdown options for x-axis of scatter plot.
+        :return options: Data dropdown options for y-axis of scatter plot.
+        :return options: Data dropdown options for z-axis of scatter plot.
+        :return options: Data dropdown options for color-axis of scatter plot.
+        :return options: Data dropdown options for size-axis of scatter plot.
+        """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        options = self.get_data_options(trigger, ui_json, object_name)
+        options = self.get_data_options(trigger, ui_json, object_uid)
 
         return options, options, options, options, options
 
@@ -227,9 +239,8 @@ class ScatterPlots(BaseDashApplication):
         """
         Set the min and max values for the given axis channel.
 
-        :param workspace: Current workspace.
         :param channel: Name of channel to find data for.
-        :param data: Optional data to use instead of channel name.
+        :param kmeans: Optional data to use instead of channel name.
 
         :return cmin: Minimum value for input channel.
         :return cmax: Maximum value for input channel.
@@ -269,7 +280,7 @@ class ScatterPlots(BaseDashApplication):
         :param z: Name of selected z data.
         :param color: Name of selected color data.
         :param size: Name of selected size data.
-        :param data: Optional data to use instead of channel name.
+        :param kmeans: Optional data to use instead of channel name.
 
         :return x_min: Minimum value for x data.
         :return x_max: Maximum value for x data.
@@ -412,17 +423,20 @@ class ScatterPlots(BaseDashApplication):
         :return figure: Scatter plot.
         """
         update_dict = {}
+        # Get list of parameters to update in self.params, from callback trigger.
         for item in callback_context.triggered:
             update_dict[item["prop_id"].split(".")[0]] = item["value"]
 
+        # Don't update plot if objects triggered the callback, but use objects to update self.params.
         if "objects" in update_dict and len(update_dict) == 1:
             return no_update
         elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
             update_dict.update({"objects": objects})
 
+        # Update self.params
         param_dict = self.get_params_dict(update_dict)
         self.params.update(param_dict)
-
+        # Run driver to get updated scatter plot.
         figure = go.FigureWidget(self.driver.run())
 
         return figure

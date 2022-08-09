@@ -11,7 +11,7 @@ import os
 from time import time
 
 from dash import callback_context, no_update
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from flask import Flask
 from geoh5py.objects.object_base import ObjectBase
@@ -77,17 +77,17 @@ class BlockModelCreation(BaseDashApplication):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="new_grid", component_property="value"),
-            Input(component_id="objects", component_property="value"),
-            Input(component_id="cell_size_x", component_property="value"),
-            Input(component_id="cell_size_y", component_property="value"),
-            Input(component_id="cell_size_z", component_property="value"),
-            Input(component_id="depth_core", component_property="value"),
-            Input(component_id="horizontal_padding", component_property="value"),
-            Input(component_id="bottom_padding", component_property="value"),
-            Input(component_id="expansion_fact", component_property="value"),
-            Input(component_id="live_link", component_property="value"),
-            Input(component_id="monitoring_directory", component_property="value"),
+            State(component_id="new_grid", component_property="value"),
+            State(component_id="objects", component_property="value"),
+            State(component_id="cell_size_x", component_property="value"),
+            State(component_id="cell_size_y", component_property="value"),
+            State(component_id="cell_size_z", component_property="value"),
+            State(component_id="depth_core", component_property="value"),
+            State(component_id="horizontal_padding", component_property="value"),
+            State(component_id="bottom_padding", component_property="value"),
+            State(component_id="expansion_fact", component_property="value"),
+            State(component_id="live_link", component_property="value"),
+            State(component_id="monitoring_directory", component_property="value"),
         )(self.trigger_click)
 
     def trigger_click(

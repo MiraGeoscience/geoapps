@@ -45,15 +45,15 @@ class BaseDashApplication:
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
-        and sets the new object options.
+        and sets the new object options and values.
 
         :param filename: Uploaded filename. Workspace or ui.json.
         :param contents: Uploaded file contents. Workspace or ui.json.
         :param trigger: Dash component which triggered the callback.
 
-        :return ui_json: Uploaded ui_json.
         :return object_options: New object dropdown options.
         :return object_value: New object value.
+        :return ui_json: Uploaded ui_json.
         :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
         :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
@@ -63,6 +63,7 @@ class BaseDashApplication:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if contents is not None or trigger == "":
             if filename is not None and filename.endswith(".ui.json"):
+                # Uploaded ui.json
                 content_type, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
@@ -73,6 +74,7 @@ class BaseDashApplication:
                 if is_uuid(ui_json["objects"]["value"]):
                     object_value = str(ui_json["objects"]["value"])
             elif filename is not None and filename.endswith(".geoh5"):
+                # Uploaded workspace
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded)
@@ -80,6 +82,7 @@ class BaseDashApplication:
                 self.driver.params = self.params
                 ui_json = no_update
             elif trigger == "":
+                # Initialization of app from self.params.
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
                     validation_options={"disabled": True},
@@ -89,6 +92,7 @@ class BaseDashApplication:
                 if is_uuid(ui_json["objects"]["value"]):
                     object_value = str(ui_json["objects"]["value"])
 
+            # Get new options for object dropdown
             object_options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
                 for obj in self.workspace.objects
@@ -97,15 +101,13 @@ class BaseDashApplication:
 
     def get_data_options(self, trigger, ui_json, object_uid: str):
         """
-        Update data dropdown options after object change.
+        Get data dropdown options from a given object.
 
+        :param trigger: Callback trigger.
+        :param ui_json: Uploaded ui.json to read object from.
         :param object_uid: Selected object in object dropdown.
 
-        :return options: Data dropdown options for x-axis of scatter plot.
-        :return options: Data dropdown options for y-axis of scatter plot.
-        :return options: Data dropdown options for z-axis of scatter plot.
-        :return options: Data dropdown options for color axis of scatter plot.
-        :return options: Data dropdown options for size axis of scatter plot.
+        :return options: Data dropdown options.
         """
         obj = None
 
@@ -171,24 +173,6 @@ class BaseDashApplication:
 
         return ui_json
 
-    @staticmethod
-    def get_outputs(param_list: list, update_dict: dict) -> tuple:
-        """
-        Get the list of updated parameters to return to the dash callback and update the dash components.
-
-        :param param_list: Parameters that need to be returned to the callback.
-        :param update_dict: Dictionary of changed parameters and their new values.
-
-        :return outputs: Outputs to return to dash callback.
-        """
-        outputs = []
-        for param in param_list:
-            if param in update_dict:
-                outputs.append(update_dict[param])
-            else:
-                outputs.append(no_update)
-        return tuple(outputs)
-
     def get_params_dict(self, update_dict: dict):
         """
         Get dict of current params.
@@ -205,6 +189,7 @@ class BaseDashApplication:
         for key in self.params.to_dict():
             if key in update_dict:
                 if bool in validations[key]["types"] and type(update_dict[key]) == list:
+                    # Convert from dash component checklist to bool
                     if not update_dict[key]:
                         output_dict[key] = False
                     else:
@@ -231,6 +216,7 @@ class BaseDashApplication:
 
         :param ui_json: Uploaded ui_json.
         :param output_ids: List of parameters to update. Used by tests.
+        :param trigger: Callback trigger.
 
         :return outputs: List of outputs corresponding to the callback expected outputs.
         """
@@ -268,6 +254,7 @@ class BaseDashApplication:
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json":
+            # If the monitoring directory is empty, use path from workspace.
             if "monitoring_directory_value" in update_dict and (
                 update_dict["monitoring_directory_value"] == ""
                 or update_dict["monitoring_directory_value"] is None
@@ -340,6 +327,7 @@ class BaseDashApplication:
 
     @workspace.setter
     def workspace(self, workspace):
+        # Close old workspace and open new workspace in "r" mode.
         if self._workspace is not None:
             self._workspace.close()
         if workspace is not None:

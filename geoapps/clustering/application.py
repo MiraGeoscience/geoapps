@@ -31,7 +31,6 @@ from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.layout import cluster_layout
 from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
-from geoapps.scatter_plot import ScatterPlotParams
 from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.shared_utils.utils import colors
@@ -50,6 +49,7 @@ class Clustering(ScatterPlots):
 
         super().__init__(**self.params.to_dict())
 
+        # Params and driver used for updating scatter plot in make_scatter_plot function.
         self.scatter_params = self._param_class(**self.params.to_dict())
         self.scatter_driver = ScatterPlotDriver(self.scatter_params)
 
@@ -279,45 +279,45 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="live_link", component_property="value"),
-            Input(component_id="n_clusters", component_property="value"),
-            Input(component_id="objects", component_property="value"),
-            Input(component_id="data_subset", component_property="value"),
-            Input(component_id="color_pickers", component_property="data"),
-            Input(component_id="downsampling", component_property="value"),
-            Input(component_id="full_scales", component_property="data"),
-            Input(component_id="full_lower_bounds", component_property="data"),
-            Input(component_id="full_upper_bounds", component_property="data"),
-            Input(component_id="x", component_property="value"),
-            Input(component_id="x_log", component_property="value"),
-            Input(component_id="x_thresh", component_property="value"),
-            Input(component_id="x_min", component_property="value"),
-            Input(component_id="x_max", component_property="value"),
-            Input(component_id="y", component_property="value"),
-            Input(component_id="y_log", component_property="value"),
-            Input(component_id="y_thresh", component_property="value"),
-            Input(component_id="y_min", component_property="value"),
-            Input(component_id="y_max", component_property="value"),
-            Input(component_id="z", component_property="value"),
-            Input(component_id="z_log", component_property="value"),
-            Input(component_id="z_thresh", component_property="value"),
-            Input(component_id="z_min", component_property="value"),
-            Input(component_id="z_max", component_property="value"),
-            Input(component_id="color", component_property="value"),
-            Input(component_id="color_log", component_property="value"),
-            Input(component_id="color_thresh", component_property="value"),
-            Input(component_id="color_min", component_property="value"),
-            Input(component_id="color_max", component_property="value"),
-            Input(component_id="color_maps", component_property="value"),
-            Input(component_id="size", component_property="value"),
-            Input(component_id="size_log", component_property="value"),
-            Input(component_id="size_thresh", component_property="value"),
-            Input(component_id="size_min", component_property="value"),
-            Input(component_id="size_max", component_property="value"),
-            Input(component_id="size_markers", component_property="value"),
-            Input(component_id="channel", component_property="value"),
-            Input(component_id="ga_group_name", component_property="value"),
-            Input(component_id="monitoring_directory", component_property="value"),
+            State(component_id="live_link", component_property="value"),
+            State(component_id="n_clusters", component_property="value"),
+            State(component_id="objects", component_property="value"),
+            State(component_id="data_subset", component_property="value"),
+            State(component_id="color_pickers", component_property="data"),
+            State(component_id="downsampling", component_property="value"),
+            State(component_id="full_scales", component_property="data"),
+            State(component_id="full_lower_bounds", component_property="data"),
+            State(component_id="full_upper_bounds", component_property="data"),
+            State(component_id="x", component_property="value"),
+            State(component_id="x_log", component_property="value"),
+            State(component_id="x_thresh", component_property="value"),
+            State(component_id="x_min", component_property="value"),
+            State(component_id="x_max", component_property="value"),
+            State(component_id="y", component_property="value"),
+            State(component_id="y_log", component_property="value"),
+            State(component_id="y_thresh", component_property="value"),
+            State(component_id="y_min", component_property="value"),
+            State(component_id="y_max", component_property="value"),
+            State(component_id="z", component_property="value"),
+            State(component_id="z_log", component_property="value"),
+            State(component_id="z_thresh", component_property="value"),
+            State(component_id="z_min", component_property="value"),
+            State(component_id="z_max", component_property="value"),
+            State(component_id="color", component_property="value"),
+            State(component_id="color_log", component_property="value"),
+            State(component_id="color_thresh", component_property="value"),
+            State(component_id="color_min", component_property="value"),
+            State(component_id="color_max", component_property="value"),
+            State(component_id="color_maps", component_property="value"),
+            State(component_id="size", component_property="value"),
+            State(component_id="size_log", component_property="value"),
+            State(component_id="size_thresh", component_property="value"),
+            State(component_id="size_min", component_property="value"),
+            State(component_id="size_max", component_property="value"),
+            State(component_id="size_markers", component_property="value"),
+            State(component_id="channel", component_property="value"),
+            State(component_id="ga_group_name", component_property="value"),
+            State(component_id="monitoring_directory", component_property="value"),
             prevent_initial_call=True,
         )(self.trigger_click)
 
@@ -346,7 +346,15 @@ class Clustering(ScatterPlots):
             return {"display": "block"}
 
     @staticmethod
-    def get_name(channel, channel_options):
+    def get_name(channel: str, channel_options: list):
+        """
+        Get channel name from uid and full channel options.
+
+        :param channel: Channel uid.
+        :param channel_options: Full options for channel. List of {"label": channel_name, "value": channel_uid}.
+
+        :return channel_name: Channel name.
+        """
         channel_name = None
         if channel_options:
             for item in channel_options:
@@ -355,45 +363,88 @@ class Clustering(ScatterPlots):
         return channel_name
 
     @staticmethod
-    def update_select_cluster_options(n_clusters, select_cluster):
+    def update_select_cluster_options(n_clusters: int, select_cluster: int):
+        """
+        Update select cluster dropdown options to have a max of n_clusters. Dropdown used for picking colors for
+        clusters.
+
+        :param n_clusters: Number of clusters.
+        :param select_cluster: Current selected cluster in dropdown.
+
+        :return options: List of options from 0 to n_clusters.
+        :return select_cluster: Current selected cluster in dropdown.
+        """
         options = np.arange(0, n_clusters, 1)
         if select_cluster is None and len(options) > 0:
             select_cluster = options[0]
         return options, select_cluster
 
     @staticmethod
-    def update_color_pickers(ui_json, color_pickers, color_picker, select_cluster):
+    def update_color_pickers(
+        ui_json: dict, color_pickers: list, color_picker: str, select_cluster: int
+    ):
+        """
+        Update list of colors corresponding to clusters.
+
+        :param ui_json: Uploaded ui.json.
+        :param color_pickers: List of colors corresponding to clusters.
+        :param color_picker: Color corresponding to select_cluster.
+        :param select_cluster: Current selected cluster.
+
+        :return color_pickers: List of colors corresponding to clusters.
+        """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json":
+            # Read in list of colors from ui.json.
             if type(ui_json["color_pickers"]) == list:
                 full_list = ui_json["color_pickers"]
             else:
+                # Convert string to list.
                 full_list = ast.literal_eval(ui_json["color_pickers"])
             if (full_list is None) | (not full_list):
+                # Default list of colors.
                 color_pickers = colors
             else:
                 color_pickers = full_list
         elif trigger == "color_picker":
+            # Update list of colors from user clicking on color picker.
             color_pickers[select_cluster] = color_picker["hex"]
         return color_pickers
 
     @staticmethod
-    def update_color_picker(color_pickers, select_cluster):
+    def update_color_picker(color_pickers: list, select_cluster: int):
+        """
+        Update the displayed color on color picker when select cluster is switched.
+
+        :param color_pickers: Full list of colors corresponding to clusters.
+        :param select_cluster: Current selected cluster from dropdown.
+
+        :return color_picker: Displayed value on color picker.
+        """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "select_cluster" and color_pickers:
             return dict(hex=color_pickers[select_cluster])
         else:
             return no_update
 
-    def update_data_subset(self, ui_json, object_name):
+    def update_data_subset(self, ui_json: dict, object_uid: str):
+        """
+        Update data subset options and values from selected object.
+
+        :param ui_json: Uploaded ui.json.
+        :param object_uid: Selected object from dropdown.
+
+        :return options: Options for data subset dropdown.
+        :return value: Value for data subset dropdown.
+        """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json" in triggers:
             value = ast.literal_eval(ui_json["data_subset"]["value"])
-            options = self.get_data_options("ui_json", ui_json, object_name)
+            options = self.get_data_options("ui_json", ui_json, object_uid)
         else:
             value = []
-            options = self.get_data_options("objects", ui_json, object_name)
+            options = self.get_data_options("objects", ui_json, object_uid)
 
         return options, value
 
@@ -401,6 +452,28 @@ class Clustering(ScatterPlots):
     def update_data_options(
         ui_json: dict, data_subset: list, full_options: list, kmeans: list
     ):
+        """
+        Update data options and values for scatter plot and histogram/boxplot.
+
+        :param ui_json: Uploaded ui.json.
+        :param data_subset: Subset of data used for clustering and plotting.
+        :param full_options: Full options for data subset.
+        :param kmeans: K-means values from clustering.
+
+        :return axis_options: Dropdown options for x-axis of scatter plot.
+        :return axis_options: Dropdown options for y-axis of scatter plot.
+        :return axis_options: Dropdown options for z-axis of scatter plot.
+        :return axis_options: Dropdown options for color-axis of scatter plot.
+        :return axis_options: Dropdown options for size-axis of scatter plot.
+        :return channel_options: Dropdown options for histogram/boxplot.
+        :return color_maps_options: Dropdown options for color maps in scatter plot.
+        :return x_axis_values: Value for x-axis dropdown.
+        :return y_axis_values: Value for y-axis dropdown.
+        :return z_axis_values: Value for z-axis dropdown.
+        :return color_axis_values: Value for color-axis dropdown.
+        :return size_axis_values: Value for size-axis dropdown.
+        :return channel_axis_values: Value for histogram/boxplot dropdown.
+        """
         data_subset_options = []
         for item in full_options:
             if item["value"] in data_subset:
@@ -409,6 +482,7 @@ class Clustering(ScatterPlots):
         axis_options = data_subset_options.copy()
         color_maps_options = px.colors.named_colorscales()
 
+        # Add kmeans to the dropdown options for scatterplot.
         if kmeans is not None:
             axis_options.append({"label": "kmeans", "value": "kmeans"})
             color_maps_options.insert(0, "kmeans")
@@ -442,10 +516,21 @@ class Clustering(ScatterPlots):
         ) + axis_values
 
     @staticmethod
-    def update_data_values(ui_json):
+    def update_data_values(ui_json: dict):
         """
         Read in axes values from ui.json.
+
+        :param ui_json: Uploaded ui.json.
+
+        :return x_axis_values: Value for x-axis dropdown.
+        :return y_axis_values: Value for y-axis dropdown.
+        :return z_axis_values: Value for z-axis dropdown.
+        :return color_axis_values: Value for color-axis dropdown.
+        :return size_axis_values: Value for size-axis dropdown.
+        :return channel_axis_values: Value for histogram/boxplot dropdown.
         """
+        # Read in plot_kmeans list from ui.json. Used to know to plot kmeans, since kmeans can't be saved as data in
+        # the ui.json.
         plot_kmeans = ast.literal_eval(ui_json["plot_kmeans"])
         if not plot_kmeans:
             plot_kmeans = [False, False, False, False, False]
@@ -474,16 +559,28 @@ class Clustering(ScatterPlots):
         full_upper_bounds: dict,
     ) -> tuple:
         """
-        Get stored scale and bounds for a given channel. If there's no stored value, set a default.
-        :param channel: Input data name for histogram, boxplot.
+        Update selected scale, bounds with stored value. Or update stored values with new scale, bounds.
+
+        :param ui_json: Uploaded ui.json.
+        :param channel: Input data uid for histogram, boxplot.
+        :param scale: Scale value for selected channel.
+        :param lower_bounds: Lower bounds for selected channel.
+        :param upper_bounds: Upper bounds for selected channel.
         :param full_scales: Dictionary of data names and the corresponding scales.
         :param full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
         :param full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
-        :return update_dict: Dictionary of new scale and bounds.
+
+        :return scale: Scale value for selected channel.
+        :return lower_bounds: Lower bounds for selected channel.
+        :return upper_bounds: Upper bounds for selected channel.
+        :return full_scales: Dictionary of data names and the corresponding scales.
+        :return full_lower_bounds: Dictionary of data names and the corresponding lower bounds.
+        :return full_upper_bounds: Dictionary of data names and the corresponding upper bounds.
         """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
         if trigger == "ui_json":
-            # Reconstruct scaling and bounds dicts from uijson input lists.
+            # Reconstruct scaling and bounds dicts from ui.json input lists.
             data_subset = ast.literal_eval(ui_json["data_subset"]["value"])
             if len(data_subset) == 0:
                 full_scales, full_lower_bounds, full_upper_bounds = {}, {}, {}
@@ -542,7 +639,17 @@ class Clustering(ScatterPlots):
             full_upper_bounds,
         )
 
-    def update_dataframe(self, downsampling, data_subset):
+    def update_dataframe(self, downsampling: int, data_subset: list):
+        """
+        Update dataframe.
+
+        :param downsampling: Percent downsampling.
+        :param data_subset: Selected data to use for creating dataframe and clustering.
+
+        :return dataframe: Dataframe with data_subset data values.
+        :return mapping: Mapping between generated kmeans and data to plot.
+        :return indices: Active indices for plotting data.
+        """
         if data_subset:
             dataframe, mapping, indices = ClusteringDriver.update_dataframe(
                 downsampling, data_subset, self.workspace, downsample_min=5000
@@ -552,8 +659,27 @@ class Clustering(ScatterPlots):
             return None, None, None
 
     @staticmethod
-    def run_clustering(dataframe_dict, n_clusters, full_scales, clusters, mapping):
+    def run_clustering(
+        dataframe_dict: list[dict],
+        n_clusters: int,
+        full_scales: dict,
+        clusters: dict,
+        mapping: list,
+    ):
+        """
+        Run clustering.
+
+        :param dataframe_dict: Dataframe of data subset values.
+        :param n_clusters: Number of clusters.
+        :param full_scales: dictionary of data subset names and corresponding scaling factors.
+        :param clusters: Current cluster values.
+        :param mapping: Mapping between generated kmeans and data to plot.
+
+        :return kmeans: K-means for n_clusters.
+        :return clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
+        """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        # Boolean to update clusters for inertia plot or not.
         if trigger != "n_clusters" or clusters == {}:
             update_all_clusters = True
         else:
@@ -564,7 +690,7 @@ class Clustering(ScatterPlots):
             dataframe_dict,
             full_scales,
             clusters,
-            mapping,
+            np.array(mapping),
             update_all_clusters,
         )
         return kmeans, clusters
@@ -573,8 +699,10 @@ class Clustering(ScatterPlots):
     def update_colormap(n_clusters: int, color_pickers: list) -> list:
         """
         Change the colormap for clusters
+
         :param n_clusters: Number of clusters.
         :param color_pickers: List of colors with index corresponding to cluster number.
+
         :return color_map: Color map for plotting kmeans on scatter plot.
         """
         if color_pickers:
@@ -637,11 +765,13 @@ class Clustering(ScatterPlots):
     ) -> go.Figure:
         """
         Update plots.
+
         :param n_clusters: Number of clusters.
         :param dataframe_dict: Dataframe with all channels and their data values.
-        :param channel: Name of data displayed on histogram, boxplot.
-        :param lower_bounds: Lower bounds for channel data.
-        :param upper_bounds: Upper bounds for channel data.
+        :param kmeans: K-means for n_clusters.
+        :param indices: Active indices for data, determined by downsampling.
+        :param color_pickers: List of colors with index corresponding to cluster number.
+        :param channel_options: Full list of data options for channel.
         :param x: Name of data for x-axis of scatter plot.
         :param x_log: Checkbox for plotting log for x-axis of scatter plot.
         :param x_thresh: Threshold for x-axis of scatter plot.
@@ -663,22 +793,14 @@ class Clustering(ScatterPlots):
         :param color_min: Min for color-axis of scatter plot.
         :param color_max: Max for color-axis of scatter plot.
         :param color_maps: Color map for scatter plot.
-        :param color_pickers: List of colors with index corresponding to cluster number.
         :param size: Name of data for size-axis of scatter plot.
         :param size_log: Checkbox for plotting log for size-axis of scatter plot.
         :param size_thresh: Threshold for size-axis of scatter plot.
         :param size_min: Min for size-axis of scatter plot.
         :param size_max: Max for size-axis of scatter plot.
         :param size_markers: Size of markers for scatter plot.
-        :param kmeans: K-means for n_clusters.
-        :param indices: Active indices for data, determined by downsampling.
-        :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
+
         :return crossplot: Scatter plot with axes x, y, z, color, size.
-        :return stats_table: Table of statistics: count, mean, std, min, max, etc. for data subset.
-        :return matrix: Confusion matrix for data subset.
-        :return histogram: Histogram of channel data.
-        :return boxplot: Boxplots for clusters for channel data.
-        :return inertia: Plot of kmeans inertia against number of clusters.
         """
         # Read in stored dataframe.
         dataframe = pd.DataFrame(dataframe_dict)
@@ -735,9 +857,11 @@ class Clustering(ScatterPlots):
     def make_inertia_plot(n_clusters: int, clusters: dict) -> go.Figure:
         """
         Generate an inertia plot.
+
         :param n_clusters: Number of clusters.
         :param clusters: K-means values for (2, 4, 8, 16, 32, n_clusters)
-        :return inertia_plot: Inertia figure.
+
+        :return inertia: Plot of kmeans inertia against number of clusters.
         """
         inertia_plot = go.Figure()
 
@@ -774,11 +898,14 @@ class Clustering(ScatterPlots):
     ) -> go.Figure:
         """
         Generate an histogram plot for the selected data channel.
-        :param dataframe: Data names and values for the selected data subset.
+
+        :param dataframe_dict: Data names and values for the selected data subset.
         :param channel: Name of data plotted on histogram, boxplot.
+        :param channel_options: Full list of data options for channel.
         :param lower_bounds: Lower bounds for channel data.
         :param upper_bounds: Upper bounds for channel data.
-        :return histogram: Histogram figure.
+
+        :return histogram: Histogram of channel data.
         """
         dataframe = pd.DataFrame(dataframe_dict)
 
@@ -809,12 +936,15 @@ class Clustering(ScatterPlots):
     ) -> go.Figure:
         """
         Generate a box plot for each cluster.
+
         :param n_clusters: Number of clusters.
         :param channel: Name of data to be plotted on histogram, boxplot.
+        :param channel_options: Full list of data options for channel.
         :param color_pickers: List of colors with index corresponding to cluster number.
         :param kmeans: K-means values for n_clusters.
         :param indices: Active indices for data, determined by downsampling.
-        :return boxplot: Boxplot figure.
+
+        :return boxplot: Boxplots for clusters for channel data.
         """
         if (
             (kmeans is not None)
@@ -865,7 +995,9 @@ class Clustering(ScatterPlots):
     def make_stats_table(dataframe_dict: dict) -> list[dict]:
         """
         Generate a table of statistics using pandas
-        :param dataframe: Data names and values for selected data subset.
+
+        :param dataframe_dict: Data names and values for selected data subset.
+
         :return stats_table: Table of stats: count, mean, std, min, max, etc.
         """
         dataframe = pd.DataFrame(dataframe_dict)
@@ -880,8 +1012,10 @@ class Clustering(ScatterPlots):
     def make_heatmap(dataframe_dict: dict):
         """
         Generate a confusion matrix.
-        :param dataframe: Data names and values for selected data subset.
-        :return matrix: Confusion matrix figure.
+
+        :param dataframe_dict: Data names and values for selected data subset.
+
+        :return matrix: Confusion matrix for data subset.
         """
         dataframe = pd.DataFrame(dataframe_dict)
         corrs = dataframe.corr()
@@ -1001,7 +1135,50 @@ class Clustering(ScatterPlots):
         trigger: str = None,
     ):
         """
-        Write cluster groups to the target geoh5 object.
+        Write cluster groups to the target geoh5 object. Inputs are all params that are written to ui.json.
+
+        :param export: Trigger for export button.
+        :param live_link: Checkbox for live link.
+        :param n_clusters: Number of clusters.
+        :param objects: Selected object uid.
+        :param data_subset: Subset of data used for clustering and plotting.
+        :param color_pickers: List of colors corresponding to clusters.
+        :param downsampling: Percent downsampling.
+        :param full_scales: Dictionary of data subset names and corresponding scaling factors.
+        :param full_lower_bounds: Dictionary of data subset names and corresponding lower bounds.
+        :param full_upper_bounds: Dictionary of data subset names and corresponding upper bounds.
+        :param x: Selected x-axis data uid.
+        :param x_log: Checkbox for plotting log on x-axis.
+        :param x_thresh: X-axis threshold.
+        :param x_min: X-axis minimum.
+        :param x_max: X-axis maximum.
+        :param y: Selected y-axis data uid.
+        :param y_log: Checkbox for plotting log on y-axis.
+        :param y_thresh: Y-axis threshold.
+        :param y_min: Y-axis minimum.
+        :param y_max: Y-axis maximum.
+        :param z: Selected z-axis data uid.
+        :param z_log: Checkbox for plotting log on z-axis.
+        :param z_thresh: Z-axis threshold.
+        :param z_min: Z-axis minimum.
+        :param z_max: Z-axis maximum.
+        :param color: Selected color-axis data uid.
+        :param color_log: Checkbox for plotting log on color-axis.
+        :param color_thresh: Color-axis threshold.
+        :param color_min: Color-axis minimum.
+        :param color_max: Color-axis maximum.
+        :param color_maps: Color-axis color map.
+        :param size: Selected size-axis data uid.
+        :param size_log: Checkbox for plotting log on size-axis.
+        :param size_thresh: Size-axis threshold.
+        :param size_min: Size-axis minimum.
+        :param size_max: Size-axis maximum.
+        :param size_markers: Max size for markers.
+        :param channel: Selected data for histogram/boxplot.
+        :param ga_group_name: GA group name.
+        :param monitoring_directory: Output path.
+        :param trigger: Callback trigger.
+
         :return live_link: Checkbox value for dash live_link component.
         """
         if trigger is None:
