@@ -93,8 +93,6 @@ class BaseDashApplication:
                 {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
                 for obj in self.workspace.objects
             ]
-        print("update obj")
-        print(object_value)
         return object_options, object_value, ui_json, None, None
 
     def get_data_options(self, trigger, ui_json, object_uid: str):
@@ -252,7 +250,7 @@ class BaseDashApplication:
                 if key + "_value" in output_ids:
                     if type(value) is dict:
                         if type(value["value"]) is bool:
-                            if value:
+                            if value["value"]:
                                 update_dict[key + "_value"] = [True]
                             else:
                                 update_dict[key + "_value"] = []
