@@ -268,18 +268,14 @@ class BaseDashApplication:
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json":
-            print(1)
             if "monitoring_directory_value" in update_dict and (
                 update_dict["monitoring_directory_value"] == ""
                 or update_dict["monitoring_directory_value"] is None
             ):
-                print(2)
                 if self.workspace is not None:
-                    print(3)
                     update_dict["monitoring_directory_value"] = os.path.abspath(
                         os.path.dirname(self.workspace.h5file)
                     )
-                    print(update_dict["monitoring_directory_value"])
         # Format updated params to return to the callback
         outputs = []
         for param in output_ids:
