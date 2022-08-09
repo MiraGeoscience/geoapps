@@ -365,7 +365,7 @@ class Clustering(ScatterPlots):
             if type(ui_json["color_pickers"]) == list:
                 full_list = ui_json["color_pickers"]
             else:
-                full_list = ast.literal_eval(ui_json["color_pickers"]["value"])
+                full_list = ast.literal_eval(ui_json["color_pickers"])
             if (full_list is None) | (not full_list):
                 color_pickers = colors
             else:
@@ -436,7 +436,7 @@ class Clustering(ScatterPlots):
         """
         Read in axes values from ui.json.
         """
-        plot_kmeans = ast.literal_eval(ui_json["plot_kmeans"]["value"])
+        plot_kmeans = ast.literal_eval(ui_json["plot_kmeans"])
         if not plot_kmeans:
             plot_kmeans = [False, False, False, False, False]
         output_axes = []
@@ -478,7 +478,7 @@ class Clustering(ScatterPlots):
                 full_dicts = []
                 for key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
                     out_dict = {}
-                    full_list = ast.literal_eval(ui_json[key]["value"])
+                    full_list = ast.literal_eval(ui_json[key])
                     for i in range(len(data_subset)):
                         if (full_list is None) | (not full_list):
                             if key == "full_scales":

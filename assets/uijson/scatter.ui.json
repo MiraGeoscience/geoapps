@@ -12,7 +12,6 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
-    "output_path": "./",
     "objects": {
         "group": "Data Selection",
         "label": "Object",
