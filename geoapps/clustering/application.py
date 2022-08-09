@@ -88,6 +88,7 @@ class Clustering(ScatterPlots):
         )(Clustering.update_select_cluster_options)
         self.app.callback(
             Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
             Output(component_id="ui_json", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
@@ -120,6 +121,12 @@ class Clustering(ScatterPlots):
             Output(component_id="size", component_property="options"),
             Output(component_id="channel", component_property="options"),
             Output(component_id="color_maps", component_property="options"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="size", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="data_subset", component_property="options"),
             Input(component_id="kmeans", component_property="data"),
@@ -158,16 +165,6 @@ class Clustering(ScatterPlots):
             Input(component_id="full_upper_bounds", component_property="data"),
         )(self.update_properties)
         self.app.callback(
-            Output(component_id="x", component_property="value"),
-            Output(component_id="y", component_property="value"),
-            Output(component_id="z", component_property="value"),
-            Output(component_id="color", component_property="value"),
-            Output(component_id="size", component_property="value"),
-            Output(component_id="plot_kmeans", component_property="data"),
-            Input(component_id="ui_json", component_property="data"),
-        )(self.update_data_values)
-        self.app.callback(
-            Output(component_id="objects", component_property="value"),
             Output(component_id="downsampling", component_property="value"),
             Output(component_id="x_log", component_property="value"),
             Output(component_id="x_thresh", component_property="value"),
@@ -283,7 +280,6 @@ class Clustering(ScatterPlots):
             Input(component_id="objects", component_property="value"),
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="color_pickers", component_property="data"),
-            Input(component_id="plot_kmeans", component_property="data"),
             Input(component_id="downsampling", component_property="value"),
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="full_lower_bounds", component_property="data"),
@@ -386,30 +382,38 @@ class Clustering(ScatterPlots):
             return no_update
 
     def update_data_subset(self, ui_json, object_name):
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if trigger == "ui_json":
-            object_name = ui_json["objects"]["value"]
+        if "ui_json" in triggers:
             value = ast.literal_eval(ui_json["data_subset"]["value"])
+            options = self.get_data_options("ui_json", ui_json, object_name)
         else:
             value = []
+            options = self.get_data_options("objects", ui_json, object_name)
 
-        options = self.get_data_options(trigger, ui_json, object_name)
         return options, value
 
     @staticmethod
-    def update_data_options(data_subset: list, full_options: list, kmeans: list):
+    def update_data_options(
+        ui_json: dict, data_subset: list, full_options: list, kmeans: list
+    ):
         data_subset_options = []
         for item in full_options:
             if item["value"] in data_subset:
                 data_subset_options.append(item)
         channel_options = data_subset_options
-        axis_options = data_subset_options
+        axis_options = data_subset_options.copy()
         color_maps_options = px.colors.named_colorscales()
 
         if kmeans is not None:
             axis_options.append({"label": "kmeans", "value": "kmeans"})
             color_maps_options.insert(0, "kmeans")
+
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+        if "ui_json" in triggers:
+            axis_values = Clustering.update_data_values(ui_json)
+        else:
+            axis_values = no_update, no_update, no_update, no_update, no_update
 
         # replace empty lists with empty dictionary
         if not axis_options:
@@ -424,9 +428,10 @@ class Clustering(ScatterPlots):
             axis_options,
             channel_options,
             color_maps_options,
-        )
+        ) + axis_values
 
-    def update_data_values(self, ui_json):
+    @staticmethod
+    def update_data_values(ui_json):
         """
         Read in axes values from ui.json.
         """
@@ -444,7 +449,7 @@ class Clustering(ScatterPlots):
             else:
                 output_axes.append(None)
 
-        return tuple(output_axes + [plot_kmeans])
+        return tuple(output_axes)
 
     def update_properties(
         self,
@@ -945,7 +950,6 @@ class Clustering(ScatterPlots):
         objects: str,
         data_subset: list,
         color_pickers: list,
-        plot_kmeans: list,
         downsampling: int,
         full_scales: dict,
         full_lower_bounds: dict,
@@ -1030,6 +1034,8 @@ class Clustering(ScatterPlots):
             ws, live_link = BaseApplication.get_output_workspace(
                 live_link, monitoring_directory, temp_geoh5
             )
+            if not live_link:
+                param_dict["monitoring_directory"] = ""
 
             with ws as workspace:
                 # Put entities in output workspace.
