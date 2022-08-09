@@ -13,7 +13,6 @@ from copy import deepcopy
 import plotly.express as px
 
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
-from geoapps.shared_utils.utils import colors
 
 defaults = {
     "title": "Clustering",
@@ -78,33 +77,14 @@ default_ui_json.update(
         "data_subset": {
             "label": "data subset",
             "value": "[]",
+            "main": True,
             "visible": False,
         },
-        "full_scales": {
-            "label": "full scales",
-            "value": "[]",
-            "visible": False,
-        },
-        "full_lower_bounds": {
-            "label": "full lower bounds",
-            "value": "[]",
-            "visible": False,
-        },
-        "full_upper_bounds": {
-            "label": "full upper bounds",
-            "value": "[]",
-            "visible": False,
-        },
-        "color_pickers": {
-            "label": "color pickers",
-            "value": "[]",
-            "visible": False,
-        },
-        "plot_kmeans": {
-            "label": "plot kmeans",
-            "value": "[]",
-            "visible": False,
-        },
+        "full_scales": "[]",
+        "full_lower_bounds": "[]",
+        "full_upper_bounds": "[]",
+        "color_pickers": "[]",
+        "plot_kmeans": "[]",
         "conda_environment": "geoapps",
         "run_command": "geoapps.clustering.application",
     }
