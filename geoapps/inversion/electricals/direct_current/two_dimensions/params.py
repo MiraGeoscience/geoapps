@@ -21,7 +21,7 @@ from .constants import (
 )
 
 
-class DirectCurrentParams(InversionBaseParams):
+class DirectCurrent2DParams(InversionBaseParams):
     """
     Parameter class for electrical->conductivity inversion.
     """

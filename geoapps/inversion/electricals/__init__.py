@@ -7,5 +7,4 @@
 
 from __future__ import annotations
 
-from .direct_current.params import DirectCurrentParams
 from .induced_polarization.params import InducedPolarizationParams
