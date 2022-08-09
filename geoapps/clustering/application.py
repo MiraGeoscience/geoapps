@@ -132,7 +132,6 @@ class Clustering(ScatterPlots):
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="data_subset", component_property="options"),
             Input(component_id="kmeans", component_property="data"),
-            prevent_initial_call=True,
         )(Clustering.update_data_options)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
@@ -446,7 +445,7 @@ class Clustering(ScatterPlots):
             axis_val = ui_json[axes_names[i]]["value"]
             if is_uuid(axis_val):
                 output_axes.append(str(axis_val))
-            elif axis_val == "" and plot_kmeans[i]:
+            elif (axis_val == "" or axis_val is None) and plot_kmeans[i]:
                 output_axes.append("kmeans")
             else:
                 output_axes.append(None)
@@ -1017,8 +1016,10 @@ class Clustering(ScatterPlots):
             param_dict["plot_kmeans"] = str(plot_kmeans)
 
             # Get output path
-            if monitoring_directory is not None and os.path.exists(
-                os.path.abspath(monitoring_directory)
+            if (
+                monitoring_directory is not None
+                and monitoring_directory != ""
+                and os.path.exists(os.path.abspath(monitoring_directory))
             ):
                 monitoring_directory = os.path.abspath(monitoring_directory)
             else:
