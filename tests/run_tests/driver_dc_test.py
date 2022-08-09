@@ -33,7 +33,7 @@ def test_dc_run(
     refinement=(4, 6),
 ):
     from geoapps.inversion.driver import InversionDriver
-    from geoapps.inversion.electricals import DirectCurrentParams
+    from geoapps.inversion.electricals import DirectCurrent3DParams
 
     np.random.seed(0)
     # Run the forward
@@ -47,7 +47,7 @@ def test_dc_run(
         inversion_type="dcip",
         flatten=False,
     )
-    params = DirectCurrentParams(
+    params = DirectCurrent3DParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
@@ -65,7 +65,7 @@ def test_dc_run(
     potential = geoh5.get_entity("Iteration_0_dc")[0]
     # Run the inverse
     np.random.seed(0)
-    params = DirectCurrentParams(
+    params = DirectCurrent3DParams(
         geoh5=geoh5,
         mesh=mesh.uid,
         topography_object=topography.uid,

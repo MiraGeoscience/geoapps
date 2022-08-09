@@ -449,12 +449,19 @@ def start_inversion(filepath=None, **kwargs):
         from .natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
-        from .electricals import DirectCurrentParams as ParamClass
-        from .electricals.direct_current.constants import validations
+        from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+            validations,
+        )
+
+        from .electricals.direct_current.three_dimensions.params import (
+            DirectCurrent3DParams as ParamClass,
+        )
 
     elif inversion_type == "induced polarization":
-        from .electricals import InducedPolarizationParams as ParamClass
         from .electricals.induced_polarization.constants import validations
+        from .electricals.induced_polarization.params import (
+            InducedPolarizationParams as ParamClass,
+        )
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")

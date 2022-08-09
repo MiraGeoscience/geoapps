@@ -17,7 +17,12 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.params import (
+    InducedPolarizationParams,
+)
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
@@ -55,12 +60,16 @@ def write_default_uijson(path, use_initializers=False):
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mvi_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.electricals.direct_current.constants import app_initializer
+    from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+        app_initializer,
+    )
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_init = app_initializer if use_initializers else {}
 
-    from geoapps.inversion.electricals.direct_current.constants import app_initializer
+    from geoapps.inversion.electricals.induced_polarization.constants import (
+        app_initializer,
+    )
 
     app_initializer["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_init = app_initializer if use_initializers else {}
@@ -137,10 +146,10 @@ def write_default_uijson(path, use_initializers=False):
         "magnetic_vector_forward.ui.json": MagneticVectorParams(
             forward_only=True, validate=False
         ),
-        "direct_current_inversion.ui.json": DirectCurrentParams(
+        "direct_current_inversion.ui.json": DirectCurrent3DParams(
             validate=False, **dc_init
         ),
-        "direct_current_forward.ui.json": DirectCurrentParams(
+        "direct_current_forward.ui.json": DirectCurrent3DParams(
             forward_only=True, validate=False
         ),
         "induced_polarization_inversion.ui.json": InducedPolarizationParams(
