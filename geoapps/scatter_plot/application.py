@@ -222,7 +222,7 @@ class ScatterPlots(BaseDashApplication):
 
         return options, options, options, options, options
 
-    def get_channel_bounds(self, channel: str, data: list = None) -> (float, float):
+    def get_channel_bounds(self, channel: str, kmeans: list = None) -> (float, float):
         """
         Set the min and max values for the given axis channel.
 
@@ -233,11 +233,12 @@ class ScatterPlots(BaseDashApplication):
         :return cmin: Minimum value for input channel.
         :return cmax: Maximum value for input channel.
         """
-        cmin, cmax = None, None
+        data, cmin, cmax = None, None, None
 
-        if (
-            data is None
-            and channel is not None
+        if channel == "kmeans" and kmeans is not None:
+            data = kmeans
+        elif (
+            channel is not None
             and self.workspace.get_entity(uuid.UUID(channel))[0] is not None
         ):
             data = self.workspace.get_entity(uuid.UUID(channel))[0].values
@@ -256,7 +257,7 @@ class ScatterPlots(BaseDashApplication):
         z: str,
         color: str,
         size: str,
-        data: list = None,
+        kmeans: list = None,
     ):
         """
         Update min and max for all channels, either from uploaded ui.json or from change of data.
@@ -319,15 +320,15 @@ class ScatterPlots(BaseDashApplication):
             )
 
         elif trigger == "x":
-            x_min, x_max = self.get_channel_bounds(x, data)
+            x_min, x_max = self.get_channel_bounds(x, kmeans)
         elif trigger == "y":
-            y_min, y_max = self.get_channel_bounds(y, data)
+            y_min, y_max = self.get_channel_bounds(y, kmeans)
         elif trigger == "z":
-            z_min, z_max = self.get_channel_bounds(z, data)
+            z_min, z_max = self.get_channel_bounds(z, kmeans)
         elif trigger == "color":
-            color_min, color_max = self.get_channel_bounds(color, data)
+            color_min, color_max = self.get_channel_bounds(color, kmeans)
         elif trigger == "size":
-            size_min, size_max = self.get_channel_bounds(size, data)
+            size_min, size_max = self.get_channel_bounds(size, kmeans)
 
         return (
             x_min,

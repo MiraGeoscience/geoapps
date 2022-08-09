@@ -42,7 +42,7 @@ class BaseDashApplication:
 
     def update_object_options(
         self, filename: str, contents: str, trigger: str = None
-    ) -> (list, dict, None, None):
+    ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
         and sets the new object options.
@@ -57,7 +57,7 @@ class BaseDashApplication:
         :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
         :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
-        ui_json, object_options = no_update, no_update
+        ui_json, object_options, object_value = no_update, no_update, None
 
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
@@ -70,6 +70,8 @@ class BaseDashApplication:
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.driver.params = self.params
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
+                if is_uuid(ui_json["objects"]["value"]):
+                    object_value = str(ui_json["objects"]["value"])
             elif filename is not None and filename.endswith(".geoh5"):
                 content_type, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
@@ -84,13 +86,16 @@ class BaseDashApplication:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
+                if is_uuid(ui_json["objects"]["value"]):
+                    object_value = str(ui_json["objects"]["value"])
 
             object_options = [
                 {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
                 for obj in self.workspace.objects
             ]
-
-        return object_options, ui_json, None, None
+        print("update obj")
+        print(object_value)
+        return object_options, object_value, ui_json, None, None
 
     def get_data_options(self, trigger, ui_json, object_uid: str):
         """
@@ -274,7 +279,6 @@ class BaseDashApplication:
                     update_dict["monitoring_directory"] = os.path.abspath(
                         os.path.dirname(self.workspace.h5file)
                     )
-
         # Format updated params to return to the callback
         outputs = []
         for param in output_ids:

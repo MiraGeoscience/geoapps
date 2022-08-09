@@ -279,7 +279,6 @@ cluster_layout = html.Div(
         dcc.Store(id="full_lower_bounds", data={}),
         dcc.Store(id="full_upper_bounds", data={}),
         dcc.Store(id="color_pickers"),
-        dcc.Store(id="plot_kmeans"),
         dcc.Store(id="kmeans"),
         dcc.Store(id="clusters", data={}),
         dcc.Store(id="indices"),
