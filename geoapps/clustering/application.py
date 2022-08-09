@@ -128,6 +128,7 @@ class Clustering(ScatterPlots):
             Output(component_id="z", component_property="value"),
             Output(component_id="color", component_property="value"),
             Output(component_id="size", component_property="value"),
+            Output(component_id="channel", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="data_subset", component_property="options"),
@@ -161,6 +162,9 @@ class Clustering(ScatterPlots):
             Output(component_id="full_upper_bounds", component_property="data"),
             Input(component_id="ui_json", component_property="data"),
             Input(component_id="channel", component_property="value"),
+            Input(component_id="scale", component_property="value"),
+            Input(component_id="lower_bounds", component_property="value"),
+            Input(component_id="upper_bounds", component_property="value"),
             Input(component_id="full_scales", component_property="data"),
             Input(component_id="full_lower_bounds", component_property="data"),
             Input(component_id="full_upper_bounds", component_property="data"),
@@ -179,7 +183,6 @@ class Clustering(ScatterPlots):
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
-            Output(component_id="channel", component_property="value"),
             Output(component_id="n_clusters", component_property="value"),
             Output(component_id="ga_group_name", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
@@ -440,7 +443,7 @@ class Clustering(ScatterPlots):
         if not plot_kmeans:
             plot_kmeans = [False, False, False, False, False]
         output_axes = []
-        axes_names = ["x", "y", "z", "color", "size"]
+        axes_names = ["x", "y", "z", "color", "size", "channel"]
         for i in range(len(axes_names)):
             axis_val = ui_json[axes_names[i]]["value"]
             if is_uuid(axis_val):
@@ -456,6 +459,9 @@ class Clustering(ScatterPlots):
         self,
         ui_json: dict,
         channel: str,
+        scale: int,
+        lower_bounds: float,
+        upper_bounds: float,
         full_scales: dict,
         full_lower_bounds: dict,
         full_upper_bounds: dict,
@@ -491,25 +497,32 @@ class Clustering(ScatterPlots):
                 full_scales, full_lower_bounds, full_upper_bounds = full_dicts
 
         if channel is not None:
-            if channel not in full_scales:
-                full_scales[channel] = 1
-            scale = full_scales[channel]
+            if trigger == "ui_json" or trigger == "channel":
+                # Update scale, bounds from full_scales, full_bounds
+                if channel not in full_scales:
+                    full_scales[channel] = 1
+                scale = full_scales[channel]
 
-            if (channel not in full_lower_bounds) or (
-                full_lower_bounds[channel] is None
-            ):
-                full_lower_bounds[channel] = np.nanmin(
-                    self.workspace.get_entity(uuid.UUID(channel))[0].values
-                )
-            lower_bounds = float(full_lower_bounds[channel])
+                if (channel not in full_lower_bounds) or (
+                    full_lower_bounds[channel] is None
+                ):
+                    full_lower_bounds[channel] = np.nanmin(
+                        self.workspace.get_entity(uuid.UUID(channel))[0].values
+                    )
+                lower_bounds = float(full_lower_bounds[channel])
 
-            if (channel not in full_upper_bounds) or (
-                full_upper_bounds[channel] is None
-            ):
-                full_upper_bounds[channel] = np.nanmax(
-                    self.workspace.get_entity(uuid.UUID(channel))[0].values
-                )
-            upper_bounds = float(full_upper_bounds[channel])
+                if (channel not in full_upper_bounds) or (
+                    full_upper_bounds[channel] is None
+                ):
+                    full_upper_bounds[channel] = np.nanmax(
+                        self.workspace.get_entity(uuid.UUID(channel))[0].values
+                    )
+                upper_bounds = float(full_upper_bounds[channel])
+            else:
+                # Update full_scales, full_bounds from scale, bounds
+                full_scales[channel] = scale
+                full_lower_bounds[channel] = lower_bounds
+                full_upper_bounds[channel] = upper_bounds
         else:
             scale, lower_bounds, upper_bounds = None, None, None
 
