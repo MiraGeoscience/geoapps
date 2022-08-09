@@ -132,7 +132,6 @@ class Clustering(ScatterPlots):
             Input(component_id="ui_json", component_property="data"),
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="data_subset", component_property="options"),
-            Input(component_id="kmeans", component_property="data"),
         )(Clustering.update_data_options)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
@@ -346,7 +345,7 @@ class Clustering(ScatterPlots):
             return {"display": "block"}
 
     @staticmethod
-    def get_name(channel: str, channel_options: list):
+    def get_name(channel: str, channel_options: list) -> str:
         """
         Get channel name from uid and full channel options.
 
@@ -363,7 +362,9 @@ class Clustering(ScatterPlots):
         return channel_name
 
     @staticmethod
-    def update_select_cluster_options(n_clusters: int, select_cluster: int):
+    def update_select_cluster_options(
+        n_clusters: int, select_cluster: int
+    ) -> (list, int):
         """
         Update select cluster dropdown options to have a max of n_clusters. Dropdown used for picking colors for
         clusters.
@@ -381,8 +382,8 @@ class Clustering(ScatterPlots):
 
     @staticmethod
     def update_color_pickers(
-        ui_json: dict, color_pickers: list, color_picker: str, select_cluster: int
-    ):
+        ui_json: dict, color_pickers: list, color_picker: dict, select_cluster: int
+    ) -> list:
         """
         Update list of colors corresponding to clusters.
 
@@ -412,7 +413,7 @@ class Clustering(ScatterPlots):
         return color_pickers
 
     @staticmethod
-    def update_color_picker(color_pickers: list, select_cluster: int):
+    def update_color_picker(color_pickers: list, select_cluster: int) -> dict:
         """
         Update the displayed color on color picker when select cluster is switched.
 
@@ -427,7 +428,7 @@ class Clustering(ScatterPlots):
         else:
             return no_update
 
-    def update_data_subset(self, ui_json: dict, object_uid: str):
+    def update_data_subset(self, ui_json: dict, object_uid: str) -> (list, str):
         """
         Update data subset options and values from selected object.
 
@@ -450,15 +451,14 @@ class Clustering(ScatterPlots):
 
     @staticmethod
     def update_data_options(
-        ui_json: dict, data_subset: list, full_options: list, kmeans: list
-    ):
+        ui_json: dict, data_subset: list, full_options: list
+    ) -> (list, list, list, list, list, list, list, str, str, str, str, str, str):
         """
         Update data options and values for scatter plot and histogram/boxplot.
 
         :param ui_json: Uploaded ui.json.
         :param data_subset: Subset of data used for clustering and plotting.
         :param full_options: Full options for data subset.
-        :param kmeans: K-means values from clustering.
 
         :return axis_options: Dropdown options for x-axis of scatter plot.
         :return axis_options: Dropdown options for y-axis of scatter plot.
@@ -483,9 +483,8 @@ class Clustering(ScatterPlots):
         color_maps_options = px.colors.named_colorscales()
 
         # Add kmeans to the dropdown options for scatterplot.
-        if kmeans is not None:
-            axis_options.append({"label": "kmeans", "value": "kmeans"})
-            color_maps_options.insert(0, "kmeans")
+        axis_options.append({"label": "kmeans", "value": "kmeans"})
+        color_maps_options.insert(0, "kmeans")
 
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
         if "ui_json" in triggers:
@@ -516,7 +515,7 @@ class Clustering(ScatterPlots):
         ) + axis_values
 
     @staticmethod
-    def update_data_values(ui_json: dict):
+    def update_data_values(ui_json: dict) -> (str, str, str, str, str, str):
         """
         Read in axes values from ui.json.
 
@@ -535,7 +534,7 @@ class Clustering(ScatterPlots):
         if not plot_kmeans:
             plot_kmeans = [False, False, False, False, False]
         output_axes = []
-        axes_names = ["x", "y", "z", "color", "size", "channel"]
+        axes_names = ["x", "y", "z", "color", "size"]
         for i in range(len(axes_names)):
             axis_val = ui_json[axes_names[i]]["value"]
             if is_uuid(axis_val):
@@ -544,6 +543,10 @@ class Clustering(ScatterPlots):
                 output_axes.append("kmeans")
             else:
                 output_axes.append(None)
+        if is_uuid(ui_json["channel"]["value"]):
+            output_axes.append(str(ui_json["channel"]["value"]))
+        else:
+            output_axes.append(None)
 
         return tuple(output_axes)
 
@@ -639,7 +642,9 @@ class Clustering(ScatterPlots):
             full_upper_bounds,
         )
 
-    def update_dataframe(self, downsampling: int, data_subset: list):
+    def update_dataframe(
+        self, downsampling: int, data_subset: list
+    ) -> (pd.DataFrame, np.ndarray, np.ndarray):
         """
         Update dataframe.
 
@@ -665,7 +670,7 @@ class Clustering(ScatterPlots):
         full_scales: dict,
         clusters: dict,
         mapping: list,
-    ):
+    ) -> (np.ndarray, dict):
         """
         Run clustering.
 
@@ -811,7 +816,7 @@ class Clustering(ScatterPlots):
             if indices is not None:
                 indices = np.array(indices)
 
-            if color_maps == "kmeans":
+            if color_maps == "kmeans" and kmeans is not None and kmeans != []:
                 # Update color_maps
                 color_maps = Clustering.update_colormap(n_clusters, color_pickers)
             if color_maps is None:
@@ -820,7 +825,7 @@ class Clustering(ScatterPlots):
             # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
             axis_values = []
             for axis in [x, y, z, color, size]:
-                if axis == "kmeans":
+                if axis == "kmeans" and kmeans is not None and kmeans != []:
                     axis_values.append(PlotData(axis, kmeans[indices].astype(float)))
                 elif axis is not None:
                     axis_name = Clustering.get_name(axis, channel_options)
@@ -1009,7 +1014,7 @@ class Clustering(ScatterPlots):
             return None
 
     @staticmethod
-    def make_heatmap(dataframe_dict: dict):
+    def make_heatmap(dataframe_dict: dict) -> go.Figure:
         """
         Generate a confusion matrix.
 
@@ -1090,6 +1095,47 @@ class Clustering(ScatterPlots):
         )
         return matrix
 
+    @staticmethod
+    def get_full_lists(
+        data_subset: list,
+        full_scales: dict,
+        full_lower_bounds: dict,
+        full_upper_bounds: dict,
+    ) -> dict:
+        """
+        Loop through scales and bounds and convert to list to save in self.params.
+
+        :param data_subset: Subset of data.
+        :param full_scales: Dictionary of data and corresponding scaling factors.
+        :param full_lower_bounds: Dictionary of data and corresponding lower bounds.
+        :param full_upper_bounds: Dictionary of data and corresponding upper bounds.
+
+        :return update_dict:
+        """
+        full_scales_list = []
+        full_lower_bounds_list = []
+        full_upper_bounds_list = []
+        for data in data_subset:
+            if data in full_scales:
+                full_scales_list.append(full_scales[data])
+            else:
+                full_scales_list.append(1)
+            if data in full_lower_bounds:
+                full_lower_bounds_list.append(full_lower_bounds[data])
+            else:
+                full_lower_bounds_list.append(None)
+            if data in full_upper_bounds:
+                full_upper_bounds_list.append(full_upper_bounds[data])
+            else:
+                full_upper_bounds_list.append(None)
+
+        return {
+            "data_subset": str(data_subset),
+            "full_scales": str(full_scales_list),
+            "full_lower_bounds": str(full_lower_bounds_list),
+            "full_upper_bounds": str(full_upper_bounds_list),
+        }
+
     def trigger_click(
         self,
         export: int,
@@ -1133,7 +1179,7 @@ class Clustering(ScatterPlots):
         ga_group_name: str,
         monitoring_directory: str,
         trigger: str = None,
-    ):
+    ) -> list:
         """
         Write cluster groups to the target geoh5 object. Inputs are all params that are written to ui.json.
 
@@ -1190,18 +1236,12 @@ class Clustering(ScatterPlots):
                 live_link = True
 
             param_dict = self.get_params_dict(locals())
+
             # Convert dicts to lists to save in the ui.json.
             param_dict.update(
-                {
-                    "data_subset": str(sorted(data_subset)),
-                    "full_scales": str([x[1] for x in sorted(full_scales.items())]),
-                    "full_lower_bounds": str(
-                        [x[1] for x in sorted(full_lower_bounds.items())]
-                    ),
-                    "full_upper_bounds": str(
-                        [x[1] for x in sorted(full_upper_bounds.items())]
-                    ),
-                }
+                Clustering.get_full_lists(
+                    data_subset, full_scales, full_lower_bounds, full_upper_bounds
+                )
             )
 
             # Save axes that are plotting kmeans.
