@@ -13,6 +13,7 @@ import os
 import webbrowser
 
 import numpy as np
+from dash import Input, Output
 from flask import Flask
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.shared import Entity
@@ -68,6 +69,186 @@ class InversionApp:
         )
 
         self.app.layout = potential_fields_layout
+
+        # Callbacks relating to layout
+        self.app.callback(
+            Output(component_id="inducing_params_div", component_property="style"),
+            Input(component_id="inversion_type", component_property="value"),
+        )(InversionApp.update_inducing_params_visibility)
+        self.app.callback(
+            Output(component_id="topography_none", component_property="style"),
+            Output(component_id="topography_object", component_property="style"),
+            Output(component_id="topography_sensor", component_property="style"),
+            Output(component_id="topography_constant", component_property="style"),
+            Input(component_id="topography_options", component_property="value"),
+        )(InversionApp.update_topography_visibility)
+
+        for model_type in ["starting", "ref"]:
+            for param in ["susceptibility", "inclination", "declination"]:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_const_div",
+                        component_property="style",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_mod_div",
+                        component_property="style",
+                    ),
+                    Input(
+                        component_id=model_type + "_" + param + "_options",
+                        component_property="value",
+                    ),
+                )(InversionApp.update_model_visibility)
+
+        self.app.callback(
+            Output(component_id="starting_model_div", component_property="style"),
+            Output(component_id="mesh_div", component_property="style"),
+            Output(component_id="reference_model_div", component_property="style"),
+            Output(component_id="regularization_div", component_property="style"),
+            Output(component_id="upper_lower_bounds_div", component_property="style"),
+            Output(component_id="detrend_div", component_property="style"),
+            Output(component_id="ignore_values_div", component_property="style"),
+            Output(component_id="optimization_div", component_property="style"),
+            Input(component_id="param_dropdown", component_property="value"),
+        )(InversionApp.update_inversion_params_visibility)
+
+    @staticmethod
+    def update_inducing_params_visibility(selection):
+        if selection == "magnetic vector" or selection == "magnetic scalar":
+            return {"display": "block"}
+        else:
+            return {"display": "none"}
+
+    @staticmethod
+    def update_topography_visibility(selection):
+        if selection == "None":
+            return (
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "Object":
+            return (
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "Relative to Sensor":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+            )
+        elif selection == "Constant":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+            )
+
+    @staticmethod
+    def update_model_visibility(selection):
+        if selection == "Constant":
+            return ({"display": "block"}, {"display": "none"})
+        elif selection == "Model":
+            return ({"display": "none"}, {"display": "block"})
+        elif selection == "None":
+            return ({"display": "none"}, {"display": "none"})
+
+    @staticmethod
+    def update_inversion_params_visibility(selection):
+        if selection == "starting model":
+            return (
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "mesh":
+            return (
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "reference model":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "regularization":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "upper-lower bounds":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "detrend":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "ignore values":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+            )
+        elif selection == "optimization":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+            )
 
     def run(self):
         # The reloader has not yet run - open the browser

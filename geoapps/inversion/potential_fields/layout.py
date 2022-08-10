@@ -9,28 +9,20 @@ from dash import dcc, html
 
 from geoapps.inversion.base_layout import (
     generate_model_component,
+    get_object_selection_layout,
     ignore_values,
     input_data_layout,
+    inversion_parameters_dropdown,
     mesh,
-    object_selection_layout,
     optimization,
     output_layout,
     regularization,
     topography_layout,
     upper_lower_bounds,
-    workspace_layout,
 )
 
-inducing_params_layout = html.Div(
-    [
-        dcc.Markdown("Inducing Field Parameters"),
-        dcc.Markdown("Amplitude (nT)"),
-        dcc.Input(id="amplitude"),
-        dcc.Markdown("Inclination (d.dd)"),
-        dcc.Input(id="inclination"),
-        dcc.Markdown("Declination (d.dd)"),
-        dcc.Input(id="declination"),
-    ]
+object_selection_layout = get_object_selection_layout(
+    ["magnetic vector", "magnetic scalar", "gravity"]
 )
 
 starting_model_components = []
@@ -49,21 +41,25 @@ for param, value in param_names.items():
         generate_model_component(param, value["label"], value["units"], "reference")
     )
 
-starting_model = html.Div(starting_model_components)
+starting_model = html.Div(id="starting_model_div", children=starting_model_components)
 
-reference_model = html.Div(reference_model_components)
+reference_model = html.Div(
+    id="reference_model_div", children=reference_model_components
+)
 
 detrend = html.Div(
-    [
+    id="detrend_div",
+    children=[
         dcc.Markdown("Method"),
         dcc.Dropdown(id="method", options=["all", "perimeter"]),
         dcc.Markdown("Order"),
         dcc.Input(id="order"),
-    ]
+    ],
 )
 
 inversion_parameters_layout = html.Div(
     [
+        inversion_parameters_dropdown,
         starting_model,
         mesh,
         reference_model,
@@ -72,13 +68,13 @@ inversion_parameters_layout = html.Div(
         detrend,
         ignore_values,
         optimization,
-    ]
+    ],
+    style={"border": "2px black solid"},
 )
 
 # Full app layout
 potential_fields_layout = html.Div(
     [
-        workspace_layout,
         object_selection_layout,
         input_data_layout,
         topography_layout,
