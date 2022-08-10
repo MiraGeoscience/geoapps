@@ -17,11 +17,11 @@ def generate_model_component(
     if model_type == "reference":
         radio_options = ["Constant", "Model", "None"]
         label_prefix = "Reference "
-        param_prefix = "ref"
+        param_prefix = "ref_"
     elif model_type == "starting":
         radio_options = ["Constant", "Model"]
         label_prefix = "Starting "
-        param_prefix = "starting"
+        param_prefix = "starting_"
     else:
         radio_options = ["Constant", "Model", "None"]
         label_prefix = ""
@@ -31,24 +31,24 @@ def generate_model_component(
         [
             dcc.Markdown(label_prefix + param_label),
             dcc.RadioItems(
-                id=param_prefix + "_" + param_name + "_options",
+                id=param_prefix + param_name + "_options",
                 options=radio_options,
                 value="Constant",
             ),
             html.Div(
-                id=param_prefix + "_" + param_name + "_const_div",
+                id=param_prefix + param_name + "_const_div",
                 children=[
                     dcc.Markdown(units),
-                    dcc.Input(id=param_prefix + "_" + param_name + "_const"),
+                    dcc.Input(id=param_prefix + param_name + "_const"),
                 ],
             ),
             html.Div(
-                id=param_prefix + "_" + param_name + "_mod_div",
+                id=param_prefix + param_name + "_mod_div",
                 children=[
                     dcc.Markdown("Object"),
-                    dcc.Input(id=param_prefix + "_" + param_name + "_obj"),
+                    dcc.Input(id=param_prefix + param_name + "_obj"),
                     dcc.Markdown("Values"),
-                    dcc.Input(id=param_prefix + "_" + param_name + "_data"),
+                    dcc.Input(id=param_prefix + param_name + "_data"),
                 ],
             ),
         ]
@@ -56,24 +56,61 @@ def generate_model_component(
     return component
 
 
-workspace_layout = html.Div(
-    [
-        dcc.Upload(
-            id="upload",
-            children=html.Button("Upload Workspace/ui.json"),
-        ),
-    ]
-)
+def get_object_selection_layout(inversion_type_list):
+    if ("magnetic vector" in inversion_type_list) or (
+        "magnetic scalar" in inversion_type_list
+    ):
+        object_selection_layout = html.Div(
+            [
+                dcc.Upload(
+                    id="upload",
+                    children=html.Button("Upload Workspace/ui.json"),
+                ),
+                dcc.Markdown("Object:"),
+                dcc.Dropdown(id="object"),
+                dcc.Markdown("Inversion Type:"),
+                dcc.Dropdown(
+                    id="inversion_type",
+                    options=inversion_type_list,
+                    value=inversion_type_list[0],
+                ),
+                inducing_params_div,
+            ],
+            style={"border": "2px black solid"},
+        )
+    else:
+        object_selection_layout = html.Div(
+            [
+                dcc.Upload(
+                    id="upload",
+                    children=html.Button("Upload Workspace/ui.json"),
+                ),
+                dcc.Markdown("Object:"),
+                dcc.Dropdown(id="object"),
+                dcc.Markdown("Inversion Type:"),
+                dcc.Dropdown(
+                    id="inversion_type",
+                    options=inversion_type_list,
+                    value=inversion_type_list[0],
+                ),
+            ],
+            style={"border": "2px black solid"},
+        )
+    return object_selection_layout
 
-object_selection_layout = html.Div(
-    [
-        dcc.Markdown("Object:"),
-        dcc.Dropdown(id="object"),
-        dcc.Markdown("Inversion Type:"),
-        dcc.Dropdown(id="inversion_type"),
-        html.Div(id="extra_params"),
+
+inducing_params_div = html.Div(
+    id="inducing_params_div",
+    children=[
+        dcc.Markdown("Inducing Field Parameters"),
+        dcc.Markdown("Amplitude (nT)"),
+        dcc.Input(id="amplitude"),
+        dcc.Markdown("Inclination (d.dd)"),
+        dcc.Input(id="inclination"),
+        dcc.Markdown("Declination (d.dd)"),
+        dcc.Input(id="declination"),
     ],
-    style={"border": "2px black solid"},
+    style={"display": "none"},
 )
 
 input_data_layout = html.Div(
@@ -83,13 +120,15 @@ input_data_layout = html.Div(
                 dcc.Markdown("Input Data"),
                 dcc.Markdown("Component:"),
                 dcc.Dropdown(id="component"),
-                dcc.Checklist(id="active", options={"label": "Active", "value": True}),
+                dcc.Checklist(
+                    id="active", options=[{"label": "Active", "value": True}]
+                ),
                 dcc.Markdown("Channel:"),
                 dcc.Dropdown(id="channel"),
                 dcc.Markdown("Uncertainties"),
                 dcc.Markdown("Floor:"),
                 dcc.Dropdown(id="floor"),
-                dcc.Markdown("[Optional] Channel:"),
+                dcc.Markdown("(Optional) Channel:"),
                 dcc.Dropdown(id="optional_channel"),
             ]
         ),
@@ -102,7 +141,8 @@ input_data_layout = html.Div(
                 dcc.Graph(id="plot"),
             ]
         ),
-    ]
+    ],
+    style={"border": "2px black solid"},
 )
 
 topography_none = html.Div(
@@ -136,6 +176,7 @@ topography_layout = html.Div(
                 dcc.Markdown("Topography"),
                 dcc.Markdown("Define by:"),
                 dcc.RadioItems(
+                    id="topography_options",
                     options=["None", "Object", "Relative to Sensor", "Constant"],
                     value="None",
                 ),
@@ -150,7 +191,7 @@ topography_layout = html.Div(
                 dcc.Markdown("Sensor Location"),
                 dcc.Checklist(
                     id="z_from_topo",
-                    options={"label": "Set Z from topo + offsets", "value": True},
+                    options=[{"label": "Set Z from topo + offsets", "value": True}],
                 ),
                 dcc.Markdown("Offsets"),
                 dcc.Markdown("dx (+East)"),
@@ -163,11 +204,12 @@ topography_layout = html.Div(
                 dcc.Dropdown(id="radar"),
             ]
         ),
-    ]
+    ],
+    style={"border": "2px black solid"},
 )
 
 mesh = html.Div(
-    id="mesh",
+    id="mesh_div",
     children=[
         dcc.Markdown("Object:"),
         dcc.Dropdown(id="mesh_object"),
@@ -176,9 +218,9 @@ mesh = html.Div(
         dcc.Input(id="core_cell_size_v"),
         dcc.Input(id="core_cell_size_z"),
         dcc.Markdown("Refinement Layers"),
-        dcc.Markdown("# Cells below topography"),
+        dcc.Markdown("Number of cells below topography"),
         dcc.Input(id="cells_below_topo"),
-        dcc.Markdown("# Cells below sensors"),
+        dcc.Markdown("Number of cells below sensors"),
         dcc.Input(id="cells_below_sensors"),
         dcc.Markdown("Maximum distance (m)"),
         dcc.Input(id="maximum_distance"),
@@ -193,7 +235,8 @@ mesh = html.Div(
 )
 
 regularization = html.Div(
-    [
+    id="regularization_div",
+    children=[
         html.Div(
             [
                 html.Div(
@@ -224,22 +267,28 @@ regularization = html.Div(
                 ),
             ]
         ),
-    ]
+    ],
 )
 
 upper_lower_bounds = html.Div(
-    [
+    id="upper_lower_bounds_div",
+    children=[
         generate_model_component("lower_bounds", "Lower Bounds", "Units"),
         generate_model_component("upper_bounds", "Upper Bounds", "Units"),
-    ]
+    ],
 )
 
 ignore_values = html.Div(
-    [dcc.Markdown("Value (i.e. '<0' for no negatives)"), dcc.Input(id="ignore_values")]
+    id="ignore_values_div",
+    children=[
+        dcc.Markdown("Value (i.e. '<0' for no negatives)"),
+        dcc.Input(id="ignore_values"),
+    ],
 )
 
 optimization = html.Div(
-    [
+    id="optimization_div",
+    children=[
         html.Div(
             [
                 dcc.Markdown("Max beta Iterations"),
@@ -262,13 +311,13 @@ optimization = html.Div(
                 dcc.Input(id="num_tiles"),
             ]
         ),
-    ]
+    ],
 )
 
 inversion_parameters_dropdown = html.Div(
     [
         dcc.Markdown("Inversion Parameters"),
-        dcc.Checklist(id="forward", options={"label": "Forward only", "value": True}),
+        dcc.Checklist(id="forward", options=[{"label": "Forward only", "value": True}]),
         dcc.Dropdown(
             id="param_dropdown",
             options=[
@@ -281,6 +330,7 @@ inversion_parameters_dropdown = html.Div(
                 "ignore values",
                 "optimization",
             ],
+            value="starting model",
         ),
     ]
 )
@@ -294,5 +344,6 @@ output_layout = html.Div(
         dcc.Input(id="monitoring_directory"),
         html.Button("Write input", id="write_input"),
         html.Button("Compute", id="compute"),
-    ]
+    ],
+    style={"border": "2px black solid"},
 )
