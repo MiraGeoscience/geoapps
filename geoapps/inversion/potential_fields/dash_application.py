@@ -101,6 +101,17 @@ class InversionApp:
                 )(InversionApp.update_model_visibility)
 
         self.app.callback(
+            Output(component_id="lower_bounds_const_div", component_property="style"),
+            Output(component_id="lower_bounds_mod_div", component_property="style"),
+            Input(component_id="lower_bounds_options", component_property="value"),
+        )(InversionApp.update_model_visibility)
+        self.app.callback(
+            Output(component_id="upper_bounds_const_div", component_property="style"),
+            Output(component_id="upper_bounds_mod_div", component_property="style"),
+            Input(component_id="upper_bounds_options", component_property="value"),
+        )(InversionApp.update_model_visibility)
+
+        self.app.callback(
             Output(component_id="starting_model_div", component_property="style"),
             Output(component_id="mesh_div", component_property="style"),
             Output(component_id="reference_model_div", component_property="style"),
@@ -115,7 +126,7 @@ class InversionApp:
     @staticmethod
     def update_inducing_params_visibility(selection):
         if selection == "magnetic vector" or selection == "magnetic scalar":
-            return {"display": "block"}
+            return {"display": "inline-block"}
         else:
             return {"display": "none"}
 
@@ -153,17 +164,17 @@ class InversionApp:
     @staticmethod
     def update_model_visibility(selection):
         if selection == "Constant":
-            return ({"display": "block"}, {"display": "none"})
+            return {"display": "block"}, {"display": "none"}
         elif selection == "Model":
-            return ({"display": "none"}, {"display": "block"})
+            return {"display": "none"}, {"display": "block"}
         elif selection == "None":
-            return ({"display": "none"}, {"display": "none"})
+            return {"display": "none"}, {"display": "none"}
 
     @staticmethod
     def update_inversion_params_visibility(selection):
         if selection == "starting model":
             return (
-                {"display": "block"},
+                {"display": "inline-block"},
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
@@ -175,7 +186,7 @@ class InversionApp:
         elif selection == "mesh":
             return (
                 {"display": "none"},
-                {"display": "block"},
+                {"display": "inline-block"},
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
@@ -187,7 +198,7 @@ class InversionApp:
             return (
                 {"display": "none"},
                 {"display": "none"},
-                {"display": "block"},
+                {"display": "inline-block"},
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
@@ -199,7 +210,7 @@ class InversionApp:
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
-                {"display": "block"},
+                {"display": "inline-block"},
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
@@ -211,7 +222,7 @@ class InversionApp:
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
-                {"display": "block"},
+                {"display": "inline-block"},
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
@@ -223,7 +234,7 @@ class InversionApp:
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
-                {"display": "block"},
+                {"display": "inline-block"},
                 {"display": "none"},
                 {"display": "none"},
             )
@@ -235,7 +246,7 @@ class InversionApp:
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
-                {"display": "block"},
+                {"display": "inline-block"},
                 {"display": "none"},
             )
         elif selection == "optimization":
@@ -247,7 +258,7 @@ class InversionApp:
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
-                {"display": "block"},
+                {"display": "inline-block"},
             )
 
     def run(self):
@@ -256,7 +267,7 @@ class InversionApp:
             webbrowser.open_new("http://127.0.0.1:8050/")
 
         # Otherwise, continue as normal
-        self.app.run_server(host="127.0.0.1", port=8050, debug=False)
+        self.app.run_server(host="127.0.0.1", port=8050, debug=True)
 
 
 app = InversionApp()
