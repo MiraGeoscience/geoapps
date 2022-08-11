@@ -102,7 +102,7 @@ class InversionLocations:
             locs[:, :2] = rotate_xyz(
                 locs[:, :2],
                 self.origin,
-                -self.angle,
+                -1 * self.angle,
             )
 
         entity = geoh5_object.create(
