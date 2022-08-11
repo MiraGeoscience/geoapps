@@ -11,9 +11,11 @@ import os
 from time import time
 
 from dash import callback_context, no_update
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
+from flask import Flask
 from geoh5py.objects.object_base import ObjectBase
+from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -29,6 +31,7 @@ class BlockModelCreation(BaseDashApplication):
     """
 
     _param_class = BlockModelParams
+    _driver_class = BlockModelDriver
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -37,21 +40,30 @@ class BlockModelCreation(BaseDashApplication):
         else:
             self.params = self._param_class(**app_initializer)
 
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
+        )
+
         super().__init__(**kwargs)
 
-        # Set up the layout with the dash components
         self.app.layout = block_model_layout
 
         # Set up callbacks
         self.app.callback(
-            Output(component_id="ui_json", component_property="data"),
             Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
         )(self.update_object_options)
         self.app.callback(
             Output(component_id="new_grid", component_property="value"),
-            Output(component_id="objects", component_property="value"),
             Output(component_id="cell_size_x", component_property="value"),
             Output(component_id="cell_size_y", component_property="value"),
             Output(component_id="cell_size_z", component_property="value"),
@@ -65,24 +77,24 @@ class BlockModelCreation(BaseDashApplication):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
-            Input(component_id="new_grid", component_property="value"),
-            Input(component_id="objects", component_property="value"),
-            Input(component_id="cell_size_x", component_property="value"),
-            Input(component_id="cell_size_y", component_property="value"),
-            Input(component_id="cell_size_z", component_property="value"),
-            Input(component_id="depth_core", component_property="value"),
-            Input(component_id="horizontal_padding", component_property="value"),
-            Input(component_id="bottom_padding", component_property="value"),
-            Input(component_id="expansion_fact", component_property="value"),
-            Input(component_id="live_link", component_property="value"),
-            Input(component_id="monitoring_directory", component_property="value"),
+            State(component_id="new_grid", component_property="value"),
+            State(component_id="objects", component_property="value"),
+            State(component_id="cell_size_x", component_property="value"),
+            State(component_id="cell_size_y", component_property="value"),
+            State(component_id="cell_size_z", component_property="value"),
+            State(component_id="depth_core", component_property="value"),
+            State(component_id="horizontal_padding", component_property="value"),
+            State(component_id="bottom_padding", component_property="value"),
+            State(component_id="expansion_fact", component_property="value"),
+            State(component_id="live_link", component_property="value"),
+            State(component_id="monitoring_directory", component_property="value"),
         )(self.trigger_click)
 
     def trigger_click(
         self,
         n_clicks: int,
         new_grid: str,
-        objects_uid: str,
+        objects: str,
         cell_size_x: float,
         cell_size_y: float,
         cell_size_z: float,
@@ -99,7 +111,7 @@ class BlockModelCreation(BaseDashApplication):
 
         :param n_clicks: Triggers callback for pressing export button.
         :param new_grid: Name for exported block model.
-        :param objects_uid: Input object uid.
+        :param objects: Input object uid.
         :param cell_size_x: X cell size for the core mesh.
         :param cell_size_y: Y cell size for the core mesh.
         :param cell_size_z: Z cell size for the core mesh.
@@ -140,32 +152,33 @@ class BlockModelCreation(BaseDashApplication):
             ws, live_link = BaseApplication.get_output_workspace(
                 live_link, monitoring_directory, temp_geoh5
             )
+            if not live_link:
+                param_dict["monitoring_directory"] = ""
 
-            with self.workspace.open():
-                with ws as new_workspace:
-                    # Put entities in output workspace.
-                    param_dict["geoh5"] = new_workspace
-                    for key, value in param_dict.items():
-                        if isinstance(value, ObjectBase):
-                            param_dict[key] = value.copy(
-                                parent=new_workspace, copy_children=True
-                            )
+            with ws as new_workspace:
+                # Put entities in output workspace.
+                param_dict["geoh5"] = new_workspace
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=new_workspace, copy_children=True
+                        )
 
-            # Write output uijson.
-            new_params = BlockModelParams(**param_dict)
-            new_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=monitoring_directory,
-                validate=False,
-            )
-            # Run driver.
-            driver = BlockModelDriver(new_params)
-            print("Creating block model . . .")
-            driver.run()
+                # Write output uijson.
+                new_params = BlockModelParams(**param_dict)
+                new_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=monitoring_directory,
+                    validate=False,
+                )
+                # Run driver.
+                self.driver.params = new_params
+                print("Creating block model . . .")
+                self.driver.run()
 
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
-                return ["Geoscience ANALYST Pro - Live link"]
+                return [True]
             else:
                 print("Saved to " + monitoring_directory)
                 return []

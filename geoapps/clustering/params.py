@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from geoh5py.data import Data
 from geoh5py.ui_json import InputFile
 
 from geoapps.scatter_plot.params import ScatterPlotParams
@@ -27,14 +28,13 @@ class ClusteringParams(ScatterPlotParams):
         self._validations = validations
         self._n_clusters = None
         self._ga_group_name = None
-        self._channels = None
+        self._data_subset = None
+        self._channel = None
         self._full_scales = None
         self._full_lower_bounds = None
         self._full_upper_bounds = None
         self._color_pickers = None
         self._plot_kmeans = None
-        self._live_link = None
-        self._output_path = None
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -58,15 +58,26 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("n_clusters", val)
 
     @property
-    def channels(self) -> str | None:
+    def channel(self) -> Data | None:
         """
-        List of channels.
+        Histogram and boxplot data
         """
-        return self._channels
+        return self._channel
 
-    @channels.setter
-    def channels(self, val):
-        self.setter_validator("channels", val)
+    @channel.setter
+    def channel(self, val):
+        self.setter_validator("channel", val)
+
+    @property
+    def data_subset(self) -> str | None:
+        """
+        List of data used for clustering.
+        """
+        return self._data_subset
+
+    @data_subset.setter
+    def data_subset(self, val):
+        self.setter_validator("data_subset", val)
 
     @property
     def full_scales(self) -> str | None:
@@ -133,25 +144,3 @@ class ClusteringParams(ScatterPlotParams):
     @ga_group_name.setter
     def ga_group_name(self, val):
         self.setter_validator("ga_group_name", val)
-
-    @property
-    def live_link(self) -> bool | None:
-        """
-        Live link.
-        """
-        return self._live_link
-
-    @live_link.setter
-    def live_link(self, val):
-        self.setter_validator("live_link", val)
-
-    @property
-    def output_path(self) -> str | None:
-        """
-        Output path.
-        """
-        return self._output_path
-
-    @output_path.setter
-    def output_path(self, val):
-        self.setter_validator("output_path", val)

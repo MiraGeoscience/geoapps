@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 from copy import deepcopy
 
 import plotly.express as px
@@ -57,6 +58,7 @@ default_ui_json.update(
     {
         "title": "Scatter Plot",
         "geoh5": "",
+        "monitoring_directory": "",
         "objects": {
             "group": "Data Selection",
             "label": "Object",
@@ -384,4 +386,5 @@ app_initializer = {
     "size_max": 24.8,
     "downsampling": 80,
     "size_markers": 20,
+    "monitoring_directory": os.path.abspath("../../assets"),
 }
