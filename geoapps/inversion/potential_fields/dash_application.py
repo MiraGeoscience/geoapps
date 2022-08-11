@@ -14,15 +14,17 @@ import warnings
 from time import time
 
 import numpy as np
-from dash import Input, Output
+from dash import Input, Output, State, callback_context, no_update
 from flask import Flask
 from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
+from geoapps.base.dash_application import BaseDashApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.potential_fields.gravity.params import GravityParams
@@ -39,7 +41,7 @@ from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
 
 
-class InversionApp:
+class InversionApp(BaseDashApplication):
     """
     Application for the inversion of potential field data using SimPEG
     """
@@ -60,7 +62,7 @@ class InversionApp:
         else:
             self.params = self._param_class(**app_initializer)
 
-        # super().__init__(**self.params.to_dict())
+        super().__init__(**self.params.to_dict())
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -79,22 +81,30 @@ class InversionApp:
         )(InversionApp.update_inducing_params_visibility)
         self.app.callback(
             Output(component_id="starting_magnetic_vector", component_property="style"),
-            Output(component_id="ref_magnetic_vector", component_property="style"),
+            Output(
+                component_id="reference_magnetic_vector", component_property="style"
+            ),
             Output(component_id="starting_magnetic_scalar", component_property="style"),
-            Output(component_id="ref_magnetic_scalar", component_property="style"),
+            Output(
+                component_id="reference_magnetic_scalar", component_property="style"
+            ),
             Output(component_id="starting_gravity", component_property="style"),
-            Output(component_id="ref_gravity", component_property="style"),
+            Output(component_id="reference_gravity", component_property="style"),
             Input(component_id="inversion_type", component_property="value"),
         )(InversionApp.update_inversion_div_visibility)
         self.app.callback(
-            Output(component_id="topography_none", component_property="style"),
-            Output(component_id="topography_object", component_property="style"),
-            Output(component_id="topography_sensor", component_property="style"),
-            Output(component_id="topography_constant", component_property="style"),
+            Output(component_id="uncertainty_floor", component_property="style"),
+            Output(component_id="uncertainty_channel", component_property="style"),
+            Input(component_id="uncertainty_options", component_property="value"),
+        )(InversionApp.update_uncertainty_visibility)
+        self.app.callback(
+            Output(component_id="topography_none_div", component_property="style"),
+            Output(component_id="topography_object_div", component_property="style"),
+            Output(component_id="topography_sensor_div", component_property="style"),
+            Output(component_id="topography_constant_div", component_property="style"),
             Input(component_id="topography_options", component_property="value"),
         )(InversionApp.update_topography_visibility)
-
-        for model_type in ["starting", "ref"]:
+        for model_type in ["starting", "reference"]:
             for param in [
                 "eff_susceptibility",
                 "inclination",
@@ -116,24 +126,22 @@ class InversionApp:
                         component_property="value",
                     ),
                 )(InversionApp.update_model_visibility)
-
         self.app.callback(
-            Output(component_id="lower_bounds_const_div", component_property="style"),
-            Output(component_id="lower_bounds_mod_div", component_property="style"),
-            Input(component_id="lower_bounds_options", component_property="value"),
+            Output(component_id="lower_bound_const_div", component_property="style"),
+            Output(component_id="lower_bound_mod_div", component_property="style"),
+            Input(component_id="lower_bound_options", component_property="value"),
         )(InversionApp.update_model_visibility)
         self.app.callback(
-            Output(component_id="upper_bounds_const_div", component_property="style"),
-            Output(component_id="upper_bounds_mod_div", component_property="style"),
-            Input(component_id="upper_bounds_options", component_property="value"),
+            Output(component_id="upper_bound_const_div", component_property="style"),
+            Output(component_id="upper_bound_mod_div", component_property="style"),
+            Input(component_id="upper_bound_options", component_property="value"),
         )(InversionApp.update_model_visibility)
-
         self.app.callback(
             Output(component_id="starting_model_div", component_property="style"),
             Output(component_id="mesh_div", component_property="style"),
             Output(component_id="reference_model_div", component_property="style"),
             Output(component_id="regularization_div", component_property="style"),
-            Output(component_id="upper_lower_bounds_div", component_property="style"),
+            Output(component_id="upper_lower_bound_div", component_property="style"),
             Output(component_id="detrend_div", component_property="style"),
             Output(component_id="ignore_values_div", component_property="style"),
             Output(component_id="optimization_div", component_property="style"),
@@ -145,6 +153,119 @@ class InversionApp:
             Output(component_id="component", component_property="options"),
             Input(component_id="inversion_type", component_property="value"),
         )(self.update_component_list)
+
+        # Update object and data dropdowns
+        self.app.callback(
+            Output(component_id="data_object", component_property="options"),
+            Output(component_id="data_object", component_property="value"),
+            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+        self.app.callback(
+            Output(component_id="channel", component_property="options"),
+            # Output(component_id="channel", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.update_channel_options)
+        self.app.callback(
+            Output(component_id="uncertainty_channel", component_property="options"),
+            # Output(component_id="uncertainty_channel", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.update_channel_options)
+        self.app.callback(
+            Output(component_id="receivers_radar_drape", component_property="options"),
+            Output(component_id="receivers_radar_drape", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.update_data_options)
+
+        # Update input data channel and uncertainties from component
+        self.app.callback(
+            Output(component_id="full_components", component_property="data"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="full_components", component_property="data"),
+            Input(component_id="channel_bool", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="uncertainty_options", component_property="value"),
+            Input(component_id="uncertainty_floor", component_property="value"),
+            Input(component_id="uncertainty_channel", component_property="value"),
+            State(component_id="component", component_property="value"),
+            State(component_id="component", component_property="options"),
+        )(self.update_full_components)
+        self.app.callback(
+            Output(component_id="channel_bool", component_property="value"),
+            Output(component_id="channel", component_property="value"),
+            Output(component_id="uncertainty_options", component_property="value"),
+            Output(component_id="uncertainty_floor", component_property="value"),
+            Output(component_id="uncertainty_channel", component_property="value"),
+            Input(component_id="component", component_property="value"),
+            Input(component_id="full_components", component_property="data"),
+        )(self.update_input_channel)
+
+        # Update from ui.json
+        self.app.callback(
+            # Object selection
+            Output(component_id="inversion_type", component_property="value"),
+            Output(component_id="inducing_field_strength", component_property="value"),
+            Output(
+                component_id="inducing_field_inclination", component_property="value"
+            ),
+            Output(
+                component_id="inducing_field_declination", component_property="value"
+            ),
+            # Input Data
+            Output(component_id="resolution", component_property="value"),
+            # Topography
+            Output(component_id="z_from_topo", component_property="value"),
+            Output(component_id="receivers_offset_x", component_property="value"),
+            Output(component_id="receivers_offset_y", component_property="value"),
+            Output(component_id="receivers_offset_z", component_property="value"),
+            Output(component_id="topography_offset", component_property="value"),
+            Output(component_id="topography_constant", component_property="value"),
+            # Inversion - mesh
+            Output(component_id="u_cell_size", component_property="value"),
+            Output(component_id="v_cell_size", component_property="value"),
+            Output(component_id="w_cell_size", component_property="value"),
+            # Output(component_id="octree_levels_topo", component_property="value"),
+            # Output(component_id="octree_levels_obs", component_property="value"),
+            Output(component_id="max_distance", component_property="value"),
+            Output(component_id="horizontal_padding", component_property="value"),
+            Output(component_id="vertical_padding", component_property="value"),
+            Output(component_id="depth_core", component_property="value"),
+            # Inversion - regularization
+            Output(component_id="alpha_s", component_property="value"),
+            Output(component_id="alpha_x", component_property="value"),
+            Output(component_id="alpha_y", component_property="value"),
+            Output(component_id="alpha_z", component_property="value"),
+            Output(component_id="s_norm", component_property="value"),
+            Output(component_id="x_norm", component_property="value"),
+            Output(component_id="y_norm", component_property="value"),
+            Output(component_id="z_norm", component_property="value"),
+            # Inversion - upper-lower bounds
+            # Output(component_id="lower_bound", component_property="value"),
+            # Output(component_id="upper_bound", component_property="value"),
+            # Inversion - detrend
+            Output(component_id="detrend_type", component_property="value"),
+            Output(component_id="detrend_order", component_property="value"),
+            # Inversion - ignore values
+            Output(component_id="ignore_values", component_property="value"),
+            # Inversion - optimization
+            Output(component_id="max_iterations", component_property="value"),
+            Output(component_id="chi_factor", component_property="value"),
+            Output(component_id="initial_beta_ratio", component_property="value"),
+            Output(component_id="max_cg_iterations", component_property="value"),
+            Output(component_id="tol_cg", component_property="value"),
+            Output(component_id="n_cpu", component_property="value"),
+            Output(component_id="tile_spatial", component_property="value"),
+            # Output
+            Output(component_id="ga_group_name", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+        )(self.update_remainder_from_ui_json)
+
         """
         # Update mesh
         self.app.callback(
@@ -196,6 +317,19 @@ class InversionApp:
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "block"},
+                {"display": "block"},
+            )
+
+    @staticmethod
+    def update_uncertainty_visibility(selection):
+        if selection == "Floor":
+            return (
+                {"display": "block"},
+                {"display": "none"},
+            )
+        elif selection == "Channel":
+            return (
+                {"display": "none"},
                 {"display": "block"},
             )
 
@@ -359,6 +493,123 @@ class InversionApp:
                 "uv",
             ]
         return data_type_list
+
+    # Update input data dropdown options
+
+    def update_channel_options(self, ui_json: dict, object_uid: str) -> (list, str):
+        """
+        Update data subset options and values from selected object.
+
+        :param ui_json: Uploaded ui.json.
+        :param object_uid: Selected object from dropdown.
+
+        :return options: Options for data subset dropdown.
+        :return value: Value for data subset dropdown.
+        """
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "ui_json" in triggers:
+            # value = ui_json["channel"]["value"]
+            value = None
+            options = self.get_data_options("ui_json", ui_json, object_uid)
+        else:
+            value = None
+            options = self.get_data_options("data_object", ui_json, object_uid)
+
+        return options
+
+    def update_data_options(self, ui_json: dict, object_uid: str) -> (list, str):
+        """
+        Update data subset options and values from selected object.
+
+        :param ui_json: Uploaded ui.json.
+        :param object_uid: Selected object from dropdown.
+
+        :return options: Options for data subset dropdown.
+        :return value: Value for data subset dropdown.
+        """
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "ui_json" in triggers:
+            # value = ui_json["channel"]["value"]
+            value = None
+            options = self.get_data_options("ui_json", ui_json, object_uid)
+        else:
+            value = None
+            options = self.get_data_options("data_object", ui_json, object_uid)
+
+        return options, value
+
+    @staticmethod
+    def update_full_components(
+        ui_json,
+        full_components,
+        channel_bool,
+        channel,
+        uncertainty_type,
+        uncertainty_floor,
+        uncertainty_channel,
+        component,
+        component_options,
+    ):
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "ui_json":
+            full_components = {}
+            for comp in component_options:
+                # Get channel value
+                if is_uuid(ui_json[comp + "_channel"]["value"]):
+                    channel = str(ui_json[comp + "_channel"]["value"])
+                else:
+                    channel = None
+                # Get channel_bool value
+                if ui_json[comp + "_channel_bool"]:
+                    channel_bool = [True]
+                else:
+                    channel_bool = []
+                # Get uncertainty value
+                if type(ui_json[comp + "_uncertainty"]) == float:
+                    uncertainty_type = "Floor"
+                    uncertainty_floor = ui_json[comp + "_uncertainty"]
+                    uncertainty_channel = None
+                elif is_uuid(ui_json[comp + "_uncertainty"]["value"]):
+                    uncertainty_type = "Channel"
+                    uncertainty_floor = None
+                    uncertainty_channel = str(ui_json[comp + "_uncertainty"]["value"])
+
+                full_components[comp] = {
+                    "channel_bool": channel_bool,
+                    "channel": channel,
+                    "uncertainty_type": uncertainty_type,
+                    "uncertainty_floor": uncertainty_floor,
+                    "uncertainty_channel": uncertainty_channel,
+                }
+        else:
+            full_components[component] = {
+                "channel_bool": channel_bool,
+                "channel": channel,
+                "uncertainty_type": uncertainty_type,
+                "uncertainty_floor": uncertainty_floor,
+                "uncertainty_channel": uncertainty_channel,
+            }
+        return full_components
+
+    @staticmethod
+    def update_input_channel(component, full_components):
+        if full_components and component is not None:
+            channel_bool = full_components[component]["channel_bool"]
+            channel = full_components[component]["channel"]
+            uncertainty_type = full_components[component]["uncertainty_type"]
+            uncertainty_floor = full_components[component]["uncertainty_floor"]
+            uncertainty_channel = full_components[component]["uncertainty_channel"]
+            return (
+                channel_bool,
+                channel,
+                uncertainty_type,
+                uncertainty_floor,
+                uncertainty_channel,
+            )
+        else:
+            return no_update, no_update, no_update, no_update, no_update
 
     def update_octree_param(self, window_width, window_height, resolution):
         dl = resolution
