@@ -13,12 +13,20 @@ object_selection_layout = base_layout.get_object_selection_layout(
     ["magnetic vector", "magnetic scalar", "gravity"]
 )
 
-param_names = {
-    "susceptibility": {"label": "Effective Susceptibility", "units": "SI"},
-    "inclination": {"label": "Inclination", "units": "Degree"},
-    "declination": {"label": "Declination", "units": "Degree"},
+inversion_params = {
+    "magnetic_vector": {
+        "eff_susceptibility": {"label": "Effective Susceptibility", "units": "SI"},
+        "inclination": {"label": "Inclination", "units": "Degree"},
+        "declination": {"label": "Declination", "units": "Degree"},
+    },
+    "magnetic_scalar": {
+        "susceptibility": {"label": "Susceptibility", "units": "SI"},
+    },
+    "gravity": {
+        "density": {"label": "Density", "units": "g/cc"},
+    },
 }
-inversion_params_layout = base_layout.get_inversion_params_layout(param_names)
+inversion_params_layout = base_layout.get_inversion_params_layout(inversion_params)
 
 # Full app layout
 potential_fields_layout = html.Div(
