@@ -51,7 +51,6 @@ class OctreeMesh(ObjectDataSelection):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults = {}
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
@@ -233,22 +232,18 @@ class OctreeMesh(ObjectDataSelection):
         )
         with ws as new_workspace:
 
+            param_dict["geoh5"] = new_workspace
+
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
                     param_dict[key] = value.copy(
                         parent=new_workspace, copy_children=True
                     )
 
-            param_dict["geoh5"] = new_workspace
-
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-            new_params = OctreeParams(input_file=ifile, **param_dict)
+            new_params = OctreeParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
             self.run(new_params)
 
@@ -271,7 +266,7 @@ class OctreeMesh(ObjectDataSelection):
         Add a refinement from dictionary
         """
         widget_list = [Label(label)]
-        for key in self.params._free_parameter_keys:
+        for key in self.params.free_parameter_keys:
             attr_name = label + f" {key}"
             value = getattr(self.params, attr_name)
             if "object" in key:
@@ -325,5 +320,5 @@ if __name__ == "__main__":
         "'geoapps.octree_creation.driver' in version 0.7.0. "
         "This warning is likely due to the execution of older ui.json files. Please update."
     )
-    params = OctreeParams(InputFile.read_ui_json(file))
-    OctreeMesh.run(params)
+    params_class = OctreeParams(InputFile.read_ui_json(file))
+    OctreeMesh.run(params_class)

@@ -19,7 +19,7 @@ with warn_module_not_found():
     import pandas as pd
 
 
-def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=None):
+def object_2_dataframe(entity, fields=None, inplace=False, vertices=True, index=None):
     """
     Convert an object to a pandas dataframe
     """
@@ -37,15 +37,31 @@ def object_2_dataframe(entity, fields=[], inplace=False, vertices=True, index=No
         data_dict["Y"] = locs[index, 1]
         data_dict["Z"] = locs[index, 2]
 
-    d_f = pd.DataFrame(data_dict, columns=list(data_dict.keys()))
-    for field in fields:
-        for data in entity.workspace.get_entity(field):
-            if (data in entity.children) and (data.values.shape[0] == locs.shape[0]):
-                d_f[data.name] = data.values.copy()[index]
-                if inplace:
-                    data.values = None
+    dataframe = pd.DataFrame(data_dict, columns=list(data_dict))
+    if fields is not None:
+        for field in fields:
+            for data in entity.workspace.get_entity(field):
+                if (data in entity.children) and (
+                    data.values.shape[0] == locs.shape[0]
+                ):
+                    dataframe[data.name] = data.values.copy()[index]
+                    if inplace:
+                        data.values = None
 
-    return d_f
+    return dataframe
+
+
+def parse_lines(curve, values):
+    polylines, polyvalues = [], []
+    for line_id in curve.unique_parts:
+
+        ind_line = np.where(curve.parts == line_id)[0]
+        polylines += [curve.vertices[ind_line, :2]]
+
+        if values is not None:
+            polyvalues += [values[ind_line]]
+
+    return polylines, polyvalues
 
 
 def export_curve_2_shapefile(
@@ -57,28 +73,23 @@ def export_curve_2_shapefile(
     :param curve: Input Curve object to be exported.
     :param attribute: Data values exported on the Curve parts.
     :param wkt_code: Well-Known-Text string used to assign a projection.
-    :param file_name: Specify the path and name of the *.shp. Defaults to the current directory and `curve.name`.
+    :param file_name: Specify the path and name of the *.shp. Defaults to
+        the current directory and `curve.name`.
     """
-    import fiona
+    # import here so that the rest of geoapps can import if fiona is not installed
+    import fiona  # pylint: disable=import-outside-toplevel
 
     attribute_vals = None
 
     if attribute is not None and curve.get_data(attribute):
         attribute_vals = curve.get_data(attribute)[0].values
 
-    polylines, values = [], []
-    for lid in curve.unique_parts:
-
-        ind_line = np.where(curve.parts == lid)[0]
-        polylines += [curve.vertices[ind_line, :2]]
-
-        if attribute_vals is not None:
-            values += [attribute_vals[ind_line]]
+    polylines, polyvalues = parse_lines(curve, attribute_vals)
 
     # Define a polygon feature geometry with one attribute
     schema = {"geometry": "LineString"}
 
-    if values:
+    if polyvalues:
         attr_name = attribute.replace(":", "_")
         schema["properties"] = {attr_name: "float"}
     else:
@@ -90,22 +101,22 @@ def export_curve_2_shapefile(
         driver="ESRI Shapefile",
         schema=schema,
         crs_wkt=wkt_code,
-    ) as c:
+    ) as shapefile:
 
         # If there are multiple geometries, put the "for" loop here
-        for ii, poly in enumerate(polylines):
+        for i, poly in enumerate(polylines):
 
             if len(poly) > 1:
-                pline = LineString(list(tuple(map(tuple, poly))))
+                poly = LineString(list(tuple(map(tuple, poly))))
 
                 res = {}
                 res["properties"] = {}
 
-                if attribute and values:
-                    res["properties"][attr_name] = np.mean(values[ii])
+                if attribute and polyvalues:
+                    res["properties"][attr_name] = np.mean(polyvalues[i])
                 else:
-                    res["properties"]["id"] = ii
+                    res["properties"]["id"] = i
 
-                # geometry of of the original polygon shapefile
-                res["geometry"] = mapping(pline)
-                c.write(res)
+                # geometry of the original polygon shapefile
+                res["geometry"] = mapping(poly)
+                shapefile.write(res)
