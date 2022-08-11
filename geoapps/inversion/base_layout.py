@@ -135,25 +135,41 @@ def get_object_selection_layout(inversion_type_list):
     return object_selection_layout
 
 
-def get_inversion_params_layout(param_names):
-    starting_model_components = []
-    reference_model_components = []
-    for param, value in param_names.items():
-        starting_model_components.append(
-            generate_model_component(param, value["label"], value["units"], "starting")
+def get_inversion_params_layout(inversion_params):
+
+    starting_model_divs = []
+    reference_model_divs = []
+    for inversion_type, params in inversion_params.items():
+        starting_model_components = []
+        reference_model_components = []
+        for param_name, value in params.items():
+            starting_model_components.append(
+                generate_model_component(
+                    param_name, value["label"], value["units"], "starting"
+                )
+            )
+            reference_model_components.append(
+                generate_model_component(
+                    param_name, value["label"], value["units"], "reference"
+                )
+            )
+        starting_model_divs.append(
+            html.Div(
+                id="starting_" + inversion_type, children=starting_model_components
+            )
         )
-        reference_model_components.append(
-            generate_model_component(param, value["label"], value["units"], "reference")
+        reference_model_divs.append(
+            html.Div(id="ref_" + inversion_type, children=reference_model_components)
         )
 
     starting_model = html.Div(
         id="starting_model_div",
-        children=starting_model_components,
+        children=starting_model_divs,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
     reference_model = html.Div(
         id="reference_model_div",
-        children=reference_model_components,
+        children=reference_model_divs,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
 

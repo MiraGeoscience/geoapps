@@ -78,6 +78,15 @@ class InversionApp:
             Input(component_id="inversion_type", component_property="value"),
         )(InversionApp.update_inducing_params_visibility)
         self.app.callback(
+            Output(component_id="starting_magnetic_vector", component_property="style"),
+            Output(component_id="ref_magnetic_vector", component_property="style"),
+            Output(component_id="starting_magnetic_scalar", component_property="style"),
+            Output(component_id="ref_magnetic_scalar", component_property="style"),
+            Output(component_id="starting_gravity", component_property="style"),
+            Output(component_id="ref_gravity", component_property="style"),
+            Input(component_id="inversion_type", component_property="value"),
+        )(InversionApp.update_inversion_div_visibility)
+        self.app.callback(
             Output(component_id="topography_none", component_property="style"),
             Output(component_id="topography_object", component_property="style"),
             Output(component_id="topography_sensor", component_property="style"),
@@ -86,7 +95,13 @@ class InversionApp:
         )(InversionApp.update_topography_visibility)
 
         for model_type in ["starting", "ref"]:
-            for param in ["susceptibility", "inclination", "declination"]:
+            for param in [
+                "eff_susceptibility",
+                "inclination",
+                "declination",
+                "susceptibility",
+                "density",
+            ]:
                 self.app.callback(
                     Output(
                         component_id=model_type + "_" + param + "_const_div",
@@ -125,12 +140,12 @@ class InversionApp:
             Input(component_id="param_dropdown", component_property="value"),
         )(InversionApp.update_inversion_params_visibility)
 
-        # Update from changing inversion type
+        # Update component options from changing inversion type
         self.app.callback(
             Output(component_id="component", component_property="options"),
             Input(component_id="inversion_type", component_property="value"),
         )(self.update_component_list)
-
+        """
         # Update mesh
         self.app.callback(
             Input(component_id="window_width", component_property="value"),
@@ -145,13 +160,44 @@ class InversionApp:
         self.app.callback(
             Input(component_id="compute", component_property="n_clicks"),
         )(self.trigger_click)
+        """
 
     @staticmethod
     def update_inducing_params_visibility(selection):
-        if selection == "magnetic vector" or selection == "magnetic scalar":
+        if selection in ["magnetic vector", "magnetic scalar"]:
             return {"display": "inline-block"}
         else:
             return {"display": "none"}
+
+    @staticmethod
+    def update_inversion_div_visibility(selection):
+        if selection == "magnetic vector":
+            return (
+                {"display": "block"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "magnetic scalar":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif selection == "gravity":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "block"},
+            )
 
     @staticmethod
     def update_topography_visibility(selection):
@@ -284,8 +330,9 @@ class InversionApp:
                 {"display": "inline-block"},
             )
 
-    def update_component_list(self, inversion_type):
-        if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
+    @staticmethod
+    def update_component_list(inversion_type):
+        if inversion_type in ["magnetic vector", "magnetic scalar"]:
             data_type_list = [
                 "tmi",
                 "bx",
