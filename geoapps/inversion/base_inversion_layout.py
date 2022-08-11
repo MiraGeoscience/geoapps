@@ -319,7 +319,11 @@ plot_layout = html.Div(
                             vertical=True,
                         ),
                     ],
-                    style={"display": "inline-block", "height": "100%"},
+                    style={
+                        "display": "inline-block",
+                        "height": "100%",
+                        "vertical-align": "middle",
+                    },
                 ),
                 html.Div(
                     [
@@ -335,12 +339,25 @@ plot_layout = html.Div(
                             vertical=True,
                         ),
                     ],
-                    style={"display": "inline-block", "height": "100%"},
+                    style={
+                        "display": "inline-block",
+                        "height": "100%",
+                        "vertical-align": "middle",
+                    },
+                ),
+                # dcc.Graph(id="plot", style={"width": "600px", "height": "800px", "display": "inline-block", "vertical-align": "middle"}),
+                dcc.Graph(
+                    id="plot",
+                    style={
+                        "width": "70%",
+                        "height": "100%",
+                        "display": "inline-block",
+                        "vertical-align": "middle",
+                    },
                 ),
             ]
         ),
-        html.Img(id="plot"),
-        # dcc.Graph(id="plot"),
+        # html.Img(id="plot"),
         html.Div(
             [
                 dcc.Markdown("Azimuth", style={"display": "inline-block"}),
