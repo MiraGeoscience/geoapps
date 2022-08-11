@@ -38,10 +38,11 @@ class BaseDashApplication:
 
     def __init__(self, **kwargs):
         self.workspace = self.params.geoh5
-        self.driver = self._driver_class(self.params)
+        if self._driver_class is not None:
+            self.driver = self._driver_class(self.params)
 
     def update_object_options(
-        self, filename: str, contents: str, trigger: str = None
+        self, filename: str, contents: str, param_name: str = None, trigger: str = None
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
@@ -59,6 +60,8 @@ class BaseDashApplication:
         """
         ui_json, object_options, object_value = no_update, no_update, None
 
+        if param_name is None:
+            param_name = callback_context.outputs_list[0]["id"]
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if contents is not None or trigger == "":
@@ -71,8 +74,8 @@ class BaseDashApplication:
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.driver.params = self.params
                 ui_json = BaseDashApplication.load_ui_json(ui_json)
-                if is_uuid(ui_json["objects"]["value"]):
-                    object_value = str(ui_json["objects"]["value"])
+                if is_uuid(ui_json[param_name]["value"]):
+                    object_value = str(ui_json[param_name]["value"])
             elif filename is not None and filename.endswith(".geoh5"):
                 # Uploaded workspace
                 content_type, content_string = contents.split(",")
@@ -89,8 +92,8 @@ class BaseDashApplication:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
-                if is_uuid(ui_json["objects"]["value"]):
-                    object_value = str(ui_json["objects"]["value"])
+                if is_uuid(ui_json[param_name]["value"]):
+                    object_value = str(ui_json[param_name]["value"])
 
             # Get new options for object dropdown
             object_options = [
