@@ -5,23 +5,28 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-# https://stackoverflow.com/questions/49851280/showing-a-simple-matplotlib-plot-in-plotly-dash
 
 from __future__ import annotations
 
+import base64
 import os
+import uuid
 import warnings
+from io import BytesIO
 from time import time
 
 import numpy as np
 from dash import Input, Output, State, callback_context, no_update
 from flask import Flask
-from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
+from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
+from matplotlib import pyplot as plt
+from plotly import graph_objects as go
+from plotly.tools import mpl_to_plotly
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -36,8 +41,10 @@ from geoapps.inversion.potential_fields.magnetic_vector.constants import app_ini
 from geoapps.inversion.potential_fields.magnetic_vector.params import (
     MagneticVectorParams,
 )
+from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
+from geoapps.utils.plotting import plot_plan_data_selection
 from geoapps.utils.string import string_2_list
 
 
@@ -230,8 +237,8 @@ class InversionApp(BaseDashApplication):
             Output(component_id="u_cell_size", component_property="value"),
             Output(component_id="v_cell_size", component_property="value"),
             Output(component_id="w_cell_size", component_property="value"),
-            # Output(component_id="octree_levels_topo", component_property="value"),
-            # Output(component_id="octree_levels_obs", component_property="value"),
+            Output(component_id="octree_levels_topo", component_property="value"),
+            Output(component_id="octree_levels_obs", component_property="value"),
             Output(component_id="max_distance", component_property="value"),
             Output(component_id="horizontal_padding", component_property="value"),
             Output(component_id="vertical_padding", component_property="value"),
@@ -265,6 +272,38 @@ class InversionApp(BaseDashApplication):
             Output(component_id="ga_group_name", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
+
+        # Plot callbacks
+        self.app.callback(
+            Output(component_id="window_center_x", component_property="min"),
+            Output(component_id="window_center_x", component_property="max"),
+            Output(component_id="window_center_x", component_property="value"),
+            Output(component_id="window_center_y", component_property="min"),
+            Output(component_id="window_center_y", component_property="max"),
+            Output(component_id="window_center_y", component_property="value"),
+            Output(component_id="window_width", component_property="min"),
+            Output(component_id="window_width", component_property="max"),
+            Output(component_id="window_width", component_property="value"),
+            Output(component_id="window_height", component_property="min"),
+            Output(component_id="window_height", component_property="max"),
+            Output(component_id="window_height", component_property="value"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.set_bounding_box)
+        # Update plot
+        self.app.callback(
+            Output(component_id="plot", component_property="src"),
+            Output(component_id="data_count", component_property="children"),
+            Input(component_id="data_object", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="resolution", component_property="value"),
+            Input(component_id="window_center_x", component_property="value"),
+            Input(component_id="window_center_y", component_property="value"),
+            Input(component_id="window_width", component_property="value"),
+            Input(component_id="window_height", component_property="value"),
+            Input(component_id="window_azimuth", component_property="value"),
+            Input(component_id="zoom_extent", component_property="value"),
+            Input(component_id="colorbar", component_property="value"),
+        )(self.plot_selection)
 
         """
         # Update mesh
@@ -567,9 +606,11 @@ class InversionApp(BaseDashApplication):
                 else:
                     channel_bool = []
                 # Get uncertainty value
-                if type(ui_json[comp + "_uncertainty"]) == float:
+                if (type(ui_json[comp + "_uncertainty"]["value"]) == float) or (
+                    type(ui_json[comp + "_uncertainty"]["value"]) == int
+                ):
                     uncertainty_type = "Floor"
-                    uncertainty_floor = ui_json[comp + "_uncertainty"]
+                    uncertainty_floor = ui_json[comp + "_uncertainty"]["value"]
                     uncertainty_channel = None
                 elif is_uuid(ui_json[comp + "_uncertainty"]["value"]):
                     uncertainty_type = "Channel"
@@ -610,6 +651,126 @@ class InversionApp(BaseDashApplication):
             )
         else:
             return no_update, no_update, no_update, no_update, no_update
+
+    def fig_to_uri(self, in_fig, close_all=True, **save_args):
+        # type: (plt.Figure) -> str
+        """
+        Save a figure as a URI
+        :param in_fig:
+        :return:
+        """
+        out_img = BytesIO()
+        in_fig.savefig(out_img, format="png", **save_args)
+        if close_all:
+            in_fig.clf()
+            plt.close("all")
+        out_img.seek(0)  # rewind file
+        encoded = base64.b64encode(out_img.read()).decode("ascii").replace("\n", "")
+        return f"data:image/png;base64,{encoded}"
+
+    def plot_selection(
+        self,
+        object,
+        data,
+        resolution,
+        center_x,
+        center_y,
+        width,
+        height,
+        azimuth,
+        zoom_extent,
+        colorbar,
+    ):
+        if object is not None and data is not None:
+            obj = self.workspace.get_entity(uuid.UUID(object))[0]
+
+            data_obj = self.workspace.get_entity(uuid.UUID(data))[0]
+
+            if isinstance(obj, (Grid2D, Surface, Points, Curve)):
+                # figure = plt.figure(figsize=(10, 10))
+                figure, axis = plt.subplots(figsize=(10, 10))
+                corners = np.r_[
+                    np.c_[-1.0, -1.0],
+                    np.c_[-1.0, 1.0],
+                    np.c_[1.0, 1.0],
+                    np.c_[1.0, -1.0],
+                    np.c_[-1.0, -1.0],
+                ]
+                corners[:, 0] *= width / 2
+                corners[:, 1] *= height / 2
+                corners = rotate_xyz(corners, [0, 0], -azimuth)
+                axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
+                axis, _, ind_filter, _, _ = plot_plan_data_selection(
+                    obj,
+                    data_obj,
+                    **{
+                        "axis": axis,
+                        "resolution": resolution,
+                        "window": {
+                            "center": [center_x, center_y],
+                            "size": [width, height],
+                            "azimuth": azimuth,
+                        },
+                        "zoom_extent": zoom_extent,
+                        "resize": True,
+                        "colorbar": colorbar,
+                    },
+                )
+                data_count = f"Data Count: {ind_filter.sum()}"
+                # plt.show()
+                out_url = self.fig_to_uri(figure)
+                return out_url, [data_count]  # mpl_to_plotly(figure), [data_count]
+            else:
+                return no_update, no_update
+
+    def set_bounding_box(self, data_object):
+        # Fetch vertices in the project
+        lim_x = [1e8, -1e8]
+        lim_y = [1e8, -1e8]
+
+        obj = self.workspace.get_entity(uuid.UUID(data_object))[0]
+        if isinstance(obj, Grid2D):
+            lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
+            lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
+        elif isinstance(obj, (Points, Curve, Surface)):
+            lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
+            lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
+        else:
+            return
+
+        width = lim_x[1] - lim_x[0]
+        height = lim_y[1] - lim_y[0]
+
+        window_center_x_max = lim_x[1] + width * 0.1
+        window_center_x_value = np.mean(lim_x)
+        window_center_x_min = lim_x[0] - width * 0.1
+
+        window_center_y_max = lim_y[1] + height * 0.1
+        window_center_y_value = np.mean(lim_y)
+        window_center_y_min = lim_y[0] - height * 0.1
+
+        window_width_max = width * 1.2
+        window_width_value = window_width_max / 2.0
+        window_width_min = 0
+
+        window_height_max = height * 1.2
+        window_height_min = 0
+        window_height_value = window_height_max / 2.0
+
+        return (
+            window_center_x_min,
+            window_center_x_max,
+            window_center_x_value,
+            window_center_y_min,
+            window_center_y_max,
+            window_center_y_value,
+            window_width_min,
+            window_width_max,
+            window_width_value,
+            window_height_min,
+            window_height_max,
+            window_height_value,
+        )
 
     def update_octree_param(self, window_width, window_height, resolution):
         dl = resolution

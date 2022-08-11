@@ -244,6 +244,10 @@ class BaseDashApplication:
                                 update_dict[key + "_value"] = []
                         elif is_uuid(value["value"]):
                             update_dict[key + "_value"] = str(value["value"])
+                        elif type(value["value"]) is list:
+                            update_dict[key + "_value"] = (
+                                str(value["value"]).replace("[", "").replace("]", "")
+                            )
                         else:
                             update_dict[key + "_value"] = value["value"]
                     else:

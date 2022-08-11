@@ -237,6 +237,144 @@ inducing_params_div = html.Div(
     style={"display": "inline-block", "vertical-align": "top", "width": "40%"},
 )
 
+plot_layout = html.Div(
+    [
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Grid Resolution (m)",
+                    style={"display": "inline-block", "width": "30%"},
+                ),
+                dcc.Input(
+                    id="resolution",
+                    style={"display": "inline-block", "width": "70%"},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Data Count:",
+                    style={"display": "inline-block", "width": "30%"},
+                ),
+                dcc.Markdown(
+                    id="data_count",
+                    style={"display": "inline-block", "width": "70%"},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Easting",
+                    style={"width": "6%", "margin-left": "47%", "margin-right": "47%"},
+                ),
+                html.Div(
+                    [
+                        dcc.Slider(
+                            id="window_center_x",
+                            min=-90,
+                            max=90,
+                            value=0,
+                            step=5,
+                            tooltip={"placement": "top", "always_visible": True},
+                            marks=None,
+                        ),
+                    ],
+                    style={"width": "50%", "margin-left": "25%", "margin-right": "25%"},
+                ),
+                dcc.Markdown(
+                    "Width",
+                    style={"width": "6%", "margin-left": "47%", "margin-right": "47%"},
+                ),
+                html.Div(
+                    [
+                        dcc.Slider(
+                            id="window_width",
+                            min=-90,
+                            max=90,
+                            value=0,
+                            step=5,
+                            tooltip={"placement": "top", "always_visible": True},
+                            marks=None,
+                        ),
+                    ],
+                    style={"width": "50%", "margin-left": "25%", "margin-right": "25%"},
+                ),
+            ],
+        ),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        dcc.Markdown("Northing", style={"display": "inline-block"}),
+                        dcc.Slider(
+                            id="window_center_y",
+                            min=-90,
+                            max=90,
+                            value=0,
+                            step=5,
+                            tooltip={"placement": "left", "always_visible": True},
+                            marks=None,
+                            vertical=True,
+                        ),
+                    ],
+                    style={"display": "inline-block", "height": "100%"},
+                ),
+                html.Div(
+                    [
+                        dcc.Markdown("Height", style={"display": "inline-block"}),
+                        dcc.Slider(
+                            id="window_height",
+                            min=-90,
+                            max=90,
+                            value=0,
+                            step=5,
+                            tooltip={"placement": "left", "always_visible": True},
+                            marks=None,
+                            vertical=True,
+                        ),
+                    ],
+                    style={"display": "inline-block", "height": "100%"},
+                ),
+            ]
+        ),
+        html.Img(id="plot"),
+        # dcc.Graph(id="plot"),
+        html.Div(
+            [
+                dcc.Markdown("Azimuth", style={"display": "inline-block"}),
+                dcc.Slider(
+                    id="window_azimuth",
+                    min=-90,
+                    max=90,
+                    value=0,
+                    step=5,
+                    tooltip={"placement": "top", "always_visible": True},
+                    marks=None,
+                ),
+            ],
+            style={"width": "50%", "margin-left": "25%", "margin-right": "25%"},
+        ),
+        html.Div(
+            [
+                html.Button(
+                    "Zoom on selection",
+                    id="zoom_extent",
+                    style={"display": "inline-block"},
+                ),
+                dcc.Checklist(
+                    id="colorbar",
+                    options=[{"label": "Colorbar", "value": True}],
+                    style={"display": "inline-block"},
+                ),
+            ],
+            style={"width": "40%", "margin-left": "30%", "margin-right": "30%"},
+        ),
+    ],
+    style={"display": "inline-block", "width": "50%"},
+)
+
 input_data_layout = html.Div(
     [
         dcc.Markdown("###### **Input Data**"),
@@ -298,36 +436,7 @@ input_data_layout = html.Div(
             ],
             style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
         ),
-        html.Div(
-            [
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            "Grid Resolution (m)",
-                            style={"display": "inline-block", "width": "30%"},
-                        ),
-                        dcc.Input(
-                            id="resolution",
-                            style={"display": "inline-block", "width": "70%"},
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            "Data Count:",
-                            style={"display": "inline-block", "width": "30%"},
-                        ),
-                        dcc.Markdown(
-                            id="data_count",
-                            style={"display": "inline-block", "width": "70%"},
-                        ),
-                    ]
-                ),
-                dcc.Graph(id="plot"),
-            ],
-            style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
-        ),
+        plot_layout,
     ],
     style={"border": "2px black solid"},
 )
