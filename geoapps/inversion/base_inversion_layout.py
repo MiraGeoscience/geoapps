@@ -493,23 +493,6 @@ topography_object = html.Div(
         ),
     ],
 )
-topography_sensor = html.Div(
-    id="topography_sensor_div",
-    children=[
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Vertical offset (+ve up)",
-                    style={"display": "inline-block", "width": "25%"},
-                ),
-                dcc.Input(
-                    id="topography_offset",
-                    style={"display": "inline-block", "width": "60%"},
-                ),
-            ]
-        ),
-    ],
-)
 topography_constant = html.Div(
     id="topography_constant_div",
     children=[
@@ -519,7 +502,7 @@ topography_constant = html.Div(
                     "Elevation (m)", style={"display": "inline-block", "width": "25%"}
                 ),
                 dcc.Input(
-                    id="topography_constant",
+                    id="topography_const",
                     style={"display": "inline-block", "width": "60%"},
                 ),
             ]
@@ -547,7 +530,6 @@ topography_layout = html.Div(
                             options=[
                                 "None",
                                 "Object",
-                                "Relative to Sensor",
                                 "Constant",
                             ],
                             value="None",
@@ -561,7 +543,6 @@ topography_layout = html.Div(
                 ),
                 topography_none,
                 topography_object,
-                topography_sensor,
                 topography_constant,
             ],
             style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
