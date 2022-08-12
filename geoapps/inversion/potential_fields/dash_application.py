@@ -8,11 +8,9 @@
 
 from __future__ import annotations
 
-import base64
 import os
 import uuid
 import warnings
-from io import BytesIO
 from time import time
 
 import matplotlib
@@ -356,34 +354,13 @@ class InversionApp(BaseDashApplication):
         )(self.update_remainder_from_ui_json)
 
         # Plot callbacks
-        self.app.callback(
-            Output(component_id="window_center_x", component_property="min"),
-            Output(component_id="window_center_x", component_property="max"),
-            Output(component_id="window_center_x", component_property="value"),
-            Output(component_id="window_center_y", component_property="min"),
-            Output(component_id="window_center_y", component_property="max"),
-            Output(component_id="window_center_y", component_property="value"),
-            Output(component_id="window_width", component_property="min"),
-            Output(component_id="window_width", component_property="max"),
-            Output(component_id="window_width", component_property="value"),
-            Output(component_id="window_height", component_property="min"),
-            Output(component_id="window_height", component_property="max"),
-            Output(component_id="window_height", component_property="value"),
-            Input(component_id="data_object", component_property="value"),
-        )(self.set_bounding_box)
         # Update plot
         self.app.callback(
-            Output(component_id="plot", component_property="src"),
+            Output(component_id="plot", component_property="figure"),
             Output(component_id="data_count", component_property="children"),
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="resolution", component_property="value"),
-            Input(component_id="window_center_x", component_property="value"),
-            Input(component_id="window_center_y", component_property="value"),
-            Input(component_id="window_width", component_property="value"),
-            Input(component_id="window_height", component_property="value"),
-            Input(component_id="window_azimuth", component_property="value"),
-            Input(component_id="zoom_extent", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
         )(self.plot_selection)
 
@@ -688,19 +665,225 @@ class InversionApp(BaseDashApplication):
         else:
             return no_update, no_update, no_update, no_update, no_update
 
+    def plot_plan_data_selection(self, entity, data, **kwargs):
+        """
+        Plot data values in 2D with contours
+
+        :param entity: `geoh5py.objects`
+            Input object with either `vertices` or `centroids` property.
+        :param data: `geoh5py.data`
+            Input data with `values` property.
+
+        :return ax:
+        :return out:
+        :return indices:
+        :return line_selection:
+        :return contour_set:
+        """
+        indices = None
+        line_selection = None
+        contour_set = None
+        values = None
+        figure = None
+        out = None
+
+        if isinstance(entity, (Grid2D, Points, Curve, Surface)):
+            if "figure" not in kwargs.keys():
+                figure = go.Figure()
+            else:
+                figure = kwargs["figure"]
+        else:
+            return figure, out, indices, line_selection, contour_set
+
+        # for collection in axis.collections:
+        #     collection.remove()
+
+        if getattr(entity, "vertices", None) is not None:
+            locations = entity.vertices
+        else:
+            locations = entity.centroids
+
+        if "resolution" not in kwargs.keys():
+            resolution = 0
+        else:
+            resolution = kwargs["resolution"]
+
+        if "indices" in kwargs.keys():
+            indices = kwargs["indices"]
+            if isinstance(indices, np.ndarray) and np.all(indices == False):
+                indices = None
+
+        if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
+            data.values[0], str
+        ):
+            values = np.asarray(data.values, dtype=float).copy()
+            values[values == -99999] = np.nan
+        elif isinstance(data, str) and (data in "XYZ"):
+            values = locations[:, "XYZ".index(data)]
+
+        if values is not None and (values.shape[0] != locations.shape[0]):
+            values = None
+
+        color_norm = None
+        if "color_norm" in kwargs.keys():
+            color_norm = kwargs["color_norm"]
+
+        window = None
+        if "window" in kwargs.keys():
+            window = kwargs["window"]
+
+        if (
+            data is not None
+            and getattr(data, "entity_type", None) is not None
+            and getattr(data.entity_type, "color_map", None) is not None
+        ):
+            new_cmap = data.entity_type.color_map._values
+            map_vals = new_cmap["Value"].copy()
+            cmap = colors.ListedColormap(
+                np.c_[
+                    new_cmap["Red"] / 255,
+                    new_cmap["Green"] / 255,
+                    new_cmap["Blue"] / 255,
+                ]
+            )
+            color_norm = colors.BoundaryNorm(map_vals, cmap.N)
+        else:
+            cmap = "Spectral_r"
+
+        if isinstance(entity, Grid2D):
+            x = entity.centroids[:, 0].reshape(entity.shape, order="F")
+            y = entity.centroids[:, 1].reshape(entity.shape, order="F")
+            indices = filter_xy(x, y, resolution, window=window)
+
+            ind_x, ind_y = (
+                np.any(indices, axis=1),
+                np.any(indices, axis=0),
+            )
+
+            X = x[ind_x, :][:, ind_y]
+            Y = y[ind_x, :][:, ind_y]
+
+            if values is not None:
+                values = np.asarray(
+                    values.reshape(entity.shape, order="F"), dtype=float
+                )
+                values[indices == False] = np.nan
+                values = values[ind_x, :][:, ind_y]
+
+            if np.any(values):
+                # values[np.isnan(values)] = 0
+                # print(values)
+                figure.add_trace(go.Heatmap(z=values.T))
+                # out = axis.pcolormesh(
+                #    X, Y, values, cmap=cmap, norm=color_norm, shading="auto"
+                # )
+
+            if (
+                "contours" in kwargs.keys()
+                and kwargs["contours"] is not None
+                and np.any(values)
+            ):
+                contour_set = axis.contour(
+                    X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
+                )
+
+        else:
+            x, y = entity.vertices[:, 0], entity.vertices[:, 1]
+            if indices is None:
+                indices = filter_xy(
+                    x,
+                    y,
+                    resolution,
+                    window=window,
+                )
+            X, Y = x[indices], y[indices]
+
+            if values is not None:
+                values = values[indices]
+
+            if "marker_size" not in kwargs.keys():
+                marker_size = 50
+            else:
+                marker_size = kwargs["marker_size"]
+
+            out = axis.scatter(X, Y, marker_size, values, cmap=cmap, norm=color_norm)
+
+            if (
+                "contours" in kwargs.keys()
+                and kwargs["contours"] is not None
+                and np.any(values)
+            ):
+                ind = ~np.isnan(values)
+                contour_set = axis.tricontour(
+                    X[ind],
+                    Y[ind],
+                    values[ind],
+                    levels=kwargs["contours"],
+                    colors="k",
+                    linewidths=1.0,
+                )
+
+        if "collections" in kwargs.keys():
+            for collection in kwargs["collections"]:
+                axis.add_collection(copy(collection))
+
+        if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"] and np.any(values):
+            ind = ~np.isnan(values.ravel())
+            x = X.ravel()[ind]
+            y = Y.ravel()[ind]
+
+        if np.any(x) and np.any(y):
+            width = x.max() - x.min()
+            height = y.max() - y.min()
+
+            # format_labels(x, y, axis, **kwargs)
+            # figure.update_layout(xaxis_range=[x.min() - width * 0.1, x.max() + width * 0.1],
+            #                     yaxis_range=[y.min() - height * 0.1, y.max() + height * 0.1])
+
+        # if "colorbar" in kwargs.keys() and kwargs["colorbar"]:
+        #    plt.colorbar(out, ax=axis)
+
+        line_selection = np.zeros_like(indices, dtype=bool)
+        if "highlight_selection" in kwargs.keys() and isinstance(
+            kwargs["highlight_selection"], dict
+        ):
+            for key, values in kwargs["highlight_selection"].items():
+
+                if not np.any(entity.workspace.get_entity(key)):
+                    continue
+
+                line_data = entity.workspace.get_entity(key)[0]
+                if isinstance(line_data, ReferencedData):
+                    values = [
+                        key
+                        for key, value in line_data.value_map.map.items()
+                        if value in values
+                    ]
+
+                for line in values:
+                    ind = np.where(line_data.values == line)[0]
+                    x, y, values = (
+                        locations[ind, 0],
+                        locations[ind, 1],
+                        entity.workspace.get_entity(key)[0].values[ind],
+                    )
+                    ind_line = filter_xy(x, y, resolution, window=window)
+                    axis.scatter(
+                        x[ind_line], y[ind_line], marker_size * 2, "k", marker="+"
+                    )
+                    line_selection[ind[ind_line]] = True
+
+        return figure, out, indices, line_selection, contour_set
+
     def plot_selection(
         self,
         object,
         data,
         resolution,
-        center_x,
-        center_y,
-        width,
-        height,
-        azimuth,
-        zoom_extent,
         colorbar,
     ):
+        figure = go.Figure()
+        data_count = "Data Count: "
 
         if object is not None and data is not None:
             obj = self.workspace.get_entity(uuid.UUID(object))[0]
@@ -708,106 +891,19 @@ class InversionApp(BaseDashApplication):
             data_obj = self.workspace.get_entity(uuid.UUID(data))[0]
 
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
-                # figure = plt.figure(figsize=(10, 10))
-                figure, axis = plt.subplots(figsize=(10, 10))
-                corners = np.r_[
-                    np.c_[-1.0, -1.0],
-                    np.c_[-1.0, 1.0],
-                    np.c_[1.0, 1.0],
-                    np.c_[1.0, -1.0],
-                    np.c_[-1.0, -1.0],
-                ]
-                corners[:, 0] *= width / 2
-                corners[:, 1] *= height / 2
-                corners = rotate_xyz(corners, [0, 0], -azimuth)
-                axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
-                axis, _, ind_filter, _, _ = plot_plan_data_selection(
+                figure, _, ind_filter, _, _ = self.plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
-                        "axis": axis,
+                        "figure": figure,
                         "resolution": resolution,
-                        "window": {
-                            "center": [center_x, center_y],
-                            "size": [width, height],
-                            "azimuth": azimuth,
-                        },
-                        "zoom_extent": zoom_extent,
                         "resize": True,
                         "colorbar": colorbar,
                     },
                 )
-                data_count = f"Data Count: {ind_filter.sum()}"
-                # plt.show()
-                out_url = self.fig_to_uri(figure)
-                return out_url, [data_count]  # mpl_to_plotly(figure), [data_count]
-            else:
-                return no_update, no_update
+                data_count += f"{ind_filter.sum()}"
 
-    def fig_to_uri(self, in_fig, close_all=True, **save_args):
-        # type: (plt.Figure) -> str
-        """
-        Save a figure as a URI
-        :param in_fig:
-        :return:
-        """
-        out_img = BytesIO()
-        in_fig.savefig(out_img, bbox_inches="tight", format="png", **save_args)
-        if close_all:
-            in_fig.clf()
-            plt.close("all")
-        out_img.seek(0)  # rewind file
-        encoded = base64.b64encode(out_img.read()).decode("ascii").replace("\n", "")
-        return f"data:image/png;base64,{encoded}"
-
-    def set_bounding_box(self, data_object):
-        # Fetch vertices in the project
-        lim_x = [1e8, -1e8]
-        lim_y = [1e8, -1e8]
-
-        obj = self.workspace.get_entity(uuid.UUID(data_object))[0]
-        if isinstance(obj, Grid2D):
-            lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
-            lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
-        elif isinstance(obj, (Points, Curve, Surface)):
-            lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
-            lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
-        else:
-            return
-
-        width = lim_x[1] - lim_x[0]
-        height = lim_y[1] - lim_y[0]
-
-        window_center_x_max = lim_x[1] + width * 0.1
-        window_center_x_value = np.mean(lim_x)
-        window_center_x_min = lim_x[0] - width * 0.1
-
-        window_center_y_max = lim_y[1] + height * 0.1
-        window_center_y_value = np.mean(lim_y)
-        window_center_y_min = lim_y[0] - height * 0.1
-
-        window_width_max = width * 1.2
-        window_width_value = window_width_max / 2.0
-        window_width_min = 0
-
-        window_height_max = height * 1.2
-        window_height_min = 0
-        window_height_value = window_height_max / 2.0
-
-        return (
-            window_center_x_min,
-            window_center_x_max,
-            window_center_x_value,
-            window_center_y_min,
-            window_center_y_max,
-            window_center_y_value,
-            window_width_min,
-            window_width_max,
-            window_width_value,
-            window_height_min,
-            window_height_max,
-            window_height_value,
-        )
+        return figure, data_count
 
     def update_octree_param(self, window_width, window_height, resolution):
         dl = resolution

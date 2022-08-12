@@ -320,147 +320,24 @@ plot_layout = html.Div(
                 ),
             ]
         ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    id="data_count",
-                    children=["Data Count:"],
-                    style={"display": "inline-block", "width": "30%"},
-                ),
-            ]
+        dcc.Markdown(
+            id="data_count",
+            children=["Data Count:"],
+            style={"display": "inline-block", "width": "30%"},
         ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Easting",
-                    style={"width": "6%", "margin-left": "47%", "margin-right": "47%"},
-                ),
-                html.Div(
-                    [
-                        dcc.Slider(
-                            id="window_center_x",
-                            min=-90,
-                            max=90,
-                            value=0,
-                            step=5,
-                            tooltip={"placement": "top", "always_visible": True},
-                            marks=None,
-                        ),
-                    ],
-                    style={"width": "50%", "margin-left": "25%", "margin-right": "25%"},
-                ),
-                dcc.Markdown(
-                    "Width",
-                    style={"width": "6%", "margin-left": "47%", "margin-right": "47%"},
-                ),
-                html.Div(
-                    [
-                        dcc.Slider(
-                            id="window_width",
-                            min=-90,
-                            max=90,
-                            value=0,
-                            step=5,
-                            tooltip={"placement": "top", "always_visible": True},
-                            marks=None,
-                        ),
-                    ],
-                    style={"width": "50%", "margin-left": "25%", "margin-right": "25%"},
-                ),
-            ],
+        dcc.Checklist(
+            id="colorbar",
+            options=[{"label": "Colorbar", "value": True}],
+            style={"display": "inline-block"},
         ),
-        html.Div(
-            [
-                html.Div(
-                    [
-                        dcc.Markdown("Northing", style={"display": "inline-block"}),
-                        dcc.Slider(
-                            id="window_center_y",
-                            min=-90,
-                            max=90,
-                            value=0,
-                            step=5,
-                            tooltip={"placement": "left", "always_visible": True},
-                            marks=None,
-                            vertical=True,
-                        ),
-                    ],
-                    style={
-                        "display": "inline-block",
-                        "height": "100%",
-                        "vertical-align": "middle",
-                    },
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown("Height", style={"display": "inline-block"}),
-                        dcc.Slider(
-                            id="window_height",
-                            min=-90,
-                            max=90,
-                            value=0,
-                            step=5,
-                            tooltip={"placement": "left", "always_visible": True},
-                            marks=None,
-                            vertical=True,
-                        ),
-                    ],
-                    style={
-                        "display": "inline-block",
-                        "height": "100%",
-                        "vertical-align": "middle",
-                    },
-                ),
-                html.Img(
-                    id="plot",
-                    style={
-                        "width": "65%",
-                        # "height": "100%",
-                        "display": "inline-block",
-                        "vertical-align": "middle",
-                    },
-                ),
-                # dcc.Graph(id="plot", style={"width": "600px", "height": "800px", "display": "inline-block", "vertical-align": "middle"}),
-                # dcc.Graph(
-                #    id="plot",
-                #    style={
-                #        "width": "70%",
-                #        "height": "100%",
-                #        "display": "inline-block",
-                #        "vertical-align": "middle",
-                #    },
-                # ),
-            ]
-        ),
-        html.Div(
-            [
-                dcc.Markdown("Azimuth", style={"display": "inline-block"}),
-                dcc.Slider(
-                    id="window_azimuth",
-                    min=-90,
-                    max=90,
-                    value=0,
-                    step=5,
-                    tooltip={"placement": "top", "always_visible": True},
-                    marks=None,
-                ),
-            ],
-            style={"width": "50%", "margin-left": "25%", "margin-right": "25%"},
-        ),
-        html.Div(
-            [
-                dcc.Checklist(
-                    id="zoom_extent",
-                    options=[{"label": "Zoom on selection", "value": True}],
-                    style={"display": "inline-block"},
-                ),
-                dcc.Checklist(
-                    id="colorbar",
-                    options=[{"label": "Colorbar", "value": True}],
-                    style={"display": "inline-block"},
-                ),
-            ],
-            style={"width": "40%", "margin-left": "30%", "margin-right": "30%"},
+        dcc.Graph(
+            id="plot",
+            style={
+                # "width": "70%",
+                # "height": "100%",
+                "display": "inline-block",
+                "vertical-align": "middle",
+            },
         ),
     ],
     style={"display": "inline-block", "width": "60%"},
