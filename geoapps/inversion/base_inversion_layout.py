@@ -114,7 +114,7 @@ def generate_model_component(
                     html.Div(
                         [
                             dcc.Markdown("Object", style={"display": "inline-block"}),
-                            dcc.Input(
+                            dcc.Dropdown(
                                 id=param_prefix + param_name + "_object",
                                 style={"display": "inline-block"},
                             ),
@@ -123,7 +123,7 @@ def generate_model_component(
                     html.Div(
                         [
                             dcc.Markdown("Values", style={"display": "inline-block"}),
-                            dcc.Input(
+                            dcc.Dropdown(
                                 id=param_prefix + param_name + "_data",
                                 style={"display": "inline-block"},
                             ),
@@ -247,19 +247,16 @@ plot_layout = html.Div(
                 ),
                 dcc.Input(
                     id="resolution",
-                    style={"display": "inline-block", "width": "70%"},
+                    style={"display": "inline-block"},
                 ),
             ]
         ),
         html.Div(
             [
                 dcc.Markdown(
-                    "Data Count:",
-                    style={"display": "inline-block", "width": "30%"},
-                ),
-                dcc.Markdown(
                     id="data_count",
-                    style={"display": "inline-block", "width": "70%"},
+                    children=["Data Count:"],
+                    style={"display": "inline-block", "width": "30%"},
                 ),
             ]
         ),
@@ -383,9 +380,9 @@ plot_layout = html.Div(
         ),
         html.Div(
             [
-                html.Button(
-                    "Zoom on selection",
+                dcc.Checklist(
                     id="zoom_extent",
+                    options=[{"label": "Zoom on selection", "value": True}],
                     style={"display": "inline-block"},
                 ),
                 dcc.Checklist(
@@ -489,7 +486,8 @@ topography_object = html.Div(
                     "Data:", style={"display": "inline-block", "width": "25%"}
                 ),
                 dcc.Dropdown(
-                    id="topo_data", style={"display": "inline-block", "width": "75%"}
+                    id="topography_data",
+                    style={"display": "inline-block", "width": "75%"},
                 ),
             ]
         ),
@@ -991,7 +989,7 @@ output_layout = html.Div(
                     "Save as:", style={"display": "inline-block", "width": "10%"}
                 ),
                 dcc.Input(
-                    id="ga_group_name",
+                    id="out_group",
                     style={"display": "inline-block", "width": "10%"},
                 ),
             ]

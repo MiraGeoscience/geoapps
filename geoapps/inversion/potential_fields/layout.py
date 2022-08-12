@@ -7,11 +7,42 @@
 
 from dash import dcc, html
 
-import geoapps.inversion.base_layout as base_layout
+import geoapps.inversion.base_inversion_layout as base_layout
 
 object_selection_layout = base_layout.get_object_selection_layout(
-    ["magnetic vector", "magnetic scalar", "gravity"]
+    [
+        "magnetic vector",
+        "magnetic scalar",
+        "gravity",
+    ]
 )
+
+input_components = {
+    "magnetics": [
+        "tmi",
+        "bx",
+        "by",
+        "bz",
+        "bxx",
+        "bxy",
+        "bxz",
+        "byy",
+        "byz",
+        "bzz",
+    ],
+    "gravity": [
+        "gx",
+        "gy",
+        "gz",
+        "gxx",
+        "gxy",
+        "gxz",
+        "gyy",
+        "gyz",
+        "gzz",
+        "uv",
+    ],
+}
 
 inversion_params = {
     "magnetic_vector": {
