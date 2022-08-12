@@ -345,19 +345,27 @@ plot_layout = html.Div(
                         "vertical-align": "middle",
                     },
                 ),
-                # dcc.Graph(id="plot", style={"width": "600px", "height": "800px", "display": "inline-block", "vertical-align": "middle"}),
-                dcc.Graph(
+                html.Img(
                     id="plot",
                     style={
-                        "width": "70%",
-                        "height": "100%",
+                        "width": "65%",
+                        # "height": "100%",
                         "display": "inline-block",
                         "vertical-align": "middle",
                     },
                 ),
+                # dcc.Graph(id="plot", style={"width": "600px", "height": "800px", "display": "inline-block", "vertical-align": "middle"}),
+                # dcc.Graph(
+                #    id="plot",
+                #    style={
+                #        "width": "70%",
+                #        "height": "100%",
+                #        "display": "inline-block",
+                #        "vertical-align": "middle",
+                #    },
+                # ),
             ]
         ),
-        # html.Img(id="plot"),
         html.Div(
             [
                 dcc.Markdown("Azimuth", style={"display": "inline-block"}),
@@ -389,7 +397,7 @@ plot_layout = html.Div(
             style={"width": "40%", "margin-left": "30%", "margin-right": "30%"},
         ),
     ],
-    style={"display": "inline-block", "width": "50%"},
+    style={"display": "inline-block", "width": "60%"},
 )
 
 input_data_layout = html.Div(
@@ -451,7 +459,7 @@ input_data_layout = html.Div(
                     style={"display": "inline-block", "width": "70%"},
                 ),
             ],
-            style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
+            style={"display": "inline-block", "vertical-align": "top", "width": "40%"},
         ),
         plot_layout,
     ],
