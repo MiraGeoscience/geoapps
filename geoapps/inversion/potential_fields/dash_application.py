@@ -116,7 +116,6 @@ class InversionApp(BaseDashApplication):
         self.app.callback(
             Output(component_id="topography_none_div", component_property="style"),
             Output(component_id="topography_object_div", component_property="style"),
-            Output(component_id="topography_sensor_div", component_property="style"),
             Output(component_id="topography_constant_div", component_property="style"),
             Input(component_id="topography_options", component_property="value"),
         )(InversionApp.update_topography_visibility)
@@ -294,7 +293,15 @@ class InversionApp(BaseDashApplication):
                     ),
                     Input(component_id="ui_json", component_property="data"),
                     Input(component_id="inversion_type", component_property="value"),
-                )(self.update_inversion_params_from_ui_json)
+                )(InversionApp.update_inversion_params_from_ui_json)
+        for param in ["topography", "lower_bound", "upper_bound"]:
+            self.app.callback(
+                Output(component_id=param + "_options", component_property="value"),
+                Output(component_id=param + "_const", component_property="value"),
+                Output(component_id=param + "_object", component_property="value"),
+                Output(component_id=param + "_data", component_property="value"),
+                Input(component_id="ui_json", component_property="data"),
+            )(InversionApp.update_general_param_from_ui_json)
 
         # Update from ui.json
         self.app.callback(
@@ -314,8 +321,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="receivers_offset_x", component_property="value"),
             Output(component_id="receivers_offset_y", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
-            Output(component_id="topography_offset", component_property="value"),
-            Output(component_id="topography_constant", component_property="value"),
             # Inversion - mesh
             Output(component_id="u_cell_size", component_property="value"),
             Output(component_id="v_cell_size", component_property="value"),
@@ -335,9 +340,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="x_norm", component_property="value"),
             Output(component_id="y_norm", component_property="value"),
             Output(component_id="z_norm", component_property="value"),
-            # Inversion - upper-lower bounds
-            # Output(component_id="lower_bound", component_property="value"),
-            # Output(component_id="upper_bound", component_property="value"),
             # Inversion - detrend
             Output(component_id="detrend_type", component_property="value"),
             Output(component_id="detrend_order", component_property="value"),
@@ -471,25 +473,15 @@ class InversionApp(BaseDashApplication):
                 {"display": "block"},
                 {"display": "none"},
                 {"display": "none"},
-                {"display": "none"},
             )
         elif selection == "Object":
             return (
                 {"display": "none"},
                 {"display": "block"},
                 {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "Relative to Sensor":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "block"},
-                {"display": "none"},
             )
         elif selection == "Constant":
             return (
-                {"display": "none"},
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "block"},
@@ -620,10 +612,10 @@ class InversionApp(BaseDashApplication):
             const = None
         return options, data, const
 
-    def update_inversion_params_from_ui_json(self, ui_json, inversion_type):
+    @staticmethod
+    def update_inversion_params_from_ui_json(ui_json, inversion_type):
         options, const, obj, data = no_update, no_update, no_update, no_update
-        # for i in ui_json.keys():
-        #    print(i)
+
         prefix, param = tuple(
             callback_context.outputs_list[0]["id"]
             .removesuffix("_options")
@@ -646,6 +638,15 @@ class InversionApp(BaseDashApplication):
 
             options, data, const = InversionApp.unpack_val(val)
 
+        return options, const, obj, data
+
+    @staticmethod
+    def update_general_param_from_ui_json(ui_json):
+        param = callback_context.outputs_list[0]["id"].removesuffix("_options")
+        obj = str(ui_json[param + "_object"]["value"])
+        val = ui_json[param]["value"]
+
+        options, data, const = InversionApp.unpack_val(val)
         return options, const, obj, data
 
     # Update object dropdowns
