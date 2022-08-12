@@ -68,4 +68,5 @@ potential_fields_layout = html.Div(
         inversion_params_layout,
         base_layout.output_layout,
     ],
+    style={"width": "90%", "margin-left": "10px", "margin-right": "10px"},
 )

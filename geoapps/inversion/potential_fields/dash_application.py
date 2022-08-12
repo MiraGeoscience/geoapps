@@ -152,16 +152,13 @@ class InversionApp(BaseDashApplication):
             Input(component_id="upper_bound_options", component_property="value"),
         )(InversionApp.update_model_visibility)
         self.app.callback(
-            Output(component_id="starting_model_div", component_property="style"),
-            Output(component_id="mesh_div", component_property="style"),
-            Output(component_id="reference_model_div", component_property="style"),
-            Output(component_id="regularization_div", component_property="style"),
-            Output(component_id="upper_lower_bound_div", component_property="style"),
-            Output(component_id="detrend_div", component_property="style"),
-            Output(component_id="ignore_values_div", component_property="style"),
-            Output(component_id="optimization_div", component_property="style"),
-            Input(component_id="param_dropdown", component_property="value"),
-        )(InversionApp.update_inversion_params_visibility)
+            Output(component_id="core_params_div", component_property="style"),
+            Input(component_id="core_params", component_property="value"),
+        )(InversionApp.update_visibility_from_checkbox)
+        self.app.callback(
+            Output(component_id="advanced_params_div", component_property="style"),
+            Input(component_id="advanced_params", component_property="value"),
+        )(InversionApp.update_visibility_from_checkbox)
 
         # Update component options from changing inversion type
         self.app.callback(
@@ -497,95 +494,11 @@ class InversionApp(BaseDashApplication):
             return {"display": "none"}, {"display": "none"}
 
     @staticmethod
-    def update_inversion_params_visibility(selection):
-        if selection == "starting model":
-            return (
-                {"display": "inline-block"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "mesh":
-            return (
-                {"display": "none"},
-                {"display": "inline-block"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "reference model":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "inline-block"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "regularization":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "inline-block"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "upper-lower bounds":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "inline-block"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "detrend":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "inline-block"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "ignore values":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "inline-block"},
-                {"display": "none"},
-            )
-        elif selection == "optimization":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "inline-block"},
-            )
+    def update_visibility_from_checkbox(selection):
+        if selection:
+            return {"display": "block"}
+        else:
+            return {"display": "none"}
 
     @staticmethod
     def update_component_list(inversion_type):
@@ -666,6 +579,8 @@ class InversionApp(BaseDashApplication):
         :return options: Options for data subset dropdown.
         :return value: Value for data subset dropdown.
         """
+        if object_uid is None or object_uid == "None":
+            return no_update
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json" in triggers:
