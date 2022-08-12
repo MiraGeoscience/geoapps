@@ -53,16 +53,24 @@ def get_object_selection_layout(inversion_type_list):
     ):
         object_selection_layout = html.Div(
             [
-                dcc.Markdown("###### **Object Selection**"),
+                dcc.Markdown("##### **Object Selection**"),
                 standard_layout,
                 inducing_params_div,
             ],
-            style={"border": "2px black solid"},
+            style={
+                "border": "2px black solid",
+                "padding-left": "10px",
+                "padding-right": "10px",
+            },
         )
     else:
         object_selection_layout = html.Div(
-            [dcc.Markdown("###### **Object Selection**"), standard_layout],
-            style={"border": "2px black solid"},
+            [dcc.Markdown("##### **Object Selection**"), standard_layout],
+            style={
+                "border": "2px black solid",
+                "padding-left": "10px",
+                "padding-right": "10px",
+            },
         )
     return object_selection_layout
 
@@ -166,18 +174,78 @@ def get_inversion_params_layout(inversion_params):
 
     starting_model = html.Div(
         id="starting_model_div",
-        children=starting_model_divs,
+        children=[dcc.Markdown("###### **Starting Model**")] + starting_model_divs,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
     reference_model = html.Div(
         id="reference_model_div",
-        children=reference_model_divs,
+        children=[dcc.Markdown("###### **Reference Model**")] + reference_model_divs,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
 
     inversion_params_layout = html.Div(
         [
-            dcc.Markdown("###### **Inversion Parameters**"),
+            dcc.Markdown("##### **Inversion Parameters**"),
+            dcc.Checklist(
+                id="forward_only", options=[{"label": "Forward only", "value": True}]
+            ),
+            dcc.Checklist(
+                id="core_params",
+                options=[{"label": "Core parameters", "value": True}],
+                value=[True],
+            ),
+            dcc.Checklist(
+                id="advanced_params",
+                options=[{"label": "Advanced parameters", "value": True}],
+                value=[],
+            ),
+            html.Hr(),
+            html.Div(
+                id="core_params_div",
+                children=[
+                    starting_model,
+                    html.Hr(),
+                    mesh,
+                    html.Hr(),
+                    reference_model,
+                ],
+                style={
+                    "border": "2px black solid",
+                    "padding-left": "10px",
+                    "padding-right": "10px",
+                },
+            ),
+            html.Div(
+                id="advanced_params_div",
+                children=[
+                    regularization,
+                    html.Hr(),
+                    upper_lower_bounds,
+                    html.Hr(),
+                    detrend,
+                    html.Hr(),
+                    ignore_values,
+                    html.Hr(),
+                    optimization,
+                ],
+                style={
+                    "border": "2px black solid",
+                    "padding-left": "10px",
+                    "padding-right": "10px",
+                },
+            ),
+        ],
+        style={
+            "border": "2px black solid",
+            "padding-left": "10px",
+            "padding-right": "10px",
+        },
+    )
+
+    """
+    inversion_params_layout = html.Div(
+        [
+            dcc.Markdown("##### **Inversion Parameters**"),
             inversion_parameters_dropdown,
             starting_model,
             mesh,
@@ -188,8 +256,9 @@ def get_inversion_params_layout(inversion_params):
             ignore_values,
             optimization,
         ],
-        style={"border": "2px black solid"},
+        style={"border": "2px black solid", "padding-left": "10px", "padding-right": "10px"},
     )
+    """
 
     return inversion_params_layout
 
@@ -399,7 +468,7 @@ plot_layout = html.Div(
 
 input_data_layout = html.Div(
     [
-        dcc.Markdown("###### **Input Data**"),
+        dcc.Markdown("##### **Input Data**"),
         html.Div(
             [
                 html.Div(
@@ -460,7 +529,11 @@ input_data_layout = html.Div(
         ),
         plot_layout,
     ],
-    style={"border": "2px black solid"},
+    style={
+        "border": "2px black solid",
+        "padding-left": "10px",
+        "padding-right": "10px",
+    },
 )
 
 topography_none = html.Div(
@@ -512,7 +585,7 @@ topography_constant = html.Div(
 
 topography_layout = html.Div(
     [
-        dcc.Markdown("###### **Topography**"),
+        dcc.Markdown("##### **Topography**"),
         html.Div(
             [
                 html.Div(
@@ -607,12 +680,17 @@ topography_layout = html.Div(
             style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
         ),
     ],
-    style={"border": "2px black solid"},
+    style={
+        "border": "2px black solid",
+        "padding-left": "10px",
+        "padding-right": "10px",
+    },
 )
 
 mesh = html.Div(
     id="mesh_div",
     children=[
+        dcc.Markdown("###### **Mesh**"),
         dcc.Markdown("Object:"),
         dcc.Dropdown(id="mesh_object"),
         dcc.Markdown("**Core cell size (u, v, w)**"),
@@ -699,6 +777,7 @@ mesh = html.Div(
 regularization = html.Div(
     id="regularization_div",
     children=[
+        dcc.Markdown("###### **Regularization**"),
         html.Div(
             [
                 html.Div(
@@ -790,6 +869,7 @@ regularization = html.Div(
 upper_lower_bounds = html.Div(
     id="upper_lower_bound_div",
     children=[
+        dcc.Markdown("###### **Upper-Lower Bounds**"),
         generate_model_component("lower_bound", "Lower Bounds", "Units"),
         generate_model_component("upper_bound", "Upper Bounds", "Units"),
     ],
@@ -799,6 +879,7 @@ upper_lower_bounds = html.Div(
 ignore_values = html.Div(
     id="ignore_values_div",
     children=[
+        dcc.Markdown("###### **Ignore Values**"),
         html.Div(
             [
                 dcc.Markdown(
@@ -810,7 +891,7 @@ ignore_values = html.Div(
                     style={"display": "inline-block", "width": "40%"},
                 ),
             ]
-        )
+        ),
     ],
     style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
 )
@@ -818,6 +899,7 @@ ignore_values = html.Div(
 optimization = html.Div(
     id="optimization_div",
     children=[
+        dcc.Markdown("###### **Optimization**"),
         html.Div(
             [
                 dcc.Markdown(
@@ -902,6 +984,7 @@ optimization = html.Div(
 detrend = html.Div(
     id="detrend_div",
     children=[
+        dcc.Markdown("###### **Detrend**"),
         html.Div(
             [
                 html.Div(
@@ -963,7 +1046,7 @@ inversion_parameters_dropdown = html.Div(
 
 output_layout = html.Div(
     [
-        dcc.Markdown("###### **Output**"),
+        dcc.Markdown("##### **Output**"),
         html.Div(
             [
                 dcc.Markdown(
@@ -995,5 +1078,9 @@ output_layout = html.Div(
             "Compute", id="compute", style={"width": "15%", "margin-right": "85%"}
         ),
     ],
-    style={"border": "2px black solid"},
+    style={
+        "border": "2px black solid",
+        "padding-left": "10px",
+        "padding-right": "10px",
+    },
 )
