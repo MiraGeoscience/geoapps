@@ -38,7 +38,11 @@ from geoapps.base.dash_application import BaseDashApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.potential_fields.gravity.params import GravityParams
-from geoapps.inversion.potential_fields.layout import potential_fields_layout
+from geoapps.inversion.potential_fields.layout import (
+    input_components,
+    inversion_params,
+    potential_fields_layout,
+)
 from geoapps.inversion.potential_fields.magnetic_scalar.params import (
     MagneticScalarParams,
 )
@@ -163,6 +167,7 @@ class InversionApp(BaseDashApplication):
         # Update component options from changing inversion type
         self.app.callback(
             Output(component_id="component", component_property="options"),
+            Output(component_id="component", component_property="value"),
             Input(component_id="inversion_type", component_property="value"),
         )(self.update_component_list)
 
@@ -176,6 +181,50 @@ class InversionApp(BaseDashApplication):
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
         )(self.update_object_options)
+
+        self.app.callback(
+            Output(component_id="mesh_object", component_property="options"),
+            Input(component_id="data_object", component_property="options"),
+        )(InversionApp.update_remaining_object_options)
+        self.app.callback(
+            Output(component_id="topography_object", component_property="options"),
+            Input(component_id="data_object", component_property="options"),
+        )(InversionApp.update_remaining_object_options)
+        self.app.callback(
+            Output(component_id="topography_data", component_property="options"),
+            # Output(component_id=param+"_data", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="topography_object", component_property="value"),
+        )(self.update_channel_options)
+
+        for model_type in ["starting", "reference"]:
+            for param in [
+                "eff_susceptibility",
+                "inclination",
+                "declination",
+                "susceptibility",
+                "density",
+            ]:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="options",
+                    ),
+                    Input(component_id="data_object", component_property="options"),
+                )(InversionApp.update_remaining_object_options)
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_data",
+                        component_property="options",
+                    ),
+                    # Output(component_id=param+"_data", component_property="value"),
+                    Input(component_id="ui_json", component_property="data"),
+                    Input(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="value",
+                    ),
+                )(self.update_channel_options)
+
         self.app.callback(
             Output(component_id="channel", component_property="options"),
             # Output(component_id="channel", component_property="value"),
@@ -217,6 +266,35 @@ class InversionApp(BaseDashApplication):
             Input(component_id="component", component_property="value"),
             Input(component_id="full_components", component_property="data"),
         )(self.update_input_channel)
+
+        for model_type in ["starting", "reference"]:
+            for param in [
+                "eff_susceptibility",
+                "inclination",
+                "declination",
+                "susceptibility",
+                "density",
+            ]:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_options",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_const",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_data",
+                        component_property="value",
+                    ),
+                    Input(component_id="ui_json", component_property="data"),
+                    Input(component_id="inversion_type", component_property="value"),
+                )(self.update_inversion_params_from_ui_json)
 
         # Update from ui.json
         self.app.callback(
@@ -274,7 +352,7 @@ class InversionApp(BaseDashApplication):
             Output(component_id="n_cpu", component_property="value"),
             Output(component_id="tile_spatial", component_property="value"),
             # Output
-            Output(component_id="ga_group_name", component_property="value"),
+            Output(component_id="out_group", component_property="value"),
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
@@ -362,6 +440,15 @@ class InversionApp(BaseDashApplication):
                 {"display": "none"},
                 {"display": "block"},
                 {"display": "block"},
+            )
+        else:
+            return (
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
             )
 
     @staticmethod
@@ -511,32 +598,60 @@ class InversionApp(BaseDashApplication):
     @staticmethod
     def update_component_list(inversion_type):
         if inversion_type in ["magnetic vector", "magnetic scalar"]:
-            data_type_list = [
-                "tmi",
-                "bx",
-                "by",
-                "bz",
-                "bxx",
-                "bxy",
-                "bxz",
-                "byy",
-                "byz",
-                "bzz",
-            ]
+            data_type_list = input_components["magnetics"]
         else:
-            data_type_list = [
-                "gx",
-                "gy",
-                "gz",
-                "gxx",
-                "gxy",
-                "gxz",
-                "gyy",
-                "gyz",
-                "gzz",
-                "uv",
-            ]
-        return data_type_list
+            data_type_list = input_components["gravity"]
+        value = data_type_list[0]
+        return data_type_list, value
+
+    @staticmethod
+    def unpack_val(val):
+        if is_uuid(val):
+            options = "Model"
+            data = str(val)
+            const = None
+        elif (type(val) == float) or (type(val) == int):
+            options = "Constant"
+            data = None
+            const = val
+        else:
+            options = "None"
+            data = None
+            const = None
+        return options, data, const
+
+    def update_inversion_params_from_ui_json(self, ui_json, inversion_type):
+        options, const, obj, data = no_update, no_update, no_update, no_update
+        # for i in ui_json.keys():
+        #    print(i)
+        prefix, param = tuple(
+            callback_context.outputs_list[0]["id"]
+            .removesuffix("_options")
+            .split("_", 1)
+        )
+        inversion_type = inversion_type.replace(" ", "_")
+
+        if (
+            inversion_type in inversion_params
+            and param in inversion_params[inversion_type]
+        ):
+            if prefix + "_" + param in ui_json:
+                obj = str(ui_json[prefix + "_" + param + "_object"]["value"])
+                val = ui_json[prefix + "_" + param]["value"]
+            elif prefix + "_model" in ui_json:
+                obj = str(ui_json[prefix + "_model_object"]["value"])
+                val = ui_json[prefix + "_model"]["value"]
+            else:
+                val = None
+
+            options, data, const = InversionApp.unpack_val(val)
+
+        return options, const, obj, data
+
+    # Update object dropdowns
+    @staticmethod
+    def update_remaining_object_options(obj_options):
+        return obj_options
 
     # Update input data dropdown options
 
@@ -657,241 +772,6 @@ class InversionApp(BaseDashApplication):
         else:
             return no_update, no_update, no_update, no_update, no_update
 
-    """
-    def format_labels(
-        self, x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs
-    ):
-        if labels is None:
-            axs.set_ylabel("Northing (m)")
-            axs.set_xlabel("Easting (m)")
-        else:
-            axs.set_xlabel(labels[0])
-            axs.set_ylabel(labels[1])
-        xticks = np.linspace(x.min(), x.max(), 5)
-        yticks = np.linspace(y.min(), y.max(), 5)
-
-        axs.set_yticks(yticks)
-        axs.set_yticklabels(
-            [tick_format % y for y in yticks.tolist()], rotation=90, va="center"
-        )
-        axs.set_xticks(xticks)
-        axs.set_xticklabels([tick_format % x for x in xticks.tolist()], va="center")
-        axs.autoscale(tight=True)
-        axs.set_aspect(aspect)
-        """
-    '''
-    def plot_plan_data_selection(self, entity, data, **kwargs):
-        """
-        Plot data values in 2D with contours
-
-        :param entity: `geoh5py.objects`
-            Input object with either `vertices` or `centroids` property.
-        :param data: `geoh5py.data`
-            Input data with `values` property.
-
-        :return ax:
-        :return out:
-        :return indices:
-        :return line_selection:
-        :return contour_set:
-        """
-        indices = None
-        line_selection = None
-        contour_set = None
-        values = None
-        figure = None
-        out = None
-
-        if isinstance(entity, (Grid2D, Points, Curve, Surface)):
-            if "figure" not in kwargs.keys():
-                figure = go.Figure()
-            else:
-                figure = kwargs["figure"]
-        else:
-            return figure, out, indices, line_selection, contour_set
-
-        if getattr(entity, "vertices", None) is not None:
-            locations = entity.vertices
-        else:
-            locations = entity.centroids
-
-        if "resolution" not in kwargs.keys():
-            resolution = 0
-        else:
-            resolution = kwargs["resolution"]
-
-        if "indices" in kwargs.keys():
-            indices = kwargs["indices"]
-            if isinstance(indices, np.ndarray) and np.all(indices == False):
-                indices = None
-
-        if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
-            data.values[0], str
-        ):
-            values = np.asarray(data.values, dtype=float).copy()
-            values[values == -99999] = np.nan
-        elif isinstance(data, str) and (data in "XYZ"):
-            values = locations[:, "XYZ".index(data)]
-
-        if values is not None and (values.shape[0] != locations.shape[0]):
-            values = None
-
-        color_norm = None
-        if "color_norm" in kwargs.keys():
-            color_norm = kwargs["color_norm"]
-
-        window = None
-        if "window" in kwargs.keys():
-            window = kwargs["window"]
-
-        if (
-            data is not None
-            and getattr(data, "entity_type", None) is not None
-            and getattr(data.entity_type, "color_map", None) is not None
-        ):
-            new_cmap = data.entity_type.color_map._values
-            map_vals = new_cmap["Value"].copy()
-            cmap = colors.ListedColormap(
-                np.c_[
-                    new_cmap["Red"] / 255,
-                    new_cmap["Green"] / 255,
-                    new_cmap["Blue"] / 255,
-                ]
-            )
-            color_norm = colors.BoundaryNorm(map_vals, cmap.N)
-        else:
-            cmap = "Spectral_r"
-
-        if isinstance(entity, Grid2D):
-            x = entity.centroids[:, 0].reshape(entity.shape, order="F")
-            y = entity.centroids[:, 1].reshape(entity.shape, order="F")
-            indices = filter_xy(x, y, resolution, window=window)
-
-            ind_x, ind_y = (
-                np.any(indices, axis=1),
-                np.any(indices, axis=0),
-            )
-
-            X = x[ind_x, :][:, ind_y]
-            Y = y[ind_x, :][:, ind_y]
-
-            if values is not None:
-                values = np.asarray(
-                    values.reshape(entity.shape, order="F"), dtype=float
-                )
-                values[indices == False] = np.nan
-                values = values[ind_x, :][:, ind_y]
-
-            if np.any(values):
-                figure.add_trace(go.Contour(x=X, y=Y, z=values))
-                #print(values)
-                figure.add_trace(go.Heatmap(z=values))
-                # out = axis.pcolormesh(
-                #    X, Y, values, cmap=cmap, norm=color_norm, shading="auto"
-                # )
-                pass
-
-            if (
-                "contours" in kwargs.keys()
-                and kwargs["contours"] is not None
-                and np.any(values)
-            ):
-                contour_set = axis.contour(
-                    X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
-                )
-
-        else:
-            x, y = entity.vertices[:, 0], entity.vertices[:, 1]
-            if indices is None:
-                indices = filter_xy(
-                    x,
-                    y,
-                    resolution,
-                    window=window,
-                )
-            X, Y = x[indices], y[indices]
-
-            if values is not None:
-                values = values[indices]
-
-            if "marker_size" not in kwargs.keys():
-                marker_size = 50
-            else:
-                marker_size = kwargs["marker_size"]
-
-            # out = axis.scatter(X, Y, marker_size, values, cmap=cmap, norm=color_norm)
-
-            if (
-                "contours" in kwargs.keys()
-                and kwargs["contours"] is not None
-                and np.any(values)
-            ):
-                ind = ~np.isnan(values)
-                contour_set = axis.tricontour(
-                    X[ind],
-                    Y[ind],
-                    values[ind],
-                    levels=kwargs["contours"],
-                    colors="k",
-                    linewidths=1.0,
-                )
-
-        if "collections" in kwargs.keys():
-            for collection in kwargs["collections"]:
-                axis.add_collection(copy(collection))
-
-        if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"] and np.any(values):
-            ind = ~np.isnan(values.ravel())
-            x = X.ravel()[ind]
-            y = Y.ravel()[ind]
-
-        if np.any(x) and np.any(y):
-            width = x.max() - x.min()
-            height = y.max() - y.min()
-
-            # format_labels(x, y, axis, **kwargs)
-            figure.update_layout(
-                xaxis_range=[x.min() - width * 0.1, x.max() + width * 0.1],
-                yaxis_range=[y.min() - height * 0.1, y.max() + height * 0.1],
-            )
-
-        if "colorbar" in kwargs.keys() and kwargs["colorbar"]:
-            # plt.colorbar(out, ax=axis)
-            pass
-
-        line_selection = np.zeros_like(indices, dtype=bool)
-        if "highlight_selection" in kwargs.keys() and isinstance(
-            kwargs["highlight_selection"], dict
-        ):
-            for key, values in kwargs["highlight_selection"].items():
-
-                if not np.any(entity.workspace.get_entity(key)):
-                    continue
-
-                line_data = entity.workspace.get_entity(key)[0]
-                if isinstance(line_data, ReferencedData):
-                    values = [
-                        key
-                        for key, value in line_data.value_map.map.items()
-                        if value in values
-                    ]
-
-                for line in values:
-                    ind = np.where(line_data.values == line)[0]
-                    x, y, values = (
-                        locations[ind, 0],
-                        locations[ind, 1],
-                        entity.workspace.get_entity(key)[0].values[ind],
-                    )
-                    ind_line = filter_xy(x, y, resolution, window=window)
-                    axis.scatter(
-                        x[ind_line], y[ind_line], marker_size * 2, "k", marker="+"
-                    )
-                    line_selection[ind[ind_line]] = True
-
-        return figure, out, indices, line_selection, contour_set
-    '''
-
     def plot_selection(
         self,
         object,
@@ -905,6 +785,7 @@ class InversionApp(BaseDashApplication):
         zoom_extent,
         colorbar,
     ):
+
         if object is not None and data is not None:
             obj = self.workspace.get_entity(uuid.UUID(object))[0]
 
