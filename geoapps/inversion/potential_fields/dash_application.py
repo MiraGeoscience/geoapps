@@ -8,12 +8,14 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import uuid
 import warnings
-from copy import copy
+from io import BytesIO
 from time import time
 
+import matplotlib
 import numpy as np
 from dash import Input, Output, State, callback_context, no_update
 from flask import Flask
@@ -24,6 +26,8 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
+
+matplotlib.use("Agg")
 from matplotlib import colors
 from matplotlib import pyplot as plt
 from plotly import graph_objects as go
@@ -292,7 +296,7 @@ class InversionApp(BaseDashApplication):
         )(self.set_bounding_box)
         # Update plot
         self.app.callback(
-            Output(component_id="plot", component_property="figure"),
+            Output(component_id="plot", component_property="src"),
             Output(component_id="data_count", component_property="children"),
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
@@ -653,6 +657,7 @@ class InversionApp(BaseDashApplication):
         else:
             return no_update, no_update, no_update, no_update, no_update
 
+    """
     def format_labels(
         self, x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs
     ):
@@ -673,7 +678,8 @@ class InversionApp(BaseDashApplication):
         axs.set_xticklabels([tick_format % x for x in xticks.tolist()], va="center")
         axs.autoscale(tight=True)
         axs.set_aspect(aspect)
-
+        """
+    '''
     def plot_plan_data_selection(self, entity, data, **kwargs):
         """
         Plot data values in 2D with contours
@@ -696,7 +702,6 @@ class InversionApp(BaseDashApplication):
         figure = None
         out = None
 
-        print(1)
         if isinstance(entity, (Grid2D, Points, Curve, Surface)):
             if "figure" not in kwargs.keys():
                 figure = go.Figure()
@@ -704,9 +709,6 @@ class InversionApp(BaseDashApplication):
                 figure = kwargs["figure"]
         else:
             return figure, out, indices, line_selection, contour_set
-        print(2)
-        # for collection in axis.collections:
-        #     collection.remove()
 
         if getattr(entity, "vertices", None) is not None:
             locations = entity.vertices
@@ -717,7 +719,7 @@ class InversionApp(BaseDashApplication):
             resolution = 0
         else:
             resolution = kwargs["resolution"]
-        print(3)
+
         if "indices" in kwargs.keys():
             indices = kwargs["indices"]
             if isinstance(indices, np.ndarray) and np.all(indices == False):
@@ -730,7 +732,7 @@ class InversionApp(BaseDashApplication):
             values[values == -99999] = np.nan
         elif isinstance(data, str) and (data in "XYZ"):
             values = locations[:, "XYZ".index(data)]
-        print(4)
+
         if values is not None and (values.shape[0] != locations.shape[0]):
             values = None
 
@@ -741,7 +743,7 @@ class InversionApp(BaseDashApplication):
         window = None
         if "window" in kwargs.keys():
             window = kwargs["window"]
-        print(5)
+
         if (
             data is not None
             and getattr(data, "entity_type", None) is not None
@@ -759,7 +761,7 @@ class InversionApp(BaseDashApplication):
             color_norm = colors.BoundaryNorm(map_vals, cmap.N)
         else:
             cmap = "Spectral_r"
-        print(6)
+
         if isinstance(entity, Grid2D):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
@@ -781,11 +783,14 @@ class InversionApp(BaseDashApplication):
                 values = values[ind_x, :][:, ind_y]
 
             if np.any(values):
+                figure.add_trace(go.Contour(x=X, y=Y, z=values))
+                #print(values)
+                figure.add_trace(go.Heatmap(z=values))
                 # out = axis.pcolormesh(
                 #    X, Y, values, cmap=cmap, norm=color_norm, shading="auto"
                 # )
                 pass
-            print(7)
+
             if (
                 "contours" in kwargs.keys()
                 and kwargs["contours"] is not None
@@ -794,7 +799,7 @@ class InversionApp(BaseDashApplication):
                 contour_set = axis.contour(
                     X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
                 )
-            print(8)
+
         else:
             x, y = entity.vertices[:, 0], entity.vertices[:, 1]
             if indices is None:
@@ -813,7 +818,7 @@ class InversionApp(BaseDashApplication):
                 marker_size = 50
             else:
                 marker_size = kwargs["marker_size"]
-            print(9)
+
             # out = axis.scatter(X, Y, marker_size, values, cmap=cmap, norm=color_norm)
 
             if (
@@ -830,7 +835,7 @@ class InversionApp(BaseDashApplication):
                     colors="k",
                     linewidths=1.0,
                 )
-        print(10)
+
         if "collections" in kwargs.keys():
             for collection in kwargs["collections"]:
                 axis.add_collection(copy(collection))
@@ -849,7 +854,7 @@ class InversionApp(BaseDashApplication):
                 xaxis_range=[x.min() - width * 0.1, x.max() + width * 0.1],
                 yaxis_range=[y.min() - height * 0.1, y.max() + height * 0.1],
             )
-        print(11)
+
         if "colorbar" in kwargs.keys() and kwargs["colorbar"]:
             # plt.colorbar(out, ax=axis)
             pass
@@ -883,8 +888,9 @@ class InversionApp(BaseDashApplication):
                         x[ind_line], y[ind_line], marker_size * 2, "k", marker="+"
                     )
                     line_selection[ind[ind_line]] = True
-        print(12)
+
         return figure, out, indices, line_selection, contour_set
+    '''
 
     def plot_selection(
         self,
@@ -905,7 +911,8 @@ class InversionApp(BaseDashApplication):
             data_obj = self.workspace.get_entity(uuid.UUID(data))[0]
 
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
-                figure = go.Figure()
+                # figure = plt.figure(figsize=(10, 10))
+                figure, axis = plt.subplots(figsize=(10, 10))
                 corners = np.r_[
                     np.c_[-1.0, -1.0],
                     np.c_[-1.0, 1.0],
@@ -916,20 +923,12 @@ class InversionApp(BaseDashApplication):
                 corners[:, 0] *= width / 2
                 corners[:, 1] *= height / 2
                 corners = rotate_xyz(corners, [0, 0], -azimuth)
-                figure.add_trace(
-                    go.Scatter(
-                        x=corners[:, 0] + center_x,
-                        y=corners[:, 1] + center_y,
-                        mode="lines",
-                        marker_color="black",
-                    )
-                )
-                print(figure)
-                figure, _, ind_filter, _, _ = self.plot_plan_data_selection(
+                axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
+                axis, _, ind_filter, _, _ = plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
-                        "figure": figure,
+                        "axis": axis,
                         "resolution": resolution,
                         "window": {
                             "center": [center_x, center_y],
@@ -941,13 +940,28 @@ class InversionApp(BaseDashApplication):
                         "colorbar": colorbar,
                     },
                 )
-                print(figure)
-                print("out")
                 data_count = f"Data Count: {ind_filter.sum()}"
-
-                return figure, [data_count]
+                # plt.show()
+                out_url = self.fig_to_uri(figure)
+                return out_url, [data_count]  # mpl_to_plotly(figure), [data_count]
             else:
                 return no_update, no_update
+
+    def fig_to_uri(self, in_fig, close_all=True, **save_args):
+        # type: (plt.Figure) -> str
+        """
+        Save a figure as a URI
+        :param in_fig:
+        :return:
+        """
+        out_img = BytesIO()
+        in_fig.savefig(out_img, bbox_inches="tight", format="png", **save_args)
+        if close_all:
+            in_fig.clf()
+            plt.close("all")
+        out_img.seek(0)  # rewind file
+        encoded = base64.b64encode(out_img.read()).decode("ascii").replace("\n", "")
+        return f"data:image/png;base64,{encoded}"
 
     def set_bounding_box(self, data_object):
         # Fetch vertices in the project
