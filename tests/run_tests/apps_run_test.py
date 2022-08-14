@@ -51,7 +51,7 @@ def test_block_model(tmp_path):
         "expansion_fact",
         "monitoring_directory",
     ]
-    (
+    (  # pylint: disable=W0632
         new_grid,
         objects_uid,
         cell_size_x,
@@ -62,7 +62,7 @@ def test_block_model(tmp_path):
         bottom_padding,
         expansion_fact,
         _,
-    ) = block_model.update_remainder_from_ui_json(ui_json, param_list, trigger="test")  # pylint: disabled=W0632
+    ) = block_model.update_remainder_from_ui_json(ui_json, param_list, trigger="test")
 
     assert new_grid == block_model.params.new_grid
     assert objects_uid == str(block_model.params.objects.uid)
