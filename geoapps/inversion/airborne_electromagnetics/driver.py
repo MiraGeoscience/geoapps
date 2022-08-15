@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import multiprocessing
-import sys
 import uuid
 
 import numpy as np
@@ -171,37 +170,86 @@ def inversion(input_file):
     channels = {}
     channel_values = []
     offsets = {}
-    for ind, (key, value) in enumerate(em_specs["channels"].items()):
-        if key in input_param["data"]["channels"]:
-            channels[key] = True
-            parameters = input_param["data"]["channels"][key]
-            uid = uuid.UUID(parameters["name"])
+    if input_param["system"] == "Airborne TEM Survey":
+        conversion = {
+            "Seconds (s)": 1.0,
+            "Milliseconds (ms)": 1e-3,
+            "Microseconds (us)": 1e-6,
+        }
 
-            try:
-                data.append(workspace.get_entity(uid)[0].values)
-            except IndexError:
-                raise IndexError(
-                    f"Data {parameters['name']} could not be found associated with "
-                    f"target {entity.name} object."
+        em_specs["channels"] = np.r_[entity.channels] * conversion[entity.unit]
+        waveform = entity.waveform
+        waveform[:, 0] -= entity.timing_mark
+        waveform[:, 0] *= conversion[entity.unit]
+        em_specs["waveform"] = waveform
+        data_group = [
+            prop_group
+            for prop_group in entity.property_groups
+            if prop_group.uid == uuid.UUID(input_param["data"]["channels"])
+        ][0]
+        uncert_group = [
+            prop_group
+            for prop_group in entity.property_groups
+            if prop_group.uid == uuid.UUID(input_param["uncertainty_channel"])
+        ][0]
+        static_offset = np.mean(entity.transmitters.vertices - entity.vertices, axis=0)
+        em_specs["tx_offsets"] = [static_offset]
+        em_specs["tx_specs"] = {
+            "a": float(entity.loop_radius) if entity.loop_radius is not None else 1.0,
+            "I": 1.0,
+        }
+
+        if np.linalg.norm(static_offset) == 0.0:
+            em_specs["tx_specs"]["type"] = "VMD"
+        else:
+            em_specs["tx_specs"]["type"] = "CircularLoop"
+
+        if "normalization" in entity.metadata:
+            em_specs["normalization"] = np.prod(entity.metadata["normalization"])
+        else:
+            em_specs["normalization"] = 1
+
+        for dat_uid, unc_uid in zip(data_group.properties, uncert_group.properties):
+            d_entity = workspace.get_entity(dat_uid)[0]
+            u_entity = workspace.get_entity(unc_uid)[0]
+            channels[d_entity.name] = True
+            data.append(d_entity.values)
+            uncertainties.append(u_entity.values)
+            offsets[d_entity.name.lower()] = static_offset
+
+        channel_values = em_specs["channels"]
+    else:
+        for ind, (key, value) in enumerate(em_specs["channels"].items()):
+            if key in input_param["data"]["channels"]:
+                channels[key] = True
+                parameters = input_param["data"]["channels"][key]
+                uid = uuid.UUID(parameters["name"])
+
+                try:
+                    data.append(workspace.get_entity(uid)[0].values)
+                except IndexError:
+                    raise IndexError(
+                        f"Data {parameters['name']} could not be found associated with "
+                        f"target {entity.name} object."
+                    )
+
+                uncertainties.append(
+                    np.abs(data[-1]) * parameters["uncertainties"][0]
+                    + parameters["uncertainties"][1]
+                )
+                channel_values += parameters["value"]
+                offsets[key.lower()] = np.linalg.norm(
+                    np.asarray(parameters["offsets"]).astype(float)
                 )
 
-            uncertainties.append(
-                np.abs(data[-1]) * parameters["uncertainties"][0]
-                + parameters["uncertainties"][1]
-            )
-            channel_values += parameters["value"]
-            offsets[key.lower()] = np.linalg.norm(
-                np.asarray(parameters["offsets"]).astype(float)
-            )
-
-        elif em_specs["type"] == "frequency" and value in frequencies:
-            channels[key] = False
-            data.append(np.zeros(entity.n_vertices))
-            uncertainties.append(np.ones(entity.n_vertices) * np.inf)
-            offsets[key.lower()] = np.linalg.norm(
-                np.asarray(em_specs["tx_offsets"][ind]).astype(float)
-            )
-            channel_values += [value]
+            elif em_specs["type"] == "frequency" and value in frequencies:
+                channels[key] = False
+                data.append(np.zeros(entity.n_vertices))
+                uncertainties.append(np.ones(entity.n_vertices) * np.inf)
+                offsets[key.lower()] = np.linalg.norm(
+                    np.asarray(em_specs["tx_offsets"][ind]).astype(float)
+                )
+                channel_values += [value]
 
     offsets = list(offsets.values())
 
@@ -1039,5 +1087,6 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    input_file = sys.argv[1]
+    # input_file = sys.argv[1]
+    input_file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\EM1DInversion_VTEM.json"
     inversion(input_file)
