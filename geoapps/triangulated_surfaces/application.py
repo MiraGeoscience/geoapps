@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from time import time
+from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -511,10 +512,10 @@ class Surface2D(ObjectDataSelection):
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
-    "data": ["{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}"],
+    "objects": UUID("{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}"),
+    "data": [UUID("{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}")],
     "max_distance": 250,
-    "elevations": {"data": "{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}"},
-    "lines": {"data": "{0be5374c-3ebb-4762-962a-97d99f3cb0e1}"},
+    "elevations": {"data": UUID("{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}")},
+    "lines": {"data": UUID("{0be5374c-3ebb-4762-962a-97d99f3cb0e1}")},
     "topography": {},
 }

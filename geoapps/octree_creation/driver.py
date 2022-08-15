@@ -27,7 +27,7 @@ class OctreeDriver:
         """
         Create an octree mesh from input values
         """
-        with self.params.geoh5.open(model="r+"):
+        with self.params.geoh5.open(mode="r+") as workspace:
             octree = self.octree_from_params(self.params)
 
             if self.params.monitoring_directory is not None and path.exists(
