@@ -245,7 +245,7 @@ def test_iso_surface(tmp_path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = IsoSurface(geoh5=temp_workspace)
-    app.trigger.click()
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("Isosurface")[0]

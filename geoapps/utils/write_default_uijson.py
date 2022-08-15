@@ -36,103 +36,99 @@ path_to_flinflon = lambda file: "\\".join(
 
 def write_default_uijson(path, use_initializers=False):
 
-    grav_init = {}
-    mag_init = {}
-    mvi_init = {}
-    dc_init = {}
-    ip_init = {}
-    mt_init = {}
-    tipper_init = {}
-    oct_init = {}
-    peak_init = {}
-    iso_init = {}
+    from geoapps.inversion.potential_fields.gravity.constants import (
+        app_initializer as grav_init,
+    )
 
-    if use_initializers:
+    grav_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    grav_init = grav_init if use_initializers else {}
 
-        from geoapps.inversion.potential_fields.gravity.constants import (
-            app_initializer as grav_init,
-        )
+    from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
+        app_initializer as mag_init,
+    )
 
-        grav_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mag_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mag_init = mag_init if use_initializers else {}
 
-        from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
-            app_initializer as mag_init,
-        )
+    from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+        app_initializer as mvi_init,
+    )
 
-        mag_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mvi_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mvi_init = mvi_init if use_initializers else {}
 
-        from geoapps.inversion.potential_fields.magnetic_vector.constants import (
-            app_initializer as mvi_init,
-        )
+    from geoapps.inversion.electricals.direct_current.constants import (
+        app_initializer as dc_init,
+    )
 
-        mvi_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    dc_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    dc_init = dc_init if use_initializers else {}
 
-        from geoapps.inversion.electricals.direct_current.constants import (
-            app_initializer as dc_init,
-        )
+    from geoapps.inversion.electricals.induced_polarization.constants import (
+        app_initializer as ip_init,
+    )
 
-        dc_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_init = ip_init if use_initializers else {}
 
-        from geoapps.inversion.electricals.induced_polarization.constants import (
-            app_initializer as ip_init,
-        )
+    from geoapps.inversion.natural_sources.magnetotellurics.constants import (
+        app_initializer as mt_init,
+    )
 
-        ip_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    mt_init["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
+    mt_init = mt_init if use_initializers else {}
 
-        from geoapps.inversion.natural_sources.magnetotellurics.constants import (
-            app_initializer as mt_init,
-        )
+    from geoapps.inversion.natural_sources.tipper.constants import (
+        app_initializer as tipper_init,
+    )
 
-        mt_init["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
+    tipper_init["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
+    tipper_init = tipper_init if use_initializers else {}
 
-        from geoapps.inversion.natural_sources.tipper.constants import (
-            app_initializer as tipper_init,
-        )
+    from geoapps.octree_creation.constants import app_initializer as oct_init
 
-        tipper_init["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
+    oct_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    oct_init = oct_init if use_initializers else {}
 
-        from geoapps.octree_creation.constants import app_initializer as oct_init
+    from geoapps.scatter_plot.constants import app_initializer as scatter_init
 
-        oct_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    scatter_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    scatter_init = scatter_init if use_initializers else {}
 
-        from geoapps.scatter_plot.constants import app_initializer
+    from geoapps.interpolation.constants import app_initializer as interp_init
 
-        app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-        scatter_init = app_initializer if use_initializers else {}
+    interp_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    interp_init = interp_init if use_initializers else {}
 
-        from geoapps.interpolation.constants import app_initializer
+    from geoapps.block_model_creation.constants import app_initializer as block_init
 
-        app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-        interp_init = app_initializer if use_initializers else {}
+    block_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    block_init = block_init if use_initializers else {}
 
-        from geoapps.block_model_creation.constants import app_initializer
+    from geoapps.clustering.constants import app_initializer as cluster_init
 
-        app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-        block_init = app_initializer if use_initializers else {}
+    cluster_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    cluster_init = cluster_init if use_initializers else {}
 
-        from geoapps.clustering.constants import app_initializer
+    from geoapps.peak_finder.constants import app_initializer as peak_init
 
-        app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-        cluster_init = app_initializer if use_initializers else {}
+    peak_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    peak_init = peak_init if use_initializers else {}
 
-        from geoapps.iso_surfaces.constants import app_initializer
-        from geoapps.peak_finder.constants import app_initializer as peak_init
+    from geoapps.iso_surfaces.constants import app_initializer as iso_init
 
-        peak_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    iso_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    iso_init = iso_init if use_initializers else {}
 
-        from geoapps.iso_surfaces.constants import app_initializer as iso_init
+    from geoapps.edge_detection.constants import app_initializer as edge_init
 
-        iso_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    edge_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    edge_init = edge_init if use_initializers else {}
 
-    from geoapps.edge_detection.constants import app_initializer
+    from geoapps.contours.constants import app_initializer as contour_init
 
-    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-    edge_init = app_initializer if use_initializers else {}
-
-    from geoapps.contours.constants import app_initializer
-
-    app_initializer["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
-    cont_init = app_initializer if use_initializers else {}
+    contour_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    contour_init = contour_init if use_initializers else {}
 
     filedict = {
         "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
@@ -179,7 +175,7 @@ def write_default_uijson(path, use_initializers=False):
         "cluster.ui.json": ClusteringParams(validate=False, **cluster_init),
         "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **iso_init),
         "edge_detection.ui.json": EdgeDetectionParams(validate=False, **edge_init),
-        "contours.ui.json": ContoursParams(validate=False, **cont_init),
+        "contours.ui.json": ContoursParams(validate=False, **contour_init),
     }
 
     for filename, params in filedict.items():
