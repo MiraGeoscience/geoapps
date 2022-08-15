@@ -280,9 +280,9 @@ class DataInterpolation(ObjectDataSelection):
                 name=temp_geoh5.replace(".geoh5", ".ui.json"), validate=False
             )
 
-        driver = DataInterpolationDriver(new_params)
-        print("Running data transfer . . .")
-        driver.run()
+            driver = DataInterpolationDriver(new_params)
+            print("Running data transfer . . .")
+            driver.run()
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

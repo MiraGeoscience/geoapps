@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=E0401
+
 from __future__ import annotations
 
 import os
@@ -161,7 +164,8 @@ class BlockModelCreation(BaseDashApplication):
             # Run driver.
             driver = BlockModelDriver(new_params)
             print("Creating block model . . .")
-            driver.run()
+            with ws.open():
+                driver.run()
 
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")

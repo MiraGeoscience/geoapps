@@ -260,7 +260,6 @@ class Surface2D(ObjectDataSelection):
 
                 # Remove the simplices too long
                 delaunay_2d.simplices = delaunay_2d.simplices[indx, :]
-                delaunay_2d.vertices = delaunay_2d.vertices[indx, :]
                 model_vertices.append(
                     np.c_[
                         np.ravel(x_locations),

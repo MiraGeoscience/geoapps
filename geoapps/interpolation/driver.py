@@ -12,7 +12,6 @@ import sys
 from os import path
 
 import numpy as np
-from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import LinearNDInterpolator
@@ -27,8 +26,6 @@ class DataInterpolationDriver:
         self.params: DataInterpolationParams = params
 
     def run(self):
-        self.params.geoh5.open(mode="r+")
-
         xyz = get_locations(self.params.geoh5, self.params.objects)
 
         if xyz is None:
@@ -180,9 +177,11 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
-    params = DataInterpolationParams(ifile)
-    params.geoh5.close()
-    driver = DataInterpolationDriver(params)
-    print(f"Loaded. Starting data transfer . . .")
-    driver.run()
-    print("Saved to " + params.geoh5.h5file)
+    params_class = DataInterpolationParams(ifile)
+    params_class.geoh5.close()
+    driver = DataInterpolationDriver(params_class)
+    print("Loaded. Starting data transfer . . .")
+    with params_class.geoh5.open(mode="r+"):
+        driver.run()
+
+    print("Saved to " + params_class.geoh5.h5file)

@@ -439,7 +439,9 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
     params = ParamClass(input_file=input_file, **kwargs)
 
     driver = InversionDriver(params)
-    driver.run()
+
+    with params.geoh5.open(mode="r+"):
+        driver.run()
 
     return driver
 
