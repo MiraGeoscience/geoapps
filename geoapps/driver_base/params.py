@@ -219,6 +219,13 @@ class BaseParams:
         return free_parameter_dict
 
     @property
+    def free_parameter_keys(self) -> list | None:
+        """
+        String identifiers for free form parameters.
+        """
+        return self._free_parameter_keys
+
+    @property
     def validations(self) -> dict[str, Any]:
         """Encoded parameter validator type and associated validations."""
         if getattr(self, "_validations", None) is None:

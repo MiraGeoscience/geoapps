@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=E0401
+
 from __future__ import annotations
 
 import os
@@ -250,14 +252,15 @@ class OctreeMesh(ObjectDataSelection):
             if self.live_link.value:
                 print("Live link active. Check your ANALYST session for new mesh.")
 
-    @staticmethod
-    def run(params: OctreeParams) -> Octree:
+    @classmethod
+    def run(cls, params: OctreeParams) -> Octree:
         """
         Create an octree mesh from input values
         """
 
         driver = OctreeDriver(params)
-        octree = driver.run()
+        with params.geoh5.open(mode="r+"):
+            octree = driver.run()
 
         return octree
 

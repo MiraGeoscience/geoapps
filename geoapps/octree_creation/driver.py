@@ -27,16 +27,15 @@ class OctreeDriver:
         """
         Create an octree mesh from input values
         """
-        with self.params.geoh5.open(mode="r+") as workspace:
-            octree = self.octree_from_params(self.params)
+        octree = self.octree_from_params(self.params)
 
-            if self.params.monitoring_directory is not None and path.exists(
-                self.params.monitoring_directory
-            ):
-                monitored_directory_copy(self.params.monitoring_directory, octree)
+        if self.params.monitoring_directory is not None and path.exists(
+            self.params.monitoring_directory
+        ):
+            monitored_directory_copy(self.params.monitoring_directory, octree)
 
-            else:
-                print(f"Result exported to: {workspace.h5file}")
+        else:
+            print(f"Result exported to: {self.params.geoh5.h5file}")
 
         return octree
 
@@ -96,4 +95,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     params_class = OctreeParams(InputFile.read_ui_json(file))
     driver = OctreeDriver(params_class)
-    driver.run()
+
+    with params_class.geoh5.open(model="r+"):
+        driver.run()

@@ -1339,14 +1339,14 @@ class PeakFinder(ObjectDataSelection):
         if hasattr(self.lines, "anomalies"):
             self.center.value = self.group_display.value
 
-    @staticmethod
-    def run(params, output_group=None):
+    @classmethod
+    def run(cls, params: PeakFinderParams):
         """
         Create an octree mesh from input values
         """
-        params.geoh5.close()
         driver = PeakFinderDriver(params)
-        driver.run(output_group)
+        with params.geoh5.open(mode="r+"):
+            driver.run()
 
     def show_decay_trigger(self, _):
         """

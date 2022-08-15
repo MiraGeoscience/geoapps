@@ -461,7 +461,7 @@ class BaseApplication:
         self.run(self.params)
 
     @classmethod
-    def run(cls, _params):
+    def run(cls, params: BaseParams):
         """
         Static run method.
         """
