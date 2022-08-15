@@ -330,6 +330,11 @@ plot_layout = html.Div(
             options=[{"label": "Colorbar", "value": True}],
             style={"display": "inline-block"},
         ),
+        dcc.Checklist(
+            id="fix_aspect_ratio",
+            options=[{"label": "Fix Aspect Ratio", "value": True}],
+            style={"display": "inline-block"},
+        ),
         dcc.Graph(
             id="plot",
             style={

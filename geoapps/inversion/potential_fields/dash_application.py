@@ -362,6 +362,7 @@ class InversionApp(BaseDashApplication):
             Input(component_id="channel", component_property="value"),
             Input(component_id="resolution", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
+            Input(component_id="fix_aspect_ratio", component_property="value"),
         )(self.plot_selection)
 
         """
@@ -695,9 +696,6 @@ class InversionApp(BaseDashApplication):
         else:
             return figure, out, indices, line_selection, contour_set
 
-        # for collection in axis.collections:
-        #     collection.remove()
-
         if getattr(entity, "vertices", None) is not None:
             locations = entity.vertices
         else:
@@ -760,9 +758,6 @@ class InversionApp(BaseDashApplication):
                 np.any(indices, axis=0),
             )
 
-            X = x[ind_x, :][:, ind_y]
-            Y = y[ind_x, :][:, ind_y]
-
             if values is not None:
                 values = np.asarray(
                     values.reshape(entity.shape, order="F"), dtype=float
@@ -771,20 +766,12 @@ class InversionApp(BaseDashApplication):
                 values = values[ind_x, :][:, ind_y]
 
             if np.any(values):
-                # values[np.isnan(values)] = 0
-                # print(values)
-                figure.add_trace(go.Heatmap(z=values.T))
-                # out = axis.pcolormesh(
-                #    X, Y, values, cmap=cmap, norm=color_norm, shading="auto"
-                # )
-
-            if (
-                "contours" in kwargs.keys()
-                and kwargs["contours"] is not None
-                and np.any(values)
-            ):
-                contour_set = axis.contour(
-                    X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
+                figure.add_trace(
+                    go.Heatmap(
+                        x=np.linspace(x.min(), x.max(), x.shape[0])[ind_x],
+                        y=np.linspace(y.min(), y.max(), y.shape[1])[ind_y],
+                        z=values.T,
+                    )
                 )
 
         else:
@@ -823,65 +810,26 @@ class InversionApp(BaseDashApplication):
                     linewidths=1.0,
                 )
 
-        if "collections" in kwargs.keys():
-            for collection in kwargs["collections"]:
-                axis.add_collection(copy(collection))
-
-        if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"] and np.any(values):
-            ind = ~np.isnan(values.ravel())
-            x = X.ravel()[ind]
-            y = Y.ravel()[ind]
-
         if np.any(x) and np.any(y):
-            width = x.max() - x.min()
-            height = y.max() - y.min()
+            figure.update_layout(plot_bgcolor="rgba(0,0,0,0)")
+            figure.update_layout(xaxis_title="Easting (m)", yaxis_title="Northing (m)")
 
-            # format_labels(x, y, axis, **kwargs)
-            # figure.update_layout(xaxis_range=[x.min() - width * 0.1, x.max() + width * 0.1],
-            #                     yaxis_range=[y.min() - height * 0.1, y.max() + height * 0.1])
+        if "fix_aspect_ratio" in kwargs.keys():
+            if kwargs["fix_aspect_ratio"]:
+                figure.update_layout(yaxis=dict(scaleanchor="x"))
+            else:
 
-        # if "colorbar" in kwargs.keys() and kwargs["colorbar"]:
-        #    plt.colorbar(out, ax=axis)
+                figure.update_layout(yaxis=dict(scaleanchor=None))
 
-        line_selection = np.zeros_like(indices, dtype=bool)
-        if "highlight_selection" in kwargs.keys() and isinstance(
-            kwargs["highlight_selection"], dict
-        ):
-            for key, values in kwargs["highlight_selection"].items():
-
-                if not np.any(entity.workspace.get_entity(key)):
-                    continue
-
-                line_data = entity.workspace.get_entity(key)[0]
-                if isinstance(line_data, ReferencedData):
-                    values = [
-                        key
-                        for key, value in line_data.value_map.map.items()
-                        if value in values
-                    ]
-
-                for line in values:
-                    ind = np.where(line_data.values == line)[0]
-                    x, y, values = (
-                        locations[ind, 0],
-                        locations[ind, 1],
-                        entity.workspace.get_entity(key)[0].values[ind],
-                    )
-                    ind_line = filter_xy(x, y, resolution, window=window)
-                    axis.scatter(
-                        x[ind_line], y[ind_line], marker_size * 2, "k", marker="+"
-                    )
-                    line_selection[ind[ind_line]] = True
+        if "colorbar" in kwargs.keys():
+            if kwargs["colorbar"]:
+                figure.update_traces(showscale=True)
+            else:
+                figure.update_traces(showscale=False)
 
         return figure, out, indices, line_selection, contour_set
 
-    def plot_selection(
-        self,
-        object,
-        data,
-        resolution,
-        colorbar,
-    ):
+    def plot_selection(self, object, data, resolution, colorbar, fix_aspect_ratio):
         figure = go.Figure()
         data_count = "Data Count: "
 
@@ -899,6 +847,7 @@ class InversionApp(BaseDashApplication):
                         "resolution": resolution,
                         "resize": True,
                         "colorbar": colorbar,
+                        "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
                 data_count += f"{ind_filter.sum()}"
