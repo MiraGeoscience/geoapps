@@ -40,7 +40,7 @@ input_components = {
         "gyy",
         "gyz",
         "gzz",
-        "uv",
+        "guv",
     ],
 }
 

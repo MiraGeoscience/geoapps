@@ -1,0 +1,442 @@
+#  Copyright (c) 2022 Mira Geoscience Ltd.
+#
+#  This file is part of geoapps.
+#
+#  geoapps is distributed under the terms and conditions of the MIT License
+#  (see LICENSE file at the root of this source code package).
+
+
+from __future__ import annotations
+
+import os
+import uuid
+from time import time
+
+import matplotlib
+import numpy as np
+from dash import Input, Output, State, callback_context, no_update
+from flask import Flask
+from geoh5py.data import ReferencedData
+from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
+from geoh5py.shared import Entity
+from geoh5py.shared.utils import is_uuid
+from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
+from jupyter_dash import JupyterDash
+from matplotlib import colors
+from plotly import graph_objects as go
+
+from geoapps.base.application import BaseApplication
+from geoapps.base.dash_application import BaseDashApplication
+from geoapps.base.selection import TopographyOptions
+from geoapps.inversion.base_inversion_application import InversionApp
+from geoapps.inversion.potential_fields.gravity.constants import app_initializer
+from geoapps.inversion.potential_fields.gravity.layout import (
+    gravity_inversion_params,
+    gravity_layout,
+)
+from geoapps.inversion.potential_fields.gravity.params import GravityParams
+from geoapps.inversion.potential_fields.magnetic_scalar.params import (
+    MagneticScalarParams,
+)
+from geoapps.inversion.potential_fields.magnetic_vector.params import (
+    MagneticVectorParams,
+)
+from geoapps.shared_utils.utils import filter_xy
+
+
+class GravityApp(InversionApp):
+    """
+    Application for the inversion of potential field data using SimPEG
+    """
+
+    _param_class = GravityParams
+    _inversion_type = "gravity"
+    _inversion_params = gravity_inversion_params
+
+    def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
+        if ui_json is not None and os.path.exists(ui_json.path):
+            self.params = self._param_class(ui_json)
+        else:
+            self.params = self._param_class(**app_initializer)
+
+        super().__init__(**self.params.to_dict())
+
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
+        )
+
+        self.app.layout = gravity_layout
+
+        # Callbacks relating to layout
+        self.app.callback(
+            Output(component_id="uncertainty_floor", component_property="style"),
+            Output(component_id="uncertainty_channel", component_property="style"),
+            Input(component_id="uncertainty_options", component_property="value"),
+        )(InversionApp.update_uncertainty_visibility)
+        self.app.callback(
+            Output(component_id="topography_none_div", component_property="style"),
+            Output(component_id="topography_object_div", component_property="style"),
+            Output(component_id="topography_constant_div", component_property="style"),
+            Input(component_id="topography_options", component_property="value"),
+        )(InversionApp.update_topography_visibility)
+        for model_type in ["starting", "reference"]:
+            for param in gravity_inversion_params:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_const_div",
+                        component_property="style",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_mod_div",
+                        component_property="style",
+                    ),
+                    Input(
+                        component_id=model_type + "_" + param + "_options",
+                        component_property="value",
+                    ),
+                )(InversionApp.update_model_visibility)
+        self.app.callback(
+            Output(component_id="lower_bound_const_div", component_property="style"),
+            Output(component_id="lower_bound_mod_div", component_property="style"),
+            Input(component_id="lower_bound_options", component_property="value"),
+        )(InversionApp.update_model_visibility)
+        self.app.callback(
+            Output(component_id="upper_bound_const_div", component_property="style"),
+            Output(component_id="upper_bound_mod_div", component_property="style"),
+            Input(component_id="upper_bound_options", component_property="value"),
+        )(InversionApp.update_model_visibility)
+        self.app.callback(
+            Output(component_id="core_params_div", component_property="style"),
+            Input(component_id="core_params", component_property="value"),
+        )(InversionApp.update_visibility_from_checkbox)
+        self.app.callback(
+            Output(component_id="advanced_params_div", component_property="style"),
+            Input(component_id="advanced_params", component_property="value"),
+        )(InversionApp.update_visibility_from_checkbox)
+
+        # Update object and data dropdowns
+        self.app.callback(
+            Output(component_id="data_object", component_property="options"),
+            Output(component_id="data_object", component_property="value"),
+            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+
+        self.app.callback(
+            Output(component_id="mesh_object", component_property="options"),
+            Input(component_id="data_object", component_property="options"),
+        )(InversionApp.update_remaining_object_options)
+        self.app.callback(
+            Output(component_id="topography_object", component_property="options"),
+            Input(component_id="data_object", component_property="options"),
+        )(InversionApp.update_remaining_object_options)
+        self.app.callback(
+            Output(component_id="topography_data", component_property="options"),
+            # Output(component_id=param+"_data", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="topography_object", component_property="value"),
+        )(self.update_channel_options)
+
+        for model_type in ["starting", "reference"]:
+            for param in gravity_inversion_params:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="options",
+                    ),
+                    Input(component_id="data_object", component_property="options"),
+                )(InversionApp.update_remaining_object_options)
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_data",
+                        component_property="options",
+                    ),
+                    # Output(component_id=param+"_data", component_property="value"),
+                    Input(component_id="ui_json", component_property="data"),
+                    Input(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="value",
+                    ),
+                )(self.update_channel_options)
+
+        self.app.callback(
+            Output(component_id="channel", component_property="options"),
+            # Output(component_id="channel", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.update_channel_options)
+        self.app.callback(
+            Output(component_id="uncertainty_channel", component_property="options"),
+            # Output(component_id="uncertainty_channel", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.update_channel_options)
+        self.app.callback(
+            Output(component_id="receivers_radar_drape", component_property="options"),
+            Output(component_id="receivers_radar_drape", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.update_data_options)
+
+        # Update input data channel and uncertainties from component
+        self.app.callback(
+            Output(component_id="full_components", component_property="data"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="full_components", component_property="data"),
+            Input(component_id="channel_bool", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="uncertainty_options", component_property="value"),
+            Input(component_id="uncertainty_floor", component_property="value"),
+            Input(component_id="uncertainty_channel", component_property="value"),
+            State(component_id="component", component_property="value"),
+            State(component_id="component", component_property="options"),
+        )(self.update_full_components)
+        self.app.callback(
+            Output(component_id="channel_bool", component_property="value"),
+            Output(component_id="channel", component_property="value"),
+            Output(component_id="uncertainty_options", component_property="value"),
+            Output(component_id="uncertainty_floor", component_property="value"),
+            Output(component_id="uncertainty_channel", component_property="value"),
+            Input(component_id="component", component_property="value"),
+            Input(component_id="full_components", component_property="data"),
+        )(self.update_input_channel)
+
+        for model_type in ["starting", "reference"]:
+            for param in gravity_inversion_params:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_options",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_const",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_data",
+                        component_property="value",
+                    ),
+                    Input(component_id="ui_json", component_property="data"),
+                )(self.update_inversion_params_from_ui_json)
+        for param in ["topography", "lower_bound", "upper_bound"]:
+            self.app.callback(
+                Output(component_id=param + "_options", component_property="value"),
+                Output(component_id=param + "_const", component_property="value"),
+                Output(component_id=param + "_object", component_property="value"),
+                Output(component_id=param + "_data", component_property="value"),
+                Input(component_id="ui_json", component_property="data"),
+            )(InversionApp.update_general_param_from_ui_json)
+
+        # Update from ui.json
+        self.app.callback(
+            # Input Data
+            Output(component_id="resolution", component_property="value"),
+            # Topography
+            Output(component_id="z_from_topo", component_property="value"),
+            Output(component_id="receivers_offset_x", component_property="value"),
+            Output(component_id="receivers_offset_y", component_property="value"),
+            Output(component_id="receivers_offset_z", component_property="value"),
+            # Inversion - mesh
+            Output(component_id="u_cell_size", component_property="value"),
+            Output(component_id="v_cell_size", component_property="value"),
+            Output(component_id="w_cell_size", component_property="value"),
+            Output(component_id="octree_levels_topo", component_property="value"),
+            Output(component_id="octree_levels_obs", component_property="value"),
+            Output(component_id="max_distance", component_property="value"),
+            Output(component_id="horizontal_padding", component_property="value"),
+            Output(component_id="vertical_padding", component_property="value"),
+            Output(component_id="depth_core", component_property="value"),
+            # Inversion - regularization
+            Output(component_id="alpha_s", component_property="value"),
+            Output(component_id="alpha_x", component_property="value"),
+            Output(component_id="alpha_y", component_property="value"),
+            Output(component_id="alpha_z", component_property="value"),
+            Output(component_id="s_norm", component_property="value"),
+            Output(component_id="x_norm", component_property="value"),
+            Output(component_id="y_norm", component_property="value"),
+            Output(component_id="z_norm", component_property="value"),
+            # Inversion - detrend
+            Output(component_id="detrend_type", component_property="value"),
+            Output(component_id="detrend_order", component_property="value"),
+            # Inversion - ignore values
+            Output(component_id="ignore_values", component_property="value"),
+            # Inversion - optimization
+            Output(component_id="max_iterations", component_property="value"),
+            Output(component_id="chi_factor", component_property="value"),
+            Output(component_id="initial_beta_ratio", component_property="value"),
+            Output(component_id="max_cg_iterations", component_property="value"),
+            Output(component_id="tol_cg", component_property="value"),
+            Output(component_id="n_cpu", component_property="value"),
+            Output(component_id="tile_spatial", component_property="value"),
+            # Output
+            Output(component_id="out_group", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+        )(self.update_remainder_from_ui_json)
+
+        # Plot callbacks
+        # Update plot
+        self.app.callback(
+            Output(component_id="plot", component_property="figure"),
+            Output(component_id="data_count", component_property="children"),
+            Input(component_id="data_object", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="resolution", component_property="value"),
+            Input(component_id="colorbar", component_property="value"),
+            Input(component_id="fix_aspect_ratio", component_property="value"),
+        )(self.plot_selection)
+
+        # Button callbacks
+        self.app.callback(
+            Output(component_id="live_link", component_property="value"),
+            Input(component_id="write_input", component_property="n_clicks"),
+            prevent_initial_call=True,
+        )(self.write_trigger)
+        self.app.callback(
+            Output(component_id="compute", component_property="n_clicks"),
+            Input(component_id="compute", component_property="n_clicks"),
+            prevent_initial_call=True,
+        )(self.trigger_click)
+
+    def write_trigger(self, live_link, ga_group_name, _):
+        # Widgets values populate params dictionary
+        param_dict = self.get_params_dict(locals())
+        # param_dict = {}
+
+        # Create a new workspace and copy objects into it
+        temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
+        ws, live_link = BaseApplication.get_output_workspace(
+            live_link, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
+
+            param_dict["geoh5"] = new_workspace
+
+            for elem in [
+                "topography",
+                "starting_model",
+                "reference_model",
+                "lower_bound",
+                "upper_bound",
+            ]:
+                param_dict[elem + "_object"] = None
+                param_dict[elem] = None
+                if locals()[elem + "_options"] == "Object":
+                    obj, data = locals()[elem + "_object"], locals()[elem + "_data"]
+
+                    if obj is not None:
+                        new_obj = new_workspace.get_entity(obj.uid)[0]
+                        if new_obj is None:
+                            new_obj = obj.copy(
+                                parent=new_workspace, copy_children=False
+                            )
+                        for d in data:
+                            if new_workspace.get_entity(d.uid)[0] is None:
+                                d.copy(parent=new_obj)
+
+                    param_dict[elem + "_object"] = locals()[elem + "_object"]
+                    param_dict[elem] = locals()[elem + "_data"]
+
+                elif locals()[elem + "_options"] == "Constant":
+                    param_dict[elem] = locals()[elem + "_const"]
+
+            if self._inversion_type == "magnetic vector":
+                for elem in [
+                    self._starting_inclination_group,
+                    self._starting_declination_group,
+                    self._reference_inclination_group,
+                    self._reference_declination_group,
+                ]:
+                    obj, data = elem.get_selected_entities()
+                    if obj is not None:
+                        new_obj = new_workspace.get_entity(obj.uid)[0]
+                        if new_obj is None:
+                            new_obj = obj.copy(
+                                parent=new_workspace, copy_children=False
+                            )
+                        for d in data:
+                            if new_workspace.get_entity(d.uid)[0] is None:
+                                d.copy(parent=new_obj)
+
+            new_obj = new_workspace.get_entity(self.objects.value)
+            if len(new_obj) == 0 or new_obj[0] is None:
+                print("An object with data must be selected to write the input file.")
+                return
+
+            new_obj = new_obj[0]
+            for key in self.data_channel_choices.options:
+                widget = getattr(self, f"{key}_uncertainty_channel")
+                if widget.value is not None:
+                    param_dict[f"{key}_uncertainty"] = str(widget.value)
+                    if new_workspace.get_entity(widget.value)[0] is None:
+                        self.workspace.get_entity(widget.value)[0].copy(
+                            parent=new_obj, copy_children=False
+                        )
+                else:
+                    widget = getattr(self, f"{key}_uncertainty_floor")
+                    param_dict[f"{key}_uncertainty"] = widget.value
+
+                if getattr(self, f"{key}_channel_bool").value:
+                    if not self.forward_only.value:
+                        self.workspace.get_entity(
+                            getattr(self, f"{key}_channel").value
+                        )[0].copy(parent=new_obj)
+
+            if self.receivers_radar_drape.value is not None:
+                self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
+                    parent=new_obj
+                )
+
+            for key in self.__dict__:
+                attr = getattr(self, key)
+                if isinstance(attr, Widget) and hasattr(attr, "value"):
+                    value = attr.value
+                    if isinstance(value, uuid.UUID):
+                        value = new_workspace.get_entity(value)[0]
+                    if hasattr(self.params, key):
+                        param_dict[key.lstrip("_")] = value
+                else:
+                    sub_keys = []
+                    if isinstance(attr, (ModelOptions, TopographyOptions)):
+                        sub_keys = [attr.identifier + "_object", attr.identifier]
+                        attr = self
+                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                        sub_keys = attr.params_keys
+                    for sub_key in sub_keys:
+                        value = getattr(attr, sub_key)
+                        if isinstance(value, Widget) and hasattr(value, "value"):
+                            value = value.value
+                        if isinstance(value, uuid.UUID):
+                            value = new_workspace.get_entity(value)[0]
+
+                        if hasattr(self.params, sub_key):
+                            param_dict[sub_key.lstrip("_")] = value
+
+            # Create new params object and write
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+            )
+            param_dict["geoh5"] = new_workspace
+            param_dict["resolution"] = None  # No downsampling for dcip
+            self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            self._run_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=self.export_directory.selected_path,
+            )
+
+
+app = GravityApp()
+app.app.run_server(host="127.0.0.1", port=8050, debug=True)

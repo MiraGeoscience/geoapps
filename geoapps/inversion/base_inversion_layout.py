@@ -8,7 +8,7 @@
 from dash import dcc, html
 
 
-def get_object_selection_layout(inversion_type_list):
+def get_object_selection_layout(inversion_type):
     standard_layout = html.Div(
         [
             dcc.Upload(
@@ -33,11 +33,6 @@ def get_object_selection_layout(inversion_type_list):
                         "Inversion Type:",
                         style={"display": "inline-block", "width": "30%"},
                     ),
-                    dcc.Dropdown(
-                        id="inversion_type",
-                        options=inversion_type_list,
-                        style={"display": "inline-block", "width": "70%"},
-                    ),
                 ]
             ),
         ],
@@ -48,9 +43,7 @@ def get_object_selection_layout(inversion_type_list):
             "margin-right": "5%",
         },
     )
-    if ("magnetic vector" in inversion_type_list) or (
-        "magnetic scalar" in inversion_type_list
-    ):
+    if inversion_type in ["magnetic vector", "magnetic scalar"]:
         object_selection_layout = html.Div(
             [
                 dcc.Markdown("##### **Object Selection**"),
@@ -145,41 +138,30 @@ def generate_model_component(
 
 
 def get_inversion_params_layout(inversion_params):
-    starting_model_divs = []
-    reference_model_divs = []
-    for inversion_type, params in inversion_params.items():
-        starting_model_components = []
-        reference_model_components = []
-        for param_name, value in params.items():
-            starting_model_components.append(
-                generate_model_component(
-                    param_name, value["label"], value["units"], "starting"
-                )
-            )
-            reference_model_components.append(
-                generate_model_component(
-                    param_name, value["label"], value["units"], "reference"
-                )
-            )
-        starting_model_divs.append(
-            html.Div(
-                id="starting_" + inversion_type, children=starting_model_components
+    starting_model_components = []
+    reference_model_components = []
+    for param_name, value in inversion_params.items():
+        starting_model_components.append(
+            generate_model_component(
+                param_name, value["label"], value["units"], "starting"
             )
         )
-        reference_model_divs.append(
-            html.Div(
-                id="reference_" + inversion_type, children=reference_model_components
+        reference_model_components.append(
+            generate_model_component(
+                param_name, value["label"], value["units"], "reference"
             )
         )
 
     starting_model = html.Div(
         id="starting_model_div",
-        children=[dcc.Markdown("###### **Starting Model**")] + starting_model_divs,
+        children=[dcc.Markdown("###### **Starting Model**")]
+        + starting_model_components,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
     reference_model = html.Div(
         id="reference_model_div",
-        children=[dcc.Markdown("###### **Reference Model**")] + reference_model_divs,
+        children=[dcc.Markdown("###### **Reference Model**")]
+        + reference_model_components,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
 
@@ -241,24 +223,6 @@ def get_inversion_params_layout(inversion_params):
             "padding-right": "10px",
         },
     )
-
-    """
-    inversion_params_layout = html.Div(
-        [
-            dcc.Markdown("##### **Inversion Parameters**"),
-            inversion_parameters_dropdown,
-            starting_model,
-            mesh,
-            reference_model,
-            regularization,
-            upper_lower_bounds,
-            detrend,
-            ignore_values,
-            optimization,
-        ],
-        style={"border": "2px black solid", "padding-left": "10px", "padding-right": "10px"},
-    )
-    """
 
     return inversion_params_layout
 
@@ -338,8 +302,8 @@ plot_layout = html.Div(
         dcc.Graph(
             id="plot",
             style={
-                # "width": "70%",
-                # "height": "100%",
+                "width": "600px",
+                "height": "600px",
                 "display": "inline-block",
                 "vertical-align": "middle",
             },
@@ -348,75 +312,84 @@ plot_layout = html.Div(
     style={"display": "inline-block", "width": "60%"},
 )
 
-input_data_layout = html.Div(
-    [
-        dcc.Markdown("##### **Input Data**"),
-        html.Div(
-            [
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            "Component:",
-                            style={"display": "inline-block", "width": "30%"},
-                        ),
-                        dcc.Dropdown(
-                            id="component",
-                            style={"display": "inline-block", "width": "70%"},
-                        ),
-                        dcc.Store(id="full_components"),
-                    ]
-                ),
-                dcc.Checklist(
-                    id="channel_bool", options=[{"label": "Active", "value": True}]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            "Channel:",
-                            style={"display": "inline-block", "width": "30%"},
-                        ),
-                        dcc.Dropdown(
-                            id="channel",
-                            style={"display": "inline-block", "width": "70%"},
-                        ),
-                    ]
-                ),
-                dcc.Markdown("**Uncertainties**"),
-                dcc.RadioItems(
-                    id="uncertainty_options",
-                    options=[
-                        "Floor",
-                        "Channel",
-                    ],
-                    value="Floor",
-                    style={
-                        "display": "inline-block",
-                        "vertical-align": "top",
-                        "width": "30%",
-                    },
-                ),
-                html.Div(
-                    [
-                        dcc.Input(
-                            id="uncertainty_floor",
-                        ),
-                        dcc.Dropdown(
-                            id="uncertainty_channel",
-                        ),
-                    ],
-                    style={"display": "inline-block", "width": "70%"},
-                ),
-            ],
-            style={"display": "inline-block", "vertical-align": "top", "width": "40%"},
-        ),
-        plot_layout,
-    ],
-    style={
-        "border": "2px black solid",
-        "padding-left": "10px",
-        "padding-right": "10px",
-    },
-)
+
+def get_input_data_layout(component_list):
+    input_data_layout = html.Div(
+        [
+            dcc.Markdown("##### **Input Data**"),
+            html.Div(
+                [
+                    html.Div(
+                        [
+                            dcc.Markdown(
+                                "Component:",
+                                style={"display": "inline-block", "width": "30%"},
+                            ),
+                            dcc.Dropdown(
+                                id="component",
+                                style={"display": "inline-block", "width": "70%"},
+                                options=component_list,
+                            ),
+                            dcc.Store(id="full_components"),
+                        ]
+                    ),
+                    dcc.Checklist(
+                        id="channel_bool", options=[{"label": "Active", "value": True}]
+                    ),
+                    html.Div(
+                        [
+                            dcc.Markdown(
+                                "Channel:",
+                                style={"display": "inline-block", "width": "30%"},
+                            ),
+                            dcc.Dropdown(
+                                id="channel",
+                                style={"display": "inline-block", "width": "70%"},
+                            ),
+                        ]
+                    ),
+                    dcc.Markdown("**Uncertainties**"),
+                    dcc.RadioItems(
+                        id="uncertainty_options",
+                        options=[
+                            "Floor",
+                            "Channel",
+                        ],
+                        value="Floor",
+                        style={
+                            "display": "inline-block",
+                            "vertical-align": "top",
+                            "width": "30%",
+                        },
+                    ),
+                    html.Div(
+                        [
+                            dcc.Input(
+                                id="uncertainty_floor",
+                            ),
+                            dcc.Dropdown(
+                                id="uncertainty_channel",
+                            ),
+                        ],
+                        style={"display": "inline-block", "width": "70%"},
+                    ),
+                ],
+                style={
+                    "display": "inline-block",
+                    "vertical-align": "top",
+                    "width": "40%",
+                },
+            ),
+            plot_layout,
+        ],
+        style={
+            "border": "2px black solid",
+            "padding-left": "10px",
+            "padding-right": "10px",
+        },
+    )
+    return input_data_layout
+
 
 topography_none = html.Div(
     id="topography_none_div", children=[dcc.Markdown("No topography")]
