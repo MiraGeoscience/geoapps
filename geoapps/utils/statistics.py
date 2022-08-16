@@ -12,6 +12,22 @@ import numpy.typing as npt
 from sklearn.neighbors import KernelDensity
 
 
+def is_outlier(population: list[float | int], value: float, n_std: int | float = 3):
+    """
+    use a standard deviation threshold to determine if value is an outlier for the population.
+
+    :param population: list of values.
+    :param value: single value to detect outlier status
+    :param n_std (optional):
+
+    :return True if the deviation of value from the mean exceeds the standard deviation threshold.
+    """
+    mean = np.mean(population)
+    std = np.std(population)
+    deviation = np.abs(mean - value)
+    return deviation > n_std * std
+
+
 def random_sampling(
     values: npt.NDArray[np.float64],
     size: int,
