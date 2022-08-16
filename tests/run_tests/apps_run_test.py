@@ -51,7 +51,7 @@ def test_block_model(tmp_path):
         "expansion_fact",
         "monitoring_directory",
     ]
-    (
+    (  # pylint: disable=W0632
         new_grid,
         objects_uid,
         cell_size_x,
@@ -61,7 +61,7 @@ def test_block_model(tmp_path):
         horizontal_padding,
         bottom_padding,
         expansion_fact,
-        monitoring_directory,
+        _,
     ) = block_model.update_remainder_from_ui_json(ui_json, param_list, trigger="test")
 
     assert new_grid == block_model.params.new_grid
@@ -119,7 +119,7 @@ def test_calculator(tmp_path):
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
-    app = Calculator(h5file=temp_workspace)
+    app = Calculator(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -133,7 +133,7 @@ def test_coordinate_transformation(tmp_path):
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
 
-    app = CoordinateTransformation(h5file=temp_workspace)
+    app = CoordinateTransformation(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -148,7 +148,7 @@ def test_contour_values(tmp_path):
         )
 
     app = ContourValues(geoh5=temp_workspace, plot_result=False)
-    app.trigger.click()
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("contours")[0]
@@ -163,8 +163,8 @@ def test_create_surface(tmp_path):
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = Surface2D(h5file=temp_workspace)
-    app.trigger.click()
+    app = Surface2D(geoh5=temp_workspace)
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("CDI")[0]
@@ -231,8 +231,9 @@ def test_edge_detection(tmp_path):
 
 
 def test_export():
-    app = Export(h5file=PROJECT)
+    app = Export(geoh5=PROJECT)
     app.trigger.click()
+    # TODO write all the files types and check that appropriate files are written
 
 
 def test_iso_surface(tmp_path):
@@ -244,7 +245,7 @@ def test_iso_surface(tmp_path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = IsoSurface(geoh5=temp_workspace)
-    app.trigger.click()
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("Isosurface")[0]

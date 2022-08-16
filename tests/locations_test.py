@@ -5,14 +5,12 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from copy import deepcopy
 
 import numpy as np
 import pytest
 from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion import default_ui_json
 from geoapps.inversion.components.locations import InversionLocations
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
@@ -21,9 +19,7 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
-    geotest = Geoh5Tester(
-        geoh5, tmp, "test.geoh5", deepcopy(default_ui_json), MagneticVectorParams
-    )
+    geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", MagneticVectorParams)
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     return geotest.make()
@@ -33,13 +29,13 @@ def test_mask(tmp_path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     locations = InversionLocations(ws, params, window)
-    test_mask = [0, 1, 1, 0]
-    locations.mask = test_mask
+    loc_mask = [0, 1, 1, 0]
+    locations.mask = loc_mask
     assert isinstance(locations.mask, np.ndarray)
     assert locations.mask.dtype == bool
-    test_mask = [0, 1, 2, 3]
+    loc_mask = [0, 1, 2, 3]
     with pytest.raises(ValueError) as excinfo:
-        locations.mask = test_mask
+        locations.mask = loc_mask
     assert "Badly formed" in str(excinfo.value)
 
 

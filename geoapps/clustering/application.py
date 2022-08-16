@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=E0401
+
 from __future__ import annotations
 
 import ast
@@ -304,7 +306,7 @@ class Clustering(ScatterPlots):
                             value=0,
                             style={"margin-bottom": "20px"},
                         ),
-                        daq.ColorPicker(
+                        daq.ColorPicker(  # pylint: disable=E1102
                             id="color_picker",
                             value=dict(hex="#000000"),
                         ),
@@ -1317,7 +1319,7 @@ class Clustering(ScatterPlots):
                 else:
                     axis_values.append(None)
 
-            x, y, z, color, size = tuple(axis_values)
+            x, y, z, color, size = tuple(axis_values)  # pylint: disable=W0632
 
             crossplot = self.update_plot(
                 100,
@@ -1731,9 +1733,9 @@ class Clustering(ScatterPlots):
                 path=output_path,
                 validate=False,
             )
-        # Run driver.
-        driver = ClusteringDriver(new_params)
-        driver.run()
+            # Run driver.
+            driver = ClusteringDriver(new_params)
+            driver.run()
 
         if self.params.live_link:
             print("Live link active. Check your ANALYST session for new mesh.")

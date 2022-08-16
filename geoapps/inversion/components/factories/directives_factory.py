@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=W0221
+
 from __future__ import annotations
 
 import numpy as np
@@ -140,7 +143,7 @@ class DirectivesFactory:
                     )
                 )
 
-        for directive_name in self.params._directive_list:
+        for directive_name in self.params.directive_list:
             for attr in self._directive_2_attr[directive_name]:
                 directive = getattr(self, attr)
                 if directive is not None:
@@ -230,7 +233,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "save_objective_function": save_objective_function,
                 "label": "model",
                 "association": "CEll",
-                "sorting": inversion_object.mesh._ubc_order,
+                "sorting": inversion_object.mesh._ubc_order,  # pylint: disable=W0212
                 "transforms": [active_cells_map],
             }
 
@@ -258,14 +261,14 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        components = list(inversion_object.observed.keys())
+        components = list(inversion_object.observed)
         channels = [""]
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",
             "data_type": {
                 comp: {channel: dtype for channel in channels}
-                for comp, dtype in inversion_object._observed_data_types.items()
+                for comp, dtype in inversion_object.observed_data_types.items()
             },
             "transforms": [
                 np.tile(
@@ -290,12 +293,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["label"] = name
             data = inversion_object.normalize(inversion_object.observed)
 
-            def transform(x):
+            def potfield_transform(x):
                 data_stack = np.row_stack(list(data.values()))
                 data_stack = data_stack[:, np.argsort(sorting)]
                 return data_stack.ravel() - x
 
-            kwargs["transforms"].append(transform)
+            kwargs["transforms"].append(potfield_transform)
 
         return kwargs
 
@@ -309,7 +312,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        components = list(inversion_object.observed.keys())
+        components = list(inversion_object.observed)
         channels = [""]
         is_dc = True if self.factory_type == "direct current" else False
         component = "dc" if is_dc else "ip"
@@ -318,7 +321,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "attribute_type": "predicted",
             "data_type": {
                 comp: {channel: dtype for channel in channels}
-                for comp, dtype in inversion_object._observed_data_types.items()
+                for comp, dtype in inversion_object.observed_data_types.items()
             },
             "transforms": [
                 np.hstack(
@@ -342,25 +345,25 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].append(inversion_object.transformations["potential"])
-            property = "resistivity"
-            kwargs["channels"] = [f"apparent_{property}"]
+            phys_prop = "resistivity"
+            kwargs["channels"] = [f"apparent_{phys_prop}"]
             apparent_measurement_entity_type = self.params.geoh5.get_entity(
-                f"Observed_apparent_{property}"
+                f"Observed_apparent_{phys_prop}"
             )[0].entity_type
             kwargs["data_type"] = {
-                component: {f"apparent_{property}": apparent_measurement_entity_type}
+                component: {f"apparent_{phys_prop}": apparent_measurement_entity_type}
             }
 
         if name == "Residual":
             kwargs["label"] = name
             data = inversion_object.normalize(inversion_object.observed)
 
-            def transform(x):
+            def dcip_transform(x):
                 data_stack = np.row_stack(list(data.values())).ravel()
                 sorting_stack = np.tile(np.argsort(sorting), len(data))
                 return data_stack[sorting_stack] - x
 
-            kwargs["transforms"].append(transform)
+            kwargs["transforms"].append(dcip_transform)
 
         return kwargs
 
@@ -375,14 +378,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         name=None,
     ):
 
-        components = list(inversion_object.observed.keys())
-        channels = np.unique(
-            [list(v.keys()) for k, v in inversion_object.observed.items()]
-        )
+        components = list(inversion_object.observed)
+        channels = np.unique([list(v) for k, v in inversion_object.observed.items()])
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",
-            "data_type": inversion_object._observed_data_types,
+            "data_type": inversion_object.observed_data_types,
             "association": "VERTEX",
             "transforms": [
                 np.tile(
@@ -409,11 +410,11 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 for c in components:
                     data["_".join([str(f), str(c)])] = obs[c][f]
 
-            def transform(x):
+            def natsource_transform(x):
                 data_stack = np.row_stack(list(data.values()))
                 data_stack = data_stack[:, np.argsort(sorting)]
                 return data_stack.ravel() - x
 
-            kwargs["transforms"].append(transform)
+            kwargs["transforms"].append(natsource_transform)
 
         return kwargs

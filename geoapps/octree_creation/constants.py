@@ -97,6 +97,7 @@ default_ui_json.update(
             "value": "Octree_Mesh",
         },
         "conda_environment": "geoapps",
+        "workspace_geoh5": None,
         "run_command": "geoapps.octree_creation.driver",
     }
 )

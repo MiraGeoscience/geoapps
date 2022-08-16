@@ -9,19 +9,21 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from geoh5py.workspace import Workspace
-    from geoh5py.objects import Octree
-    from geoapps.driver_base.params import BaseParams
-    from discretize import TreeMesh
-    from . import InversionData, InversionTopography
-
 import numpy as np
 from geoh5py.objects import PotentialElectrode
-from geoh5py.workspace import Workspace
 
+from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.shared_utils.utils import octree_2_treemesh
+
+if TYPE_CHECKING:
+    from discretize import TreeMesh
+    from geoh5py.objects import Octree
+    from geoh5py.workspace import Workspace
+
+    from geoapps.driver_base.params import BaseParams
+
+    from . import InversionData, InversionTopography
 
 
 class InversionMesh:
@@ -31,7 +33,7 @@ class InversionMesh:
     Attributes
     ----------
 
-    nC:
+    n_cells:
         Number of cells in the mesh.
     rotation :
         Rotation of original octree mesh.
@@ -59,7 +61,7 @@ class InversionMesh:
         self.inversion_data = inversion_data
         self.inversion_topography = inversion_topography
         self.mesh: TreeMesh = None
-        self.nC: int = None
+        self.n_cells: int = None
         self.rotation: dict[str, float] = None
         self.octree_permutation: np.ndarray = None
         self.entity: Octree = None
@@ -82,7 +84,7 @@ class InversionMesh:
             self.build_from_params()
 
         self.uid = self.entity.uid
-        self.nC = self.entity.n_cells
+        self.n_cells = self.entity.n_cells
 
         if self.entity.rotation:
             origin = self.entity.origin.tolist()
@@ -90,7 +92,7 @@ class InversionMesh:
             self.rotation = {"origin": origin, "angle": angle}
 
         self.mesh = octree_2_treemesh(self.entity)
-        self.octree_permutation = self.mesh._ubc_order
+        self.octree_permutation = getattr(self.mesh, "_ubc_order")
 
     def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
         """Collect mesh params from inversion params set and return octree Params object."""
@@ -107,7 +109,7 @@ class InversionMesh:
 
         mesh_params_dict = params.to_dict(ui_json_format=False)
         for k in mesh_param_names:
-            if (k not in mesh_params_dict.keys()) or (mesh_params_dict[k] is None):
+            if (k not in mesh_params_dict) or (mesh_params_dict[k] is None):
                 msg = f"Cannot create OctreeParams from {type(params)} instance. "
                 msg += f"Missing param: {k}."
                 raise ValueError(msg)
@@ -140,11 +142,7 @@ class InversionMesh:
 
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
-
-        from geoapps.octree_creation.driver import OctreeDriver
-
         octree_params = self.collect_mesh_params(self.params)
         driver = OctreeDriver(octree_params)
         self.entity = driver.run()
-        self.workspace.open()
         self.entity.parent = self.params.ga_group

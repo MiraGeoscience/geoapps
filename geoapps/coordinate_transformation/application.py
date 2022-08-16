@@ -20,11 +20,9 @@ from geoh5py.ui_json.utils import monitored_directory_copy
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import warn_module_not_found
-from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
 from ..base.application import BaseApplication
-from .utils import geotiff_2_grid
 
 with warn_module_not_found():
     from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
@@ -35,25 +33,34 @@ with warn_module_not_found():
 with warn_module_not_found():
     from osgeo import gdal, osr
 
+    from geoapps.utils.io import export_grid_2_geotiff
+
+    from .utils import geotiff_2_grid
+
+
+app_initializer = {
+    "ga_group_name": "CoordinateTransformation",
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": [
+        "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+        "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+    ],
+    "code_in": "EPSG:26914",
+    "code_out": "EPSG:4326",
+}
+
 
 class CoordinateTransformation(ObjectDataSelection):
-    """"""
-
-    defaults = {
-        "ga_group_name": "CoordinateTransformation",
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": [
-            "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-            "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
-        ],
-        "code_in": "EPSG:26914",
-        "code_out": "EPSG:4326",
-    }
+    """Re-project entities between known coordinate systems."""
 
     def __init__(self, **kwargs):
-
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
-
+        self._code_in = Text(description="Input Projection:", continuous_update=False)
+        self._code_out = Text(description="Output Projection:", continuous_update=False)
+        self._wkt_in = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        self._wkt_out = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        self.defaults.update(**kwargs)
         self.code_out.observe(self.set_wkt_out, names="value")
         self.code_in.observe(self.set_wkt_in, names="value")
         self.wkt_in.observe(self.set_authority_in, names="value")
@@ -89,7 +96,7 @@ class CoordinateTransformation(ObjectDataSelection):
         if self.wkt_in.value != "" and self.wkt_out.value != "":
 
             if self.plot_result:
-                self.figure = plt.figure(figsize=(12, 8))
+                self._figure = plt.figure(figsize=(12, 8))
                 ax1 = plt.subplot(1, 2, 1)
                 ax2 = plt.subplot(1, 2, 2)
 
@@ -206,38 +213,32 @@ class CoordinateTransformation(ObjectDataSelection):
 
     @property
     def code_in(self):
-        if getattr(self, "_code_in", None) is None:
-            self._code_in = Text(
-                description="Input Projection:", continuous_update=False
-            )
+        """Input EPSG or ESRI code."""
         return self._code_in
 
     @property
     def code_out(self):
-        if getattr(self, "_code_out", None) is None:
-            self._code_out = Text(
-                description="Output Projection:", continuous_update=False
-            )
+        """
+        Output EPSG or ESRI code.
+        """
         return self._code_out
 
     @property
     def wkt_in(self):
-        if getattr(self, "_wkt_in", None) is None:
-            self._wkt_in = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        """Input Well-Known-Text (WKT) string."""
         return self._wkt_in
 
     @property
     def wkt_out(self):
-        if getattr(self, "_wkt_out", None) is None:
-            self._wkt_out = Textarea(description="<=> WKT", layout=Layout(width="50%"))
+        """Output Well-Known-Text (WKT) string."""
         return self._wkt_out
 
     def set_wkt_in(self, _):
-        datasetSRS = osr.SpatialReference()
-        datasetSRS.SetFromUserInput(self.code_in.value.upper())
+        dataset_SRS = osr.SpatialReference()
+        dataset_SRS.SetFromUserInput(self.code_in.value.upper())
 
         self.wkt_in.unobserve_all("value")
-        self.wkt_in.value = datasetSRS.ExportToWkt()
+        self.wkt_in.value = dataset_SRS.ExportToWkt()
         self.wkt_in.observe(self.set_authority_in, names="value")
 
     def set_authority_in(self, _):
@@ -251,11 +252,11 @@ class CoordinateTransformation(ObjectDataSelection):
         self.code_in.observe(self.set_wkt_in, names="value")
 
     def set_wkt_out(self, _):
-        datasetSRS = osr.SpatialReference()
-        datasetSRS.SetFromUserInput(self.code_out.value.upper())
+        dataset_SRS = osr.SpatialReference()
+        dataset_SRS.SetFromUserInput(self.code_out.value.upper())
 
         self.wkt_out.unobserve_all("value")
-        self.wkt_out.value = datasetSRS.ExportToWkt()
+        self.wkt_out.value = dataset_SRS.ExportToWkt()
         self.wkt_out.observe(self.set_authority_out, names="value")
 
     def set_authority_out(self, _):

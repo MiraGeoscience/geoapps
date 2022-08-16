@@ -10,7 +10,7 @@ ci:
 
 repos:
 -   repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
     -   id: black
 -   repo: https://github.com/PyCQA/isort
@@ -27,7 +27,7 @@ repos:
 #    hooks:
 #    -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v2.31.0
+    rev: v2.37.2
     hooks:
     -   id: pyupgrade
         args: [--py37-plus]
@@ -59,7 +59,7 @@ repos:
         exclude: (\.ipynb$)
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.3.0
     hooks:
     -   id: trailing-whitespace
         exclude: \.mdj$
@@ -75,7 +75,7 @@ repos:
     -   id: mixed-line-ending
     -   id: name-tests-test
 -   repo: https://github.com/rstcheck/rstcheck
-    rev: v5.0.0
+    rev: v6.0.0.post1
     hooks:
     -   id: rstcheck
         additional_dependencies: [sphinx]
