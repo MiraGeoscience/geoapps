@@ -12,7 +12,7 @@ from time import time
 
 from geoh5py.objects.object_base import Entity, ObjectBase
 from geoh5py.ui_json.input_file import InputFile
-from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
+from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox
 
 from geoapps.base.plot import PlotSelection2D
 from geoapps.contours.constants import app_initializer
@@ -35,7 +35,6 @@ class ContourValues(PlotSelection2D):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults = {}
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
@@ -52,15 +51,6 @@ class ContourValues(PlotSelection2D):
         self.data.observe(self.update_name, names="value")
         super().__init__(**self.defaults)
 
-        self.selection = interactive_output(
-            self.compute_plot,
-            {
-                "interval_min": self.interval_min,
-                "interval_max": self.interval_max,
-                "interval_spacing": self.interval_spacing,
-                "fixed_contours": self.fixed_contours,
-            },
-        )
         self.contours = VBox(
             [
                 self.interval_min,
@@ -73,13 +63,6 @@ class ContourValues(PlotSelection2D):
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export"
         self.trigger.button_style = "danger"
-
-    @property
-    def export(self):
-        """
-        :obj:`ipywidgets.ToggleButton`: Write contours to the target geoh5
-        """
-        return self._export
 
     @property
     def export_as(self):
@@ -125,20 +108,9 @@ class ContourValues(PlotSelection2D):
                             ),
                         ]
                     ),
-                    self.selection,
                 ]
             )
         return self._main
-
-    def compute_plot(
-        self, interval_min, interval_max, interval_spacing, fixed_contours
-    ):
-        """
-        Get current selection and trigger update
-        """
-        entity, data = self.get_selected_entities()
-        if data is None:
-            return
 
     def update_contours(self):
         """

@@ -92,7 +92,7 @@ default_ui_json.update(
             "value": None,
         },
         "system": {
-            "choiceList": list(parameters().keys()),
+            "choiceList": list(parameters()),
             "main": True,
             "label": "TEM system",
             "dependency": "tem_checkbox",
@@ -183,7 +183,7 @@ template_dict = {
 
 # Over-write validations for jupyter app parameters
 validations = {
-    "line_id": {"types": [float, type(None)]},
+    "line_id": {"types": [str, float, type(None)]},
     "center": {"types": [float, type(None)]},
     "width": {"types": [float, type(None)]},
 }

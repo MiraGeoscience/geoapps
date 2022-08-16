@@ -70,7 +70,7 @@ def test_truncate_locs_depths():
     assert zrange + depth_core_new == depth_core + z
 
 
-def test_find_top_padding(tmp_path):
+def test_find_top_padding():
 
     top = 500
     depth_core = 300.0
@@ -92,7 +92,7 @@ def test_find_top_padding(tmp_path):
     assert top_padding >= pads[-1]
 
 
-def test_get_block_model(tmp_path):
+def test_get_block_model():
 
     # padding in the W/E/N/S directions should make create locs at least as
     # far as the core hull plus the padding distances

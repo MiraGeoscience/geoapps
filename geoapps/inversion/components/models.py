@@ -262,12 +262,14 @@ class InversionModel:
 
                 if inclination is None:
                     inclination = (
-                        np.ones(self.mesh.nC) * self.params.inducing_field_inclination
+                        np.ones(self.mesh.n_cells)
+                        * self.params.inducing_field_inclination
                     )
 
                 if declination is None:
                     declination = (
-                        np.ones(self.mesh.nC) * self.params.inducing_field_declination
+                        np.ones(self.mesh.n_cells)
+                        * self.params.inducing_field_declination
                     )
                     if self.mesh.rotation is not None:
                         declination += self.mesh.rotation["angle"]
@@ -289,9 +291,9 @@ class InversionModel:
 
             if model is None:
                 bound = -np.inf if self.model_type == "lower_bound" else np.inf
-                model = np.full(self.mesh.nC, bound)
+                model = np.full(self.mesh.n_cells, bound)
 
-            if self.is_vector and model.shape[0] == self.mesh.nC:
+            if self.is_vector and model.shape[0] == self.mesh.n_cells:
                 model = np.tile(model, self.n_blocks)
 
         if model is not None:
@@ -388,7 +390,7 @@ class InversionModel:
             model = self._obj_2_mesh(model.values, model.parent)
 
         else:
-            nc = self.mesh.nC
+            nc = self.mesh.n_cells
             if isinstance(model, (int, float)):
                 model *= np.ones(nc)
 

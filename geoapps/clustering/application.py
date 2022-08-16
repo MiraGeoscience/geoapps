@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=E0401
+
 from __future__ import annotations
 
 import ast
@@ -449,7 +452,6 @@ class Clustering(ScatterPlots):
 
         return options, value
 
-    @staticmethod
     def update_data_options(
         ui_json: dict, data_subset: list, full_options: list
     ) -> (list, list, list, list, list, list, list, str, str, str, str, str, str):

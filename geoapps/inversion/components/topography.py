@@ -99,7 +99,11 @@ class InversionTopography(InversionLocations):
             active_cells = active_from_xyz(
                 mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
             )
-            active_cells[mesh.mesh._get_containing_cell_indexes(data.locations)] = True
+            active_cells[
+                mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+                    data.locations
+                )
+            ] = True
         else:
             active_cells = active_from_xyz(
                 mesh.mesh, self.locations, grid_reference="cell_centers"
@@ -115,18 +119,18 @@ class InversionTopography(InversionLocations):
 
         return active_cells
 
-    def get_locations(self, entity: Entity) -> np.ndarray:
+    def get_locations(self, obj: Entity) -> np.ndarray:
         """
         Returns locations of data object centroids or vertices.
 
-        :param entity: geoh5py object containing centroid or
+        :param obj: geoh5py object containing centroid or
             vertex location data
 
         :return: Array shape(*, 3) of x, y, z location data
 
         """
 
-        locs = super().get_locations(entity)
+        locs = super().get_locations(obj)
 
         if self.params.topography is not None:
             if isinstance(self.params.topography, Entity):
