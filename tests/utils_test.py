@@ -18,8 +18,10 @@ import geoh5py.objects
 import numpy as np
 import pytest
 from discretize import TreeMesh
+from geoh5py.data import ReferencedData
 from geoh5py.objects import Grid2D
 from geoh5py.workspace import Workspace
+from scipy.spatial import cKDTree
 
 from geoapps.driver_base.utils import running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
@@ -37,10 +39,57 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.models import RectangularBlock
 from geoapps.utils.string import string_to_numeric
+from geoapps.utils.surveys import (
+    is_outlier,
+    new_neighbors,
+    split_dcip_survey,
+    survey_lines,
+)
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+# geoh5_dcip = Workspace("./FlinFlon_dcip.geoh5")
+
+
+def test_survey_lines():
+
+    nodes = [2, 3, 4, 5, 6]
+    d = np.array([25, 50, 0])
+    id = np.array([1, 2, 3])
+    n = new_neighbors(d, id, nodes)
+
+    population = [25.1, 25.3]
+    next = 50.05
+    is_outlier(population, next, 3)
+
+    ws = Workspace("../assets/FlinFlon_dcip.geoh5", mode="r+")
+    survey = ws.get_entity("DC_Survey")[0]
+    lines = survey_lines(survey, [314529, 6071402])
+
+    split_dcip_survey(survey, lines)
+
+    line_data = survey.add_data(
+        {
+            "line_ids": {
+                "values": np.array(lines),
+                "association": "VERTEX",
+                "entity_type": {
+                    "primitive_type": "REFERENCED",
+                    "value_map": {k: str(k) for k in lines},
+                },
+            }
+        }
+    )
+
+    ws.close()
+    assert True
+
+
+# def test_is_outlier():
+#     population = [25.1, 25.3]
+#     next = 50.05
+#     is_outlier(population, next, 3)
 
 
 def test_rectangular_block():
