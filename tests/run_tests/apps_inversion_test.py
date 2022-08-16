@@ -14,6 +14,7 @@ from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
+from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
 from geoapps.inversion.potential_fields import MagneticVectorParams
@@ -33,17 +34,16 @@ project_dcip = "./FlinFlon_dcip.geoh5"
 
 def test_mag_inversion(tmp_path):
     """Tests the jupyter application for mag-mvi"""
+    with Workspace(project) as ws:
+        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+            new_topo = ws.get_entity(UUID("ab3c2083-6ea8-4d31-9230-7aad3ec09525"))[
+                0
+            ].copy(parent=new_geoh5)
+            new_obj = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
+                0
+            ].copy(parent=new_geoh5)
+            topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
 
-    ws = Workspace(project)
-    new_geoh5 = Workspace(path.join(tmp_path, "invtest.geoh5"))
-
-    new_topo = ws.get_entity(UUID("ab3c2083-6ea8-4d31-9230-7aad3ec09525"))[0].copy(
-        parent=new_geoh5
-    )
-    new_obj = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
-        parent=new_geoh5
-    )
-    topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
     changes = {
         "data_object": new_obj.uid,
         "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
@@ -55,15 +55,14 @@ def test_mag_inversion(tmp_path):
         "starting_model": 0.01,
     }
     side_effects = {"starting_inclination": 35}
-    app = MagInversionApp(geoh5=project, plot_result=False)
-    app.geoh5 = new_geoh5
+    app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)
 
     assert (
-        len(app._lower_bound_group.objects.options) == 2
+        len(getattr(app, "_lower_bound_group").objects.options) == 2
     ), "Lower bound group did not reset properly on workspace change."
 
     assert (
-        len(app._upper_bound_group.objects.options) == 2
+        len(getattr(app, "_upper_bound_group").objects.options) == 2
     ), "Upper bound group did not reset properly on workspace change."
 
     for param, value in changes.items():
@@ -74,8 +73,11 @@ def test_mag_inversion(tmp_path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check to make sure this can be run twice
-    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
+    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
     params_reload = MagneticVectorParams(ifile)
+
+    InversionDriver(params_reload)
+
     objs = params_reload.geoh5.list_entities_name
     check_objs = [
         new_obj.uid,
@@ -130,20 +132,18 @@ def test_mag_inversion(tmp_path):
             assert (
                 getattr(app, "_" + group + "_group").options.value == "Model"
             ), f"Property group {group} did not reset to 'Model'"
-        #
-        # setattr(app, group, 1.)
 
 
 def test_dc_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
-    ws = Workspace(project_dcip)
-    new_geoh5 = Workspace(path.join(tmp_path, "invtest.geoh5"))
-    new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[0].copy(
-        parent=new_geoh5
-    )
-    # dc object
-    currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
-    currents.copy(parent=new_geoh5)
+    with Workspace(project_dcip) as ws:
+        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+            new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
+                0
+            ].copy(parent=new_geoh5)
+            # dc object
+            currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
+            currents.copy(parent=new_geoh5)
     changes = {
         "topography_object": new_topo.uid,
         "z_from_topo": False,
@@ -162,7 +162,7 @@ def test_dc_inversion(tmp_path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
-    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
+    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
     params_reload = DirectCurrentParams(ifile)
 
     for param, value in changes.items():
@@ -241,7 +241,7 @@ def test_ip_inversion(tmp_path):
             setattr(app, param, value)
 
     app.write_trigger(None)
-    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
+    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
     params_reload = InducedPolarizationParams(ifile)
 
     for param, value in changes.items():

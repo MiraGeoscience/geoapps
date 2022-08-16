@@ -6,8 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-import pytest
-
 from geoapps.utils.formatters import string_name
 
 

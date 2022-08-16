@@ -17,34 +17,34 @@ from geoapps.utils.list import sorted_alphanumeric_list
 
 
 def sorted_children_dict(
-    object: UUID | Entity, workspace: Workspace = None
+    entity: UUID | Entity, workspace: Workspace = None
 ) -> dict[str, UUID]:
     """
     Uses natural sorting algorithm to order the keys of a dictionary containing
     children name/uid key/value pairs.
 
-    If valid uuid entered calls get_entity.  Will return None if no object found
-    in workspace for provided object
+    If valid uuid entered calls get_entity.  Will return None if no entity found
+    in workspace for provided entity
 
-    :param object: geoh5py object containing children IntegerData, FloatData
+    :param entity: geoh5py entity containing children IntegerData, FloatData
         entities
 
-    :return : sorted name/uid dictionary of children entities of object.
+    :return : sorted name/uid dictionary of children entities of entity.
 
     """
 
-    if isinstance(object, UUID):
-        object = workspace.get_entity(object)[0]
-        if not object:
+    if isinstance(entity, UUID):
+        entity = workspace.get_entity(entity)[0]
+        if not entity:
             return None
 
     children_dict = {}
-    for c in object.children:
-        if not isinstance(c, (IntegerData, FloatData)):
+    for child in entity.children:
+        if not isinstance(child, (IntegerData, FloatData)):
             continue
-        else:
-            children_dict[c.name] = c.uid
 
-    children_order = sorted_alphanumeric_list(list(children_dict.keys()))
+        children_dict[child.name] = child.uid
+
+    children_order = sorted_alphanumeric_list(list(children_dict))
 
     return {k: children_dict[k] for k in children_order}

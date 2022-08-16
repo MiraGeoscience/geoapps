@@ -144,7 +144,7 @@ def test_find_value():
     assert find_value(labels, ["data"]) == "inversion_01_data"
     assert find_value(labels, ["inversion", "02"]) == "inversion_02_model"
     assert find_value(labels, ["inversion"]) == "inversion_02_model"
-    assert find_value(labels, ["lskdfjsd"]) == None
+    assert find_value(labels, ["lskdfjsd"]) is None
     labels = [["inversion_01_model", 1], ["inversion_01_data", 2]]
     assert find_value(labels, ["model"]) == 1
     assert find_value(labels, ["data"]) == 2
@@ -185,12 +185,12 @@ def test_sorted_alphanumeric_list():
     ]
 
     sorted_list = sorted_alphanumeric_list(random.sample(test, len(test)))
-    assert all([sorted_list[i] == test[i] for i in range(len(test))])
+    assert all(elem == tester for elem, tester in zip(sorted_list, test))
 
 
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
-        import os as test_import
+        import os as test_import  # pylint: disable=W0404
     assert test_import == os
 
     with warn_module_not_found():
@@ -198,7 +198,7 @@ def test_no_warn_module_not_found(recwarn):
     assert test_import_from == os.system
 
     with warn_module_not_found():
-        import geoh5py.objects as test_import_submodule
+        import geoh5py.objects as test_import_submodule  # pylint: disable=W0404
     assert test_import_submodule == geoh5py.objects
 
     with warn_module_not_found():
@@ -212,42 +212,40 @@ def test_warn_module_not_found():
     # pylint: disable=import-error
     # pylint: disable=no-name-in-module
 
-    noop = lambda x: None
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    def noop(_):
+        return None
+
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             import nonexisting as test_import
     with pytest.raises(NameError):
         noop(test_import)
 
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             from nonexisting import nope as test_import_from
     with pytest.raises(NameError):
         noop(test_import_from)
 
-    with pytest.warns(
-        match=f"Module 'os.nonexisting' is missing from the environment."
-    ):
+    with pytest.warns(match="Module 'os.nonexisting' is missing from the environment."):
         with warn_module_not_found():
             import os.nonexisting as test_import_os_submodule
     with pytest.raises(NameError):
         noop(test_import_os_submodule)
 
-    with pytest.warns(
-        match=f"Module 'os.nonexisting' is missing from the environment."
-    ):
+    with pytest.warns(match="Module 'os.nonexisting' is missing from the environment."):
         with warn_module_not_found():
             from os.nonexisting import nope as test_import_from_os_submodule
     with pytest.raises(NameError):
         noop(test_import_from_os_submodule)
 
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             import nonexisting.nope as test_import_nonexising_submodule
     with pytest.raises(NameError):
         noop(test_import_nonexising_submodule)
 
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             from nonexisting.nope import nada as test_import_from_nonexisting_submodule
     with pytest.raises(NameError):
@@ -268,26 +266,26 @@ def test_sorted_children_dict(tmp_path):
         allow_move=False,
     )
 
-    test_data = grid.add_data({"Iteration_10_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_1_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_5_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_3_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_2_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_4_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_9.0_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_8e0_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"interp_02": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"interp_01": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"interp_11": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"iteration_2_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"iteration_12_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_2_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_12_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"topo": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_10_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_1_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_5_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_3_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_2_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_4_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_9.0_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_8e0_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
+    grid.add_data({"interp_02": {"values": np.ones(10 * 15)}})
+    grid.add_data({"interp_01": {"values": np.ones(10 * 15)}})
+    grid.add_data({"interp_11": {"values": np.ones(10 * 15)}})
+    grid.add_data({"iteration_2_model": {"values": np.ones(10 * 15)}})
+    grid.add_data({"iteration_12_model": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_2_model": {"values": np.ones(10 * 15)}})
+    grid.add_data({"Iteration_12_model": {"values": np.ones(10 * 15)}})
+    grid.add_data({"topo": {"values": np.ones(10 * 15)}})
+    grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
 
     d = sorted_children_dict(grid)
     d = list(d.keys())
@@ -411,98 +409,100 @@ def test_weigted_average():
 def test_treemesh_2_octree(tmp_path):
 
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    ws = geotest.make()
-    mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
-    mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
-    omesh = treemesh_2_octree(ws, mesh, name="test_mesh")
-    assert omesh.n_cells == mesh.n_cells
-    assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)
-    expected_refined_cells = [
-        (0, 0, 6),
-        (0, 0, 7),
-        (1, 0, 6),
-        (1, 0, 7),
-        (0, 1, 6),
-        (0, 1, 7),
-        (1, 1, 6),
-        (1, 1, 7),
-    ]
-    ijk_refined = omesh.octree_cells[["I", "J", "K"]][
-        omesh.octree_cells["NCells"] == 1
-    ].tolist()
-    assert np.all([k in ijk_refined for k in expected_refined_cells])
-    assert np.all([k in expected_refined_cells for k in ijk_refined])
+    with geotest.make() as workspace:
+        mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
+        mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
+        omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
+        assert omesh.n_cells == mesh.n_cells
+        assert np.all(
+            (omesh.centroids - mesh.cell_centers[getattr(mesh, "_ubc_order")]) < 1e-14
+        )
+        expected_refined_cells = [
+            (0, 0, 6),
+            (0, 0, 7),
+            (1, 0, 6),
+            (1, 0, 7),
+            (0, 1, 6),
+            (0, 1, 7),
+            (1, 1, 6),
+            (1, 1, 7),
+        ]
+        ijk_refined = omesh.octree_cells[["I", "J", "K"]][
+            omesh.octree_cells["NCells"] == 1
+        ].tolist()
+        assert np.all([k in ijk_refined for k in expected_refined_cells])
+        assert np.all([k in expected_refined_cells for k in ijk_refined])
 
 
 def test_octree_2_treemesh(tmp_path):
 
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    ws = geotest.make()
-    mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
-    mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
-    omesh = treemesh_2_octree(ws, mesh)
-    for p in itertools.product("uvw", repeat=3):
-        omesh.origin = [0, 0, 0]
-        for axis in "uvw":
-            attr = axis + "_cell_size"
-            setattr(omesh, attr, np.abs(getattr(omesh, attr)))
-        for axis in np.unique(p):
-            attr = axis + "_cell_size"
-            setattr(omesh, attr, -1 * getattr(omesh, attr))
-            omesh.origin["xyz"["uvw".find(axis)]] = 40
-        tmesh = octree_2_treemesh(omesh)
-        assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-14)
+    with geotest.make() as workspace:
+        mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
+        mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
+        omesh = treemesh_2_octree(workspace, mesh)
+        for prod in itertools.product("uvw", repeat=3):
+            omesh.origin = [0, 0, 0]
+            for axis in "uvw":
+                attr = axis + "_cell_size"
+                setattr(omesh, attr, np.abs(getattr(omesh, attr)))
+            for axis in np.unique(prod):
+                attr = axis + "_cell_size"
+                setattr(omesh, attr, -1 * getattr(omesh, attr))
+                omesh.origin["xyz"["uvw".find(axis)]] = 40
+            tmesh = octree_2_treemesh(omesh)
+            assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-14)
 
 
 def test_window_xy():
-    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-    x = xg.ravel()
-    y = yg.ravel()
+    x, y = np.meshgrid(np.arange(11), np.arange(11))
+    x = x.ravel()
+    y = y.ravel()
     window = {
         "center": [5, 5],
         "size": [1, 1],
     }
-    ind, xw, yw = window_xy(x, y, window)
-    assert len(xw) == 1
-    assert len(yw) == 1
-    assert xw[0] == 5
-    assert yw[0] == 5
+    ind, x_win, y_win = window_xy(x, y, window)
+    assert len(x_win) == 1
+    assert len(y_win) == 1
+    assert x_win[0] == 5
+    assert y_win[0] == 5
     assert sum(ind) == 1
 
     window = {"center": [6, 2.5], "size": [3, 2]}
-    ind, xw, yw = window_xy(x, y, window)
-    assert [p in xw for p in [5, 6, 7]]
-    assert [p in [5, 6, 7] for p in xw]
-    assert [p in yw for p in [3, 4]]
-    assert [p in [3, 4] for p in yw]
+    ind, x_win, y_win = window_xy(x, y, window)
+    assert [p in x_win for p in [5, 6, 7]]
+    assert [p in [5, 6, 7] for p in x_win]
+    assert [p in y_win for p in [3, 4]]
+    assert [p in [3, 4] for p in y_win]
 
 
 def test_downsample_xy():
-    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-    x = xg.ravel()
-    y = yg.ravel()
-    ind, xd, yd = downsample_xy(x, y, 0)
-    assert np.all(x == xd)
-    assert np.all(y == yd)
+    x_grid, y_grid = np.meshgrid(np.arange(11), np.arange(11))
+    x = x_grid.ravel()
+    y = y_grid.ravel()
+    _, x_down, y_down = downsample_xy(x, y, 0)
+    assert np.all(x == x_down)
+    assert np.all(y == y_down)
 
-    ind, xd, yd = downsample_xy(x, y, 1)
-    assert np.all(x[::2] == xd)
-    assert np.all(y[::2] == yd)
+    _, x_down, y_down = downsample_xy(x, y, 1)
+    assert np.all(x[::2] == x_down)
+    assert np.all(y[::2] == y_down)
 
 
 def test_downsample_grid():
 
     # Test a simple grid equal spacing in x, y
-    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-    ind, xd, yd = downsample_grid(xg, yg, 2)
-    assert np.all(np.diff(yd.reshape(6, 6), axis=0) == 2)
-    assert np.all(np.diff(xd.reshape(6, 6), axis=1) == 2)
+    x_grid, y_grid = np.meshgrid(np.arange(11), np.arange(11))
+    _, x_down, y_down = downsample_grid(x_grid, y_grid, 2)
+    assert np.all(np.diff(y_down.reshape(6, 6), axis=0) == 2)
+    assert np.all(np.diff(x_down.reshape(6, 6), axis=1) == 2)
 
     # Test a rotated grid equal spacing in u, v
-    xy_rot = rotate_xyz(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
-    xg_rot = xy_rot[:, 0].reshape(11, 11)
-    yg_rot = xy_rot[:, 1].reshape(11, 11)
-    ind, xd, yd = downsample_grid(xg_rot, yg_rot, 2)
+    xy_rot = rotate_xyz(np.c_[x_grid.ravel(), y_grid.ravel()], [5, 5], 30)
+    x_grid_rot = xy_rot[:, 0].reshape(11, 11)
+    y_grid_rot = xy_rot[:, 1].reshape(11, 11)
+    _, xd, yd = downsample_grid(x_grid_rot, y_grid_rot, 2)
     xy = rotate_xyz(np.c_[xd, yd], [5, 5], -30)
     xg_test = xy[:, 0].reshape(6, 6)
     yg_test = xy[:, 1].reshape(6, 6)
@@ -510,67 +510,74 @@ def test_downsample_grid():
     np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((5, 6), 2))
 
     # Test unequal spacing in x, y
-    xg, yg = np.meshgrid(np.arange(11), np.linspace(0, 10, 21))
-    ind, xd, yd = downsample_grid(xg, yg, 2)
-    xg_test = xd.reshape(6, 6)
-    yg_test = yd.reshape(6, 6)
-    np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
-    np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((5, 6), 2))
+    x_grid, y_grid = np.meshgrid(np.arange(11), np.linspace(0, 10, 21))
+    _, x_down, y_down = downsample_grid(x_grid, y_grid, 2)
+    x_grid_test = x_down.reshape(6, 6)
+    y_grid_test = y_down.reshape(6, 6)
+    np.testing.assert_allclose(np.diff(x_grid_test, axis=1), np.full((6, 5), 2))
+    np.testing.assert_allclose(np.diff(y_grid_test, axis=0), np.full((5, 6), 2))
 
 
 def test_filter_xy():
-
-    xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-    xy_rot = rotate_xyz(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
-    xg_rot = xy_rot[:, 0].reshape(11, 11)
-    yg_rot = xy_rot[:, 1].reshape(11, 11)
+    x_grid, y_grid = np.meshgrid(np.arange(11), np.arange(11))
+    xy_rot = rotate_xyz(np.c_[x_grid.ravel(), y_grid.ravel()], [5, 5], 30)
+    x_grid_rot = xy_rot[:, 0].reshape(11, 11)
+    y_grid_rot = xy_rot[:, 1].reshape(11, 11)
     window = {
         "center": [5, 5],
         "size": [9, 5],
     }
     # Test the windowing functionality
-    w_mask = filter_xy(xg, yg, window=window)
-    xg_test, yg_test = xg[w_mask].reshape(5, 9), yg[w_mask].reshape(5, 9)
-    np.testing.assert_allclose(
-        xg_test, np.meshgrid(np.arange(1, 10), np.arange(3, 8))[0]
+    w_mask = filter_xy(x_grid, y_grid, window=window)
+    x_grid_test, y_grid_test = x_grid[w_mask].reshape(5, 9), y_grid[w_mask].reshape(
+        5, 9
     )
     np.testing.assert_allclose(
-        yg_test, np.meshgrid(np.arange(1, 10), np.arange(3, 8))[1]
+        x_grid_test, np.meshgrid(np.arange(1, 10), np.arange(3, 8))[0]
+    )
+    np.testing.assert_allclose(
+        y_grid_test, np.meshgrid(np.arange(1, 10), np.arange(3, 8))[1]
     )
 
     # Test the downsampling functionality
-    ds_mask = filter_xy(xg, yg, distance=2)
-    xg_test, yg_test = xg[ds_mask].reshape(6, 6), yg[ds_mask].reshape(6, 6)
-    np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
-    np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((5, 6), 2))
+    ds_mask = filter_xy(x_grid, y_grid, distance=2)
+    x_grid_test, y_grid_test = x_grid[ds_mask].reshape(6, 6), y_grid[ds_mask].reshape(
+        6, 6
+    )
+    np.testing.assert_allclose(np.diff(x_grid_test, axis=1), np.full((6, 5), 2))
+    np.testing.assert_allclose(np.diff(y_grid_test, axis=0), np.full((5, 6), 2))
 
     # Test the combo functionality
-    comb_mask = filter_xy(xg, yg, distance=2, window=window)
+    comb_mask = filter_xy(x_grid, y_grid, distance=2, window=window)
     assert np.all(comb_mask == (w_mask & ds_mask))
-    xg_test, yg_test = xg[comb_mask].reshape(2, 4), yg[comb_mask].reshape(2, 4)
-    assert np.all((xg_test >= 1) & (xg_test <= 9))
-    assert np.all((yg_test >= 3) & (yg_test <= 7))
-    np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((2, 3), 2))
-    np.testing.assert_allclose(np.diff(yg_test, axis=0), np.full((1, 4), 2))
+    x_grid_test, y_grid_test = x_grid[comb_mask].reshape(2, 4), y_grid[
+        comb_mask
+    ].reshape(2, 4)
+    assert np.all((x_grid_test >= 1) & (x_grid_test <= 9))
+    assert np.all((y_grid_test >= 3) & (y_grid_test <= 7))
+    np.testing.assert_allclose(np.diff(x_grid_test, axis=1), np.full((2, 3), 2))
+    np.testing.assert_allclose(np.diff(y_grid_test, axis=0), np.full((1, 4), 2))
 
     # Test rotation options
-    combo_mask = filter_xy(xg_rot, yg_rot, distance=2, window=window, angle=-30)
-    xg_test, yg_test = xg_rot[comb_mask], yg_rot[comb_mask]
+    combo_mask = filter_xy(x_grid_rot, y_grid_rot, distance=2, window=window, angle=-30)
+    xg_test, yg_test = x_grid_rot[comb_mask], y_grid_rot[comb_mask]
     xy_rot = rotate_xyz(np.c_[xg_test, yg_test], [5, 5], -30)
-    xg_rot_test, yg_rot_test = xy_rot[:, 0].reshape(2, 4), xy_rot[:, 1].reshape(2, 4)
-    assert np.all((xg_rot_test >= 1) & (xg_rot_test <= 9))
-    assert np.all((yg_rot_test >= 3) & (yg_rot_test <= 7))
-    np.testing.assert_allclose(np.diff(xg_rot_test, axis=1), np.full((2, 3), 2))
-    np.testing.assert_allclose(np.diff(yg_rot_test, axis=0), np.full((1, 4), 2))
+    x_grid_rot_test, y_grid_rot_test = xy_rot[:, 0].reshape(2, 4), xy_rot[:, 1].reshape(
+        2, 4
+    )
+    assert np.all((x_grid_rot_test >= 1) & (x_grid_rot_test <= 9))
+    assert np.all((y_grid_rot_test >= 3) & (y_grid_rot_test <= 7))
+    np.testing.assert_allclose(np.diff(x_grid_rot_test, axis=1), np.full((2, 3), 2))
+    np.testing.assert_allclose(np.diff(y_grid_rot_test, axis=0), np.full((1, 4), 2))
 
     window["azimuth"] = -30
-    combo_mask_test = filter_xy(xg_rot, yg_rot, distance=2, window=window)
+    combo_mask_test = filter_xy(x_grid_rot, y_grid_rot, distance=2, window=window)
     assert np.all(combo_mask_test == combo_mask)
 
 
 def test_detrend_xy():
-    xg, yg = np.meshgrid(np.arange(64), np.arange(64))
-    xy = np.c_[xg.flatten(), yg.flatten()]
+    x_grid, y_grid = np.meshgrid(np.arange(64), np.arange(64))
+    xy = np.c_[x_grid.flatten(), y_grid.flatten()]
     coefficients = np.random.randn(3)
     values = coefficients[0] + coefficients[1] * xy[:, 1] + coefficients[2] * xy[:, 0]
     ind_nan = np.random.randint(0, high=values.shape[0] - 1, size=32)
@@ -578,12 +585,10 @@ def test_detrend_xy():
     nan_values[ind_nan] = np.nan
 
     # Should return a plane even for order=5
-    comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=5, method="all")
+    comp_trend, _ = calculate_2D_trend(xy, nan_values, order=5, method="all")
     np.testing.assert_almost_equal(values, comp_trend)
     # Should return same plane parameter for 'perimeter' or 'all'
-    corner_trend, corner_params = calculate_2D_trend(
-        xy, nan_values, order=1, method="perimeter"
-    )
+    corner_trend, _ = calculate_2D_trend(xy, nan_values, order=1, method="perimeter")
     np.testing.assert_almost_equal(values, corner_trend)
 
     with pytest.raises(ValueError) as excinfo:
@@ -601,21 +606,21 @@ def test_detrend_xy():
 
 def test_get_locations(tmp_path):
 
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    n_x, n_y = 10, 15
-    grid = Grid2D.create(
-        ws,
-        origin=[0, 0, 0],
-        u_cell_size=20.0,
-        v_cell_size=30.0,
-        u_count=n_x,
-        v_count=n_y,
-        name="test_grid",
-        allow_move=False,
-    )
-    base_locs = get_locations(ws, grid)
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as workspace:
+        n_x, n_y = 10, 15
+        grid = Grid2D.create(
+            workspace,
+            origin=[0, 0, 0],
+            u_cell_size=20.0,
+            v_cell_size=30.0,
+            u_count=n_x,
+            v_count=n_y,
+            name="test_grid",
+            allow_move=False,
+        )
+        base_locs = get_locations(workspace, grid)
 
-    test_data = grid.add_data({"test_data": {"values": np.ones(10 * 15)}})
-    data_locs = get_locations(ws, test_data)
+        test_data = grid.add_data({"test_data": {"values": np.ones(10 * 15)}})
+        data_locs = get_locations(workspace, test_data)
 
-    np.testing.assert_array_equal(base_locs, data_locs)
+        np.testing.assert_array_equal(base_locs, data_locs)

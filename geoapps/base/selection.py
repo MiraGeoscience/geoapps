@@ -276,6 +276,7 @@ class ObjectDataSelection(BaseApplication):
         if getattr(self, "_workspace", None) is not None:
             obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
             if obj is None or getattr(obj, "get_data_list", None) is None:
+                self.refresh.value = refresh
                 return
 
             options = [["", None]]
@@ -363,12 +364,13 @@ class LineOptions(ObjectDataSelection):
     Unique lines selection from selected data channel
     """
 
-    defaults = {"find_label": "line"}
-    _multiple_lines = None
-    _add_xyz = False
+    _defaults = {"find_label": "line"}
 
     def __init__(self, **kwargs):
 
+        self._multiple_lines = None
+        self._add_xyz = False
+        self._lines = None
         self.defaults.update(**kwargs)
 
         super().__init__(**self.defaults)
@@ -432,10 +434,8 @@ class TopographyOptions(ObjectDataSelection):
     Define the topography used by the inversion
     """
 
-    defaults = {}
-
     def __init__(
-        self, option_list=["None", "Object", "Relative to Sensor", "Constant"], **kwargs
+        self, option_list=("None", "Object", "Relative to Sensor", "Constant"), **kwargs
     ):
         self.defaults.update(**kwargs)
         self.find_label = ["topo", "dem", "dtm", "elevation", "Z"]
@@ -454,6 +454,7 @@ class TopographyOptions(ObjectDataSelection):
             description="Define by:",
         )
         self.options.observe(self.update_options)
+        self._panel = None
 
         super().__init__(**self.defaults)
 

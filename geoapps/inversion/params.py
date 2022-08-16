@@ -33,8 +33,12 @@ class InversionBaseParams(BaseParams):
     _inversion_type = None
     _ga_group = None
 
-    def __init__(self, input_file=None, forward_only=False, **kwargs):
-        self._forward_only: bool = forward_only
+    def __init__(
+        self, input_file: InputFile | None = None, forward_only: bool = False, **kwargs
+    ):
+        self._forward_only: bool = (
+            forward_only if input_file is None else input_file.data["forward_only"]
+        )
         self._topography_object: UUID = None
         self._topography: UUID | float = None
         self._data_object: UUID = None
@@ -119,7 +123,9 @@ class InversionBaseParams(BaseParams):
             ui_json.update(
                 self._forward_ui_json if self.forward_only else self._inversion_ui_json
             )
-            ui_json = {k: ui_json[k] for k in self.defaults}  # Re-order using defaults
+            ui_json = {
+                k: ui_json[k] for k in list(self.defaults)
+            }  # Re-order using defaults
             input_file = InputFile(
                 ui_json=ui_json,
                 data=self.defaults,
@@ -168,7 +174,7 @@ class InversionBaseParams(BaseParams):
         comps = []
         channels = [
             k.lstrip("_").split("_channel_bool")[0]
-            for k in self.__dict__.keys()
+            for k in self.__dict__
             if "channel_bool" in k
         ]
 
@@ -222,6 +228,11 @@ class InversionBaseParams(BaseParams):
             self.y_norm,
             self.z_norm,
         ]
+
+    @property
+    def directive_list(self):
+        """List of directives"""
+        return self._directive_list
 
     @property
     def forward_defaults(self):
