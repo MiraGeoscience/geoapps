@@ -1386,7 +1386,9 @@ class InversionApp(PlotSelection2D):
                 data_list.append(data.copy(parent=new_obj))
 
             new_group = new_obj.add_data_to_group(data_list, prop_group.name)
-            input_dict["data"]["channels"] = str(new_group.uid)
+
+            if isinstance(input_dict["data"]["channels"], str):
+                input_dict["data"]["channels"] = str(new_group.uid)
 
             if self._uncertainties.value is not None:
 

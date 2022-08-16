@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import multiprocessing
+import sys
 import uuid
 
 import numpy as np
@@ -199,10 +200,10 @@ def inversion(input_file):
             "I": 1.0,
         }
 
-        if np.linalg.norm(static_offset) == 0.0:
-            em_specs["tx_specs"]["type"] = "VMD"
-        else:
+        if np.linalg.norm(static_offset) < 1e-1:
             em_specs["tx_specs"]["type"] = "CircularLoop"
+        else:
+            em_specs["tx_specs"]["type"] = "VMD"
 
         if "normalization" in entity.metadata:
             em_specs["normalization"] = np.prod(entity.metadata["normalization"])
@@ -1060,10 +1061,10 @@ def inversion(input_file):
     prob.counter = opt.counter = Counter()
     opt.LSshorten = 0.5
     opt.remember("xc")
+    workspace.close()
     inv.run(m0)
 
-    with workspace:
-        workspace.open()
+    with workspace.open():
         for ind, channel in enumerate(channels):
             if channel in list(input_param["data"]["channels"]):
                 res = (
@@ -1087,6 +1088,5 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    # input_file = sys.argv[1]
-    input_file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\EM1DInversion_VTEM.json"
+    input_file = sys.argv[1]
     inversion(input_file)
