@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import multiprocessing
-import sys
 import uuid
 
 import numpy as np
@@ -205,8 +204,10 @@ def inversion(input_file):
         else:
             em_specs["tx_specs"]["type"] = "VMD"
 
-        if "normalization" in entity.metadata:
-            em_specs["normalization"] = np.prod(entity.metadata["normalization"])
+        if "Normalization" in entity.metadata["EM Dataset"]:
+            em_specs["normalization"] = np.prod(
+                entity.metadata["EM Dataset"]["Normalization"]
+            )
         else:
             em_specs["normalization"] = 1
 
@@ -1088,5 +1089,6 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    input_file = sys.argv[1]
+    # input_file = sys.argv[1]
+    input_file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\EM1DInversion_VTEM_rx.json"
     inversion(input_file)
