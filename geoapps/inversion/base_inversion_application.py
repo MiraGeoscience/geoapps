@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 import uuid
 import warnings
+import webbrowser
 
 import matplotlib
 import numpy as np
@@ -24,6 +25,7 @@ from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from matplotlib import colors
+from notebook import notebookapp
 from plotly import graph_objects as go
 
 from geoapps.base.application import BaseApplication
@@ -92,6 +94,24 @@ class InversionApp(BaseDashApplication):
                 {"display": "none"},
                 {"display": "block"},
             )
+
+    def open_mesh_app(self, _):
+        nb_port = None
+        servers = list(notebookapp.list_running_servers())
+        for s in servers:
+            if s["notebook_dir"] == os.path.abspath("../../../"):
+                nb_port = s["port"]
+                break
+
+        if nb_port is not None:
+            # The reloader has not yet run - open the browser
+            if not os.environ.get("WERKZEUG_RUN_MAIN"):
+                webbrowser.open_new(
+                    "http://localhost:"
+                    + str(nb_port)
+                    + "/notebooks/octree_creation/notebook.ipynb"
+                )
+        return 0
 
     @staticmethod
     def update_model_visibility(selection):
@@ -376,6 +396,22 @@ class InversionApp(BaseDashApplication):
                 np.any(indices, axis=0),
             )
 
+            """
+            if window is not None:
+                x_min = window["center_x"] - (window["width"]/2)
+                x_max = window["center_x"] + (window["width"]/2)
+                y_min = window["center_y"] - (window["height"]/2)
+                y_max = window["center_y"] + (window["height"]/2)
+            else:
+                x_min = x.min()
+                x_max = x.max()
+                y_min = y.min()
+                y_max = y.max()
+
+            plot_x = np.arange(x_min, x_max + resolution, resolution)
+            plot_y = np.arange(y_min, y_max + resolution, resolution)
+            """
+
             if values is not None:
                 values = np.asarray(
                     values.reshape(entity.shape, order="F"), dtype=float
@@ -386,8 +422,8 @@ class InversionApp(BaseDashApplication):
             if np.any(values):
                 figure.add_trace(
                     go.Heatmap(
-                        x=np.linspace(x.min(), x.max(), x.shape[0])[ind_x],
-                        y=np.linspace(y.min(), y.max(), y.shape[1])[ind_y],
+                        x=x[ind_x, :][0],
+                        y=y[:, ind_y][1],
                         z=values.T,
                     )
                 )
@@ -448,7 +484,55 @@ class InversionApp(BaseDashApplication):
 
         return figure, out, indices, line_selection, contour_set
 
-    def plot_selection(self, object, data, resolution, colorbar, fix_aspect_ratio):
+    def update_window_params(self, ui_json, figure, channel):
+        print("test")
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        print(trigger)
+
+        if trigger == "plot":
+            if channel is None:
+                return (
+                    no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                )
+            else:
+                x_min = figure["layout"]["xaxis"]["range"][0]
+                x_max = figure["layout"]["xaxis"]["range"][1]
+                y_min = figure["layout"]["yaxis"]["range"][0]
+                y_max = figure["layout"]["yaxis"]["range"][1]
+
+                width = x_max - x_min
+                height = y_max - y_min
+                center_x = x_min + (width / 2)
+                center_y = y_min + (height / 2)
+        else:
+            center_x = ui_json["window_center_x"]["value"]
+            center_y = ui_json["window_center_y"]["value"]
+            width = ui_json["window_width"]["value"]
+            height = ui_json["window_height"]["value"]
+            print(center_x)
+
+        return (
+            center_x,
+            center_y,
+            width,
+            height,
+        )
+
+    def plot_selection(
+        self,
+        object,
+        data,
+        center_x,
+        center_y,
+        width,
+        height,
+        resolution,
+        colorbar,
+        fix_aspect_ratio,
+    ):
         figure = go.Figure()
         data_count = "Data Count: "
 
@@ -463,6 +547,11 @@ class InversionApp(BaseDashApplication):
                     data_obj,
                     **{
                         "figure": figure,
+                        "window": {
+                            "center": [center_x, center_y],
+                            "size": [width, height],
+                            # "azimuth": azimuth,
+                        },
                         "resolution": resolution,
                         "resize": True,
                         "colorbar": colorbar,
@@ -471,7 +560,10 @@ class InversionApp(BaseDashApplication):
                 )
                 data_count += f"{ind_filter.sum()}"
 
-        return figure, data_count
+        return (
+            figure,
+            data_count,
+        )
 
     def trigger_click(self, _):
         """"""

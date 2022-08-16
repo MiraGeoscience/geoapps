@@ -24,6 +24,7 @@ from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 from matplotlib import colors
+from notebook import notebookapp
 from plotly import graph_objects as go
 
 from geoapps.base.application import BaseApplication
@@ -249,16 +250,6 @@ class GravityApp(InversionApp):
             Output(component_id="receivers_offset_x", component_property="value"),
             Output(component_id="receivers_offset_y", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
-            # Inversion - mesh
-            Output(component_id="u_cell_size", component_property="value"),
-            Output(component_id="v_cell_size", component_property="value"),
-            Output(component_id="w_cell_size", component_property="value"),
-            Output(component_id="octree_levels_topo", component_property="value"),
-            Output(component_id="octree_levels_obs", component_property="value"),
-            Output(component_id="max_distance", component_property="value"),
-            Output(component_id="horizontal_padding", component_property="value"),
-            Output(component_id="vertical_padding", component_property="value"),
-            Output(component_id="depth_core", component_property="value"),
             # Inversion - regularization
             Output(component_id="alpha_s", component_property="value"),
             Output(component_id="alpha_x", component_property="value"),
@@ -286,6 +277,16 @@ class GravityApp(InversionApp):
             Input(component_id="ui_json", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
+        self.app.callback(
+            Output(component_id="center_x", component_property="value"),
+            Output(component_id="center_y", component_property="value"),
+            Output(component_id="width", component_property="value"),
+            Output(component_id="height", component_property="value"),
+            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="plot", component_property="figure"),
+            State(component_id="channel", component_property="value"),
+        )(self.update_window_params)
+
         # Plot callbacks
         # Update plot
         self.app.callback(
@@ -293,6 +294,10 @@ class GravityApp(InversionApp):
             Output(component_id="data_count", component_property="children"),
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
+            Input(component_id="center_x", component_property="value"),
+            Input(component_id="center_y", component_property="value"),
+            Input(component_id="width", component_property="value"),
+            Input(component_id="height", component_property="value"),
             Input(component_id="resolution", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
             Input(component_id="fix_aspect_ratio", component_property="value"),
@@ -302,6 +307,68 @@ class GravityApp(InversionApp):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="write_input", component_property="n_clicks"),
+            State(component_id="live_link", component_property="value"),
+            # Object Selection
+            State(component_id="data_object", component_property="value"),
+            # Input Data
+            State(component_id="full_components", component_property="data"),
+            State(component_id="resolution", component_property="value"),
+            State(component_id="plot", component_property="figure"),
+            State(component_id="colorbar", component_property="value"),
+            State(component_id="fix_aspect_ratio", component_property="value"),
+            # Topography
+            State(component_id="topography_object", component_property="value"),
+            State(component_id="topography_data", component_property="value"),
+            State(component_id="topography_const", component_property="value"),
+            State(component_id="z_from_topo", component_property="value"),
+            State(component_id="receivers_offset_x", component_property="value"),
+            State(component_id="receivers_offset_y", component_property="value"),
+            State(component_id="receivers_offset_z", component_property="value"),
+            State(component_id="receivers_radar_drape", component_property="value"),
+            # Inversion Parameters
+            State(component_id="forward_only", component_property="value"),
+            # Starting Model
+            State(component_id="starting_density_object", component_property="value"),
+            State(component_id="starting_density_data", component_property="value"),
+            State(component_id="starting_density_const", component_property="value"),
+            # Mesh
+            # State(component_id="mesh_object", component_property="value"),
+            # Reference Model
+            State(component_id="reference_density_object", component_property="value"),
+            State(component_id="reference_density_data", component_property="value"),
+            State(component_id="reference_density_const", component_property="value"),
+            # Regularization
+            State(component_id="alpha_s", component_property="value"),
+            State(component_id="alpha_x", component_property="value"),
+            State(component_id="alpha_y", component_property="value"),
+            State(component_id="alpha_z", component_property="value"),
+            State(component_id="s_norm", component_property="value"),
+            State(component_id="x_norm", component_property="value"),
+            State(component_id="y_norm", component_property="value"),
+            State(component_id="z_norm", component_property="value"),
+            # Upper-Lower Bounds
+            State(component_id="lower_bound_object", component_property="value"),
+            State(component_id="lower_bound_data", component_property="value"),
+            State(component_id="lower_bound_const", component_property="value"),
+            State(component_id="upper_bound_object", component_property="value"),
+            State(component_id="upper_bound_data", component_property="value"),
+            State(component_id="upper_bound_const", component_property="value"),
+            # Detrend
+            State(component_id="detrend_type", component_property="value"),
+            State(component_id="detrend_order", component_property="value"),
+            # Ignore Values
+            State(component_id="ignore_values", component_property="value"),
+            # Optimization
+            State(component_id="max_iterations", component_property="value"),
+            State(component_id="chi_factor", component_property="value"),
+            State(component_id="initial_beta_ratio", component_property="value"),
+            State(component_id="max_cg_iterations", component_property="value"),
+            State(component_id="tol_cg", component_property="value"),
+            State(component_id="n_cpu", component_property="value"),
+            State(component_id="tile_spatial", component_property="value"),
+            # Output
+            State(component_id="out_group", component_property="value"),
+            State(component_id="export_directory", component_property="value"),
             prevent_initial_call=True,
         )(self.write_trigger)
         self.app.callback(
@@ -309,8 +376,65 @@ class GravityApp(InversionApp):
             Input(component_id="compute", component_property="n_clicks"),
             prevent_initial_call=True,
         )(self.trigger_click)
+        self.app.callback(
+            Output(component_id="open_mesh", component_property="n_clicks"),
+            Input(component_id="open_mesh", component_property="n_clicks"),
+            prevent_initial_call=True,
+        )(self.open_mesh_app)
 
-    def write_trigger(self, live_link, ga_group_name, _):
+    def write_trigger(
+        self,
+        n_clicks,
+        live_link,
+        data_object,
+        full_components,
+        resolution,
+        plot,
+        colorbar,
+        fix_aspect_ratio,
+        topography_object,
+        topography_data,
+        topography_const,
+        z_from_topo,
+        receivers_offset_x,
+        receivers_offset_y,
+        receivers_offset_z,
+        receivers_radar_drape,
+        forward_only,
+        starting_density_object,
+        starting_density_data,
+        starting_density_const,
+        mesh_object,
+        reference_density_object,
+        reference_density_data,
+        reference_density_const,
+        alpha_s,
+        alpha_x,
+        alpha_y,
+        alpha_z,
+        s_norm,
+        x_norm,
+        y_norm,
+        z_norm,
+        lower_bound_object,
+        lower_bound_data,
+        lower_bound_const,
+        upper_bound_object,
+        upper_bound_data,
+        upper_bound_const,
+        detrend_type,
+        detrend_order,
+        ignore_values,
+        max_iterations,
+        chi_factor,
+        initial_beta_ratio,
+        max_cg_iterations,
+        tol_cg,
+        n_cpu,
+        tile_spatial,
+        ga_group_name,
+        export_directory,
+    ):
         # Widgets values populate params dictionary
         param_dict = self.get_params_dict(locals())
         # param_dict = {}
@@ -318,10 +442,9 @@ class GravityApp(InversionApp):
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
         ws, live_link = BaseApplication.get_output_workspace(
-            live_link, self.export_directory.selected_path, temp_geoh5
+            live_link, export_directory, temp_geoh5
         )
         with ws as new_workspace:
-
             param_dict["geoh5"] = new_workspace
 
             for elem in [
@@ -352,25 +475,7 @@ class GravityApp(InversionApp):
                 elif locals()[elem + "_options"] == "Constant":
                     param_dict[elem] = locals()[elem + "_const"]
 
-            if self._inversion_type == "magnetic vector":
-                for elem in [
-                    self._starting_inclination_group,
-                    self._starting_declination_group,
-                    self._reference_inclination_group,
-                    self._reference_declination_group,
-                ]:
-                    obj, data = elem.get_selected_entities()
-                    if obj is not None:
-                        new_obj = new_workspace.get_entity(obj.uid)[0]
-                        if new_obj is None:
-                            new_obj = obj.copy(
-                                parent=new_workspace, copy_children=False
-                            )
-                        for d in data:
-                            if new_workspace.get_entity(d.uid)[0] is None:
-                                d.copy(parent=new_obj)
-
-            new_obj = new_workspace.get_entity(self.objects.value)
+            new_obj = new_workspace.get_entity(uuid.UUID(data_object))
             if len(new_obj) == 0 or new_obj[0] is None:
                 print("An object with data must be selected to write the input file.")
                 return
@@ -389,15 +494,13 @@ class GravityApp(InversionApp):
                     param_dict[f"{key}_uncertainty"] = widget.value
 
                 if getattr(self, f"{key}_channel_bool").value:
-                    if not self.forward_only.value:
+                    if not forward_only:
                         self.workspace.get_entity(
                             getattr(self, f"{key}_channel").value
                         )[0].copy(parent=new_obj)
 
-            if self.receivers_radar_drape.value is not None:
-                self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
-                    parent=new_obj
-                )
+            if receivers_radar_drape is not None:
+                self.workspace.get_entity(receivers_radar_drape)[0].copy(parent=new_obj)
 
             for key in self.__dict__:
                 attr = getattr(self, key)
@@ -434,9 +537,5 @@ class GravityApp(InversionApp):
             self._run_params = self.params.__class__(input_file=ifile, **param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=self.export_directory.selected_path,
+                path=export_directory,
             )
-
-
-app = GravityApp()
-app.app.run_server(host="127.0.0.1", port=8050, debug=True)

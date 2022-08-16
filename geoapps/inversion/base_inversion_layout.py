@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+import os.path
 
 from dash import dcc, html
 
@@ -24,14 +25,6 @@ def get_object_selection_layout(inversion_type):
                     dcc.Dropdown(
                         id="data_object",
                         style={"display": "inline-block", "width": "70%"},
-                    ),
-                ]
-            ),
-            html.Div(
-                [
-                    dcc.Markdown(
-                        "Inversion Type:",
-                        style={"display": "inline-block", "width": "30%"},
                     ),
                 ]
             ),
@@ -274,30 +267,97 @@ plot_layout = html.Div(
     [
         html.Div(
             [
-                dcc.Markdown(
-                    "Grid Resolution (m)",
-                    style={"display": "inline-block", "width": "30%"},
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            "Center x",
+                            style={"display": "inline-block", "width": "12%"},
+                        ),
+                        dcc.Input(
+                            id="center_x",
+                            style={
+                                "display": "inline-block",
+                                "width": "35%",
+                                "margin-right": "3%",
+                            },
+                        ),
+                        dcc.Markdown(
+                            "Center y",
+                            style={"display": "inline-block", "width": "12%"},
+                        ),
+                        dcc.Input(
+                            id="center_y",
+                            style={
+                                "display": "inline-block",
+                                "width": "35%",
+                                "margin-right": "3%",
+                            },
+                        ),
+                    ]
                 ),
-                dcc.Input(
-                    id="resolution",
-                    style={"display": "inline-block"},
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            "Width", style={"display": "inline-block", "width": "12%"}
+                        ),
+                        dcc.Input(
+                            id="width",
+                            style={
+                                "display": "inline-block",
+                                "width": "35%",
+                                "margin-right": "3%",
+                            },
+                        ),
+                        dcc.Markdown(
+                            "Height", style={"display": "inline-block", "width": "12%"}
+                        ),
+                        dcc.Input(
+                            id="height",
+                            style={
+                                "display": "inline-block",
+                                "width": "35%",
+                                "margin-right": "3%",
+                            },
+                        ),
+                    ]
+                ),
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            "Resolution",
+                            style={"display": "inline-block", "width": "12%"},
+                        ),
+                        dcc.Input(
+                            id="resolution",
+                            style={
+                                "display": "inline-block",
+                                "width": "35%",
+                                "margin-right": "3%",
+                            },
+                        ),
+                    ]
                 ),
             ]
         ),
-        dcc.Markdown(
-            id="data_count",
-            children=["Data Count:"],
-            style={"display": "inline-block", "width": "30%"},
-        ),
-        dcc.Checklist(
-            id="colorbar",
-            options=[{"label": "Colorbar", "value": True}],
-            style={"display": "inline-block"},
-        ),
-        dcc.Checklist(
-            id="fix_aspect_ratio",
-            options=[{"label": "Fix Aspect Ratio", "value": True}],
-            style={"display": "inline-block"},
+        html.Div(
+            [
+                dcc.Markdown(
+                    id="data_count",
+                    children=["Data Count:"],
+                    style={"display": "inline-block", "width": "25%"},
+                ),
+                dcc.Checklist(
+                    id="colorbar",
+                    options=[{"label": "Colorbar", "value": True}],
+                    style={"display": "inline-block", "width": "20%"},
+                ),
+                dcc.Checklist(
+                    id="fix_aspect_ratio",
+                    options=[{"label": "Fix Aspect Ratio", "value": True}],
+                    value=[True],
+                    style={"display": "inline-block", "width": "25%"},
+                ),
+            ]
         ),
         dcc.Graph(
             id="plot",
@@ -542,89 +602,15 @@ topography_layout = html.Div(
     },
 )
 
+path_test = os.path.abspath("../../../octree_creation/notebook.ipynb")
+
 mesh = html.Div(
     id="mesh_div",
     children=[
         dcc.Markdown("###### **Mesh**"),
+        html.Button(id="open_mesh", children=["Open Mesh Creation"]),
         dcc.Markdown("Object:"),
         dcc.Dropdown(id="mesh_object"),
-        dcc.Markdown("**Core cell size (u, v, w)**"),
-        dcc.Input(id="u_cell_size", style={"width": "40%", "margin-right": "60%"}),
-        dcc.Input(id="v_cell_size", style={"width": "40%", "margin-right": "60%"}),
-        dcc.Input(id="w_cell_size", style={"width": "40%", "margin-right": "60%"}),
-        dcc.Markdown("**Refinement Layers**"),
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Number of cells below topography",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-                dcc.Input(
-                    id="octree_levels_topo",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Number of cells below sensors",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-                dcc.Input(
-                    id="octree_levels_obs",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Maximum distance (m)",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-                dcc.Input(
-                    id="max_distance",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-            ]
-        ),
-        dcc.Markdown("**Dimensions**"),
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Horizontal padding (m)",
-                    style={"display": "inline-block", "width": "30%"},
-                ),
-                dcc.Input(
-                    id="horizontal_padding",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Vertical padding (m)",
-                    style={"display": "inline-block", "width": "30%"},
-                ),
-                dcc.Input(
-                    id="vertical_padding",
-                    style={"display": "inline-block", "width": "40%"},
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Minimum depth (m)",
-                    style={"display": "inline-block", "width": "30%"},
-                ),
-                dcc.Input(
-                    id="depth_core", style={"display": "inline-block", "width": "40%"}
-                ),
-            ]
-        ),
     ],
     style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
 )
@@ -913,13 +899,18 @@ output_layout = html.Div(
                 ),
             ]
         ),
+        dcc.Checklist(
+            id="live_link",
+            options=[{"label": "Geoscience ANALYST Pro - Live link", "value": True}],
+            value=[],
+        ),
         html.Div(
             [
                 dcc.Markdown(
                     "Output path:", style={"display": "inline-block", "width": "15%"}
                 ),
                 dcc.Input(
-                    id="monitoring_directory",
+                    id="export_directory",
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
