@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import multiprocessing
+import sys
 import uuid
 
 import numpy as np
@@ -1089,6 +1090,5 @@ def inversion(input_file):
 
 if __name__ == "__main__":
 
-    # input_file = sys.argv[1]
-    input_file = r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\EM1DInversion_VTEM_rx.json"
+    input_file = sys.argv[1]
     inversion(input_file)
