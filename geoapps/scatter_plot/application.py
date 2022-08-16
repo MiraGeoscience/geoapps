@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+
 from __future__ import annotations
 
 import os
@@ -44,6 +46,8 @@ class ScatterPlots(BaseDashApplication):
         else:
             self.params = self._param_class(**app_initializer)
 
+        super().__init__()
+
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
         self.app = JupyterDash(
@@ -51,8 +55,6 @@ class ScatterPlots(BaseDashApplication):
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
         )
-
-        super().__init__(**kwargs)
 
         self.app.layout = scatter_layout
 
@@ -442,7 +444,7 @@ class ScatterPlots(BaseDashApplication):
         return figure
 
     def trigger_click(
-        self, n_clicks: int, monitoring_directory: str, figure: go.FigureWidget
+        self, n_clicks: int, monitoring_directory: str, figure: go.FigureWidget = None
     ):
         """
         Save the plot as html, write out ui.json.
