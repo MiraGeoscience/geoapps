@@ -32,13 +32,14 @@ class BaseDashApplication:
     """
 
     _params = None
-    _param_class = None
+    _param_class = BaseParams
     _driver_class = None
     _workspace = None
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.workspace = self.params.geoh5
-        self.driver = self._driver_class(self.params)
+        self.driver = self._driver_class(self.params)  # pylint: disable=E1102
+        self.app = None
 
     def update_object_options(
         self, filename: str, contents: str, trigger: str = None
@@ -64,7 +65,7 @@ class BaseDashApplication:
         if contents is not None or trigger == "":
             if filename is not None and filename.endswith(".ui.json"):
                 # Uploaded ui.json
-                content_type, content_string = contents.split(",")
+                _, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"])
@@ -75,7 +76,7 @@ class BaseDashApplication:
                     object_value = str(ui_json["objects"]["value"])
             elif filename is not None and filename.endswith(".geoh5"):
                 # Uploaded workspace
-                content_type, content_string = contents.split(",")
+                _, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded)
                 self.params = self._param_class(**{"geoh5": self.workspace})
@@ -99,7 +100,7 @@ class BaseDashApplication:
             ]
         return object_options, object_value, ui_json, None, None
 
-    def get_data_options(self, trigger, ui_json, object_uid: str):
+    def get_data_options(self, trigger: str, ui_json: dict, object_uid: str):
         """
         Get data dropdown options from a given object.
 
