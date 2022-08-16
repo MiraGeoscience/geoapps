@@ -293,8 +293,9 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
-    params = EdgeDetectionParams(ifile)
-    driver = EdgeDetectionDriver(params)
+    params_class = EdgeDetectionParams(ifile)
+    driver = EdgeDetectionDriver(params_class)
     print("Loaded. Running edge detection . . .")
-    driver.run()
+    with params_class.geoh5.open(mode="r+"):
+        driver.run()
     print("Saved to " + ifile.path)

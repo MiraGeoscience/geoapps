@@ -30,20 +30,23 @@ with warn_module_not_found():
         VBox,
     )
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+}
+
 
 class PlotSelection2D(ObjectDataSelection):
     """
     Application for selecting data in 2D plan map view
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
-    }
     plot_result = True
 
     def __init__(self, **kwargs):
+
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.axis = None
         self.indices = None
@@ -115,6 +118,7 @@ class PlotSelection2D(ObjectDataSelection):
             icon="check",
         )
         self.objects.observe(self.set_bounding_box, names="value")
+        self.figure = None
         super().__init__(**self.defaults)
 
         self.window_plot = widgets.interactive_output(
@@ -315,7 +319,7 @@ class PlotSelection2D(ObjectDataSelection):
             corners[:, 1] *= height / 2
             corners = rotate_xyz(corners, [0, 0], -azimuth)
             self.axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
-            self.axis, _, ind_filter, _, contour_set = plot_plan_data_selection(
+            self.axis, _, ind_filter, _, _ = plot_plan_data_selection(
                 entity,
                 data_obj,
                 **{
