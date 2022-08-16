@@ -306,7 +306,7 @@ class Clustering(ScatterPlots):
                             value=0,
                             style={"margin-bottom": "20px"},
                         ),
-                        daq.ColorPicker(
+                        daq.ColorPicker(  # pylint: disable=E1102
                             id="color_picker",
                             value=dict(hex="#000000"),
                         ),
