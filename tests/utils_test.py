@@ -36,11 +36,32 @@ from geoapps.shared_utils.utils import (
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.models import RectangularBlock
+from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
+from geoapps.utils.surveys import new_neighbors
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+
+
+def test_is_outlier():
+    assert is_outlier([25.1, 25.3], 50.0)
+    assert not is_outlier([25.1, 25.3], 25.2)
+    assert is_outlier([25.1, 25.3], 25.4, 1)
+    assert not is_outlier([25.1, 25.3], 25.4, 3)
+    assert is_outlier([25, 25], 26)
+    assert not is_outlier([25, 25], 25)
+
+
+def test_new_neighbors():
+
+    nodes = [2, 3, 4, 5, 6]
+    dist = np.array([25, 50, 0])
+    neighbors = np.array([1, 2, 3])
+    neighbor_id = new_neighbors(dist, neighbors, nodes)
+    assert len(neighbor_id) == 1
+    assert neighbor_id[0] == 1
 
 
 def test_rectangular_block():
