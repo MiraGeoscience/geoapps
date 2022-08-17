@@ -283,7 +283,7 @@ cluster_layout = html.Div(
         dcc.Store(id="clusters", data={}),
         dcc.Store(id="indices"),
         dcc.Store(id="mapping"),
-        dcc.Store(id="ui_json"),
+        dcc.Store(id="ui_json_data"),
     ],
     style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
 )
