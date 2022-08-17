@@ -13,11 +13,13 @@ import uuid
 from os import makedirs, mkdir, path
 from shutil import copyfile
 
-from geoh5py.shared import Entity
+from geoh5py.groups import Group
+from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import dict_mapper, entity2uuid, str2uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
+from traitlets import TraitError
 
 from geoapps.driver_base.params import BaseParams
 from geoapps.utils import warn_module_not_found
@@ -57,10 +59,10 @@ class BaseApplication:
     _figure = None
     _refresh = None
     _params: BaseParams | None = None
+    _defaults: dict | None = None
     plot_result = False
 
     def __init__(self, **kwargs):
-        self.defaults = {}
         self.defaults.update(**kwargs)
         self._file_browser = FileChooser()
         self._file_browser._select.on_click(self.file_browser_change)
@@ -104,7 +106,7 @@ class BaseApplication:
 
         self.__populate__(**self.defaults)
 
-        for key in list(self.__dict__.keys()):
+        for key in list(self.__dict__):
             attr = getattr(self, key, None)
             if isinstance(attr, Widget) and hasattr(attr, "style"):
                 attr.style = {"description_width": "initial"}
@@ -143,14 +145,24 @@ class BaseApplication:
                         getattr(self, key, None)(key, value)
                     else:
                         setattr(self, key, value)
-                except:
+                except (AttributeError, TypeError, TraitError, AssertionError):
                     pass
+
+    @property
+    def defaults(self):
+        """
+        Dictionary of default values.
+        """
+        if self._defaults is None:
+            self._defaults = {}
+
+        return self._defaults
 
     def file_browser_change(self, _):
         """
         Change the target h5file
         """
-        if not self.file_browser._select.disabled:
+        if not self.file_browser._select.disabled:  # pylint: disable="protected-access"
             _, extension = path.splitext(self.file_browser.selected)
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
@@ -168,18 +180,21 @@ class BaseApplication:
         """
         Change the target h5file
         """
-        if not self.export_directory._select.disabled:
+        if (
+            not self.export_directory._select.disabled  # pylint: disable="protected-access"
+        ):
             self._monitoring_directory = self.export_directory.selected
 
     @staticmethod
-    def live_link_output(selected_path, entity: Entity):
+    def live_link_output(filepath: str, entity: ObjectBase | Group):
         """
-        Create a temporary geoh5 file in the monitoring folder and export entity for update.
+        Create a temporary geoh5 file in the monitoring folder and export an
+        entity for update.
 
-        :param entity: Entity to be updated
-        :param data: Data name and values to be added as data to the entity on export {"name": values}
+        :param filepath: Monitoring directory.
+        :param entity: Entity to be updated.
         """
-        monitored_directory_copy(selected_path, entity)
+        monitored_directory_copy(filepath, entity)
 
     def live_link_choice(self, _):
         """
@@ -225,8 +240,10 @@ class BaseApplication:
             mkdir(live_path)
 
         live_path = path.abspath(live_path)
-        self.export_directory._set_form_values(live_path, "")
-        self.export_directory._apply_selection()
+        self.export_directory._set_form_values(  # pylint: disable=protected-access
+            live_path, ""
+        )
+        self.export_directory._apply_selection()  # pylint: disable=protected-access
 
         self._monitoring_directory = live_path
 
@@ -326,19 +343,21 @@ class BaseApplication:
         self._h5file = value
         self._workspace_geoh5 = value
         self._working_directory = None
-        self.workspace = Workspace(self._h5file, mode="r")
+
+        if value is not None:
+            self.workspace = Workspace(self._h5file, mode="r")
 
     @property
-    def live_link(self):
+    def live_link(self) -> Checkbox:
         """
-        :obj:`ipywidgets.Checkbox`: Activate the live link between an application and Geoscience ANALYST
+        Activate the live link between an application and Geoscience ANALYST
         """
         return self._live_link
 
     @property
-    def export_directory(self):
+    def export_directory(self) -> FileChooser:
         """
-        :obj:`ipyfilechooser.FileChooser`: Path for the monitoring folder to be copied to Geoscience ANALYST preferences.
+        File chooser for the monitoring directory.
         """
         return self._export_directory
 
@@ -358,7 +377,7 @@ class BaseApplication:
         self._params = params
 
     @property
-    def refresh(self):
+    def refresh(self) -> ToggleButton:
         """
         Generic toggle button to control a refresh of the application
         """
@@ -431,7 +450,7 @@ class BaseApplication:
             self.h5file = value
 
     def trigger_click(self, _):
-        for key, value in self.__dict__.items():
+        for key in self.__dict__:
             try:
                 if isinstance(getattr(self, key), Widget):
                     setattr(self.params, key, getattr(self, key).value)
@@ -441,9 +460,11 @@ class BaseApplication:
         self.params.write_input_file(name=self.params.ga_group_name)
         self.run(self.params)
 
-    @staticmethod
-    def run(cls, params):
-        ...
+    @classmethod
+    def run(cls, params: BaseParams):
+        """
+        Static run method.
+        """
 
     def base_workspace_changes(self, workspace: Workspace):
         self._workspace = workspace
@@ -452,14 +473,16 @@ class BaseApplication:
             path=self.working_directory,
             filename=path.basename(self._h5file),
         )
-        self._file_browser._apply_selection()
+        self._file_browser._apply_selection()  # pylint: disable=protected-access
 
         export_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
         if not path.exists(export_path):
             mkdir(export_path)
 
-        self.export_directory._set_form_values(export_path, "")
-        self.export_directory._apply_selection()
+        self.export_directory._set_form_values(  # pylint: disable=protected-access
+            export_path, ""
+        )
+        self.export_directory._apply_selection()  # pylint: disable=protected-access
 
     def get_param_dict(self):
         param_dict = {}

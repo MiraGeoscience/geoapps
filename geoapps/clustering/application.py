@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=E0401
+
 from __future__ import annotations
 
 import ast
@@ -91,7 +94,7 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
-            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="ui_json_data", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -100,12 +103,12 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="data_subset", component_property="options"),
             Output(component_id="data_subset", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_subset)
         self.app.callback(
             Output(component_id="color_pickers", component_property="data"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="color_pickers", component_property="data"),
             Input(component_id="color_picker", component_property="value"),
             Input(component_id="select_cluster", component_property="value"),
@@ -129,10 +132,16 @@ class Clustering(ScatterPlots):
             Output(component_id="color", component_property="value"),
             Output(component_id="size", component_property="value"),
             Output(component_id="channel", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="data_subset", component_property="options"),
-        )(Clustering.update_data_options)
+            Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+        )(Clustering.update_data_from_data_subset)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
             Output(component_id="x_max", component_property="value"),
@@ -144,7 +153,7 @@ class Clustering(ScatterPlots):
             Output(component_id="color_max", component_property="value"),
             Output(component_id="size_min", component_property="value"),
             Output(component_id="size_max", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="x", component_property="value"),
             Input(component_id="y", component_property="value"),
             Input(component_id="z", component_property="value"),
@@ -159,7 +168,7 @@ class Clustering(ScatterPlots):
             Output(component_id="full_scales", component_property="data"),
             Output(component_id="full_lower_bounds", component_property="data"),
             Output(component_id="full_upper_bounds", component_property="data"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="scale", component_property="value"),
             Input(component_id="lower_bounds", component_property="value"),
@@ -185,7 +194,7 @@ class Clustering(ScatterPlots):
             Output(component_id="n_clusters", component_property="value"),
             Output(component_id="ga_group_name", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
         # Clustering callbacks
@@ -278,6 +287,7 @@ class Clustering(ScatterPlots):
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
             Input(component_id="export", component_property="n_clicks"),
+            State(component_id="monitoring_directory", component_property="value"),
             State(component_id="live_link", component_property="value"),
             State(component_id="n_clusters", component_property="value"),
             State(component_id="objects", component_property="value"),
@@ -316,7 +326,6 @@ class Clustering(ScatterPlots):
             State(component_id="size_markers", component_property="value"),
             State(component_id="channel", component_property="value"),
             State(component_id="ga_group_name", component_property="value"),
-            State(component_id="monitoring_directory", component_property="value"),
             prevent_initial_call=True,
         )(self.trigger_click)
 
@@ -382,12 +391,12 @@ class Clustering(ScatterPlots):
 
     @staticmethod
     def update_color_pickers(
-        ui_json: dict, color_pickers: list, color_picker: dict, select_cluster: int
+        ui_json_data: dict, color_pickers: list, color_picker: dict, select_cluster: int
     ) -> list:
         """
         Update list of colors corresponding to clusters.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param color_pickers: List of colors corresponding to clusters.
         :param color_picker: Color corresponding to select_cluster.
         :param select_cluster: Current selected cluster.
@@ -395,13 +404,13 @@ class Clustering(ScatterPlots):
         :return color_pickers: List of colors corresponding to clusters.
         """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json":
+        if trigger == "ui_json_data":
             # Read in list of colors from ui.json.
-            if type(ui_json["color_pickers"]) == list:
-                full_list = ui_json["color_pickers"]
+            if type(ui_json_data["color_pickers"]) == list:
+                full_list = ui_json_data["color_pickers"]
             else:
                 # Convert string to list.
-                full_list = ast.literal_eval(ui_json["color_pickers"])
+                full_list = ast.literal_eval(ui_json_data["color_pickers"])
             if (full_list is None) | (not full_list):
                 # Default list of colors.
                 color_pickers = colors
@@ -428,11 +437,11 @@ class Clustering(ScatterPlots):
         else:
             return no_update
 
-    def update_data_subset(self, ui_json: dict, object_uid: str) -> (list, str):
+    def update_data_subset(self, ui_json_data: dict, object_uid: str) -> (list, str):
         """
         Update data subset options and values from selected object.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param object_uid: Selected object from dropdown.
 
         :return options: Options for data subset dropdown.
@@ -440,25 +449,39 @@ class Clustering(ScatterPlots):
         """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if "ui_json" in triggers:
-            value = ast.literal_eval(ui_json["data_subset"]["value"])
-            options = self.get_data_options("ui_json", ui_json, object_uid)
+        if "ui_json_data" in triggers:
+            value = ast.literal_eval(ui_json_data["data_subset"])
+            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
         else:
             value = []
-            options = self.get_data_options("objects", ui_json, object_uid)
+            options = self.get_data_options("objects", ui_json_data, object_uid)
 
         return options, value
 
     @staticmethod
-    def update_data_options(
-        ui_json: dict, data_subset: list, full_options: list
+    def update_data_from_data_subset(
+        ui_json_data: dict,
+        data_subset: list,
+        full_options: list,
+        x: str,
+        y: str,
+        z: str,
+        color: str,
+        size: str,
+        channel: str,
     ) -> (list, list, list, list, list, list, list, str, str, str, str, str, str):
         """
         Update data options and values for scatter plot and histogram/boxplot.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param data_subset: Subset of data used for clustering and plotting.
         :param full_options: Full options for data subset.
+        :param x: X-axis data uid.
+        :param y: Y-axis data uid.
+        :param z: Z-axis data uid.
+        :param color: Color-axis data uid.
+        :param size: Size-axis data uid.
+        :param channel: Data uid for boxplot/histogram.
 
         :return axis_options: Dropdown options for x-axis of scatter plot.
         :return axis_options: Dropdown options for y-axis of scatter plot.
@@ -487,17 +510,15 @@ class Clustering(ScatterPlots):
         color_maps_options.insert(0, "kmeans")
 
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
-        if "ui_json" in triggers:
-            axis_values = Clustering.update_data_values(ui_json)
+        if "ui_json_data" in triggers:
+            axis_values = Clustering.update_data_values(ui_json_data)
         else:
-            axis_values = (
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-            )
+            axis_values = [None, None, None, None, None, None]
+            axes = [x, y, z, color, size, channel]
+            for i in range(len(axes)):
+                if axes[i] in data_subset or axes[i] == "kmeans":
+                    axis_values[i] = no_update
+            axis_values = tuple(axis_values)
 
         # replace empty lists with empty dictionary
         if not axis_options:
@@ -515,11 +536,11 @@ class Clustering(ScatterPlots):
         ) + axis_values
 
     @staticmethod
-    def update_data_values(ui_json: dict) -> (str, str, str, str, str, str):
+    def update_data_values(ui_json_data: dict) -> (str, str, str, str, str, str):
         """
         Read in axes values from ui.json.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
 
         :return x_axis_values: Value for x-axis dropdown.
         :return y_axis_values: Value for y-axis dropdown.
@@ -530,21 +551,21 @@ class Clustering(ScatterPlots):
         """
         # Read in plot_kmeans list from ui.json. Used to know to plot kmeans, since kmeans can't be saved as data in
         # the ui.json.
-        plot_kmeans = ast.literal_eval(ui_json["plot_kmeans"])
+        plot_kmeans = ast.literal_eval(ui_json_data["plot_kmeans"])
         if not plot_kmeans:
             plot_kmeans = [False, False, False, False, False]
         output_axes = []
         axes_names = ["x", "y", "z", "color", "size"]
         for i in range(len(axes_names)):
-            axis_val = ui_json[axes_names[i]]["value"]
+            axis_val = ui_json_data[axes_names[i]]
             if is_uuid(axis_val):
                 output_axes.append(str(axis_val))
             elif (axis_val == "" or axis_val is None) and plot_kmeans[i]:
                 output_axes.append("kmeans")
             else:
                 output_axes.append(None)
-        if is_uuid(ui_json["channel"]["value"]):
-            output_axes.append(str(ui_json["channel"]["value"]))
+        if is_uuid(ui_json_data["channel"]):
+            output_axes.append(str(ui_json_data["channel"]))
         else:
             output_axes.append(None)
 
@@ -552,7 +573,7 @@ class Clustering(ScatterPlots):
 
     def update_properties(
         self,
-        ui_json: dict,
+        ui_json_data: dict,
         channel: str,
         scale: int,
         lower_bounds: float,
@@ -564,7 +585,7 @@ class Clustering(ScatterPlots):
         """
         Update selected scale, bounds with stored value. Or update stored values with new scale, bounds.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param channel: Input data uid for histogram, boxplot.
         :param scale: Scale value for selected channel.
         :param lower_bounds: Lower bounds for selected channel.
@@ -582,29 +603,30 @@ class Clustering(ScatterPlots):
         """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
-        if trigger == "ui_json":
+        if trigger == "ui_json_data":
             # Reconstruct scaling and bounds dicts from ui.json input lists.
-            data_subset = ast.literal_eval(ui_json["data_subset"]["value"])
+            data_subset = ast.literal_eval(ui_json_data["data_subset"])
             if len(data_subset) == 0:
                 full_scales, full_lower_bounds, full_upper_bounds = {}, {}, {}
             else:
-                full_dicts = []
-                for key in ["full_scales", "full_lower_bounds", "full_upper_bounds"]:
+                full_dicts = [None, None, None]
+                params = ["full_scales", "full_lower_bounds", "full_upper_bounds"]
+                for i in range(len(params)):
                     out_dict = {}
-                    full_list = ast.literal_eval(ui_json[key])
-                    for i in range(len(data_subset)):
+                    full_list = ast.literal_eval(ui_json_data[params[i]])
+                    for j in range(len(data_subset)):
                         if (full_list is None) | (not full_list):
-                            if key == "full_scales":
-                                out_dict[data_subset[i]] = 1
+                            if params[i] == "full_scales":
+                                out_dict[data_subset[j]] = 1
                             else:
-                                out_dict[data_subset[i]] = None
+                                out_dict[data_subset[j]] = None
                         else:
-                            out_dict[data_subset[i]] = full_list[i]
-                    full_dicts.append(out_dict)
-                full_scales, full_lower_bounds, full_upper_bounds = full_dicts
+                            out_dict[data_subset[j]] = full_list[j]
+                    full_dicts[i] = out_dict
+                full_scales, full_lower_bounds, full_upper_bounds = tuple(full_dicts)
 
         if channel is not None:
-            if trigger == "ui_json" or trigger == "channel":
+            if trigger == "ui_json_data" or trigger == "channel":
                 # Update scale, bounds from full_scales, full_bounds
                 if channel not in full_scales:
                     full_scales[channel] = 1
@@ -823,15 +845,18 @@ class Clustering(ScatterPlots):
                 color_maps = [[0.0, "rgb(0,0,0)"]]
 
             # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
-            axis_values = []
-            for axis in [x, y, z, color, size]:
-                if axis == "kmeans" and kmeans is not None and kmeans != []:
-                    axis_values.append(PlotData(axis, kmeans[indices].astype(float)))
-                elif axis is not None:
-                    axis_name = Clustering.get_name(axis, channel_options)
-                    axis_values.append(PlotData(axis_name, dataframe[axis_name].values))
-                else:
-                    axis_values.append(None)
+            axis_values = [None, None, None, None, None]
+            axes = [x, y, z, color, size]
+
+            for i in range(len(axes)):
+                if axes[i] == "kmeans" and kmeans is not None and kmeans != []:
+                    axis_values[i] = PlotData(axes[i], kmeans[indices].astype(float))
+                elif axes[i] is not None:
+                    axis_name = Clustering.get_name(axes[i], channel_options)
+                    if axis_name is not None:
+                        axis_values[i] = PlotData(
+                            axis_name, dataframe[axis_name].values
+                        )
 
             x, y, z, color, size = tuple(axis_values)
 
@@ -951,15 +976,16 @@ class Clustering(ScatterPlots):
 
         :return boxplot: Boxplots for clusters for channel data.
         """
+        channel_name = Clustering.get_name(channel, channel_options)
         if (
             (kmeans is not None)
-            and (channel is not None)
+            and (channel_name is not None)
             and (indices is not None)
             and (color_pickers is not None)
         ):
             kmeans = np.array(kmeans)
             indices = np.array(indices)
-            channel_name = Clustering.get_name(channel, channel_options)
+
             boxes = []
             y_data = self.workspace.get_entity(uuid.UUID(channel))[0].values
             for ii in range(n_clusters):
@@ -1136,9 +1162,10 @@ class Clustering(ScatterPlots):
             "full_upper_bounds": str(full_upper_bounds_list),
         }
 
-    def trigger_click(
+    def trigger_click(  # pylint: disable=W0221
         self,
-        export: int,
+        n_clicks: int,
+        monitoring_directory: str,
         live_link: list,
         n_clusters: int,
         objects: str,
@@ -1177,13 +1204,12 @@ class Clustering(ScatterPlots):
         size_markers: int,
         channel: str,
         ga_group_name: str,
-        monitoring_directory: str,
         trigger: str = None,
     ) -> list:
         """
         Write cluster groups to the target geoh5 object. Inputs are all params that are written to ui.json.
 
-        :param export: Trigger for export button.
+        :param n_clicks: Trigger for export button.
         :param live_link: Checkbox for live link.
         :param n_clusters: Number of clusters.
         :param objects: Selected object uid.
@@ -1280,7 +1306,6 @@ class Clustering(ScatterPlots):
                         param_dict[key] = value.copy(
                             parent=workspace, copy_children=True
                         )
-
                 # Write output uijson.
                 new_params = ClusteringParams(**param_dict)
                 new_params.write_input_file(
@@ -1288,9 +1313,10 @@ class Clustering(ScatterPlots):
                     path=monitoring_directory,
                     validate=False,
                 )
-            # Run driver.
-            self.driver.params = new_params
-            self.driver.run()
+                # Run driver.
+                self.driver.params = new_params
+                self.driver.run()
+
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return [True]

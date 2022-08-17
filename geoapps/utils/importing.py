@@ -24,8 +24,8 @@ def warn_module_not_found():
     """
     try:
         yield
-    except ModuleNotFoundError as e:
-        module_name = e.name
+    except ModuleNotFoundError as error:
+        module_name = error.name
         err = (
             f"Module '{module_name}' is missing from the environment. "
             f"Consider installing with: 'conda install -c conda-forge {module_name}'"

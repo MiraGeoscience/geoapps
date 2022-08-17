@@ -13,6 +13,7 @@ import numpy as np
 from geoh5py.groups import Group
 from geoh5py.objects import Grid2D
 from geoh5py.workspace import Workspace
+from osgeo import gdal
 
 
 def geotiff_2_grid(
@@ -33,7 +34,6 @@ def geotiff_2_grid(
 
      :return grid: Grid2D object with values stored.
     """
-    from osgeo import gdal
 
     tiff_object = gdal.Open(file_name)
     band = tiff_object.GetRasterBand(1)

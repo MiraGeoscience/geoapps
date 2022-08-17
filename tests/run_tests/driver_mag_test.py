@@ -9,11 +9,9 @@ import numpy as np
 from geoh5py.workspace import Workspace
 from SimPEG import utils
 
+from geoapps.inversion.driver import start_inversion
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
-
-# import pytest
-# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
@@ -93,11 +91,9 @@ def test_susceptibility_run(
         max_iterations=max_iterations,
         initial_beta_ratio=1e0,
     )
-    params.workpath = tmp_path
+    params.write_input_file(path=tmp_path, name="Inv_run")
+    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
 
-    driver = InversionDriver(params)
-
-    driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
@@ -185,10 +181,11 @@ def test_magnetic_vector_run(
         initial_beta_ratio=1e1,
         prctile=100,
     )
-    driver = InversionDriver(params)
+    params.write_input_file(path=tmp_path, name="Inv_run")
+    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
 
-    driver.run()
     run_ws = Workspace(driver.params.geoh5.h5file)
+
     # Re-open the workspace and get iterations
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

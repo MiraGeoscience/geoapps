@@ -35,10 +35,11 @@ class OctreeParams(BaseParams):
         self._vertical_padding = None
         self._depth_core = None
         self._ga_group_name = None
+        self._title = None
 
         if input_file is None:
             free_param_dict = {}
-            for key, value in kwargs.items():
+            for key in kwargs:
                 if (
                     self._free_parameter_identifier in key.lower()
                     and "object" in key.lower()
