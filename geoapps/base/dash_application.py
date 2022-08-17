@@ -206,9 +206,9 @@ class BaseDashApplication:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json_data":
             # If the monitoring directory is empty, use path from workspace.
-            if "monitoring_directory_value" in update_dict and (
-                update_dict["monitoring_directory_value"] == ""
-                or update_dict["monitoring_directory_value"] is None
+            if "monitoring_directory" in update_dict and (
+                update_dict["monitoring_directory"] == ""
+                or update_dict["monitoring_directory"] is None
             ):
                 if self.workspace is not None:
                     update_dict["monitoring_directory_value"] = os.path.abspath(
