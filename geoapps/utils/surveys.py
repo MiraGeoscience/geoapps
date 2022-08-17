@@ -121,59 +121,62 @@ def split_dcip_survey(survey, lines, on="A"):
     with survey.workspace.open(mode="r+"):
 
         current = survey.current_electrodes
-        ab = survey.ab_cell_id
-        survey_locs = survey.vertices
-        survey_cells = survey.cells
 
-        line_id = 1
-        survey_locs, survey_loc_map = slice_and_map(survey_locs, lines == line_id)
-        func = lambda c: (c[0] in survey_loc_map) & (c[1] in survey_loc_map)
-        survey_cells, survey_cell_map = slice_and_map(survey_cells, func)
-        survey_cells = np.array([[survey_loc_map[i] for i in c] for c in survey_cells])
+        for line_id in np.unique(lines):
+            survey_locs, survey_loc_map = slice_and_map(
+                survey.vertices, lines == line_id
+            )
+            func = lambda c: (c[0] in survey_loc_map) & (c[1] in survey_loc_map)
+            survey_cells, survey_cell_map = slice_and_map(survey.cells, func)
+            survey_cells = np.array(
+                [[survey_loc_map[i] for i in c] for c in survey_cells]
+            )
 
-        ab_cell_ids = np.array(ab.values[list(survey_cell_map)], dtype=int)
-        current_cells, current_cell_map = slice_and_map(
-            current.cells, np.unique(ab_cell_ids)
-        )
-        current_locs, current_loc_map = slice_and_map(
-            current.vertices, np.unique(current_cells.ravel())
-        )
-        ab_cell_ids = np.array([current_cell_map[i] for i in ab_cell_ids])
-        current_cells = np.array(
-            [[current_loc_map[i] for i in c] for c in current_cells]
-        )
+            ab_cell_ids = (
+                np.array(survey.ab_cell_id.values[list(survey_cell_map)], dtype=int) - 1
+            )
+            current_cells, current_cell_map = slice_and_map(
+                current.cells, np.unique(ab_cell_ids)
+            )
+            current_locs, current_loc_map = slice_and_map(
+                current.vertices, np.unique(current_cells.ravel())
+            )
+            ab_cell_ids = np.array([current_cell_map[i] for i in ab_cell_ids])
+            current_cells = np.array(
+                [[current_loc_map[i] for i in c] for c in current_cells]
+            )
 
-        name = f"Line {line_id}"
-        currents = CurrentElectrode.create(
-            survey.workspace, name=name, vertices=current_locs
-        )
-        currents.cells = current_cells
-        currents.add_default_ab_cell_id()
+            name = f"Line {line_id}"
+            currents = CurrentElectrode.create(
+                survey.workspace, name=name, vertices=current_locs
+            )
+            currents.cells = current_cells
+            currents.add_default_ab_cell_id()
 
-        potentials = PotentialElectrode.create(
-            survey.workspace, name=name + "_rx", vertices=survey_locs
-        )
-        potentials.cells = survey_cells
-        value_map = {k + 1: str(k + 1) for k in ab_cell_ids}
+            potentials = PotentialElectrode.create(
+                survey.workspace, name=name + "_rx", vertices=survey_locs
+            )
+            potentials.cells = survey_cells
+            value_map = {k + 1: str(k + 1) for k in ab_cell_ids}
 
-        value_map.update({0: "Unknown"})
-        ab_cell_id = potentials.add_data(
-            {
-                "A-B Cell ID": {
-                    "values": ab_cell_ids + 1,
-                    "association": "CELL",
-                    "entity_type": {
-                        "primitive_type": "REFERENCED",
-                        "value_map": value_map,
-                    },
+            value_map.update({0: "Unknown"})
+            ab_cell_id = potentials.add_data(
+                {
+                    "A-B Cell ID": {
+                        "values": ab_cell_ids + 1,
+                        "association": "CELL",
+                        "entity_type": {
+                            "primitive_type": "REFERENCED",
+                            "value_map": value_map,
+                        },
+                    }
                 }
-            }
-        )
-        potentials.current_electrodes = currents
-        for c in survey.children:
-            if isinstance(c, FloatData) and "Pseudo" not in c.name:
-                potentials.add_data(
-                    {c.name: {"values": c.values[list(survey_cell_map)]}}
-                )
+            )
+            potentials.current_electrodes = currents
+            for c in survey.children:
+                if isinstance(c, FloatData) and "Pseudo" not in c.name:
+                    potentials.add_data(
+                        {c.name: {"values": c.values[list(survey_cell_map)]}}
+                    )
 
-    return potentials
+    return
