@@ -8,8 +8,6 @@
 from __future__ import annotations
 
 import numpy as np
-from geoh5py.data import FloatData
-from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from scipy.spatial import cKDTree
 
 from geoapps.utils.statistics import is_outlier
@@ -30,8 +28,8 @@ def next_neighbor(tree, point, nodes, n=3):
     if any(new_id):
         distances = distances[new_id]
         ids = ids[new_id]
-        next = np.argmin(distances)
-        return distances[next], ids[next]
+        next_id = np.argmin(distances)
+        return distances[next_id], ids[next_id]
 
     else:
         return next_neighbor(tree, point, nodes, n + 3)
