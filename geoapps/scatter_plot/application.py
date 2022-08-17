@@ -82,6 +82,11 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="z", component_property="options"),
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="size", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
@@ -105,20 +110,15 @@ class ScatterPlots(BaseDashApplication):
         )(self.update_channel_bounds)
         self.app.callback(
             Output(component_id="downsampling", component_property="value"),
-            Output(component_id="x", component_property="value"),
             Output(component_id="x_log", component_property="value"),
             Output(component_id="x_thresh", component_property="value"),
-            Output(component_id="y", component_property="value"),
             Output(component_id="y_log", component_property="value"),
             Output(component_id="y_thresh", component_property="value"),
-            Output(component_id="z", component_property="value"),
             Output(component_id="z_log", component_property="value"),
             Output(component_id="z_thresh", component_property="value"),
-            Output(component_id="color", component_property="value"),
             Output(component_id="color_log", component_property="value"),
             Output(component_id="color_thresh", component_property="value"),
             Output(component_id="color_maps", component_property="value"),
-            Output(component_id="size", component_property="value"),
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
@@ -230,11 +230,45 @@ class ScatterPlots(BaseDashApplication):
         :return options: Data dropdown options for z-axis of scatter plot.
         :return options: Data dropdown options for color-axis of scatter plot.
         :return options: Data dropdown options for size-axis of scatter plot.
+        :return x_value: Data dropdown options for x-axis of scatter plot.
+        :return y_value: Data dropdown options for y-axis of scatter plot.
+        :return z_value: Data dropdown options for z-axis of scatter plot.
+        :return color_value: Data dropdown options for color-axis of scatter plot.
+        :return size_value: Data dropdown options for size-axis of scatter plot.
         """
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "ui_json_data" in triggers:
+            x_value = ui_json_data.get("x", None)
+            y_value = ui_json_data.get("y", None)
+            z_value = ui_json_data.get("z", None)
+            color_value = ui_json_data.get("color", None)
+            size_value = ui_json_data.get("size", None)
+            trigger = "ui_json"
+        else:
+            x_value, y_value, z_value, color_value, size_value = (
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            trigger = "objects"
+
         options = self.get_data_options(trigger, ui_json_data, object_uid)
 
-        return options, options, options, options, options
+        return (
+            options,
+            options,
+            options,
+            options,
+            options,
+            x_value,
+            y_value,
+            z_value,
+            color_value,
+            size_value,
+        )
 
     def get_channel_bounds(self, channel: str, kmeans: list = None) -> (float, float):
         """

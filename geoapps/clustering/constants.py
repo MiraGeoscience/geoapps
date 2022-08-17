@@ -121,6 +121,6 @@ app_initializer = {
     "downsampling": 80,
     "size_markers": 20,
     "n_clusters": 8,
-    "data_subset": "'cdd7668a-4b5b-49ac-9365-c9ce4fddf733', '18c2560c-6161-468a-8571-5d9d59649535', 'cb35da1c-7ea4-44f0-8817-e3d80e8ba98c', '94a150e8-16d9-4784-a7aa-e6271df3a3ef', '41d51965-3670-43ba-8a10-d399070689e3'",
+    "data_subset": "'{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}', '{18c2560c-6161-468a-8571-5d9d59649535}', '{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}', '{94a150e8-16d9-4784-a7aa-e6271df3a3ef}', '{41d51965-3670-43ba-8a10-d399070689e3}'",
     "ga_group_name": "Clusters",
 }

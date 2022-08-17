@@ -135,6 +135,12 @@ class Clustering(ScatterPlots):
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_subset", component_property="value"),
             Input(component_id="data_subset", component_property="options"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            Input(component_id="channel", component_property="value"),
         )(Clustering.update_data_from_data_subset)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
@@ -454,7 +460,15 @@ class Clustering(ScatterPlots):
 
     @staticmethod
     def update_data_from_data_subset(
-        ui_json_data: dict, data_subset: list, full_options: list
+        ui_json_data: dict,
+        data_subset: list,
+        full_options: list,
+        x: str,
+        y: str,
+        z: str,
+        color: str,
+        size: str,
+        channel: str,
     ) -> (list, list, list, list, list, list, list, str, str, str, str, str, str):
         """
         Update data options and values for scatter plot and histogram/boxplot.
@@ -493,14 +507,12 @@ class Clustering(ScatterPlots):
         if "ui_json_data" in triggers:
             axis_values = Clustering.update_data_values(ui_json_data)
         else:
-            axis_values = (
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-            )
+            axis_values = [None, None, None, None, None, None]
+            axes = [x, y, z, color, size, channel]
+            for i in range(len(axes)):
+                if axes[i] in data_subset or axes[i] == "kmeans":
+                    axis_values[i] = no_update
+            axis_values = tuple(axis_values)
 
         # replace empty lists with empty dictionary
         if not axis_options:
@@ -829,12 +841,16 @@ class Clustering(ScatterPlots):
             # Input downsampled data to scatterplot so it doesn't regenerate data every time a parameter changes.
             axis_values = [None, None, None, None, None]
             axes = [x, y, z, color, size]
+
             for i in range(len(axes)):
                 if axes[i] == "kmeans" and kmeans is not None and kmeans != []:
                     axis_values[i] = PlotData(axes[i], kmeans[indices].astype(float))
                 elif axes[i] is not None:
                     axis_name = Clustering.get_name(axes[i], channel_options)
-                    axis_values[i] = PlotData(axis_name, dataframe[axis_name].values)
+                    if axis_name is not None:
+                        axis_values[i] = PlotData(
+                            axis_name, dataframe[axis_name].values
+                        )
 
             x, y, z, color, size = tuple(axis_values)
 
@@ -954,15 +970,16 @@ class Clustering(ScatterPlots):
 
         :return boxplot: Boxplots for clusters for channel data.
         """
+        channel_name = Clustering.get_name(channel, channel_options)
         if (
             (kmeans is not None)
-            and (channel is not None)
+            and (channel_name is not None)
             and (indices is not None)
             and (color_pickers is not None)
         ):
             kmeans = np.array(kmeans)
             indices = np.array(indices)
-            channel_name = Clustering.get_name(channel, channel_options)
+
             boxes = []
             y_data = self.workspace.get_entity(uuid.UUID(channel))[0].values
             for ii in range(n_clusters):
