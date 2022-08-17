@@ -38,19 +38,19 @@ def test_block_model(tmp_path):
 
     block_model = BlockModelCreation(geoh5=temp_workspace)
     # Test initialization
-    object_options, objects_uid, ui_json, _, _ = block_model.update_object_options(
+    object_options, objects_uid, ui_json_data, _, _ = block_model.update_object_options(
         None, None, trigger=""
     )
     param_list = [
-        "new_grid_value",
-        "cell_size_x_value",
-        "cell_size_y_value",
-        "cell_size_z_value",
-        "depth_core_value",
-        "horizontal_padding_value",
-        "bottom_padding_value",
-        "expansion_fact_value",
-        "monitoring_directory_value",
+        "new_grid",
+        "cell_size_x",
+        "cell_size_y",
+        "cell_size_z",
+        "depth_core",
+        "horizontal_padding",
+        "bottom_padding",
+        "expansion_fact",
+        "monitoring_directory",
     ]
     (  # pylint: disable=W0632
         new_grid,
@@ -62,10 +62,12 @@ def test_block_model(tmp_path):
         bottom_padding,
         expansion_fact,
         _,
-    ) = block_model.update_remainder_from_ui_json(ui_json, param_list, trigger="test")
+    ) = block_model.update_remainder_from_ui_json(
+        ui_json_data, param_list, trigger="test"
+    )
 
     assert new_grid == block_model.params.new_grid
-    assert objects_uid == str(block_model.params.objects.uid)
+    assert objects_uid == "{" + str(block_model.params.objects.uid) + "}"
     assert cell_size_x == block_model.params.cell_size_x
     assert cell_size_y == block_model.params.cell_size_y
     assert cell_size_z == block_model.params.cell_size_z
@@ -85,7 +87,7 @@ def test_block_model(tmp_path):
     content_bytes = base64.b64encode(decoded)
     content_string = content_bytes.decode("utf-8")
     contents = "".join(["content_type", ",", content_string])
-    object_options, _, ui_json, _, _ = block_model.update_object_options(
+    object_options, _, _, _, _ = block_model.update_object_options(
         "ws.geoh5", contents, trigger="upload"
     )
 
@@ -179,25 +181,25 @@ def test_clustering(tmp_path):
     app = Clustering(geoh5=temp_workspace, output_path=str(tmp_path))
 
     app.trigger_click(
-        export=0,
+        n_clicks=0,
         live_link=[],
         n_clusters=3,
-        objects="79b719bc-d996-4f52-9af0-10aa9c7bb941",
+        objects="{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
         data_subset=[
-            "0e4833e3-74ad-4ca9-a98b-d8119069bc01",
-            "18c2560c-6161-468a-8571-5d9d59649535",
+            "{0e4833e3-74ad-4ca9-a98b-d8119069bc01}",
+            "{18c2560c-6161-468a-8571-5d9d59649535}",
         ],
         color_pickers=[],
         downsampling=80,
         full_scales={},
         full_lower_bounds={},
         full_upper_bounds={},
-        x="0e4833e3-74ad-4ca9-a98b-d8119069bc01",
+        x="{0e4833e3-74ad-4ca9-a98b-d8119069bc01}",
         x_log=[True],
         x_thresh=0.1,
         x_min=0,
         x_max=0,
-        y="18c2560c-6161-468a-8571-5d9d59649535",
+        y="{18c2560c-6161-468a-8571-5d9d59649535}",
         y_log=[True],
         y_thresh=0.1,
         y_min=0,
