@@ -42,7 +42,7 @@ class BaseDashApplication:
         self.app = None
 
     def update_object_options(
-        self, filename: str, contents: str, trigger: str = None, **kwargs
+        self, filename: str, contents: str, trigger: str = None
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
@@ -71,14 +71,18 @@ class BaseDashApplication:
                 self.workspace = Workspace(ui_json["geoh5"], mode="r")
                 self.params = self._param_class(**{"geoh5": self.workspace})
                 self.driver.params = self.params
+                # Create ifile from ui.json
                 ifile = InputFile(ui_json=ui_json)
+                # Demote ifile data so it can be stored as a string
                 ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
+                # Get new object value for dropdown from ui.json
                 object_value = ui_json_data["objects"]
             elif filename is not None and filename.endswith(".geoh5"):
                 # Uploaded workspace
                 _, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded, mode="r")
+                # Update self.params with new workspace, but keep unaffected params the same.
                 new_params = self.params.to_dict()
                 for key, value in new_params.items():
                     if isinstance(value, Entity):
@@ -117,6 +121,7 @@ class BaseDashApplication:
         :param object_uid: Selected object in object dropdown.
 
         :return options: Data dropdown options.
+        :return value: Data dropdown value.
         """
         obj = None
 
