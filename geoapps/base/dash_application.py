@@ -18,6 +18,7 @@ import numpy as np
 from dash import callback_context, no_update
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
+from geoh5py.shared import Entity
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -41,7 +42,7 @@ class BaseDashApplication:
         self.app = None
 
     def update_object_options(
-        self, filename: str, contents: str, trigger: str = None
+        self, filename: str, contents: str, trigger: str = None, **kwargs
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
@@ -78,7 +79,12 @@ class BaseDashApplication:
                 _, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded, mode="r")
-                self.params = self._param_class(**{"geoh5": self.workspace})
+                new_params = self.params.to_dict()
+                for key, value in new_params.items():
+                    if isinstance(value, Entity):
+                        new_params[key] = None
+                new_params["geoh5"] = self.workspace
+                self.params = self._param_class(**new_params)
                 self.driver.params = self.params
                 ui_json_data = no_update
             elif trigger == "":
@@ -221,7 +227,7 @@ class BaseDashApplication:
             if param in update_dict:
                 outputs.append(update_dict[param])
             else:
-                outputs.append(no_update)
+                outputs.append(None)
 
         return tuple(outputs)
 

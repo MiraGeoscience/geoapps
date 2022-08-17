@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import plotly.express as px
 from dash import dcc, html
 
 workspace_layout = html.Div(
@@ -312,6 +313,7 @@ axis_layout = html.Div(
                 dcc.Dropdown(
                     id="color_maps",
                     style={"margin-bottom": "20px"},
+                    options=px.colors.named_colorscales(),
                 ),
                 html.Div(
                     [

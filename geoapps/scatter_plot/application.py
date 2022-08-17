@@ -117,7 +117,6 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="color", component_property="value"),
             Output(component_id="color_log", component_property="value"),
             Output(component_id="color_thresh", component_property="value"),
-            Output(component_id="color_maps", component_property="options"),
             Output(component_id="color_maps", component_property="value"),
             Output(component_id="size", component_property="value"),
             Output(component_id="size_log", component_property="value"),
@@ -321,16 +320,20 @@ class ScatterPlots(BaseDashApplication):
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json_data":
-            x_min, x_max = ui_json_data["x_min"], ui_json_data["x_max"]
-            y_min, y_max = ui_json_data["y_min"], ui_json_data["y_max"]
-            z_min, z_max = ui_json_data["z_min"], ui_json_data["z_max"]
-            color_min, color_max = (
-                ui_json_data["color_min"],
-                ui_json_data["color_max"],
+            x_min, x_max = ui_json_data.get("x_min", None), ui_json_data.get(
+                "x_max", None
             )
-            size_min, size_max = (
-                ui_json_data["size_min"],
-                ui_json_data["size_max"],
+            y_min, y_max = ui_json_data.get("y_min", None), ui_json_data.get(
+                "y_max", None
+            )
+            z_min, z_max = ui_json_data.get("z_min", None), ui_json_data.get(
+                "z_max", None
+            )
+            color_min, color_max = ui_json_data.get(
+                "color_min", None
+            ), ui_json_data.get("color_max", None)
+            size_min, size_max = ui_json_data.get("size_min", None), ui_json_data.get(
+                "size_max", None
             )
 
         elif trigger == "x":
@@ -388,7 +391,7 @@ class ScatterPlots(BaseDashApplication):
         size_min: float,
         size_max: float,
         size_markers: int,
-    ) -> go.FigureWidget:
+    ) -> go.Figure:
         """
         Run scatter plot driver, and if export was clicked save the figure as html.
 
@@ -431,7 +434,7 @@ class ScatterPlots(BaseDashApplication):
 
         # Don't update plot if objects triggered the callback, but use objects to update self.params.
         if "objects" in update_dict and len(update_dict) == 1:
-            return no_update
+            return go.Figure()
         elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
             update_dict.update({"objects": objects})
 
@@ -439,7 +442,7 @@ class ScatterPlots(BaseDashApplication):
         param_dict = self.get_params_dict(update_dict)
         self.params.update(param_dict)
         # Run driver to get updated scatter plot.
-        figure = go.FigureWidget(self.driver.run())
+        figure = go.Figure(self.driver.run())
 
         return figure
 
