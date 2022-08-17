@@ -476,6 +476,12 @@ class Clustering(ScatterPlots):
         :param ui_json_data: Uploaded ui.json data.
         :param data_subset: Subset of data used for clustering and plotting.
         :param full_options: Full options for data subset.
+        :param x: X-axis data uid.
+        :param y: Y-axis data uid.
+        :param z: Z-axis data uid.
+        :param color: Color-axis data uid.
+        :param size: Size-axis data uid.
+        :param channel: Data uid for boxplot/histogram.
 
         :return axis_options: Dropdown options for x-axis of scatter plot.
         :return axis_options: Dropdown options for y-axis of scatter plot.

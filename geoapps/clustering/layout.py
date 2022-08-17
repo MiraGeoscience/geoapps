@@ -253,7 +253,7 @@ cluster_layout = html.Div(
                     style={"margin-bottom": "20px"},
                     clearable=False,
                 ),
-                daq.ColorPicker(
+                daq.ColorPicker(  # pylint: disable=E1102
                     id="color_picker",
                     value=dict(hex="#000000"),
                 ),

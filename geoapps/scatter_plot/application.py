@@ -481,7 +481,7 @@ class ScatterPlots(BaseDashApplication):
         return figure
 
     def trigger_click(
-        self, n_clicks: int, monitoring_directory: str, figure: go.FigureWidget = None
+        self, n_clicks: int, monitoring_directory: str, figure: go.Figure = None
     ):
         """
         Save the plot as html, write out ui.json.
