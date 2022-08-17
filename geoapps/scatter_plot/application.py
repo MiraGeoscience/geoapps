@@ -70,7 +70,7 @@ class ScatterPlots(BaseDashApplication):
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
-            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="ui_json_data", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -82,7 +82,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="z", component_property="options"),
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
         self.app.callback(
@@ -96,7 +96,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="color_max", component_property="value"),
             Output(component_id="size_min", component_property="value"),
             Output(component_id="size_max", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="x", component_property="value"),
             Input(component_id="y", component_property="value"),
             Input(component_id="z", component_property="value"),
@@ -124,7 +124,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
@@ -219,11 +219,11 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def update_data_options(self, ui_json: dict, object_uid: str):
+    def update_data_options(self, ui_json_data: dict, object_uid: str):
         """
         Get data dropdown options from a given object.
 
-        :param ui_json: Uploaded ui.json to read object from.
+        :param ui_json_data: Uploaded ui.json data to read object from.
         :param object_uid: Selected object in object dropdown.
 
         :return options: Data dropdown options for x-axis of scatter plot.
@@ -233,7 +233,7 @@ class ScatterPlots(BaseDashApplication):
         :return options: Data dropdown options for size-axis of scatter plot.
         """
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        options = self.get_data_options(trigger, ui_json, object_uid)
+        options = self.get_data_options(trigger, ui_json_data, object_uid)
 
         return options, options, options, options, options
 
@@ -265,7 +265,7 @@ class ScatterPlots(BaseDashApplication):
 
     def update_channel_bounds(
         self,
-        ui_json: dict,
+        ui_json_data: dict,
         x: str,
         y: str,
         z: str,
@@ -276,7 +276,7 @@ class ScatterPlots(BaseDashApplication):
         """
         Update min and max for all channels, either from uploaded ui.json or from change of data.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param x: Name of selected x data.
         :param y: Name of selected y data.
         :param z: Name of selected z data.
@@ -320,17 +320,17 @@ class ScatterPlots(BaseDashApplication):
         )
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json":
-            x_min, x_max = ui_json["x_min"]["value"], ui_json["x_max"]["value"]
-            y_min, y_max = ui_json["y_min"]["value"], ui_json["y_max"]["value"]
-            z_min, z_max = ui_json["z_min"]["value"], ui_json["z_max"]["value"]
+        if trigger == "ui_json_data":
+            x_min, x_max = ui_json_data["x_min"], ui_json_data["x_max"]
+            y_min, y_max = ui_json_data["y_min"], ui_json_data["y_max"]
+            z_min, z_max = ui_json_data["z_min"], ui_json_data["z_max"]
             color_min, color_max = (
-                ui_json["color_min"]["value"],
-                ui_json["color_max"]["value"],
+                ui_json_data["color_min"],
+                ui_json_data["color_max"],
             )
             size_min, size_max = (
-                ui_json["size_min"]["value"],
-                ui_json["size_max"]["value"],
+                ui_json_data["size_min"],
+                ui_json_data["size_max"],
             )
 
         elif trigger == "x":

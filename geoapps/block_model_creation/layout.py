@@ -200,7 +200,7 @@ block_model_layout = html.Div(
         ),
         html.Button("Export", id="export"),
         dcc.Markdown(id="output_message"),
-        dcc.Store(id="ui_json"),
+        dcc.Store(id="ui_json_data"),
     ],
     style={
         "margin_left": "20px",
