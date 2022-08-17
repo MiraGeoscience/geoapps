@@ -26,5 +26,5 @@ class AbstractFactory(ABC):
         """Returns a class to be constructed by the build method."""
 
     @abstractmethod
-    def build(self):
+    def build(self, *args):
         """Constructs concrete object for provided factory type."""

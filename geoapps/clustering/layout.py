@@ -253,7 +253,7 @@ cluster_layout = html.Div(
                     style={"margin-bottom": "20px"},
                     clearable=False,
                 ),
-                daq.ColorPicker(
+                daq.ColorPicker(  # pylint: disable=E1102
                     id="color_picker",
                     value=dict(hex="#000000"),
                 ),
@@ -283,7 +283,7 @@ cluster_layout = html.Div(
         dcc.Store(id="clusters", data={}),
         dcc.Store(id="indices"),
         dcc.Store(id="mapping"),
-        dcc.Store(id="ui_json"),
+        dcc.Store(id="ui_json_data"),
     ],
     style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
 )

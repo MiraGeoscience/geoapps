@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+
 from __future__ import annotations
 
 import os
@@ -44,6 +46,8 @@ class ScatterPlots(BaseDashApplication):
         else:
             self.params = self._param_class(**app_initializer)
 
+        super().__init__()
+
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
         self.app = JupyterDash(
@@ -51,8 +55,6 @@ class ScatterPlots(BaseDashApplication):
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
         )
-
-        super().__init__(**kwargs)
 
         self.app.layout = scatter_layout
 
@@ -68,7 +70,7 @@ class ScatterPlots(BaseDashApplication):
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
-            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="ui_json_data", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -80,7 +82,12 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="z", component_property="options"),
             Output(component_id="color", component_property="options"),
             Output(component_id="size", component_property="options"),
-            Input(component_id="ui_json", component_property="data"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="size", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
         self.app.callback(
@@ -94,7 +101,7 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="color_max", component_property="value"),
             Output(component_id="size_min", component_property="value"),
             Output(component_id="size_max", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="x", component_property="value"),
             Input(component_id="y", component_property="value"),
             Input(component_id="z", component_property="value"),
@@ -103,26 +110,20 @@ class ScatterPlots(BaseDashApplication):
         )(self.update_channel_bounds)
         self.app.callback(
             Output(component_id="downsampling", component_property="value"),
-            Output(component_id="x", component_property="value"),
             Output(component_id="x_log", component_property="value"),
             Output(component_id="x_thresh", component_property="value"),
-            Output(component_id="y", component_property="value"),
             Output(component_id="y_log", component_property="value"),
             Output(component_id="y_thresh", component_property="value"),
-            Output(component_id="z", component_property="value"),
             Output(component_id="z_log", component_property="value"),
             Output(component_id="z_thresh", component_property="value"),
-            Output(component_id="color", component_property="value"),
             Output(component_id="color_log", component_property="value"),
             Output(component_id="color_thresh", component_property="value"),
-            Output(component_id="color_maps", component_property="options"),
             Output(component_id="color_maps", component_property="value"),
-            Output(component_id="size", component_property="value"),
             Output(component_id="size_log", component_property="value"),
             Output(component_id="size_thresh", component_property="value"),
             Output(component_id="size_markers", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
@@ -217,11 +218,11 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def update_data_options(self, ui_json: dict, object_uid: str):
+    def update_data_options(self, ui_json_data: dict, object_uid: str):
         """
         Get data dropdown options from a given object.
 
-        :param ui_json: Uploaded ui.json to read object from.
+        :param ui_json_data: Uploaded ui.json data to read object from.
         :param object_uid: Selected object in object dropdown.
 
         :return options: Data dropdown options for x-axis of scatter plot.
@@ -229,11 +230,45 @@ class ScatterPlots(BaseDashApplication):
         :return options: Data dropdown options for z-axis of scatter plot.
         :return options: Data dropdown options for color-axis of scatter plot.
         :return options: Data dropdown options for size-axis of scatter plot.
+        :return x_value: Data dropdown options for x-axis of scatter plot.
+        :return y_value: Data dropdown options for y-axis of scatter plot.
+        :return z_value: Data dropdown options for z-axis of scatter plot.
+        :return color_value: Data dropdown options for color-axis of scatter plot.
+        :return size_value: Data dropdown options for size-axis of scatter plot.
         """
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        options = self.get_data_options(trigger, ui_json, object_uid)
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        return options, options, options, options, options
+        if "ui_json_data" in triggers:
+            x_value = ui_json_data.get("x", None)
+            y_value = ui_json_data.get("y", None)
+            z_value = ui_json_data.get("z", None)
+            color_value = ui_json_data.get("color", None)
+            size_value = ui_json_data.get("size", None)
+            trigger = "ui_json"
+        else:
+            x_value, y_value, z_value, color_value, size_value = (
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            trigger = "objects"
+
+        options = self.get_data_options(trigger, ui_json_data, object_uid)
+
+        return (
+            options,
+            options,
+            options,
+            options,
+            options,
+            x_value,
+            y_value,
+            z_value,
+            color_value,
+            size_value,
+        )
 
     def get_channel_bounds(self, channel: str, kmeans: list = None) -> (float, float):
         """
@@ -263,7 +298,7 @@ class ScatterPlots(BaseDashApplication):
 
     def update_channel_bounds(
         self,
-        ui_json: dict,
+        ui_json_data: dict,
         x: str,
         y: str,
         z: str,
@@ -274,7 +309,7 @@ class ScatterPlots(BaseDashApplication):
         """
         Update min and max for all channels, either from uploaded ui.json or from change of data.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param x: Name of selected x data.
         :param y: Name of selected y data.
         :param z: Name of selected z data.
@@ -318,17 +353,21 @@ class ScatterPlots(BaseDashApplication):
         )
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json":
-            x_min, x_max = ui_json["x_min"]["value"], ui_json["x_max"]["value"]
-            y_min, y_max = ui_json["y_min"]["value"], ui_json["y_max"]["value"]
-            z_min, z_max = ui_json["z_min"]["value"], ui_json["z_max"]["value"]
-            color_min, color_max = (
-                ui_json["color_min"]["value"],
-                ui_json["color_max"]["value"],
+        if trigger == "ui_json_data":
+            x_min, x_max = ui_json_data.get("x_min", None), ui_json_data.get(
+                "x_max", None
             )
-            size_min, size_max = (
-                ui_json["size_min"]["value"],
-                ui_json["size_max"]["value"],
+            y_min, y_max = ui_json_data.get("y_min", None), ui_json_data.get(
+                "y_max", None
+            )
+            z_min, z_max = ui_json_data.get("z_min", None), ui_json_data.get(
+                "z_max", None
+            )
+            color_min, color_max = ui_json_data.get(
+                "color_min", None
+            ), ui_json_data.get("color_max", None)
+            size_min, size_max = ui_json_data.get("size_min", None), ui_json_data.get(
+                "size_max", None
             )
 
         elif trigger == "x":
@@ -386,7 +425,7 @@ class ScatterPlots(BaseDashApplication):
         size_min: float,
         size_max: float,
         size_markers: int,
-    ) -> go.FigureWidget:
+    ) -> go.Figure:
         """
         Run scatter plot driver, and if export was clicked save the figure as html.
 
@@ -429,7 +468,7 @@ class ScatterPlots(BaseDashApplication):
 
         # Don't update plot if objects triggered the callback, but use objects to update self.params.
         if "objects" in update_dict and len(update_dict) == 1:
-            return no_update
+            return go.Figure()
         elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
             update_dict.update({"objects": objects})
 
@@ -437,12 +476,12 @@ class ScatterPlots(BaseDashApplication):
         param_dict = self.get_params_dict(update_dict)
         self.params.update(param_dict)
         # Run driver to get updated scatter plot.
-        figure = go.FigureWidget(self.driver.run())
+        figure = go.Figure(self.driver.run())
 
         return figure
 
     def trigger_click(
-        self, n_clicks: int, monitoring_directory: str, figure: go.FigureWidget
+        self, n_clicks: int, monitoring_directory: str, figure: go.Figure = None
     ):
         """
         Save the plot as html, write out ui.json.

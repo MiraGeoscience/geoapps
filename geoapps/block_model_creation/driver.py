@@ -77,7 +77,6 @@ class BlockModelDriver:
 
         :return pad_sum: Top padding.
         """
-        f = np.abs(np.diff(obj.z_cell_delimiters))
         pad_sum = 0.0
         for h in np.abs(np.diff(obj.z_cell_delimiters)):
             if h != core_z_cell_size:
@@ -194,10 +193,10 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
-    params = BlockModelParams(ifile)
-    # params.geoh5.close()
-    driver = BlockModelDriver(params)
+    params_class = BlockModelParams(ifile)
+
+    driver = BlockModelDriver(params_class)
     print("Loaded. Creating block model . . .")
-    with params.geoh5.open("r+"):
+    with params_class.geoh5.open("r+"):
         driver.run()
-    print("Saved to " + params.geoh5.h5file)
+    print("Saved to " + params_class.geoh5.h5file)

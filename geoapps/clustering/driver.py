@@ -185,16 +185,14 @@ class ClusteringDriver:
         return indices, values.T
 
     def run(self):
-        self.params.geoh5.open(mode="r+")
         # Run clustering to get kmeans and indices.
-        clustering_dict = {}
         dataframe, mapping, indices = ClusteringDriver.update_dataframe(
             self.params.downsampling,
             ast.literal_eval(self.params.data_subset),
             self.params.geoh5,
         )
         full_scales_dict = dict(zip(self.params.data_subset, self.params.full_scales))
-        kmeans, clusters = ClusteringDriver.run_clustering(
+        kmeans, _ = ClusteringDriver.run_clustering(
             self.params.n_clusters,
             dataframe,
             full_scales_dict,

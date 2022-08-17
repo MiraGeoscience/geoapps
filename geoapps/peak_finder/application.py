@@ -89,6 +89,7 @@ class PeakFinder(ObjectDataSelection):
     _system = None
     _tem_checkbox = None
     _width = None
+    _x_label = None
     _object_types = (Curve,)
     all_anomalies = []
     active_channels = {}
@@ -100,6 +101,7 @@ class PeakFinder(ObjectDataSelection):
     plot_result = True
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
+        self.figure = None
         self.plot_result = plot_result
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
@@ -107,7 +109,6 @@ class PeakFinder(ObjectDataSelection):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults = {}
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
@@ -437,7 +438,7 @@ class PeakFinder(ObjectDataSelection):
                 continuous_update=False,
                 description="Minimum # channels",
                 style={"description_width": "initial"},
-                disabled=True,
+                disabled=False,
             )
 
         return self._min_channels
@@ -922,8 +923,8 @@ class PeakFinder(ObjectDataSelection):
 
         if (
             self.pause_refresh
-            or not self.refresh.value
-            or self.plot_trigger.value is False
+            or not refresh
+            or plot_trigger is False
             or not self.plot_result
         ):
             return
@@ -958,15 +959,15 @@ class PeakFinder(ObjectDataSelection):
         up_markers_x, up_markers_y = [], []
         dwn_markers_x, dwn_markers_y = [], []
 
-        for cc, (uid, channel) in enumerate(self.active_channels.items()):
+        for cc, channel in enumerate(self.active_channels.values()):
 
-            if "values" not in channel.keys():
+            if "values" not in channel:
                 continue
 
             self.lines.profile.values = channel["values"][self.survey.line_indices]
             values = self.lines.profile.values_resampled
-            y_min = np.min([values[sub_ind].min(), y_min])
-            y_max = np.max([values[sub_ind].max(), y_max])
+            y_min = np.nanmin([values[sub_ind].min(), y_min])
+            y_max = np.nanmax([values[sub_ind].max(), y_max])
             axs.plot(locs, values, color=[0.5, 0.5, 0.5, 1])
             for group in self.lines.anomalies:
                 query = np.where(group["channels"] == cc)[0]
@@ -978,9 +979,9 @@ class PeakFinder(ObjectDataSelection):
                 ):
                     continue
 
-                ii = query[0]
-                start = group["start"][ii]
-                end = group["end"][ii]
+                i = query[0]
+                start = group["start"][i]
+                end = group["end"][i]
                 axs.plot(
                     locs[start:end],
                     values[start:end],
@@ -993,29 +994,29 @@ class PeakFinder(ObjectDataSelection):
                     ori = "left"
 
                 if markers:
-                    if ii == 0:
+                    if i == 0:
                         axs.scatter(
-                            locs[group["peak"][ii]],
-                            values[group["peak"][ii]],
+                            locs[group["peak"][i]],
+                            values[group["peak"][i]],
                             s=200,
                             c="k",
                             marker=self.marker[ori],
                             zorder=10,
                         )
-                    peak_markers_x += [locs[group["peak"][ii]]]
-                    peak_markers_y += [values[group["peak"][ii]]]
+                    peak_markers_x += [locs[group["peak"][i]]]
+                    peak_markers_y += [values[group["peak"][i]]]
                     peak_markers_c += [group["channel_group"]["color"]]
-                    start_markers_x += [locs[group["start"][ii]]]
-                    start_markers_y += [values[group["start"][ii]]]
-                    end_markers_x += [locs[group["end"][ii]]]
-                    end_markers_y += [values[group["end"][ii]]]
-                    up_markers_x += [locs[group["inflx_up"][ii]]]
-                    up_markers_y += [values[group["inflx_up"][ii]]]
-                    dwn_markers_x += [locs[group["inflx_dwn"][ii]]]
-                    dwn_markers_y += [values[group["inflx_dwn"][ii]]]
+                    start_markers_x += [locs[group["start"][i]]]
+                    start_markers_y += [values[group["start"][i]]]
+                    end_markers_x += [locs[group["end"][i]]]
+                    end_markers_y += [values[group["end"][i]]]
+                    up_markers_x += [locs[group["inflx_up"][i]]]
+                    up_markers_y += [values[group["inflx_up"][i]]]
+                    dwn_markers_x += [locs[group["inflx_dwn"][i]]]
+                    dwn_markers_y += [values[group["inflx_dwn"][i]]]
 
             if residual:
-                raw = self.lines.profile._values_resampled_raw
+                raw = self.lines.profile.values_resampled_raw
                 axs.fill_between(
                     locs, values, raw, where=raw > values, color=[1, 0, 0, 0.5]
                 )
@@ -1033,7 +1034,7 @@ class PeakFinder(ObjectDataSelection):
             center - width / 2.0,
             center + width / 2.0,
         ]
-        y_lims = [np.max([y_min, self.min_value.value]), y_max]
+        y_lims = [np.nanmax([y_min, self.min_value.value]), y_max]
         axs.set_xlim(x_lims)
         axs.set_ylim(y_lims)
         axs.set_ylabel("Data")
@@ -1128,7 +1129,7 @@ class PeakFinder(ObjectDataSelection):
             return
 
         if (
-            self.plot_trigger.value
+            plot_trigger
             or self.refresh.value
             and hasattr(self.lines, "profile")
             and self.tem_checkbox.value
@@ -1159,8 +1160,8 @@ class PeakFinder(ObjectDataSelection):
             if group is not None and group["linear_fit"] is not None:
                 times = [
                     channel["time"]
-                    for ii, channel in enumerate(self.active_channels.values())
-                    if ii in list(group["channels"])
+                    for i, channel in enumerate(self.active_channels.values())
+                    if i in list(group["channels"])
                 ]
             if any(times):
                 times = np.hstack(times)
@@ -1236,9 +1237,7 @@ class PeakFinder(ObjectDataSelection):
                 try:
                     if self.tem_checkbox.value:
                         channel = [
-                            ch
-                            for ch in system["channels"].keys()
-                            if ch in params["name"]
+                            ch for ch in system["channels"] if ch in params["name"]
                         ]
                         if any(channel):
                             self.active_channels[uid]["time"] = system["channels"][
@@ -1258,8 +1257,12 @@ class PeakFinder(ObjectDataSelection):
                             ),
                         ]
                     )
-                    d_min = np.min([d_min, self.active_channels[uid]["values"].min()])
-                    d_max = np.max([d_max, self.active_channels[uid]["values"].max()])
+                    d_min = np.nanmin(
+                        [d_min, self.active_channels[uid]["values"].min()]
+                    )
+                    d_max = np.nanmax(
+                        [d_max, self.active_channels[uid]["values"].max()]
+                    )
                 except KeyError:
                     continue
 
@@ -1294,7 +1297,7 @@ class PeakFinder(ObjectDataSelection):
 
         for label, group in self._channel_groups.items():
             for member in ["data", "color"]:
-                name = f"{label} {member}"
+                name = f"Group {label} {member}"
                 ui_json[name] = deepcopy(template_dict[member])
                 ui_json[name]["group"] = f"Group {label}"
                 param_dict[name] = group[member]
@@ -1322,13 +1325,7 @@ class PeakFinder(ObjectDataSelection):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=ui_json,
-                validations=self.params.validations,
-                validation_options={"disabled": True},
-            )
-
-            new_params = PeakFinderParams(input_file=ifile, **param_dict)
+            new_params = PeakFinderParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
             self.run(new_params)
 
@@ -1342,14 +1339,14 @@ class PeakFinder(ObjectDataSelection):
         if hasattr(self.lines, "anomalies"):
             self.center.value = self.group_display.value
 
-    @staticmethod
-    def run(params, output_group=None):
+    @classmethod
+    def run(cls, params: PeakFinderParams):
         """
         Create an octree mesh from input values
         """
-
         driver = PeakFinderDriver(params)
-        driver.run(output_group)
+        with params.geoh5.open(mode="r+"):
+            driver.run()
 
     def show_decay_trigger(self, _):
         """
@@ -1370,5 +1367,5 @@ if __name__ == "__main__":
         "'geoapps.peak_finder.driver' in version 0.7.0. "
         "This warning is likely due to the execution of older ui.json files. Please update."
     )
-    params = PeakFinderParams(InputFile(file))
-    PeakFinder.run(params)
+    params_class = PeakFinderParams(InputFile(file))
+    PeakFinder.run(params_class)

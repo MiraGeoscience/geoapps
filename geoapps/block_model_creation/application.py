@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=E0401
+
 from __future__ import annotations
 
 import os
@@ -40,6 +43,8 @@ class BlockModelCreation(BaseDashApplication):
         else:
             self.params = self._param_class(**app_initializer)
 
+        super().__init__()
+
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
         self.app = JupyterDash(
@@ -48,15 +53,13 @@ class BlockModelCreation(BaseDashApplication):
             external_stylesheets=external_stylesheets,
         )
 
-        super().__init__(**kwargs)
-
         self.app.layout = block_model_layout
 
         # Set up callbacks
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
-            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="ui_json_data", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -72,7 +75,7 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="bottom_padding", component_property="value"),
             Output(component_id="expansion_fact", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
