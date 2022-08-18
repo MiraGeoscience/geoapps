@@ -20,6 +20,7 @@ import webbrowser
 
 import matplotlib
 import numpy as np
+import skimage
 from dash import callback_context, no_update
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.shared.utils import is_uuid
@@ -31,6 +32,8 @@ from plotly import graph_objects as go
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.base.selection import TopographyOptions
+from geoapps.inversion import InversionBaseParams
+from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields.gravity.params import GravityParams
 from geoapps.inversion.potential_fields.magnetic_scalar.params import (
     MagneticScalarParams,
@@ -47,7 +50,8 @@ class InversionApp(BaseDashApplication):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = None
+    _param_class = InversionBaseParams
+    # _driver_class = InversionDriver
     _inversion_type = None
     _inversion_params = None
     _run_params = None
@@ -59,7 +63,7 @@ class InversionApp(BaseDashApplication):
         else:
             self.params = self._param_class(**app_initializer)
 
-        super().__init__(**self.params.to_dict())
+        super().__init__()
 
     @staticmethod
     def update_uncertainty_visibility(selection):
@@ -76,6 +80,8 @@ class InversionApp(BaseDashApplication):
 
     @staticmethod
     def update_topography_visibility(selection):
+        print("selecciont")
+        print(selection)
         if selection == "None":
             return (
                 {"display": "block"},
@@ -93,6 +99,12 @@ class InversionApp(BaseDashApplication):
                 {"display": "none"},
                 {"display": "none"},
                 {"display": "block"},
+            )
+        else:
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
             )
 
     def open_mesh_app(self, _):
@@ -145,7 +157,7 @@ class InversionApp(BaseDashApplication):
             const = None
         return options, data, const
 
-    def update_inversion_params_from_ui_json(self, ui_json):
+    def update_inversion_params_from_ui_json(self, ui_json_data):
         options, const, obj, data = no_update, no_update, no_update, no_update
 
         prefix, param = tuple(
@@ -155,12 +167,12 @@ class InversionApp(BaseDashApplication):
         )
 
         if param in self._inversion_params:
-            if prefix + "_" + param in ui_json:
-                obj = str(ui_json[prefix + "_" + param + "_object"]["value"])
-                val = ui_json[prefix + "_" + param]["value"]
-            elif prefix + "_model" in ui_json:
-                obj = str(ui_json[prefix + "_model_object"]["value"])
-                val = ui_json[prefix + "_model"]["value"]
+            if prefix + "_" + param in ui_json_data:
+                obj = str(ui_json_data[prefix + "_" + param + "_object"])
+                val = ui_json_data[prefix + "_" + param]
+            elif prefix + "_model" in ui_json_data:
+                obj = str(ui_json_data[prefix + "_model_object"])
+                val = ui_json_data[prefix + "_model"]
             else:
                 val = None
 
@@ -169,10 +181,10 @@ class InversionApp(BaseDashApplication):
         return options, const, obj, data
 
     @staticmethod
-    def update_general_param_from_ui_json(ui_json):
+    def update_general_param_from_ui_json(ui_json_data):
         param = callback_context.outputs_list[0]["id"].removesuffix("_options")
-        obj = str(ui_json[param + "_object"]["value"])
-        val = ui_json[param]["value"]
+        obj = str(ui_json_data[param + "_object"])
+        val = ui_json_data[param]
 
         options, data, const = InversionApp.unpack_val(val)
         return options, const, obj, data
@@ -184,11 +196,13 @@ class InversionApp(BaseDashApplication):
 
     # Update input data dropdown options
 
-    def update_channel_options(self, ui_json: dict, object_uid: str) -> (list, str):
+    def update_channel_options(
+        self, ui_json_data: dict, object_uid: str
+    ) -> (list, str):
         """
         Update data subset options and values from selected object.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param object_uid: Selected object from dropdown.
 
         :return options: Options for data subset dropdown.
@@ -198,21 +212,21 @@ class InversionApp(BaseDashApplication):
             return no_update
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if "ui_json" in triggers:
+        if "ui_json_data" in triggers:
             # value = ui_json["channel"]["value"]
             value = None
-            options = self.get_data_options("ui_json", ui_json, object_uid)
+            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
         else:
             value = None
-            options = self.get_data_options("data_object", ui_json, object_uid)
+            options = self.get_data_options("data_object", ui_json_data, object_uid)
 
         return options
 
-    def update_data_options(self, ui_json: dict, object_uid: str) -> (list, str):
+    def update_data_options(self, ui_json_data: dict, object_uid: str) -> (list, str):
         """
         Update data subset options and values from selected object.
 
-        :param ui_json: Uploaded ui.json.
+        :param ui_json_data: Uploaded ui.json data.
         :param object_uid: Selected object from dropdown.
 
         :return options: Options for data subset dropdown.
@@ -220,19 +234,19 @@ class InversionApp(BaseDashApplication):
         """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if "ui_json" in triggers:
+        if "ui_json_data" in triggers:
             # value = ui_json["channel"]["value"]
             value = None
-            options = self.get_data_options("ui_json", ui_json, object_uid)
+            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
         else:
             value = None
-            options = self.get_data_options("data_object", ui_json, object_uid)
+            options = self.get_data_options("data_object", ui_json_data, object_uid)
 
         return options, value
 
     @staticmethod
     def update_full_components(
-        ui_json,
+        ui_json_data,
         full_components,
         channel_bool,
         channel,
@@ -243,30 +257,30 @@ class InversionApp(BaseDashApplication):
         component_options,
     ):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json":
+        if trigger == "ui_json_data":
             full_components = {}
             for comp in component_options:
                 # Get channel value
-                if is_uuid(ui_json[comp + "_channel"]["value"]):
-                    channel = str(ui_json[comp + "_channel"]["value"])
+                if is_uuid(ui_json_data[comp + "_channel"]):
+                    channel = str(ui_json_data[comp + "_channel"])
                 else:
                     channel = None
                 # Get channel_bool value
-                if ui_json[comp + "_channel_bool"]:
+                if ui_json_data[comp + "_channel_bool"]:
                     channel_bool = [True]
                 else:
                     channel_bool = []
                 # Get uncertainty value
-                if (type(ui_json[comp + "_uncertainty"]["value"]) == float) or (
-                    type(ui_json[comp + "_uncertainty"]["value"]) == int
+                if (type(ui_json_data[comp + "_uncertainty"]) == float) or (
+                    type(ui_json_data[comp + "_uncertainty"]) == int
                 ):
                     uncertainty_type = "Floor"
-                    uncertainty_floor = ui_json[comp + "_uncertainty"]["value"]
+                    uncertainty_floor = ui_json_data[comp + "_uncertainty"]
                     uncertainty_channel = None
-                elif is_uuid(ui_json[comp + "_uncertainty"]["value"]):
+                elif is_uuid(ui_json_data[comp + "_uncertainty"]):
                     uncertainty_type = "Channel"
                     uncertainty_floor = None
-                    uncertainty_channel = str(ui_json[comp + "_uncertainty"]["value"])
+                    uncertainty_channel = str(ui_json_data[comp + "_uncertainty"])
 
                 full_components[comp] = {
                     "channel_bool": channel_bool,
@@ -389,44 +403,28 @@ class InversionApp(BaseDashApplication):
         if isinstance(entity, Grid2D):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
-            indices = filter_xy(x, y, resolution, window=window)
-
-            ind_x, ind_y = (
-                np.any(indices, axis=1),
-                np.any(indices, axis=0),
-            )
-
-            """
-            if window is not None:
-                x_min = window["center_x"] - (window["width"]/2)
-                x_max = window["center_x"] + (window["width"]/2)
-                y_min = window["center_y"] - (window["height"]/2)
-                y_max = window["center_y"] + (window["height"]/2)
-            else:
-                x_min = x.min()
-                x_max = x.max()
-                y_min = y.min()
-                y_max = y.max()
-
-            plot_x = np.arange(x_min, x_max + resolution, resolution)
-            plot_y = np.arange(y_min, y_max + resolution, resolution)
-            """
 
             if values is not None:
                 values = np.asarray(
                     values.reshape(entity.shape, order="F"), dtype=float
                 )
                 values[indices == False] = np.nan
-                values = values[ind_x, :][:, ind_y]
+                # values = values[ind_x, :][:, ind_y]
+            # https://stackoverflow.com/questions/18666014/downsample-array-in-python
+            downsampled = skimage.measure.block_reduce(values, (resolution, resolution))
 
             if np.any(values):
-                figure.add_trace(
+                figure["data"][0]["x"] = x[0]
+                figure["data"][0]["y"] = y[1]
+                figure["data"][0]["z"] = np.flip(downsampled.T, axis=1)
+
+                """figure.add_trace(
                     go.Heatmap(
-                        x=x[ind_x, :][0],
-                        y=y[:, ind_y][1],
-                        z=values.T,
+                        x=x[0],
+                        y=y[1],
+                        z=np.flip(downsampled.T, axis=1),
                     )
-                )
+                )"""
 
         else:
             x, y = entity.vertices[:, 0], entity.vertices[:, 1]
@@ -467,8 +465,14 @@ class InversionApp(BaseDashApplication):
         if np.any(x) and np.any(y):
             figure.update_layout(plot_bgcolor="rgba(0,0,0,0)")
             figure.update_layout(xaxis_title="Easting (m)", yaxis_title="Northing (m)")
+            # figure.update_layout(
+            #    xaxis_range=[window["center"][0] - (window["size"][0]/2), window["center"][0] + (window["size"][0]/2)],
+            #    yaxis_range=[window["center"][1] - (window["size"][1]/2), window["center"][1] + (window["size"][1]/2)]
+            # )
 
         if "fix_aspect_ratio" in kwargs.keys():
+            print("fix aspe")
+            print(figure["layout"]["yaxis"]["scaleanchor"])
             if kwargs["fix_aspect_ratio"]:
                 # figure.update_layout(scene=dict(aspectmode="data"))
                 figure.update_layout(yaxis=dict(scaleanchor="x"))
@@ -484,57 +488,31 @@ class InversionApp(BaseDashApplication):
 
         return figure, out, indices, line_selection, contour_set
 
-    def update_window_params(self, ui_json, figure, channel):
-        print("test")
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        print(trigger)
-
-        if trigger == "plot":
-            if channel is None:
-                return (
-                    no_update,
-                    no_update,
-                    no_update,
-                    no_update,
-                )
-            else:
-                x_min = figure["layout"]["xaxis"]["range"][0]
-                x_max = figure["layout"]["xaxis"]["range"][1]
-                y_min = figure["layout"]["yaxis"]["range"][0]
-                y_max = figure["layout"]["yaxis"]["range"][1]
-
-                width = x_max - x_min
-                height = y_max - y_min
-                center_x = x_min + (width / 2)
-                center_y = y_min + (height / 2)
-        else:
-            center_x = ui_json["window_center_x"]["value"]
-            center_y = ui_json["window_center_y"]["value"]
-            width = ui_json["window_width"]["value"]
-            height = ui_json["window_height"]["value"]
-            print(center_x)
-
-        return (
-            center_x,
-            center_y,
-            width,
-            height,
-        )
-
     def plot_selection(
         self,
+        ui_json_data,
+        figure,
         object,
         data,
-        center_x,
-        center_y,
-        width,
-        height,
         resolution,
         colorbar,
         fix_aspect_ratio,
     ):
-        figure = go.Figure()
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        figure = go.Figure(figure)
         data_count = "Data Count: "
+
+        # Update bounds from ui_json
+        if "ui_json_data" in triggers:
+            center_x = ui_json_data["window_center_x"]
+            center_y = ui_json_data["window_center_y"]
+            width = ui_json_data["window_width"]
+            height = ui_json_data["window_height"]
+            figure.update_layout(
+                xaxis_range=[center_x - (width / 2), center_x + (width / 2)],
+                yaxis_range=[center_y - (height / 2), center_y + (height / 2)],
+            )
 
         if object is not None and data is not None:
             obj = self.workspace.get_entity(uuid.UUID(object))[0]
@@ -547,18 +525,20 @@ class InversionApp(BaseDashApplication):
                     data_obj,
                     **{
                         "figure": figure,
-                        "window": {
-                            "center": [center_x, center_y],
-                            "size": [width, height],
-                            # "azimuth": azimuth,
-                        },
                         "resolution": resolution,
-                        "resize": True,
+                        # "resize": True,
                         "colorbar": colorbar,
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
-                data_count += f"{ind_filter.sum()}"
+                x = np.array(figure["data"][0]["x"])
+                x_range = figure["layout"]["xaxis"]["range"]
+                x_points = np.sum((x_range[0] <= x) & (x <= x_range[1]))
+                y = np.array(figure["data"][0]["y"])
+                y_range = figure["layout"]["yaxis"]["range"]
+                y_points = np.sum((y_range[0] <= y) & (y <= y_range[1]))
+
+                data_count += f"{x_points*y_points}"
 
         return (
             figure,

@@ -38,7 +38,8 @@ class BaseDashApplication:
 
     def __init__(self):
         self.workspace = self.params.geoh5
-        self.driver = self._driver_class(self.params)  # pylint: disable=E1102
+        if self._driver_class is not None:
+            self.driver = self._driver_class(self.params)
         self.app = None
 
     def update_object_options(
@@ -78,7 +79,7 @@ class BaseDashApplication:
                 # Demote ifile data so it can be stored as a string
                 ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
                 # Get new object value for dropdown from ui.json
-                object_value = ui_json_data["objects"]
+                object_value = ui_json_data[param_name]
             elif filename is not None and filename.endswith(".geoh5"):
                 # Uploaded workspace
                 _, content_string = contents.split(",")
@@ -101,7 +102,7 @@ class BaseDashApplication:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
-                object_value = ui_json_data["objects"]
+                object_value = ui_json_data[param_name]
 
             # Get new options for object dropdown
             object_options = [

@@ -125,7 +125,7 @@ class GravityApp(InversionApp):
         self.app.callback(
             Output(component_id="data_object", component_property="options"),
             Output(component_id="data_object", component_property="value"),
-            Output(component_id="ui_json", component_property="data"),
+            Output(component_id="ui_json_data", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
             Input(component_id="upload", component_property="filename"),
@@ -143,7 +143,7 @@ class GravityApp(InversionApp):
         self.app.callback(
             Output(component_id="topography_data", component_property="options"),
             # Output(component_id=param+"_data", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="topography_object", component_property="value"),
         )(self.update_channel_options)
 
@@ -162,7 +162,7 @@ class GravityApp(InversionApp):
                         component_property="options",
                     ),
                     # Output(component_id=param+"_data", component_property="value"),
-                    Input(component_id="ui_json", component_property="data"),
+                    Input(component_id="ui_json_data", component_property="data"),
                     Input(
                         component_id=model_type + "_" + param + "_object",
                         component_property="value",
@@ -172,26 +172,26 @@ class GravityApp(InversionApp):
         self.app.callback(
             Output(component_id="channel", component_property="options"),
             # Output(component_id="channel", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_object", component_property="value"),
         )(self.update_channel_options)
         self.app.callback(
             Output(component_id="uncertainty_channel", component_property="options"),
             # Output(component_id="uncertainty_channel", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_object", component_property="value"),
         )(self.update_channel_options)
         self.app.callback(
             Output(component_id="receivers_radar_drape", component_property="options"),
             Output(component_id="receivers_radar_drape", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_object", component_property="value"),
         )(self.update_data_options)
 
         # Update input data channel and uncertainties from component
         self.app.callback(
             Output(component_id="full_components", component_property="data"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="full_components", component_property="data"),
             Input(component_id="channel_bool", component_property="value"),
             Input(component_id="channel", component_property="value"),
@@ -230,7 +230,7 @@ class GravityApp(InversionApp):
                         component_id=model_type + "_" + param + "_data",
                         component_property="value",
                     ),
-                    Input(component_id="ui_json", component_property="data"),
+                    Input(component_id="ui_json_data", component_property="data"),
                 )(self.update_inversion_params_from_ui_json)
         for param in ["topography", "lower_bound", "upper_bound"]:
             self.app.callback(
@@ -238,7 +238,7 @@ class GravityApp(InversionApp):
                 Output(component_id=param + "_const", component_property="value"),
                 Output(component_id=param + "_object", component_property="value"),
                 Output(component_id=param + "_data", component_property="value"),
-                Input(component_id="ui_json", component_property="data"),
+                Input(component_id="ui_json_data", component_property="data"),
             )(InversionApp.update_general_param_from_ui_json)
 
         # Update from ui.json
@@ -274,30 +274,18 @@ class GravityApp(InversionApp):
             Output(component_id="tile_spatial", component_property="value"),
             # Output
             Output(component_id="out_group", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
-
-        self.app.callback(
-            Output(component_id="center_x", component_property="value"),
-            Output(component_id="center_y", component_property="value"),
-            Output(component_id="width", component_property="value"),
-            Output(component_id="height", component_property="value"),
-            Input(component_id="ui_json", component_property="data"),
-            Input(component_id="plot", component_property="figure"),
-            State(component_id="channel", component_property="value"),
-        )(self.update_window_params)
 
         # Plot callbacks
         # Update plot
         self.app.callback(
             Output(component_id="plot", component_property="figure"),
             Output(component_id="data_count", component_property="children"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="plot", component_property="figure"),
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
-            Input(component_id="center_x", component_property="value"),
-            Input(component_id="center_y", component_property="value"),
-            Input(component_id="width", component_property="value"),
-            Input(component_id="height", component_property="value"),
             Input(component_id="resolution", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
             Input(component_id="fix_aspect_ratio", component_property="value"),
