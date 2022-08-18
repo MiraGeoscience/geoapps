@@ -400,7 +400,7 @@ class InversionApp(BaseDashApplication):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
 
-            rot = entity.rotation[0]
+            rot = entity.rotation[0] + window["azimuth"]
 
             indices = filter_xy(x, y, resolution, window=window)
 
@@ -530,6 +530,7 @@ class InversionApp(BaseDashApplication):
         object,
         data,
         resolution,
+        azimuth,
         colorbar,
         fix_aspect_ratio,
     ):
@@ -571,7 +572,7 @@ class InversionApp(BaseDashApplication):
                         "window": {
                             "center": [center_x, center_y],
                             "size": [width, height],
-                            # "azimuth": azimuth,
+                            "azimuth": azimuth,
                         },
                         # "resize": True,
                         "colorbar": colorbar,
