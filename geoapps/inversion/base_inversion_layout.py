@@ -7,6 +7,7 @@
 import os.path
 
 from dash import dcc, html
+from plotly import graph_objects as go
 
 
 def get_object_selection_layout(inversion_type):
@@ -16,7 +17,7 @@ def get_object_selection_layout(inversion_type):
                 id="upload",
                 children=html.Button("Upload Workspace/ui.json"),
             ),
-            dcc.Store(id="ui_json"),
+            dcc.Store(id="ui_json_data"),
             html.Div(
                 [
                     dcc.Markdown(
@@ -270,65 +271,13 @@ plot_layout = html.Div(
                 html.Div(
                     [
                         dcc.Markdown(
-                            "Center x",
-                            style={"display": "inline-block", "width": "12%"},
-                        ),
-                        dcc.Input(
-                            id="center_x",
-                            style={
-                                "display": "inline-block",
-                                "width": "35%",
-                                "margin-right": "3%",
-                            },
-                        ),
-                        dcc.Markdown(
-                            "Center y",
-                            style={"display": "inline-block", "width": "12%"},
-                        ),
-                        dcc.Input(
-                            id="center_y",
-                            style={
-                                "display": "inline-block",
-                                "width": "35%",
-                                "margin-right": "3%",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            "Width", style={"display": "inline-block", "width": "12%"}
-                        ),
-                        dcc.Input(
-                            id="width",
-                            style={
-                                "display": "inline-block",
-                                "width": "35%",
-                                "margin-right": "3%",
-                            },
-                        ),
-                        dcc.Markdown(
-                            "Height", style={"display": "inline-block", "width": "12%"}
-                        ),
-                        dcc.Input(
-                            id="height",
-                            style={
-                                "display": "inline-block",
-                                "width": "35%",
-                                "margin-right": "3%",
-                            },
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
                             "Resolution",
                             style={"display": "inline-block", "width": "12%"},
                         ),
                         dcc.Input(
                             id="resolution",
+                            type="number",
+                            min=1,
                             style={
                                 "display": "inline-block",
                                 "width": "35%",
@@ -361,6 +310,7 @@ plot_layout = html.Div(
         ),
         dcc.Graph(
             id="plot",
+            figure=go.Figure(go.Heatmap()),
             style={
                 "width": "600px",
                 "height": "600px",
