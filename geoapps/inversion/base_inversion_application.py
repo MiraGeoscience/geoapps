@@ -20,12 +20,14 @@ import webbrowser
 
 import matplotlib
 import numpy as np
+import scipy
 import skimage
 from dash import callback_context, no_update
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from matplotlib import colors
+from matplotlib import pyplot as plt
 from notebook import notebookapp
 from plotly import graph_objects as go
 
@@ -80,8 +82,6 @@ class InversionApp(BaseDashApplication):
 
     @staticmethod
     def update_topography_visibility(selection):
-        print("selecciont")
-        print(selection)
         if selection == "None":
             return (
                 {"display": "block"},
@@ -374,10 +374,6 @@ class InversionApp(BaseDashApplication):
         if values is not None and (values.shape[0] != locations.shape[0]):
             values = None
 
-        color_norm = None
-        if "color_norm" in kwargs.keys():
-            color_norm = kwargs["color_norm"]
-
         window = None
         if "window" in kwargs.keys():
             window = kwargs["window"]
@@ -404,20 +400,61 @@ class InversionApp(BaseDashApplication):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
 
+            rot = entity.rotation[0]
+
+            indices = filter_xy(x, y, resolution, window=window)
+
+            ind_x, ind_y = (
+                np.any(indices, axis=1),
+                np.any(indices, axis=0),
+            )
+
+            X = x[ind_x, :][:, ind_y]
+            Y = y[ind_x, :][:, ind_y]
+
             if values is not None:
+                # values[np.isnan(values)] = None
                 values = np.asarray(
                     values.reshape(entity.shape, order="F"), dtype=float
                 )
-                values[indices == False] = np.nan
+                # values[indices == False] = np.nan
+
+                # new_x = scipy.ndimage.rotate(x, rot)
+                # new_y = scipy.ndimage.rotate(y, rot)
+                new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
+
+                downsampled = skimage.measure.block_reduce(
+                    new_values, (resolution, resolution)
+                )
+
                 # values = values[ind_x, :][:, ind_y]
-            # https://stackoverflow.com/questions/18666014/downsample-array-in-python
-            downsampled = skimage.measure.block_reduce(values, (resolution, resolution))
-
             if np.any(values):
-                figure["data"][0]["x"] = x[0]
-                figure["data"][0]["y"] = y[1]
-                figure["data"][0]["z"] = np.flip(downsampled.T, axis=1)
+                # figure["data"][0]["x"] = new_x[0] #x[ind_x, :][0]
+                # figure["data"][0]["y"] = new_y[1] #y[ind_x, :][1]
+                figure["data"][0]["x"] = np.linspace(
+                    x.min(), x.max(), downsampled.shape[0]
+                )
+                figure["data"][0]["y"] = np.linspace(
+                    y.min(), y.max(), downsampled.shape[1]
+                )
+                figure["data"][0]["z"] = downsampled.T  # new_values
 
+                """
+                if values is not None:
+                    values = np.asarray(
+                        values.reshape(entity.shape, order="F"), dtype=float
+                    )
+                    values[indices == False] = np.nan
+                    # values = values[ind_x, :][:, ind_y]
+                # https://stackoverflow.com/questions/18666014/downsample-array-in-python
+                downsampled = skimage.measure.block_reduce(values, (resolution, resolution))
+
+                if np.any(values):
+
+                    figure["data"][0]["x"] = np.arange(0, len(x[0])+1), #x[0]
+                    figure["data"][0]["y"] = np.arange(0, len(y[1])+1), #y[1]
+                    figure["data"][0]["z"] = np.flip(downsampled.T, axis=1)
+                """
                 """figure.add_trace(
                     go.Heatmap(
                         x=x[0],
@@ -470,15 +507,13 @@ class InversionApp(BaseDashApplication):
             #    yaxis_range=[window["center"][1] - (window["size"][1]/2), window["center"][1] + (window["size"][1]/2)]
             # )
 
+        # """
         if "fix_aspect_ratio" in kwargs.keys():
-            print("fix aspe")
-            print(figure["layout"]["yaxis"]["scaleanchor"])
             if kwargs["fix_aspect_ratio"]:
-                # figure.update_layout(scene=dict(aspectmode="data"))
                 figure.update_layout(yaxis=dict(scaleanchor="x"))
             else:
-                # figure.update_layout(scene=dict(aspectmode=None))
                 figure.update_layout(yaxis=dict(scaleanchor=None))
+        # """
 
         if "colorbar" in kwargs.keys():
             if kwargs["colorbar"]:
@@ -503,7 +538,6 @@ class InversionApp(BaseDashApplication):
         figure = go.Figure(figure)
         data_count = "Data Count: "
 
-        # Update bounds from ui_json
         if "ui_json_data" in triggers:
             center_x = ui_json_data["window_center_x"]
             center_y = ui_json_data["window_center_y"]
@@ -513,6 +547,13 @@ class InversionApp(BaseDashApplication):
                 xaxis_range=[center_x - (width / 2), center_x + (width / 2)],
                 yaxis_range=[center_y - (height / 2), center_y + (height / 2)],
             )
+        else:
+            x_range = figure["layout"]["xaxis"]["range"]
+            width = x_range[1] - x_range[0]
+            center_x = x_range[0] + (width / 2)
+            y_range = figure["layout"]["yaxis"]["range"]
+            height = y_range[1] - y_range[0]
+            center_y = y_range[0] + (height / 2)
 
         if object is not None and data is not None:
             obj = self.workspace.get_entity(uuid.UUID(object))[0]
@@ -520,25 +561,34 @@ class InversionApp(BaseDashApplication):
             data_obj = self.workspace.get_entity(uuid.UUID(data))[0]
 
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
+
                 figure, _, ind_filter, _, _ = InversionApp.plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
                         "figure": figure,
                         "resolution": resolution,
+                        "window": {
+                            "center": [center_x, center_y],
+                            "size": [width, height],
+                            # "azimuth": azimuth,
+                        },
                         # "resize": True,
                         "colorbar": colorbar,
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
+
+                """
                 x = np.array(figure["data"][0]["x"])
                 x_range = figure["layout"]["xaxis"]["range"]
-                x_points = np.sum((x_range[0] <= x) & (x <= x_range[1]))
+                x_points = np.sum((x_range[0] < x) & (x < x_range[1]))
                 y = np.array(figure["data"][0]["y"])
                 y_range = figure["layout"]["yaxis"]["range"]
-                y_points = np.sum((y_range[0] <= y) & (y <= y_range[1]))
+                y_points = np.sum((y_range[0] < y) & (y < y_range[1]))
+                """
 
-                data_count += f"{x_points*y_points}"
+                data_count += f"{np.sum(ind_filter)}"
 
         return (
             figure,
