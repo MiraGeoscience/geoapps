@@ -287,6 +287,7 @@ class GravityApp(InversionApp):
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="resolution", component_property="value"),
+            Input(component_id="azimuth", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
             Input(component_id="fix_aspect_ratio", component_property="value"),
         )(self.plot_selection)

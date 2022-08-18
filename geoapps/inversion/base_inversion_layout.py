@@ -314,9 +314,36 @@ plot_layout = html.Div(
             style={
                 "width": "600px",
                 "height": "600px",
-                "display": "inline-block",
                 "vertical-align": "middle",
             },
+        ),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Azimuth",
+                    style={
+                        "display": "inline-block",
+                        "vertical-align": "middle",
+                        "width": "10%",
+                    },
+                ),
+                html.Div(
+                    [
+                        dcc.Slider(
+                            id="azimuth",
+                            min=-90,
+                            max=90,
+                            value=0,
+                            tooltip={"placement": "top", "always_visible": True},
+                        ),
+                    ],
+                    style={
+                        "display": "inline-block",
+                        "vertical-align": "middle",
+                        "width": "40%",
+                    },
+                ),
+            ]
         ),
     ],
     style={"display": "inline-block", "width": "60%"},
