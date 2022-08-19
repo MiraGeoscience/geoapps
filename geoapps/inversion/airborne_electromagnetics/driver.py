@@ -180,6 +180,7 @@ def inversion(input_file):
 
         em_specs["channels"] = np.r_[entity.channels] * conversion[entity.unit]
         waveform = entity.waveform
+        waveform[0, 1] = 1e-8
         waveform[:, 0] -= entity.timing_mark
         waveform[:, 0] *= conversion[entity.unit]
         em_specs["waveform"] = waveform
