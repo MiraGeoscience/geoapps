@@ -795,6 +795,7 @@ def inversion(input_file):
         )
         print(f"Input chi factor: {input_param['chi_factor']} -> target: {chi_target}")
 
+    workspace.close()
     if isinstance(reference, str):
         print("**** Best-fitting halfspace inversion ****")
         hz_BFHS = np.r_[1.0]
@@ -920,6 +921,7 @@ def inversion(input_file):
         opt.remember("xc")
         mopt = inv.run(m0)
 
+    workspace.open()
     if isinstance(reference, str):
         m0 = mkvc(np.kron(mopt, np.ones_like(hz)))
         mref = mkvc(np.kron(mopt, np.ones_like(hz)))
