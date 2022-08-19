@@ -885,7 +885,7 @@ class PeakFinder(ObjectDataSelection):
             child.children[0].options = self.data.options
 
         for aem_system, specs in self.em_system_specs.items():
-            if any(
+            if specs["flag"] is not None and any(
                 [specs["flag"] in channel for channel in self._survey.get_data_list()]
             ):
                 if aem_system in self.system.options:
