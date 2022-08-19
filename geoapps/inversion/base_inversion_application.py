@@ -82,6 +82,7 @@ class InversionApp(BaseDashApplication):
 
     @staticmethod
     def update_topography_visibility(selection):
+
         if selection == "None":
             return (
                 {"display": "block"},
@@ -101,11 +102,7 @@ class InversionApp(BaseDashApplication):
                 {"display": "block"},
             )
         else:
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
+            return (no_update, no_update, no_update)
 
     def open_mesh_app(self, _):
         nb_port = None
@@ -398,8 +395,7 @@ class InversionApp(BaseDashApplication):
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
 
             rot = entity.rotation[0] + window["azimuth"]
-            # print("win")
-            # print(window)
+
             x_min = x.min()
             x_max = x.max()
             y_min = y.min()
