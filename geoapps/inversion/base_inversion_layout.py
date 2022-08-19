@@ -310,7 +310,7 @@ plot_layout = html.Div(
         ),
         dcc.Graph(
             id="plot",
-            figure=go.Figure(go.Heatmap()),
+            figure=go.Figure(go.Heatmap(colorscale="rainbow")),
             style={
                 "width": "600px",
                 "height": "600px",
