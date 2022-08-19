@@ -319,7 +319,7 @@ class PlotSelection2D(ObjectDataSelection):
             corners[:, 1] *= height / 2
             corners = rotate_xyz(corners, [0, 0], -azimuth)
             self.axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
-            self.axis, _, ind_filter, _, contour_set = plot_plan_data_selection(
+            self.axis, _, ind_filter, _, _ = plot_plan_data_selection(
                 entity,
                 data_obj,
                 **{

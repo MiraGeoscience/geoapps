@@ -40,7 +40,7 @@ default_ui_json.update(
             "tooltip": "Warning: launches process to run python model on save",
             "main": True,
         },
-        "monitoring_directory": "./",
+        "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
         "objects": {
