@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import os
 from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
@@ -583,7 +584,7 @@ app_initializer = {
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "w_cell_size": 25.0,
-    "resolution": 50.0,
+    "resolution": 1.0,
     "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 1200.0,
@@ -600,8 +601,10 @@ app_initializer = {
     "z_norm": 2.0,
     "starting_model": 1e-4,
     "max_iterations": 25,
+    "n_cpu": 4,
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "out_group": "GravityInversion",
+    "export_directory": os.path.abspath("../../../../assets/Temp"),
 }

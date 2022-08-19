@@ -225,7 +225,7 @@ class BaseDashApplication:
                 or update_dict["monitoring_directory"] is None
             ):
                 if self.workspace is not None:
-                    update_dict["monitoring_directory_value"] = os.path.abspath(
+                    update_dict["monitoring_directory"] = os.path.abspath(
                         os.path.dirname(self.workspace.h5file)
                     )
 

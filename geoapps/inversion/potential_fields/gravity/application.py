@@ -17,7 +17,15 @@ import numpy as np
 from dash import Input, Output, State, callback_context, no_update
 from flask import Flask
 from geoh5py.data import ReferencedData
-from geoh5py.objects import BlockModel, Curve, Grid2D, Octree, Points, Surface
+from geoh5py.objects import (
+    BlockModel,
+    Curve,
+    Grid2D,
+    ObjectBase,
+    Octree,
+    Points,
+    Surface,
+)
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
@@ -306,6 +314,7 @@ class GravityApp(InversionApp):
             State(component_id="colorbar", component_property="value"),
             State(component_id="fix_aspect_ratio", component_property="value"),
             # Topography
+            State(component_id="topography_options", component_property="value"),
             State(component_id="topography_object", component_property="value"),
             State(component_id="topography_data", component_property="value"),
             State(component_id="topography_const", component_property="value"),
@@ -317,12 +326,14 @@ class GravityApp(InversionApp):
             # Inversion Parameters
             State(component_id="forward_only", component_property="value"),
             # Starting Model
+            State(component_id="starting_density_options", component_property="value"),
             State(component_id="starting_density_object", component_property="value"),
             State(component_id="starting_density_data", component_property="value"),
             State(component_id="starting_density_const", component_property="value"),
             # Mesh
-            # State(component_id="mesh_object", component_property="value"),
+            State(component_id="mesh_object", component_property="value"),
             # Reference Model
+            State(component_id="reference_density_options", component_property="value"),
             State(component_id="reference_density_object", component_property="value"),
             State(component_id="reference_density_data", component_property="value"),
             State(component_id="reference_density_const", component_property="value"),
@@ -336,9 +347,11 @@ class GravityApp(InversionApp):
             State(component_id="y_norm", component_property="value"),
             State(component_id="z_norm", component_property="value"),
             # Upper-Lower Bounds
+            State(component_id="lower_bound_options", component_property="value"),
             State(component_id="lower_bound_object", component_property="value"),
             State(component_id="lower_bound_data", component_property="value"),
             State(component_id="lower_bound_const", component_property="value"),
+            State(component_id="upper_bound_options", component_property="value"),
             State(component_id="upper_bound_object", component_property="value"),
             State(component_id="upper_bound_data", component_property="value"),
             State(component_id="upper_bound_const", component_property="value"),
@@ -381,6 +394,7 @@ class GravityApp(InversionApp):
         plot,
         colorbar,
         fix_aspect_ratio,
+        topography_options,
         topography_object,
         topography_data,
         topography_const,
@@ -390,10 +404,12 @@ class GravityApp(InversionApp):
         receivers_offset_z,
         receivers_radar_drape,
         forward_only,
+        starting_density_options,
         starting_density_object,
         starting_density_data,
         starting_density_const,
         mesh_object,
+        reference_density_options,
         reference_density_object,
         reference_density_data,
         reference_density_const,
@@ -405,9 +421,11 @@ class GravityApp(InversionApp):
         x_norm,
         y_norm,
         z_norm,
+        lower_bound_options,
         lower_bound_object,
         lower_bound_data,
         lower_bound_const,
+        upper_bound_options,
         upper_bound_object,
         upper_bound_data,
         upper_bound_const,
@@ -427,71 +445,75 @@ class GravityApp(InversionApp):
         # Widgets values populate params dictionary
         param_dict = self.get_params_dict(locals())
 
+        if not live_link:
+            live_link = False
+        else:
+            live_link = True
+
+        for elem in [
+            "topography",
+            "starting_density",
+            "reference_density",
+            "lower_bound",
+            "upper_bound",
+        ]:
+            param_dict[elem + "_object"] = None
+            param_dict[elem] = None
+            if locals()[elem + "_options"] == "Object":
+                param_dict[elem + "_object"] = locals()[elem + "_object"]
+                param_dict[elem + "_data"] = locals()[elem + "_data"]
+
+                """
+                obj_uid, data_uid = locals()[elem + "_object"], locals()[elem + "_data"]
+
+                param_dict[elem + "_object"] = self.workspace.get_entity(uuid.UUID(obj_uid))[0]
+                param_dict[elem] = self.workspace.get_entity(uuid.UUID(data_uid))[0]
+                """
+
+            elif locals()[elem + "_options"] == "Constant":
+                param_dict[elem] = locals()[elem + "_const"]
+
+        new_obj = self.workspace.get_entity(uuid.UUID(data_object))
+        if len(new_obj) == 0 or new_obj[0] is None:
+            print("An object with data must be selected to write the input file.")
+            return no_update
+
+        new_obj = new_obj[0]
+
+        for comp, value in full_components.items():
+            if value["channel_bool"]:
+                if not forward_only:
+                    param_dict[comp + "_channel"] = self.workspace.get_entity(
+                        value["channel"]
+                    )[0]
+
+            if value["uncertainty_type"] == "Floor":
+                param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
+            elif value["uncertainty_type"] == "Channel":
+                if self.workspace.get_entity(value["uncertainty_channel"])[0] is None:
+                    param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
+                        value["uncertainty_channel"]
+                    )[0]
+            else:
+                param_dict[comp + "_uncertainty"] = None
+
+        if receivers_radar_drape is not None:
+            param_dict["receivers_radar_drape"] = self.workspace.get_entity(
+                receivers_radar_drape
+            )[0]
+
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
         ws, live_link = BaseApplication.get_output_workspace(
             live_link, export_directory, temp_geoh5
         )
-        with ws as new_workspace:
-            param_dict["geoh5"] = new_workspace
 
-            for elem in [
-                "topography",
-                "starting_model",
-                "reference_model",
-                "lower_bound",
-                "upper_bound",
-            ]:
-                param_dict[elem + "_object"] = None
-                param_dict[elem] = None
-                if locals()[elem + "_options"] == "Object":
-                    obj, data = locals()[elem + "_object"], locals()[elem + "_data"]
-
-                    if obj is not None:
-                        new_obj = new_workspace.get_entity(obj.uid)[0]
-                        if new_obj is None:
-                            new_obj = obj.copy(
-                                parent=new_workspace, copy_children=False
-                            )
-                        for d in data:
-                            if new_workspace.get_entity(d.uid)[0] is None:
-                                d.copy(parent=new_obj)
-
-                    param_dict[elem + "_object"] = locals()[elem + "_object"]
-                    param_dict[elem] = locals()[elem + "_data"]
-
-                elif locals()[elem + "_options"] == "Constant":
-                    param_dict[elem] = locals()[elem + "_const"]
-
-            new_obj = new_workspace.get_entity(uuid.UUID(data_object))
-            if len(new_obj) == 0 or new_obj[0] is None:
-                print("An object with data must be selected to write the input file.")
-                return
-
-            new_obj = new_obj[0]
-
-            for comp, value in full_components.items():
-                if value["channel_bool"]:
-                    if not forward_only:
-                        self.workspace.get_entity(value["channel"])[0].copy(
-                            parent=new_obj
-                        )
-
-                if value["uncertainty_type"] == "Floor":
-                    param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
-                elif value["uncertainty_type"] == "Channel":
-                    if (
-                        new_workspace.get_entity(value["uncertainty_channel"])[0]
-                        is None
-                    ):
-                        self.workspace.get_entity(value["uncertainty_channel"])[0].copy(
-                            parent=new_obj, copy_children=False
-                        )
-                else:
-                    param_dict[comp + "_uncertainty"] = None
-
-            if receivers_radar_drape is not None:
-                self.workspace.get_entity(receivers_radar_drape)[0].copy(parent=new_obj)
+        with ws as workspace:
+            # Put entities in output workspace.
+            param_dict["geoh5"] = workspace
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
             # Create new params object and write
             ifile = InputFile(
@@ -505,3 +527,10 @@ class GravityApp(InversionApp):
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=export_directory,
             )
+
+        if live_link:
+            print("Live link active. Check your ANALYST session for new mesh.")
+            return [True]
+        else:
+            print("Saved to " + os.path.abspath(export_directory))
+            return []
