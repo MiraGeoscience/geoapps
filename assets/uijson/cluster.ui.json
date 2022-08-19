@@ -433,12 +433,30 @@
         "value": "",
         "group": "Python run preferences"
     },
-    "channels": "[]",
+    "channel": {
+        "association": [
+            "Vertex",
+            "Cell"
+        ],
+        "dataType": "Float",
+        "group": "x axis",
+        "label": "Data",
+        "optional": true,
+        "enabled": false,
+        "main": true,
+        "parent": "objects",
+        "value": "",
+        "visible": false
+    },
+    "data_subset": {
+        "label": "data subset",
+        "value": "[]",
+        "main": true,
+        "visible": false
+    },
     "full_scales": "[]",
     "full_lower_bounds": "[]",
     "full_upper_bounds": "[]",
     "color_pickers": "[]",
-    "plot_kmeans": "[]",
-    "live_link": false,
-    "output_path": "./"
+    "plot_kmeans": "[]"
 }
