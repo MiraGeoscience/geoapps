@@ -20,11 +20,9 @@ from geoh5py.ui_json.utils import monitored_directory_copy
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import warn_module_not_found
-from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
 from ..base.application import BaseApplication
-from .utils import geotiff_2_grid
 
 with warn_module_not_found():
     from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
@@ -34,6 +32,8 @@ with warn_module_not_found():
 
 with warn_module_not_found():
     from osgeo import gdal, osr
+
+    from geoapps.utils.io import export_grid_2_geotiff
 
     from .utils import geotiff_2_grid
 
