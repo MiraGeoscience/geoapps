@@ -426,7 +426,6 @@ class GravityApp(InversionApp):
     ):
         # Widgets values populate params dictionary
         param_dict = self.get_params_dict(locals())
-        # param_dict = {}
 
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
@@ -470,58 +469,36 @@ class GravityApp(InversionApp):
                 return
 
             new_obj = new_obj[0]
-            for key in self.data_channel_choices.options:
-                widget = getattr(self, f"{key}_uncertainty_channel")
-                if widget.value is not None:
-                    param_dict[f"{key}_uncertainty"] = str(widget.value)
-                    if new_workspace.get_entity(widget.value)[0] is None:
-                        self.workspace.get_entity(widget.value)[0].copy(
+
+            for comp, value in full_components.items():
+                if value["channel_bool"]:
+                    if not forward_only:
+                        self.workspace.get_entity(value["channel"])[0].copy(
+                            parent=new_obj
+                        )
+
+                if value["uncertainty_type"] == "Floor":
+                    param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
+                elif value["uncertainty_type"] == "Channel":
+                    if (
+                        new_workspace.get_entity(value["uncertainty_channel"])[0]
+                        is None
+                    ):
+                        self.workspace.get_entity(value["uncertainty_channel"])[0].copy(
                             parent=new_obj, copy_children=False
                         )
                 else:
-                    widget = getattr(self, f"{key}_uncertainty_floor")
-                    param_dict[f"{key}_uncertainty"] = widget.value
-
-                if getattr(self, f"{key}_channel_bool").value:
-                    if not forward_only:
-                        self.workspace.get_entity(
-                            getattr(self, f"{key}_channel").value
-                        )[0].copy(parent=new_obj)
+                    param_dict[comp + "_uncertainty"] = None
 
             if receivers_radar_drape is not None:
                 self.workspace.get_entity(receivers_radar_drape)[0].copy(parent=new_obj)
-
-            for key in self.__dict__:
-                attr = getattr(self, key)
-                if isinstance(attr, Widget) and hasattr(attr, "value"):
-                    value = attr.value
-                    if isinstance(value, uuid.UUID):
-                        value = new_workspace.get_entity(value)[0]
-                    if hasattr(self.params, key):
-                        param_dict[key.lstrip("_")] = value
-                else:
-                    sub_keys = []
-                    if isinstance(attr, (ModelOptions, TopographyOptions)):
-                        sub_keys = [attr.identifier + "_object", attr.identifier]
-                        attr = self
-                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                        sub_keys = attr.params_keys
-                    for sub_key in sub_keys:
-                        value = getattr(attr, sub_key)
-                        if isinstance(value, Widget) and hasattr(value, "value"):
-                            value = value.value
-                        if isinstance(value, uuid.UUID):
-                            value = new_workspace.get_entity(value)[0]
-
-                        if hasattr(self.params, sub_key):
-                            param_dict[sub_key.lstrip("_")] = value
 
             # Create new params object and write
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
             )
-            param_dict["geoh5"] = new_workspace
+
             param_dict["resolution"] = None  # No downsampling for dcip
             self._run_params = self.params.__class__(input_file=ifile, **param_dict)
             self._run_params.write_input_file(

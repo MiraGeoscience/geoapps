@@ -44,7 +44,7 @@ from geoapps.inversion.potential_fields.magnetic_vector.constants import app_ini
 from geoapps.inversion.potential_fields.magnetic_vector.params import (
     MagneticVectorParams,
 )
-from geoapps.shared_utils.utils import filter_xy
+from geoapps.shared_utils.utils import downsample_grid, filter_xy
 
 
 class InversionApp(BaseDashApplication):
@@ -334,11 +334,8 @@ class InversionApp(BaseDashApplication):
         :return contour_set:
         """
         indices = None
-        line_selection = None
-        contour_set = None
         values = None
         figure = None
-        out = None
 
         if isinstance(entity, (Grid2D, Points, Curve, Surface)):
             if "figure" not in kwargs.keys():
@@ -346,7 +343,7 @@ class InversionApp(BaseDashApplication):
             else:
                 figure = kwargs["figure"]
         else:
-            return figure, out, indices, line_selection, contour_set
+            return figure, indices
 
         if getattr(entity, "vertices", None) is not None:
             locations = entity.vertices
@@ -401,16 +398,28 @@ class InversionApp(BaseDashApplication):
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
 
             rot = entity.rotation[0] + window["azimuth"]
-
+            # print("win")
+            # print(window)
+            x_min = x.min()
+            x_max = x.max()
+            y_min = y.min()
+            y_max = y.max()
+            width = x_max - x_min
+            height = y_max - y_min
             indices = filter_xy(x, y, resolution, window=window)
+
+            """
+            {
+                "center": [x_min + (width/2), y_min + (height/2)],
+                "size": [width, height],
+                "azimuth": window["azimuth"]
+            }
+            """
 
             ind_x, ind_y = (
                 np.any(indices, axis=1),
                 np.any(indices, axis=0),
             )
-
-            X = x[ind_x, :][:, ind_y]
-            Y = y[ind_x, :][:, ind_y]
 
             if values is not None:
                 # values[np.isnan(values)] = None
@@ -418,50 +427,34 @@ class InversionApp(BaseDashApplication):
                     values.reshape(entity.shape, order="F"), dtype=float
                 )
                 # values[indices == False] = np.nan
+                # values = values[ind_x, :][:, ind_y]
 
-                # new_x = scipy.ndimage.rotate(x, rot)
-                # new_y = scipy.ndimage.rotate(y, rot)
+                # """
                 new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
+                rot_x = np.linspace(x.min(), x.max(), new_values.shape[0])
+                rot_y = np.linspace(y.min(), y.max(), new_values.shape[1])
+
+                # downsampled_index, down_x, down_y = downsample_grid(rot_x, rot_y, resolution)"""
 
                 downsampled = skimage.measure.block_reduce(
                     new_values, (resolution, resolution)
                 )
 
-                # values = values[ind_x, :][:, ind_y]
             if np.any(values):
-                # figure["data"][0]["x"] = new_x[0] #x[ind_x, :][0]
-                # figure["data"][0]["y"] = new_y[1] #y[ind_x, :][1]
+                """
                 figure["data"][0]["x"] = np.linspace(
-                    x.min(), x.max(), downsampled.shape[0]
+                    x.min(), x.max(), values.shape[0]
                 )
                 figure["data"][0]["y"] = np.linspace(
-                    y.min(), y.max(), downsampled.shape[1]
-                )
-                figure["data"][0]["z"] = downsampled.T  # new_values
-
-                """
-                if values is not None:
-                    values = np.asarray(
-                        values.reshape(entity.shape, order="F"), dtype=float
-                    )
-                    values[indices == False] = np.nan
-                    # values = values[ind_x, :][:, ind_y]
-                # https://stackoverflow.com/questions/18666014/downsample-array-in-python
-                downsampled = skimage.measure.block_reduce(values, (resolution, resolution))
-
-                if np.any(values):
-
-                    figure["data"][0]["x"] = np.arange(0, len(x[0])+1), #x[0]
-                    figure["data"][0]["y"] = np.arange(0, len(y[1])+1), #y[1]
-                    figure["data"][0]["z"] = np.flip(downsampled.T, axis=1)
-                """
-                """figure.add_trace(
-                    go.Heatmap(
-                        x=x[0],
-                        y=y[1],
-                        z=np.flip(downsampled.T, axis=1),
-                    )
+                    y.min(), y.max(), values.shape[1]
                 )"""
+                figure["data"][0]["z"] = values.T
+                # figure["data"][0]["x"] = down_x
+                # figure["data"][0]["y"] = down_y
+                # figure["data"][0]["z"] = new_values.T[downsampled_index]  # new_values
+                figure["data"][0]["x"] = rot_x
+                figure["data"][0]["y"] = rot_y
+                figure["data"][0]["z"] = downsampled.T  # new_values
 
         else:
             x, y = entity.vertices[:, 0], entity.vertices[:, 1]
@@ -507,13 +500,11 @@ class InversionApp(BaseDashApplication):
             #    yaxis_range=[window["center"][1] - (window["size"][1]/2), window["center"][1] + (window["size"][1]/2)]
             # )
 
-        # """
         if "fix_aspect_ratio" in kwargs.keys():
             if kwargs["fix_aspect_ratio"]:
                 figure.update_layout(yaxis=dict(scaleanchor="x"))
             else:
                 figure.update_layout(yaxis=dict(scaleanchor=None))
-        # """
 
         if "colorbar" in kwargs.keys():
             if kwargs["colorbar"]:
@@ -521,7 +512,7 @@ class InversionApp(BaseDashApplication):
             else:
                 figure.update_traces(showscale=False)
 
-        return figure, out, indices, line_selection, contour_set
+        return figure, indices
 
     def plot_selection(
         self,
@@ -539,6 +530,7 @@ class InversionApp(BaseDashApplication):
         figure = go.Figure(figure)
         data_count = "Data Count: "
 
+        """
         if "ui_json_data" in triggers:
             center_x = ui_json_data["window_center_x"]
             center_y = ui_json_data["window_center_y"]
@@ -555,15 +547,39 @@ class InversionApp(BaseDashApplication):
             y_range = figure["layout"]["yaxis"]["range"]
             height = y_range[1] - y_range[0]
             center_y = y_range[0] + (height / 2)
+        """
 
         if object is not None and data is not None:
             obj = self.workspace.get_entity(uuid.UUID(object))[0]
 
             data_obj = self.workspace.get_entity(uuid.UUID(data))[0]
 
+            lim_x = [1e8, -1e8]
+            lim_y = [1e8, -1e8]
+
+            if isinstance(obj, Grid2D):
+                lim_x[0], lim_x[1] = (
+                    obj.centroids[:, 0].min(),
+                    obj.centroids[:, 0].max(),
+                )
+                lim_y[0], lim_y[1] = (
+                    obj.centroids[:, 1].min(),
+                    obj.centroids[:, 1].max(),
+                )
+            elif isinstance(obj, (Points, Curve, Surface)):
+                lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
+                lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
+            else:
+                return
+
+            width = lim_x[1] - lim_x[0]
+            height = lim_y[1] - lim_y[0]
+            center_x = np.mean(lim_x)
+            center_y = np.mean(lim_y)
+
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
 
-                figure, _, ind_filter, _, _ = InversionApp.plot_plan_data_selection(
+                figure, ind_filter = InversionApp.plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
@@ -580,16 +596,33 @@ class InversionApp(BaseDashApplication):
                     },
                 )
 
-                """
+                if "ui_json_data" in triggers:
+                    center_x = ui_json_data["window_center_x"]
+                    center_y = ui_json_data["window_center_y"]
+                    width = ui_json_data["window_width"]
+                    height = ui_json_data["window_height"]
+                    figure.update_layout(
+                        xaxis_range=[center_x - (width / 2), center_x + (width / 2)],
+                        yaxis_range=[center_y - (height / 2), center_y + (height / 2)],
+                    )
+
+                # axes range is wrong
                 x = np.array(figure["data"][0]["x"])
                 x_range = figure["layout"]["xaxis"]["range"]
-                x_points = np.sum((x_range[0] < x) & (x < x_range[1]))
+                x_indices = (x_range[0] < x) & (x < x_range[1])
+
                 y = np.array(figure["data"][0]["y"])
                 y_range = figure["layout"]["yaxis"]["range"]
-                y_points = np.sum((y_range[0] < y) & (y < y_range[1]))
-                """
+                y_indices = (y_range[0] < y) & (y < y_range[1])
 
-                data_count += f"{np.sum(ind_filter)}"
+                z = np.array(figure["data"][0]["z"])
+                # z = z[y_indices, x_indices]
+                # z_points = np.sum(~np.isnan(z))
+
+                # indices = filter_xy(x, y, resolution, window=window)
+
+                # data_count += f"{np.sum(ind_filter)}"
+                data_count += f"{0}"
 
         return (
             figure,
