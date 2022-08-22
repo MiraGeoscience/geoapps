@@ -38,11 +38,23 @@ from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.models import RectangularBlock
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
-from geoapps.utils.surveys import new_neighbors
+from geoapps.utils.surveys import (
+    find_endpoints,
+    new_neighbors,
+    split_dcip_survey,
+    survey_lines,
+)
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+
+
+def test_find_endpoints():
+    x = np.arange(11)
+    y = -x + 10
+    p = find_endpoints(np.c_[x, y])
+    assert np.allclose(p, [[10, 0], [0, 10]])
 
 
 def test_is_outlier():
@@ -62,6 +74,24 @@ def test_new_neighbors():
     neighbor_id = new_neighbors(dist, neighbors, nodes)
     assert len(neighbor_id) == 1
     assert neighbor_id[0] == 1
+
+
+def test_survey_lines(tmp_path):
+    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
+
+    old_survey = ws.get_entity("DC_Survey")[0]
+    new_survey = old_survey.copy(parent=test_workspace)
+
+    lines = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
+    assert np.all(
+        np.unique(test_workspace.get_entity("test_line_ids")[0].values)
+        == np.arange(1, 11)
+    )
+
+
+def test_extract_dcip_survey(tmp_path):
+    split_dcip_survey(survey, lines, "DC Survey Line")
 
 
 def test_rectangular_block():
