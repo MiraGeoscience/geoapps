@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
 
 from __future__ import annotations
 
@@ -12,32 +13,13 @@ import os
 import uuid
 from time import time
 
-import matplotlib
-import numpy as np
-from dash import Input, Output, State, callback_context, no_update
+from dash import Input, Output, State, no_update
 from flask import Flask
-from geoh5py.data import ReferencedData
-from geoh5py.objects import (
-    BlockModel,
-    Curve,
-    Grid2D,
-    ObjectBase,
-    Octree,
-    Points,
-    Surface,
-)
-from geoh5py.shared import Entity
-from geoh5py.shared.utils import is_uuid
+from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
-from matplotlib import colors
-from notebook import notebookapp
-from plotly import graph_objects as go
 
 from geoapps.base.application import BaseApplication
-from geoapps.base.dash_application import BaseDashApplication
-from geoapps.base.selection import TopographyOptions
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.gravity.constants import app_initializer
 from geoapps.inversion.potential_fields.gravity.layout import (
@@ -45,13 +27,6 @@ from geoapps.inversion.potential_fields.gravity.layout import (
     gravity_layout,
 )
 from geoapps.inversion.potential_fields.gravity.params import GravityParams
-from geoapps.inversion.potential_fields.magnetic_scalar.params import (
-    MagneticScalarParams,
-)
-from geoapps.inversion.potential_fields.magnetic_vector.params import (
-    MagneticVectorParams,
-)
-from geoapps.shared_utils.utils import filter_xy
 
 
 class GravityApp(InversionApp):
@@ -460,15 +435,12 @@ class GravityApp(InversionApp):
             param_dict[elem + "_object"] = None
             param_dict[elem] = None
             if locals()[elem + "_options"] == "Object":
-                param_dict[elem + "_object"] = locals()[elem + "_object"]
-                param_dict[elem + "_data"] = locals()[elem + "_data"]
-
-                """
-                obj_uid, data_uid = locals()[elem + "_object"], locals()[elem + "_data"]
-
-                param_dict[elem + "_object"] = self.workspace.get_entity(uuid.UUID(obj_uid))[0]
-                param_dict[elem] = self.workspace.get_entity(uuid.UUID(data_uid))[0]
-                """
+                param_dict[elem + "_object"] = self.workspace.get_entity(
+                    locals()[elem + "_object"]
+                )[0]
+                param_dict[elem + "_data"] = self.workspace.get_entity(
+                    locals()[elem + "_data"]
+                )[0]
 
             elif locals()[elem + "_options"] == "Constant":
                 param_dict[elem] = locals()[elem + "_const"]
@@ -478,29 +450,32 @@ class GravityApp(InversionApp):
             print("An object with data must be selected to write the input file.")
             return no_update
 
+        # param_dict["data_object"] = data_object
         new_obj = new_obj[0]
 
         for comp, value in full_components.items():
             if value["channel_bool"]:
                 if not forward_only:
                     param_dict[comp + "_channel"] = self.workspace.get_entity(
-                        value["channel"]
+                        uuid.UUID(value["channel"])
                     )[0]
 
             if value["uncertainty_type"] == "Floor":
                 param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
             elif value["uncertainty_type"] == "Channel":
+                # param_dict[comp + "_uncertainty"] = value["uncertainty_channel"]
                 if self.workspace.get_entity(value["uncertainty_channel"])[0] is None:
                     param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
-                        value["uncertainty_channel"]
+                        uuid.UUID(value["uncertainty_channel"])
                     )[0]
             else:
                 param_dict[comp + "_uncertainty"] = None
 
         if receivers_radar_drape is not None:
             param_dict["receivers_radar_drape"] = self.workspace.get_entity(
-                receivers_radar_drape
+                uuid.UUID(receivers_radar_drape)
             )[0]
+            # param_dict["receivers_radar_drape"] = receivers_radar_drape
 
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
@@ -516,13 +491,16 @@ class GravityApp(InversionApp):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
             # Create new params object and write
+            """
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
                 validation_options={"disabled": True},
             )
+            """
 
-            param_dict["resolution"] = None  # No downsampling for dcip
-            self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            # param_dict["resolution"] = None  # No downsampling for dcip
+            # self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=export_directory,
