@@ -27,13 +27,13 @@ def new_neighbors(distances, neighbors, nodes):
 
 def next_neighbor(tree, point, nodes, n=3):
     """Returns smallest distance neighbor that has not yet been traversed"""
-    d, id = tree.query(point, n)
-    new_id = new_neighbors(d, id, nodes)
-    if any(new_id):
-        d = d[new_id]
-        id = id[new_id]
-        next = np.argmin(d)
-        return d[next], id[next]
+    distances, neighbors = tree.query(point, n)
+    new_ids = new_neighbors(distances, neighbors, nodes)
+    if any(new_ids):
+        distances = distances[new_ids]
+        neighbors = neighbors[new_ids]
+        next_id = np.argmin(distances)
+        return distances[next_id], neighbors[next_id]
 
     else:
         return next_neighbor(tree, point, nodes, n + 3)
@@ -86,23 +86,23 @@ def survey_lines(survey, start_loc, save: str | None = None):
     while nodes:
 
         lines.append(line_id)
-        d, id = next_neighbor(tree, loc, nodes)
+        dist, next_id = next_neighbor(tree, loc, nodes)
 
         outlier = False
         if len(distances) > 1:
-            if all(d == distances):
+            if all(dist == distances):
                 outlier = False
             else:
-                outlier = is_outlier(distances, d)
+                outlier = is_outlier(distances, dist)
 
         if outlier:
             line_id += 1
             distances = []
         else:
-            distances.append(d)
+            distances.append(dist)
 
-        nodes.pop(nodes.index(id))
-        loc = locs[id]
+        nodes.pop(nodes.index(next_id))
+        loc = locs[next_id]
 
     lines += [line_id]  # nodes run out before last id assigned
 
@@ -123,7 +123,7 @@ def survey_lines(survey, start_loc, save: str | None = None):
     return np.array(lines)
 
 
-def slice_and_map(object: np.ndarray, slicer: np.ndarray | Callable):
+def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     """
     Slice an array and return both sliced array and global to local map.
     :param object: Array to be sliced.
@@ -136,17 +136,17 @@ def slice_and_map(object: np.ndarray, slicer: np.ndarray | Callable):
     if isinstance(slicer, np.ndarray):
 
         if slicer.dtype == bool:
-            sliced_object = object[slicer]
-            g2l = dict(zip(np.where(slicer)[0], np.arange(len(object))))
+            sliced_object = obj[slicer]
+            g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj))))
         else:
-            sliced_object = object[slicer]
+            sliced_object = obj[slicer]
             g2l = dict(zip(slicer, np.arange(len(slicer))))
 
     elif callable(slicer):
 
-        slicer = np.array([slicer(k) for k in object])
-        sliced_object = object[slicer]
-        g2l = dict(zip(np.where(slicer)[0], np.arange(len(object))))
+        slicer = np.array([slicer(k) for k in obj])
+        sliced_object = obj[slicer]
+        g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj))))
 
     return sliced_object, g2l
 
@@ -198,7 +198,7 @@ def extract_dcip_survey(workspace, survey, lines, line_id, name="Line"):
     # Add ab_cell_id as referenced data object
     value_map = {k + 1: str(k + 1) for k in ab_cell_ids}
     value_map.update({0: "Unknown"})
-    ab_cell_id = potentials.add_data(
+    potentials.add_data(
         {
             "A-B Cell ID": {
                 "values": ab_cell_ids + 1,
@@ -228,9 +228,7 @@ def split_dcip_survey(survey, lines, name="Line", workspace=None):
     with ws.open(mode="r+") as ws:
         line_surveys = []
         for line_id in np.unique(lines):
-            line_survey = extract_dcip_survey(
-                survey.workspace, survey, lines, line_id, name
-            )
-            line_surveys.append(survey)
+            line_survey = extract_dcip_survey(ws, survey, lines, line_id, name)
+            line_surveys.append(line_survey)
 
     return line_surveys
