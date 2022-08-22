@@ -64,7 +64,6 @@ class GravityApp(InversionApp):
             Input(component_id="uncertainty_options", component_property="value"),
         )(InversionApp.update_uncertainty_visibility)
         self.app.callback(
-            Output(component_id="topography_none_div", component_property="style"),
             Output(component_id="topography_object_div", component_property="style"),
             Output(component_id="topography_constant_div", component_property="style"),
             Input(component_id="topography_options", component_property="value"),
@@ -174,6 +173,11 @@ class GravityApp(InversionApp):
         # Update input data channel and uncertainties from component
         self.app.callback(
             Output(component_id="full_components", component_property="data"),
+            Output(component_id="channel_bool", component_property="value"),
+            Output(component_id="channel", component_property="value"),
+            Output(component_id="uncertainty_options", component_property="value"),
+            Output(component_id="uncertainty_floor", component_property="value"),
+            Output(component_id="uncertainty_channel", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="full_components", component_property="data"),
             Input(component_id="channel_bool", component_property="value"),
@@ -181,18 +185,9 @@ class GravityApp(InversionApp):
             Input(component_id="uncertainty_options", component_property="value"),
             Input(component_id="uncertainty_floor", component_property="value"),
             Input(component_id="uncertainty_channel", component_property="value"),
-            State(component_id="component", component_property="value"),
+            Input(component_id="component", component_property="value"),
             State(component_id="component", component_property="options"),
         )(self.update_full_components)
-        self.app.callback(
-            Output(component_id="channel_bool", component_property="value"),
-            Output(component_id="channel", component_property="value"),
-            Output(component_id="uncertainty_options", component_property="value"),
-            Output(component_id="uncertainty_floor", component_property="value"),
-            Output(component_id="uncertainty_channel", component_property="value"),
-            Input(component_id="component", component_property="value"),
-            Input(component_id="full_components", component_property="data"),
-        )(self.update_input_channel)
 
         for model_type in ["starting", "reference"]:
             for param in gravity_inversion_params:
@@ -270,7 +265,7 @@ class GravityApp(InversionApp):
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="resolution", component_property="value"),
-            Input(component_id="azimuth", component_property="value"),
+            # Input(component_id="azimuth", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
             Input(component_id="fix_aspect_ratio", component_property="value"),
         )(self.plot_selection)
@@ -286,6 +281,7 @@ class GravityApp(InversionApp):
             State(component_id="full_components", component_property="data"),
             State(component_id="resolution", component_property="value"),
             State(component_id="plot", component_property="figure"),
+            # State(component_id="azimuth", component_property="value"),
             State(component_id="colorbar", component_property="value"),
             State(component_id="fix_aspect_ratio", component_property="value"),
             # Topography
@@ -367,6 +363,7 @@ class GravityApp(InversionApp):
         full_components,
         resolution,
         plot,
+        # azimuth,
         colorbar,
         fix_aspect_ratio,
         topography_options,
@@ -383,7 +380,7 @@ class GravityApp(InversionApp):
         starting_density_object,
         starting_density_data,
         starting_density_const,
-        mesh_object,
+        mesh,
         reference_density_options,
         reference_density_object,
         reference_density_data,
@@ -425,8 +422,29 @@ class GravityApp(InversionApp):
         else:
             live_link = True
 
+        # Window params
+        # param_dict["window_azimuth"] = float(azimuth)
+        x_range = plot["layout"]["xaxis"]["range"]
+        y_range = plot["layout"]["yaxis"]["range"]
+        param_dict["window_width"] = x_range[1] - x_range[0]
+        param_dict["window_height"] = y_range[1] - y_range[0]
+        param_dict["window_center_x"] = x_range[0] + (param_dict["window_width"] / 2)
+        param_dict["window_center_y"] = y_range[0] + (param_dict["window_height"] / 2)
+
+        # Topography
+        param_dict["topography_object"] = self.workspace.get_entity(
+            uuid.UUID(topography_object)
+        )[0]
+        if locals()["topography_options"] == "Object":
+            param_dict["topography"] = self.workspace.get_entity(
+                uuid.UUID(topography_data)
+            )[0]
+        elif locals()["topography_options"] == "Constant":
+            param_dict["topography"] = locals()["topography_const"]
+        else:
+            param_dict["topography"] = None
+
         for elem in [
-            "topography",
             "starting_density",
             "reference_density",
             "lower_bound",
@@ -454,11 +472,13 @@ class GravityApp(InversionApp):
         new_obj = new_obj[0]
 
         for comp, value in full_components.items():
-            if value["channel_bool"]:
-                if not forward_only:
-                    param_dict[comp + "_channel"] = self.workspace.get_entity(
-                        uuid.UUID(value["channel"])
-                    )[0]
+            if value["channel_bool"] and not forward_only:
+                param_dict[comp + "_channel_bool"] = True
+                param_dict[comp + "_channel"] = self.workspace.get_entity(
+                    uuid.UUID(value["channel"])
+                )[0]
+            else:
+                param_dict[comp + "_channel_bool"] = False
 
             if value["uncertainty_type"] == "Floor":
                 param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
@@ -470,12 +490,6 @@ class GravityApp(InversionApp):
                     )[0]
             else:
                 param_dict[comp + "_uncertainty"] = None
-
-        if receivers_radar_drape is not None:
-            param_dict["receivers_radar_drape"] = self.workspace.get_entity(
-                uuid.UUID(receivers_radar_drape)
-            )[0]
-            # param_dict["receivers_radar_drape"] = receivers_radar_drape
 
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"

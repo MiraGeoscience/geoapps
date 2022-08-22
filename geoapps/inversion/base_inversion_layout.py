@@ -277,6 +277,7 @@ plot_layout = html.Div(
                         dcc.Input(
                             id="resolution",
                             type="number",
+                            debounce=True,
                             min=1,
                             style={
                                 "display": "inline-block",
@@ -317,6 +318,7 @@ plot_layout = html.Div(
                 "vertical-align": "middle",
             },
         ),
+        """
         html.Div(
             [
                 dcc.Markdown(
@@ -345,6 +347,7 @@ plot_layout = html.Div(
                 ),
             ]
         ),
+        """,
     ],
     style={"display": "inline-block", "width": "60%"},
 )
@@ -428,23 +431,9 @@ def get_input_data_layout(component_list):
     return input_data_layout
 
 
-topography_none = html.Div(
-    id="topography_none_div", children=[dcc.Markdown("No topography")]
-)
 topography_object = html.Div(
     id="topography_object_div",
     children=[
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Object:", style={"display": "inline-block", "width": "25%"}
-                ),
-                dcc.Dropdown(
-                    id="topography_object",
-                    style={"display": "inline-block", "width": "75%"},
-                ),
-            ]
-        ),
         html.Div(
             [
                 dcc.Markdown(
@@ -487,28 +476,53 @@ topography_layout = html.Div(
                             style={
                                 "display": "inline-block",
                                 "vertical-align": "top",
-                                "width": "20%",
+                                "width": "50%",
                             },
                         ),
                         dcc.RadioItems(
                             id="topography_options",
                             options=[
                                 "None",
-                                "Object",
+                                "Data",
                                 "Constant",
                             ],
                             value="None",
                             style={
                                 "display": "inline-block",
                                 "vertical-align": "top",
-                                "width": "70%",
+                                "width": "50%",
                             },
                         ),
-                    ]
+                    ],
+                    style={
+                        "display": "inline-block",
+                        "width": "40%",
+                        "vertical-align": "top",
+                    },
                 ),
-                topography_none,
-                topography_object,
-                topography_constant,
+                html.Div(
+                    [
+                        html.Div(
+                            [
+                                dcc.Markdown(
+                                    "Object:",
+                                    style={"display": "inline-block", "width": "25%"},
+                                ),
+                                dcc.Dropdown(
+                                    id="topography_object",
+                                    style={"display": "inline-block", "width": "75%"},
+                                ),
+                            ]
+                        ),
+                        topography_object,
+                        topography_constant,
+                    ],
+                    style={
+                        "display": "inline-block",
+                        "width": "60%",
+                        "vertical-align": "top",
+                    },
+                ),
             ],
             style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
         ),
