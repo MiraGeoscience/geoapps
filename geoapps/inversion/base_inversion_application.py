@@ -73,24 +73,21 @@ class InversionApp(BaseDashApplication):
 
         if selection == "None":
             return (
-                {"display": "block"},
                 {"display": "none"},
                 {"display": "none"},
             )
-        elif selection == "Object":
+        elif selection == "Data":
             return (
-                {"display": "none"},
                 {"display": "block"},
                 {"display": "none"},
             )
         elif selection == "Constant":
             return (
                 {"display": "none"},
-                {"display": "none"},
                 {"display": "block"},
             )
         else:
-            return (no_update, no_update, no_update)
+            return no_update, no_update
 
     def open_mesh_app(self, _):
         nb_port = None
@@ -229,8 +226,8 @@ class InversionApp(BaseDashApplication):
 
         return options, value
 
-    @staticmethod
     def update_full_components(
+        self,
         ui_json_data,
         full_components,
         channel_bool,
@@ -242,6 +239,7 @@ class InversionApp(BaseDashApplication):
         component_options,
     ):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
         if trigger == "ui_json_data":
             full_components = {}
             for comp in component_options:
@@ -274,7 +272,29 @@ class InversionApp(BaseDashApplication):
                     "uncertainty_floor": uncertainty_floor,
                     "uncertainty_channel": uncertainty_channel,
                 }
+        elif trigger == "component":
+            if full_components and component is not None:
+                channel_bool = full_components[component]["channel_bool"]
+                channel = full_components[component]["channel"]
+                uncertainty_type = full_components[component]["uncertainty_type"]
+                uncertainty_floor = full_components[component]["uncertainty_floor"]
+                uncertainty_channel = full_components[component]["uncertainty_channel"]
         else:
+            if trigger == "channel":
+                if channel is None:
+                    channel_bool = []
+                    uncertainty_floor = 1.0
+                else:
+                    channel_bool = [True]
+                    values = self.workspace.get_entity(uuid.UUID(channel))[0].values
+                    if values is not None and values.dtype in [
+                        np.float32,
+                        np.float64,
+                        np.int32,
+                    ]:
+                        uncertainty_floor = np.round(
+                            np.percentile(np.abs(values[~np.isnan(values)]), 5), 5
+                        )
             full_components[component] = {
                 "channel_bool": channel_bool,
                 "channel": channel,
@@ -282,25 +302,14 @@ class InversionApp(BaseDashApplication):
                 "uncertainty_floor": uncertainty_floor,
                 "uncertainty_channel": uncertainty_channel,
             }
-        return full_components
-
-    @staticmethod
-    def update_input_channel(component, full_components):
-        if full_components and component is not None:
-            channel_bool = full_components[component]["channel_bool"]
-            channel = full_components[component]["channel"]
-            uncertainty_type = full_components[component]["uncertainty_type"]
-            uncertainty_floor = full_components[component]["uncertainty_floor"]
-            uncertainty_channel = full_components[component]["uncertainty_channel"]
-            return (
-                channel_bool,
-                channel,
-                uncertainty_type,
-                uncertainty_floor,
-                uncertainty_channel,
-            )
-        else:
-            return no_update, no_update, no_update, no_update, no_update
+        return (
+            full_components,
+            channel_bool,
+            channel,
+            uncertainty_type,
+            uncertainty_floor,
+            uncertainty_channel,
+        )
 
     @staticmethod
     def plot_plan_data_selection(entity, data, **kwargs):
@@ -382,7 +391,7 @@ class InversionApp(BaseDashApplication):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
 
-            rot = entity.rotation[0] + window["azimuth"]
+            rot = entity.rotation[0]  # + window["azimuth"]
 
             x_min = x.min()
             x_max = x.max()
@@ -513,7 +522,7 @@ class InversionApp(BaseDashApplication):
         object,
         data,
         resolution,
-        azimuth,
+        # azimuth,
         colorbar,
         fix_aspect_ratio,
     ):
@@ -586,7 +595,7 @@ class InversionApp(BaseDashApplication):
                         "window": {
                             "center": [center_x, center_y],
                             "size": [width, height],
-                            "azimuth": azimuth,
+                            # "azimuth": azimuth,
                         },
                         # "resize": True,
                         "colorbar": colorbar,
