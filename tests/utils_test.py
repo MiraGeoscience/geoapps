@@ -18,6 +18,7 @@ import geoh5py.objects
 import numpy as np
 import pytest
 from discretize import TreeMesh
+from discretize.utils import mesh_utils
 from geoh5py.data import ReferencedData
 from geoh5py.objects import Grid2D
 from geoh5py.workspace import Workspace
@@ -37,9 +38,11 @@ from geoapps.shared_utils.utils import (
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
-from geoapps.utils.models import RectangularBlock
+from geoapps.utils.models import RectangularBlock, get_drape_model
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
+    compute_alongline_distance,
+    find_endpoints,
     is_outlier,
     new_neighbors,
     split_dcip_survey,
@@ -52,7 +55,59 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 # geoh5_dcip = Workspace("./FlinFlon_dcip.geoh5")
 
 
-def test_survey_lines():
+def test_test(tmp_path):
+    xy_loc = np.random.randn(8, 2)
+    mesh = mesh_utils.mesh_builder_xyz(
+        xy_loc,
+        [0.1, 0.1],
+        depth_core=0.5,
+        padding_distance=[[1, 2], [1, 0]],
+        mesh_type="tensor",
+    )
+    assert True
+
+
+def test_get_drape_model(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    x = np.arange(11)
+    y = -x + 10
+    locs = np.c_[x, y, np.zeros_like(x)]
+    h = [0.5, 0.5]
+    depth_core = 5.0
+    pads = [5, 5, 3, 1]
+    expansion_factor = 0.1
+    model, mesh = get_drape_model(
+        ws,
+        "drape_test",
+        locs,
+        h,
+        depth_core,
+        pads,
+        expansion_factor,
+        return_colocated_mesh=True,
+    )
+    ws.close()
+    assert True
+
+
+def test_find_endpoints():
+    x = np.arange(11)
+    y = -x + 10
+    p = find_endpoints(np.c_[x, y])
+    assert np.allclose(p, [[10, 0], [0, 10]])
+
+
+def test_compute_alongline_distance():
+    x = np.arange(11)
+    y = -x + 10
+    locs = np.c_[x, y]
+    p = find_endpoints(locs)
+    d = compute_alongline_distance(locs)
+    assert np.max(d) == np.sqrt(2) * 10
+
+
+def test_survey_lines(tmp_path):
+    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
 
     nodes = [2, 3, 4, 5, 6]
     d = np.array([25, 50, 0])
@@ -63,12 +118,13 @@ def test_survey_lines():
     next = 50.05
     is_outlier(population, next, 3)
 
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5", mode="r+")
+    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
     survey = ws.get_entity("DC_Survey")[0]
+
     lines = survey_lines(survey, [314529, 6071402])
+    split_dcip_survey(survey, lines, "DC Survey Line")
 
-    split_dcip_survey(survey, lines)
-
+    survey.workspace.open(mode="r+")
     line_data = survey.add_data(
         {
             "line_ids": {
@@ -81,15 +137,9 @@ def test_survey_lines():
             }
         }
     )
+    survey.workspace.close()
 
-    ws.close()
     assert True
-
-
-# def test_is_outlier():
-#     population = [25.1, 25.3]
-#     next = 50.05
-#     is_outlier(population, next, 3)
 
 
 def test_rectangular_block():

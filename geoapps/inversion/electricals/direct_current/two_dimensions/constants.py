@@ -43,13 +43,10 @@ inversion_defaults = {
     "mesh": None,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
-    "w_cell_size": 25.0,
-    "octree_levels_topo": [0, 0, 4, 4],
-    "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
-    "max_distance": 5000.0,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
+    "expansion_factor": 1.1,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -127,13 +124,10 @@ forward_defaults = {
     "mesh": None,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
-    "w_cell_size": 25.0,
-    "octree_levels_topo": [0, 0, 4, 4],
-    "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,
-    "max_distance": 5000.0,
     "horizontal_padding": 1000.0,
     "vertical_padding": 1000.0,
+    "expansion_factor": 1.1,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -206,12 +200,18 @@ default_ui_json = {
         "property": None,
         "value": 1.0,
     },
-    "line": {
+    "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
-        "main": True,
         "group": "Data",
+        "main": True,
         "label": "Line field",
+        "parent": "data_object",
+        "value": None,
+    },
+    "line_id": {
+        "main": True,
+        "label": "Line number",
         "value": None,
     },
     "starting_model_object": {
@@ -262,6 +262,7 @@ default_ui_json = {
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
+# default_ui_json = {k: v for k, v in default_ui_json.items() if k in inversion_defaults}
 
 
 ################ Validations #################
