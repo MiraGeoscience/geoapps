@@ -740,6 +740,8 @@ optimization = html.Div(
                 ),
                 dcc.Input(
                     id="max_iterations",
+                    type="number",
+                    step=1,
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
@@ -751,6 +753,7 @@ optimization = html.Div(
                 ),
                 dcc.Input(
                     id="chi_factor",
+                    type="number",
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
@@ -763,6 +766,7 @@ optimization = html.Div(
                 ),
                 dcc.Input(
                     id="initial_beta_ratio",
+                    type="number",
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
@@ -775,6 +779,8 @@ optimization = html.Div(
                 ),
                 dcc.Input(
                     id="max_cg_iterations",
+                    type="number",
+                    step=1,
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
@@ -785,7 +791,9 @@ optimization = html.Div(
                     "CG Tolerance", style={"display": "inline-block", "width": "50%"}
                 ),
                 dcc.Input(
-                    id="tol_cg", style={"display": "inline-block", "width": "50%"}
+                    id="tol_cg",
+                    type="number",
+                    style={"display": "inline-block", "width": "50%"},
                 ),
             ]
         ),
@@ -795,7 +803,10 @@ optimization = html.Div(
                     "Max CPUs", style={"display": "inline-block", "width": "50%"}
                 ),
                 dcc.Input(
-                    id="n_cpu", style={"display": "inline-block", "width": "50%"}
+                    id="n_cpu",
+                    type="number",
+                    step=1,
+                    style={"display": "inline-block", "width": "50%"},
                 ),
             ]
         ),
@@ -805,7 +816,10 @@ optimization = html.Div(
                     "Number of tiles", style={"display": "inline-block", "width": "50%"}
                 ),
                 dcc.Input(
-                    id="tile_spatial", style={"display": "inline-block", "width": "50%"}
+                    id="tile_spatial",
+                    type="number",
+                    step=1,
+                    style={"display": "inline-block", "width": "50%"},
                 ),
             ]
         ),
@@ -838,6 +852,7 @@ detrend = html.Div(
                         ),
                         dcc.Input(
                             id="detrend_order",
+                            type="number",
                             style={"display": "inline-block", "width": "60%"},
                         ),
                     ]

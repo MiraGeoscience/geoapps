@@ -173,7 +173,9 @@ class BaseDashApplication:
                     else:
                         output_dict[key] = True
                 elif (
-                    float in validations[key]["types"] and type(update_dict[key]) == int
+                    float in validations[key]["types"]
+                    and int not in validations[key]["types"]
+                    and type(update_dict[key]) == int
                 ):
                     # Checking for values that Dash has given as int when they should be float.
                     output_dict[key] = float(update_dict[key])
