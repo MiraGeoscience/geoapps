@@ -18,33 +18,21 @@ import uuid
 import warnings
 import webbrowser
 
-import matplotlib
 import numpy as np
 import scipy
 import skimage
 from dash import callback_context, no_update
 from geoh5py.objects import Curve, Grid2D, Points, Surface
+from geoh5py.shared import entity
 from geoh5py.shared.utils import is_uuid
-from geoh5py.ui_json import InputFile
 from matplotlib import colors
-from matplotlib import pyplot as plt
 from notebook import notebookapp
 from plotly import graph_objects as go
 
-from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.base.selection import TopographyOptions
 from geoapps.inversion import InversionBaseParams
-from geoapps.inversion.driver import InversionDriver
-from geoapps.inversion.potential_fields.gravity.params import GravityParams
-from geoapps.inversion.potential_fields.magnetic_scalar.params import (
-    MagneticScalarParams,
-)
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
-from geoapps.inversion.potential_fields.magnetic_vector.params import (
-    MagneticVectorParams,
-)
-from geoapps.shared_utils.utils import downsample_grid, filter_xy
+from geoapps.shared_utils.utils import downsample_grid, downsample_xy, filter_xy
 
 
 class InversionApp(BaseDashApplication):
@@ -402,7 +390,7 @@ class InversionApp(BaseDashApplication):
             y_max = y.max()
             width = x_max - x_min
             height = y_max - y_min
-            indices = filter_xy(x, y, resolution, window=window)
+            # indices = filter_xy(x, y, resolution, window=window)
 
             """
             {
@@ -412,10 +400,10 @@ class InversionApp(BaseDashApplication):
             }
             """
 
-            ind_x, ind_y = (
-                np.any(indices, axis=1),
-                np.any(indices, axis=0),
-            )
+            # ind_x, ind_y = (
+            #    np.any(indices, axis=1),
+            #    np.any(indices, axis=0),
+            # )
 
             if values is not None:
                 # values[np.isnan(values)] = None
@@ -429,12 +417,16 @@ class InversionApp(BaseDashApplication):
                 new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
                 rot_x = np.linspace(x.min(), x.max(), new_values.shape[0])
                 rot_y = np.linspace(y.min(), y.max(), new_values.shape[1])
+                # """
 
-                # downsampled_index, down_x, down_y = downsample_grid(rot_x, rot_y, resolution)"""
+                X, Y = np.meshgrid(rot_x, rot_y)
 
-                downsampled = skimage.measure.block_reduce(
-                    new_values, (resolution, resolution)
-                )
+                downsampled_index, down_x, down_y = downsample_grid(X, Y, resolution)
+
+                # base * round(x/base)
+                # downsampled = skimage.measure.block_reduce(
+                #    new_values, (resolution, resolution)
+                # )
 
             if np.any(values):
                 """
@@ -444,16 +436,25 @@ class InversionApp(BaseDashApplication):
                 figure["data"][0]["y"] = np.linspace(
                     y.min(), y.max(), values.shape[1]
                 )"""
-                figure["data"][0]["z"] = values.T
-                # figure["data"][0]["x"] = down_x
-                # figure["data"][0]["y"] = down_y
-                # figure["data"][0]["z"] = new_values.T[downsampled_index]  # new_values
-                figure["data"][0]["x"] = rot_x
-                figure["data"][0]["y"] = rot_y
-                figure["data"][0]["z"] = downsampled.T  # new_values
+                # figure["data"][0]["z"] = values.T
+
+                figure["data"][0]["x"] = down_x
+                figure["data"][0]["y"] = down_y
+                figure["data"][0]["z"] = new_values.T[downsampled_index]  # new_values
+
+                # figure["data"][0]["x"] = rot_x
+                # figure["data"][0]["y"] = rot_y
+                # figure["data"][0]["z"] = downsampled.T  # new_values
+
+            if "colorbar" in kwargs.keys():
+                if kwargs["colorbar"]:
+                    figure.update_traces(showscale=True)
+                else:
+                    figure.update_traces(showscale=False)
 
         else:
             x, y = entity.vertices[:, 0], entity.vertices[:, 1]
+            """
             if indices is None:
                 indices = filter_xy(
                     x,
@@ -465,28 +466,29 @@ class InversionApp(BaseDashApplication):
 
             if values is not None:
                 values = values[indices]
-
+            """
             if "marker_size" not in kwargs.keys():
                 marker_size = 50
             else:
                 marker_size = kwargs["marker_size"]
 
-            out = axis.scatter(X, Y, marker_size, values, cmap=cmap, norm=color_norm)
-
-            if (
-                "contours" in kwargs.keys()
-                and kwargs["contours"] is not None
-                and np.any(values)
-            ):
-                ind = ~np.isnan(values)
-                contour_set = axis.tricontour(
-                    X[ind],
-                    Y[ind],
-                    values[ind],
-                    levels=kwargs["contours"],
-                    colors="k",
-                    linewidths=1.0,
+            if values is not None:
+                downsampled_index, down_x, down_y = downsample_xy(
+                    x, y, resolution, mask=~np.isnan(values)
                 )
+                figure["data"][0]["x"] = down_x
+                figure["data"][0]["y"] = down_y
+                figure["data"][0]["marker"]["color"] = values[downsampled_index]
+            else:
+                downsampled_index, down_x, down_y = downsample_xy(x, y, resolution)
+                figure["data"][0]["x"] = down_x
+                figure["data"][0]["y"] = down_y
+
+            if "colorbar" in kwargs.keys():
+                if kwargs["colorbar"]:
+                    figure.update_traces(marker_showscale=True)
+                else:
+                    figure.update_traces(marker_showscale=False)
 
         if np.any(x) and np.any(y):
             figure.update_layout(plot_bgcolor="rgba(0,0,0,0)")
@@ -502,12 +504,6 @@ class InversionApp(BaseDashApplication):
             else:
                 figure.update_layout(yaxis=dict(scaleanchor=None))
 
-        if "colorbar" in kwargs.keys():
-            if kwargs["colorbar"]:
-                figure.update_traces(showscale=True)
-            else:
-                figure.update_traces(showscale=False)
-
         return figure, indices
 
     def plot_selection(
@@ -522,8 +518,6 @@ class InversionApp(BaseDashApplication):
         fix_aspect_ratio,
     ):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
-
-        figure = go.Figure(figure)
         data_count = "Data Count: "
 
         """
@@ -544,6 +538,14 @@ class InversionApp(BaseDashApplication):
             height = y_range[1] - y_range[0]
             center_y = y_range[0] + (height / 2)
         """
+        if "data_object" in triggers:
+            obj = self.workspace.get_entity(uuid.UUID(object))[0]
+            if isinstance(obj, Grid2D):
+                figure = go.Figure(go.Heatmap(colorscale="rainbow"))
+            else:
+                figure = go.Figure(go.Scatter(mode="markers"))
+        else:
+            figure = go.Figure(figure)
 
         if object is not None and data is not None:
             obj = self.workspace.get_entity(uuid.UUID(object))[0]
@@ -601,7 +603,7 @@ class InversionApp(BaseDashApplication):
                         xaxis_range=[center_x - (width / 2), center_x + (width / 2)],
                         yaxis_range=[center_y - (height / 2), center_y + (height / 2)],
                     )
-
+                """
                 # axes range is wrong
                 x = np.array(figure["data"][0]["x"])
                 x_range = figure["layout"]["xaxis"]["range"]
@@ -618,6 +620,7 @@ class InversionApp(BaseDashApplication):
                 # indices = filter_xy(x, y, resolution, window=window)
 
                 # data_count += f"{np.sum(ind_filter)}"
+                """
                 data_count += f"{0}"
 
         return (
