@@ -39,6 +39,7 @@ from geoapps.utils.models import RectangularBlock
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
+    extract_dcip_survey,
     find_endpoints,
     new_neighbors,
     split_dcip_survey,
@@ -81,9 +82,9 @@ def test_survey_lines(tmp_path):
     ws = Workspace("../assets/FlinFlon_dcip.geoh5")
 
     old_survey = ws.get_entity("DC_Survey")[0]
-    new_survey = old_survey.copy(parent=test_workspace)
+    _ = old_survey.copy(parent=test_workspace)
 
-    lines = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
+    _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
     assert np.all(
         np.unique(test_workspace.get_entity("test_line_ids")[0].values)
         == np.arange(1, 11)
@@ -91,7 +92,23 @@ def test_survey_lines(tmp_path):
 
 
 def test_extract_dcip_survey(tmp_path):
-    split_dcip_survey(survey, lines, "DC Survey Line")
+    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
+
+    survey = ws.get_entity("DC_Survey")[0]
+    lines = survey_lines(survey, [314529, 6071402])
+    extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
+    assert test_workspace.get_entity("test_survey_line 4")[0] is not None
+
+
+def test_split_dcip_survey(tmp_path):
+    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
+
+    survey = ws.get_entity("DC_Survey")[0]
+    lines = survey_lines(survey, [314529, 6071402])
+    split_dcip_survey(survey, lines, "DC Survey Line", test_workspace)
+    assert test_workspace.get_entity("DC Survey Line 10")[0] is not None
 
 
 def test_rectangular_block():
@@ -241,7 +258,7 @@ def test_sorted_alphanumeric_list():
 
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
-        import os as test_import
+        import os as test_import  # pylint: disable=reimported
     assert test_import == os
 
     with warn_module_not_found():
@@ -249,7 +266,7 @@ def test_no_warn_module_not_found(recwarn):
     assert test_import_from == os.system
 
     with warn_module_not_found():
-        import geoh5py.objects as test_import_submodule
+        import geoh5py.objects as test_import_submodule  # pylint: disable=reimported
     assert test_import_submodule == geoh5py.objects
 
     with warn_module_not_found():
@@ -264,41 +281,37 @@ def test_warn_module_not_found():
     # pylint: disable=no-name-in-module
 
     noop = lambda x: None
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             import nonexisting as test_import
     with pytest.raises(NameError):
         noop(test_import)
 
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             from nonexisting import nope as test_import_from
     with pytest.raises(NameError):
         noop(test_import_from)
 
-    with pytest.warns(
-        match=f"Module 'os.nonexisting' is missing from the environment."
-    ):
+    with pytest.warns(match="Module 'os.nonexisting' is missing from the environment."):
         with warn_module_not_found():
             import os.nonexisting as test_import_os_submodule
     with pytest.raises(NameError):
         noop(test_import_os_submodule)
 
-    with pytest.warns(
-        match=f"Module 'os.nonexisting' is missing from the environment."
-    ):
+    with pytest.warns(match="Module 'os.nonexisting' is missing from the environment."):
         with warn_module_not_found():
             from os.nonexisting import nope as test_import_from_os_submodule
     with pytest.raises(NameError):
         noop(test_import_from_os_submodule)
 
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             import nonexisting.nope as test_import_nonexising_submodule
     with pytest.raises(NameError):
         noop(test_import_nonexising_submodule)
 
-    with pytest.warns(match=f"Module 'nonexisting' is missing from the environment."):
+    with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
             from nonexisting.nope import nada as test_import_from_nonexisting_submodule
     with pytest.raises(NameError):
@@ -319,26 +332,26 @@ def test_sorted_children_dict(tmp_path):
         allow_move=False,
     )
 
-    test_data = grid.add_data({"Iteration_10_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_1_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_5_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_3_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_2_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_4_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_9.0_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_8e0_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"interp_02": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"interp_01": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"interp_11": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"iteration_2_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"iteration_12_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_2_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"Iteration_12_model": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"topo": {"values": np.ones(10 * 15)}})
-    test_data = grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_10_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_1_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_5_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_3_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_2_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_4_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_9.0_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_8e0_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_11_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_6_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_7_data": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"interp_02": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"interp_01": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"interp_11": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"iteration_2_model": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"iteration_12_model": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_2_model": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"Iteration_12_model": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"topo": {"values": np.ones(10 * 15)}})
+    _ = grid.add_data({"uncert": {"values": np.ones(10 * 15)}})
 
     d = sorted_children_dict(grid)
     d = list(d.keys())
@@ -467,7 +480,10 @@ def test_treemesh_2_octree(tmp_path):
     mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
     omesh = treemesh_2_octree(ws, mesh, name="test_mesh")
     assert omesh.n_cells == mesh.n_cells
-    assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)
+    assert np.all(
+        (omesh.centroids - mesh.cell_centers[mesh._ubc_order])
+        < 1e-14  # pylint: disable=protected-access
+    )
     expected_refined_cells = [
         (0, 0, 6),
         (0, 0, 7),
@@ -532,11 +548,11 @@ def test_downsample_xy():
     xg, yg = np.meshgrid(np.arange(11), np.arange(11))
     x = xg.ravel()
     y = yg.ravel()
-    ind, xd, yd = downsample_xy(x, y, 0)
+    _, xd, yd = downsample_xy(x, y, 0)
     assert np.all(x == xd)
     assert np.all(y == yd)
 
-    ind, xd, yd = downsample_xy(x, y, 1)
+    _, xd, yd = downsample_xy(x, y, 1)
     assert np.all(x[::2] == xd)
     assert np.all(y[::2] == yd)
 
@@ -545,7 +561,7 @@ def test_downsample_grid():
 
     # Test a simple grid equal spacing in x, y
     xg, yg = np.meshgrid(np.arange(11), np.arange(11))
-    ind, xd, yd = downsample_grid(xg, yg, 2)
+    _, xd, yd = downsample_grid(xg, yg, 2)
     assert np.all(np.diff(yd.reshape(6, 6), axis=0) == 2)
     assert np.all(np.diff(xd.reshape(6, 6), axis=1) == 2)
 
@@ -553,7 +569,7 @@ def test_downsample_grid():
     xy_rot = rotate_xyz(np.c_[xg.ravel(), yg.ravel()], [5, 5], 30)
     xg_rot = xy_rot[:, 0].reshape(11, 11)
     yg_rot = xy_rot[:, 1].reshape(11, 11)
-    ind, xd, yd = downsample_grid(xg_rot, yg_rot, 2)
+    _, xd, yd = downsample_grid(xg_rot, yg_rot, 2)
     xy = rotate_xyz(np.c_[xd, yd], [5, 5], -30)
     xg_test = xy[:, 0].reshape(6, 6)
     yg_test = xy[:, 1].reshape(6, 6)
@@ -562,7 +578,7 @@ def test_downsample_grid():
 
     # Test unequal spacing in x, y
     xg, yg = np.meshgrid(np.arange(11), np.linspace(0, 10, 21))
-    ind, xd, yd = downsample_grid(xg, yg, 2)
+    _, xd, yd = downsample_grid(xg, yg, 2)
     xg_test = xd.reshape(6, 6)
     yg_test = yd.reshape(6, 6)
     np.testing.assert_allclose(np.diff(xg_test, axis=1), np.full((6, 5), 2))
@@ -629,12 +645,10 @@ def test_detrend_xy():
     nan_values[ind_nan] = np.nan
 
     # Should return a plane even for order=5
-    comp_trend, comp_params = calculate_2D_trend(xy, nan_values, order=5, method="all")
+    comp_trend, _ = calculate_2D_trend(xy, nan_values, order=5, method="all")
     np.testing.assert_almost_equal(values, comp_trend)
     # Should return same plane parameter for 'perimeter' or 'all'
-    corner_trend, corner_params = calculate_2D_trend(
-        xy, nan_values, order=1, method="perimeter"
-    )
+    corner_trend, _ = calculate_2D_trend(xy, nan_values, order=1, method="perimeter")
     np.testing.assert_almost_equal(values, corner_trend)
 
     with pytest.raises(ValueError) as excinfo:
