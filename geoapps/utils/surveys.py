@@ -16,9 +16,12 @@ from scipy.spatial import cKDTree
 from geoapps.utils.statistics import is_outlier
 
 
-def new_neighbors(d, id, nodes):
+def new_neighbors(distances, neighbors, nodes):
     """index into neighbor arrays excluding zero distance and past neighbors."""
-    ind = [i in nodes if d[id.tolist().index(i)] != 0 else False for i in id]
+    ind = [
+        i in nodes if distances[neighbors.tolist().index(i)] != 0 else False
+        for i in neighbors
+    ]
     return np.where(ind)[0].tolist()
 
 
@@ -36,9 +39,10 @@ def next_neighbor(tree, point, nodes, n=3):
         return next_neighbor(tree, point, nodes, n + 3)
 
 
-def find_endpoints(locs, ends=[], start_index=0):
+def find_endpoints(locs, ends=None, start_index=0):
     """Finds the end locations of a roughly linear point set."""
 
+    ends = [] if ends is None else ends
     start = locs[start_index, :2]
     dist = np.linalg.norm(start - locs[:, :2], axis=1)
     end_id = np.where(dist == dist.max())[0]
