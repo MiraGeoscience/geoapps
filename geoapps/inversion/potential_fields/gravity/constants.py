@@ -538,6 +538,7 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "gravity"},
+    "fix_aspect_ratio": True,
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -600,4 +601,5 @@ app_initializer = {
     "z_from_topo": True,
     "out_group": "GravityInversion",
     "monitoring_directory": os.path.abspath("../../../../assets/Temp"),
+    "fix_aspect_ratio": True,
 }

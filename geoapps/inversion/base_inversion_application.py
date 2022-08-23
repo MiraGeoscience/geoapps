@@ -189,10 +189,30 @@ class InversionApp(BaseDashApplication):
         return obj_options
 
     # Update input data dropdown options
+    def update_radar_options(self, ui_json_data: dict, object_uid: str) -> (list, str):
+        """
+        Update data subset options and values from selected object.
 
-    def update_channel_options(
-        self, ui_json_data: dict, object_uid: str
-    ) -> (list, str):
+        :param ui_json_data: Uploaded ui.json data.
+        :param object_uid: Selected object from dropdown.
+
+        :return options: Options for data subset dropdown.
+        :return value: Value for data subset dropdown.
+        """
+        if object_uid is None or object_uid == "None":
+            return no_update, no_update
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "ui_json_data" in triggers:
+            value = ui_json_data["receivers_radar_drape"]
+            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
+        else:
+            value = None
+            options = self.get_data_options("data_object", ui_json_data, object_uid)
+
+        return options, value
+
+    def update_data_options(self, ui_json_data: dict, object_uid: str) -> (list, str):
         """
         Update data subset options and values from selected object.
 
@@ -216,28 +236,6 @@ class InversionApp(BaseDashApplication):
 
         return options
 
-    def update_data_options(self, ui_json_data: dict, object_uid: str) -> (list, str):
-        """
-        Update data subset options and values from selected object.
-
-        :param ui_json_data: Uploaded ui.json data.
-        :param object_uid: Selected object from dropdown.
-
-        :return options: Options for data subset dropdown.
-        :return value: Value for data subset dropdown.
-        """
-        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
-
-        if "ui_json_data" in triggers:
-            # value = ui_json["channel"]["value"]
-            value = None
-            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
-        else:
-            value = None
-            options = self.get_data_options("data_object", ui_json_data, object_uid)
-
-        return options, value
-
     def update_full_components(
         self,
         ui_json_data,
@@ -251,6 +249,13 @@ class InversionApp(BaseDashApplication):
         component,
         component_options,
     ):
+        # full_components = no_update
+        # channel_bool = no_update
+        # channel = no_update
+        # uncertainty_type = no_update
+        # uncertainty_floor = no_update
+        # uncertainty_channel = no_update
+        # component = no_update
 
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
@@ -278,6 +283,10 @@ class InversionApp(BaseDashApplication):
                     uncertainty_type = "Channel"
                     uncertainty_floor = None
                     uncertainty_channel = str(ui_json_data[comp + "_uncertainty"])
+                else:
+                    uncertainty_type = "Floor"
+                    uncertainty_floor = None
+                    uncertainty_channel = None
 
                 full_components[comp] = {
                     "channel_bool": channel_bool,
@@ -305,11 +314,17 @@ class InversionApp(BaseDashApplication):
                 uncertainty_channel = full_components[component]["uncertainty_channel"]
         elif "data_object" in triggers:
             for comp in full_components:
-                full_components[comp]["channel_bool"] = None
+                full_components[comp]["channel_bool"] = []
                 full_components[comp]["channel"] = None
-                full_components[comp]["uncertainty_type"] = None
+                full_components[comp]["uncertainty_type"] = "Floor"
                 full_components[comp]["uncertainty_floor"] = None
                 full_components[comp]["uncertainty_channel"] = None
+            channel_bool = []
+            channel = None
+            uncertainty_type = "Floor"
+            uncertainty_floor = None
+            uncertainty_channel = None
+            component = no_update
         else:
             if "channel" in triggers:
                 if channel is None:
@@ -575,6 +590,7 @@ class InversionApp(BaseDashApplication):
             "window_height": height,
             "window_center_x": x_range[0] + (width / 2),
             "window_center_y": y_range[0] + (height / 2),
+            "window_azimuth": 0.0,
         }
 
     def get_topography_params(self, topography):
@@ -741,7 +757,6 @@ class InversionApp(BaseDashApplication):
         full_components,
         resolution,
         plot,
-        colorbar,
         fix_aspect_ratio,
         topography_options,
         topography_object,
