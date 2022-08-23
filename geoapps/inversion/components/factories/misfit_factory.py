@@ -29,11 +29,14 @@ class MisfitFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
         self.factory_type = self.params.inversion_type
         self.models = models
+        self.sorting = None
 
     def concrete_object(self):
         return objective_function.ComboObjectiveFunction
 
-    def build(self, tiles, inversion_data, mesh, active_cells):
+    def build(
+        self, tiles, inversion_data, mesh, active_cells
+    ):  # pylint: disable=arguments-differ
         global_misfit = super().build(
             tiles=tiles,
             inversion_data=inversion_data,
@@ -42,7 +45,7 @@ class MisfitFactory(SimPEGFactory):
         )
         return global_misfit, self.sorting
 
-    def assemble_arguments(
+    def assemble_arguments(  # pylint: disable=arguments-differ
         self,
         tiles,
         inversion_data,
@@ -77,7 +80,7 @@ class MisfitFactory(SimPEGFactory):
         )
 
         tile_num = 0
-        for tile_id, local_index in enumerate(tiles):
+        for local_index in tiles:
             survey, local_index = inversion_data.survey(mesh, active_cells, local_index)
 
             lsim, lmap = inversion_data.simulation(mesh, active_cells, survey, tile_num)
@@ -119,14 +122,12 @@ class MisfitFactory(SimPEGFactory):
             [],
             [],
         )
-        frequencies = np.unique(
-            [list(v.keys()) for v in inversion_data.observed.values()]
-        )
+        frequencies = np.unique([list(v) for v in inversion_data.observed.values()])
         tile_num = 0
 
-        for tile_id, local_index in enumerate(tiles):
+        for local_index in tiles:
             self.sorting.append(local_index)
-            for i, freq in enumerate(frequencies):
+            for freq in frequencies:
 
                 survey, local_index = inversion_data.survey(
                     mesh, active_cells, local_index, channel=freq

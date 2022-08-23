@@ -188,8 +188,12 @@ class ScatterPlotDriver:
 
         return figure
 
-    def get_indices(self):
+    def get_indices(self) -> np.ndarray:
+        """
+        Get indices of data to plot after downsampling.
 
+        :return indices:
+        """
         values = []
         non_nan = []
         for axis in [self.params.x, self.params.y, self.params.z]:
@@ -218,5 +222,4 @@ class ScatterPlotDriver:
             rtol=1e0,
             method="histogram",
         )
-
         return indices

@@ -6,7 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-from geoapps.inversion.electricals.direct_current import (
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
     constants as direct_current_constants,
 )
 from geoapps.inversion.electricals.induced_polarization import (
@@ -31,9 +31,9 @@ constants = [
 
 def test_deprecated_uijson_fields():
     deprecated_fields = ["default"]
-    for c in constants:
-        d_u_j = c.default_ui_json
-        for k, v in d_u_j.items():
-            if isinstance(v, dict):
-                for f in deprecated_fields:
-                    assert f not in v.keys()
+    for constant in constants:
+        d_u_j = constant.default_ui_json
+        for value in d_u_j.values():
+            if isinstance(value, dict):
+                for field in deprecated_fields:
+                    assert field not in value.keys()

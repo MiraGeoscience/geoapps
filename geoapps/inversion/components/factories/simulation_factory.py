@@ -5,6 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+# pylint: disable=W0221
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -71,7 +74,7 @@ class SimulationFactory(SimPEGFactory):
         global_mesh=None,
         local_mesh=None,
         active_cells=None,
-        map=None,
+        mapping=None,
         tile_id=None,
     ):
         mesh = global_mesh if tile_id is None else local_mesh
@@ -83,7 +86,7 @@ class SimulationFactory(SimPEGFactory):
         global_mesh=None,
         local_mesh=None,
         active_cells=None,
-        map=None,
+        mapping=None,
         tile_id=None,
     ):
 

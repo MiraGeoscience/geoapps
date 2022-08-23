@@ -43,7 +43,7 @@ def inv_symlog(values, threshold):
     return np.sign(values) * threshold * (-1.0 + 10.0 ** np.abs(values))
 
 
-def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i", **kwargs):
+def format_labels(x, y, axs, labels=None, aspect="equal", tick_format="%i"):
     if labels is None:
         axs.set_ylabel("Northing (m)")
         axs.set_xlabel("Easting (m)")
@@ -118,7 +118,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
     out = None
 
     if isinstance(entity, (Grid2D, Points, Curve, Surface)):
-        if "axis" not in kwargs.keys():
+        if "axis" not in kwargs:
             plt.figure(figsize=(8, 8))
             axis = plt.subplot()
         else:
@@ -134,12 +134,12 @@ def plot_plan_data_selection(entity, data, **kwargs):
     else:
         locations = entity.centroids
 
-    if "resolution" not in kwargs.keys():
+    if "resolution" not in kwargs:
         resolution = 0
     else:
         resolution = kwargs["resolution"]
 
-    if "indices" in kwargs.keys():
+    if "indices" in kwargs:
         indices = kwargs["indices"]
         if isinstance(indices, np.ndarray) and np.all(indices == False):
             indices = None
@@ -156,11 +156,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
         values = None
 
     color_norm = None
-    if "color_norm" in kwargs.keys():
+    if "color_norm" in kwargs:
         color_norm = kwargs["color_norm"]
 
     window = None
-    if "window" in kwargs.keys():
+    if "window" in kwargs:
         window = kwargs["window"]
 
     if (
@@ -168,13 +168,13 @@ def plot_plan_data_selection(entity, data, **kwargs):
         and getattr(data, "entity_type", None) is not None
         and getattr(data.entity_type, "color_map", None) is not None
     ):
-        new_cmap = data.entity_type.color_map._values
-        map_vals = new_cmap["Value"].copy()
+        new_cmap = data.entity_type.color_map.values
+        map_vals = new_cmap[0].copy()
         cmap = colors.ListedColormap(
             np.c_[
-                new_cmap["Red"] / 255,
-                new_cmap["Green"] / 255,
-                new_cmap["Blue"] / 255,
+                new_cmap[1] / 255,
+                new_cmap[2] / 255,
+                new_cmap[3] / 255,
             ]
         )
         color_norm = colors.BoundaryNorm(map_vals, cmap.N)
@@ -204,11 +204,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 X, Y, values, cmap=cmap, norm=color_norm, shading="auto"
             )
 
-        if (
-            "contours" in kwargs.keys()
-            and kwargs["contours"] is not None
-            and np.any(values)
-        ):
+        if "contours" in kwargs and kwargs["contours"] is not None and np.any(values):
             contour_set = axis.contour(
                 X, Y, values, levels=kwargs["contours"], colors="k", linewidths=1.0
             )
@@ -227,18 +223,14 @@ def plot_plan_data_selection(entity, data, **kwargs):
         if values is not None:
             values = values[indices]
 
-        if "marker_size" not in kwargs.keys():
+        if "marker_size" not in kwargs:
             marker_size = 50
         else:
             marker_size = kwargs["marker_size"]
 
         out = axis.scatter(X, Y, marker_size, values, cmap=cmap, norm=color_norm)
 
-        if (
-            "contours" in kwargs.keys()
-            and kwargs["contours"] is not None
-            and np.any(values)
-        ):
+        if "contours" in kwargs and kwargs["contours"] is not None and np.any(values):
             ind = ~np.isnan(values)
             contour_set = axis.tricontour(
                 X[ind],
@@ -249,11 +241,11 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 linewidths=1.0,
             )
 
-    if "collections" in kwargs.keys():
+    if "collections" in kwargs:
         for collection in kwargs["collections"]:
             axis.add_collection(copy(collection))
 
-    if "zoom_extent" in kwargs.keys() and kwargs["zoom_extent"] and np.any(values):
+    if "zoom_extent" in kwargs and kwargs["zoom_extent"] and np.any(values):
         ind = ~np.isnan(values.ravel())
         x = X.ravel()[ind]
         y = Y.ravel()[ind]
@@ -261,16 +253,22 @@ def plot_plan_data_selection(entity, data, **kwargs):
     if np.any(x) and np.any(y):
         width = x.max() - x.min()
         height = y.max() - y.min()
-
-        format_labels(x, y, axis, **kwargs)
+        format_labels(
+            x,
+            y,
+            axis,
+            labels=kwargs.get("labels"),
+            aspect=kwargs.get("aspect", "equal"),
+            tick_format=kwargs.get("tick_format", "%i"),
+        )
         axis.set_xlim([x.min() - width * 0.1, x.max() + width * 0.1])
         axis.set_ylim([y.min() - height * 0.1, y.max() + height * 0.1])
 
-    if "colorbar" in kwargs.keys() and kwargs["colorbar"]:
+    if "colorbar" in kwargs and kwargs["colorbar"]:
         plt.colorbar(out, ax=axis)
 
     line_selection = np.zeros_like(indices, dtype=bool)
-    if "highlight_selection" in kwargs.keys() and isinstance(
+    if "highlight_selection" in kwargs and isinstance(
         kwargs["highlight_selection"], dict
     ):
         for key, values in kwargs["highlight_selection"].items():
@@ -304,22 +302,25 @@ def plot_profile_data_selection(
     entity,
     field_list,
     uncertainties=None,
-    selection={},
+    selection=None,
     resolution=None,
     plot_legend=False,
     ax=None,
-    color=[0, 0, 0],
+    color=(0, 0, 0),
 ):
 
     locations = entity.vertices
 
     if ax is None:
-        fig = plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(8, 8))
         ax = plt.subplot()
 
-    pos = ax.get_position()
     xx, yy = [], []
     threshold = 1e-14
+
+    if selection is None:
+        return ax, threshold
+
     for key, values in selection.items():
 
         for line in values:
@@ -353,7 +354,7 @@ def plot_profile_data_selection(
 
             c_increment = [(1 - c) / (len(field_list) + 1) for c in color]
 
-            for ii, field in enumerate(field_list):
+            for i, field in enumerate(field_list):
                 if (
                     entity.workspace.get_entity(field)
                     and entity.workspace.get_entity(field)[0].values is not None
@@ -367,15 +368,15 @@ def plot_profile_data_selection(
                         ax.errorbar(
                             xx[-1],
                             yy[-1],
-                            yerr=uncertainties[ii][0] * np.abs(yy[-1])
-                            + uncertainties[ii][1],
-                            color=[c + ii * i for c, i in zip(color, c_increment)],
+                            yerr=uncertainties[i][0] * np.abs(yy[-1])
+                            + uncertainties[i][1],
+                            color=[c + i * i for c, i in zip(color, c_increment)],
                         )
                     else:
                         ax.plot(
                             xx[-1],
                             yy[-1],
-                            color=[c + ii * i for c, i in zip(color, c_increment)],
+                            color=[c + i * i for c, i in zip(color, c_increment)],
                         )
                     legend.append(field)
 
@@ -410,7 +411,7 @@ def plotly_scatter(
     """
     assert (
         getattr(points, "vertices", None) is not None
-    ), f"Input object must have vertices"
+    ), "Input object must have vertices"
 
     if figure is None:
         figure = go.FigureWidget()
@@ -480,9 +481,9 @@ def plotly_block_model(
     block_model,
     figure=None,
     value=None,
-    x_slice=[],
-    y_slice=[],
-    z_slice=[],
+    x_slice=None,
+    y_slice=None,
+    z_slice=None,
     colorscale="Portland",
     **kwargs,
 ):
@@ -496,13 +497,13 @@ def plotly_block_model(
     if figure is None:
         figure = go.FigureWidget()
 
-    if not x_slice:
+    if x_slice is None:
         x_slice = [block_model.centroids[:, 0].mean()]
 
-    if not y_slice:
+    if y_slice is None:
         y_slice = [block_model.centroids[:, 1].mean()]
 
-    if not z_slice:
+    if z_slice is None:
         z_slice = [block_model.centroids[:, 2].mean()]
 
     figure.add_trace(go.Volume())

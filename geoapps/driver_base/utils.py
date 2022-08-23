@@ -56,10 +56,10 @@ def running_mean(
 
 def treemesh_2_octree(workspace, treemesh, **kwargs):
 
-    indArr, levels = treemesh._ubc_indArr
-    ubc_order = treemesh._ubc_order
+    index_array, levels = getattr(treemesh, "_ubc_indArr")
+    ubc_order = getattr(treemesh, "_ubc_order")
 
-    indArr = indArr[ubc_order] - 1
+    index_array = index_array[ubc_order] - 1
     levels = levels[ubc_order]
 
     origin = treemesh.x0.copy()
@@ -73,7 +73,7 @@ def treemesh_2_octree(workspace, treemesh, **kwargs):
         u_cell_size=treemesh.h[0][0],
         v_cell_size=treemesh.h[1][0],
         w_cell_size=-treemesh.h[2][0],
-        octree_cells=np.c_[indArr, levels],
+        octree_cells=np.c_[index_array, levels],
         **kwargs,
     )
 
@@ -90,8 +90,8 @@ def active_from_xyz(
 
     """
     if method == "linear":
-        tri2D = Delaunay(xyz[:, :2])
-        z_interpolate = LinearNDInterpolator(tri2D, xyz[:, 2])
+        delaunay_2d = Delaunay(xyz[:, :2])
+        z_interpolate = LinearNDInterpolator(delaunay_2d, xyz[:, 2])
     else:
         z_interpolate = NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
 

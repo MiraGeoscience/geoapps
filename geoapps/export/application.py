@@ -32,6 +32,18 @@ with warn_module_not_found():
 
 from .utils import export_curve_2_shapefile, object_2_dataframe
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": [
+        "{44822654-b6ae-45b0-8886-2d845f80f422}",
+        "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+    ],
+    "epsg_code": "EPSG:26914",
+    "file_type": "geotiff",
+    "data_type": "RGB",
+}
+
 
 class Export(ObjectDataSelection):
     """
@@ -40,21 +52,10 @@ class Export(ObjectDataSelection):
     shapefiles: *.shp
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": [
-            "{44822654-b6ae-45b0-8886-2d845f80f422}",
-            "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
-        ],
-        "epsg_code": "EPSG:26914",
-        "file_type": "geotiff",
-        "data_type": "RGB",
-    }
-
     _select_multiple = True
 
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self._file_type = Dropdown(
             options=["ESRI shapefile", "csv", "geotiff", "UBC format"],
@@ -178,14 +179,11 @@ class Export(ObjectDataSelection):
             )
         return self._main
 
-    def trigger_click(self, _):
-        entity = self.workspace.get_entity(self.objects.value)[0]
-        if entity is None:
-            return
+    def _collect_data_values(self):
+        """Returns dictionary of values with no_data_values applied."""
 
+        data_values = {}
         if self.data.value:
-
-            data_values = {}
 
             for key in self.data.value:
                 if self.workspace.get_entity(key):
@@ -193,175 +191,195 @@ class Export(ObjectDataSelection):
                     data_values[key][
                         (data_values[key] > 1e-38) * (data_values[key] < 2e-38)
                     ] = self.no_data_value.value
-        else:
-            data_values = {}
 
-        if self.file_type.value == "csv":
-            dataframe = object_2_dataframe(entity, fields=list(data_values.keys()))
-            dataframe.to_csv(
-                f"{path.join(self.export_directory.selected_path, self.export_as.value)}"
-                + ".csv",
-                index=False,
-            )
+        return data_values
 
-        elif self.file_type.value == "ESRI shapefile":
+    def _export_csv(self, entity, fields):
+        dataframe = object_2_dataframe(entity, fields=fields)
+        dataframe.to_csv(
+            f"{path.join(self.export_directory.selected_path, self.export_as.value)}"
+            + ".csv",
+            index=False,
+        )
 
-            assert isinstance(
-                entity, Curve
-            ), f"Only Curve objects are support for type {self.file_type.value}"
+    def _export_shapefile(self, entity):
+        assert isinstance(
+            entity, Curve
+        ), f"Only Curve objects are support for type {self.file_type.value}"
 
-            if self.data.value:
-                for key in self.data.value:
-                    out_name = re.sub(
-                        "[^0-9a-zA-Z]+",
-                        "_",
-                        self.export_as.value + "_" + self.data.uid_name_map[key],
-                    )
-                    export_curve_2_shapefile(
-                        entity,
-                        attribute=key,
-                        file_name=path.join(
-                            self.export_directory.selected_path, out_name
-                        ),
-                        wkt_code=self.wkt_code.value,
-                    )
-                    print(
-                        f"Object saved to {path.join(self.export_directory.selected_path, out_name) + '.shp'}"
-                    )
-            else:
-                out_name = re.sub("[^0-9a-zA-Z]+", "_", self.export_as.value)
+        if self.data.value:
+            for key in self.data.value:
+                out_name = re.sub(
+                    "[^0-9a-zA-Z]+",
+                    "_",
+                    self.export_as.value + "_" + self.data.uid_name_map[key],
+                )
                 export_curve_2_shapefile(
                     entity,
+                    attribute=key,
                     file_name=path.join(self.export_directory.selected_path, out_name),
                     wkt_code=self.wkt_code.value,
                 )
-                print(
-                    f"Object saved to {path.join(self.export_directory.selected_path, out_name) + '.shp'}"
+                filename = (
+                    path.join(self.export_directory.selected_path, out_name) + ".shp"
+                )
+                print(f"Object saved to {filename}")
+
+        else:
+            out_name = re.sub("[^0-9a-zA-Z]+", "_", self.export_as.value)
+            export_curve_2_shapefile(
+                entity,
+                file_name=path.join(self.export_directory.selected_path, out_name),
+                wkt_code=self.wkt_code.value,
+            )
+            filename = path.join(self.export_directory.selected_path, out_name) + ".shp"
+            print(f"Object saved to {filename}")
+
+    def _export_geotiff(self, entity):
+
+        for key in self.data.value:
+            name = (
+                path.join(self.export_directory.selected_path, self.export_as.value)
+                + "_"
+                + self.data.uid_name_map[key]
+                + ".tif"
+            )
+            if self.workspace.get_entity(key):
+                export_grid_2_geotiff(
+                    self.workspace.get_entity(key)[0],
+                    name,
+                    wkt_code=self.wkt_code.value,
+                    data_type=self.data_type.value,
                 )
 
-        elif self.file_type.value == "geotiff":
-            for key in self.data.value:
-                name = (
-                    path.join(self.export_directory.selected_path, self.export_as.value)
-                    + "_"
-                    + self.data.uid_name_map[key]
-                    + ".tif"
-                )
-                if self.workspace.get_entity(key):
-                    export_grid_2_geotiff(
-                        self.workspace.get_entity(key)[0],
-                        name,
-                        wkt_code=self.wkt_code.value,
-                        data_type=self.data_type.value,
+                if self.data_type.value == "RGB":
+                    figure, axis = plt.figure(), plt.subplot()
+
+                    if not self.plot_result:
+                        plt.gca().set_visible(False)
+
+                    axis, image, _, _, _ = plot_plan_data_selection(
+                        entity, self.workspace.get_entity(key)[0], axis=axis
                     )
-
-                    if self.data_type.value == "RGB":
-                        fig, ax = plt.figure(), plt.subplot()
-
-                        if not self.plot_result:
-                            plt.gca().set_visible(False)
-
-                        ax, im, _, _, _ = plot_plan_data_selection(
-                            entity, self.workspace.get_entity(key)[0], axis=ax
-                        )
-                        plt.colorbar(im, fraction=0.02)
-                        plt.savefig(
-                            path.join(
-                                self.export_directory.selected_path,
-                                self.export_as.value,
-                            )
-                            + "_"
-                            + self.data.uid_name_map[key]
-                            + "_Colorbar.png",
-                            dpi=300,
-                            bbox_inches="tight",
-                        )
-                        if not self.plot_result:
-                            plt.close(fig)
-
-                    print(f"Object saved to {name}")
-
-        elif self.file_type.value == "UBC format":
-
-            assert isinstance(
-                entity, (Octree, BlockModel)
-            ), "Export available for BlockModel or octree only"
-            if isinstance(entity, Octree):
-                mesh = octree_2_treemesh(entity)
-
-                models = {}
-                for key, item in data_values.items():
-                    ind = np.argsort(mesh._ubc_order)
-                    models[
+                    plt.colorbar(image, fraction=0.02)
+                    plt.savefig(
                         path.join(
-                            self.export_directory.selected_path, self.export_as.value
+                            self.export_directory.selected_path,
+                            self.export_as.value,
                         )
                         + "_"
                         + self.data.uid_name_map[key]
-                        + ".mod"
-                    ] = item[ind]
-                name = (
+                        + "_Colorbar.png",
+                        dpi=300,
+                        bbox_inches="tight",
+                    )
+                    if not self.plot_result:
+                        plt.close(figure)
+
+                print(f"Object saved to {name}")
+
+    def _export_ubc(self, entity, data_values):
+        assert isinstance(
+            entity, (Octree, BlockModel)
+        ), "Export available for BlockModel or octree only"
+        if isinstance(entity, Octree):
+            mesh = octree_2_treemesh(entity)
+
+            models = {}
+            for key, item in data_values.items():
+                ind = np.argsort(mesh._ubc_order)  # pylint: disable=protected-access
+                models[
                     path.join(self.export_directory.selected_path, self.export_as.value)
-                    + ".msh"
-                )
-                mesh.writeUBC(
-                    name,
-                    models=models,
-                )
-                print(f"Mesh saved to {name}")
-                print(f"Models saved to {list(models.keys())}")
+                    + "_"
+                    + self.data.uid_name_map[key]
+                    + ".mod"
+                ] = item[ind]
+            name = (
+                path.join(self.export_directory.selected_path, self.export_as.value)
+                + ".msh"
+            )
+            mesh.writeUBC(
+                name,
+                models=models,
+            )
+            print(f"Mesh saved to {name}")
+            print(f"Models saved to {list(models)}")
 
-            else:
+        else:
 
-                mesh = discretize.TensorMesh(
-                    [
-                        np.abs(entity.u_cells),
-                        np.abs(entity.v_cells),
-                        np.abs(entity.z_cells[::-1]),
-                    ]
-                )
-
-                # Move the origin to the bottom SW corner
-                mesh.x0 = [
-                    entity.origin["x"] + entity.u_cells[entity.u_cells < 0].sum(),
-                    entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
-                    entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
+            mesh = discretize.TensorMesh(
+                [
+                    np.abs(entity.u_cells),
+                    np.abs(entity.v_cells),
+                    np.abs(entity.z_cells[::-1]),
                 ]
-                name = (
-                    path.join(self.export_directory.selected_path, self.export_as.value)
-                    + ".msh"
-                )
-                mesh.writeUBC(name)
-                print(f"Mesh saved to {name}")
+            )
 
-                if any(data_values):
-                    for key, item in data_values.items():
+            # Move the origin to the bottom SW corner
+            mesh.x0 = [
+                entity.origin["x"] + entity.u_cells[entity.u_cells < 0].sum(),
+                entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
+                entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
+            ]
+            name = (
+                path.join(self.export_directory.selected_path, self.export_as.value)
+                + ".msh"
+            )
+            mesh.writeUBC(name)
+            print(f"Mesh saved to {name}")
 
-                        if mesh.x0[2] == entity.origin["z"]:
-                            values = item.copy()
-                            values = values.reshape(
-                                (mesh.nCz, mesh.nCx, mesh.nCy), order="F"
-                            )[::-1, :, :]
-                            values = values.reshape((-1, 1), order="F")
-                        else:
-                            values = item
+            if any(data_values):
+                for key, item in data_values.items():
 
-                        name = (
-                            path.join(
-                                self.export_directory.selected_path,
-                                self.data.uid_name_map[key],
-                            )
-                            + ".mod"
+                    if mesh.x0[2] == entity.origin["z"]:
+                        values = item.copy()
+                        values = values.reshape(
+                            (
+                                mesh.shape_cells[2],
+                                mesh.shape_cells[0],
+                                mesh.shape_cells[1],
+                            ),
+                            order="F",
+                        )[::-1, :, :]
+                        values = values.reshape((-1, 1), order="F")
+                    else:
+                        values = item
+
+                    name = (
+                        path.join(
+                            self.export_directory.selected_path,
+                            self.data.uid_name_map[key],
                         )
-                        np.savetxt(name, values)
-                        print(f"Model saved to {name}")
+                        + ".mod"
+                    )
+                    np.savetxt(name, values)
+                    print(f"Model saved to {name}")
+
+    def trigger_click(self, _):
+        entity = self.workspace.get_entity(self.objects.value)[0]
+        if entity is None:
+            return
+
+        data_values = self._collect_data_values()
+
+        if self.file_type.value == "csv":
+            self._export_csv(entity, list(data_values))
+
+        elif self.file_type.value == "ESRI shapefile":
+            self._export_shapefile(entity)
+
+        elif self.file_type.value == "geotiff":
+            self._export_geotiff(entity)
+
+        elif self.file_type.value == "UBC format":
+            self._export_ubc(entity, data_values)
 
     def set_wkt(self, _):
-        datasetSRS = osr.SpatialReference()
-        datasetSRS.SetFromUserInput(self.epsg_code.value.upper())
+        spatial_reference = osr.SpatialReference()
+        spatial_reference.SetFromUserInput(self.epsg_code.value.upper())
 
         self.wkt_code.unobserve_all("value")
-        self.wkt_code.value = datasetSRS.ExportToWkt()
+        self.wkt_code.value = spatial_reference.ExportToWkt()
         self.wkt_code.observe(self.set_authority_code, names="value")
 
     def set_authority_code(self, _):
