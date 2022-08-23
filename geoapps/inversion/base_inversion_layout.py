@@ -116,6 +116,7 @@ def generate_model_component(
                     ),
                     dcc.Input(
                         id=param_prefix + param_name + "_const",
+                        type="number",
                         style={"display": "inline-block"},
                     ),
                 ],
@@ -490,6 +491,7 @@ topography_constant = html.Div(
                 ),
                 dcc.Input(
                     id="topography_const",
+                    type="number",
                     style={"display": "inline-block", "width": "60%"},
                 ),
             ]
@@ -583,6 +585,7 @@ topography_layout = html.Div(
                         ),
                         dcc.Input(
                             id="receivers_offset_x",
+                            type="number",
                             style={"display": "inline-block", "width": "50%"},
                         ),
                     ]
@@ -595,6 +598,7 @@ topography_layout = html.Div(
                         ),
                         dcc.Input(
                             id="receivers_offset_y",
+                            type="number",
                             style={"display": "inline-block", "width": "50%"},
                         ),
                     ]
@@ -607,6 +611,7 @@ topography_layout = html.Div(
                         ),
                         dcc.Input(
                             id="receivers_offset_z",
+                            type="number",
                             style={"display": "inline-block", "width": "50%"},
                         ),
                     ]
@@ -653,7 +658,7 @@ mesh = html.Div(
                     },
                 ),
                 dcc.Dropdown(
-                    id="mesh_object",
+                    id="mesh",
                     style={
                         "display": "inline-block",
                         "width": "65%",
@@ -696,10 +701,12 @@ regularization = html.Div(
                         ),
                         dcc.Input(
                             id="alpha_s",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(
                             id="s_norm",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                     ]
@@ -712,10 +719,12 @@ regularization = html.Div(
                         ),
                         dcc.Input(
                             id="alpha_x",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(
                             id="x_norm",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                     ]
@@ -728,10 +737,12 @@ regularization = html.Div(
                         ),
                         dcc.Input(
                             id="alpha_y",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(
                             id="y_norm",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                     ]
@@ -744,10 +755,12 @@ regularization = html.Div(
                         ),
                         dcc.Input(
                             id="alpha_z",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(
                             id="z_norm",
+                            type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                     ]
@@ -776,7 +789,7 @@ ignore_values = html.Div(
             [
                 dcc.Markdown(
                     "Value (i.e. '<0' for no negatives)",
-                    style={"display": "inline-block", "width": "55%"},
+                    style={"display": "inline-block", "width": "30%"},
                 ),
                 dcc.Input(
                     id="ignore_values",
@@ -884,7 +897,7 @@ optimization = html.Div(
             ]
         ),
     ],
-    style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
+    style={"display": "inline-block", "vertical-align": "top", "width": "45%"},
 )
 
 detrend = html.Div(
@@ -899,7 +912,7 @@ detrend = html.Div(
                             "Method",
                             style={
                                 "display": "inline-block",
-                                "width": "30%",
+                                "width": "20%",
                                 "vertical-align": "bottom",
                             },
                         ),
@@ -908,7 +921,7 @@ detrend = html.Div(
                             options=["all", "perimeter"],
                             style={
                                 "display": "inline-block",
-                                "width": "70%",
+                                "width": "60%",
                                 "vertical-align": "bottom",
                             },
                         ),
@@ -917,12 +930,14 @@ detrend = html.Div(
                 html.Div(
                     [
                         dcc.Markdown(
-                            "Order", style={"display": "inline-block", "width": "40%"}
+                            "Order", style={"display": "inline-block", "width": "20%"}
                         ),
                         dcc.Input(
                             id="detrend_order",
                             type="number",
-                            style={"display": "inline-block", "width": "60%"},
+                            step=1,
+                            min=0,
+                            style={"display": "inline-block", "width": "30%"},
                         ),
                     ]
                 ),

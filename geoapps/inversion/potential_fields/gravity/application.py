@@ -112,7 +112,7 @@ class GravityApp(InversionApp):
         )(self.update_object_options)
 
         self.app.callback(
-            Output(component_id="mesh_object", component_property="options"),
+            Output(component_id="mesh", component_property="options"),
             Input(component_id="data_object", component_property="options"),
         )(InversionApp.update_remaining_object_options)
         self.app.callback(
@@ -125,6 +125,27 @@ class GravityApp(InversionApp):
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="topography_object", component_property="value"),
         )(self.update_data_options)
+
+        for param in ["lower_bound", "upper_bound"]:
+            self.app.callback(
+                Output(
+                    component_id=param + "_object",
+                    component_property="options",
+                ),
+                Input(component_id="data_object", component_property="options"),
+            )(InversionApp.update_remaining_object_options)
+            self.app.callback(
+                Output(
+                    component_id=param + "_data",
+                    component_property="options",
+                ),
+                # Output(component_id=param+"_data", component_property="value"),
+                Input(component_id="ui_json_data", component_property="data"),
+                Input(
+                    component_id=param + "_object",
+                    component_property="value",
+                ),
+            )(self.update_data_options)
 
         for model_type in ["starting", "reference"]:
             for param in gravity_inversion_params:
@@ -236,6 +257,8 @@ class GravityApp(InversionApp):
             Output(component_id="receivers_offset_x", component_property="value"),
             Output(component_id="receivers_offset_y", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
+            # Inversion - mesh
+            Output(component_id="mesh", component_property="value"),
             # Inversion - regularization
             Output(component_id="alpha_s", component_property="value"),
             Output(component_id="alpha_x", component_property="value"),
@@ -307,7 +330,7 @@ class GravityApp(InversionApp):
             State(component_id="starting_density_data", component_property="value"),
             State(component_id="starting_density_const", component_property="value"),
             # Mesh
-            State(component_id="mesh_object", component_property="value"),
+            State(component_id="mesh", component_property="value"),
             # Reference Model
             State(component_id="reference_density_options", component_property="value"),
             State(component_id="reference_density_object", component_property="value"),

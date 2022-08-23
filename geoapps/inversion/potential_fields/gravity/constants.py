@@ -131,6 +131,7 @@ inversion_defaults = {
     "gyz_channel_bool": False,
     "gx_channel_bool": False,
     "gy_channel_bool": False,
+    "fix_aspect_ratio": True,
 }
 forward_defaults = {
     "title": "SimPEG gravity Forward",
@@ -196,6 +197,7 @@ forward_defaults = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
+    "fix_aspect_ratio": True,
 }
 
 inversion_ui_json = {
@@ -572,6 +574,7 @@ validations = {
     "gx_uncertainty": {"one_of": "uncertainty channel"},
     "gy_channel": {"one_of": "data channel"},
     "gy_uncertainty": {"one_of": "uncertainty channel"},
+    "fix_aspect_ratio": {"types": [bool]},
 }
 
 validations = dict(base_validations, **validations)
