@@ -178,6 +178,7 @@ class GravityApp(InversionApp):
             Output(component_id="uncertainty_options", component_property="value"),
             Output(component_id="uncertainty_floor", component_property="value"),
             Output(component_id="uncertainty_channel", component_property="value"),
+            Output(component_id="component", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="full_components", component_property="data"),
             Input(component_id="data_object", component_property="value"),

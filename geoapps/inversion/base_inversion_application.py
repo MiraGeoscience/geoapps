@@ -283,6 +283,16 @@ class InversionApp(BaseDashApplication):
                     "uncertainty_floor": uncertainty_floor,
                     "uncertainty_channel": uncertainty_channel,
                 }
+            # Get starting component
+            for comp, value in full_components.items():
+                if value["channel_bool"]:
+                    component = comp
+                    channel_bool = value["channel_bool"]
+                    channel = value["channel"]
+                    uncertainty_type = value["uncertainty_type"]
+                    uncertainty_floor = value["uncertainty_floor"]
+                    uncertainty_channel = value["uncertainty_channel"]
+                    break
         elif "component" in triggers:
             if full_components and component is not None:
                 channel_bool = full_components[component]["channel_bool"]
@@ -327,6 +337,7 @@ class InversionApp(BaseDashApplication):
             uncertainty_type,
             uncertainty_floor,
             uncertainty_channel,
+            component,
         )
 
     @staticmethod
@@ -383,9 +394,9 @@ class InversionApp(BaseDashApplication):
         if values is not None and (values.shape[0] != locations.shape[0]):
             values = None
 
-        window = None
-        if "window" in kwargs.keys():
-            window = kwargs["window"]
+        # window = None
+        # if "window" in kwargs.keys():
+        #    window = kwargs["window"]
 
         if (
             data is not None
@@ -409,69 +420,25 @@ class InversionApp(BaseDashApplication):
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
 
-            rot = entity.rotation[0]  # + window["azimuth"]
-
-            x_min = x.min()
-            x_max = x.max()
-            y_min = y.min()
-            y_max = y.max()
-            width = x_max - x_min
-            height = y_max - y_min
-            # indices = filter_xy(x, y, resolution, window=window)
-
-            """
-            {
-                "center": [x_min + (width/2), y_min + (height/2)],
-                "size": [width, height],
-                "azimuth": window["azimuth"]
-            }
-            """
-
-            # ind_x, ind_y = (
-            #    np.any(indices, axis=1),
-            #    np.any(indices, axis=0),
-            # )
+            rot = entity.rotation[0]
 
             if values is not None:
-                # values[np.isnan(values)] = None
                 values = np.asarray(
                     values.reshape(entity.shape, order="F"), dtype=float
                 )
-                # values[indices == False] = np.nan
-                # values = values[ind_x, :][:, ind_y]
 
-                # """
                 new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
                 rot_x = np.linspace(x.min(), x.max(), new_values.shape[0])
                 rot_y = np.linspace(y.min(), y.max(), new_values.shape[1])
-                # """
 
                 X, Y = np.meshgrid(rot_x, rot_y)
 
                 downsampled_index, down_x, down_y = downsample_grid(X, Y, resolution)
 
-                # base * round(x/base)
-                # downsampled = skimage.measure.block_reduce(
-                #    new_values, (resolution, resolution)
-                # )
-
             if np.any(values):
-                """
-                figure["data"][0]["x"] = np.linspace(
-                    x.min(), x.max(), values.shape[0]
-                )
-                figure["data"][0]["y"] = np.linspace(
-                    y.min(), y.max(), values.shape[1]
-                )"""
-                # figure["data"][0]["z"] = values.T
-
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
                 figure["data"][0]["z"] = new_values.T[downsampled_index]  # new_values
-
-                # figure["data"][0]["x"] = rot_x
-                # figure["data"][0]["y"] = rot_y
-                # figure["data"][0]["z"] = downsampled.T  # new_values
 
             if "colorbar" in kwargs.keys():
                 if kwargs["colorbar"]:
@@ -481,23 +448,11 @@ class InversionApp(BaseDashApplication):
 
         else:
             x, y = entity.vertices[:, 0], entity.vertices[:, 1]
-            """
-            if indices is None:
-                indices = filter_xy(
-                    x,
-                    y,
-                    resolution,
-                    window=window,
-                )
-            X, Y = x[indices], y[indices]
 
-            if values is not None:
-                values = values[indices]
-            """
             if "marker_size" not in kwargs.keys():
-                marker_size = 50
+                figure["data"][0]["marker"]["size"] = 50
             else:
-                marker_size = kwargs["marker_size"]
+                figure["data"][0]["marker"]["size"] = kwargs["marker_size"]
 
             if values is not None:
                 downsampled_index, down_x, down_y = downsample_xy(
@@ -540,44 +495,25 @@ class InversionApp(BaseDashApplication):
         object,
         channel,
         resolution,
-        # azimuth,
         colorbar,
         fix_aspect_ratio,
     ):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
         data_count = "Data Count: "
 
-        """
-        if "ui_json_data" in triggers:
-            center_x = ui_json_data["window_center_x"]
-            center_y = ui_json_data["window_center_y"]
-            width = ui_json_data["window_width"]
-            height = ui_json_data["window_height"]
-            figure.update_layout(
-                xaxis_range=[center_x - (width / 2), center_x + (width / 2)],
-                yaxis_range=[center_y - (height / 2), center_y + (height / 2)],
-            )
-        else:
-            x_range = figure["layout"]["xaxis"]["range"]
-            width = x_range[1] - x_range[0]
-            center_x = x_range[0] + (width / 2)
-            y_range = figure["layout"]["yaxis"]["range"]
-            height = y_range[1] - y_range[0]
-            center_y = y_range[0] + (height / 2)
-        """
         if object is None:
             return go.Figure(), data_count
 
         obj = self.workspace.get_entity(uuid.UUID(object))[0]
         if "data_object" in triggers or channel is None:
-            print("object change")
             if isinstance(obj, Grid2D):
                 figure = go.Figure(go.Heatmap(colorscale="rainbow"))
             else:
                 figure = go.Figure(
                     go.Scatter(mode="markers", marker={"colorscale": "rainbow"})
                 )
-            return figure, data_count
+            if "ui_json_data" not in triggers:
+                return figure, data_count
         else:
             figure = go.Figure(figure)
 
@@ -602,11 +538,6 @@ class InversionApp(BaseDashApplication):
             else:
                 return
 
-            width = lim_x[1] - lim_x[0]
-            height = lim_y[1] - lim_y[0]
-            center_x = np.mean(lim_x)
-            center_y = np.mean(lim_y)
-
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
                 figure, ind_filter = InversionApp.plot_plan_data_selection(
                     obj,
@@ -614,17 +545,15 @@ class InversionApp(BaseDashApplication):
                     **{
                         "figure": figure,
                         "resolution": resolution,
-                        "window": {
-                            "center": [center_x, center_y],
-                            "size": [width, height],
-                            # "azimuth": azimuth,
-                        },
-                        # "resize": True,
+                        # "window": {
+                        #    "center": [center_x, center_y],
+                        #    "size": [width, height],
+                        # },
                         "colorbar": colorbar,
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
-
+                print(figure["layout"]["xaxis"]["range"])
                 if "ui_json_data" in triggers:
                     center_x = ui_json_data["window_center_x"]
                     center_y = ui_json_data["window_center_y"]
