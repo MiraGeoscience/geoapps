@@ -22,12 +22,9 @@ from time import time
 
 import numpy as np
 import scipy
-import skimage
 from dash import callback_context, no_update
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
-from geoh5py.shared import entity
 from geoh5py.shared.utils import is_uuid
-from matplotlib import colors
 from notebook import notebookapp
 from plotly import graph_objects as go
 
@@ -600,7 +597,7 @@ class InversionApp(BaseDashApplication):
             )[0]
         }
 
-        if topography["options"] == "Object":
+        if topography["options"] == "Data":
             param_dict["topography"] = self.workspace.get_entity(
                 uuid.UUID(topography["data"])
             )[0]
@@ -616,13 +613,14 @@ class InversionApp(BaseDashApplication):
         for key, value in bounds.items():
             param_dict[key + "_object"] = None
             param_dict[key] = None
-            if value["options"] == "Object":
+            if value["options"] == "Model":
                 param_dict[key + "_object"] = self.workspace.get_entity(
-                    value["object"]
+                    uuid.UUID(value["object"])
                 )[0]
-                param_dict[key] = self.workspace.get_entity(value["data"])[0]
+                param_dict[key] = self.workspace.get_entity(uuid.UUID(value["data"]))[0]
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
+
         return param_dict
 
     def get_model_params(self, inversion_type, update_dict):
@@ -675,11 +673,11 @@ class InversionApp(BaseDashApplication):
         for key, value in models.items():
             param_dict[key + "_object"] = None
             param_dict[key] = None
-            if value["options"] == "Object":
+            if value["options"] == "Model":
                 param_dict[key + "_object"] = self.workspace.get_entity(
-                    value["object"]
+                    uuid.UUID(value["object"])
                 )[0]
-                param_dict[key + "_data"] = self.workspace.get_entity(value["data"])[0]
+                param_dict[key] = self.workspace.get_entity(uuid.UUID(value["data"]))[0]
 
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
@@ -727,16 +725,16 @@ class InversionApp(BaseDashApplication):
             self.get_bound_params(
                 {
                     "lower_bound": {
-                        "options": update_dict["topography_options"],
-                        "object": update_dict["topography_object"],
-                        "data": update_dict["topography_data"],
-                        "const": update_dict["topography_const"],
+                        "options": update_dict["lower_bound_options"],
+                        "object": update_dict["lower_bound_object"],
+                        "data": update_dict["lower_bound_data"],
+                        "const": update_dict["lower_bound_const"],
                     },
                     "upper_bound": {
-                        "options": update_dict["topography_options"],
-                        "object": update_dict["topography_object"],
-                        "data": update_dict["topography_data"],
-                        "const": update_dict["topography_const"],
+                        "options": update_dict["upper_bound_options"],
+                        "object": update_dict["upper_bound_object"],
+                        "data": update_dict["upper_bound_data"],
+                        "const": update_dict["upper_bound_const"],
                     },
                 }
             )
@@ -803,7 +801,7 @@ class InversionApp(BaseDashApplication):
         tol_cg,
         n_cpu,
         tile_spatial,
-        ga_group_name,
+        out_group,
         monitoring_directory,
         starting_inclination_options=None,
         starting_inclination_object=None,
@@ -845,7 +843,7 @@ class InversionApp(BaseDashApplication):
             monitoring_directory = os.path.dirname(self.workspace.h5file)
 
         # Create a new workspace and copy objects into it
-        temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
+        temp_geoh5 = f"{'GravityInversion'}_{time():.0f}.geoh5"
         ws, live_link = BaseApplication.get_output_workspace(
             live_link, monitoring_directory, temp_geoh5
         )
