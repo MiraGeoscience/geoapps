@@ -9,8 +9,6 @@ from dash import html
 
 import geoapps.inversion.base_inversion_layout as base_layout
 
-object_selection_layout = base_layout.get_object_selection_layout("gravity")
-
 component_list = [
     "gx",
     "gy",
@@ -23,7 +21,10 @@ component_list = [
     "gzz",
     "guv",
 ]
-input_data_layout = base_layout.get_input_data_layout(component_list)
+
+object_selection_layout = base_layout.get_object_selection_layout(
+    "gravity", component_list
+)
 
 gravity_inversion_params = {"density": {"label": "Density", "units": "g/cc"}}
 inversion_params_layout = base_layout.get_inversion_params_layout(
@@ -34,8 +35,7 @@ inversion_params_layout = base_layout.get_inversion_params_layout(
 gravity_layout = html.Div(
     [
         object_selection_layout,
-        input_data_layout,
-        base_layout.topography_layout,
+        base_layout.plot_layout,
         inversion_params_layout,
         base_layout.output_layout,
     ],
