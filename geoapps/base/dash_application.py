@@ -73,7 +73,8 @@ class BaseDashApplication:
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"], mode="r")
                 self.params = self._param_class(**{"geoh5": self.workspace})
-                self.driver.params = self.params
+                if hasattr(self, "driver"):
+                    self.driver.params = self.params
                 # Create ifile from ui.json
                 ifile = InputFile(ui_json=ui_json)
                 # Demote ifile data so it can be stored as a string
@@ -92,7 +93,8 @@ class BaseDashApplication:
                         new_params[key] = None
                 new_params["geoh5"] = self.workspace
                 self.params = self._param_class(**new_params)
-                self.driver.params = self.params
+                if hasattr(self, "driver"):
+                    self.driver.params = self.params
                 ui_json_data = no_update
             elif trigger == "":
                 # Initialization of app from self.params.

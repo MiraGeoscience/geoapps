@@ -121,10 +121,10 @@ class GravityApp(InversionApp):
         )(InversionApp.update_remaining_object_options)
         self.app.callback(
             Output(component_id="topography_data", component_property="options"),
-            # Output(component_id=param+"_data", component_property="value"),
+            # Output(component_id="topography_data", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="topography_object", component_property="value"),
-        )(self.update_channel_options)
+        )(self.update_data_options)
 
         for model_type in ["starting", "reference"]:
             for param in gravity_inversion_params:
@@ -146,26 +146,26 @@ class GravityApp(InversionApp):
                         component_id=model_type + "_" + param + "_object",
                         component_property="value",
                     ),
-                )(self.update_channel_options)
+                )(self.update_data_options)
 
         self.app.callback(
             Output(component_id="channel", component_property="options"),
             # Output(component_id="channel", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_object", component_property="value"),
-        )(self.update_channel_options)
+        )(self.update_data_options)
         self.app.callback(
             Output(component_id="uncertainty_channel", component_property="options"),
             # Output(component_id="uncertainty_channel", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_object", component_property="value"),
-        )(self.update_channel_options)
+        )(self.update_data_options)
         self.app.callback(
             Output(component_id="receivers_radar_drape", component_property="options"),
             Output(component_id="receivers_radar_drape", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_object", component_property="value"),
-        )(self.update_data_options)
+        )(self.update_radar_options)
 
         # Update input data channel and uncertainties from component
         self.app.callback(
@@ -229,6 +229,8 @@ class GravityApp(InversionApp):
         self.app.callback(
             # Input Data
             Output(component_id="resolution", component_property="value"),
+            # Plot
+            Output(component_id="fix_aspect_ratio", component_property="value"),
             # Topography
             Output(component_id="z_from_topo", component_property="value"),
             Output(component_id="receivers_offset_x", component_property="value"),
@@ -272,7 +274,6 @@ class GravityApp(InversionApp):
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="resolution", component_property="value"),
-            # Input(component_id="azimuth", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
             Input(component_id="fix_aspect_ratio", component_property="value"),
         )(self.plot_selection)
@@ -282,14 +283,11 @@ class GravityApp(InversionApp):
             Output(component_id="live_link", component_property="value"),
             Input(component_id="write_input", component_property="n_clicks"),
             State(component_id="live_link", component_property="value"),
-            # Object Selection
+            # Data Selection
             State(component_id="data_object", component_property="value"),
-            # Input Data
             State(component_id="full_components", component_property="data"),
             State(component_id="resolution", component_property="value"),
             State(component_id="plot", component_property="figure"),
-            # State(component_id="azimuth", component_property="value"),
-            State(component_id="colorbar", component_property="value"),
             State(component_id="fix_aspect_ratio", component_property="value"),
             # Topography
             State(component_id="topography_options", component_property="value"),
