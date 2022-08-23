@@ -43,6 +43,7 @@ class BaseParams:
     _ui_json = None
     _input_file = None
     _validations = None
+    _validation_options = None
     _validator: InputValidation = None
     validate = True
 
@@ -50,7 +51,7 @@ class BaseParams:
         self,
         input_file=None,
         validate=True,
-        validation_options={},
+        validation_options=None,
         workpath=None,
         **kwargs,
     ):
@@ -59,6 +60,7 @@ class BaseParams:
         self._geoh5 = None
         self._run_command: str = None
         self._run_command_boolean: bool = None
+        self._title = None
         self._conda_environment: str = None
         self._conda_environment_boolean: bool = None
         self.workpath = workpath
@@ -111,7 +113,7 @@ class BaseParams:
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
 
-        params_dict = self.input_file._promote(params_dict)
+        params_dict = self.input_file._promote(params_dict)  # pylint: disable=W0212
         for key, value in params_dict.items():
             if key not in self.ui_json.keys() or key == "geoh5":
                 continue  # ignores keys not in default_ui_json
@@ -142,9 +144,21 @@ class BaseParams:
         self._workpath = val
 
     @property
-    def validations(self):
-        """Encoded parameter validator type and associated validations."""
-        return self._validations
+    def validation_options(self):
+        """Optional validation directives."""
+        if self._validation_options is None:
+            return {}
+
+        return self._validation_options
+
+    @validation_options.setter
+    def validation_options(self, value: dict | None):
+        if not isinstance(value, (dict, type(None))):
+            raise UserWarning(
+                "Input 'validation_options' must a dictionary of options or None."
+            )
+
+        self._validation_options = value
 
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
@@ -164,7 +178,7 @@ class BaseParams:
     def is_uuid(self, p: str) -> bool:
         """Return true if string contains valid UUID."""
         if isinstance(p, str):
-            private_attr = self.__getattribue__("_" + p)
+            private_attr = self.__getattribute__("_" + p)
             return True if isinstance(private_attr, UUID) else False
         else:
             pass
@@ -205,7 +219,15 @@ class BaseParams:
         return free_parameter_dict
 
     @property
+    def free_parameter_keys(self) -> list | None:
+        """
+        String identifiers for free form parameters.
+        """
+        return self._free_parameter_keys
+
+    @property
     def validations(self) -> dict[str, Any]:
+        """Encoded parameter validator type and associated validations."""
         if getattr(self, "_validations", None) is None:
             self._validations = self.input_file.validations
         return self._validations
@@ -214,7 +236,7 @@ class BaseParams:
     def validations(self, validations: dict[str, Any]):
         assert isinstance(
             validations, dict
-        ), f"Input value must be a dictionary of validations."
+        ), "Input value must be a dictionary of validations."
         self._validations = validations
 
     @property
@@ -294,6 +316,15 @@ class BaseParams:
         self.setter_validator("title", val)
 
     @property
+    def workspace_geoh5(self):
+        """Source geoh5 file."""
+        return self._workspace_geoh5
+
+    @workspace_geoh5.setter
+    def workspace_geoh5(self, val):
+        self.setter_validator("workspace_geoh5", val)
+
+    @property
     def input_file(self) -> InputFile | None:
         """
         An InputFile class holding the associated ui_json and validations.
@@ -350,7 +381,6 @@ class BaseParams:
 
     def write_input_file(
         self,
-        ui_json: dict = None,
         name: str = None,
         path: str = None,
         validate: bool = True,

@@ -46,6 +46,12 @@ class TipperParams(InversionBaseParams):
         self._txz_real_channel_bool = None
         self._txz_real_channel = None
         self._txz_real_uncertainty = None
+        self._txz_imag_channel_bool = None
+        self._txz_imag_channel = None
+        self._txz_imag_uncertainty = None
+        self._tyz_real_channel_bool = None
+        self._tyz_real_channel = None
+        self._tyz_real_uncertainty = None
         self._tyz_imag_channel_bool = None
         self._tyz_imag_channel = None
         self._tyz_imag_uncertainty = None

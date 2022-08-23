@@ -6,29 +6,26 @@
 #  (see LICENSE file at the root of this source code package).
 
 import os
-from copy import deepcopy
 
 import numpy as np
 import SimPEG
 from geoh5py.objects import Points
-from geoh5py.workspace import Workspace
 from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components import InversionData
-from geoapps.inversion.constants import default_ui_json
 from geoapps.inversion.driver import InversionDriver
+from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
+    DirectCurrent2DParams,
+)
 from geoapps.inversion.potential_fields import MagneticVectorParams
-from geoapps.inversion.electricals.direct_current.two_dimensions.params import DirectCurrent2DParams
 from geoapps.utils.testing import Geoh5Tester
 
 geoh5 = Workspace("./FlinFlon.geoh5")
 
 
 def setup_params(tmp):
-    d_u_j = deepcopy(default_ui_json)
-    geotest = Geoh5Tester(
-        geoh5, tmp, "test.geoh5", ui=d_u_j, params_class=MagneticVectorParams
-    )
+    geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", params_class=MagneticVectorParams)
     geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
@@ -41,48 +38,52 @@ def setup_params(tmp):
 def test_survey_data(tmp_path):
     X, Y, Z = np.meshgrid(np.linspace(0, 100, 3), np.linspace(0, 100, 3), 0)
     verts = np.column_stack([X.ravel(), Y.ravel(), Z.ravel()])
-    ws = Workspace(os.path.join(tmp_path, "test_ws.geoh5"))
-    test_data_object = Points.create(ws, vertices=verts, name="test_data_object")
-    bxx_data, byy_data, bzz_data = test_data_object.add_data(
-        {
-            "bxx": {
-                "association": "VERTEX",
-                "values": np.arange(len(verts)).astype(float),
-            },
-            "byy": {
-                "association": "VERTEX",
-                "values": len(verts) + np.arange(len(verts)).astype(float),
-            },
-            "bzz": {
-                "association": "VERTEX",
-                "values": 2 * len(verts) + np.arange(len(verts)).astype(float),
-            },
-        }
-    )
-    test_topo_object = Points.create(ws, vertices=verts, name="test_topo_object")
-    _ = test_topo_object.add_data(
-        {"elev": {"association": "VERTEX", "values": 100 * np.ones(len(verts))}}
-    )
-    params = MagneticVectorParams(
-        forward_only=False,
-        geoh5=ws,
-        data_object=test_data_object.uid,
-        topography_object=test_topo_object.uid,
-        topography=ws.get_entity("elev")[0].uid,
-        bxx_channel=bxx_data.uid,
-        bxx_uncertainty=0.1,
-        byy_channel=byy_data.uid,
-        byy_uncertainty=0.2,
-        bzz_channel=bzz_data.uid,
-        bzz_uncertainty=0.3,
-        starting_model=0.0,
-        tile_spatial=2,
-        z_from_topo=True,
-        receivers_offset_z=50.0,
-        resolution=0.0,
-    )
+    with Workspace(os.path.join(tmp_path, "test_workspace.geoh5")) as workspace:
+        test_data_object = Points.create(
+            workspace, vertices=verts, name="test_data_object"
+        )
+        bxx_data, byy_data, bzz_data = test_data_object.add_data(
+            {
+                "bxx": {
+                    "association": "VERTEX",
+                    "values": np.arange(len(verts)).astype(float),
+                },
+                "byy": {
+                    "association": "VERTEX",
+                    "values": len(verts) + np.arange(len(verts)).astype(float),
+                },
+                "bzz": {
+                    "association": "VERTEX",
+                    "values": 2 * len(verts) + np.arange(len(verts)).astype(float),
+                },
+            }
+        )
+        test_topo_object = Points.create(
+            workspace, vertices=verts, name="test_topo_object"
+        )
+        _ = test_topo_object.add_data(
+            {"elev": {"association": "VERTEX", "values": 100 * np.ones(len(verts))}}
+        )
+        params = MagneticVectorParams(
+            forward_only=False,
+            geoh5=workspace,
+            data_object=test_data_object.uid,
+            topography_object=test_topo_object.uid,
+            topography=workspace.get_entity("elev")[0].uid,
+            bxx_channel=bxx_data.uid,
+            bxx_uncertainty=0.1,
+            byy_channel=byy_data.uid,
+            byy_uncertainty=0.2,
+            bzz_channel=bzz_data.uid,
+            bzz_uncertainty=0.3,
+            starting_model=0.0,
+            tile_spatial=2,
+            z_from_topo=True,
+            receivers_offset_z=50.0,
+            resolution=0.0,
+        )
 
-    driver = InversionDriver(params, warmstart=False)
+        driver = InversionDriver(params, warmstart=False)
 
     local_survey_a = driver.inverse_problem.dmisfit.objfcts[0].simulation.survey
     local_survey_b = driver.inverse_problem.dmisfit.objfcts[1].simulation.survey
@@ -101,7 +102,6 @@ def test_survey_data(tmp_path):
     assert all(local_survey_b.receiver_locations[:, 2] == 150.0)
 
     # test observed data
-
     sorting = np.hstack(driver.sorting)
     expected_dobs = np.column_stack(
         [bxx_data.values, byy_data.values, bzz_data.values]
@@ -110,30 +110,29 @@ def test_survey_data(tmp_path):
     np.testing.assert_array_equal(expected_dobs, np.hstack(survey_dobs))
 
     # test savegeoh5iteration data
-    driver.directiveList[-2].save_components(99, survey_dobs)
+    driver.directive_list[-2].save_components(99, survey_dobs)
 
-    ws.open()
-    bxx_test = ws.get_entity("Iteration_99_bxx")[0].values
-    byy_test = ws.get_entity("Iteration_99_byy")[0].values
-    bzz_test = ws.get_entity("Iteration_99_bzz")[0].values
-    ws.close()
+    with workspace.open():
+        bxx_test = workspace.get_entity("Iteration_99_bxx")[0].values
+        byy_test = workspace.get_entity("Iteration_99_byy")[0].values
+        bzz_test = workspace.get_entity("Iteration_99_bzz")[0].values
 
     np.testing.assert_array_equal(bxx_test, bxx_data.values)
     np.testing.assert_array_equal(byy_test, byy_data.values)
     np.testing.assert_array_equal(bzz_test, bzz_data.values)
 
-    driver.directiveList[-1].save_components(99, survey_dobs)
-    ws.open()
-    assert np.all(
-        ws.get_entity("Iteration_99_bxx_Residual")[0].values == 0
-    ), "Residual data should be zero."
-    assert np.all(
-        ws.get_entity("Iteration_99_byy_Residual")[0].values == 0
-    ), "Residual data should be zero."
-    assert np.all(
-        ws.get_entity("Iteration_99_bzz_Residual")[0].values == 0
-    ), "Residual data should be zero."
-    ws.close()
+    driver.directive_list[-1].save_components(99, survey_dobs)
+
+    with workspace.open():
+        assert np.all(
+            workspace.get_entity("Iteration_99_bxx_Residual")[0].values == 0
+        ), "Residual data should be zero."
+        assert np.all(
+            workspace.get_entity("Iteration_99_byy_Residual")[0].values == 0
+        ), "Residual data should be zero."
+        assert np.all(
+            workspace.get_entity("Iteration_99_bzz_Residual")[0].values == 0
+        ), "Residual data should be zero."
 
 
 def test_save_data(tmp_path):
@@ -163,21 +162,21 @@ def test_parse_ignore_values(tmp_path):
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.ignore_values = "<99"
     data = InversionData(ws, params, window)
-    val, type = data.parse_ignore_values()
+    val, logic = data.parse_ignore_values()
     assert val == 99
-    assert type == "<"
+    assert logic == "<"
 
     params.ignore_values = ">99"
     data = InversionData(ws, params, window)
-    val, type = data.parse_ignore_values()
+    val, logic = data.parse_ignore_values()
     assert val == 99
-    assert type == ">"
+    assert logic == ">"
 
     params.ignore_values = "99"
     data = InversionData(ws, params, window)
-    val, type = data.parse_ignore_values()
+    val, logic = data.parse_ignore_values()
     assert val == 99
-    assert type == "="
+    assert logic == "="
 
 
 def test_set_infinity_uncertainties(tmp_path):
@@ -270,13 +269,16 @@ def test_get_survey(tmp_path):
     survey, _ = data.survey()
     assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)
 
+
 def test_dc2d_data():
-    ifile = InputFile.read_ui_json("../assets/uijson/direct_current_inversion_2d.ui.json")
+    ifile = InputFile.read_ui_json(
+        "../assets/uijson/direct_current_inversion_2d.ui.json"
+    )
     params = DirectCurrent2DParams(input_file=ifile)
     from geoapps.inversion.components import InversionData
+
     params.geoh5.open(mode="r+")
     idata = InversionData(params.geoh5, params, None)
     params.data("potential")
     assert True
     params.geoh5.close()
-
