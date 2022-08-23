@@ -599,5 +599,5 @@ app_initializer = {
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "out_group": "GravityInversion",
-    "export_directory": os.path.abspath("../../../../assets/Temp"),
+    "monitoring_directory": os.path.abspath("../../../../assets/Temp"),
 }

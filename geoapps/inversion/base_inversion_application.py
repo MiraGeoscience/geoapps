@@ -10,6 +10,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
 
 from __future__ import annotations
 
@@ -17,18 +18,20 @@ import os
 import uuid
 import warnings
 import webbrowser
+from time import time
 
 import numpy as np
 import scipy
 import skimage
 from dash import callback_context, no_update
-from geoh5py.objects import Curve, Grid2D, Points, Surface
+from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
 from geoh5py.shared import entity
 from geoh5py.shared.utils import is_uuid
 from matplotlib import colors
 from notebook import notebookapp
 from plotly import graph_objects as go
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
@@ -559,6 +562,301 @@ class InversionApp(BaseDashApplication):
             figure,
             data_count,
         )
+
+    @staticmethod
+    def get_window_params(plot):
+        x_range = plot["layout"]["xaxis"]["range"]
+        y_range = plot["layout"]["yaxis"]["range"]
+        width = x_range[1] - x_range[0]
+        height = y_range[1] - y_range[0]
+
+        return {
+            "window_width": width,
+            "window_height": height,
+            "window_center_x": x_range[0] + (width / 2),
+            "window_center_y": y_range[0] + (height / 2),
+        }
+
+    def get_topography_params(self, topography):
+        param_dict = {
+            "topography_object": self.workspace.get_entity(
+                uuid.UUID(topography["object"])
+            )[0]
+        }
+
+        if topography["options"] == "Object":
+            param_dict["topography"] = self.workspace.get_entity(
+                uuid.UUID(topography["data"])
+            )[0]
+        elif topography["options"] == "Constant":
+            param_dict["topography"] = topography["const"]
+        else:
+            param_dict["topography"] = None
+
+        return param_dict
+
+    def get_bound_params(self, bounds):
+        param_dict = {}
+        for key, value in bounds.items():
+            param_dict[key + "_object"] = None
+            param_dict[key] = None
+            if value["options"] == "Object":
+                param_dict[key + "_object"] = self.workspace.get_entity(
+                    value["object"]
+                )[0]
+                param_dict[key] = self.workspace.get_entity(value["data"])[0]
+            elif value["options"] == "Constant":
+                param_dict[key] = value["const"]
+        return param_dict
+
+    def get_model_params(self, inversion_type, update_dict):
+        models = {
+            "starting_model": {
+                "options": update_dict["starting_model_options"],
+                "object": update_dict["starting_model_object"],
+                "data": update_dict["starting_model_data"],
+                "const": update_dict["starting_model_const"],
+            },
+            "reference_model": {
+                "options": update_dict["reference_model_options"],
+                "object": update_dict["reference_model_object"],
+                "data": update_dict["reference_model_data"],
+                "const": update_dict["reference_model_const"],
+            },
+        }
+        if inversion_type == "magnetic_vector":
+            models.update(
+                {
+                    "starting_inclination": {
+                        "options": update_dict["starting_inclination_options"],
+                        "object": update_dict["starting_inclination_object"],
+                        "data": update_dict["starting_inclination_data"],
+                        "const": update_dict["starting_inclination_const"],
+                    },
+                    "reference_inclination": {
+                        "options": update_dict["reference_inclination_options"],
+                        "object": update_dict["reference_inclination_object"],
+                        "data": update_dict["reference_inclination_data"],
+                        "const": update_dict["reference_inclination_const"],
+                    },
+                    "starting_declination": {
+                        "options": update_dict["starting_declination_options"],
+                        "object": update_dict["starting_declination_object"],
+                        "data": update_dict["starting_declination_data"],
+                        "const": update_dict["starting_declination_const"],
+                    },
+                    "reference_declination": {
+                        "options": update_dict["reference_declination_options"],
+                        "object": update_dict["reference_declination_object"],
+                        "data": update_dict["reference_declination_data"],
+                        "const": update_dict["reference_declination_const"],
+                    },
+                }
+            )
+
+        param_dict = {}
+
+        for key, value in models.items():
+            param_dict[key + "_object"] = None
+            param_dict[key] = None
+            if value["options"] == "Object":
+                param_dict[key + "_object"] = self.workspace.get_entity(
+                    value["object"]
+                )[0]
+                param_dict[key + "_data"] = self.workspace.get_entity(value["data"])[0]
+
+            elif value["options"] == "Constant":
+                param_dict[key] = value["const"]
+
+        return param_dict
+
+    def get_full_component_params(self, full_components, forward_only):
+        param_dict = {}
+        for comp, value in full_components.items():
+            if value["channel_bool"] and not forward_only:
+                param_dict[comp + "_channel_bool"] = True
+                param_dict[comp + "_channel"] = self.workspace.get_entity(
+                    uuid.UUID(value["channel"])
+                )[0]
+            else:
+                param_dict[comp + "_channel_bool"] = False
+
+            if value["uncertainty_type"] == "Floor":
+                param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
+            elif value["uncertainty_type"] == "Channel":
+                # param_dict[comp + "_uncertainty"] = value["uncertainty_channel"]
+                if self.workspace.get_entity(value["uncertainty_channel"])[0] is None:
+                    param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
+                        uuid.UUID(value["uncertainty_channel"])
+                    )[0]
+            else:
+                param_dict[comp + "_uncertainty"] = None
+
+        return param_dict
+
+    def get_inversion_params_dict(self, inversion_type, update_dict):
+        param_dict = {}
+        param_dict.update(InversionApp.get_window_params(update_dict["plot"]))
+        param_dict.update(
+            self.get_topography_params(
+                {
+                    "options": update_dict["topography_options"],
+                    "object": update_dict["topography_object"],
+                    "data": update_dict["topography_data"],
+                    "const": update_dict["topography_const"],
+                }
+            )
+        )
+        param_dict.update(
+            self.get_bound_params(
+                {
+                    "lower_bound": {
+                        "options": update_dict["topography_options"],
+                        "object": update_dict["topography_object"],
+                        "data": update_dict["topography_data"],
+                        "const": update_dict["topography_const"],
+                    },
+                    "upper_bound": {
+                        "options": update_dict["topography_options"],
+                        "object": update_dict["topography_object"],
+                        "data": update_dict["topography_data"],
+                        "const": update_dict["topography_const"],
+                    },
+                }
+            )
+        )
+        param_dict.update(self.get_model_params(inversion_type, update_dict))
+        param_dict.update(
+            self.get_full_component_params(
+                update_dict["full_components"], update_dict["forward_only"]
+            )
+        )
+        return param_dict
+
+    def write_trigger(
+        self,
+        n_clicks,
+        live_link,
+        data_object,
+        full_components,
+        resolution,
+        plot,
+        colorbar,
+        fix_aspect_ratio,
+        topography_options,
+        topography_object,
+        topography_data,
+        topography_const,
+        z_from_topo,
+        receivers_offset_x,
+        receivers_offset_y,
+        receivers_offset_z,
+        receivers_radar_drape,
+        forward_only,
+        starting_model_options,
+        starting_model_object,
+        starting_model_data,
+        starting_model_const,
+        mesh,
+        reference_model_options,
+        reference_model_object,
+        reference_model_data,
+        reference_model_const,
+        alpha_s,
+        alpha_x,
+        alpha_y,
+        alpha_z,
+        s_norm,
+        x_norm,
+        y_norm,
+        z_norm,
+        lower_bound_options,
+        lower_bound_object,
+        lower_bound_data,
+        lower_bound_const,
+        upper_bound_options,
+        upper_bound_object,
+        upper_bound_data,
+        upper_bound_const,
+        detrend_type,
+        detrend_order,
+        ignore_values,
+        max_iterations,
+        chi_factor,
+        initial_beta_ratio,
+        max_cg_iterations,
+        tol_cg,
+        n_cpu,
+        tile_spatial,
+        ga_group_name,
+        monitoring_directory,
+        starting_inclination_options=None,
+        starting_inclination_object=None,
+        starting_inclination_data=None,
+        starting_inclination_const=None,
+        reference_inclination_options=None,
+        reference_inclination_object=None,
+        reference_inclination_data=None,
+        reference_inclination_const=None,
+        starting_declination_options=None,
+        starting_declination_object=None,
+        starting_declination_data=None,
+        starting_declination_const=None,
+        reference_declination_options=None,
+        reference_declination_object=None,
+        reference_declination_data=None,
+        reference_declination_const=None,
+    ):
+        # Get dict of params from base dash application
+        param_dict = self.get_params_dict(locals())
+        # Add inversion specific params to param_dict
+        param_dict.update(
+            self.get_inversion_params_dict(self._inversion_type, locals())
+        )
+
+        if not live_link:
+            live_link = False
+        else:
+            live_link = True
+
+        # Get output path
+        if (
+            monitoring_directory is not None
+            and monitoring_directory != ""
+            and os.path.exists(os.path.abspath(monitoring_directory))
+        ):
+            monitoring_directory = os.path.abspath(monitoring_directory)
+        else:
+            monitoring_directory = os.path.dirname(self.workspace.h5file)
+
+        # Create a new workspace and copy objects into it
+        temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
+        ws, live_link = BaseApplication.get_output_workspace(
+            live_link, monitoring_directory, temp_geoh5
+        )
+        if not live_link:
+            param_dict["monitoring_directory"] = ""
+
+        with ws as workspace:
+            # Put entities in output workspace.
+            param_dict["geoh5"] = workspace
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+
+            # param_dict["resolution"] = None  # No downsampling for dcip
+            self._run_params = self.params.__class__(**param_dict)
+            self._run_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=monitoring_directory,
+            )
+
+        if live_link:
+            print("Live link active. Check your ANALYST session for new mesh.")
+            return [True]
+        else:
+            print("Saved to " + os.path.abspath(monitoring_directory))
+            return []
 
     def trigger_click(self, _):
         """"""

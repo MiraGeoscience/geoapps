@@ -5,13 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-# pylint: disable=W0613
 
 from __future__ import annotations
 
 import os
-import uuid
-from time import time
 
 from dash import Input, Output, State, no_update
 from flask import Flask
@@ -261,6 +258,7 @@ class GravityApp(InversionApp):
             Output(component_id="tile_spatial", component_property="value"),
             # Output
             Output(component_id="out_group", component_property="value"),
+            Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
@@ -350,7 +348,7 @@ class GravityApp(InversionApp):
             State(component_id="tile_spatial", component_property="value"),
             # Output
             State(component_id="out_group", component_property="value"),
-            State(component_id="export_directory", component_property="value"),
+            State(component_id="monitoring_directory", component_property="value"),
             prevent_initial_call=True,
         )(self.write_trigger)
         self.app.callback(
@@ -363,175 +361,3 @@ class GravityApp(InversionApp):
             Input(component_id="open_mesh", component_property="n_clicks"),
             prevent_initial_call=True,
         )(self.open_mesh_app)
-
-    def write_trigger(
-        self,
-        n_clicks,
-        live_link,
-        data_object,
-        full_components,
-        resolution,
-        plot,
-        # azimuth,
-        colorbar,
-        fix_aspect_ratio,
-        topography_options,
-        topography_object,
-        topography_data,
-        topography_const,
-        z_from_topo,
-        receivers_offset_x,
-        receivers_offset_y,
-        receivers_offset_z,
-        receivers_radar_drape,
-        forward_only,
-        starting_density_options,
-        starting_density_object,
-        starting_density_data,
-        starting_density_const,
-        mesh,
-        reference_density_options,
-        reference_density_object,
-        reference_density_data,
-        reference_density_const,
-        alpha_s,
-        alpha_x,
-        alpha_y,
-        alpha_z,
-        s_norm,
-        x_norm,
-        y_norm,
-        z_norm,
-        lower_bound_options,
-        lower_bound_object,
-        lower_bound_data,
-        lower_bound_const,
-        upper_bound_options,
-        upper_bound_object,
-        upper_bound_data,
-        upper_bound_const,
-        detrend_type,
-        detrend_order,
-        ignore_values,
-        max_iterations,
-        chi_factor,
-        initial_beta_ratio,
-        max_cg_iterations,
-        tol_cg,
-        n_cpu,
-        tile_spatial,
-        ga_group_name,
-        export_directory,
-    ):
-        # Widgets values populate params dictionary
-        param_dict = self.get_params_dict(locals())
-
-        if not live_link:
-            live_link = False
-        else:
-            live_link = True
-
-        # Window params
-        # param_dict["window_azimuth"] = float(azimuth)
-        x_range = plot["layout"]["xaxis"]["range"]
-        y_range = plot["layout"]["yaxis"]["range"]
-        param_dict["window_width"] = x_range[1] - x_range[0]
-        param_dict["window_height"] = y_range[1] - y_range[0]
-        param_dict["window_center_x"] = x_range[0] + (param_dict["window_width"] / 2)
-        param_dict["window_center_y"] = y_range[0] + (param_dict["window_height"] / 2)
-
-        # Topography
-        param_dict["topography_object"] = self.workspace.get_entity(
-            uuid.UUID(topography_object)
-        )[0]
-        if locals()["topography_options"] == "Object":
-            param_dict["topography"] = self.workspace.get_entity(
-                uuid.UUID(topography_data)
-            )[0]
-        elif locals()["topography_options"] == "Constant":
-            param_dict["topography"] = locals()["topography_const"]
-        else:
-            param_dict["topography"] = None
-
-        for elem in [
-            "starting_density",
-            "reference_density",
-            "lower_bound",
-            "upper_bound",
-        ]:
-            param_dict[elem + "_object"] = None
-            param_dict[elem] = None
-            if locals()[elem + "_options"] == "Object":
-                param_dict[elem + "_object"] = self.workspace.get_entity(
-                    locals()[elem + "_object"]
-                )[0]
-                param_dict[elem + "_data"] = self.workspace.get_entity(
-                    locals()[elem + "_data"]
-                )[0]
-
-            elif locals()[elem + "_options"] == "Constant":
-                param_dict[elem] = locals()[elem + "_const"]
-
-        new_obj = self.workspace.get_entity(uuid.UUID(data_object))
-        if len(new_obj) == 0 or new_obj[0] is None:
-            print("An object with data must be selected to write the input file.")
-            return no_update
-
-        # param_dict["data_object"] = data_object
-        new_obj = new_obj[0]
-
-        for comp, value in full_components.items():
-            if value["channel_bool"] and not forward_only:
-                param_dict[comp + "_channel_bool"] = True
-                param_dict[comp + "_channel"] = self.workspace.get_entity(
-                    uuid.UUID(value["channel"])
-                )[0]
-            else:
-                param_dict[comp + "_channel_bool"] = False
-
-            if value["uncertainty_type"] == "Floor":
-                param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
-            elif value["uncertainty_type"] == "Channel":
-                # param_dict[comp + "_uncertainty"] = value["uncertainty_channel"]
-                if self.workspace.get_entity(value["uncertainty_channel"])[0] is None:
-                    param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
-                        uuid.UUID(value["uncertainty_channel"])
-                    )[0]
-            else:
-                param_dict[comp + "_uncertainty"] = None
-
-        # Create a new workspace and copy objects into it
-        temp_geoh5 = f"{ga_group_name}_{time():.0f}.geoh5"
-        ws, live_link = BaseApplication.get_output_workspace(
-            live_link, export_directory, temp_geoh5
-        )
-
-        with ws as workspace:
-            # Put entities in output workspace.
-            param_dict["geoh5"] = workspace
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
-
-            # Create new params object and write
-            """
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-            """
-
-            # param_dict["resolution"] = None  # No downsampling for dcip
-            # self._run_params = self.params.__class__(input_file=ifile, **param_dict)
-            self._run_params = self.params.__class__(**param_dict)
-            self._run_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=export_directory,
-            )
-
-        if live_link:
-            print("Live link active. Check your ANALYST session for new mesh.")
-            return [True]
-        else:
-            print("Saved to " + os.path.abspath(export_directory))
-            return []

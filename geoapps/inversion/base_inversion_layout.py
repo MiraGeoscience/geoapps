@@ -354,8 +354,8 @@ plot_layout = html.Div(
             id="plot",
             figure=go.Figure(go.Heatmap(colorscale="rainbow")),
             style={
-                "width": "600px",
-                "height": "600px",
+                "width": "650px",
+                "height": "650px",
                 "vertical-align": "middle",
             },
         ),
@@ -985,7 +985,7 @@ output_layout = html.Div(
                     "Output path:", style={"display": "inline-block", "width": "15%"}
                 ),
                 dcc.Input(
-                    id="export_directory",
+                    id="monitoring_directory",
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
