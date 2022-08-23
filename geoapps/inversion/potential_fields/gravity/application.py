@@ -180,6 +180,7 @@ class GravityApp(InversionApp):
             Output(component_id="uncertainty_channel", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="full_components", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
             Input(component_id="channel_bool", component_property="value"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="uncertainty_options", component_property="value"),
@@ -210,14 +211,21 @@ class GravityApp(InversionApp):
                     ),
                     Input(component_id="ui_json_data", component_property="data"),
                 )(self.update_inversion_params_from_ui_json)
-        for param in ["topography", "lower_bound", "upper_bound"]:
+        for param in ["lower_bound", "upper_bound"]:
             self.app.callback(
                 Output(component_id=param + "_options", component_property="value"),
                 Output(component_id=param + "_const", component_property="value"),
                 Output(component_id=param + "_object", component_property="value"),
                 Output(component_id=param + "_data", component_property="value"),
                 Input(component_id="ui_json_data", component_property="data"),
-            )(InversionApp.update_general_param_from_ui_json)
+            )(InversionApp.update_bounds_from_ui_json)
+        self.app.callback(
+            Output(component_id="topography_options", component_property="value"),
+            Output(component_id="topography_const", component_property="value"),
+            Output(component_id="topography_object", component_property="value"),
+            Output(component_id="topography_data", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+        )(InversionApp.update_topography_from_ui_json)
 
         # Update from ui.json
         self.app.callback(

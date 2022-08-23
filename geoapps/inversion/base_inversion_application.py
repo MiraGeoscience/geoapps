@@ -70,7 +70,6 @@ class InversionApp(BaseDashApplication):
 
     @staticmethod
     def update_topography_visibility(selection):
-
         if selection == "None":
             return (
                 {"display": "none"},
@@ -86,8 +85,6 @@ class InversionApp(BaseDashApplication):
                 {"display": "none"},
                 {"display": "block"},
             )
-        else:
-            return no_update, no_update
 
     def open_mesh_app(self, _):
         nb_port = None
@@ -124,9 +121,12 @@ class InversionApp(BaseDashApplication):
             return {"display": "none"}
 
     @staticmethod
-    def unpack_val(val):
+    def unpack_val(val, topography=False):
         if is_uuid(val):
-            options = "Model"
+            if topography:
+                options = "Data"
+            else:
+                options = "Model"
             data = str(val)
             const = None
         elif (type(val) == float) or (type(val) == int):
@@ -163,7 +163,16 @@ class InversionApp(BaseDashApplication):
         return options, const, obj, data
 
     @staticmethod
-    def update_general_param_from_ui_json(ui_json_data):
+    def update_topography_from_ui_json(ui_json_data):
+        param = callback_context.outputs_list[0]["id"].removesuffix("_options")
+        obj = str(ui_json_data[param + "_object"])
+        val = ui_json_data[param]
+
+        options, data, const = InversionApp.unpack_val(val, topography=True)
+        return options, const, obj, data
+
+    @staticmethod
+    def update_bounds_from_ui_json(ui_json_data):
         param = callback_context.outputs_list[0]["id"].removesuffix("_options")
         obj = str(ui_json_data[param + "_object"])
         val = ui_json_data[param]
@@ -230,6 +239,7 @@ class InversionApp(BaseDashApplication):
         self,
         ui_json_data,
         full_components,
+        data_object,
         channel_bool,
         channel,
         uncertainty_type,
@@ -238,9 +248,10 @@ class InversionApp(BaseDashApplication):
         component,
         component_options,
     ):
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
-        if trigger == "ui_json_data":
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "ui_json_data" in triggers:
             full_components = {}
             for comp in component_options:
                 # Get channel value
@@ -272,15 +283,22 @@ class InversionApp(BaseDashApplication):
                     "uncertainty_floor": uncertainty_floor,
                     "uncertainty_channel": uncertainty_channel,
                 }
-        elif trigger == "component":
+        elif "component" in triggers:
             if full_components and component is not None:
                 channel_bool = full_components[component]["channel_bool"]
                 channel = full_components[component]["channel"]
                 uncertainty_type = full_components[component]["uncertainty_type"]
                 uncertainty_floor = full_components[component]["uncertainty_floor"]
                 uncertainty_channel = full_components[component]["uncertainty_channel"]
+        elif "data_object" in triggers:
+            for comp in full_components:
+                full_components[comp]["channel_bool"] = None
+                full_components[comp]["channel"] = None
+                full_components[comp]["uncertainty_type"] = None
+                full_components[comp]["uncertainty_floor"] = None
+                full_components[comp]["uncertainty_channel"] = None
         else:
-            if trigger == "channel":
+            if "channel" in triggers:
                 if channel is None:
                     channel_bool = []
                     uncertainty_floor = 1.0
@@ -520,7 +538,7 @@ class InversionApp(BaseDashApplication):
         ui_json_data,
         figure,
         object,
-        data,
+        channel,
         resolution,
         # azimuth,
         colorbar,
@@ -547,19 +565,24 @@ class InversionApp(BaseDashApplication):
             height = y_range[1] - y_range[0]
             center_y = y_range[0] + (height / 2)
         """
-        if "data_object" in triggers:
-            obj = self.workspace.get_entity(uuid.UUID(object))[0]
+        if object is None:
+            return go.Figure(), data_count
+
+        obj = self.workspace.get_entity(uuid.UUID(object))[0]
+        if "data_object" in triggers or channel is None:
+            print("object change")
             if isinstance(obj, Grid2D):
                 figure = go.Figure(go.Heatmap(colorscale="rainbow"))
             else:
-                figure = go.Figure(go.Scatter(mode="markers"))
+                figure = go.Figure(
+                    go.Scatter(mode="markers", marker={"colorscale": "rainbow"})
+                )
+            return figure, data_count
         else:
             figure = go.Figure(figure)
 
-        if object is not None and data is not None:
-            obj = self.workspace.get_entity(uuid.UUID(object))[0]
-
-            data_obj = self.workspace.get_entity(uuid.UUID(data))[0]
+        if channel is not None:
+            data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
 
             lim_x = [1e8, -1e8]
             lim_y = [1e8, -1e8]
@@ -585,7 +608,6 @@ class InversionApp(BaseDashApplication):
             center_y = np.mean(lim_y)
 
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
-
                 figure, ind_filter = InversionApp.plot_plan_data_selection(
                     obj,
                     data_obj,
