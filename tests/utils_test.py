@@ -51,6 +51,36 @@ from geoapps.utils.workspace import sorted_children_dict
 geoh5 = Workspace("./FlinFlon.geoh5")
 
 
+def test_get_drape_model(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    x = np.arange(11)
+    y = -x + 10
+    locs = np.c_[x, y, np.zeros_like(x)]
+    h = [0.5, 0.5]
+    depth_core = 5.0
+    pads = [5, 5, 3, 1]
+    expansion_factor = 0.1
+    model, mesh = get_drape_model(
+        ws,
+        "drape_test",
+        locs,
+        h,
+        depth_core,
+        pads,
+        expansion_factor,
+        return_colocated_mesh=True,
+    )
+    ws.close()
+    assert True
+
+def test_compute_alongline_distance():
+    x = np.arange(11)
+    y = -x + 10
+    locs = np.c_[x, y]
+    p = find_endpoints(locs)
+    d = compute_alongline_distance(locs)
+    assert np.max(d) == np.sqrt(2) * 10
+
 def test_find_endpoints():
     x = np.arange(11)
     y = -x + 10
