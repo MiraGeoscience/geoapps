@@ -4,7 +4,6 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-import os.path
 
 from dash import dcc, html
 from plotly import graph_objects as go
@@ -21,11 +20,20 @@ def get_object_selection_layout(inversion_type):
             html.Div(
                 [
                     dcc.Markdown(
-                        "Object:", style={"display": "inline-block", "width": "30%"}
+                        "Object:",
+                        style={
+                            "display": "inline-block",
+                            "width": "20%",
+                            "vertical-align": "bottom",
+                        },
                     ),
                     dcc.Dropdown(
                         id="data_object",
-                        style={"display": "inline-block", "width": "70%"},
+                        style={
+                            "display": "inline-block",
+                            "width": "70%",
+                            "vertical-align": "bottom",
+                        },
                     ),
                 ]
             ),
@@ -84,49 +92,72 @@ def generate_model_component(
     component = html.Div(
         [
             dcc.Markdown("**" + label_prefix + param_label + "**"),
-            dcc.RadioItems(
-                id=param_prefix + param_name + "_options",
-                options=radio_options,
-                value="Constant",
+            html.Div(
+                [
+                    dcc.RadioItems(
+                        id=param_prefix + param_name + "_options",
+                        options=radio_options,
+                        value="Constant",
+                    ),
+                ],
+                style={"display": "inline-block", "width": "30%"},
             ),
             html.Div(
                 id=param_prefix + param_name + "_const_div",
                 children=[
-                    html.Div(
-                        [
-                            dcc.Markdown(units, style={"display": "inline-block"}),
-                            dcc.Input(
-                                id=param_prefix + param_name + "_const",
-                                style={"display": "inline-block"},
-                            ),
-                        ]
+                    dcc.Markdown(
+                        units, style={"display": "inline-block", "margin-right": "5%"}
+                    ),
+                    dcc.Input(
+                        id=param_prefix + param_name + "_const",
+                        style={"display": "inline-block"},
                     ),
                 ],
+                style={"display": "inline-block", "width": "60%"},
             ),
             html.Div(
                 id=param_prefix + param_name + "_mod_div",
                 children=[
-                    html.Div(
-                        [
-                            dcc.Markdown("Object", style={"display": "inline-block"}),
-                            dcc.Dropdown(
-                                id=param_prefix + param_name + "_object",
-                                style={"display": "inline-block"},
-                            ),
-                        ]
+                    dcc.Markdown(
+                        "Object",
+                        style={
+                            "display": "inline-block",
+                            "margin-right": "5%",
+                            "vertical-align": "bottom",
+                        },
+                    ),
+                    dcc.Dropdown(
+                        id=param_prefix + param_name + "_object",
+                        style={
+                            "display": "inline-block",
+                            "width": "70%",
+                            "vertical-align": "bottom",
+                        },
                     ),
                     html.Div(
                         [
-                            dcc.Markdown("Values", style={"display": "inline-block"}),
+                            dcc.Markdown(
+                                "Values",
+                                style={
+                                    "display": "inline-block",
+                                    "margin-right": "5%",
+                                    "vertical-align": "bottom",
+                                },
+                            ),
                             dcc.Dropdown(
                                 id=param_prefix + param_name + "_data",
-                                style={"display": "inline-block"},
+                                style={
+                                    "display": "inline-block",
+                                    "width": "70%",
+                                    "vertical-align": "bottom",
+                                },
                             ),
                         ]
                     ),
                 ],
+                style={"display": "inline-block", "width": "60%"},
             ),
-        ]
+        ],
     )
     return component
 
@@ -318,36 +349,6 @@ plot_layout = html.Div(
                 "vertical-align": "middle",
             },
         ),
-        """
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Azimuth",
-                    style={
-                        "display": "inline-block",
-                        "vertical-align": "middle",
-                        "width": "10%",
-                    },
-                ),
-                html.Div(
-                    [
-                        dcc.Slider(
-                            id="azimuth",
-                            min=-90,
-                            max=90,
-                            value=0,
-                            tooltip={"placement": "top", "always_visible": True},
-                        ),
-                    ],
-                    style={
-                        "display": "inline-block",
-                        "vertical-align": "middle",
-                        "width": "40%",
-                    },
-                ),
-            ]
-        ),
-        """,
     ],
     style={"display": "inline-block", "width": "60%"},
 )
@@ -363,11 +364,19 @@ def get_input_data_layout(component_list):
                         [
                             dcc.Markdown(
                                 "Component:",
-                                style={"display": "inline-block", "width": "30%"},
+                                style={
+                                    "display": "inline-block",
+                                    "width": "30%",
+                                    "vertical-align": "bottom",
+                                },
                             ),
                             dcc.Dropdown(
                                 id="component",
-                                style={"display": "inline-block", "width": "70%"},
+                                style={
+                                    "display": "inline-block",
+                                    "width": "70%",
+                                    "vertical-align": "bottom",
+                                },
                                 options=component_list,
                             ),
                             dcc.Store(id="full_components"),
@@ -380,11 +389,19 @@ def get_input_data_layout(component_list):
                         [
                             dcc.Markdown(
                                 "Channel:",
-                                style={"display": "inline-block", "width": "30%"},
+                                style={
+                                    "display": "inline-block",
+                                    "width": "30%",
+                                    "vertical-align": "bottom",
+                                },
                             ),
                             dcc.Dropdown(
                                 id="channel",
-                                style={"display": "inline-block", "width": "70%"},
+                                style={
+                                    "display": "inline-block",
+                                    "width": "70%",
+                                    "vertical-align": "bottom",
+                                },
                             ),
                         ]
                     ),
@@ -411,7 +428,7 @@ def get_input_data_layout(component_list):
                                 id="uncertainty_channel",
                             ),
                         ],
-                        style={"display": "inline-block", "width": "70%"},
+                        style={"display": "inline-block", "width": "60%"},
                     ),
                 ],
                 style={
@@ -437,11 +454,20 @@ topography_object = html.Div(
         html.Div(
             [
                 dcc.Markdown(
-                    "Data:", style={"display": "inline-block", "width": "25%"}
+                    "Data:",
+                    style={
+                        "display": "inline-block",
+                        "width": "25%",
+                        "vertical-align": "bottom",
+                    },
                 ),
                 dcc.Dropdown(
                     id="topography_data",
-                    style={"display": "inline-block", "width": "75%"},
+                    style={
+                        "display": "inline-block",
+                        "width": "75%",
+                        "vertical-align": "bottom",
+                    },
                 ),
             ]
         ),
@@ -506,11 +532,19 @@ topography_layout = html.Div(
                             [
                                 dcc.Markdown(
                                     "Object:",
-                                    style={"display": "inline-block", "width": "25%"},
+                                    style={
+                                        "display": "inline-block",
+                                        "width": "25%",
+                                        "vertical-align": "bottom",
+                                    },
                                 ),
                                 dcc.Dropdown(
                                     id="topography_object",
-                                    style={"display": "inline-block", "width": "75%"},
+                                    style={
+                                        "display": "inline-block",
+                                        "width": "75%",
+                                        "vertical-align": "bottom",
+                                    },
                                 ),
                             ]
                         ),
@@ -574,11 +608,19 @@ topography_layout = html.Div(
                     [
                         dcc.Markdown(
                             "Radar (Optional):",
-                            style={"display": "inline-block", "width": "25%"},
+                            style={
+                                "display": "inline-block",
+                                "width": "25%",
+                                "vertical-align": "bottom",
+                            },
                         ),
                         dcc.Dropdown(
                             id="receivers_radar_drape",
-                            style={"display": "inline-block", "width": "50%"},
+                            style={
+                                "display": "inline-block",
+                                "width": "50%",
+                                "vertical-align": "bottom",
+                            },
                         ),
                     ]
                 ),
@@ -593,15 +635,31 @@ topography_layout = html.Div(
     },
 )
 
-path_test = os.path.abspath("../../../octree_creation/notebook.ipynb")
-
 mesh = html.Div(
     id="mesh_div",
     children=[
         dcc.Markdown("###### **Mesh**"),
         html.Button(id="open_mesh", children=["Open Mesh Creation"]),
-        dcc.Markdown("Object:"),
-        dcc.Dropdown(id="mesh_object"),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Object:",
+                    style={
+                        "display": "inline-block",
+                        "width": "15%",
+                        "vertical-align": "bottom",
+                    },
+                ),
+                dcc.Dropdown(
+                    id="mesh_object",
+                    style={
+                        "display": "inline-block",
+                        "width": "65%",
+                        "vertical-align": "bottom",
+                    },
+                ),
+            ]
+        ),
     ],
     style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
 )
@@ -836,12 +894,21 @@ detrend = html.Div(
                 html.Div(
                     [
                         dcc.Markdown(
-                            "Method", style={"display": "inline-block", "width": "30%"}
+                            "Method",
+                            style={
+                                "display": "inline-block",
+                                "width": "30%",
+                                "vertical-align": "bottom",
+                            },
                         ),
                         dcc.Dropdown(
                             id="detrend_type",
                             options=["all", "perimeter"],
-                            style={"display": "inline-block", "width": "70%"},
+                            style={
+                                "display": "inline-block",
+                                "width": "70%",
+                                "vertical-align": "bottom",
+                            },
                         ),
                     ]
                 ),
