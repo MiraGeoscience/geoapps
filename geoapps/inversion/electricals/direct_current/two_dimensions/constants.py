@@ -21,6 +21,8 @@ inversion_defaults = {
     "forward_only": False,
     "topography_object": None,
     "topography": None,
+    "line_object": None,
+    "line_id": None,
     "data_object": None,
     "potential_channel": None,
     "potential_uncertainty": 1.0,
@@ -106,6 +108,8 @@ forward_defaults = {
     "forward_only": True,
     "topography_object": None,
     "topography": None,
+    "line_object": None,
+    "line_id": None,
     "data_object": None,
     "potential_channel_bool": True,
     "starting_model_object": None,
@@ -172,6 +176,22 @@ forward_ui_json = {
 default_ui_json = {
     "title": "SimPEG Direct Current inversion",
     "inversion_type": "direct current",
+    "line_object": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Referenced",
+        "group": "Data",
+        "main": True,
+        "label": "Line field",
+        "parent": "data_object",
+        "value": None,
+    },
+    "line_id": {
+        "group": "Data",
+        "main": True,
+        "min": 1,
+        "label": "Line number",
+        "value": None,
+    },
     "data_object": {
         "main": True,
         "group": "Data",
@@ -199,20 +219,6 @@ default_ui_json = {
         "parent": "data_object",
         "property": None,
         "value": 1.0,
-    },
-    "line_object": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Referenced",
-        "group": "Data",
-        "main": True,
-        "label": "Line field",
-        "parent": "data_object",
-        "value": None,
-    },
-    "line_id": {
-        "main": True,
-        "label": "Line number",
-        "value": None,
     },
     "starting_model_object": {
         "group": "Starting Model",
@@ -255,6 +261,12 @@ default_ui_json = {
         "optional": True,
         "value": 0.0,
     },
+    "expansion_factor": {
+        "main": True,
+        "group": "Mesh",
+        "label": "Expansion factor",
+        "value": 1.1,
+    },
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
@@ -262,7 +274,6 @@ default_ui_json = {
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-# default_ui_json = {k: v for k, v in default_ui_json.items() if k in inversion_defaults}
 
 
 ################ Validations #################
@@ -282,6 +293,8 @@ app_initializer = {
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
     "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
     "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
+    "line_object": UUID("{d400e8f1-8460-4609-b852-b3b93f945770}"),
+    "line_id": 1,
     "reference_model": 1e-1,
     "starting_model": 1e-1,
     "u_cell_size": 25.0,
