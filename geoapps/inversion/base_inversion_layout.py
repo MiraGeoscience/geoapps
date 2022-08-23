@@ -9,7 +9,8 @@ from dash import dcc, html
 from plotly import graph_objects as go
 
 
-def get_object_selection_layout(inversion_type):
+def get_object_selection_layout(inversion_type, component_list):
+    input_data_layout = get_input_data_layout(component_list)
     standard_layout = html.Div(
         [
             dcc.Upload(
@@ -48,9 +49,10 @@ def get_object_selection_layout(inversion_type):
     if inversion_type in ["magnetic vector", "magnetic scalar"]:
         object_selection_layout = html.Div(
             [
-                dcc.Markdown("##### **Object Selection**"),
+                dcc.Markdown("##### **Data Selection**"),
                 standard_layout,
                 inducing_params_div,
+                input_data_layout,
             ],
             style={
                 "border": "2px black solid",
@@ -60,7 +62,11 @@ def get_object_selection_layout(inversion_type):
         )
     else:
         object_selection_layout = html.Div(
-            [dcc.Markdown("##### **Object Selection**"), standard_layout],
+            [
+                dcc.Markdown("##### **Object Selection**"),
+                standard_layout,
+                input_data_layout,
+            ],
             style={
                 "border": "2px black solid",
                 "padding-left": "10px",
@@ -210,6 +216,7 @@ def get_inversion_params_layout(inversion_params):
             html.Div(
                 id="core_params_div",
                 children=[
+                    topography_layout,
                     starting_model,
                     html.Hr(),
                     mesh,
@@ -297,6 +304,7 @@ inducing_params_div = html.Div(
 
 plot_layout = html.Div(
     [
+        dcc.Markdown("##### **Window Data**"),
         html.Div(
             [
                 html.Div(
@@ -316,7 +324,8 @@ plot_layout = html.Div(
                                 "margin-right": "3%",
                             },
                         ),
-                    ]
+                    ],
+                    style={"width": "60%"},
                 ),
             ]
         ),
@@ -338,7 +347,8 @@ plot_layout = html.Div(
                     value=[True],
                     style={"display": "inline-block", "width": "25%"},
                 ),
-            ]
+            ],
+            style={"width": "60%"},
         ),
         dcc.Graph(
             id="plot",
@@ -350,14 +360,17 @@ plot_layout = html.Div(
             },
         ),
     ],
-    style={"display": "inline-block", "width": "60%"},
+    style={
+        "border": "2px black solid",
+        "padding-left": "10px",
+        "padding-right": "10px",
+    },
 )
 
 
 def get_input_data_layout(component_list):
     input_data_layout = html.Div(
         [
-            dcc.Markdown("##### **Input Data**"),
             html.Div(
                 [
                     html.Div(
@@ -437,13 +450,7 @@ def get_input_data_layout(component_list):
                     "width": "40%",
                 },
             ),
-            plot_layout,
         ],
-        style={
-            "border": "2px black solid",
-            "padding-left": "10px",
-            "padding-right": "10px",
-        },
     )
     return input_data_layout
 
@@ -492,7 +499,7 @@ topography_constant = html.Div(
 
 topography_layout = html.Div(
     [
-        dcc.Markdown("##### **Topography**"),
+        dcc.Markdown("###### **Topography**"),
         html.Div(
             [
                 html.Div(
@@ -628,11 +635,6 @@ topography_layout = html.Div(
             style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
         ),
     ],
-    style={
-        "border": "2px black solid",
-        "padding-left": "10px",
-        "padding-right": "10px",
-    },
 )
 
 mesh = html.Div(

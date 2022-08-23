@@ -394,29 +394,9 @@ class InversionApp(BaseDashApplication):
         if values is not None and (values.shape[0] != locations.shape[0]):
             values = None
 
-        # window = None
-        # if "window" in kwargs.keys():
-        #    window = kwargs["window"]
-
-        if (
-            data is not None
-            and getattr(data, "entity_type", None) is not None
-            and getattr(data.entity_type, "color_map", None) is not None
-        ):
-            new_cmap = data.entity_type.color_map._values
-            map_vals = new_cmap["Value"].copy()
-            cmap = colors.ListedColormap(
-                np.c_[
-                    new_cmap["Red"] / 255,
-                    new_cmap["Green"] / 255,
-                    new_cmap["Blue"] / 255,
-                ]
-            )
-            color_norm = colors.BoundaryNorm(map_vals, cmap.N)
-        else:
-            cmap = "Spectral_r"
-
         if isinstance(entity, Grid2D):
+            # Plot heatmap
+            grid = True
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
 
@@ -439,20 +419,10 @@ class InversionApp(BaseDashApplication):
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
                 figure["data"][0]["z"] = new_values.T[downsampled_index]  # new_values
-
-            if "colorbar" in kwargs.keys():
-                if kwargs["colorbar"]:
-                    figure.update_traces(showscale=True)
-                else:
-                    figure.update_traces(showscale=False)
-
         else:
+            # Plot scatter plot
+            grid = False
             x, y = entity.vertices[:, 0], entity.vertices[:, 1]
-
-            if "marker_size" not in kwargs.keys():
-                figure["data"][0]["marker"]["size"] = 50
-            else:
-                figure["data"][0]["marker"]["size"] = kwargs["marker_size"]
 
             if values is not None:
                 downsampled_index, down_x, down_y = downsample_xy(
@@ -466,25 +436,25 @@ class InversionApp(BaseDashApplication):
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
 
-            if "colorbar" in kwargs.keys():
-                if kwargs["colorbar"]:
+        # Add colorbar
+        if "colorbar" in kwargs.keys():
+            if kwargs["colorbar"]:
+                if grid:
+                    figure.update_traces(showscale=True)
+                else:
                     figure.update_traces(marker_showscale=True)
+            else:
+                if grid:
+                    figure.update_traces(showscale=False)
                 else:
                     figure.update_traces(marker_showscale=False)
 
-        if np.any(x) and np.any(y):
-            figure.update_layout(plot_bgcolor="rgba(0,0,0,0)")
-            figure.update_layout(xaxis_title="Easting (m)", yaxis_title="Northing (m)")
-            # figure.update_layout(
-            #    xaxis_range=[window["center"][0] - (window["size"][0]/2), window["center"][0] + (window["size"][0]/2)],
-            #    yaxis_range=[window["center"][1] - (window["size"][1]/2), window["center"][1] + (window["size"][1]/2)]
-            # )
-
+        # Fix aspect ratio
         if "fix_aspect_ratio" in kwargs.keys():
             if kwargs["fix_aspect_ratio"]:
-                figure.update_layout(yaxis=dict(scaleanchor="x"))
+                figure.update_layout(yaxis_scaleanchor="x")
             else:
-                figure.update_layout(yaxis=dict(scaleanchor=None))
+                figure.update_layout(yaxis_scaleanchor=None)
 
         return figure, indices
 
@@ -512,6 +482,9 @@ class InversionApp(BaseDashApplication):
                 figure = go.Figure(
                     go.Scatter(mode="markers", marker={"colorscale": "rainbow"})
                 )
+            figure.update_layout(plot_bgcolor="rgba(0,0,0,0)")
+            figure.update_layout(xaxis_title="Easting (m)", yaxis_title="Northing (m)")
+
             if "ui_json_data" not in triggers:
                 return figure, data_count
         else:
@@ -553,7 +526,6 @@ class InversionApp(BaseDashApplication):
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
-                print(figure["layout"]["xaxis"]["range"])
                 if "ui_json_data" in triggers:
                     center_x = ui_json_data["window_center_x"]
                     center_y = ui_json_data["window_center_y"]
