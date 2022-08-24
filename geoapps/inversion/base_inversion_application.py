@@ -23,6 +23,7 @@ from time import time
 import numpy as np
 import scipy
 from dash import callback_context, no_update
+from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from notebook import notebookapp
@@ -41,7 +42,6 @@ class InversionApp(BaseDashApplication):
     """
 
     _param_class = InversionBaseParams
-    # _driver_class = InversionDriver
     _inversion_type = None
     _inversion_params = None
     _run_params = None
@@ -56,7 +56,15 @@ class InversionApp(BaseDashApplication):
         super().__init__()
 
     @staticmethod
-    def update_uncertainty_visibility(selection):
+    def update_uncertainty_visibility(selection: str) -> (dict, dict):
+        """
+        Update visibility of channel and floor input data uncertainty from radio buttons.
+
+        :param selection: Radio button selection.
+
+        :return floor_style: Visibility for floor uncertainty input box.
+        :return channel_style: Visibility for channel uncertainty dropdown.
+        """
         if selection == "Floor":
             return (
                 {"display": "block"},
@@ -69,7 +77,15 @@ class InversionApp(BaseDashApplication):
             )
 
     @staticmethod
-    def update_topography_visibility(selection):
+    def update_topography_visibility(selection: str) -> (dict, dict):
+        """
+        Update visibility of topography data and constant input boxes from radio buttons.
+
+        :param selection: Radio button selection.
+
+        :return data_style: Visibility for topography data dropdown.
+        :return constant_style: Visibility for topography constant input box.
+        """
         if selection == "None":
             return (
                 {"display": "none"},
@@ -86,7 +102,71 @@ class InversionApp(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def open_mesh_app(self, _):
+    @staticmethod
+    def update_model_visibility(selection: str) -> (dict, dict):
+        """
+        Update visibility of starting and reference model data and constant input boxes from radio buttons.
+
+        :param selection: Radio button selection.
+
+        :return constant_style: Visibility for model constant input box.
+        :return model_style: Visibility for model object and data dropdowns.
+        """
+        if selection == "Constant":
+            return {"display": "block"}, {"display": "none"}
+        elif selection == "Model":
+            return {"display": "none"}, {"display": "block"}
+        elif selection == "None":
+            return {"display": "none"}, {"display": "none"}
+
+    @staticmethod
+    def update_visibility_from_checkbox(selection: str) -> dict:
+        """
+        Update visibility of a given component from a checkbox.
+
+        :param selection: Checkbox value.
+
+        :return style: Visibility for the component.
+        """
+        if selection:
+            return {"display": "block"}
+        else:
+            return {"display": "none"}
+
+    @staticmethod
+    def update_reference_model_options(forward_only: list) -> list:
+        if forward_only:
+            options = [
+                {"label": "Constant", "value": "Constant", "disabled": True},
+                {"label": "Model", "value": "Model", "disabled": True},
+                {"label": "None", "value": "None", "disabled": False},
+            ]
+        else:
+            options = ["Constant", "Model", "None"]
+        return options
+
+    @staticmethod
+    def update_forward_only_layout(forward_only: list):
+        if forward_only:
+            style = {"display": "none"}
+            options = [
+                {"label": "Advanced parameters", "value": True, "disabled": True}
+            ]
+        else:
+            style = {"display": "block"}
+            options = [{"label": "Advanced parameters", "value": True}]
+        return style, options
+
+    @staticmethod
+    def open_mesh_app(_: int) -> int:
+        """
+        Triggered on open mesh app button click. Opens mesh creator notebook in a new window.
+
+        :param _: Triggers function when button is clicked.
+
+        :return n_clicks: Placeholder return since dash requires callbacks to have output.
+        """
+        # Get a notebook port that is running from the index page.
         nb_port = None
         servers = list(notebookapp.list_running_servers())
         for s in servers:
@@ -94,6 +174,7 @@ class InversionApp(BaseDashApplication):
                 nb_port = s["port"]
                 break
 
+        # Open the octree creation notebook in a new window using the notebook port in the url.
         if nb_port is not None:
             # The reloader has not yet run - open the browser
             if not os.environ.get("WERKZEUG_RUN_MAIN"):
@@ -105,23 +186,20 @@ class InversionApp(BaseDashApplication):
         return 0
 
     @staticmethod
-    def update_model_visibility(selection):
-        if selection == "Constant":
-            return {"display": "block"}, {"display": "none"}
-        elif selection == "Model":
-            return {"display": "none"}, {"display": "block"}
-        elif selection == "None":
-            return {"display": "none"}, {"display": "none"}
+    def unpack_val(
+        val: float | int | str, topography: bool = False
+    ) -> (str, str, float | int):
+        """
+        Determine if input value is a constant or data, and determine the corresponding radio button value.
 
-    @staticmethod
-    def update_visibility_from_checkbox(selection):
-        if selection:
-            return {"display": "block"}
-        else:
-            return {"display": "none"}
+        :param val: Input value. Either constant, data, or None.
+        :param topography: Whether the parameter is topography, since the topography radio buttons are slightly
+        different.
 
-    @staticmethod
-    def unpack_val(val, topography=False):
+        :return options: Radio button selection.
+        :return data: Data value.
+        :return const: Constant value.
+        """
         if is_uuid(val):
             if topography:
                 options = "Data"
@@ -139,7 +217,27 @@ class InversionApp(BaseDashApplication):
             const = None
         return options, data, const
 
-    def update_models_from_ui_json(self, ui_json_data, data_object_options, object_uid):
+    def update_models_from_ui_json(
+        self,
+        ui_json_data: dict,
+        data_object_options: list,
+        object_uid: str,
+        forward_only: list,
+    ) -> (str, float | int, str, list, str, list):
+        """
+        Update starting and reference models from ui.json data. Update dropdown options and values.
+
+        :param ui_json_data: Uploaded ui.json data.
+        :param data_object_options: List of dropdown options for main input object.
+        :param object_uid: Selected object for the model.
+
+        :return options: Selected option for radio button.
+        :return const: Value of constant for model.
+        :return obj: Value of object for model.
+        :return obj_options: Dropdown options for model object. Same as data_object_options.
+        :return data: Value of data for model.
+        :return data_options: Dropdown options for model data.
+        """
         options, const, obj, obj_options, data, data_options = (
             no_update,
             no_update,
@@ -149,16 +247,18 @@ class InversionApp(BaseDashApplication):
             no_update,
         )
 
+        # Get param name based on callback input.
         prefix, param = tuple(
             callback_context.outputs_list[0]["id"]
             .removesuffix("_options")
             .split("_", 1)
         )
+        # Get callback triggers
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
             if param in self._inversion_params:
-                # Maybe use inversion type to differentiate here
+                # Read in from ui.json using dict of inversion params.
                 if prefix + "_" + param in ui_json_data:
                     obj = str(ui_json_data[prefix + "_" + param + "_object"])
                     val = ui_json_data[prefix + "_" + param]
@@ -173,11 +273,16 @@ class InversionApp(BaseDashApplication):
                 data_options = self.get_data_options(ui_json_data, obj)
                 obj_options = data_object_options
         elif "data_object" in triggers:
+            # Clear object value and data dropdown on workspace change.
             obj_options = data_object_options
             obj = None
             data_options = []
             data = None
+        elif "forward_only" in triggers and forward_only:
+            if prefix == "reference":
+                options = "None"
         else:
+            # Update data options and clear data value on object change.
             data = None
             data_options = self.get_data_options(ui_json_data, object_uid)
 
@@ -185,7 +290,21 @@ class InversionApp(BaseDashApplication):
 
     def update_general_inversion_params_from_ui_json(
         self, ui_json_data, data_object_options, param_object_uid
-    ):
+    ) -> (str, float | int, str, list, str, list):
+        """
+        Update topography and bounds from ui.json data. Update dropdown options and values.
+
+        :param ui_json_data: Uploaded ui.json data.
+        :param data_object_options: List of dropdown options for main input object.
+        :param param_object_uid: Selected object for the param.
+
+        :return options: Selected option for radio button.
+        :return const: Value of constant for param.
+        :return obj: Value of object for param.
+        :return obj_options: Dropdown options for param object. Same as data_object_options.
+        :return data: Value of data for param.
+        :return data_options: Dropdown options for param data.
+        """
         options, const, obj, obj_options, data, data_options = (
             no_update,
             no_update,
@@ -219,21 +338,26 @@ class InversionApp(BaseDashApplication):
 
         return options, const, obj, obj_options, data, data_options
 
-    # Update object dropdowns
     @staticmethod
-    def update_mesh_options(obj_options):
+    def update_mesh_options(obj_options: list) -> list:
+        """
+        Update mesh dropdown options from the main input object options.
+
+        :param obj_options: Main input object options.
+
+        :return obj_options: Mesh dropdown options.
+        """
         return obj_options
 
-    # Update input data dropdown options
     def update_radar_options(self, ui_json_data: dict, object_uid: str) -> (list, str):
         """
-        Update data subset options and values from selected object.
+        Update data dropdown options for receivers radar drape.
 
         :param ui_json_data: Uploaded ui.json data.
         :param object_uid: Selected object from dropdown.
 
-        :return options: Options for data subset dropdown.
-        :return value: Value for data subset dropdown.
+        :return options: Options for radar dropdown.
+        :return value: Value for radar dropdown.
         """
         if object_uid is None or object_uid == "None":
             return no_update, no_update
@@ -255,21 +379,48 @@ class InversionApp(BaseDashApplication):
 
     def update_full_components(
         self,
-        ui_json_data,
-        full_components,
-        data_object,
-        channel_bool,
-        channel,
-        uncertainty_type,
-        uncertainty_floor,
-        uncertainty_channel,
-        component,
-        component_options,
-    ):
+        ui_json_data: dict,
+        full_components: dict,
+        data_object: str,
+        channel_bool: list,
+        channel: str,
+        uncertainty_type: str,
+        uncertainty_floor: float | int,
+        uncertainty_channel: str,
+        component: str,
+        component_options: list,
+    ) -> (dict, list, str, list, str, float | int, str, list, str):
+        """
+        Update components in relating to input data. Update the dictionary storing these values for each component.
+
+        :param ui_json_data: Uploaded ui.json data.
+        :param full_components: Dictionary with keys of component_options, and with values channel_bool, channel,
+        uncertainty_type, uncertainty_floor, uncertainty_channel for each key.
+        :param data_object: Input data object.
+        :param channel_bool: Checkbox for whether the channel is active.
+        :param channel: Input data.
+        :param uncertainty_type: Type of uncertainty. Floor or channel.
+        :param uncertainty_floor: Uncertainty floor.
+        :param uncertainty_channel: Uncertainty data.
+        :param component: Component that data corresponds to.
+        :param component_options: List of component options.
+
+        :return full_components: Dictionary with keys of component_options, and with values channel_bool, channel,
+        uncertainty_type, uncertainty_floor, uncertainty_channel for each key.
+        :return channel_bool: Checkbox for whether the channel is active.
+        :return channel: Input data.
+        :return dropdown_options: Dropdown options for channel.
+        :return uncertainty_type: Type of uncertainty. Floor or channel.
+        :return uncertainty_floor: Uncertainty floor.
+        :return uncertainty_channel: Uncertainty data.
+        :return dropdown_options: Dropdown options for uncertainty channel.
+        :return component: Component that data corresponds to.
+        """
         dropdown_options = no_update
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
+            # Fill in full_components dict from ui.json.
             full_components = {}
             for comp in component_options:
                 # Get channel value
@@ -294,6 +445,7 @@ class InversionApp(BaseDashApplication):
                     uncertainty_floor = None
                     uncertainty_channel = str(ui_json_data[comp + "_uncertainty"])
                 else:
+                    # Default uncertainty value
                     uncertainty_type = "Floor"
                     uncertainty_floor = None
                     uncertainty_channel = None
@@ -305,7 +457,8 @@ class InversionApp(BaseDashApplication):
                     "uncertainty_floor": uncertainty_floor,
                     "uncertainty_channel": uncertainty_channel,
                 }
-            # Get starting component
+
+            # Get component to initialize app. First active component.
             for comp, value in full_components.items():
                 if value["channel_bool"]:
                     component = comp
@@ -315,7 +468,7 @@ class InversionApp(BaseDashApplication):
                     uncertainty_floor = value["uncertainty_floor"]
                     uncertainty_channel = value["uncertainty_channel"]
                     break
-
+            # Update channel data dropdown options.
             dropdown_options = self.get_data_options(
                 ui_json_data,
                 data_object,
@@ -323,6 +476,7 @@ class InversionApp(BaseDashApplication):
                 object_name="data_object",
             )
         elif "component" in triggers:
+            # On component change, read in new values to display from full_components dict.
             if full_components and component is not None:
                 channel_bool = full_components[component]["channel_bool"]
                 channel = full_components[component]["channel"]
@@ -330,6 +484,7 @@ class InversionApp(BaseDashApplication):
                 uncertainty_floor = full_components[component]["uncertainty_floor"]
                 uncertainty_channel = full_components[component]["uncertainty_channel"]
         elif "data_object" in triggers:
+            # On object change, clear full_components and update data dropdown options.
             for comp in full_components:
                 full_components[comp]["channel_bool"] = []
                 full_components[comp]["channel"] = None
@@ -344,6 +499,7 @@ class InversionApp(BaseDashApplication):
             component = no_update
             dropdown_options = self.get_data_options(ui_json_data, data_object)
         else:
+            # If the channel, channel_bool, or uncertainties are changed, we need to update the full_components dict.
             if "channel" in triggers:
                 if channel is None:
                     channel_bool = []
@@ -379,22 +535,15 @@ class InversionApp(BaseDashApplication):
         )
 
     @staticmethod
-    def plot_plan_data_selection(entity, data, **kwargs):
+    def plot_plan_data_selection(entity: ObjectBase, data: Data, **kwargs) -> go.Figure:
         """
-        Plot data values in 2D with contours
+        A simplified version of the plot_plan_data_selection function in utils/plotting, except for dash.
 
-        :param entity: `geoh5py.objects`
-            Input object with either `vertices` or `centroids` property.
-        :param data: `geoh5py.data`
-            Input data with `values` property.
+        :param entity: Input object with either `vertices` or `centroids` property.
+        :param data: Input data with `values` property.
 
-        :return ax:
-        :return out:
-        :return indices:
-        :return line_selection:
-        :return contour_set:
+        :return figure: Figure with updated data
         """
-        indices = None
         values = None
         figure = None
 
@@ -404,7 +553,7 @@ class InversionApp(BaseDashApplication):
             else:
                 figure = kwargs["figure"]
         else:
-            return figure, indices
+            return figure
 
         if getattr(entity, "vertices", None) is not None:
             locations = entity.vertices
@@ -415,11 +564,6 @@ class InversionApp(BaseDashApplication):
             resolution = 0
         else:
             resolution = kwargs["resolution"]
-
-        if "indices" in kwargs.keys():
-            indices = kwargs["indices"]
-            if isinstance(indices, np.ndarray) and np.all(indices == False):
-                indices = None
 
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
             data.values[0], str
@@ -437,7 +581,6 @@ class InversionApp(BaseDashApplication):
             grid = True
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
-
             rot = entity.rotation[0]
 
             if values is not None:
@@ -445,18 +588,21 @@ class InversionApp(BaseDashApplication):
                     values.reshape(entity.shape, order="F"), dtype=float
                 )
 
+                # Rotate plot to match object rotation.
                 new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
                 rot_x = np.linspace(x.min(), x.max(), new_values.shape[0])
                 rot_y = np.linspace(y.min(), y.max(), new_values.shape[1])
 
                 X, Y = np.meshgrid(rot_x, rot_y)
 
+                # Downsample grid
                 downsampled_index, down_x, down_y = downsample_grid(X, Y, resolution)
 
             if np.any(values):
+                # Update figure data.
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
-                figure["data"][0]["z"] = new_values.T[downsampled_index]  # new_values
+                figure["data"][0]["z"] = new_values.T[downsampled_index]
         else:
             # Plot scatter plot
             grid = False
@@ -494,26 +640,42 @@ class InversionApp(BaseDashApplication):
             else:
                 figure.update_layout(yaxis_scaleanchor=None)
 
-        return figure, indices
+        return figure
 
     def plot_selection(
         self,
-        ui_json_data,
-        figure,
-        object_uid,
-        channel,
-        resolution,
-        colorbar,
-        fix_aspect_ratio,
-    ):
+        ui_json_data: dict,
+        figure: dict,
+        object_uid: str,
+        channel: str,
+        resolution: float | int,
+        colorbar: list,
+        fix_aspect_ratio: list,
+    ) -> (go.Figure, str):
+        """
+        Dash version of the plot_selection function in base/plot.
+
+        :param ui_json_data: Uploaded ui.json data.
+        :param figure: Current displayed figure.
+        :param object_uid: Input object.
+        :param channel: Input data.
+        :param resolution: Resolution distance.
+        :param colorbar: Checkbox value for whether to display colorbar.
+        :param fix_aspect_ratio: Checkbox value for whether to fix aspect ratio.
+
+        :return figure: Updated figure.
+        :return data_count: Displayed data count value.
+        """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
         data_count = "Data Count: "
 
         if object_uid is None:
+            # If object is None, figure is empty.
             return go.Figure(), data_count
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
         if "data_object" in triggers or channel is None:
+            # If object changes, update plot type based on object type.
             if isinstance(obj, Grid2D):
                 figure = go.Figure(go.Heatmap(colorscale="rainbow"))
             else:
@@ -524,46 +686,28 @@ class InversionApp(BaseDashApplication):
             figure.update_layout(xaxis_title="Easting (m)", yaxis_title="Northing (m)")
 
             if "ui_json_data" not in triggers:
+                # If we aren't reading in a ui.json, return the empty plot.
                 return figure, data_count
         else:
+            # Construct figure from existing figure to keep bounds and plot layout.
             figure = go.Figure(figure)
 
         if channel is not None:
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
 
-            lim_x = [1e8, -1e8]
-            lim_y = [1e8, -1e8]
-
-            if isinstance(obj, Grid2D):
-                lim_x[0], lim_x[1] = (
-                    obj.centroids[:, 0].min(),
-                    obj.centroids[:, 0].max(),
-                )
-                lim_y[0], lim_y[1] = (
-                    obj.centroids[:, 1].min(),
-                    obj.centroids[:, 1].max(),
-                )
-            elif isinstance(obj, (Points, Curve, Surface)):
-                lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
-                lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
-            else:
-                return
-
+            # Update plot data.
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
-                figure, ind_filter = InversionApp.plot_plan_data_selection(
+                figure = InversionApp.plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
                         "figure": figure,
                         "resolution": resolution,
-                        # "window": {
-                        #    "center": [center_x, center_y],
-                        #    "size": [width, height],
-                        # },
                         "colorbar": colorbar,
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
+                # Update plot bounds from ui.json.
                 if "ui_json_data" in triggers:
                     center_x = ui_json_data["window_center_x"]
                     center_y = ui_json_data["window_center_y"]
@@ -599,7 +743,15 @@ class InversionApp(BaseDashApplication):
         )
 
     @staticmethod
-    def get_window_params(plot):
+    def get_window_params(plot: go.Figure) -> dict:
+        """
+        Get window params from plot to update self.params.
+
+        :param plot: Plot of data.
+
+        :return dict: Dictionary with window params.
+        """
+        # Get plot bounds
         x_range = plot["layout"]["xaxis"]["range"]
         y_range = plot["layout"]["yaxis"]["range"]
         width = x_range[1] - x_range[0]
@@ -613,13 +765,21 @@ class InversionApp(BaseDashApplication):
             "window_azimuth": 0.0,
         }
 
-    def get_topography_params(self, topography):
+    def get_topography_params(self, topography: dict) -> dict:
+        """
+        Get topography params to update self.params.
+
+        :param topography: Dict with topography type, data, constant, and object.
+
+        :return param_dict: Dictionary with topography_object and topography.
+        """
         param_dict = {
             "topography_object": self.workspace.get_entity(
                 uuid.UUID(topography["object"])
             )[0]
         }
 
+        # Determine whether to save data or constant from topography options value.
         if topography["options"] == "Data" and is_uuid(topography["data"]):
             param_dict["topography"] = self.workspace.get_entity(
                 uuid.UUID(topography["data"])
@@ -631,7 +791,15 @@ class InversionApp(BaseDashApplication):
 
         return param_dict
 
-    def get_bound_params(self, bounds):
+    def get_bound_params(self, bounds: dict) -> dict:
+        """
+        Get lower and upper bounds to add to self.params.
+
+        :param bounds: Dictionary of lower, upper bounds with radio button selection, data, constant, and object for
+        each.
+
+        :return param_dict: Dictionary with lower_bound_object, lower_bound, upper_bound_object, upper_bound.
+        """
         param_dict = {}
         for key, value in bounds.items():
             param_dict[key + "_object"] = None
@@ -650,7 +818,15 @@ class InversionApp(BaseDashApplication):
 
         return param_dict
 
-    def get_model_params(self, inversion_type, update_dict):
+    def get_model_params(self, update_dict: dict) -> dict:
+        """
+        Get dictionary of params to update self.params with starting and reference model values.
+
+        :param update_dict: Dictionary of input values from dash callback.
+
+        :return param_dict: Dictionary with model values to save.
+        """
+        # Base dictionary of models.
         models = {
             "starting_model": {
                 "options": update_dict["starting_model_options"],
@@ -665,7 +841,8 @@ class InversionApp(BaseDashApplication):
                 "const": update_dict["reference_model_const"],
             },
         }
-        if inversion_type == "magnetic_vector":
+        # Add additional parameters for magnetic vector inversion.
+        if self._inversion_type == "magnetic_vector":
             models.update(
                 {
                     "starting_inclination": {
@@ -696,7 +873,7 @@ class InversionApp(BaseDashApplication):
             )
 
         param_dict = {}
-
+        # Loop through dict of models and determine whether to save data or constant.
         for key, value in models.items():
             param_dict[key + "_object"] = None
             param_dict[key] = None
@@ -715,8 +892,20 @@ class InversionApp(BaseDashApplication):
 
         return param_dict
 
-    def get_full_component_params(self, full_components, forward_only):
+    def get_full_component_params(
+        self, full_components: dict, forward_only: list
+    ) -> dict:
+        """
+        Get param_dict of values to add to self.params from full_components.
+
+        :param full_components: Dictionary with keys of component_options, and with values channel_bool, channel,
+        uncertainty_type, uncertainty_floor, uncertainty_channel for each key.
+        :param forward_only: Checkbox of whether to perform only forward inversion.
+
+        :return param_dict: Dictionary of values to update self.params.
+        """
         param_dict = {}
+        # Loop through
         for comp, value in full_components.items():
             if value["channel_bool"] and not forward_only:
                 param_dict[comp + "_channel_bool"] = True
@@ -739,7 +928,7 @@ class InversionApp(BaseDashApplication):
 
         return param_dict
 
-    def get_inversion_params_dict(self, inversion_type, update_dict):
+    def get_inversion_params_dict(self, update_dict):
         param_dict = {}
         param_dict.update(InversionApp.get_window_params(update_dict["plot"]))
         param_dict.update(
@@ -770,7 +959,7 @@ class InversionApp(BaseDashApplication):
                 }
             )
         )
-        param_dict.update(self.get_model_params(inversion_type, update_dict))
+        param_dict.update(self.get_model_params(update_dict))
         param_dict.update(
             self.get_full_component_params(
                 update_dict["full_components"], update_dict["forward_only"]
@@ -854,9 +1043,7 @@ class InversionApp(BaseDashApplication):
         # Get dict of params from base dash application
         param_dict = self.get_params_dict(locals())
         # Add inversion specific params to param_dict
-        param_dict.update(
-            self.get_inversion_params_dict(self._inversion_type, locals())
-        )
+        param_dict.update(self.get_inversion_params_dict(locals()))
 
         if not live_link:
             live_link = False

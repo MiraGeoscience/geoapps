@@ -201,9 +201,6 @@ def get_inversion_params_layout(inversion_params):
         [
             dcc.Markdown("##### **Inversion Parameters**"),
             dcc.Checklist(
-                id="forward_only", options=[{"label": "Forward only", "value": True}]
-            ),
-            dcc.Checklist(
                 id="core_params",
                 options=[{"label": "Core parameters", "value": True}],
                 value=[True],
@@ -376,6 +373,10 @@ def get_input_data_layout(component_list):
                 [
                     html.Div(
                         [
+                            dcc.Checklist(
+                                id="forward_only",
+                                options=[{"label": "Forward only", "value": True}],
+                            ),
                             dcc.Markdown(
                                 "Component:",
                                 style={
@@ -400,49 +401,54 @@ def get_input_data_layout(component_list):
                         id="channel_bool", options=[{"label": "Active", "value": True}]
                     ),
                     html.Div(
-                        [
-                            dcc.Markdown(
-                                "Channel:",
+                        id="forward_only_div",
+                        children=[
+                            html.Div(
+                                [
+                                    dcc.Markdown(
+                                        "Channel:",
+                                        style={
+                                            "display": "inline-block",
+                                            "width": "30%",
+                                            "vertical-align": "bottom",
+                                        },
+                                    ),
+                                    dcc.Dropdown(
+                                        id="channel",
+                                        style={
+                                            "display": "inline-block",
+                                            "width": "70%",
+                                            "vertical-align": "bottom",
+                                        },
+                                    ),
+                                ]
+                            ),
+                            dcc.Markdown("**Uncertainties**"),
+                            dcc.RadioItems(
+                                id="uncertainty_options",
+                                options=[
+                                    "Floor",
+                                    "Channel",
+                                ],
+                                value="Floor",
                                 style={
                                     "display": "inline-block",
+                                    "vertical-align": "top",
                                     "width": "30%",
-                                    "vertical-align": "bottom",
                                 },
                             ),
-                            dcc.Dropdown(
-                                id="channel",
-                                style={
-                                    "display": "inline-block",
-                                    "width": "70%",
-                                    "vertical-align": "bottom",
-                                },
-                            ),
-                        ]
-                    ),
-                    dcc.Markdown("**Uncertainties**"),
-                    dcc.RadioItems(
-                        id="uncertainty_options",
-                        options=[
-                            "Floor",
-                            "Channel",
-                        ],
-                        value="Floor",
-                        style={
-                            "display": "inline-block",
-                            "vertical-align": "top",
-                            "width": "30%",
-                        },
-                    ),
-                    html.Div(
-                        [
-                            dcc.Input(
-                                id="uncertainty_floor",
-                            ),
-                            dcc.Dropdown(
-                                id="uncertainty_channel",
+                            html.Div(
+                                [
+                                    dcc.Input(
+                                        id="uncertainty_floor",
+                                    ),
+                                    dcc.Dropdown(
+                                        id="uncertainty_channel",
+                                    ),
+                                ],
+                                style={"display": "inline-block", "width": "60%"},
                             ),
                         ],
-                        style={"display": "inline-block", "width": "60%"},
                     ),
                 ],
                 style={
@@ -949,9 +955,6 @@ detrend = html.Div(
 
 inversion_parameters_dropdown = html.Div(
     [
-        dcc.Checklist(
-            id="forward_only", options=[{"label": "Forward only", "value": True}]
-        ),
         dcc.Dropdown(
             id="param_dropdown",
             options=[

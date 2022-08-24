@@ -96,6 +96,23 @@ class GravityApp(InversionApp):
             Output(component_id="advanced_params_div", component_property="style"),
             Input(component_id="advanced_params", component_property="value"),
         )(InversionApp.update_visibility_from_checkbox)
+        # Update components from forward only checkbox
+        for param in gravity_inversion_params:
+            self.app.callback(
+                Output(
+                    component_id="reference_" + param + "_options",
+                    component_property="options",
+                ),
+                Input(
+                    component_id="forward_only",
+                    component_property="value",
+                ),
+            )(InversionApp.update_reference_model_options)
+        self.app.callback(
+            Output(component_id="forward_only_div", component_property="style"),
+            Output(component_id="advanced_params", component_property="options"),
+            Input(component_id="forward_only", component_property="value"),
+        )(InversionApp.update_forward_only_layout)
 
         # Update object and data dropdowns
         self.app.callback(
@@ -179,6 +196,7 @@ class GravityApp(InversionApp):
                         component_id=model_type + "_" + param + "_object",
                         component_property="value",
                     ),
+                    Input(component_id="forward_only", component_property="value"),
                 )(self.update_models_from_ui_json)
 
         # Update bounds dropdown options and values
@@ -330,4 +348,4 @@ class GravityApp(InversionApp):
             Output(component_id="open_mesh", component_property="n_clicks"),
             Input(component_id="open_mesh", component_property="n_clicks"),
             prevent_initial_call=True,
-        )(self.open_mesh_app)
+        )(InversionApp.open_mesh_app)
