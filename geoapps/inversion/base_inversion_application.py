@@ -26,6 +26,7 @@ from dash import callback_context, no_update
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
 from geoh5py.shared.utils import is_uuid
+from geoh5py.ui_json import monitored_directory_copy
 from notebook import notebookapp
 from plotly import graph_objects as go
 
@@ -33,7 +34,7 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
-from geoapps.shared_utils.utils import downsample_grid, downsample_xy
+from geoapps.shared_utils.utils import downsample_grid, downsample_xy, filter_xy
 
 
 class InversionApp(BaseDashApplication):
@@ -581,6 +582,11 @@ class InversionApp(BaseDashApplication):
         else:
             resolution = kwargs["resolution"]
 
+        if "window" not in kwargs.keys():
+            window = None
+        else:
+            window = kwargs["window"]
+
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
             data.values[0], str
         ):
@@ -656,6 +662,77 @@ class InversionApp(BaseDashApplication):
             else:
                 figure.update_layout(yaxis_scaleanchor=None)
 
+        # Set plot axes limits
+        if window:
+            figure.update_layout(
+                xaxis_range=[
+                    window["center"][0] - (window["size"][0] / 2),
+                    window["center"][0] + (window["size"][0] / 2),
+                ],
+                yaxis_range=[
+                    window["center"][1] - (window["size"][1] / 2),
+                    window["center"][1] + (window["size"][1] / 2),
+                ],
+            )
+
+        # axes range is wrong
+        x = np.array(figure["data"][0]["x"])
+        x_range = figure["layout"]["xaxis"]["range"]
+        x_indices = (x_range[0] < x) & (x < x_range[1])
+
+        y = np.array(figure["data"][0]["y"])
+        y_range = figure["layout"]["yaxis"]["range"]
+        y_indices = (y_range[0] < y) & (y < y_range[1])
+
+        if grid:
+            z = np.array(figure["data"][0]["z"])
+            # print(np.sum(~np.isnan(z)))
+            # print(z.shape)
+            z = z[np.logical_and(x_indices, y_indices)]
+            z_points = np.sum(~np.isnan(z))
+
+            x_range = figure["layout"]["xaxis"]["range"]
+            y_range = figure["layout"]["yaxis"]["range"]
+            width = x_range[1] - x_range[0]
+            height = y_range[1] - y_range[0]
+
+            window = {
+                "center": [x_range[0] + (width / 2), y_range[0] + (height / 2)],
+                "size": [width, height],
+                "azimuth": rot,
+            }
+            indices = filter_xy(x, y, resolution, window=window)
+            # print("filtyer")
+            # print(np.sum(indices))
+
+            # data_count += f"{np.sum(ind_filter)}"
+            print("grid")
+            print(z_points)
+        else:
+            # print(x_range)
+            # print(np.sum(x_indices))
+            # print(np.sum(y_indices))
+            # print(values.shape)
+            # print(x_indices.shape)
+            # print(y_indices.shape)
+
+            x_range = figure["layout"]["xaxis"]["range"]
+            y_range = figure["layout"]["yaxis"]["range"]
+            width = x_range[1] - x_range[0]
+            height = y_range[1] - y_range[0]
+
+            window = {
+                "center": [x_range[0] + (width / 2), y_range[0] + (height / 2)],
+                "size": [width, height],
+                "azimuth": 0.0,
+            }
+            indices = filter_xy(x, y, resolution, window=window)
+            print("scatter")
+            print(np.sum(indices))
+            # count = np.sum(values[np.logical_and(x_indices, y_indices)])
+            print("scatter")
+            # print(count)
+
         return figure
 
     def plot_selection(
@@ -711,6 +788,19 @@ class InversionApp(BaseDashApplication):
         if channel is not None:
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
 
+            window = None
+            # Update plot bounds from ui.json.
+            if "ui_json_data" in triggers:
+                window = {
+                    "center": [
+                        ui_json_data["window_center_x"],
+                        ui_json_data["window_center_y"],
+                    ],
+                    "size": [
+                        ui_json_data["window_width"],
+                        ui_json_data["window_height"],
+                    ],
+                }
             # Update plot data.
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
                 figure = InversionApp.plot_plan_data_selection(
@@ -719,38 +809,12 @@ class InversionApp(BaseDashApplication):
                     **{
                         "figure": figure,
                         "resolution": resolution,
+                        "window": window,
                         "colorbar": colorbar,
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
-                # Update plot bounds from ui.json.
-                if "ui_json_data" in triggers:
-                    center_x = ui_json_data["window_center_x"]
-                    center_y = ui_json_data["window_center_y"]
-                    width = ui_json_data["window_width"]
-                    height = ui_json_data["window_height"]
-                    figure.update_layout(
-                        xaxis_range=[center_x - (width / 2), center_x + (width / 2)],
-                        yaxis_range=[center_y - (height / 2), center_y + (height / 2)],
-                    )
-                """
-                # axes range is wrong
-                x = np.array(figure["data"][0]["x"])
-                x_range = figure["layout"]["xaxis"]["range"]
-                x_indices = (x_range[0] < x) & (x < x_range[1])
 
-                y = np.array(figure["data"][0]["y"])
-                y_range = figure["layout"]["yaxis"]["range"]
-                y_indices = (y_range[0] < y) & (y < y_range[1])
-
-                z = np.array(figure["data"][0]["z"])
-                # z = z[y_indices, x_indices]
-                # z_points = np.sum(~np.isnan(z))
-
-                # indices = filter_xy(x, y, resolution, window=window)
-
-                # data_count += f"{np.sum(ind_filter)}"
-                """
                 data_count += f"{0}"
 
         return (
@@ -789,6 +853,7 @@ class InversionApp(BaseDashApplication):
 
         :return param_dict: Dictionary with topography_object and topography.
         """
+        print("topo test")
         param_dict = {
             "topography_object": self.workspace.get_entity(
                 uuid.UUID(topography["object"])
@@ -1168,6 +1233,13 @@ class InversionApp(BaseDashApplication):
         if not live_link:
             param_dict["monitoring_directory"] = ""
 
+        if param_dict["mesh"] is None:
+            print("A mesh must be selected to write the input file.")
+            return no_update
+        if param_dict["data_object"] is None:
+            print("An object with data must be selected to write the input file.")
+            return no_update
+
         with ws as workspace:
             # Put entities in output workspace.
             param_dict["geoh5"] = workspace
@@ -1182,6 +1254,15 @@ class InversionApp(BaseDashApplication):
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=monitoring_directory,
             )
+
+            if self.params.monitoring_directory is not None and os.path.exists(
+                os.path.abspath(self.params.monitoring_directory)
+            ):
+                for obj in ws.objects:
+                    monitored_directory_copy(
+                        os.path.abspath(self.params.monitoring_directory),
+                        obj,
+                    )
 
         if live_link:
             print("Live link active. Check your ANALYST session for new mesh.")
