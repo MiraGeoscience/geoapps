@@ -738,7 +738,7 @@ regularization = html.Div(
                 html.Div(
                     [
                         dcc.Markdown(
-                            "NS_gradient (y)",
+                            "NS-gradient (y)",
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(

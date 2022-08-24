@@ -135,6 +135,13 @@ class InversionApp(BaseDashApplication):
 
     @staticmethod
     def update_reference_model_options(forward_only: list) -> list:
+        """
+        Disable constant and model options for reference model when forward only is selected.
+
+        :param forward_only: Checkbox for whether to perform forward inversion.
+
+        :return options: Reference model radio button options.
+        """
         if forward_only:
             options = [
                 {"label": "Constant", "value": "Constant", "disabled": True},
@@ -146,9 +153,18 @@ class InversionApp(BaseDashApplication):
         return options
 
     @staticmethod
-    def update_forward_only_layout(forward_only: list):
+    def update_forward_only_layout(forward_only: list) -> (dict, list):
+        """
+        Update layout from forward_only checkbox.
+
+        :param forward_only: Checkbox for whether to perform forward inversion.
+
+        :return style: Style for div containing channel, and uncertainties.
+        :return options: Options for advanced parameters checkbox.
+        """
         if forward_only:
             style = {"display": "none"}
+            # Disable advanced parameters if forward only inversion.
             options = [
                 {"label": "Advanced parameters", "value": True, "disabled": True}
             ]
@@ -158,11 +174,9 @@ class InversionApp(BaseDashApplication):
         return style, options
 
     @staticmethod
-    def open_mesh_app(_: int) -> int:
+    def open_mesh_app(_) -> None:
         """
         Triggered on open mesh app button click. Opens mesh creator notebook in a new window.
-
-        :param _: Triggers function when button is clicked.
 
         :return n_clicks: Placeholder return since dash requires callbacks to have output.
         """
@@ -183,7 +197,7 @@ class InversionApp(BaseDashApplication):
                     + str(nb_port)
                     + "/notebooks/octree_creation/notebook.ipynb"
                 )
-        return 0
+        return None
 
     @staticmethod
     def unpack_val(
@@ -230,6 +244,7 @@ class InversionApp(BaseDashApplication):
         :param ui_json_data: Uploaded ui.json data.
         :param data_object_options: List of dropdown options for main input object.
         :param object_uid: Selected object for the model.
+        :param forward_only: Checkbox for performing forward inversion.
 
         :return options: Selected option for radio button.
         :return const: Value of constant for model.
@@ -279,6 +294,7 @@ class InversionApp(BaseDashApplication):
             data_options = []
             data = None
         elif "forward_only" in triggers and forward_only:
+            # Set the reference model to none for forward inversion.
             if prefix == "reference":
                 options = "None"
         else:
@@ -905,30 +921,38 @@ class InversionApp(BaseDashApplication):
         :return param_dict: Dictionary of values to update self.params.
         """
         param_dict = {}
-        # Loop through
         for comp, value in full_components.items():
-            if value["channel_bool"] and not forward_only:
+            # Only save channel_bool if forward_only.
+            if value["channel_bool"]:
                 param_dict[comp + "_channel_bool"] = True
-                param_dict[comp + "_channel"] = self.workspace.get_entity(
-                    uuid.UUID(value["channel"])
-                )[0]
+                if not forward_only:
+                    param_dict[comp + "_channel"] = self.workspace.get_entity(
+                        uuid.UUID(value["channel"])
+                    )[0]
             else:
                 param_dict[comp + "_channel_bool"] = False
 
-            if value["uncertainty_type"] == "Floor":
-                param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
-            elif value["uncertainty_type"] == "Channel":
-                # param_dict[comp + "_uncertainty"] = value["uncertainty_channel"]
-                if self.workspace.get_entity(value["uncertainty_channel"])[0] is None:
+            # Determine whether to save uncertainty as floor or channel
+            if not forward_only:
+                if value["uncertainty_type"] == "Floor":
+                    param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
+                elif value["uncertainty_type"] == "Channel":
                     param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
                         uuid.UUID(value["uncertainty_channel"])
                     )[0]
-            else:
-                param_dict[comp + "_uncertainty"] = None
+                else:
+                    param_dict[comp + "_uncertainty"] = None
 
         return param_dict
 
-    def get_inversion_params_dict(self, update_dict):
+    def get_inversion_params_dict(self, update_dict: dict) -> dict:
+        """
+        Get parameters that are specific to inversion, that will be used to update self.params.
+
+        :param update_dict: Dictionary of new parameters and values from dash callback.
+
+        :return param_dict: Dictionary of parameters ready to update self.params.
+        """
         param_dict = {}
         param_dict.update(InversionApp.get_window_params(update_dict["plot"]))
         param_dict.update(
@@ -969,77 +993,153 @@ class InversionApp(BaseDashApplication):
 
     def write_trigger(
         self,
-        n_clicks,
-        live_link,
-        data_object,
-        full_components,
-        resolution,
-        plot,
-        fix_aspect_ratio,
-        topography_options,
-        topography_object,
-        topography_data,
-        topography_const,
-        z_from_topo,
-        receivers_offset_x,
-        receivers_offset_y,
-        receivers_offset_z,
-        receivers_radar_drape,
-        forward_only,
-        starting_model_options,
-        starting_model_object,
-        starting_model_data,
-        starting_model_const,
-        mesh,
-        reference_model_options,
-        reference_model_object,
-        reference_model_data,
-        reference_model_const,
-        alpha_s,
-        alpha_x,
-        alpha_y,
-        alpha_z,
-        s_norm,
-        x_norm,
-        y_norm,
-        z_norm,
-        lower_bound_options,
-        lower_bound_object,
-        lower_bound_data,
-        lower_bound_const,
-        upper_bound_options,
-        upper_bound_object,
-        upper_bound_data,
-        upper_bound_const,
-        detrend_type,
-        detrend_order,
-        ignore_values,
-        max_iterations,
-        chi_factor,
-        initial_beta_ratio,
-        max_cg_iterations,
-        tol_cg,
-        n_cpu,
-        tile_spatial,
-        out_group,
-        monitoring_directory,
-        starting_inclination_options=None,
-        starting_inclination_object=None,
-        starting_inclination_data=None,
-        starting_inclination_const=None,
-        reference_inclination_options=None,
-        reference_inclination_object=None,
-        reference_inclination_data=None,
-        reference_inclination_const=None,
-        starting_declination_options=None,
-        starting_declination_object=None,
-        starting_declination_data=None,
-        starting_declination_const=None,
-        reference_declination_options=None,
-        reference_declination_object=None,
-        reference_declination_data=None,
-        reference_declination_const=None,
-    ):
+        n_clicks: int,
+        live_link: list,
+        data_object: str,
+        full_components: dict,
+        resolution: float,
+        plot: go.Figure,
+        fix_aspect_ratio: list,
+        topography_options: str,
+        topography_object: str,
+        topography_data: str,
+        topography_const: float,
+        z_from_topo: list,
+        receivers_offset_x: float,
+        receivers_offset_y: float,
+        receivers_offset_z: float,
+        receivers_radar_drape: str,
+        forward_only: list,
+        starting_model_options: list,
+        starting_model_object: str,
+        starting_model_data: str,
+        starting_model_const: float,
+        mesh: str,
+        reference_model_options: str,
+        reference_model_object: str,
+        reference_model_data: str,
+        reference_model_const: float,
+        alpha_s: float,
+        alpha_x: float,
+        alpha_y: float,
+        alpha_z: float,
+        s_norm: float,
+        x_norm: float,
+        y_norm: float,
+        z_norm: float,
+        lower_bound_options: str,
+        lower_bound_object: str,
+        lower_bound_data: str,
+        lower_bound_const: float,
+        upper_bound_options: str,
+        upper_bound_object: str,
+        upper_bound_data: str,
+        upper_bound_const: float,
+        detrend_type: str,
+        detrend_order: int,
+        ignore_values: str,
+        max_iterations: int,
+        chi_factor: float,
+        initial_beta_ratio: float,
+        max_cg_iterations: int,
+        tol_cg: float,
+        n_cpu: int,
+        tile_spatial: int,
+        out_group: str,
+        monitoring_directory: str,
+        starting_inclination_options: str = None,
+        starting_inclination_object: str = None,
+        starting_inclination_data: str = None,
+        starting_inclination_const: float = None,
+        reference_inclination_options: str = None,
+        reference_inclination_object: str = None,
+        reference_inclination_data: str = None,
+        reference_inclination_const: float = None,
+        starting_declination_options: str = None,
+        starting_declination_object: str = None,
+        starting_declination_data: str = None,
+        starting_declination_const: float = None,
+        reference_declination_options: str = None,
+        reference_declination_object: str = None,
+        reference_declination_data: str = None,
+        reference_declination_const: float = None,
+    ) -> list:
+        """
+        Update self.params and write out.
+
+        :param n_clicks: Trigger for calling write_params.
+        :param live_link: Checkbox showing whether monitoring directory is enabled.
+        :param data_object: Input object uuid.
+        :param full_components: Dictionary of components and corresponding channels, uncertainties, active.
+        :param resolution: Resolution distance.
+        :param plot: Plot of data, with axis range.
+        :param fix_aspect_ratio: Checkbox for plotting with fixed aspect ratio.
+        :param topography_options: Type of topography selected (None, Data, Constant).
+        :param topography_object: Topography object uuid.
+        :param topography_data: Topography data uuid.
+        :param topography_const: Topography constant.
+        :param z_from_topo: Checkbox for getting z from topography.
+        :param receivers_offset_x: Sensor offset East.
+        :param receivers_offset_y: Sensor offset North.
+        :param receivers_offset_z: Sensor offset up.
+        :param receivers_radar_drape: Radar.
+        :param forward_only: Checkbox for performing forward inversion.
+        :param starting_model_options: Type of starting model selected (Model, Constant).
+        :param starting_model_object: Starting model object uuid.
+        :param starting_model_data: Starting model data uuid.
+        :param starting_model_const: Starting model constant.
+        :param mesh: Mesh object uuid.
+        :param reference_model_options: Type of reference model selected (Model, Constant, None).
+        :param reference_model_object: Reference model object uuid.
+        :param reference_model_data: Reference model data uuid.
+        :param reference_model_const: Reference model constant uuid.
+        :param alpha_s: Scaling for reference model.
+        :param alpha_x: Scaling for EW gradient.
+        :param alpha_y: Scaling for NS gradient.
+        :param alpha_z: Scaling for vertical gradient.
+        :param s_norm: Lp-norm for reference model.
+        :param x_norm: Lp-norm for EW gradient.
+        :param y_norm: Lp-norm for NS gradient.
+        :param z_norm: Lp-norm for vertical gradient.
+        :param lower_bound_options: Type of lower bound selected (Model, Constant, None).
+        :param lower_bound_object: Lower bound object uuid.
+        :param lower_bound_data: Lower bound data uuid.
+        :param lower_bound_const: Lower bound constant.
+        :param upper_bound_options: Type of upper bound selected (Model, Constant, None).
+        :param upper_bound_object: Upper bound object uuid.
+        :param upper_bound_data: Upper bound data uuid.
+        :param upper_bound_const: Upper bound constant.
+        :param detrend_type: Detrend method (all, perimeter).
+        :param detrend_order: Detrend order.
+        :param ignore_values: Specified values to ignore.
+        :param max_iterations: Max iterations.
+        :param chi_factor: Target misfit.
+        :param initial_beta_ratio: Beta ratio (phi_d/phi_m).
+        :param max_cg_iterations: Max CG iterations.
+        :param tol_cg: CG tolerance.
+        :param n_cpu: Max CPUs.
+        :param tile_spatial: Number of tiles.
+        :param out_group: GA group name.
+        :param monitoring_directory: Export path.
+        :param starting_inclination_options: (Magnetic vector specific.) Type of starting inclination selected.
+        :param starting_inclination_object: (Magnetic vector specific.) Starting model inclination object uuid.
+        :param starting_inclination_data: (Magnetic vector specific.) Starting model inclination data uuid.
+        :param starting_inclination_const: (Magnetic vector specific.) Starting model inclination constant.
+        :param reference_inclination_options: (Magnetic vector specific.) Type of reference inclination selected.
+        :param reference_inclination_object: (Magnetic vector specific.) Reference model inclination object uuid.
+        :param reference_inclination_data: (Magnetic vector specific.) Reference model inclination data uuid.
+        :param reference_inclination_const: (Magnetic vector specific.) Reference model inclination constant.
+        :param starting_declination_options: (Magnetic vector specific.) Type of starting declination selected.
+        :param starting_declination_object: (Magnetic vector specific.) Starting model declination object uuid.
+        :param starting_declination_data: (Magnetic vector specific.) Starting model declination data uuid.
+        :param starting_declination_const: (Magnetic vector specific.) Starting model declination constant.
+        :param reference_declination_options: (Magnetic vector specific.) Type of Reference declination selected.
+        :param reference_declination_object: (Magnetic vector specific.) Reference model declination object uuid.
+        :param reference_declination_data: (Magnetic vector specific.) Reference model declination data uuid.
+        :param reference_declination_const: (Magnetic vector specific.) Reference model declination constant.
+
+        :return live_link: Checkbox showing whether monitoring directory is enabled.
+        """
         # Get dict of params from base dash application
         param_dict = self.get_params_dict(locals())
         # Add inversion specific params to param_dict
@@ -1075,7 +1175,8 @@ class InversionApp(BaseDashApplication):
                 if isinstance(value, ObjectBase):
                     param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
-            # param_dict["resolution"] = None  # No downsampling for dcip
+            if self._inversion_type == "dcip":
+                param_dict["resolution"] = None  # No downsampling for dcip
             self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
@@ -1090,7 +1191,9 @@ class InversionApp(BaseDashApplication):
             return []
 
     def trigger_click(self, _):
-        """"""
+        """
+        Triggered from clicking compute button. Checks parameters and runs inversion.
+        """
         if self._run_params is None:
             warnings.warn("Input file must be written before running.")
             return
