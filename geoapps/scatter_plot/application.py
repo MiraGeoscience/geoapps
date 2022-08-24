@@ -255,7 +255,7 @@ class ScatterPlots(BaseDashApplication):
             )
             trigger = "objects"
 
-        options = self.get_data_options(trigger, ui_json_data, object_uid)
+        options = self.get_data_options(ui_json_data, object_uid, trigger=trigger)
 
         return (
             options,

@@ -32,7 +32,7 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
-from geoapps.shared_utils.utils import downsample_grid, downsample_xy, filter_xy
+from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
 
 class InversionApp(BaseDashApplication):
@@ -139,50 +139,89 @@ class InversionApp(BaseDashApplication):
             const = None
         return options, data, const
 
-    def update_inversion_params_from_ui_json(self, ui_json_data):
-        options, const, obj, data = no_update, no_update, no_update, no_update
+    def update_models_from_ui_json(self, ui_json_data, data_object_options, object_uid):
+        options, const, obj, obj_options, data, data_options = (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+        )
 
         prefix, param = tuple(
             callback_context.outputs_list[0]["id"]
             .removesuffix("_options")
             .split("_", 1)
         )
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if param in self._inversion_params:
-            if prefix + "_" + param in ui_json_data:
-                obj = str(ui_json_data[prefix + "_" + param + "_object"])
-                val = ui_json_data[prefix + "_" + param]
-            elif prefix + "_model" in ui_json_data:
-                obj = str(ui_json_data[prefix + "_model_object"])
-                val = ui_json_data[prefix + "_model"]
+        if "ui_json_data" in triggers:
+            if param in self._inversion_params:
+                # Maybe use inversion type to differentiate here
+                if prefix + "_" + param in ui_json_data:
+                    obj = str(ui_json_data[prefix + "_" + param + "_object"])
+                    val = ui_json_data[prefix + "_" + param]
+                elif prefix + "_model" in ui_json_data:
+                    obj = str(ui_json_data[prefix + "_model_object"])
+                    val = ui_json_data[prefix + "_model"]
+                else:
+                    obj = None
+                    val = None
+
+                options, data, const = InversionApp.unpack_val(val)
+                data_options = self.get_data_options(ui_json_data, obj)
+                obj_options = data_object_options
+        elif "data_object" in triggers:
+            obj_options = data_object_options
+            obj = None
+            data_options = []
+            data = None
+        else:
+            data = None
+            data_options = self.get_data_options(ui_json_data, object_uid)
+
+        return options, const, obj, obj_options, data, data_options
+
+    def update_general_inversion_params_from_ui_json(
+        self, ui_json_data, data_object_options, param_object_uid
+    ):
+        options, const, obj, obj_options, data, data_options = (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+        )
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "ui_json_data" in triggers:
+            param = callback_context.outputs_list[0]["id"].removesuffix("_options")
+            obj = str(ui_json_data[param + "_object"])
+            val = ui_json_data[param]
+
+            if param == "topography":
+                options, data, const = InversionApp.unpack_val(val, topography=True)
             else:
-                val = None
+                options, data, const = InversionApp.unpack_val(val)
 
-            options, data, const = InversionApp.unpack_val(val)
+            data_options = self.get_data_options(ui_json_data, obj)
+            obj_options = data_object_options
+        elif "data_object" in triggers:
+            obj_options = data_object_options
+            obj = None
+            data_options = []
+            data = None
+        else:
+            data = None
+            data_options = self.get_data_options(ui_json_data, param_object_uid)
 
-        return options, const, obj, data
-
-    @staticmethod
-    def update_topography_from_ui_json(ui_json_data):
-        param = callback_context.outputs_list[0]["id"].removesuffix("_options")
-        obj = str(ui_json_data[param + "_object"])
-        val = ui_json_data[param]
-
-        options, data, const = InversionApp.unpack_val(val, topography=True)
-        return options, const, obj, data
-
-    @staticmethod
-    def update_bounds_from_ui_json(ui_json_data):
-        param = callback_context.outputs_list[0]["id"].removesuffix("_options")
-        obj = str(ui_json_data[param + "_object"])
-        val = ui_json_data[param]
-
-        options, data, const = InversionApp.unpack_val(val)
-        return options, const, obj, data
+        return options, const, obj, obj_options, data, data_options
 
     # Update object dropdowns
     @staticmethod
-    def update_remaining_object_options(obj_options):
+    def update_mesh_options(obj_options):
         return obj_options
 
     # Update input data dropdown options
@@ -202,36 +241,17 @@ class InversionApp(BaseDashApplication):
 
         if "ui_json_data" in triggers:
             value = ui_json_data["receivers_radar_drape"]
-            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
+            options = self.get_data_options(
+                ui_json_data,
+                object_uid,
+                trigger="ui_json_data",
+                object_name="data_object",
+            )
         else:
             value = None
-            options = self.get_data_options("data_object", ui_json_data, object_uid)
+            options = self.get_data_options(ui_json_data, object_uid)
 
         return options, value
-
-    def update_data_options(self, ui_json_data: dict, object_uid: str) -> (list, str):
-        """
-        Update data subset options and values from selected object.
-
-        :param ui_json_data: Uploaded ui.json data.
-        :param object_uid: Selected object from dropdown.
-
-        :return options: Options for data subset dropdown.
-        :return value: Value for data subset dropdown.
-        """
-        if object_uid is None or object_uid == "None":
-            return no_update
-        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
-
-        if "ui_json_data" in triggers:
-            # value = ui_json["channel"]["value"]
-            value = None
-            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
-        else:
-            value = None
-            options = self.get_data_options("data_object", ui_json_data, object_uid)
-
-        return options
 
     def update_full_components(
         self,
@@ -246,14 +266,7 @@ class InversionApp(BaseDashApplication):
         component,
         component_options,
     ):
-        # full_components = no_update
-        # channel_bool = no_update
-        # channel = no_update
-        # uncertainty_type = no_update
-        # uncertainty_floor = no_update
-        # uncertainty_channel = no_update
-        # component = no_update
-
+        dropdown_options = no_update
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
@@ -302,6 +315,13 @@ class InversionApp(BaseDashApplication):
                     uncertainty_floor = value["uncertainty_floor"]
                     uncertainty_channel = value["uncertainty_channel"]
                     break
+
+            dropdown_options = self.get_data_options(
+                ui_json_data,
+                data_object,
+                trigger="ui_json_data",
+                object_name="data_object",
+            )
         elif "component" in triggers:
             if full_components and component is not None:
                 channel_bool = full_components[component]["channel_bool"]
@@ -322,6 +342,7 @@ class InversionApp(BaseDashApplication):
             uncertainty_floor = None
             uncertainty_channel = None
             component = no_update
+            dropdown_options = self.get_data_options(ui_json_data, data_object)
         else:
             if "channel" in triggers:
                 if channel is None:
@@ -349,9 +370,11 @@ class InversionApp(BaseDashApplication):
             full_components,
             channel_bool,
             channel,
+            dropdown_options,
             uncertainty_type,
             uncertainty_floor,
             uncertainty_channel,
+            dropdown_options,
             component,
         )
 
@@ -477,7 +500,7 @@ class InversionApp(BaseDashApplication):
         self,
         ui_json_data,
         figure,
-        object,
+        object_uid,
         channel,
         resolution,
         colorbar,
@@ -486,10 +509,10 @@ class InversionApp(BaseDashApplication):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
         data_count = "Data Count: "
 
-        if object is None:
+        if object_uid is None:
             return go.Figure(), data_count
 
-        obj = self.workspace.get_entity(uuid.UUID(object))[0]
+        obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
         if "data_object" in triggers or channel is None:
             if isinstance(obj, Grid2D):
                 figure = go.Figure(go.Heatmap(colorscale="rainbow"))
@@ -597,7 +620,7 @@ class InversionApp(BaseDashApplication):
             )[0]
         }
 
-        if topography["options"] == "Data":
+        if topography["options"] == "Data" and is_uuid(topography["data"]):
             param_dict["topography"] = self.workspace.get_entity(
                 uuid.UUID(topography["data"])
             )[0]
@@ -614,10 +637,14 @@ class InversionApp(BaseDashApplication):
             param_dict[key + "_object"] = None
             param_dict[key] = None
             if value["options"] == "Model":
-                param_dict[key + "_object"] = self.workspace.get_entity(
-                    uuid.UUID(value["object"])
-                )[0]
-                param_dict[key] = self.workspace.get_entity(uuid.UUID(value["data"]))[0]
+                if is_uuid(value["object"]):
+                    param_dict[key + "_object"] = self.workspace.get_entity(
+                        uuid.UUID(value["object"])
+                    )[0]
+                if is_uuid(value["data"]):
+                    param_dict[key] = self.workspace.get_entity(
+                        uuid.UUID(value["data"])
+                    )[0]
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
 
@@ -674,10 +701,14 @@ class InversionApp(BaseDashApplication):
             param_dict[key + "_object"] = None
             param_dict[key] = None
             if value["options"] == "Model":
-                param_dict[key + "_object"] = self.workspace.get_entity(
-                    uuid.UUID(value["object"])
-                )[0]
-                param_dict[key] = self.workspace.get_entity(uuid.UUID(value["data"]))[0]
+                if is_uuid(value["object"]):
+                    param_dict[key + "_object"] = self.workspace.get_entity(
+                        uuid.UUID(value["object"])
+                    )[0]
+                if is_uuid(value["data"]):
+                    param_dict[key] = self.workspace.get_entity(
+                        uuid.UUID(value["data"])
+                    )[0]
 
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]

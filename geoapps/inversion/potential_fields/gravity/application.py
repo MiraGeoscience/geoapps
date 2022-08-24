@@ -10,13 +10,10 @@ from __future__ import annotations
 
 import os
 
-from dash import Input, Output, State, no_update
+from dash import Input, Output, State
 from flask import Flask
-from geoh5py.objects import ObjectBase
-from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
-from geoapps.base.application import BaseApplication
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.gravity.constants import app_initializer
 from geoapps.inversion.potential_fields.gravity.layout import (
@@ -111,76 +108,13 @@ class GravityApp(InversionApp):
             Input(component_id="upload", component_property="contents"),
         )(self.update_object_options)
 
+        # Update mesh object dropdown options
         self.app.callback(
             Output(component_id="mesh", component_property="options"),
             Input(component_id="data_object", component_property="options"),
-        )(InversionApp.update_remaining_object_options)
-        self.app.callback(
-            Output(component_id="topography_object", component_property="options"),
-            Input(component_id="data_object", component_property="options"),
-        )(InversionApp.update_remaining_object_options)
-        self.app.callback(
-            Output(component_id="topography_data", component_property="options"),
-            # Output(component_id="topography_data", component_property="value"),
-            Input(component_id="ui_json_data", component_property="data"),
-            Input(component_id="topography_object", component_property="value"),
-        )(self.update_data_options)
+        )(InversionApp.update_mesh_options)
 
-        for param in ["lower_bound", "upper_bound"]:
-            self.app.callback(
-                Output(
-                    component_id=param + "_object",
-                    component_property="options",
-                ),
-                Input(component_id="data_object", component_property="options"),
-            )(InversionApp.update_remaining_object_options)
-            self.app.callback(
-                Output(
-                    component_id=param + "_data",
-                    component_property="options",
-                ),
-                # Output(component_id=param+"_data", component_property="value"),
-                Input(component_id="ui_json_data", component_property="data"),
-                Input(
-                    component_id=param + "_object",
-                    component_property="value",
-                ),
-            )(self.update_data_options)
-
-        for model_type in ["starting", "reference"]:
-            for param in gravity_inversion_params:
-                self.app.callback(
-                    Output(
-                        component_id=model_type + "_" + param + "_object",
-                        component_property="options",
-                    ),
-                    Input(component_id="data_object", component_property="options"),
-                )(InversionApp.update_remaining_object_options)
-                self.app.callback(
-                    Output(
-                        component_id=model_type + "_" + param + "_data",
-                        component_property="options",
-                    ),
-                    # Output(component_id=param+"_data", component_property="value"),
-                    Input(component_id="ui_json_data", component_property="data"),
-                    Input(
-                        component_id=model_type + "_" + param + "_object",
-                        component_property="value",
-                    ),
-                )(self.update_data_options)
-
-        self.app.callback(
-            Output(component_id="channel", component_property="options"),
-            # Output(component_id="channel", component_property="value"),
-            Input(component_id="ui_json_data", component_property="data"),
-            Input(component_id="data_object", component_property="value"),
-        )(self.update_data_options)
-        self.app.callback(
-            Output(component_id="uncertainty_channel", component_property="options"),
-            # Output(component_id="uncertainty_channel", component_property="value"),
-            Input(component_id="ui_json_data", component_property="data"),
-            Input(component_id="data_object", component_property="value"),
-        )(self.update_data_options)
+        # Update radar data options
         self.app.callback(
             Output(component_id="receivers_radar_drape", component_property="options"),
             Output(component_id="receivers_radar_drape", component_property="value"),
@@ -193,9 +127,11 @@ class GravityApp(InversionApp):
             Output(component_id="full_components", component_property="data"),
             Output(component_id="channel_bool", component_property="value"),
             Output(component_id="channel", component_property="value"),
+            Output(component_id="channel", component_property="options"),
             Output(component_id="uncertainty_options", component_property="value"),
             Output(component_id="uncertainty_floor", component_property="value"),
             Output(component_id="uncertainty_channel", component_property="value"),
+            Output(component_id="uncertainty_channel", component_property="options"),
             Output(component_id="component", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="full_components", component_property="data"),
@@ -209,6 +145,7 @@ class GravityApp(InversionApp):
             State(component_id="component", component_property="options"),
         )(self.update_full_components)
 
+        # Update model dropdown options and values
         for model_type in ["starting", "reference"]:
             for param in gravity_inversion_params:
                 self.app.callback(
@@ -225,26 +162,38 @@ class GravityApp(InversionApp):
                         component_property="value",
                     ),
                     Output(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="options",
+                    ),
+                    Output(
                         component_id=model_type + "_" + param + "_data",
                         component_property="value",
                     ),
+                    Output(
+                        component_id=model_type + "_" + param + "_data",
+                        component_property="options",
+                    ),
                     Input(component_id="ui_json_data", component_property="data"),
-                )(self.update_inversion_params_from_ui_json)
-        for param in ["lower_bound", "upper_bound"]:
+                    Input(component_id="data_object", component_property="options"),
+                    Input(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="value",
+                    ),
+                )(self.update_models_from_ui_json)
+
+        # Update bounds dropdown options and values
+        for param in ["lower_bound", "upper_bound", "topography"]:
             self.app.callback(
                 Output(component_id=param + "_options", component_property="value"),
                 Output(component_id=param + "_const", component_property="value"),
                 Output(component_id=param + "_object", component_property="value"),
+                Output(component_id=param + "_object", component_property="options"),
                 Output(component_id=param + "_data", component_property="value"),
+                Output(component_id=param + "_data", component_property="options"),
                 Input(component_id="ui_json_data", component_property="data"),
-            )(InversionApp.update_bounds_from_ui_json)
-        self.app.callback(
-            Output(component_id="topography_options", component_property="value"),
-            Output(component_id="topography_const", component_property="value"),
-            Output(component_id="topography_object", component_property="value"),
-            Output(component_id="topography_data", component_property="value"),
-            Input(component_id="ui_json_data", component_property="data"),
-        )(InversionApp.update_topography_from_ui_json)
+                Input(component_id="data_object", component_property="options"),
+                Input(component_id=param + "_object", component_property="value"),
+            )(self.update_general_inversion_params_from_ui_json)
 
         # Update from ui.json
         self.app.callback(

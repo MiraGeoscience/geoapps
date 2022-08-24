@@ -451,10 +451,12 @@ class Clustering(ScatterPlots):
 
         if "ui_json_data" in triggers:
             value = ast.literal_eval(ui_json_data["data_subset"])
-            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
+            options = self.get_data_options(
+                ui_json_data, object_uid, trigger="ui_json_data"
+            )
         else:
             value = []
-            options = self.get_data_options("objects", ui_json_data, object_uid)
+            options = self.get_data_options(ui_json_data, object_uid)
 
         return options, value
 

@@ -117,24 +117,31 @@ class BaseDashApplication:
 
         return object_options, object_value, ui_json_data, None, None
 
-    def get_data_options(self, trigger: str, ui_json_data: dict, object_uid: str):
+    def get_data_options(
+        self,
+        ui_json_data: dict,
+        object_uid: str,
+        object_name: str = "objects",
+        trigger: str = None,
+    ):
         """
         Get data dropdown options from a given object.
 
-        :param trigger: Callback trigger.
         :param ui_json_data: Uploaded ui.json data to read object from.
         :param object_uid: Selected object in object dropdown.
+        :param object_name: Object parameter name in ui.json.
+        :param trigger: Callback trigger.
 
         :return options: Data dropdown options.
         :return value: Data dropdown value.
         """
         obj = None
 
-        if trigger == "ui_json_data" and "objects" in ui_json_data:
-            if self.workspace.get_entity(ui_json_data["objects"])[0] is not None:
-                object_uid = self.workspace.get_entity(ui_json_data["objects"])[0].uid
+        if trigger == "ui_json_data" and object_name in ui_json_data:
+            if self.workspace.get_entity(ui_json_data[object_name])[0] is not None:
+                object_uid = self.workspace.get_entity(ui_json_data[object_name])[0].uid
 
-        if object_uid is not None:
+        if object_uid is not None and is_uuid(object_uid):
             for entity in self.workspace.get_entity(uuid.UUID(object_uid)):
                 if isinstance(entity, ObjectBase):
                     obj = entity
