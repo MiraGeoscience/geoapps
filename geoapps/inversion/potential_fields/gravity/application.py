@@ -217,8 +217,6 @@ class GravityApp(InversionApp):
         self.app.callback(
             # Input Data
             Output(component_id="resolution", component_property="value"),
-            # Plot
-            Output(component_id="fix_aspect_ratio", component_property="value"),
             # Topography
             Output(component_id="z_from_topo", component_property="value"),
             Output(component_id="receivers_offset_x", component_property="value"),
@@ -255,15 +253,34 @@ class GravityApp(InversionApp):
         )(self.update_remainder_from_ui_json)
 
         # Plot callbacks
+        # Update slider bounds
+        self.app.callback(
+            Output(component_id="window_center_x", component_property="min"),
+            Output(component_id="window_center_x", component_property="max"),
+            Output(component_id="window_center_y", component_property="min"),
+            Output(component_id="window_center_y", component_property="max"),
+            Output(component_id="window_width", component_property="max"),
+            Output(component_id="window_height", component_property="max"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.set_bounding_box)
         # Update plot
         self.app.callback(
             Output(component_id="plot", component_property="figure"),
             Output(component_id="data_count", component_property="children"),
+            Output(component_id="window_center_x", component_property="value"),
+            Output(component_id="window_center_y", component_property="value"),
+            Output(component_id="window_width", component_property="value"),
+            Output(component_id="window_height", component_property="value"),
+            Output(component_id="fix_aspect_ratio", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
             Input(component_id="plot", component_property="relayoutData"),
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
+            Input(component_id="window_center_x", component_property="value"),
+            Input(component_id="window_center_y", component_property="value"),
+            Input(component_id="window_width", component_property="value"),
+            Input(component_id="window_height", component_property="value"),
             Input(component_id="resolution", component_property="value"),
             Input(component_id="colorbar", component_property="value"),
             Input(component_id="fix_aspect_ratio", component_property="value"),
@@ -278,7 +295,10 @@ class GravityApp(InversionApp):
             State(component_id="data_object", component_property="value"),
             State(component_id="full_components", component_property="data"),
             State(component_id="resolution", component_property="value"),
-            State(component_id="plot", component_property="figure"),
+            State(component_id="window_center_x", component_property="value"),
+            State(component_id="window_center_y", component_property="value"),
+            State(component_id="window_width", component_property="value"),
+            State(component_id="window_height", component_property="value"),
             State(component_id="fix_aspect_ratio", component_property="value"),
             # Topography
             State(component_id="topography_options", component_property="value"),

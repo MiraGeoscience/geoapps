@@ -348,14 +348,121 @@ plot_layout = html.Div(
             ],
             style={"width": "60%"},
         ),
-        dcc.Graph(
-            id="plot",
-            figure=go.Figure(go.Heatmap(colorscale="rainbow")),
-            style={
-                "width": "650px",
-                "height": "650px",
-                "vertical-align": "middle",
-            },
+        html.Div(
+            [
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            "**Easting**",
+                            style={
+                                "display": "inline-block",
+                                "width": "10%",
+                                "margin-left": "20%",
+                                "vertical-align": "middle",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                dcc.Slider(
+                                    id="window_center_x",
+                                    tooltip={
+                                        "placement": "top",
+                                        "always_visible": True,
+                                    },
+                                    marks=None,
+                                ),
+                            ],
+                            style={
+                                "display": "inline-block",
+                                "width": "70%",
+                                "vertical-align": "middle",
+                            },
+                        ),
+                    ],
+                ),
+                html.Div(
+                    [
+                        dcc.Markdown(
+                            "**Width**",
+                            style={
+                                "display": "inline-block",
+                                "width": "10%",
+                                "margin-left": "20%",
+                                "vertical-align": "middle",
+                            },
+                        ),
+                        html.Div(
+                            [
+                                dcc.Slider(
+                                    id="window_width",
+                                    min=0,
+                                    tooltip={
+                                        "placement": "top",
+                                        "always_visible": True,
+                                    },
+                                    marks=None,
+                                ),
+                            ],
+                            style={
+                                "display": "inline-block",
+                                "width": "70%",
+                                "vertical-align": "middle",
+                            },
+                        ),
+                    ],
+                ),
+            ],
+            style={"width": "700px", "height": "150px"},
+        ),
+        html.Div(
+            [
+                html.Div(
+                    [
+                        dcc.Markdown("**Northing**", style={"display": "inline-block"}),
+                        dcc.Slider(
+                            id="window_center_y",
+                            tooltip={"placement": "left", "always_visible": True},
+                            marks=None,
+                            vertical=True,
+                        ),
+                    ],
+                    style={
+                        "display": "inline-block",
+                        "height": "100%",
+                        "vertical-align": "middle",
+                        "width": "75px",
+                    },
+                ),
+                html.Div(
+                    [
+                        dcc.Markdown("**Height**", style={"display": "inline-block"}),
+                        dcc.Slider(
+                            id="window_height",
+                            min=0,
+                            tooltip={"placement": "left", "always_visible": True},
+                            marks=None,
+                            vertical=True,
+                        ),
+                    ],
+                    style={
+                        "display": "inline-block",
+                        "height": "100%",
+                        "vertical-align": "middle",
+                        "width": "75px",
+                    },
+                ),
+                dcc.Graph(
+                    id="plot",
+                    figure=go.Figure(go.Heatmap(colorscale="rainbow")),
+                    style={
+                        "display": "inline-block",
+                        "width": "550px",
+                        "height": "550px",
+                        "vertical-align": "middle",
+                    },
+                ),
+            ],
+            style={"width": "800px"},
         ),
     ],
     style={
