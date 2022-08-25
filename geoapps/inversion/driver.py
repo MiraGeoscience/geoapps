@@ -100,7 +100,7 @@ class InversionDriver:
         self.inversion_data = InversionData(self.workspace, self.params, self.window)
 
         self.inversion_topography = InversionTopography(
-            self.workspace, self.params, self.window
+            self.workspace, self.params, self.inversion_data, self.window
         )
 
         self.inversion_mesh = InversionMesh(
@@ -304,7 +304,11 @@ class InversionDriver:
 
     def get_tiles(self):
 
-        if self.params.inversion_type in ["direct current", "induced polarization"]:
+        if self.params.inversion_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+        ]:
             tiles = []
             potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
@@ -431,6 +435,11 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
 
         from .electricals.direct_current.three_dimensions.params import (
             DirectCurrent3DParams as ParamClass,
+        )
+    elif inversion_type == "direct current 2d":
+        from .electricals.direct_current.two_dimensions.constants import validations
+        from .electricals.direct_current.two_dimensions.params import (
+            DirectCurrent2DParams as ParamClass,
         )
 
     elif inversion_type == "induced polarization":

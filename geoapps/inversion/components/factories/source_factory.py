@@ -40,7 +40,7 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.SourceField
 
-        elif self.factory_type == "direct current":
+        elif self.factory_type in ["direct current", "direct current 2d"]:
             from SimPEG.electromagnetics.static.resistivity import sources
 
             return sources.Dipole
@@ -64,7 +64,11 @@ class SourcesFactory(SimPEGFactory):
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+        ]:
             args += self._dcip_arguments(
                 receivers=receivers,
                 locations=locations,
@@ -111,7 +115,7 @@ class SourcesFactory(SimPEGFactory):
         args.append(locations_a)
 
         if np.all(locations_a == locations_b):
-            if self.factory_type == "direct current":
+            if self.factory_type in ["direct current", "direct current 2d"]:
                 from SimPEG.electromagnetics.static.resistivity import sources
             else:
                 from SimPEG.electromagnetics.static.induced_polarization import sources

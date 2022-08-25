@@ -164,7 +164,8 @@ class InversionData(InversionLocations):
     def filter(self, a):
         """Remove vertices based on mask property."""
         if (
-            self.params.inversion_type in ["direct current", "induced polarization"]
+            self.params.inversion_type
+            in ["direct current", "direct current 2d", "induced polarization"]
             and self.indices is None
         ):
             ab_ind = np.where(np.any(self.mask[self.params.data_object.cells], axis=1))[
@@ -244,6 +245,10 @@ class InversionData(InversionLocations):
         else:
             for component in data.keys():
                 dnorm = self.normalizations[component] * data[component]
+                if "2d" in self.params.inversion_type:
+                    ind = np.ones_like(dnorm, dtype=bool)
+                    ind[self.global_map] = False
+                    dnorm[ind] = np.nan
                 data_entity[component] = entity.add_data(
                     {f"{basename}_{component}": {"values": dnorm}}
                 )
@@ -253,15 +258,25 @@ class InversionData(InversionLocations):
                     ].entity_type
                     uncerts = self.uncertainties[component].copy()
                     uncerts[np.isinf(uncerts)] = np.nan
+                    if "2d" in self.params.inversion_type:
+                        ind = np.ones_like(uncerts, dtype=bool)
+                        ind[self.global_map] = False
+                        uncerts[ind] = np.nan
                     entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
 
-                if self.params.inversion_type == "direct current":
+                if self.params.inversion_type in [
+                    "direct current",
+                    "direct current 2d",
+                ]:
                     self.transformations[component] = 1 / (
                         geometric_factor(self._survey) + 1e-10
                     )
-                    apparent_property = (
-                        data[component] * self.transformations[component]
-                    )
+
+                    apparent_property = data[component]
+                    if "2d" in self.params.inversion_type:
+                        apparent_property = apparent_property[self.global_map]
+                    apparent_property *= self.transformations[component]
+
                     data_entity["apparent_resistivity"] = entity.add_data(
                         {
                             f"{basename}_apparent_resistivity": {
@@ -460,10 +475,13 @@ class InversionData(InversionLocations):
         """
         simulation_factory = SimulationFactory(self.params)
 
-        if tile_id is None:
+        if tile_id is None or "2d" in self.params.inversion_type:
             mapping = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
             sim = simulation_factory.build(
-                survey=survey, global_mesh=mesh, active_cells=active_cells, map=mapping
+                survey=survey,
+                global_mesh=mesh,
+                active_cells=active_cells,
+                mapping=mapping,
             )
 
         else:

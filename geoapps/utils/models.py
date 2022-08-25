@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 from discretize.utils import mesh_utils
+from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, DrapeModel, ObjectBase
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
@@ -21,6 +22,7 @@ from geoapps.utils.surveys import compute_alongline_distance
 
 def get_drape_model(
     workspace: Workspace,
+    parent: Group,
     name: str,
     locs: np.ndarray,
     h: list,
@@ -33,6 +35,7 @@ def get_drape_model(
     Create a BlockModel object from parameters.
 
     :param workspace: Workspace.
+    :param parent: Group to contain the result.
     :param name: Block model name.
     :param locs: Location points.
     :param h: Cell size(s) for the core mesh.
@@ -79,9 +82,11 @@ def get_drape_model(
             indices.append(index)
             index += 1
 
-    model = DrapeModel.create(workspace, name=name)
+    model = DrapeModel.create(workspace, name=name, parent=parent)
     model.prisms = np.vstack(prisms)
-    model.layers = np.vstack(layers)
+    layers = np.vstack(layers)
+    layers[:, 2] = layers[:, 2][::-1]
+    model.layers = layers
 
     model.add_data(
         {

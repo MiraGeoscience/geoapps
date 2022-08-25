@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
 import numpy as np
 
+from geoapps.utils.surveys import extract_dcip_survey
+
 from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
 from .source_factory import SourcesFactory
@@ -76,7 +78,7 @@ class SurveyFactory(SimPEGFactory):
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import survey
 
-        elif self.factory_type == "direct current":
+        elif self.factory_type in ["direct current", "direct current 2d"]:
             from SimPEG.electromagnetics.static.resistivity import survey
 
         elif self.factory_type == "induced polarization":
@@ -94,7 +96,11 @@ class SurveyFactory(SimPEGFactory):
         receiver_entity = data.entity
 
         if local_index is None:
-            if self.factory_type in ["direct current", "induced polarization"]:
+            if self.factory_type in [
+                "direct current",
+                "direct current 2d",
+                "induced polarization",
+            ]:
                 n_data = receiver_entity.n_cells
             else:
                 n_data = receiver_entity.n_vertices
@@ -103,7 +109,11 @@ class SurveyFactory(SimPEGFactory):
         else:
             self.local_index = local_index
 
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+        ]:
             return self._dcip_arguments(data=data)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
@@ -136,12 +146,16 @@ class SurveyFactory(SimPEGFactory):
             active_cells=active_cells,
             channel=channel,
         )
-
-        local_index = self.local_index if local_index is None else local_index
+        condition = local_index is None or "2d" in self.params.inversion_type
+        local_index = self.local_index if condition else local_index
         if not self.params.forward_only:
             self._add_data(survey, data, local_index, channel)
 
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+        ]:
             if (
                 (mesh is not None)
                 and (active_cells is not None)
@@ -252,6 +266,19 @@ class SurveyFactory(SimPEGFactory):
             return None
 
         receiver_entity = data.entity
+        if self.factory_type == "direct current 2d":
+            lines = self.params.line_object
+            receiver_entity = extract_dcip_survey(
+                self.params.geoh5,
+                receiver_entity,
+                self.params.line_object.values,
+                self.params.line_id,
+            )
+            self.local_index = np.arange(receiver_entity.n_cells)
+            data.global_map = [
+                k for k in receiver_entity.children if k.name == "Global Map"
+            ][0].values
+
         source_ids, order = np.unique(
             receiver_entity.ab_cell_id.values[self.local_index], return_index=True
         )
@@ -263,7 +290,9 @@ class SurveyFactory(SimPEGFactory):
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
             local_index = receiver_group(source_id, receiver_entity)
             receivers = ReceiversFactory(self.params).build(
-                locations=data.locations,
+                locations=receiver_entity.vertices
+                if "2d" in self.params.inversion_type
+                else data.locations,
                 local_index=receiver_entity.cells[local_index],
             )
             if receivers.nD == 0:
