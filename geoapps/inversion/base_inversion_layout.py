@@ -49,7 +49,7 @@ def get_object_selection_layout(inversion_type, component_list):
     if inversion_type in ["magnetic vector", "magnetic scalar"]:
         object_selection_layout = html.Div(
             [
-                dcc.Markdown("##### **Data Selection**"),
+                dcc.Markdown("##### **Object/Data Selection**"),
                 standard_layout,
                 inducing_params_div,
                 input_data_layout,
@@ -63,7 +63,7 @@ def get_object_selection_layout(inversion_type, component_list):
     else:
         object_selection_layout = html.Div(
             [
-                dcc.Markdown("##### **Object Selection**"),
+                dcc.Markdown("##### **Object/Data Selection**"),
                 standard_layout,
                 input_data_layout,
             ],
@@ -373,10 +373,6 @@ def get_input_data_layout(component_list):
                 [
                     html.Div(
                         [
-                            dcc.Checklist(
-                                id="forward_only",
-                                options=[{"label": "Forward only", "value": True}],
-                            ),
                             dcc.Markdown(
                                 "Component:",
                                 style={
@@ -456,6 +452,19 @@ def get_input_data_layout(component_list):
                     "vertical-align": "top",
                     "width": "40%",
                 },
+            ),
+            html.Div(
+                [
+                    dcc.Markdown(
+                        "**Inversion Type**",
+                        style={"display": "inline-block", "width": "15%"},
+                    ),
+                    dcc.Checklist(
+                        id="forward_only",
+                        options=[{"label": "Forward only", "value": True}],
+                        style={"display": "inline-block", "width": "15%"},
+                    ),
+                ]
             ),
         ],
     )
@@ -636,7 +645,7 @@ topography_layout = html.Div(
                             id="receivers_radar_drape",
                             style={
                                 "display": "inline-block",
-                                "width": "50%",
+                                "width": "70.5%",
                                 "vertical-align": "bottom",
                             },
                         ),

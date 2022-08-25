@@ -392,6 +392,7 @@ class InversionApp(BaseDashApplication):
             value = None
             options = self.get_data_options(ui_json_data, object_uid)
 
+        options.insert(0, {"label": "", "value": ""})
         return options, value
 
     def update_full_components(
@@ -522,6 +523,7 @@ class InversionApp(BaseDashApplication):
                     channel_bool = []
                     uncertainty_floor = 1.0
                 else:
+                    # Set default floor on channel change
                     channel_bool = [True]
                     values = self.workspace.get_entity(uuid.UUID(channel))[0].values
                     if values is not None and values.dtype in [
@@ -532,6 +534,7 @@ class InversionApp(BaseDashApplication):
                         uncertainty_floor = np.round(
                             np.percentile(np.abs(values[~np.isnan(values)]), 5), 5
                         )
+
             full_components[component] = {
                 "channel_bool": channel_bool,
                 "channel": channel,
@@ -539,6 +542,7 @@ class InversionApp(BaseDashApplication):
                 "uncertainty_floor": uncertainty_floor,
                 "uncertainty_channel": uncertainty_channel,
             }
+
         return (
             full_components,
             channel_bool,
@@ -706,8 +710,8 @@ class InversionApp(BaseDashApplication):
             # print(np.sum(indices))
 
             # data_count += f"{np.sum(ind_filter)}"
-            print("grid")
-            print(z_points)
+            # print("grid")
+            # print(z_points)
         else:
             # print(x_range)
             # print(np.sum(x_indices))
@@ -845,7 +849,7 @@ class InversionApp(BaseDashApplication):
             "window_azimuth": 0.0,
         }
 
-    def get_topography_params(self, topography: dict) -> dict:
+    def get_topography_params(self, new_workspace, topography: dict) -> dict:
         """
         Get topography params to update self.params.
 
@@ -853,18 +857,24 @@ class InversionApp(BaseDashApplication):
 
         :return param_dict: Dictionary with topography_object and topography.
         """
-        print("topo test")
         param_dict = {
             "topography_object": self.workspace.get_entity(
                 uuid.UUID(topography["object"])
             )[0]
         }
+        # Copy to new workspace
+        new_topo_obj = param_dict["topography_object"].copy(
+            parent=new_workspace, copy_children=False
+        )
 
         # Determine whether to save data or constant from topography options value.
         if topography["options"] == "Data" and is_uuid(topography["data"]):
             param_dict["topography"] = self.workspace.get_entity(
                 uuid.UUID(topography["data"])
             )[0]
+            # Copy to new workspace
+            if new_workspace.get_entity(param_dict["topography"].uid)[0] is None:
+                param_dict["topography"].copy(parent=new_topo_obj)
         elif topography["options"] == "Constant":
             param_dict["topography"] = topography["const"]
         else:
@@ -872,7 +882,7 @@ class InversionApp(BaseDashApplication):
 
         return param_dict
 
-    def get_bound_params(self, bounds: dict) -> dict:
+    def get_bound_params(self, new_workspace, bounds: dict) -> dict:
         """
         Get lower and upper bounds to add to self.params.
 
@@ -890,16 +900,23 @@ class InversionApp(BaseDashApplication):
                     param_dict[key + "_object"] = self.workspace.get_entity(
                         uuid.UUID(value["object"])
                     )[0]
-                if is_uuid(value["data"]):
-                    param_dict[key] = self.workspace.get_entity(
-                        uuid.UUID(value["data"])
-                    )[0]
+                    # Copy to new workspace
+                    new_obj = param_dict[key + "_object"].copy(
+                        parent=new_workspace, copy_children=False
+                    )
+                    if is_uuid(value["data"]):
+                        param_dict[key] = self.workspace.get_entity(
+                            uuid.UUID(value["data"])
+                        )[0]
+                        # Copy to new workspace
+                        if new_workspace.get_entity(param_dict[key].uid)[0] is None:
+                            param_dict[key].copy(parent=new_obj)
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
 
         return param_dict
 
-    def get_model_params(self, update_dict: dict) -> dict:
+    def get_model_params(self, new_workspace, update_dict: dict) -> dict:
         """
         Get dictionary of params to update self.params with starting and reference model values.
 
@@ -963,10 +980,17 @@ class InversionApp(BaseDashApplication):
                     param_dict[key + "_object"] = self.workspace.get_entity(
                         uuid.UUID(value["object"])
                     )[0]
-                if is_uuid(value["data"]):
-                    param_dict[key] = self.workspace.get_entity(
-                        uuid.UUID(value["data"])
-                    )[0]
+                    # Copy to new workspace
+                    new_obj = param_dict[key + "_object"].copy(
+                        parent=new_workspace, copy_children=False
+                    )
+                    if is_uuid(value["data"]):
+                        param_dict[key] = self.workspace.get_entity(
+                            uuid.UUID(value["data"])
+                        )[0]
+                        # Copy to new workspace
+                        if new_workspace.get_entity(param_dict[key].uid)[0] is None:
+                            param_dict[key].copy(parent=new_obj)
 
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
@@ -974,7 +998,7 @@ class InversionApp(BaseDashApplication):
         return param_dict
 
     def get_full_component_params(
-        self, full_components: dict, forward_only: list
+        self, new_workspace, data_object, full_components: dict, forward_only: list
     ) -> dict:
         """
         Get param_dict of values to add to self.params from full_components.
@@ -994,6 +1018,12 @@ class InversionApp(BaseDashApplication):
                     param_dict[comp + "_channel"] = self.workspace.get_entity(
                         uuid.UUID(value["channel"])
                     )[0]
+                    # Copy to new workspace
+                    if (
+                        new_workspace.get_entity(param_dict[comp + "_channel"].uid)[0]
+                        is None
+                    ):
+                        param_dict[comp + "_channel"].copy(parent=data_object)
             else:
                 param_dict[comp + "_channel_bool"] = False
 
@@ -1002,15 +1032,28 @@ class InversionApp(BaseDashApplication):
                 if value["uncertainty_type"] == "Floor":
                     param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
                 elif value["uncertainty_type"] == "Channel":
-                    param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
-                        uuid.UUID(value["uncertainty_channel"])
-                    )[0]
+                    if is_uuid(value["uncertainty_channel"]):
+                        param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
+                            uuid.UUID(value["uncertainty_channel"])
+                        )[0]
+                        # Copy to new workspace
+                        if (
+                            new_workspace.get_entity(
+                                param_dict[comp + "_uncertainty"].uid
+                            )[0]
+                            is None
+                        ):
+                            param_dict[comp + "_uncertainty"].copy(parent=data_object)
+                    else:
+                        param_dict[comp + "_uncertainty"] = None
                 else:
                     param_dict[comp + "_uncertainty"] = None
 
         return param_dict
 
-    def get_inversion_params_dict(self, update_dict: dict) -> dict:
+    def get_inversion_params_dict(
+        self, new_workspace, update_dict: dict, data_object
+    ) -> dict:
         """
         Get parameters that are specific to inversion, that will be used to update self.params.
 
@@ -1022,16 +1065,18 @@ class InversionApp(BaseDashApplication):
         param_dict.update(InversionApp.get_window_params(update_dict["plot"]))
         param_dict.update(
             self.get_topography_params(
+                new_workspace,
                 {
                     "options": update_dict["topography_options"],
                     "object": update_dict["topography_object"],
                     "data": update_dict["topography_data"],
                     "const": update_dict["topography_const"],
-                }
+                },
             )
         )
         param_dict.update(
             self.get_bound_params(
+                new_workspace,
                 {
                     "lower_bound": {
                         "options": update_dict["lower_bound_options"],
@@ -1045,13 +1090,16 @@ class InversionApp(BaseDashApplication):
                         "data": update_dict["upper_bound_data"],
                         "const": update_dict["upper_bound_const"],
                     },
-                }
+                },
             )
         )
-        param_dict.update(self.get_model_params(update_dict))
+        param_dict.update(self.get_model_params(new_workspace, update_dict))
         param_dict.update(
             self.get_full_component_params(
-                update_dict["full_components"], update_dict["forward_only"]
+                new_workspace,
+                data_object,
+                update_dict["full_components"],
+                update_dict["forward_only"],
             )
         )
         return param_dict
@@ -1205,10 +1253,19 @@ class InversionApp(BaseDashApplication):
 
         :return live_link: Checkbox showing whether monitoring directory is enabled.
         """
+
+        if mesh is None:
+            print("A mesh must be selected to write the input file.")
+            return no_update
+        if data_object is None:
+            print("An object with data must be selected to write the input file.")
+            return no_update
+        if topography_object is None:
+            print("A topography object must be selected to write the input file.")
+            return no_update
+
         # Get dict of params from base dash application
         param_dict = self.get_params_dict(locals())
-        # Add inversion specific params to param_dict
-        param_dict.update(self.get_inversion_params_dict(locals()))
 
         if not live_link:
             live_link = False
@@ -1233,22 +1290,33 @@ class InversionApp(BaseDashApplication):
         if not live_link:
             param_dict["monitoring_directory"] = ""
 
-        if param_dict["mesh"] is None:
-            print("A mesh must be selected to write the input file.")
-            return no_update
-        if param_dict["data_object"] is None:
-            print("An object with data must be selected to write the input file.")
-            return no_update
-
         with ws as workspace:
             # Put entities in output workspace.
             param_dict["geoh5"] = workspace
+
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+                    param_dict[key] = value.copy(parent=workspace, copy_children=False)
+
+            # Add inversion specific params to param_dict
+            param_dict.update(
+                self.get_inversion_params_dict(
+                    workspace, locals(), param_dict["data_object"]
+                )
+            )
+
+            if (
+                is_uuid(param_dict["receivers_radar_drape"])
+                and workspace.get_entity(param_dict["receivers_radar_drape"].uid)[0]
+                is None
+            ):
+                param_dict["receivers_radar_drape"].copy(
+                    parent=param_dict["data_object"]
+                )
 
             if self._inversion_type == "dcip":
                 param_dict["resolution"] = None  # No downsampling for dcip
+
             self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
