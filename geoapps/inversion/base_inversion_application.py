@@ -27,6 +27,7 @@ from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import monitored_directory_copy
+from geoh5py.workspace import Workspace
 from notebook import notebookapp
 from plotly import graph_objects as go
 
@@ -849,53 +850,25 @@ class InversionApp(BaseDashApplication):
             "window_azimuth": 0.0,
         }
 
-    def get_topography_params(self, new_workspace, topography: dict) -> dict:
+    def get_general_inversion_params(
+        self, new_workspace: Workspace, inversion_params_dict: dict
+    ) -> dict:
         """
-        Get topography params to update self.params.
+        Get topography, bounds, and models to add to self.params.
 
-        :param topography: Dict with topography type, data, constant, and object.
-
-        :return param_dict: Dictionary with topography_object and topography.
-        """
-        param_dict = {
-            "topography_object": self.workspace.get_entity(
-                uuid.UUID(topography["object"])
-            )[0]
-        }
-        # Copy to new workspace
-        new_topo_obj = param_dict["topography_object"].copy(
-            parent=new_workspace, copy_children=False
-        )
-
-        # Determine whether to save data or constant from topography options value.
-        if topography["options"] == "Data" and is_uuid(topography["data"]):
-            param_dict["topography"] = self.workspace.get_entity(
-                uuid.UUID(topography["data"])
-            )[0]
-            # Copy to new workspace
-            if new_workspace.get_entity(param_dict["topography"].uid)[0] is None:
-                param_dict["topography"].copy(parent=new_topo_obj)
-        elif topography["options"] == "Constant":
-            param_dict["topography"] = topography["const"]
-        else:
-            param_dict["topography"] = None
-
-        return param_dict
-
-    def get_bound_params(self, new_workspace, bounds: dict) -> dict:
-        """
-        Get lower and upper bounds to add to self.params.
-
-        :param bounds: Dictionary of lower, upper bounds with radio button selection, data, constant, and object for
+        :param new_workspace: New workspace to copy objects and data to.
+        :param inversion_params_dict: Dictionary of params with radio button selection, data, constant, and object for
         each.
 
-        :return param_dict: Dictionary with lower_bound_object, lower_bound, upper_bound_object, upper_bound.
+        :return param_dict: Dictionary with params to update self.params.
         """
         param_dict = {}
-        for key, value in bounds.items():
+        new_obj = None
+        for key, value in inversion_params_dict.items():
             param_dict[key + "_object"] = None
             param_dict[key] = None
-            if value["options"] == "Model":
+            if value["options"] == "Model" or key == "topography":
+                # Topography always saves an object and only saves data if the radio button is selected.
                 if is_uuid(value["object"]):
                     param_dict[key + "_object"] = self.workspace.get_entity(
                         uuid.UUID(value["object"])
@@ -904,105 +877,32 @@ class InversionApp(BaseDashApplication):
                     new_obj = param_dict[key + "_object"].copy(
                         parent=new_workspace, copy_children=False
                     )
-                    if is_uuid(value["data"]):
-                        param_dict[key] = self.workspace.get_entity(
-                            uuid.UUID(value["data"])
-                        )[0]
-                        # Copy to new workspace
-                        if new_workspace.get_entity(param_dict[key].uid)[0] is None:
-                            param_dict[key].copy(parent=new_obj)
-            elif value["options"] == "Constant":
-                param_dict[key] = value["const"]
 
-        return param_dict
-
-    def get_model_params(self, new_workspace, update_dict: dict) -> dict:
-        """
-        Get dictionary of params to update self.params with starting and reference model values.
-
-        :param update_dict: Dictionary of input values from dash callback.
-
-        :return param_dict: Dictionary with model values to save.
-        """
-        # Base dictionary of models.
-        models = {
-            "starting_model": {
-                "options": update_dict["starting_model_options"],
-                "object": update_dict["starting_model_object"],
-                "data": update_dict["starting_model_data"],
-                "const": update_dict["starting_model_const"],
-            },
-            "reference_model": {
-                "options": update_dict["reference_model_options"],
-                "object": update_dict["reference_model_object"],
-                "data": update_dict["reference_model_data"],
-                "const": update_dict["reference_model_const"],
-            },
-        }
-        # Add additional parameters for magnetic vector inversion.
-        if self._inversion_type == "magnetic_vector":
-            models.update(
-                {
-                    "starting_inclination": {
-                        "options": update_dict["starting_inclination_options"],
-                        "object": update_dict["starting_inclination_object"],
-                        "data": update_dict["starting_inclination_data"],
-                        "const": update_dict["starting_inclination_const"],
-                    },
-                    "reference_inclination": {
-                        "options": update_dict["reference_inclination_options"],
-                        "object": update_dict["reference_inclination_object"],
-                        "data": update_dict["reference_inclination_data"],
-                        "const": update_dict["reference_inclination_const"],
-                    },
-                    "starting_declination": {
-                        "options": update_dict["starting_declination_options"],
-                        "object": update_dict["starting_declination_object"],
-                        "data": update_dict["starting_declination_data"],
-                        "const": update_dict["starting_declination_const"],
-                    },
-                    "reference_declination": {
-                        "options": update_dict["reference_declination_options"],
-                        "object": update_dict["reference_declination_object"],
-                        "data": update_dict["reference_declination_data"],
-                        "const": update_dict["reference_declination_const"],
-                    },
-                }
-            )
-
-        param_dict = {}
-        # Loop through dict of models and determine whether to save data or constant.
-        for key, value in models.items():
-            param_dict[key + "_object"] = None
-            param_dict[key] = None
-            if value["options"] == "Model":
-                if is_uuid(value["object"]):
-                    param_dict[key + "_object"] = self.workspace.get_entity(
-                        uuid.UUID(value["object"])
+            if value["options"] in ["Model", "Data"]:
+                if is_uuid(value["data"]) and new_obj:
+                    param_dict[key] = self.workspace.get_entity(
+                        uuid.UUID(value["data"])
                     )[0]
                     # Copy to new workspace
-                    new_obj = param_dict[key + "_object"].copy(
-                        parent=new_workspace, copy_children=False
-                    )
-                    if is_uuid(value["data"]):
-                        param_dict[key] = self.workspace.get_entity(
-                            uuid.UUID(value["data"])
-                        )[0]
-                        # Copy to new workspace
-                        if new_workspace.get_entity(param_dict[key].uid)[0] is None:
-                            param_dict[key].copy(parent=new_obj)
-
+                    if new_workspace.get_entity(param_dict[key].uid)[0] is None:
+                        param_dict[key].copy(parent=new_obj)
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
 
         return param_dict
 
     def get_full_component_params(
-        self, new_workspace, data_object, full_components: dict, forward_only: list
+        self,
+        new_workspace: Workspace,
+        data_object: ObjectBase,
+        full_components: dict,
+        forward_only: list,
     ) -> dict:
         """
         Get param_dict of values to add to self.params from full_components.
 
+        :param new_workspace: New workspace to copy channel data to.
+        :param data_object: Parent object for channel data.
         :param full_components: Dictionary with keys of component_options, and with values channel_bool, channel,
         uncertainty_type, uncertainty_floor, uncertainty_channel for each key.
         :param forward_only: Checkbox of whether to perform only forward inversion.
@@ -1024,76 +924,77 @@ class InversionApp(BaseDashApplication):
                         is None
                     ):
                         param_dict[comp + "_channel"].copy(parent=data_object)
+
+                    # Determine whether to save uncertainty as floor or channel
+                    param_dict[comp + "_uncertainty"] = 1.0
+                    if value["uncertainty_type"] == "Floor":
+                        param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
+                    elif value["uncertainty_type"] == "Channel":
+                        if is_uuid(value["uncertainty_channel"]):
+                            param_dict[
+                                comp + "_uncertainty"
+                            ] = self.workspace.get_entity(
+                                uuid.UUID(value["uncertainty_channel"])
+                            )[
+                                0
+                            ]
+                            # Copy to new workspace
+                            if (
+                                new_workspace.get_entity(
+                                    param_dict[comp + "_uncertainty"].uid
+                                )[0]
+                                is None
+                            ):
+                                param_dict[comp + "_uncertainty"].copy(
+                                    parent=data_object
+                                )
             else:
                 param_dict[comp + "_channel_bool"] = False
-
-            # Determine whether to save uncertainty as floor or channel
-            if not forward_only:
-                if value["uncertainty_type"] == "Floor":
-                    param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
-                elif value["uncertainty_type"] == "Channel":
-                    if is_uuid(value["uncertainty_channel"]):
-                        param_dict[comp + "_uncertainty"] = self.workspace.get_entity(
-                            uuid.UUID(value["uncertainty_channel"])
-                        )[0]
-                        # Copy to new workspace
-                        if (
-                            new_workspace.get_entity(
-                                param_dict[comp + "_uncertainty"].uid
-                            )[0]
-                            is None
-                        ):
-                            param_dict[comp + "_uncertainty"].copy(parent=data_object)
-                    else:
-                        param_dict[comp + "_uncertainty"] = None
-                else:
-                    param_dict[comp + "_uncertainty"] = None
 
         return param_dict
 
     def get_inversion_params_dict(
-        self, new_workspace, update_dict: dict, data_object
+        self, new_workspace: Workspace, update_dict: dict, data_object: ObjectBase
     ) -> dict:
         """
         Get parameters that are specific to inversion, that will be used to update self.params.
 
+        :param new_workspace: New workspace to copy objects and data to.
         :param update_dict: Dictionary of new parameters and values from dash callback.
+        :param data_object: Parent for channel data when copying to new workspace.
 
         :return param_dict: Dictionary of parameters ready to update self.params.
         """
+
+        # Put together dict of needed params for the get_general_inversion_params function
+        input_param_dict = {}
+        for param in [
+            "topography",
+            "lower_bound",
+            "upper_bound",
+            "starting_model",
+            "reference_model",
+            "starting_inclination"
+            "reference_inclination"
+            "starting_declination"
+            "reference_declination",
+        ]:
+            if param + "_options" in update_dict:
+                input_param_dict[param] = {
+                    "options": update_dict[param + "_options"],
+                    "object": update_dict[param + "_object"],
+                    "data": update_dict[param + "_data"],
+                    "const": update_dict[param + "_const"],
+                }
+
         param_dict = {}
+        # Update window params
         param_dict.update(InversionApp.get_window_params(update_dict["plot"]))
+        # Update topography, bounds, models
         param_dict.update(
-            self.get_topography_params(
-                new_workspace,
-                {
-                    "options": update_dict["topography_options"],
-                    "object": update_dict["topography_object"],
-                    "data": update_dict["topography_data"],
-                    "const": update_dict["topography_const"],
-                },
-            )
+            self.get_general_inversion_params(new_workspace, input_param_dict)
         )
-        param_dict.update(
-            self.get_bound_params(
-                new_workspace,
-                {
-                    "lower_bound": {
-                        "options": update_dict["lower_bound_options"],
-                        "object": update_dict["lower_bound_object"],
-                        "data": update_dict["lower_bound_data"],
-                        "const": update_dict["lower_bound_const"],
-                    },
-                    "upper_bound": {
-                        "options": update_dict["upper_bound_options"],
-                        "object": update_dict["upper_bound_object"],
-                        "data": update_dict["upper_bound_data"],
-                        "const": update_dict["upper_bound_const"],
-                    },
-                },
-            )
-        )
-        param_dict.update(self.get_model_params(new_workspace, update_dict))
+        # Update channel params
         param_dict.update(
             self.get_full_component_params(
                 new_workspace,
@@ -1305,11 +1206,7 @@ class InversionApp(BaseDashApplication):
                 )
             )
 
-            if (
-                is_uuid(param_dict["receivers_radar_drape"])
-                and workspace.get_entity(param_dict["receivers_radar_drape"].uid)[0]
-                is None
-            ):
+            if isinstance(param_dict["receivers_radar_drape"], Data):
                 param_dict["receivers_radar_drape"].copy(
                     parent=param_dict["data_object"]
                 )
@@ -1323,12 +1220,12 @@ class InversionApp(BaseDashApplication):
                 path=monitoring_directory,
             )
 
-            if self.params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self.params.monitoring_directory)
+            if self._run_params.monitoring_directory is not None and os.path.exists(
+                os.path.abspath(self._run_params.monitoring_directory)
             ):
                 for obj in ws.objects:
                     monitored_directory_copy(
-                        os.path.abspath(self.params.monitoring_directory),
+                        os.path.abspath(self._run_params.monitoring_directory),
                         obj,
                     )
 
