@@ -151,6 +151,20 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     return sliced_object, g2l
 
 
+def isolate_dcip_line(workspace, survey, lines, line_id):
+    current = survey.current_electrodes
+    survey_locs, survey_loc_map = slice_and_map(survey.vertices, lines == line_id)
+    func = lambda c: (c[0] in survey_loc_map) & (c[1] in survey_loc_map)
+    survey_cells, survey_cell_map = slice_and_map(survey.cells, func)
+    for c in survey.children:
+        if isinstance(c, FloatData) and "Pseudo" not in c.name:
+            ind = np.ones_like(c.values, dtype=bool)
+            ind[list(survey_cell_map)] = False
+            vec = c.values.copy()
+            vec[ind] = np.nan
+            c.values = vec
+
+
 def extract_dcip_survey(workspace, survey, lines, line_id, name="Line"):
     """Returns a survey containing data from a single line."""
 
@@ -207,7 +221,15 @@ def extract_dcip_survey(workspace, survey, lines, line_id, name="Line"):
                     "primitive_type": "REFERENCED",
                     "value_map": value_map,
                 },
-            }
+            },
+            "Global Map": {
+                "values": np.array(list(survey_cell_map)),
+                "association": "CELL",
+                "entity_type": {
+                    "primitive_type": "REFERENCED",
+                    "value_map": {k: str(k) for k in survey_cell_map},
+                },
+            },
         }
     )
 

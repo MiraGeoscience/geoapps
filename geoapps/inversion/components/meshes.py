@@ -10,15 +10,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from geoh5py.objects import PotentialElectrode
+from geoh5py.objects import Octree, PotentialElectrode
 
 from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.shared_utils.utils import octree_2_treemesh
+from geoapps.utils.models import get_drape_model
 
 if TYPE_CHECKING:
     from discretize import TreeMesh
-    from geoh5py.objects import Octree
     from geoh5py.workspace import Workspace
 
     from geoapps.driver_base.params import BaseParams
@@ -37,7 +37,7 @@ class InversionMesh:
         Number of cells in the mesh.
     rotation :
         Rotation of original octree mesh.
-    octree_permutation:
+    permutation:
         Permutation vector to restore cell centers or model values to
         origin octree mesh order.
 
@@ -63,7 +63,7 @@ class InversionMesh:
         self.mesh: TreeMesh = None
         self.n_cells: int = None
         self.rotation: dict[str, float] = None
-        self.octree_permutation: np.ndarray = None
+        self.permutation: np.ndarray = None
         self.entity: Octree = None
         self._initialize()
 
@@ -86,13 +86,16 @@ class InversionMesh:
         self.uid = self.entity.uid
         self.n_cells = self.entity.n_cells
 
-        if self.entity.rotation:
+        if isinstance(self.entity, Octree) and self.entity.rotation:
             origin = self.entity.origin.tolist()
             angle = self.entity.rotation[0]
             self.rotation = {"origin": origin, "angle": angle}
 
-        self.mesh = octree_2_treemesh(self.entity)
-        self.octree_permutation = getattr(self.mesh, "_ubc_order")
+            self.mesh = octree_2_treemesh(self.entity)
+            self.permutation = getattr(self.mesh, "_ubc_order")
+        else:
+            # TODO: figure out what this needs to be for 2d
+            self.permutation = np.arange(self.mesh.n_cells)
 
     def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
         """Collect mesh params from inversion params set and return octree Params object."""
@@ -142,7 +145,21 @@ class InversionMesh:
 
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
-        octree_params = self.collect_mesh_params(self.params)
-        driver = OctreeDriver(octree_params)
-        self.entity = driver.run()
-        self.entity.parent = self.params.ga_group
+        if self.params.inversion_type in ["direct current 2d"]:
+            self.entity, self.mesh = get_drape_model(
+                self.workspace,
+                self.params.ga_group,
+                "Models",
+                self.inversion_data._survey.unique_locations,
+                [self.params.u_cell_size, self.params.v_cell_size],
+                self.params.depth_core,
+                [self.params.horizontal_padding] * 2
+                + [self.params.vertical_padding, 1],
+                self.params.expansion_factor,
+                return_colocated_mesh=True,
+            )
+        else:
+            octree_params = self.collect_mesh_params(self.params)
+            driver = OctreeDriver(octree_params)
+            self.entity = driver.run()
+            self.entity.parent = self.params.ga_group

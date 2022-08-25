@@ -43,6 +43,7 @@ class SimPEGFactory:
         "magnetic scalar",
         "magnetic vector",
         "direct current",
+        "direct current 2d",
         "induced polarization",
         "magnetotellurics",
         "tipper",
@@ -66,7 +67,7 @@ class SimPEGFactory:
     @factory_type.setter
     def factory_type(self, p):
         if p not in self.valid_factory_types:
-            msg = f"Factory type: {self.factory_type} not implemented yet."
+            msg = f"Factory type: {p} not implemented yet."
             raise NotImplementedError(msg)
         else:
             self._factory_type = p

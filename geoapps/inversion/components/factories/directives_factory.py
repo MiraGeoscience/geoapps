@@ -133,7 +133,7 @@ class DirectivesFactory:
                 name="Residual",
             )
 
-            if self.factory_type in ["direct current"]:
+            if self.factory_type in ["direct current", "direct current 2d"]:
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
                         inversion_object=inversion_data,
@@ -198,7 +198,11 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     name=name,
                 )
 
-            elif self.factory_type in ["direct current", "induced polarization"]:
+            elif self.factory_type in [
+                "direct current",
+                "direct current 2d",
+                "induced polarization",
+            ]:
                 kwargs = self.assemble_data_keywords_dcip(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
@@ -245,7 +249,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     active_cells_map,
                 ]
 
-            if self.factory_type in ["direct current", "magnetotellurics", "tipper"]:
+            if self.factory_type in [
+                "direct current",
+                "direct current 2d",
+                "magnetotellurics",
+                "tipper",
+            ]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
 
@@ -314,7 +323,9 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
     ):
         components = list(inversion_object.observed)
         channels = [""]
-        is_dc = True if self.factory_type == "direct current" else False
+        is_dc = (
+            True if self.factory_type in ["direct current", "direct current"] else False
+        )
         component = "dc" if is_dc else "ip"
         kwargs = {
             "save_objective_function": save_objective_function,

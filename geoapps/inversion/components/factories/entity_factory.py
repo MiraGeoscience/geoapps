@@ -43,7 +43,11 @@ class EntityFactory(AbstractFactory):
     @property
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+        ]:
 
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
@@ -60,7 +64,11 @@ class EntityFactory(AbstractFactory):
     def build(self, inversion_data: InversionData):
         """Constructs geoh5py object for provided inversion type."""
 
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+        ]:
             return self._build_dcip(inversion_data)
         else:
             return self._build(inversion_data)

@@ -42,6 +42,7 @@ from geoapps.utils.surveys import (
     compute_alongline_distance,
     extract_dcip_survey,
     find_endpoints,
+    isolate_dcip_line,
     new_neighbors,
     split_dcip_survey,
     survey_lines,
@@ -79,7 +80,6 @@ def test_compute_alongline_distance():
     x = np.arange(11)
     y = -x + 10
     locs = np.c_[x, y]
-    p = find_endpoints(locs)
     d = compute_alongline_distance(locs)
     assert np.max(d) == np.sqrt(2) * 10
 
@@ -122,6 +122,17 @@ def test_survey_lines(tmp_path):
         np.unique(test_workspace.get_entity("test_line_ids")[0].values)
         == np.arange(1, 11)
     )
+
+
+def test_isolate_dcip_line(tmp_path):
+    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
+    survey = ws.get_entity("DC_Survey")[0]
+    test_survey = survey.copy(parent=test_workspace, copy_children=True)
+
+    lines = survey_lines(test_survey, [314529, 6071402])
+    isolate_dcip_line(test_workspace, test_survey, lines, 2)
+    assert True
 
 
 def test_extract_dcip_survey(tmp_path):

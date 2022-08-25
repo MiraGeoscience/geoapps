@@ -16,7 +16,7 @@ from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
     "title": "SimPEG Direct Current inversion",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -103,7 +103,7 @@ inversion_defaults = {
 }
 forward_defaults = {
     "title": "SimPEG Direct Current Forward",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -175,7 +175,7 @@ forward_ui_json = {
 
 default_ui_json = {
     "title": "SimPEG Direct Current inversion",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 2d",
     "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
@@ -281,7 +281,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["direct current"],
+        "values": ["direct current 2d"],
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
