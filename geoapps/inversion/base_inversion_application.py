@@ -556,8 +556,46 @@ class InversionApp(BaseDashApplication):
             component,
         )
 
+    def set_bounding_box(self, object_uid: str):
+        # Fetch vertices in the project
+        lim_x = [1e8, -1e8]
+        lim_y = [1e8, -1e8]
+
+        obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
+        if isinstance(obj, Grid2D):
+            lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
+            lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
+        elif isinstance(obj, (Points, Curve, Surface)):
+            lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
+            lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
+        else:
+            return (no_update, no_update, no_update, no_update, no_update, no_update)
+
+        width = lim_x[1] - lim_x[0]
+        height = lim_y[1] - lim_y[0]
+
+        window_center_x_max = lim_x[1] + width * 0.1
+        window_center_x_min = lim_x[0] - width * 0.1
+
+        window_center_y_max = lim_y[1] + height * 0.1
+        window_center_y_min = lim_y[0] - height * 0.1
+
+        window_width_max = width * 1.2
+        window_height_max = height * 1.2
+
+        return (
+            window_center_x_min,
+            window_center_x_max,
+            window_center_y_min,
+            window_center_y_max,
+            window_width_max,
+            window_height_max,
+        )
+
     @staticmethod
-    def plot_plan_data_selection(entity: ObjectBase, data: Data, **kwargs) -> go.Figure:
+    def plot_plan_data_selection(
+        entity: ObjectBase, data: Data, **kwargs
+    ) -> (go.Figure, int):
         """
         A simplified version of the plot_plan_data_selection function in utils/plotting, except for dash.
 
@@ -565,6 +603,7 @@ class InversionApp(BaseDashApplication):
         :param data: Input data with `values` property.
 
         :return figure: Figure with updated data
+        :return data_count: Count of data in the window, to be exported.
         """
         values = None
         figure = None
@@ -603,16 +642,17 @@ class InversionApp(BaseDashApplication):
             # Set plot axes limits
             if window:
                 figure.update_layout(
+                    xaxis_autorange=False,
                     xaxis_range=[
                         window["center"][0] - (window["size"][0] / 2),
                         window["center"][0] + (window["size"][0] / 2),
                     ],
+                    yaxis_autorange=False,
                     yaxis_range=[
                         window["center"][1] - (window["size"][1] / 2),
                         window["center"][1] + (window["size"][1] / 2),
                     ],
                 )
-
         # Add data to figure
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
             data.values[0], str
@@ -627,7 +667,6 @@ class InversionApp(BaseDashApplication):
 
         if isinstance(entity, Grid2D):
             # Plot heatmap
-            grid = True
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
             rot = entity.rotation[0]
@@ -658,15 +697,16 @@ class InversionApp(BaseDashApplication):
             # Get data count
             # Downsample grid
             downsampled_index, down_x, down_y = downsample_grid(x, y, resolution)
-            print(downsampled_index.shape)
-            print(values.shape)
             z = values[downsampled_index]
 
-            x_range = figure["layout"]["xaxis"]["range"]
-            x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
-            y_range = figure["layout"]["yaxis"]["range"]
-            y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
-            z_count = z[np.logical_and(x_indices, y_indices)]
+            if figure["layout"]["xaxis"]["autorange"]:
+                z_count = z
+            else:
+                x_range = figure["layout"]["xaxis"]["range"]
+                x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
+                y_range = figure["layout"]["yaxis"]["range"]
+                y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
+                z_count = z[np.logical_and(x_indices, y_indices)]
 
             data_count = np.sum(~np.isnan(z_count))
 
@@ -693,12 +733,16 @@ class InversionApp(BaseDashApplication):
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
 
-            x_range = figure["layout"]["xaxis"]["range"]
-            x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
-            y_range = figure["layout"]["yaxis"]["range"]
-            y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
+            if figure["layout"]["xaxis"]["autorange"]:
+                count = np.logical_and(down_x, down_y)
+            else:
+                x_range = figure["layout"]["xaxis"]["range"]
+                x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
+                y_range = figure["layout"]["yaxis"]["range"]
+                y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
+                count = np.logical_and(x_indices, y_indices)
 
-            data_count = np.sum(np.logical_and(x_indices, y_indices))
+            data_count = np.sum(count)
 
             # Add colorbar
             if "colorbar" in kwargs.keys():
@@ -716,6 +760,10 @@ class InversionApp(BaseDashApplication):
         figure_zoom_trigger: dict,
         object_uid: str,
         channel: str,
+        center_x: float | int,
+        center_y: float | int,
+        width: float | int,
+        height: float | int,
         resolution: float | int,
         colorbar: list,
         fix_aspect_ratio: list,
@@ -725,6 +773,7 @@ class InversionApp(BaseDashApplication):
 
         :param ui_json_data: Uploaded ui.json data.
         :param figure: Current displayed figure.
+        :param figure_zoom_trigger: Trigger for when zoom on figure.
         :param object_uid: Input object.
         :param channel: Input data.
         :param resolution: Resolution distance.
@@ -735,7 +784,6 @@ class InversionApp(BaseDashApplication):
         :return data_count: Displayed data count value.
         """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
-        print(triggers)
         data_count = "Data Count: "
 
         if object_uid is None:
@@ -751,9 +799,12 @@ class InversionApp(BaseDashApplication):
                 figure = go.Figure(
                     go.Scatter(mode="markers", marker={"colorscale": "rainbow"})
                 )
-            print("update background")
-            figure.update_layout(plot_bgcolor="rgba(0,0,0,0)")
-            figure.update_layout(xaxis_title="Easting (m)", yaxis_title="Northing (m)")
+            figure.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)",
+                xaxis_title="Easting (m)",
+                yaxis_title="Northing (m)",
+                margin=dict(l=20, r=20, t=20, b=20),
+            )
 
             if "ui_json_data" not in triggers:
                 # If we aren't reading in a ui.json, return the empty plot.
@@ -763,20 +814,51 @@ class InversionApp(BaseDashApplication):
             figure = go.Figure(figure)
 
         if channel is not None:
-            print("update data")
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
 
             window = None
             # Update plot bounds from ui.json.
             if "ui_json_data" in triggers:
+                if ui_json_data["fix_aspect_ratio"]:
+                    fix_aspect_ratio = [True]
+                else:
+                    fix_aspect_ratio = []
+
+                center_x = ui_json_data["window_center_x"]
+                center_y = ui_json_data["window_center_y"]
+                width = ui_json_data["window_width"]
+                height = ui_json_data["window_height"]
+
                 window = {
                     "center": [
-                        ui_json_data["window_center_x"],
-                        ui_json_data["window_center_y"],
+                        center_x,
+                        center_y,
                     ],
                     "size": [
-                        ui_json_data["window_width"],
-                        ui_json_data["window_height"],
+                        width,
+                        height,
+                    ],
+                }
+            elif any(
+                elem
+                in [
+                    "window_center_x",
+                    "window_center_y",
+                    "window_width",
+                    "window_height",
+                ]
+                for elem in triggers
+            ):
+                if "window_width" in triggers or "window_height" in triggers:
+                    fix_aspect_ratio = []
+                window = {
+                    "center": [
+                        center_x,
+                        center_y,
+                    ],
+                    "size": [
+                        width,
+                        height,
                     ],
                 }
             # Update plot data.
@@ -795,33 +877,23 @@ class InversionApp(BaseDashApplication):
 
                 data_count += f"{count}"
 
-        return (
-            figure,
-            data_count,
-        )
+            if "plot" in triggers:
+                if figure["layout"]["xaxis"]["autorange"]:
+                    x = np.array(figure["data"][0]["x"])
+                    x_range = [np.amin(x), np.amax(x)]
+                else:
+                    x_range = figure["layout"]["xaxis"]["range"]
+                width = x_range[1] - x_range[0]
+                center_x = x_range[0] + (width / 2)
+                if figure["layout"]["yaxis"]["autorange"]:
+                    y = np.array(figure["data"][0]["y"])
+                    y_range = [np.amin(y), np.amax(y)]
+                else:
+                    y_range = figure["layout"]["yaxis"]["range"]
+                height = y_range[1] - y_range[0]
+                center_y = y_range[0] + (height / 2)
 
-    @staticmethod
-    def get_window_params(plot: go.Figure) -> dict:
-        """
-        Get window params from plot to update self.params.
-
-        :param plot: Plot of data.
-
-        :return dict: Dictionary with window params.
-        """
-        # Get plot bounds
-        x_range = plot["layout"]["xaxis"]["range"]
-        y_range = plot["layout"]["yaxis"]["range"]
-        width = x_range[1] - x_range[0]
-        height = y_range[1] - y_range[0]
-
-        return {
-            "window_width": width,
-            "window_height": height,
-            "window_center_x": x_range[0] + (width / 2),
-            "window_center_y": y_range[0] + (height / 2),
-            "window_azimuth": 0.0,
-        }
+        return (figure, data_count, center_x, center_y, width, height, fix_aspect_ratio)
 
     def get_general_inversion_params(
         self, new_workspace: Workspace, inversion_params_dict: dict
@@ -961,8 +1033,6 @@ class InversionApp(BaseDashApplication):
                 }
 
         param_dict = {}
-        # Update window params
-        param_dict.update(InversionApp.get_window_params(update_dict["plot"]))
         # Update topography, bounds, models
         param_dict.update(
             self.get_general_inversion_params(new_workspace, input_param_dict)
@@ -976,6 +1046,7 @@ class InversionApp(BaseDashApplication):
                 update_dict["forward_only"],
             )
         )
+        param_dict["azimuth"] = 0.0
         return param_dict
 
     def write_trigger(
@@ -985,7 +1056,10 @@ class InversionApp(BaseDashApplication):
         data_object: str,
         full_components: dict,
         resolution: float,
-        plot: go.Figure,
+        window_center_x: float,
+        window_center_y: float,
+        window_center_width: float,
+        window_center_height: float,
         fix_aspect_ratio: list,
         topography_options: str,
         topography_object: str,
