@@ -261,6 +261,7 @@ class GravityApp(InversionApp):
             Output(component_id="data_count", component_property="children"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
+            Input(component_id="plot", component_property="relayoutData"),
             Input(component_id="data_object", component_property="value"),
             Input(component_id="channel", component_property="value"),
             Input(component_id="resolution", component_property="value"),

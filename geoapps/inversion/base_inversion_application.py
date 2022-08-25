@@ -592,6 +592,28 @@ class InversionApp(BaseDashApplication):
         else:
             window = kwargs["window"]
 
+            # Figure layout changes
+            # Fix aspect ratio
+            if "fix_aspect_ratio" in kwargs.keys():
+                if kwargs["fix_aspect_ratio"]:
+                    figure.update_layout(yaxis_scaleanchor="x")
+                else:
+                    figure.update_layout(yaxis_scaleanchor=None)
+
+            # Set plot axes limits
+            if window:
+                figure.update_layout(
+                    xaxis_range=[
+                        window["center"][0] - (window["size"][0] / 2),
+                        window["center"][0] + (window["size"][0] / 2),
+                    ],
+                    yaxis_range=[
+                        window["center"][1] - (window["size"][1] / 2),
+                        window["center"][1] + (window["size"][1] / 2),
+                    ],
+                )
+
+        # Add data to figure
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
             data.values[0], str
         ):
@@ -625,14 +647,38 @@ class InversionApp(BaseDashApplication):
                 # Downsample grid
                 downsampled_index, down_x, down_y = downsample_grid(X, Y, resolution)
 
+                z = new_values.T[downsampled_index]
+
             if np.any(values):
                 # Update figure data.
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
-                figure["data"][0]["z"] = new_values.T[downsampled_index]
+                figure["data"][0]["z"] = z
+
+            # Get data count
+            # Downsample grid
+            downsampled_index, down_x, down_y = downsample_grid(x, y, resolution)
+            print(downsampled_index.shape)
+            print(values.shape)
+            z = values[downsampled_index]
+
+            x_range = figure["layout"]["xaxis"]["range"]
+            x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
+            y_range = figure["layout"]["yaxis"]["range"]
+            y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
+            z_count = z[np.logical_and(x_indices, y_indices)]
+
+            data_count = np.sum(~np.isnan(z_count))
+
+            # Add colorbar
+            if "colorbar" in kwargs.keys():
+                if kwargs["colorbar"]:
+                    figure.update_traces(showscale=True)
+                else:
+                    figure.update_traces(showscale=False)
+
         else:
             # Plot scatter plot
-            grid = False
             x, y = entity.vertices[:, 0], entity.vertices[:, 1]
 
             if values is not None:
@@ -647,103 +693,27 @@ class InversionApp(BaseDashApplication):
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
 
-        # Add colorbar
-        if "colorbar" in kwargs.keys():
-            if kwargs["colorbar"]:
-                if grid:
-                    figure.update_traces(showscale=True)
-                else:
+            x_range = figure["layout"]["xaxis"]["range"]
+            x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
+            y_range = figure["layout"]["yaxis"]["range"]
+            y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
+
+            data_count = np.sum(np.logical_and(x_indices, y_indices))
+
+            # Add colorbar
+            if "colorbar" in kwargs.keys():
+                if kwargs["colorbar"]:
                     figure.update_traces(marker_showscale=True)
-            else:
-                if grid:
-                    figure.update_traces(showscale=False)
                 else:
                     figure.update_traces(marker_showscale=False)
 
-        # Fix aspect ratio
-        if "fix_aspect_ratio" in kwargs.keys():
-            if kwargs["fix_aspect_ratio"]:
-                figure.update_layout(yaxis_scaleanchor="x")
-            else:
-                figure.update_layout(yaxis_scaleanchor=None)
-
-        # Set plot axes limits
-        if window:
-            figure.update_layout(
-                xaxis_range=[
-                    window["center"][0] - (window["size"][0] / 2),
-                    window["center"][0] + (window["size"][0] / 2),
-                ],
-                yaxis_range=[
-                    window["center"][1] - (window["size"][1] / 2),
-                    window["center"][1] + (window["size"][1] / 2),
-                ],
-            )
-
-        # axes range is wrong
-        x = np.array(figure["data"][0]["x"])
-        x_range = figure["layout"]["xaxis"]["range"]
-        x_indices = (x_range[0] < x) & (x < x_range[1])
-
-        y = np.array(figure["data"][0]["y"])
-        y_range = figure["layout"]["yaxis"]["range"]
-        y_indices = (y_range[0] < y) & (y < y_range[1])
-
-        if grid:
-            z = np.array(figure["data"][0]["z"])
-            # print(np.sum(~np.isnan(z)))
-            # print(z.shape)
-            z = z[np.logical_and(x_indices, y_indices)]
-            z_points = np.sum(~np.isnan(z))
-
-            x_range = figure["layout"]["xaxis"]["range"]
-            y_range = figure["layout"]["yaxis"]["range"]
-            width = x_range[1] - x_range[0]
-            height = y_range[1] - y_range[0]
-
-            window = {
-                "center": [x_range[0] + (width / 2), y_range[0] + (height / 2)],
-                "size": [width, height],
-                "azimuth": rot,
-            }
-            indices = filter_xy(x, y, resolution, window=window)
-            # print("filtyer")
-            # print(np.sum(indices))
-
-            # data_count += f"{np.sum(ind_filter)}"
-            # print("grid")
-            # print(z_points)
-        else:
-            # print(x_range)
-            # print(np.sum(x_indices))
-            # print(np.sum(y_indices))
-            # print(values.shape)
-            # print(x_indices.shape)
-            # print(y_indices.shape)
-
-            x_range = figure["layout"]["xaxis"]["range"]
-            y_range = figure["layout"]["yaxis"]["range"]
-            width = x_range[1] - x_range[0]
-            height = y_range[1] - y_range[0]
-
-            window = {
-                "center": [x_range[0] + (width / 2), y_range[0] + (height / 2)],
-                "size": [width, height],
-                "azimuth": 0.0,
-            }
-            indices = filter_xy(x, y, resolution, window=window)
-            print("scatter")
-            print(np.sum(indices))
-            # count = np.sum(values[np.logical_and(x_indices, y_indices)])
-            print("scatter")
-            # print(count)
-
-        return figure
+        return figure, data_count
 
     def plot_selection(
         self,
         ui_json_data: dict,
         figure: dict,
+        figure_zoom_trigger: dict,
         object_uid: str,
         channel: str,
         resolution: float | int,
@@ -765,6 +735,7 @@ class InversionApp(BaseDashApplication):
         :return data_count: Displayed data count value.
         """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+        print(triggers)
         data_count = "Data Count: "
 
         if object_uid is None:
@@ -780,6 +751,7 @@ class InversionApp(BaseDashApplication):
                 figure = go.Figure(
                     go.Scatter(mode="markers", marker={"colorscale": "rainbow"})
                 )
+            print("update background")
             figure.update_layout(plot_bgcolor="rgba(0,0,0,0)")
             figure.update_layout(xaxis_title="Easting (m)", yaxis_title="Northing (m)")
 
@@ -791,6 +763,7 @@ class InversionApp(BaseDashApplication):
             figure = go.Figure(figure)
 
         if channel is not None:
+            print("update data")
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
 
             window = None
@@ -808,7 +781,7 @@ class InversionApp(BaseDashApplication):
                 }
             # Update plot data.
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
-                figure = InversionApp.plot_plan_data_selection(
+                figure, count = InversionApp.plot_plan_data_selection(
                     obj,
                     data_obj,
                     **{
@@ -820,7 +793,7 @@ class InversionApp(BaseDashApplication):
                     },
                 )
 
-                data_count += f"{0}"
+                data_count += f"{count}"
 
         return (
             figure,
@@ -1195,15 +1168,15 @@ class InversionApp(BaseDashApplication):
             # Put entities in output workspace.
             param_dict["geoh5"] = workspace
 
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=False)
+            # Copy mesh to workspace
+            param_dict["mesh"].copy(parent=workspace, copy_children=False)
+            data_obj = param_dict["data_object"].copy(
+                parent=workspace, copy_children=False
+            )
 
             # Add inversion specific params to param_dict
             param_dict.update(
-                self.get_inversion_params_dict(
-                    workspace, locals(), param_dict["data_object"]
-                )
+                self.get_inversion_params_dict(workspace, locals(), data_obj)
             )
 
             if isinstance(param_dict["receivers_radar_drape"], Data):
