@@ -26,7 +26,7 @@ object_selection_layout = base_layout.get_object_selection_layout(
     "gravity", component_list
 )
 
-gravity_inversion_params = {"density": {"label": "Density", "units": "g/cc"}}
+gravity_inversion_params = {"model": {"label": "Density", "units": "g/cc"}}
 inversion_params_layout = base_layout.get_inversion_params_layout(
     gravity_inversion_params
 )

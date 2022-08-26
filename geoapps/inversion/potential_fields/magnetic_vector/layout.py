@@ -27,7 +27,7 @@ object_selection_layout = base_layout.get_object_selection_layout(
 )
 
 magnetic_vector_inversion_params = {
-    "eff_susceptibility": {"label": "Effective Susceptibility", "units": "SI"},
+    "model": {"label": "Effective Susceptibility", "units": "SI"},
     "inclination": {"label": "Inclination", "units": "Degree"},
     "declination": {"label": "Declination", "units": "Degree"},
 }
