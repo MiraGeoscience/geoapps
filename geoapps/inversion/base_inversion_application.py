@@ -22,12 +22,14 @@ from time import time
 
 import numpy as np
 import scipy
-from dash import callback_context, no_update
+from dash import Input, Output, State, callback_context, no_update
+from flask import Flask
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import monitored_directory_copy
 from geoh5py.workspace import Workspace
+from jupyter_dash import JupyterDash
 from notebook import notebookapp
 from plotly import graph_objects as go
 
@@ -35,7 +37,7 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
-from geoapps.shared_utils.utils import downsample_grid, downsample_xy, filter_xy
+from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
 
 class InversionApp(BaseDashApplication):
@@ -47,6 +49,7 @@ class InversionApp(BaseDashApplication):
     _inversion_type = None
     _inversion_params = None
     _run_params = None
+    _layout = None
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -56,6 +59,263 @@ class InversionApp(BaseDashApplication):
             self.params = self._param_class(**app_initializer)
 
         super().__init__()
+
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
+        )
+
+        self.app.layout = self._layout
+
+        # Callbacks relating to layout
+        self.app.callback(
+            Output(component_id="uncertainty_floor", component_property="style"),
+            Output(component_id="uncertainty_channel", component_property="style"),
+            Input(component_id="uncertainty_options", component_property="value"),
+        )(InversionApp.update_uncertainty_visibility)
+        self.app.callback(
+            Output(component_id="topography_object_div", component_property="style"),
+            Output(component_id="topography_constant_div", component_property="style"),
+            Input(component_id="topography_options", component_property="value"),
+        )(InversionApp.update_topography_visibility)
+        for model_type in ["starting", "reference"]:
+            for param in self._inversion_params:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_const_div",
+                        component_property="style",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_mod_div",
+                        component_property="style",
+                    ),
+                    Input(
+                        component_id=model_type + "_" + param + "_options",
+                        component_property="value",
+                    ),
+                )(InversionApp.update_model_visibility)
+        self.app.callback(
+            Output(component_id="lower_bound_const_div", component_property="style"),
+            Output(component_id="lower_bound_mod_div", component_property="style"),
+            Input(component_id="lower_bound_options", component_property="value"),
+        )(InversionApp.update_model_visibility)
+        self.app.callback(
+            Output(component_id="upper_bound_const_div", component_property="style"),
+            Output(component_id="upper_bound_mod_div", component_property="style"),
+            Input(component_id="upper_bound_options", component_property="value"),
+        )(InversionApp.update_model_visibility)
+        self.app.callback(
+            Output(component_id="core_params_div", component_property="style"),
+            Input(component_id="core_params", component_property="value"),
+        )(InversionApp.update_visibility_from_checkbox)
+        self.app.callback(
+            Output(component_id="advanced_params_div", component_property="style"),
+            Input(component_id="advanced_params", component_property="value"),
+        )(InversionApp.update_visibility_from_checkbox)
+        # Update components from forward only checkbox
+        for param in self._inversion_params:
+            self.app.callback(
+                Output(
+                    component_id="reference_" + param + "_options",
+                    component_property="options",
+                ),
+                Input(
+                    component_id="forward_only",
+                    component_property="value",
+                ),
+            )(InversionApp.update_reference_model_options)
+        self.app.callback(
+            Output(component_id="forward_only_div", component_property="style"),
+            Output(component_id="advanced_params", component_property="options"),
+            Input(component_id="forward_only", component_property="value"),
+        )(InversionApp.update_forward_only_layout)
+
+        # Update object and data dropdowns
+        self.app.callback(
+            Output(component_id="data_object", component_property="options"),
+            Output(component_id="data_object", component_property="value"),
+            Output(component_id="ui_json_data", component_property="data"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+
+        # Update mesh object dropdown options
+        self.app.callback(
+            Output(component_id="mesh", component_property="options"),
+            Input(component_id="data_object", component_property="options"),
+        )(InversionApp.update_mesh_options)
+
+        # Update radar data options
+        self.app.callback(
+            Output(component_id="receivers_radar_drape", component_property="options"),
+            Output(component_id="receivers_radar_drape", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.update_radar_options)
+
+        # Update input data channel and uncertainties from component
+        self.app.callback(
+            Output(component_id="full_components", component_property="data"),
+            Output(component_id="channel_bool", component_property="value"),
+            Output(component_id="channel", component_property="value"),
+            Output(component_id="channel", component_property="options"),
+            Output(component_id="uncertainty_options", component_property="value"),
+            Output(component_id="uncertainty_floor", component_property="value"),
+            Output(component_id="uncertainty_channel", component_property="value"),
+            Output(component_id="uncertainty_channel", component_property="options"),
+            Output(component_id="component", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="full_components", component_property="data"),
+            Input(component_id="data_object", component_property="value"),
+            Input(component_id="channel_bool", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="uncertainty_options", component_property="value"),
+            Input(component_id="uncertainty_floor", component_property="value"),
+            Input(component_id="uncertainty_channel", component_property="value"),
+            Input(component_id="component", component_property="value"),
+            State(component_id="component", component_property="options"),
+        )(self.update_full_components)
+
+        # Update model dropdown options and values
+        for model_type in ["starting", "reference"]:
+            for param in self._inversion_params:
+                self.app.callback(
+                    Output(
+                        component_id=model_type + "_" + param + "_options",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_const",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="options",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_data",
+                        component_property="value",
+                    ),
+                    Output(
+                        component_id=model_type + "_" + param + "_data",
+                        component_property="options",
+                    ),
+                    Input(component_id="ui_json_data", component_property="data"),
+                    Input(component_id="data_object", component_property="options"),
+                    Input(
+                        component_id=model_type + "_" + param + "_object",
+                        component_property="value",
+                    ),
+                    Input(component_id="forward_only", component_property="value"),
+                )(self.update_models_from_ui_json)
+
+        # Update bounds dropdown options and values
+        for param in ["lower_bound", "upper_bound", "topography"]:
+            self.app.callback(
+                Output(component_id=param + "_options", component_property="value"),
+                Output(component_id=param + "_const", component_property="value"),
+                Output(component_id=param + "_object", component_property="value"),
+                Output(component_id=param + "_object", component_property="options"),
+                Output(component_id=param + "_data", component_property="value"),
+                Output(component_id=param + "_data", component_property="options"),
+                Input(component_id="ui_json_data", component_property="data"),
+                Input(component_id="data_object", component_property="options"),
+                Input(component_id=param + "_object", component_property="value"),
+            )(self.update_general_inversion_params_from_ui_json)
+
+        # Update from ui.json
+        self.app.callback(
+            # Input Data
+            Output(component_id="resolution", component_property="value"),
+            # Topography
+            Output(component_id="z_from_topo", component_property="value"),
+            Output(component_id="receivers_offset_x", component_property="value"),
+            Output(component_id="receivers_offset_y", component_property="value"),
+            Output(component_id="receivers_offset_z", component_property="value"),
+            # Inversion - mesh
+            Output(component_id="mesh", component_property="value"),
+            # Inversion - regularization
+            Output(component_id="alpha_s", component_property="value"),
+            Output(component_id="alpha_x", component_property="value"),
+            Output(component_id="alpha_y", component_property="value"),
+            Output(component_id="alpha_z", component_property="value"),
+            Output(component_id="s_norm", component_property="value"),
+            Output(component_id="x_norm", component_property="value"),
+            Output(component_id="y_norm", component_property="value"),
+            Output(component_id="z_norm", component_property="value"),
+            # Inversion - detrend
+            Output(component_id="detrend_type", component_property="value"),
+            Output(component_id="detrend_order", component_property="value"),
+            # Inversion - ignore values
+            Output(component_id="ignore_values", component_property="value"),
+            # Inversion - optimization
+            Output(component_id="max_iterations", component_property="value"),
+            Output(component_id="chi_factor", component_property="value"),
+            Output(component_id="initial_beta_ratio", component_property="value"),
+            Output(component_id="max_cg_iterations", component_property="value"),
+            Output(component_id="tol_cg", component_property="value"),
+            Output(component_id="n_cpu", component_property="value"),
+            Output(component_id="tile_spatial", component_property="value"),
+            # Output
+            Output(component_id="out_group", component_property="value"),
+            Output(component_id="monitoring_directory", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+        )(self.update_remainder_from_ui_json)
+
+        # Plot callbacks
+        # Update slider bounds
+        self.app.callback(
+            Output(component_id="window_center_x", component_property="min"),
+            Output(component_id="window_center_x", component_property="max"),
+            Output(component_id="window_center_y", component_property="min"),
+            Output(component_id="window_center_y", component_property="max"),
+            Output(component_id="window_width", component_property="max"),
+            Output(component_id="window_height", component_property="max"),
+            Input(component_id="data_object", component_property="value"),
+        )(self.set_bounding_box)
+        # Update plot
+        self.app.callback(
+            Output(component_id="plot", component_property="figure"),
+            Output(component_id="data_count", component_property="children"),
+            Output(component_id="window_center_x", component_property="value"),
+            Output(component_id="window_center_y", component_property="value"),
+            Output(component_id="window_width", component_property="value"),
+            Output(component_id="window_height", component_property="value"),
+            Output(component_id="fix_aspect_ratio", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="plot", component_property="figure"),
+            Input(component_id="plot", component_property="relayoutData"),
+            Input(component_id="data_object", component_property="value"),
+            Input(component_id="channel", component_property="value"),
+            Input(component_id="window_center_x", component_property="value"),
+            Input(component_id="window_center_y", component_property="value"),
+            Input(component_id="window_width", component_property="value"),
+            Input(component_id="window_height", component_property="value"),
+            Input(component_id="resolution", component_property="value"),
+            Input(component_id="colorbar", component_property="value"),
+            Input(component_id="fix_aspect_ratio", component_property="value"),
+        )(self.plot_selection)
+
+        # Button callbacks
+        self.app.callback(
+            Output(component_id="compute", component_property="n_clicks"),
+            Input(component_id="compute", component_property="n_clicks"),
+            prevent_initial_call=True,
+        )(self.trigger_click)
+        self.app.callback(
+            Output(component_id="open_mesh", component_property="n_clicks"),
+            Input(component_id="open_mesh", component_property="n_clicks"),
+            prevent_initial_call=True,
+        )(InversionApp.open_mesh_app)
 
     @staticmethod
     def update_uncertainty_visibility(selection: str) -> (dict, dict):

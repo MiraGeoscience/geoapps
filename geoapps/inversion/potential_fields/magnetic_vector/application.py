@@ -13,23 +13,25 @@ import os
 from dash import Input, Output, State
 
 from geoapps.inversion.base_inversion_application import InversionApp
-from geoapps.inversion.potential_fields.gravity.constants import app_initializer
-from geoapps.inversion.potential_fields.gravity.layout import (
-    gravity_inversion_params,
-    gravity_layout,
+from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
+from geoapps.inversion.potential_fields.magnetic_vector.layout import (
+    magnetic_vector_inversion_params,
+    magnetic_vector_layout,
 )
-from geoapps.inversion.potential_fields.gravity.params import GravityParams
+from geoapps.inversion.potential_fields.magnetic_vector.params import (
+    MagneticVectorParams,
+)
 
 
-class GravityApp(InversionApp):
+class MagneticVectorApp(InversionApp):
     """
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = GravityParams
-    _inversion_type = "gravity"
-    _inversion_params = gravity_inversion_params
-    _layout = gravity_layout
+    _param_class = MagneticVectorParams
+    _inversion_type = "magnetic_vector"
+    _inversion_params = magnetic_vector_inversion_params
+    _layout = magnetic_vector_layout
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -112,5 +114,50 @@ class GravityApp(InversionApp):
             # Output
             State(component_id="out_group", component_property="value"),
             State(component_id="monitoring_directory", component_property="value"),
+            # Magnetic vector specific
+            State(
+                component_id="starting_inclination_options", component_property="value"
+            ),
+            State(
+                component_id="starting_inclination_object", component_property="value"
+            ),
+            State(component_id="starting_inclination_data", component_property="value"),
+            State(
+                component_id="starting_inclination_const", component_property="value"
+            ),
+            State(
+                component_id="reference_inclination_options", component_property="value"
+            ),
+            State(
+                component_id="reference_inclination_object", component_property="value"
+            ),
+            State(
+                component_id="reference_inclination_data", component_property="value"
+            ),
+            State(
+                component_id="reference_inclination_const", component_property="value"
+            ),
+            State(
+                component_id="starting_declination_options", component_property="value"
+            ),
+            State(
+                component_id="starting_declination_object", component_property="value"
+            ),
+            State(component_id="starting_declination_data", component_property="value"),
+            State(
+                component_id="starting_declination_const", component_property="value"
+            ),
+            State(
+                component_id="reference_declination_options", component_property="value"
+            ),
+            State(
+                component_id="reference_declination_object", component_property="value"
+            ),
+            State(
+                component_id="reference_declination_data", component_property="value"
+            ),
+            State(
+                component_id="reference_declination_const", component_property="value"
+            ),
             prevent_initial_call=True,
         )(self.write_trigger)
