@@ -26,9 +26,7 @@ object_selection_layout = base_layout.get_object_selection_layout(
     "magnetic scalar", component_list
 )
 
-magnetic_scalar_inversion_params = {
-    "susceptibility": {"label": "Susceptibility", "units": "SI"}
-}
+magnetic_scalar_inversion_params = {"model": {"label": "Susceptibility", "units": "SI"}}
 inversion_params_layout = base_layout.get_inversion_params_layout(
     magnetic_scalar_inversion_params
 )

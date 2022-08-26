@@ -1571,6 +1571,9 @@ class InversionApp(BaseDashApplication):
             "tile_spatial": tile_spatial,
             "out_group": out_group,
             "monitoring_directory": monitoring_directory,
+            "inducing_field_strength": inducing_field_strength,
+            "inducing_field_inclination": inducing_field_inclination,
+            "inducing_field_declination": inducing_field_declination,
         }
         param_dict = self.get_params_dict(update_dict)
 
@@ -1590,7 +1593,7 @@ class InversionApp(BaseDashApplication):
             monitoring_directory = os.path.dirname(self.workspace.h5file)
 
         # Create a new workspace and copy objects into it
-        temp_geoh5 = f"{'GravityInversion'}_{time():.0f}.geoh5"
+        temp_geoh5 = f"{out_group}_{time():.0f}.geoh5"
         ws, live_link = BaseApplication.get_output_workspace(
             live_link, monitoring_directory, temp_geoh5
         )

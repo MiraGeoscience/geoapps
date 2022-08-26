@@ -67,10 +67,10 @@ class GravityApp(InversionApp):
             # Inversion Parameters
             State(component_id="forward_only", component_property="value"),
             # Starting Model
-            State(component_id="starting_density_options", component_property="value"),
-            State(component_id="starting_density_object", component_property="value"),
-            State(component_id="starting_density_data", component_property="value"),
-            State(component_id="starting_density_const", component_property="value"),
+            State(component_id="starting_model_options", component_property="value"),
+            State(component_id="starting_model_object", component_property="value"),
+            State(component_id="starting_model_data", component_property="value"),
+            State(component_id="starting_model_const", component_property="value"),
             # Mesh
             State(component_id="mesh", component_property="value"),
             # Reference Model

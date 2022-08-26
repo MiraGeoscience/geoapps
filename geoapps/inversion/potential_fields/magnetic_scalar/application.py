@@ -29,7 +29,7 @@ class MagneticScalarApp(InversionApp):
     """
 
     _param_class = MagneticScalarParams
-    _inversion_type = "magnetic_scalar"
+    _inversion_type = "magnetic scalar"
     _inversion_params = magnetic_scalar_inversion_params
     _layout = magnetic_scalar_layout
 
@@ -81,17 +81,17 @@ class MagneticScalarApp(InversionApp):
             # Inversion Parameters
             State(component_id="forward_only", component_property="value"),
             # Starting Model
-            State(component_id="starting_density_options", component_property="value"),
-            State(component_id="starting_density_object", component_property="value"),
-            State(component_id="starting_density_data", component_property="value"),
-            State(component_id="starting_density_const", component_property="value"),
+            State(component_id="starting_model_options", component_property="value"),
+            State(component_id="starting_model_object", component_property="value"),
+            State(component_id="starting_model_data", component_property="value"),
+            State(component_id="starting_model_const", component_property="value"),
             # Mesh
             State(component_id="mesh", component_property="value"),
             # Reference Model
-            State(component_id="reference_density_options", component_property="value"),
-            State(component_id="reference_density_object", component_property="value"),
-            State(component_id="reference_density_data", component_property="value"),
-            State(component_id="reference_density_const", component_property="value"),
+            State(component_id="reference_model_options", component_property="value"),
+            State(component_id="reference_model_object", component_property="value"),
+            State(component_id="reference_model_data", component_property="value"),
+            State(component_id="reference_model_const", component_property="value"),
             # Regularization
             State(component_id="alpha_s", component_property="value"),
             State(component_id="alpha_x", component_property="value"),
