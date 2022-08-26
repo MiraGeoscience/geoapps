@@ -913,6 +913,13 @@ class InversionApp(BaseDashApplication):
             window = None
         else:
             window = kwargs["window"]
+            if (
+                window["center"][0] is None
+                and window["center"][1] is None
+                and window["size"][0] is None
+                and window["size"][1] is None
+            ):
+                window = None
 
             # Figure layout changes
             # Fix aspect ratio
@@ -936,6 +943,12 @@ class InversionApp(BaseDashApplication):
                         window["center"][1] + (window["size"][1] / 2),
                     ],
                 )
+            else:
+                figure.update_layout(
+                    xaxis_autorange=True,
+                    yaxis_autorange=True,
+                )
+
         # Add data to figure
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
             data.values[0], str
@@ -1077,7 +1090,6 @@ class InversionApp(BaseDashApplication):
         """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
         data_count = "Data Count: "
-
         if object_uid is None:
             # If object is None, figure is empty.
             return (
@@ -1091,7 +1103,10 @@ class InversionApp(BaseDashApplication):
             )
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
-        if "data_object" in triggers or channel is None:
+        # Error with plot data resetting when switching tabs on initialization. If this happens, need to reinitialize.
+        reinitialize = "plot_bgcolor" not in figure["layout"]
+
+        if "data_object" in triggers or channel is None or reinitialize:
             # If object changes, update plot type based on object type.
             if isinstance(obj, Grid2D):
                 figure = go.Figure(go.Heatmap(colorscale="rainbow"))
@@ -1106,7 +1121,7 @@ class InversionApp(BaseDashApplication):
                 margin=dict(l=20, r=20, t=20, b=20),
             )
 
-            if "ui_json_data" not in triggers:
+            if "ui_json_data" not in triggers and not reinitialize:
                 # If we aren't reading in a ui.json, return the empty plot.
                 return (
                     figure,
@@ -1126,7 +1141,7 @@ class InversionApp(BaseDashApplication):
 
             window = None
             # Update plot bounds from ui.json.
-            if "ui_json_data" in triggers:
+            if "ui_json_data" in triggers or reinitialize:
                 if ui_json_data["fix_aspect_ratio"]:
                     fix_aspect_ratio = [True]
                 else:
@@ -1362,7 +1377,7 @@ class InversionApp(BaseDashApplication):
                 update_dict["forward_only"],
             )
         )
-        param_dict["azimuth"] = 0.0
+        param_dict["window_azimuth"] = 0.0
         return param_dict
 
     def write_trigger(
