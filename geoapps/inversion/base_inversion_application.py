@@ -1224,29 +1224,28 @@ class InversionApp(BaseDashApplication):
         :return param_dict: Dictionary with params to update self.params.
         """
         param_dict = {}
-        new_obj = None
         for key, value in inversion_params_dict.items():
             param_dict[key + "_object"] = None
             param_dict[key] = None
             if value["options"] == "Model" or key == "topography":
                 # Topography always saves an object and only saves data if the radio button is selected.
                 if is_uuid(value["object"]):
-                    param_dict[key + "_object"] = self.workspace.get_entity(
-                        uuid.UUID(value["object"])
-                    )[0]
-                    # Copy to new workspace
-                    new_obj = param_dict[key + "_object"].copy(
-                        parent=new_workspace, copy_children=False
-                    )
-
+                    obj = self.workspace.get_entity(uuid.UUID(value["object"]))[0]
+                    param_dict[key + "_object"] = new_workspace.get_entity(obj.uid)[0]
+                    if param_dict[key + "_object"] is None:
+                        param_dict[key + "_object"] = obj.copy(
+                            parent=new_workspace, copy_children=False
+                        )
             if value["options"] in ["Model", "Data"]:
-                if is_uuid(value["data"]) and new_obj:
+                if is_uuid(value["data"]) and param_dict[key + "_object"]:
                     param_dict[key] = self.workspace.get_entity(
                         uuid.UUID(value["data"])
                     )[0]
-                    # Copy to new workspace
-                    if new_workspace.get_entity(param_dict[key].uid)[0] is None:
-                        param_dict[key].copy(parent=new_obj)
+                    if (
+                        param_dict[key] is not None
+                        and new_workspace.get_entity(param_dict[key].uid)[0] is None
+                    ):
+                        param_dict[key].copy(parent=param_dict[key + "_object"])
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
 
@@ -1276,15 +1275,18 @@ class InversionApp(BaseDashApplication):
             if value["channel_bool"]:
                 param_dict[comp + "_channel_bool"] = True
                 if not forward_only:
-                    param_dict[comp + "_channel"] = self.workspace.get_entity(
-                        uuid.UUID(value["channel"])
-                    )[0]
-                    # Copy to new workspace
-                    if (
-                        new_workspace.get_entity(param_dict[comp + "_channel"].uid)[0]
-                        is None
-                    ):
-                        param_dict[comp + "_channel"].copy(parent=data_object)
+                    if is_uuid(value["channel"]):
+                        param_dict[comp + "_channel"] = self.workspace.get_entity(
+                            uuid.UUID(value["channel"])
+                        )[0]
+                        if (
+                            param_dict[comp + "_channel"] is not None
+                            and new_workspace.get_entity(
+                                param_dict[comp + "_channel"].uid
+                            )[0]
+                            is None
+                        ):
+                            param_dict[comp + "_channel"].copy(parent=data_object)
 
                     # Determine whether to save uncertainty as floor or channel
                     param_dict[comp + "_uncertainty"] = 1.0
@@ -1299,9 +1301,9 @@ class InversionApp(BaseDashApplication):
                             )[
                                 0
                             ]
-                            # Copy to new workspace
                             if (
-                                new_workspace.get_entity(
+                                param_dict[comp + "_uncertainty"] is not None
+                                and new_workspace.get_entity(
                                     param_dict[comp + "_uncertainty"].uid
                                 )[0]
                                 is None
@@ -1532,7 +1534,41 @@ class InversionApp(BaseDashApplication):
             return no_update
 
         # Get dict of params from base dash application
-        param_dict = self.get_params_dict(locals())
+        update_dict = {
+            "resolution": resolution,
+            "window_center_x": window_center_x,
+            "window_center_y": window_center_y,
+            "window_width": window_width,
+            "window_height": window_height,
+            "fix_aspect_ratio": fix_aspect_ratio,
+            "z_from_topo": z_from_topo,
+            "receivers_offset_x": receivers_offset_x,
+            "receivers_offset_y": receivers_offset_y,
+            "receivers_offset_z": receivers_offset_z,
+            "receivers_radar_drape": receivers_radar_drape,
+            "forward_only": forward_only,
+            "alpha_s": alpha_s,
+            "alpha_x": alpha_x,
+            "alpha_y": alpha_y,
+            "alpha_z": alpha_z,
+            "s_norm": s_norm,
+            "x_norm": x_norm,
+            "y_norm": y_norm,
+            "z_norm": z_norm,
+            "detrend_type": detrend_type,
+            "detrend_order": detrend_order,
+            "ignore_values": ignore_values,
+            "max_iterations": max_iterations,
+            "chi_factor": chi_factor,
+            "initial_beta_ratio": initial_beta_ratio,
+            "max_cg_iterations": max_cg_iterations,
+            "tol_cg": tol_cg,
+            "n_cpu": n_cpu,
+            "tile_spatial": tile_spatial,
+            "out_group": out_group,
+            "monitoring_directory": monitoring_directory,
+        }
+        param_dict = self.get_params_dict(update_dict)
 
         if not live_link:
             live_link = False
@@ -1562,20 +1598,38 @@ class InversionApp(BaseDashApplication):
             param_dict["geoh5"] = workspace
 
             # Copy mesh to workspace
-            param_dict["mesh"].copy(parent=workspace, copy_children=False)
-            data_obj = param_dict["data_object"].copy(
-                parent=workspace, copy_children=False
-            )
+            mesh = self.workspace.get_entity(uuid.UUID(mesh))[0]
+            param_dict["mesh"] = workspace.get_entity(mesh.uid)[0]
+            if param_dict["mesh"] is None:
+                param_dict["mesh"] = mesh.copy(parent=workspace, copy_children=False)
+
+            # Copy data object to workspace
+            data_object = self.workspace.get_entity(uuid.UUID(data_object))[0]
+            param_dict["data_object"] = workspace.get_entity(data_object.uid)[0]
+            if param_dict["data_object"] is None:
+                param_dict["data_object"] = data_object.copy(
+                    parent=workspace, copy_children=False
+                )
 
             # Add inversion specific params to param_dict
             param_dict.update(
-                self.get_inversion_params_dict(workspace, locals(), data_obj)
+                self.get_inversion_params_dict(
+                    workspace, locals(), param_dict["data_object"]
+                )
             )
 
-            if isinstance(param_dict["receivers_radar_drape"], Data):
-                param_dict["receivers_radar_drape"].copy(
-                    parent=param_dict["data_object"]
-                )
+            if is_uuid(receivers_radar_drape):
+                param_dict["receivers_radar_drape"] = self.workspace.get_entity(
+                    uuid.UUID(receivers_radar_drape)
+                )[0]
+                if (
+                    param_dict["receivers_radar_drape"] is not None
+                    and workspace.get_entity(param_dict["receivers_radar_drape"].uid)[0]
+                    is None
+                ):
+                    param_dict["receivers_radar_drape"].copy(
+                        parent=param_dict["data_object"]
+                    )
 
             if self._inversion_type == "dcip":
                 param_dict["resolution"] = None  # No downsampling for dcip
