@@ -85,6 +85,7 @@ class MagneticVectorParams(InversionBaseParams):
         self._reference_declination_object: UUID = None
         self._reference_inclination = None
         self._reference_declination = None
+        self._fix_aspect_ratio = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
@@ -446,3 +447,11 @@ class MagneticVectorParams(InversionBaseParams):
     @reference_declination.setter
     def reference_declination(self, val):
         self.setter_validator("reference_declination", val, fun=self._uuid_promoter)
+
+    @property
+    def fix_aspect_ratio(self):
+        return self._fix_aspect_ratio
+
+    @fix_aspect_ratio.setter
+    def fix_aspect_ratio(self, val):
+        self.setter_validator("fix_aspect_ratio", val)
