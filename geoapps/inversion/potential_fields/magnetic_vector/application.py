@@ -126,6 +126,14 @@ class MagneticVectorApp(InversionApp):
             # Output
             State(component_id="out_group", component_property="value"),
             State(component_id="monitoring_directory", component_property="value"),
+            # Magnetic specific
+            State(component_id="inducing_field_strength", component_property="value"),
+            State(
+                component_id="inducing_field_inclination", component_property="value"
+            ),
+            State(
+                component_id="inducing_field_declination", component_property="value"
+            ),
             # Magnetic vector specific
             State(
                 component_id="starting_inclination_options", component_property="value"
