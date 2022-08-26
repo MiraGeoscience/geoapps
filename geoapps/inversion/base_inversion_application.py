@@ -918,18 +918,26 @@ class InversionApp(BaseDashApplication):
 
             # Set plot axes limits
             if window:
-                figure.update_layout(
-                    xaxis_autorange=False,
-                    xaxis_range=[
-                        window["center"][0] - (window["size"][0] / 2),
-                        window["center"][0] + (window["size"][0] / 2),
-                    ],
-                    yaxis_autorange=False,
-                    yaxis_range=[
-                        window["center"][1] - (window["size"][1] / 2),
-                        window["center"][1] + (window["size"][1] / 2),
-                    ],
-                )
+                if (
+                    window["center"][0] is None
+                    or window["center"][1] is None
+                    or window["size"][0] is None
+                    or window["size"][1] is None
+                ):
+                    figure.update_layout(xaxis_autorange=True, yaxis_autorange=True)
+                else:
+                    figure.update_layout(
+                        xaxis_autorange=False,
+                        xaxis_range=[
+                            window["center"][0] - (window["size"][0] / 2),
+                            window["center"][0] + (window["size"][0] / 2),
+                        ],
+                        yaxis_autorange=False,
+                        yaxis_range=[
+                            window["center"][1] - (window["size"][1] / 2),
+                            window["center"][1] + (window["size"][1] / 2),
+                        ],
+                    )
         # Add data to figure
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
             data.values[0], str
@@ -1179,7 +1187,13 @@ class InversionApp(BaseDashApplication):
 
                 data_count += f"{count}"
 
-            if "plot" in triggers:
+            if (
+                "plot" in triggers
+                or center_x is None
+                or center_y is None
+                or width is None
+                or height is None
+            ):
                 if figure["layout"]["xaxis"]["autorange"]:
                     x = np.array(figure["data"][0]["x"])
                     x_range = [np.amin(x), np.amax(x)]
@@ -1195,7 +1209,7 @@ class InversionApp(BaseDashApplication):
                 height = y_range[1] - y_range[0]
                 center_y = y_range[0] + (height / 2)
 
-        return (figure, data_count, center_x, center_y, width, height, fix_aspect_ratio)
+        return figure, data_count, center_x, center_y, width, height, fix_aspect_ratio
 
     def get_general_inversion_params(
         self, new_workspace: Workspace, inversion_params_dict: dict
