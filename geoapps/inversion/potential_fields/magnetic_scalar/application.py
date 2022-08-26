@@ -13,23 +13,25 @@ import os
 from dash import Input, Output, State
 
 from geoapps.inversion.base_inversion_application import InversionApp
-from geoapps.inversion.potential_fields.gravity.constants import app_initializer
-from geoapps.inversion.potential_fields.gravity.layout import (
-    gravity_inversion_params,
-    gravity_layout,
+from geoapps.inversion.potential_fields.magnetic_scalar.constants import app_initializer
+from geoapps.inversion.potential_fields.magnetic_scalar.layout import (
+    magnetic_scalar_inversion_params,
+    magnetic_scalar_layout,
 )
-from geoapps.inversion.potential_fields.gravity.params import GravityParams
+from geoapps.inversion.potential_fields.magnetic_scalar.params import (
+    MagneticScalarParams,
+)
 
 
-class GravityApp(InversionApp):
+class MagneticScalarApp(InversionApp):
     """
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = GravityParams
-    _inversion_type = "gravity"
-    _inversion_params = gravity_inversion_params
-    _layout = gravity_layout
+    _param_class = MagneticScalarParams
+    _inversion_type = "magnetic_scalar"
+    _inversion_params = magnetic_scalar_inversion_params
+    _layout = magnetic_scalar_layout
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
