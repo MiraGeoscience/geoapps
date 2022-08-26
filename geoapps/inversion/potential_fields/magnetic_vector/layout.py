@@ -23,16 +23,14 @@ component_list = [
 ]
 
 object_selection_layout = base_layout.get_object_selection_layout(
-    "magnetic_scalar", component_list
+    "magnetic vector", component_list
 )
 
-magnetic_vector_inversion_params = (
-    {
-        "eff_susceptibility": {"label": "Effective Susceptibility", "units": "SI"},
-        "inclination": {"label": "Inclination", "units": "Degree"},
-        "declination": {"label": "Declination", "units": "Degree"},
-    },
-)
+magnetic_vector_inversion_params = {
+    "eff_susceptibility": {"label": "Effective Susceptibility", "units": "SI"},
+    "inclination": {"label": "Inclination", "units": "Degree"},
+    "declination": {"label": "Declination", "units": "Degree"},
+}
 inversion_params_layout = base_layout.get_inversion_params_layout(
     magnetic_vector_inversion_params
 )

@@ -23,7 +23,7 @@ component_list = [
 ]
 
 object_selection_layout = base_layout.get_object_selection_layout(
-    "magnetic_scalar", component_list
+    "magnetic scalar", component_list
 )
 
 magnetic_scalar_inversion_params = {

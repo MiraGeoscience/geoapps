@@ -42,6 +42,18 @@ class MagneticScalarApp(InversionApp):
 
         super().__init__(**self.params.to_dict())
 
+        # Update from ui.json
+        self.app.callback(
+            Output(component_id="inducing_field_strength", component_property="value"),
+            Output(
+                component_id="inducing_field_inclination", component_property="value"
+            ),
+            Output(
+                component_id="inducing_field_declination", component_property="value"
+            ),
+            Input(component_id="ui_json_data", component_property="data"),
+        )(self.update_remainder_from_ui_json)
+
         # Write params
         self.app.callback(
             Output(component_id="live_link", component_property="value"),
