@@ -47,7 +47,7 @@ class InversionApp(BaseDashApplication):
 
     _param_class = InversionBaseParams
     _inversion_type = None
-    _inversion_params = None
+    _inversion_params = {}
     _run_params = None
     _layout = None
 
@@ -534,7 +534,7 @@ class InversionApp(BaseDashApplication):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
-            if param in self._inversion_params:
+            if param in self._inversion_params.keys():
                 # Read in from ui.json using dict of inversion params.
                 if prefix + "_" + param in ui_json_data:
                     obj = str(ui_json_data[prefix + "_" + param + "_object"])
