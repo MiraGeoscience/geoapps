@@ -556,12 +556,29 @@ class InversionApp(BaseDashApplication):
             component,
         )
 
-    def set_bounding_box(self, object_uid: str):
+    def set_bounding_box(
+        self, object_uid: str
+    ) -> (float, float, float, float, float, float):
+        """
+        Get slider min and max values after object change.
+
+        :param object_uid: Input object uuid.
+
+        :return window_center_x_min: Center x slider min.
+        :return window_center_x_max: Center x slider max.
+        :return window_center_y_min: Center y slider min.
+        :return window_center_y_max: Center y slider max.
+        :return window_width_max: Width slider max.
+        :return window_height_max: Height slider max.
+        """
         # Fetch vertices in the project
         lim_x = [1e8, -1e8]
         lim_y = [1e8, -1e8]
 
-        obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
+        if is_uuid(object_uid):
+            obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
+        else:
+            return no_update, no_update, no_update, no_update, no_update, no_update
         if isinstance(obj, Grid2D):
             lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
             lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
@@ -569,7 +586,7 @@ class InversionApp(BaseDashApplication):
             lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
             lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
         else:
-            return (no_update, no_update, no_update, no_update, no_update, no_update)
+            return no_update, no_update, no_update, no_update, no_update, no_update
 
         width = lim_x[1] - lim_x[0]
         height = lim_y[1] - lim_y[0]
@@ -767,7 +784,7 @@ class InversionApp(BaseDashApplication):
         resolution: float | int,
         colorbar: list,
         fix_aspect_ratio: list,
-    ) -> (go.Figure, str):
+    ) -> (go.Figure, str, float, float, float, float, list):
         """
         Dash version of the plot_selection function in base/plot.
 
@@ -776,19 +793,36 @@ class InversionApp(BaseDashApplication):
         :param figure_zoom_trigger: Trigger for when zoom on figure.
         :param object_uid: Input object.
         :param channel: Input data.
+        :param center_x: Window center x.
+        :param center_y: Window center y.
+        :param width: Window width.
+        :param height: Window height
         :param resolution: Resolution distance.
         :param colorbar: Checkbox value for whether to display colorbar.
         :param fix_aspect_ratio: Checkbox value for whether to fix aspect ratio.
 
         :return figure: Updated figure.
         :return data_count: Displayed data count value.
+        :param center_x: Window center x.
+        :param center_y: Window center y.
+        :param width: Window width.
+        :param height: Window height
+        :return fix_aspect_ratio: Whether to fix aspect ratio. Turned off when width/height sliders adjusted.
         """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
         data_count = "Data Count: "
 
         if object_uid is None:
             # If object is None, figure is empty.
-            return go.Figure(), data_count
+            return (
+                go.Figure(),
+                data_count,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+                no_update,
+            )
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
         if "data_object" in triggers or channel is None:
@@ -808,7 +842,15 @@ class InversionApp(BaseDashApplication):
 
             if "ui_json_data" not in triggers:
                 # If we aren't reading in a ui.json, return the empty plot.
-                return figure, data_count
+                return (
+                    figure,
+                    data_count,
+                    no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                    no_update,
+                )
         else:
             # Construct figure from existing figure to keep bounds and plot layout.
             figure = go.Figure(figure)
@@ -1058,8 +1100,8 @@ class InversionApp(BaseDashApplication):
         resolution: float,
         window_center_x: float,
         window_center_y: float,
-        window_center_width: float,
-        window_center_height: float,
+        window_width: float,
+        window_height: float,
         fix_aspect_ratio: list,
         topography_options: str,
         topography_object: str,
@@ -1124,7 +1166,7 @@ class InversionApp(BaseDashApplication):
         reference_declination_object: str = None,
         reference_declination_data: str = None,
         reference_declination_const: float = None,
-    ) -> list:
+    ) -> (list, bool):
         """
         Update self.params and write out.
 
@@ -1133,7 +1175,10 @@ class InversionApp(BaseDashApplication):
         :param data_object: Input object uuid.
         :param full_components: Dictionary of components and corresponding channels, uncertainties, active.
         :param resolution: Resolution distance.
-        :param plot: Plot of data, with axis range.
+        :param window_center_x: Window center x.
+        :param window_center_y: Window center y.
+        :param window_width: Window width.
+        :param window_height: Window height
         :param fix_aspect_ratio: Checkbox for plotting with fixed aspect ratio.
         :param topography_options: Type of topography selected (None, Data, Constant).
         :param topography_object: Topography object uuid.
