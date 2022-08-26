@@ -918,26 +918,18 @@ class InversionApp(BaseDashApplication):
 
             # Set plot axes limits
             if window:
-                if (
-                    window["center"][0] is None
-                    or window["center"][1] is None
-                    or window["size"][0] is None
-                    or window["size"][1] is None
-                ):
-                    figure.update_layout(xaxis_autorange=True, yaxis_autorange=True)
-                else:
-                    figure.update_layout(
-                        xaxis_autorange=False,
-                        xaxis_range=[
-                            window["center"][0] - (window["size"][0] / 2),
-                            window["center"][0] + (window["size"][0] / 2),
-                        ],
-                        yaxis_autorange=False,
-                        yaxis_range=[
-                            window["center"][1] - (window["size"][1] / 2),
-                            window["center"][1] + (window["size"][1] / 2),
-                        ],
-                    )
+                figure.update_layout(
+                    xaxis_autorange=False,
+                    xaxis_range=[
+                        window["center"][0] - (window["size"][0] / 2),
+                        window["center"][0] + (window["size"][0] / 2),
+                    ],
+                    yaxis_autorange=False,
+                    yaxis_range=[
+                        window["center"][1] - (window["size"][1] / 2),
+                        window["center"][1] + (window["size"][1] / 2),
+                    ],
+                )
         # Add data to figure
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
             data.values[0], str
