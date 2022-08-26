@@ -268,6 +268,7 @@ class InversionApp(BaseDashApplication):
             # Output
             Output(component_id="out_group", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
+            Output(component_id="forward_only", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
@@ -595,16 +596,17 @@ class InversionApp(BaseDashApplication):
 
         if "ui_json_data" in triggers:
             param = callback_context.outputs_list[0]["id"].removesuffix("_options")
-            obj = str(ui_json_data[param + "_object"])
-            val = ui_json_data[param]
+            if param in ui_json_data:
+                obj = str(ui_json_data[param + "_object"])
+                val = ui_json_data[param]
 
-            if param == "topography":
-                options, data, const = InversionApp.unpack_val(val, topography=True)
-            else:
-                options, data, const = InversionApp.unpack_val(val)
+                if param == "topography":
+                    options, data, const = InversionApp.unpack_val(val, topography=True)
+                else:
+                    options, data, const = InversionApp.unpack_val(val)
 
-            data_options = self.get_data_options(ui_json_data, obj)
-            obj_options = data_object_options
+                data_options = self.get_data_options(ui_json_data, obj)
+                obj_options = data_object_options
         elif "data_object" in triggers:
             obj_options = data_object_options
             obj = None
@@ -702,19 +704,22 @@ class InversionApp(BaseDashApplication):
             # Fill in full_components dict from ui.json.
             full_components = {}
             for comp in component_options:
-                # Get channel value
-                if is_uuid(ui_json_data[comp + "_channel"]):
-                    channel = str(ui_json_data[comp + "_channel"])
-                else:
-                    channel = None
                 # Get channel_bool value
                 if ui_json_data[comp + "_channel_bool"]:
                     channel_bool = [True]
                 else:
                     channel_bool = []
+                # Get channel value
+                if comp + "_channel" in ui_json_data and is_uuid(
+                    ui_json_data[comp + "_channel"]
+                ):
+                    channel = str(ui_json_data[comp + "_channel"])
+                else:
+                    channel = None
                 # Get uncertainty value
-                if (type(ui_json_data[comp + "_uncertainty"]) == float) or (
-                    type(ui_json_data[comp + "_uncertainty"]) == int
+                if comp + "_uncertainty" in ui_json_data and (
+                    (type(ui_json_data[comp + "_uncertainty"]) == float)
+                    or (type(ui_json_data[comp + "_uncertainty"]) == int)
                 ):
                     uncertainty_type = "Floor"
                     uncertainty_floor = ui_json_data[comp + "_uncertainty"]
@@ -725,6 +730,7 @@ class InversionApp(BaseDashApplication):
                     uncertainty_channel = str(ui_json_data[comp + "_uncertainty"])
                 else:
                     # Default uncertainty value
+                    uncertainty_type = "Floor"
                     uncertainty_type = "Floor"
                     uncertainty_floor = None
                     uncertainty_channel = None
@@ -1418,6 +1424,9 @@ class InversionApp(BaseDashApplication):
         tile_spatial: int,
         out_group: str,
         monitoring_directory: str,
+        inducing_field_strength: float = None,
+        inducing_field_inclination: float = None,
+        inducing_field_declination: float = None,
         starting_inclination_options: str = None,
         starting_inclination_object: str = None,
         starting_inclination_data: str = None,
@@ -1495,6 +1504,9 @@ class InversionApp(BaseDashApplication):
         :param tile_spatial: Number of tiles.
         :param out_group: GA group name.
         :param monitoring_directory: Export path.
+        :param inducing_field_strength: (Magnetic specific.) Inducing field strength (nT).
+        :param inducing_field_inclination: (Magnetic specific.) Inducing field inclination.
+        :param inducing_field_declination: (Magnetic specific.) Inducing field declination.
         :param starting_inclination_options: (Magnetic vector specific.) Type of starting inclination selected.
         :param starting_inclination_object: (Magnetic vector specific.) Starting model inclination object uuid.
         :param starting_inclination_data: (Magnetic vector specific.) Starting model inclination data uuid.

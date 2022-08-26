@@ -126,5 +126,13 @@ class MagneticScalarApp(InversionApp):
             # Output
             State(component_id="out_group", component_property="value"),
             State(component_id="monitoring_directory", component_property="value"),
+            # Magnetic specific
+            State(component_id="inducing_field_strength", component_property="value"),
+            State(
+                component_id="inducing_field_inclination", component_property="value"
+            ),
+            State(
+                component_id="inducing_field_declination", component_property="value"
+            ),
             prevent_initial_call=True,
         )(self.write_trigger)
