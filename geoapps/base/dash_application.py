@@ -39,7 +39,7 @@ class BaseDashApplication:
     def __init__(self):
         self.workspace = self.params.geoh5
         if self._driver_class is not None:
-            self.driver = self._driver_class(self.params)
+            self.driver = self._driver_class(self.params)  # pylint: disable=E1102
         self.app = None
 
     def update_object_options(
@@ -51,6 +51,7 @@ class BaseDashApplication:
 
         :param filename: Uploaded filename. Workspace or ui.json.
         :param contents: Uploaded file contents. Workspace or ui.json.
+        :param param_name: Name of object param to get from ui.json.
         :param trigger: Dash component which triggered the callback.
 
         :return object_options: New object dropdown options.
@@ -62,6 +63,7 @@ class BaseDashApplication:
         ui_json_data, object_options, object_value = no_update, no_update, None
 
         if param_name is None:
+            # Get id from output variable names
             param_name = callback_context.outputs_list[0]["id"]
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
