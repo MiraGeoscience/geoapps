@@ -39,7 +39,7 @@ def test_block_model(tmp_path):
     block_model = BlockModelCreation(geoh5=temp_workspace)
     # Test initialization
     object_options, objects_uid, ui_json_data, _, _ = block_model.update_object_options(
-        None, None, trigger=""
+        None, None, param_name="objects", trigger=""
     )
     param_list = [
         "new_grid",
@@ -88,7 +88,7 @@ def test_block_model(tmp_path):
     content_string = content_bytes.decode("utf-8")
     contents = "".join(["content_type", ",", content_string])
     object_options, _, _, _, _ = block_model.update_object_options(
-        "ws.geoh5", contents, trigger="upload"
+        "ws.geoh5", contents, param_name="objects", trigger="upload"
     )
 
     # Test export
