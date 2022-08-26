@@ -141,6 +141,7 @@ inversion_defaults = {
     "bx_channel_bool": False,
     "by_channel_bool": False,
     "bz_channel_bool": False,
+    "fix_aspect_ratio": True,
 }
 
 forward_defaults = {
@@ -214,6 +215,7 @@ forward_defaults = {
     "x_norm": 2.0,
     "y_norm": 2.0,
     "z_norm": 2.0,
+    "fix_aspect_ratio": True,
 }
 
 inversion_ui_json = {
@@ -689,6 +691,7 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "VectorInversion"},
+    "fix_aspect_ratio": True,
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -723,12 +726,13 @@ validations = {
     "by_uncertainty": {"one_of": "uncertainty channel"},
     "bz_channel": {"one_of": "data channel"},
     "bz_uncertainty": {"one_of": "uncertainty channel"},
+    "fix_aspect_ratio": {"types": [bool]},
 }
 
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "geoh5": "../../../../assets/FlinFlon.geoh5",
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
@@ -771,4 +775,5 @@ app_initializer = {
     "receivers_offset_y": 0.0,
     "receivers_offset_z": 60.0,
     "out_group": "VectorInversion",
+    "fix_aspect_ratio": True,
 }
