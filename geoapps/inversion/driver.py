@@ -405,8 +405,12 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
-        from .potential_fields import MagneticVectorParams as ParamClass
-        from .potential_fields.magnetic_vector.constants import validations
+        from geoapps.inversion.potential_fields import (
+            MagneticVectorParams as ParamClass,
+        )
+        from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+            validations,
+        )
 
     elif inversion_type == "magnetic scalar":
         from .potential_fields import MagneticScalarParams as ParamClass
@@ -445,5 +449,6 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
 
 
 if __name__ == "__main__":
-    start_inversion(sys.argv[1])
+    # start_inversion(sys.argv[1])
+    start_inversion(r"C:\Users\dominiquef\Desktop\vector_inv3.ui.json")
     sys.stdout.close()
