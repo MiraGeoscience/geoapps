@@ -148,7 +148,6 @@ class InversionMesh:
         if self.params.inversion_type in ["direct current 2d"]:
             self.entity, self.mesh = get_drape_model(
                 self.workspace,
-                self.params.ga_group,
                 "Models",
                 self.inversion_data._survey.unique_locations,
                 [self.params.u_cell_size, self.params.v_cell_size],
@@ -156,6 +155,7 @@ class InversionMesh:
                 [self.params.horizontal_padding] * 2
                 + [self.params.vertical_padding, 1],
                 self.params.expansion_factor,
+                parent=self.params.ga_group,
                 return_colocated_mesh=True,
             )
         else:

@@ -203,6 +203,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "direct current 2d",
                 "induced polarization",
             ]:
+
                 kwargs = self.assemble_data_keywords_dcip(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
@@ -375,6 +376,14 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 return data_stack[sorting_stack] - x
 
             kwargs["transforms"].append(dcip_transform)
+
+        if "2d" in self.factory_type:
+            # TODO - verify this works once the driver is running through
+            def transform(x):
+                expanded_data = np.array([np.nan] * len(list(self.inversion_data.observed.values())[0]))
+                expanded_data[self.inversion_object.global_map] = x
+                return expanded_data
+            kwargs["transforms"].append(transform)
 
         return kwargs
 
