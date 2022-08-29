@@ -485,7 +485,6 @@ def inversion(input_file):
 
             # Remove the simplices too long
             tri2D.simplices = tri2D.simplices[indx == False, :]
-            tri2D.vertices = tri2D.vertices[indx == False, :]
             temp = np.arange(int(nZ * n_sounding)).reshape((nZ, n_sounding), order="F")
             model_ordering.append(temp[:, order].T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
