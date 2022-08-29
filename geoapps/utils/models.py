@@ -22,15 +22,15 @@ from geoapps.utils.surveys import compute_alongline_distance
 
 def get_drape_model(
     workspace: Workspace,
-    parent: Group,
     name: str,
     locs: np.ndarray,
     h: list,
     depth_core: float,
     pads: list,
     expansion_factor: float,
+    parent: Group = None,
     return_colocated_mesh=False,
-) -> BlockModel:
+):
     """
     Create a BlockModel object from parameters.
 
@@ -82,7 +82,11 @@ def get_drape_model(
             indices.append(index)
             index += 1
 
-    model = DrapeModel.create(workspace, name=name, parent=parent)
+    model = DrapeModel.create(
+        workspace,
+        name=name,
+        parent=parent
+    )
     model.prisms = np.vstack(prisms)
     layers = np.vstack(layers)
     layers[:, 2] = layers[:, 2][::-1]
