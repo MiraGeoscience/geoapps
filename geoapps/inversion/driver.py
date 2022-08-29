@@ -449,6 +449,5 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
 
 
 if __name__ == "__main__":
-    # start_inversion(sys.argv[1])
-    start_inversion(r"C:\Users\dominiquef\Desktop\vector_inv3.ui.json")
+    start_inversion(sys.argv[1])
     sys.stdout.close()
