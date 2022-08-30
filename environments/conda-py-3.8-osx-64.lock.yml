@@ -20,7 +20,7 @@ dependencies:
   - json-c=0.16=h01d06f9_0
   - jxrlib=1.1=h35c211d_2
   - libbrotlicommon=1.0.9=h5eb16cf_7
-  - libcxx=14.0.6=hce7ea42_0
+  - libcxx=14.0.6=hccf4f1f_0
   - libdeflate=1.13=h775f41a_0
   - libev=4.33=haf1e3a3_1
   - libffi=3.4.2=h0d85af4_5
@@ -231,7 +231,7 @@ dependencies:
   - numcodecs=0.10.2=py38hd331d03_0
   - pandas=1.4.3=py38h2b30649_0
   - pywavelets=1.3.0=py38h4277f33_1
-  - scipy=1.9.0=py38hb261484_0
+  - scipy=1.9.1=py38hb5a21b1_0
   - shapely=1.8.4=py38h419baa6_0
   - stack_data=0.5.0=pyhd8ed1ab_0
   - terminado=0.15.0=py38h50d1736_0

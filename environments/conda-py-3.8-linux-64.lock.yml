@@ -246,7 +246,7 @@ dependencies:
   - numcodecs=0.10.2=py38hfa26641_0
   - pandas=1.4.3=py38h47df419_0
   - pywavelets=1.3.0=py38h71d37f0_1
-  - scipy=1.9.0=py38hea3f02b_0
+  - scipy=1.9.1=py38hea3f02b_0
   - shapely=1.8.4=py38h3b45516_0
   - stack_data=0.5.0=pyhd8ed1ab_0
   - terminado=0.15.0=py38h578d9bd_0

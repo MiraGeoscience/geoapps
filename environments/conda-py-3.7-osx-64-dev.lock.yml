@@ -18,7 +18,7 @@ dependencies:
   - jpeg=9e=hac89ed1_2
   - json-c=0.16=h01d06f9_0
   - libbrotlicommon=1.0.9=h5eb16cf_7
-  - libcxx=14.0.6=hce7ea42_0
+  - libcxx=14.0.6=hccf4f1f_0
   - libdeflate=1.13=h775f41a_0
   - libev=4.33=haf1e3a3_1
   - libffi=3.4.2=h0d85af4_5
@@ -265,7 +265,7 @@ dependencies:
   - ipython=7.33.0=py37hf985489_0
   - nbconvert-core=7.0.0=pyhd8ed1ab_0
   - pytest-cov=3.0.0=pyhd8ed1ab_0
-  - requests=2.28.1=pyhd8ed1ab_0
+  - requests=2.28.1=pyhd8ed1ab_1
   - scikit-image=0.19.3=py37hbc43c61_1
   - ipykernel=6.15.2=pyh736e0ef_0
   - nbconvert-pandoc=7.0.0=pyhd8ed1ab_0
