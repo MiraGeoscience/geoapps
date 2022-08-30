@@ -3634,21 +3634,21 @@ package:
     libcblas: '>=3.9.0,<4.0a0'
     libgcc-ng: '>=12'
     libgfortran-ng: ''
-    libgfortran5: '>=10.3.0'
+    libgfortran5: '>=10.4.0'
     liblapack: '>=3.9.0,<4.0a0'
     libstdcxx-ng: '>=12'
     numpy: '>=1.19.5,<2.0a0'
     python: '>=3.8,<3.9.0a0'
     python_abi: 3.8.* *_cp38
   hash:
-    md5: d19e23bb56b31d2504a0ff4d46b7aabc
-    sha256: d197ba039aedb0f662c7be3750d25a2ac1300cd785c3ab9ddeef4dfcf81a12b2
+    md5: b232edb409c6a79e5921b3591c56b716
+    sha256: 3f576d8d7ee9211d926f9031582a99af0eb5bf07614538354d44be632d7b0278
   manager: conda
   name: scipy
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/scipy-1.9.0-py38hea3f02b_0.tar.bz2
-  version: 1.9.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/scipy-1.9.1-py38hea3f02b_0.tar.bz2
+  version: 1.9.1
 - category: full
   dependencies:
     geos: '>=3.11.0,<3.11.1.0a0'
@@ -4202,16 +4202,16 @@ package:
     certifi: '>=2017.4.17'
     charset-normalizer: '>=2,<3'
     idna: '>=2.5,<4'
-    python: '>=3.6,<4.0'
+    python: '>=3.7,<4.0'
     urllib3: '>=1.21.1,<1.27'
   hash:
-    md5: 70d6e72856de9551f83ae0f2de689a7a
-    sha256: 11f191f2f879563ec2e50e8ec675a24736d55b32ff04a4a60ef8971eedeee840
+    md5: 089382ee0e2dc2eae33a04cc3c2bddb0
+    sha256: b45d0da6774c8231ab4fef0427b3050e7c54c84dfe453143dd4010999c89e050
   manager: conda
   name: requests
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/requests-2.28.1-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/requests-2.28.1-pyhd8ed1ab_1.tar.bz2
   version: 2.28.1
 - category: full
   dependencies:
@@ -4527,13 +4527,13 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: ac504a8074ae8add8b837a93d7bc33ca
-    sha256: 747a06d1431fda3c1ee80101b070dc20f562d169d149130dd568d1825448c318
+    md5: 208a6a874b073277374de48a782f6b10
+    sha256: ebb75dd9f854b1f184a98d0b9128a3faed6cd2f05f83677e1f399c253580afe7
   manager: conda
   name: libcxx
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libcxx-14.0.6-hce7ea42_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/libcxx-14.0.6-hccf4f1f_0.tar.bz2
   version: 14.0.6
 - category: main
   dependencies: {}
@@ -7644,22 +7644,22 @@ package:
   dependencies:
     libblas: '>=3.9.0,<4.0a0'
     libcblas: '>=3.9.0,<4.0a0'
-    libcxx: '>=13.0.1'
+    libcxx: '>=14.0.4'
     libgfortran: 5.*
-    libgfortran5: '>=9.3.0'
+    libgfortran5: '>=11.3.0'
     liblapack: '>=3.9.0,<4.0a0'
     numpy: '>=1.19.5,<2.0a0'
     python: '>=3.8,<3.9.0a0'
     python_abi: 3.8.* *_cp38
   hash:
-    md5: 047a80ed0c95c6b0c5d8eed1cd1d1536
-    sha256: a7caa64cda45f31765f087718fe0cd8bc49efc37bcb80a97d3e88b7205fe6a3c
+    md5: 9af6b5a82ef47dac7f5b8d246000750d
+    sha256: 6bf9ee6e53cd19fe261e7be5ca6c61a24140a61d035753cb0173ede73fbff903
   manager: conda
   name: scipy
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/scipy-1.9.0-py38hb261484_0.tar.bz2
-  version: 1.9.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/scipy-1.9.1-py38hb5a21b1_0.tar.bz2
+  version: 1.9.1
 - category: full
   dependencies:
     geos: '>=3.11.0,<3.11.1.0a0'
@@ -8207,16 +8207,16 @@ package:
     certifi: '>=2017.4.17'
     charset-normalizer: '>=2,<3'
     idna: '>=2.5,<4'
-    python: '>=3.6,<4.0'
+    python: '>=3.7,<4.0'
     urllib3: '>=1.21.1,<1.27'
   hash:
-    md5: 70d6e72856de9551f83ae0f2de689a7a
-    sha256: 11f191f2f879563ec2e50e8ec675a24736d55b32ff04a4a60ef8971eedeee840
+    md5: 089382ee0e2dc2eae33a04cc3c2bddb0
+    sha256: b45d0da6774c8231ab4fef0427b3050e7c54c84dfe453143dd4010999c89e050
   manager: conda
   name: requests
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/requests-2.28.1-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/requests-2.28.1-pyhd8ed1ab_1.tar.bz2
   version: 2.28.1
 - category: full
   dependencies:
@@ -11672,14 +11672,14 @@ package:
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30037'
   hash:
-    md5: dc1312bb23b954427e27c319e4e262bf
-    sha256: fc03076c486f1011668e7132b2b10eea290aa9896d5dd2439f8c4ee355779d97
+    md5: 1d5949cdfaad5668613da93e6f0a80d0
+    sha256: ee62377f86d9f12bd9ff87d5d8975d9884a6ed8999cc8b0bed08f8e08ae3891c
   manager: conda
   name: scipy
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/scipy-1.9.0-py38h91810f7_0.tar.bz2
-  version: 1.9.0
+  url: https://conda.anaconda.org/conda-forge/win-64/scipy-1.9.1-py38h91810f7_0.tar.bz2
+  version: 1.9.1
 - category: full
   dependencies:
     geos: '>=3.11.0,<3.11.1.0a0'
@@ -12297,16 +12297,16 @@ package:
     certifi: '>=2017.4.17'
     charset-normalizer: '>=2,<3'
     idna: '>=2.5,<4'
-    python: '>=3.6,<4.0'
+    python: '>=3.7,<4.0'
     urllib3: '>=1.21.1,<1.27'
   hash:
-    md5: 70d6e72856de9551f83ae0f2de689a7a
-    sha256: 11f191f2f879563ec2e50e8ec675a24736d55b32ff04a4a60ef8971eedeee840
+    md5: 089382ee0e2dc2eae33a04cc3c2bddb0
+    sha256: b45d0da6774c8231ab4fef0427b3050e7c54c84dfe453143dd4010999c89e050
   manager: conda
   name: requests
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/requests-2.28.1-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/requests-2.28.1-pyhd8ed1ab_1.tar.bz2
   version: 2.28.1
 - category: full
   dependencies:

@@ -222,7 +222,7 @@ dependencies:
   - poppler=22.04.0=hea5ffa9_2
   - pysocks=1.7.1=pyh0701188_6
   - pywavelets=1.3.0=py38hbdcd294_1
-  - scipy=1.9.0=py38h91810f7_0
+  - scipy=1.9.1=py38h91810f7_0
   - shapely=1.8.4=py38h91759cc_0
   - stack_data=0.5.0=pyhd8ed1ab_0
   - terminado=0.15.0=py38haa244fe_0

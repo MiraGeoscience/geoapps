@@ -280,7 +280,7 @@ dependencies:
   - ipython=7.33.0=py37h89c1867_0
   - nbconvert-core=7.0.0=pyhd8ed1ab_0
   - pytest-cov=3.0.0=pyhd8ed1ab_0
-  - requests=2.28.1=pyhd8ed1ab_0
+  - requests=2.28.1=pyhd8ed1ab_1
   - scikit-image=0.19.3=py37hfb7772e_1
   - ipykernel=6.15.2=pyh210e3f2_0
   - nbconvert-pandoc=7.0.0=pyhd8ed1ab_0
