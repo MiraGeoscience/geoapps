@@ -194,7 +194,15 @@ def inversion(input_file):
             for prop_group in entity.property_groups
             if prop_group.uid == uuid.UUID(input_param["uncertainty_channel"])
         ][0]
-        static_offset = np.mean(entity.transmitters.vertices - entity.vertices, axis=0)
+        static_offset = np.r_[
+            np.mean(
+                np.linalg.norm(
+                    entity.transmitters.vertices[:, :2] - entity.vertices[:, :2], axis=1
+                )
+            ),
+            0,
+            np.mean(entity.transmitters.vertices[:, 2] - entity.vertices[:, 2]),
+        ]
         em_specs["tx_offsets"] = [static_offset]
         em_specs["tx_specs"] = {
             "a": float(entity.loop_radius) if entity.loop_radius is not None else 1.0,
@@ -1092,6 +1100,5 @@ def inversion(input_file):
 
 
 if __name__ == "__main__":
-
     input_file = sys.argv[1]
     inversion(input_file)
