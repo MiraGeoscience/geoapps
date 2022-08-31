@@ -1427,7 +1427,11 @@ class InversionApp(PlotSelection2D):
                 obj, data = elem.get_selected_entities()
 
                 if obj is not None:
-                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
+
+                    new_obj = new_workspace.get_entity(obj.uid)[0]
+                    if new_obj is None:
+                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
+
                     for d in data:
                         if d is None:
                             continue
