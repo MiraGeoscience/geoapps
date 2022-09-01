@@ -506,29 +506,21 @@ def inversion(input_file):
             xyz = locations[line_ind, :]
 
             # Create a 2D mesh to store the results
-            if np.std(xyz[:, 1]) > np.std(xyz[:, 0]):
-                order = np.argsort(xyz[:, 1])
-            else:
-                order = np.argsort(xyz[:, 0])
-
-            x_loc = xyz[:, 0][order]
-            y_loc = xyz[:, 1][order]
-            z_loc = dem[line_ind, 2][order]
+            dist = np.r_[
+                0, np.cumsum(np.linalg.norm(xyz[1:, :2] - xyz[:-1, :2], axis=1))
+            ]
+            z_loc = dem[line_ind, 2]
 
             # Create a grid for the surface
-            X = np.kron(np.ones(nZ), x_loc.reshape((x_loc.shape[0], 1)))
-            Y = np.kron(np.ones(nZ), y_loc.reshape((x_loc.shape[0], 1)))
-            Z = np.kron(np.ones(nZ), z_loc.reshape((x_loc.shape[0], 1))) + np.kron(
-                CCz, np.ones((x_loc.shape[0], 1))
+            X = np.kron(np.ones(nZ), xyz[:, 0].reshape((z_loc.shape[0], 1)))
+            Y = np.kron(np.ones(nZ), xyz[:, 1].reshape((z_loc.shape[0], 1)))
+            L = np.kron(np.ones(nZ), dist.reshape((z_loc.shape[0], 1)))
+            Z = np.kron(np.ones(nZ), z_loc.reshape((z_loc.shape[0], 1))) + np.kron(
+                CCz, np.ones((z_loc.shape[0], 1))
             )
 
-            if np.std(y_loc) > np.std(x_loc):
-                tri2D = Delaunay(np.c_[np.ravel(Y), np.ravel(Z)])
-                topo_top = sp.interpolate.interp1d(y_loc, z_loc)
-
-            else:
-                tri2D = Delaunay(np.c_[np.ravel(X), np.ravel(Z)])
-                topo_top = sp.interpolate.interp1d(x_loc, z_loc)
+            tri2D = Delaunay(np.c_[np.ravel(L), np.ravel(Z)])
+            topo_top = sp.interpolate.interp1d(dist, z_loc)
 
             # Remove triangles beyond surface edges
             indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
@@ -547,22 +539,21 @@ def inversion(input_file):
 
             # Remove the simplices too long
             tri2D.simplices = tri2D.simplices[indx == False, :]
-            # tri2D.vertices = tri2D.vertices[indx == False, :]
             temp = np.arange(int(nZ * n_sounding)).reshape((nZ, n_sounding), order="F")
-            model_ordering.append(temp[:, order].T.ravel() + model_count)
+            model_ordering.append(temp.T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
             model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
-            line_ids.append(np.ones_like(order) * float(line))
-            data_ordering.append(order + pred_count)
-            pred_vertices.append(xyz[order, :])
+            line_ids.append(np.ones_like(z_loc) * float(line))
+            data_ordering.append(np.arange(z_loc.shape[0]) + pred_count)
+            pred_vertices.append(xyz)
             pred_cells.append(
-                np.c_[np.arange(x_loc.shape[0] - 1), np.arange(x_loc.shape[0] - 1) + 1]
+                np.c_[np.arange(z_loc.shape[0] - 1), np.arange(z_loc.shape[0] - 1) + 1]
                 + pred_count
             )
 
             model_count += tri2D.points.shape[0]
-            pred_count += x_loc.shape[0]
+            pred_count += z_loc.shape[0]
 
         out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
         out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
