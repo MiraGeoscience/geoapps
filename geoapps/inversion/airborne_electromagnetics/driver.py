@@ -543,8 +543,8 @@ def inversion(input_file):
             model_ordering.append(temp.T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
-            model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
-            line_ids.append(np.ones_like(z_loc) * float(line))
+            model_line_ids.append(np.ones_like(np.ravel(X)) * line)
+            line_ids.append(np.ones_like(z_loc) * line)
             data_ordering.append(np.arange(z_loc.shape[0]) + pred_count)
             pred_vertices.append(xyz)
             pred_cells.append(
@@ -564,8 +564,15 @@ def inversion(input_file):
             cells=np.vstack(model_cells),
             parent=out_group,
         )
-
-        surface.add_data({"Line": {"values": np.hstack(model_line_ids)}})
+        surface.add_data(
+            {
+                "Line": {
+                    "values": np.hstack(model_line_ids).astype("uint32"),
+                    "type": "referenced",
+                    "value_map": line_data.value_map.map,
+                }
+            }
+        )
         model_ordering = np.hstack(model_ordering).astype(int)
         curve = Curve.create(
             workspace,
@@ -574,8 +581,15 @@ def inversion(input_file):
             cells=np.vstack(pred_cells).astype("uint32"),
             parent=out_group,
         )
-
-        curve.add_data({"Line": {"values": np.hstack(line_ids)}})
+        curve.add_data(
+            {
+                "Line": {
+                    "values": np.hstack(line_ids).astype("uint32"),
+                    "type": "referenced",
+                    "value_map": line_data.value_map.map,
+                }
+            }
+        )
         data_ordering = np.hstack(data_ordering)
 
     reference = "BFHS"
