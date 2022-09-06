@@ -1135,6 +1135,9 @@ class InversionApp(PlotSelection2D):
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
             _, extension = path.splitext(self.file_browser.selected)
 
+            if isinstance(self.geoh5, Workspace):
+                self.geoh5.close()
+
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
 
                 # Read the inversion type first...
@@ -1150,6 +1153,7 @@ class InversionApp(PlotSelection2D):
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
+                self.params.geoh5.open(mode="r")
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))
                 self.refresh.value = True
