@@ -957,17 +957,6 @@ class InversionApp(PlotSelection2D):
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
-        obj, _ = self.get_selected_entities()
-        if obj is not None:
-            children_list = {child.uid: child.name for child in obj.children}
-            ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
-            options = [
-                [name, uid]
-                for uid, name in ordered.items()
-                if "visual parameter" not in name.lower()
-            ]
-        else:
-            options = []
 
         def channel_setter(caller):
             channel = caller["owner"]
@@ -1062,9 +1051,7 @@ class InversionApp(PlotSelection2D):
                         ]
                     ),
                 )
-
                 setattr(InversionApp, f"{key}_uncertainty", value_setter)
-
                 data_channel_options[key] = getattr(self, f"{key}_group")
                 data_channel_options[key].children[3].children[0].header = key
                 data_channel_options[key].children[3].children[1].header = key
@@ -1082,15 +1069,12 @@ class InversionApp(PlotSelection2D):
                 data_channel_options[key].children[3].children[1].observe(
                     uncert_setter, names="value"
                 )
-            data_channel_options[key].children[1].options = [["", None]] + options
-            data_channel_options[key].children[3].children[1].options = [
-                ["", None]
-            ] + options
 
         self.data_channel_choices.value = inversion_defaults()["component"][
             self.inversion_type.value
         ]
         self.data_channel_choices.data_channel_options = data_channel_options
+        self.update_data_channel_options()
         self.data_channel_panel.children = [
             self.data_channel_choices,
             data_channel_options[self.data_channel_choices.value],
@@ -1148,11 +1132,32 @@ class InversionApp(PlotSelection2D):
             return
 
         self.update_data_list(None)
+        self.update_data_channel_options()
         self.sensor.update_data_list(None)
         self.inversion_type_observer(None)
         self.write.button_style = "warning"
         self._run_params = None
         self.trigger.button_style = "danger"
+
+    def update_data_channel_options(self):
+        if getattr(self.data_channel_choices, "data_channel_options", None) is None:
+            return
+
+        obj, _ = self.get_selected_entities()
+        if obj is not None:
+            children_list = {child.uid: child.name for child in obj.children}
+            ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
+            options = [
+                [name, uid]
+                for uid, name in ordered.items()
+                if "visual parameter" not in name.lower()
+            ]
+        else:
+            options = []
+
+        for channel_option in self.data_channel_choices.data_channel_options.values():
+            channel_option.children[1].options = [["", None]] + options
+            channel_option.children[3].children[1].options = [["", None]] + options
 
     def data_channel_choices_observer(self, _):
         if hasattr(
