@@ -29,7 +29,7 @@ def get_drape_model(
     pads: list,
     expansion_factor: float,
     parent: Group = None,
-    return_colocated_mesh=False,
+    return_colocated_mesh: bool = False,
 ):
     """
     Create a BlockModel object from parameters.
@@ -52,6 +52,7 @@ def get_drape_model(
     x_interp = interp1d(distances, locs[:, 0], fill_value="extrapolate")
     y_interp = interp1d(distances, locs[:, 1], fill_value="extrapolate")
     locs = np.c_[distances, locs[:, 2]]
+
     mesh = mesh_utils.mesh_builder_xyz(
         locs,
         h,

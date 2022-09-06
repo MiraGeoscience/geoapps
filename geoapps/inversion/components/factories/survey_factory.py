@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 import numpy as np
 
-from geoapps.utils.surveys import extract_dcip_survey
+from geoapps.utils.surveys import extract_dcip_survey, compute_alongline_distance
 
 from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
@@ -289,10 +289,15 @@ class SurveyFactory(SimPEGFactory):
         self.local_index = []
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
             local_index = receiver_group(source_id, receiver_entity)
+
+            if "2d" in self.params.inversion_type:
+                locations = receiver_entity.vertices
+                locations = compute_alongline_distance(locations)
+            else:
+                locations = data.locations
+                
             receivers = ReceiversFactory(self.params).build(
-                locations=receiver_entity.vertices
-                if "2d" in self.params.inversion_type
-                else data.locations,
+                locations=locations,
                 local_index=receiver_entity.cells[local_index],
             )
             if receivers.nD == 0:
