@@ -54,7 +54,7 @@ def find_endpoints(locs, ends=None, start_index=0):
 
 def compute_alongline_distance(points):
     """Convert from cartesian (x, y, z) points to (distance, z) locations."""
-    endpoints = find_endpoints(points)
+    endpoints = find_endpoints(points, start_index=-1)
     return np.linalg.norm(endpoints[0] - points, axis=1)
 
 
