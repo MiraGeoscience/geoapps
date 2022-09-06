@@ -345,10 +345,6 @@ class InversionApp(PlotSelection2D):
         )
         self.plotting_data = None
         super().__init__(**self.defaults)
-
-        for item in ["window_width", "window_height", "resolution"]:
-            getattr(self, item).observe(self.update_octree_param, names="value")
-
         self.write.on_click(self.write_trigger)
 
     @property
@@ -1183,22 +1179,6 @@ class InversionApp(PlotSelection2D):
             self.refresh.value = False
             self.refresh.value = True
 
-        self.write.button_style = "warning"
-        self._run_params = None
-        self.trigger.button_style = "danger"
-
-    def update_octree_param(self, _):
-        dl = self.resolution.value
-        self._mesh_octree.u_cell_size.value = f"{dl/2:.0f}"
-        self._mesh_octree.v_cell_size.value = f"{dl / 2:.0f}"
-        self._mesh_octree.w_cell_size.value = f"{dl / 2:.0f}"
-        self._mesh_octree.depth_core.value = np.ceil(
-            np.min([self.window_width.value, self.window_height.value]) / 2.0
-        )
-        self._mesh_octree.horizontal_padding.value = (
-            np.max([self.window_width.value, self.window_width.value]) / 2
-        )
-        self.resolution.indices = None
         self.write.button_style = "warning"
         self._run_params = None
         self.trigger.button_style = "danger"
