@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0212, W0611
+
 from os import path
 from uuid import UUID
 
@@ -15,10 +17,8 @@ from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
-from geoapps.inversion.driver import InversionDriver
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals import InducedPolarizationParams
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
-from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,
 )
@@ -54,6 +54,7 @@ def test_mag_inversion(tmp_path):
         "z_from_topo": False,
         "forward_only": False,
         "starting_model": 0.01,
+        "window_width": 100.0,
         "u_cell_size": 50,
         "v_cell_size": 60,
         "w_cell_size": 75,
@@ -83,13 +84,17 @@ def test_mag_inversion(tmp_path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check to make sure this can be run twice
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
-    params_reload = MagneticVectorParams(ifile)
 
-    InversionDriver(params_reload)
+    new_app = MagInversionApp(plot_result=False)
+    new_app._file_browser.reset(
+        path=getattr(app, "_run_params").input_file.path,
+        filename=getattr(app, "_run_params").input_file.name,
+    )
+    new_app._file_browser._apply_selection()
+    new_app.file_browser_change(None)
 
-    with params_reload.geoh5.open():
-        objs = params_reload.geoh5.list_entities_name
+    with new_app.params.geoh5:
+        objs = new_app.params.geoh5.list_entities_name
         check_objs = [
             new_obj.uid,
             UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
@@ -100,14 +105,14 @@ def test_mag_inversion(tmp_path):
             assert o in objs.keys()
 
         for param, value in changes.items():
-            p_value = getattr(params_reload, param)
+            p_value = getattr(new_app.params, param)
             p_value = p_value.uid if isinstance(p_value, Entity) else p_value
             assert p_value == str2list(
                 value
             ), f"Parameter {param} not saved and loaded correctly."
 
         for param, value in side_effects.items():
-            p_value = getattr(params_reload, param)
+            p_value = getattr(new_app.params, param)
             p_value = p_value.uid if isinstance(p_value, Entity) else p_value
             assert (
                 p_value == value
@@ -157,11 +162,15 @@ def test_dc_inversion(tmp_path):
             # dc object
             currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
             currents.copy(parent=new_geoh5)
+            mesh = ws.get_entity(UUID("da109284-aa8c-4824-a647-29951109b058"))[0].copy(
+                parent=new_geoh5
+            )
     changes = {
         "topography_object": new_topo.uid,
         "z_from_topo": False,
         "forward_only": False,
-        "starting_model": 0.01,
+        "starting_model_object": mesh.uid,
+        "starting_model": mesh.children[0].uid,
         "u_cell_size": 50,
         "v_cell_size": 60,
         "w_cell_size": 75,
@@ -184,18 +193,25 @@ def test_dc_inversion(tmp_path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
-    params_reload = DirectCurrentParams(ifile)
-    with params_reload.geoh5.open():
+
+    new_app = DCInversionApp(plot_result=False)
+    new_app._file_browser.reset(
+        path=getattr(app, "_run_params").input_file.path,
+        filename=getattr(app, "_run_params").input_file.name,
+    )
+    new_app._file_browser._apply_selection()
+    new_app.file_browser_change(None)
+
+    with new_app.params.geoh5.open():
         for param, value in changes.items():
-            p_value = getattr(params_reload, param)
+            p_value = getattr(new_app.params, param)
             p_value = p_value.uid if isinstance(p_value, Entity) else p_value
             assert p_value == str2list(
                 value
             ), f"Parameter {param} not saved and loaded correctly."
 
         for param, value in side_effects.items():
-            p_value = getattr(params_reload, param)
+            p_value = getattr(new_app.params, param)
             p_value = p_value.uid if isinstance(p_value, Entity) else p_value
             assert (
                 p_value == value
