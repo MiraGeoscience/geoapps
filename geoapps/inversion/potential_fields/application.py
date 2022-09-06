@@ -27,7 +27,6 @@ from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
-from geoapps.utils.string import string_2_list
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -811,6 +810,51 @@ class InversionApp(PlotSelection2D):
         """"""
         return self._write
 
+    @property
+    def u_cell_size(self):
+        """'u_cell_size' Octree mesh parameter."""
+        return self._mesh_octree.u_cell_size
+
+    @property
+    def v_cell_size(self):
+        """'v_cell_size' Octree mesh parameter."""
+        return self._mesh_octree.v_cell_size
+
+    @property
+    def w_cell_size(self):
+        """'w_cell_size' Octree mesh parameter."""
+        return self._mesh_octree.w_cell_size
+
+    @property
+    def octree_levels_topo(self):
+        """'octree_levels_topo' Octree mesh parameter."""
+        return self._mesh_octree.octree_levels_topo
+
+    @property
+    def octree_levels_obs(self):
+        """'octree_levels_obs' Octree mesh parameter."""
+        return self._mesh_octree.octree_levels_obs
+
+    @property
+    def depth_core(self):
+        """'depth_core' Octree mesh parameter."""
+        return self._mesh_octree.depth_core
+
+    @property
+    def horizontal_padding(self):
+        """'horizontal_padding' Octree mesh parameter."""
+        return self._mesh_octree.horizontal_padding
+
+    @property
+    def vertical_padding(self):
+        """'vertical_padding' Octree mesh parameter."""
+        return self._mesh_octree.vertical_padding
+
+    @property
+    def max_distance(self):
+        """'max_distance' Octree mesh parameter."""
+        return self._mesh_octree.max_distance
+
     # Observers
     def update_ref(self, _):
         alphas = [alpha.value for alpha in self.alphas.children]
@@ -1319,6 +1363,9 @@ class InversionApp(PlotSelection2D):
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
             _, extension = path.splitext(self.file_browser.selected)
 
+            if isinstance(self.geoh5, Workspace):
+                self.geoh5.close()
+
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
 
                 # Read the inversion type first...
@@ -1335,6 +1382,7 @@ class InversionApp(PlotSelection2D):
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
+                self.params.geoh5.open(mode="r")
                 self.refresh.value = False
                 self.__populate__(**self.params.to_dict(ui_json_format=False))
                 self.refresh.value = True
@@ -1513,17 +1561,9 @@ class MeshOctreeOptions(ObjectDataSelection):
     def octree_levels_obs(self):
         return self._octree_levels_obs
 
-    @octree_levels_obs.getter
-    def octree_levels_obs(self):
-        return string_2_list(self._octree_levels_obs.value)
-
     @property
     def octree_levels_topo(self):
         return self._octree_levels_topo
-
-    @octree_levels_topo.getter
-    def octree_levels_topo(self):
-        return string_2_list(self._octree_levels_topo.value)
 
     @property
     def horizontal_padding(self):
