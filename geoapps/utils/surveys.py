@@ -59,7 +59,7 @@ def compute_alongline_distance(points):
 
 
 def survey_lines(survey, start_loc, save: str | None = None):
-    """Build an array of line ids for a survey layed out in a line biased grid."""
+    """Build an array of line ids for a survey laid out in a line biased grid."""
 
     # extract xy locations and create linear indexing
     locs = survey.vertices[:, :2]
