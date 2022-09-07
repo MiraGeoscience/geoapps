@@ -114,7 +114,7 @@ class SurveyFactory(SimPEGFactory):
             "direct current 2d",
             "induced polarization",
         ]:
-            return self._dcip_arguments(data=data)
+            return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
                 data=data, mesh=mesh, active_cells=active_cells, frequency=channel
@@ -261,7 +261,7 @@ class SurveyFactory(SimPEGFactory):
         elif mode == "row":
             return np.row_stack(list(channel_data.values())).ravel()
 
-    def _dcip_arguments(self, data=None):
+    def _dcip_arguments(self, data=None, local_index=None):
         if getattr(data, "entity", None) is None:
             return None
 
@@ -288,17 +288,26 @@ class SurveyFactory(SimPEGFactory):
         sources = []
         self.local_index = []
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
-            local_index = receiver_group(source_id, receiver_entity)
+
+            receiver_indices = receiver_group(source_id, receiver_entity)
 
             if "2d" in self.params.inversion_type:
-                locations = receiver_entity.vertices
-                locations = compute_alongline_distance(locations)
+                receiver_locations = receiver_entity.vertices
+                source_locations = currents.vertices
+                if local_index is not None:
+                    distances = compute_alongline_distance(receiver_locations)
+                    receiver_locations = np.c_[distances, receiver_locations[:, 2]]
+                    distances = compute_alongline_distance(source_locations)
+                    source_locations = np.c_[distances, source_locations[:, 2]]
             else:
-                locations = data.locations
-                
+                receiver_locations = data.locations
+                source_locations = currents.vertices
+
+
+
             receivers = ReceiversFactory(self.params).build(
-                locations=locations,
-                local_index=receiver_entity.cells[local_index],
+                locations=receiver_locations,
+                local_index=receiver_entity.cells[receiver_indices],
             )
             if receivers.nD == 0:
                 continue
@@ -309,10 +318,10 @@ class SurveyFactory(SimPEGFactory):
             cell_ind = int(np.where(currents.ab_cell_id.values == source_id)[0])
             source = SourcesFactory(self.params).build(
                 receivers=receivers,
-                locations=currents.vertices[currents.cells[cell_ind]],
+                locations=source_locations[currents.cells[cell_ind]],
             )
             sources.append(source)
-            self.local_index.append(local_index)
+            self.local_index.append(receiver_indices)
 
         self.local_index = np.hstack(self.local_index)
 
