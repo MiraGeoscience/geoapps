@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from time import time
+from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -46,7 +47,7 @@ class Surface2D(ObjectDataSelection):
     _object_types = (Curve,)
 
     def __init__(self, **kwargs):
-        self.defaults = app_initializer.copy()
+        self._defaults = app_initializer.copy()
         self.defaults.update(**kwargs)
         self._z_option = RadioButtons(
             options=["elevation", "depth"],
@@ -94,6 +95,7 @@ class Surface2D(ObjectDataSelection):
         self.z_option.observe(self.z_options_change, names="value")
         self.depth_panel = HBox([self.z_option, self.elevations.data])
         self.trigger.on_click(self.trigger_click)
+        self.models = []
 
     def trigger_click(self, _):
         obj, data_list = self.get_selected_entities()
@@ -169,13 +171,19 @@ class Surface2D(ObjectDataSelection):
                     order = np.argsort(xyz[:, 0])
                     ori = "EW"
 
-                X, Y, Z, M, L = [], [], [], [], []
+                x_locations, y_locations, z_locations, model, line_location = (
+                    [],
+                    [],
+                    [],
+                    [],
+                    [],
+                )
                 # Stack the z-coordinates and model
-                nZ = 0
+                n_locations = 0
 
                 for ind, elev in enumerate(elevations):
                     # data = self.workspace.get_entity(z_prop)[0]
-                    nZ += 1
+                    n_locations += 1
                     z_vals = elev.values[line_ind]
 
                     m_vals = []
@@ -191,75 +199,76 @@ class Surface2D(ObjectDataSelection):
                         m_vals.append(values[line_ind])
 
                     m_vals = np.vstack(m_vals).T
-                    keep = (
-                        np.isnan(z_vals) * np.any(np.isnan(m_vals), axis=1)
-                    ) == False
+                    keep = ~np.isnan(z_vals) * ~np.any(np.isnan(m_vals), axis=1)
                     keep[np.isnan(z_vals)] = False
                     keep[np.any(np.isnan(m_vals), axis=1)] = False
-
-                    X.append(xyz[:, 0][order][keep])
-                    Y.append(xyz[:, 1][order][keep])
+                    x_locations.append(xyz[:, 0][order][keep])
+                    y_locations.append(xyz[:, 1][order][keep])
 
                     if self.z_option.value == "depth":
                         z_topo = topo(xyz[:, 0][order][keep], xyz[:, 1][order][keep])
 
                         nan_z = np.isnan(z_topo)
                         if np.any(nan_z):
-                            _, ii = tree_topo.query(xyz[:, :2][order][keep][nan_z])
-                            z_topo[nan_z] = topo_z[ii]
+                            _, indices = tree_topo.query(xyz[:, :2][order][keep][nan_z])
+                            z_topo[nan_z] = topo_z[indices]
 
-                        Z.append(z_topo + z_vals[order][keep])
+                        z_locations.append(z_topo + z_vals[order][keep])
 
                     else:
-                        Z.append(z_vals[order][keep])
+                        z_locations.append(z_vals[order][keep])
 
-                    L.append(
+                    line_location.append(
                         np.ones_like(z_vals[order][keep])
                         * -int(re.findall(r"\d+", elev.name)[-1])
                     )
-                    M.append(m_vals[order, :][keep, :])
+                    model.append(m_vals[order, :][keep, :])
 
-                    if ind == 0:
+                x_locations = np.hstack(x_locations)
+                y_locations = np.hstack(y_locations)
+                z_locations = np.hstack(z_locations)
+                line_location = np.hstack(line_location)
 
-                        x_loc = xyz[:, 0][order][keep]
-                        y_loc = xyz[:, 1][order][keep]
-                        z_loc = Z[0]
-
-                X = np.hstack(X)
-                Y = np.hstack(Y)
-                Z = np.hstack(Z)
-                L = np.hstack(L)
-
-                self.models.append(np.vstack(M))
-                line_ids.append(np.ones_like(Z.ravel()) * line)
+                self.models.append(np.vstack(model))
+                line_ids.append(np.ones_like(z_locations.ravel()) * line)
 
                 if ori == "NS":
-                    tri2D = Delaunay(np.c_[np.ravel(Y), np.ravel(L)])
+                    delaunay_2d = Delaunay(
+                        np.c_[np.ravel(y_locations), np.ravel(line_location)]
+                    )
                 else:
-                    tri2D = Delaunay(np.c_[np.ravel(X), np.ravel(L)])
+                    delaunay_2d = Delaunay(
+                        np.c_[np.ravel(x_locations), np.ravel(line_location)]
+                    )
 
                     # Remove triangles beyond surface edges
-                tri2D.points[:, 1] = np.ravel(Z)
-                indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
-                for ii in range(3):
+                delaunay_2d.points[  # pylint: disable=unsupported-assignment-operation
+                    :, 1
+                ] = np.ravel(z_locations)
+                indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
+                for i in range(3):
                     length = np.linalg.norm(
-                        tri2D.points[tri2D.simplices[:, ii], :]
-                        - tri2D.points[tri2D.simplices[:, ii - 1], :],
+                        delaunay_2d.points[  # pylint: disable=unsubscriptable-object
+                            delaunay_2d.simplices[:, i], :
+                        ]
+                        - delaunay_2d.points[  # pylint: disable=unsubscriptable-object
+                            delaunay_2d.simplices[:, i - 1], :
+                        ],
                         axis=1,
                     )
                     indx *= length < self.max_distance.value
 
                 # Remove the simplices too long
-                tri2D.simplices = tri2D.simplices[indx, :]
-                tri2D.vertices = tri2D.vertices[indx, :]
-
-                temp = np.arange(int(nZ * n_sounding)).reshape(
-                    (nZ, n_sounding), order="F"
+                delaunay_2d.simplices = delaunay_2d.simplices[indx, :]
+                model_vertices.append(
+                    np.c_[
+                        np.ravel(x_locations),
+                        np.ravel(y_locations),
+                        np.ravel(z_locations),
+                    ]
                 )
-                model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
-                model_cells.append(tri2D.simplices + model_count)
-
-                model_count += tri2D.points.shape[0]
+                model_cells.append(delaunay_2d.simplices + model_count)
+                model_count += delaunay_2d.points.shape[0]  # pylint: disable=no-member
 
             self.models = list(np.vstack(self.models).T)
 
@@ -277,27 +286,31 @@ class Surface2D(ObjectDataSelection):
 
                 nan_z = np.isnan(z_topo)
                 if np.any(nan_z):
-                    _, ii = tree_topo.query(locations[nan_z, :2])
-                    z_topo[nan_z] = topo_z[ii]
+                    _, i = tree_topo.query(locations[nan_z, :2])
+                    z_topo[nan_z] = topo_z[i]
 
                 locations[:, 2] = z_topo - locations[:, 2]
 
-            tri2D = Delaunay(locations[:, :2])
+            delaunay_2d = Delaunay(locations[:, :2])
 
-            indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
-            for ii in range(3):
+            indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
+            for i in range(3):
                 length = np.linalg.norm(
-                    tri2D.points[tri2D.simplices[:, ii], :]
-                    - tri2D.points[tri2D.simplices[:, ii - 1], :],
+                    delaunay_2d.points[  # pylint: disable=unsubscriptable-object
+                        delaunay_2d.simplices[:, i], :
+                    ]
+                    - delaunay_2d.points[  # pylint: disable=unsubscriptable-object
+                        delaunay_2d.simplices[:, i - 1], :
+                    ],
                     axis=1,
                 )
                 indx *= length < self.max_distance.value
 
             # Remove the simplices too long
-            tri2D.simplices = tri2D.simplices[indx, :]
+            delaunay_2d.simplices = delaunay_2d.simplices[indx, :]
 
-            model_vertices = np.c_[tri2D.points, locations[:, 2]]
-            model_cells = tri2D.simplices
+            model_vertices = np.c_[delaunay_2d.points, locations[:, 2]]
+            model_cells = delaunay_2d.simplices
             self.models = []
             for data_obj in data_list:
                 self.models += [data_obj.values[ind]]
@@ -311,7 +324,7 @@ class Surface2D(ObjectDataSelection):
             out_entity = ContainerGroup.create(workspace, name=self.ga_group_name.value)
 
             if len(model_cells) > 0:
-                self.surface = Surface.create(
+                surface = Surface.create(
                     workspace,
                     name=string_name(self.export_as.value),
                     vertices=np.vstack(model_vertices),
@@ -325,7 +338,7 @@ class Surface2D(ObjectDataSelection):
                 return
 
             if self.type.value == "Sections":
-                self.surface.add_data(
+                surface.add_data(
                     {
                         "Line": {"values": np.hstack(line_ids)},
                     }
@@ -333,14 +346,14 @@ class Surface2D(ObjectDataSelection):
 
                 if len(self.models) > 0:
                     for uid, model in zip(self.data.value, self.models):
-                        self.surface.add_data(
+                        surface.add_data(
                             {
                                 self.data.uid_name_map[uid]: {"values": model},
                             }
                         )
             else:
                 for data_obj, model in zip(data_list, self.models):
-                    self.surface.add_data(
+                    surface.add_data(
                         {
                             data_obj.name: {"values": model},
                         }
@@ -497,11 +510,11 @@ class Surface2D(ObjectDataSelection):
 
 
 app_initializer = {
-    "h5file": "../../assets/FlinFlon.geoh5",
-    "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
-    "data": ["{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}"],
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": UUID("{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}"),
+    "data": [UUID("{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}")],
     "max_distance": 250,
-    "elevations": {"data": "{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}"},
-    "lines": {"data": "{0be5374c-3ebb-4762-962a-97d99f3cb0e1}"},
+    "elevations": {"data": UUID("{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}")},
+    "lines": {"data": UUID("{0be5374c-3ebb-4762-962a-97d99f3cb0e1}")},
     "topography": {},
 }

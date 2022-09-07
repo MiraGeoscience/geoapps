@@ -16,12 +16,12 @@ from os import environ
 
 import numpy as np
 from dash import callback_context, no_update
-from flask import Flask
+from geoh5py.data import Data
+from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from jupyter_dash import JupyterDash
 
 from geoapps.driver_base.params import BaseParams
 
@@ -32,122 +32,121 @@ class BaseDashApplication:
     """
 
     _params = None
+    _param_class = BaseParams
+    _driver_class = None
     _workspace = None
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.workspace = self.params.geoh5
-        self.workspace.close()
-
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
-        server = Flask(__name__)
-        self.app = JupyterDash(
-            server=server,
-            url_base_pathname=environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
-            external_stylesheets=external_stylesheets,
-        )
+        self.driver = self._driver_class(self.params)  # pylint: disable=E1102
+        self.app = None
 
     def update_object_options(
         self, filename: str, contents: str, trigger: str = None
-    ) -> (dict, list):
+    ) -> (list, str, dict, None, None):
         """
-        This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json component,
-        and sets the new object options.
+        This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
+        and sets the new object options and values.
 
         :param filename: Uploaded filename. Workspace or ui.json.
         :param contents: Uploaded file contents. Workspace or ui.json.
         :param trigger: Dash component which triggered the callback.
 
-        :return ui_json: Uploaded ui_json.
-        :return options: New dropdown options.
+        :return object_options: New object dropdown options.
+        :return object_value: New object value.
+        :return ui_json_data: Uploaded ui_json data.
+        :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
+        :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
-        ui_json, options = no_update, no_update
+        ui_json_data, object_options, object_value = no_update, no_update, None
 
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if contents is not None or trigger == "":
             if filename is not None and filename.endswith(".ui.json"):
-                content_type, content_string = contents.split(",")
+                # Uploaded ui.json
+                _, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
-                self.workspace = Workspace(ui_json["geoh5"])
-                self.workspace.close()
-                ui_json = BaseDashApplication.load_ui_json(ui_json)
+                self.workspace = Workspace(ui_json["geoh5"], mode="r")
+                self.params = self._param_class(**{"geoh5": self.workspace})
+                self.driver.params = self.params
+                # Create ifile from ui.json
+                ifile = InputFile(ui_json=ui_json)
+                # Demote ifile data so it can be stored as a string
+                ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
+                # Get new object value for dropdown from ui.json
+                object_value = ui_json_data["objects"]
             elif filename is not None and filename.endswith(".geoh5"):
-                content_type, content_string = contents.split(",")
+                # Uploaded workspace
+                _, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
-                self.workspace = Workspace(decoded)
-                self.workspace.close()
-                ui_json = no_update
+                self.workspace = Workspace(decoded, mode="r")
+                # Update self.params with new workspace, but keep unaffected params the same.
+                new_params = self.params.to_dict()
+                for key, value in new_params.items():
+                    if isinstance(value, Entity):
+                        new_params[key] = None
+                new_params["geoh5"] = self.workspace
+                self.params = self._param_class(**new_params)
+                self.driver.params = self.params
+                ui_json_data = no_update
             elif trigger == "":
+                # Initialization of app from self.params.
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
                     validation_options={"disabled": True},
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json = BaseDashApplication.load_ui_json(ifile.ui_json)
-            options = [
-                {"label": obj.parent.name + "/" + obj.name, "value": str(obj.uid)}
+                ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
+                object_value = ui_json_data["objects"]
+
+            # Get new options for object dropdown
+            object_options = [
+                {
+                    "label": obj.parent.name + "/" + obj.name,
+                    "value": "{" + str(obj.uid) + "}",
+                }
                 for obj in self.workspace.objects
             ]
 
-        return ui_json, options
+        return object_options, object_value, ui_json_data, None, None
 
-    @staticmethod
-    def serialize_item(item):
+    def get_data_options(self, trigger: str, ui_json_data: dict, object_uid: str):
         """
-        Default function for json.dumps.
+        Get data dropdown options from a given object.
 
-        :param item: Item in ui_json to serialize.
+        :param trigger: Callback trigger.
+        :param ui_json_data: Uploaded ui.json data to read object from.
+        :param object_uid: Selected object in object dropdown.
 
-        :return serialized_item: A serialized version of the input item.
+        :return options: Data dropdown options.
+        :return value: Data dropdown value.
         """
-        if isinstance(item, Workspace):
-            return getattr(item, "h5file", None)
-        elif isinstance(item, Entity):
-            return str(getattr(item, "uid", None))
-        elif is_uuid(item):
-            return str(item).replace("{", "").replace("}", "")
-        elif type(item) == np.ndarray:
-            return item.tolist()
+        obj = None
+
+        if trigger == "ui_json_data" and "objects" in ui_json_data:
+            if self.workspace.get_entity(ui_json_data["objects"])[0] is not None:
+                object_uid = self.workspace.get_entity(ui_json_data["objects"])[0].uid
+
+        if object_uid is not None:
+            for entity in self.workspace.get_entity(uuid.UUID(object_uid)):
+                if isinstance(entity, ObjectBase):
+                    obj = entity
+
+        if obj:
+            options = []
+            for child in obj.children:
+                if isinstance(child, Data):
+                    if child.name != "Visual Parameters":
+                        options.append(
+                            {"label": child.name, "value": "{" + str(child.uid) + "}"}
+                        )
+            options = sorted(options, key=lambda d: d["label"])
+
+            return options
         else:
-            return item
-
-    @staticmethod
-    def load_ui_json(ui_json):
-        """
-        Loop through a ui_json and serialize objects, np.arrays, etc. so the ui_json can be stored as a dcc.Store
-        variable.
-
-        :param ui_json: Input ui_json.
-
-        :return serialized_item: The ui_json, now able to store as a dcc.Store variable.
-        """
-        for key, value in ui_json.items():
-            if type(value) == dict:
-                for inner_key, inner_value in value.items():
-                    value[inner_key] = BaseDashApplication.serialize_item(inner_value)
-            else:
-                ui_json[key] = BaseDashApplication.serialize_item(value)
-
-        return ui_json
-
-    @staticmethod
-    def get_outputs(param_list: list, update_dict: dict) -> tuple:
-        """
-        Get the list of updated parameters to return to the dash callback and update the dash components.
-
-        :param param_list: Parameters that need to be returned to the callback.
-        :param update_dict: Dictionary of changed parameters and their new values.
-
-        :return outputs: Outputs to return to dash callback.
-        """
-        outputs = []
-        for param in param_list:
-            if param in update_dict:
-                outputs.append(update_dict[param])
-            else:
-                outputs.append(no_update)
-        return tuple(outputs)
+            return []
 
     def get_params_dict(self, update_dict: dict):
         """
@@ -164,8 +163,9 @@ class BaseDashApplication:
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
             if key in update_dict:
-                if key == "live_link":
-                    if not update_dict["live_link"]:
+                if bool in validations[key]["types"] and type(update_dict[key]) == list:
+                    # Convert from dash component checklist to bool
+                    if not update_dict[key]:
                         output_dict[key] = False
                     else:
                         output_dict[key] = True
@@ -174,62 +174,66 @@ class BaseDashApplication:
                 ):
                     # Checking for values that Dash has given as int when they should be float.
                     output_dict[key] = float(update_dict[key])
+                elif is_uuid(update_dict[key]):
+                    output_dict[key] = self.workspace.get_entity(
+                        uuid.UUID(update_dict[key])
+                    )[0]
                 else:
                     output_dict[key] = update_dict[key]
-            elif key + "_uid" in update_dict:
-                output_dict[key] = self.workspace.get_entity(
-                    uuid.UUID(update_dict[key + "_uid"])
-                )[0]
+
         return output_dict
 
     def update_remainder_from_ui_json(
-        self, ui_json: dict, param_list: list = None, trigger: str = None
+        self, ui_json_data: dict, output_ids: list = None, trigger: str = None
     ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
 
-        :param ui_json: Uploaded ui_json.
-        :param param_list: List of parameters to update. Used by tests.
+        :param ui_json_data: Uploaded ui_json data.
+        :param output_ids: List of parameters to update. Used by tests.
+        :param trigger: Callback trigger.
 
         :return outputs: List of outputs corresponding to the callback expected outputs.
         """
         # Get list of needed outputs from the callback.
-        if param_list is None:
-            param_list = [i["id"] for i in callback_context.outputs_list]
+        if output_ids is None:
+            output_ids = [item["id"] for item in callback_context.outputs_list]
 
-        # Get update_dict from ui_json.
+        # Get update_dict from ui_json data.
         update_dict = {}
-        if ui_json is not None:
-            # Loop through uijson, and add items that are also in param_list
-            for key, value in ui_json.items():
-                if key in param_list:
-                    if type(value) is dict:
-                        if is_uuid(value["value"]):
-                            update_dict[key] = str(value["value"])
+        if ui_json_data is not None:
+            # Loop through ui_json_data, and add items that are also in param_list
+            for key, value in ui_json_data.items():
+                if key in output_ids:
+                    if type(value) is bool:
+                        if value:
+                            update_dict[key] = [True]
                         else:
-                            update_dict[key] = value["value"]
+                            update_dict[key] = []
                     else:
                         update_dict[key] = value
 
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json":
-            if (
-                "monitoring_directory" in update_dict
-                and update_dict["monitoring_directory"] == ""
+        if trigger == "ui_json_data":
+            # If the monitoring directory is empty, use path from workspace.
+            if "monitoring_directory" in update_dict and (
+                update_dict["monitoring_directory"] == ""
+                or update_dict["monitoring_directory"] is None
             ):
                 if self.workspace is not None:
-                    update_dict["monitoring_directory"] = os.path.abspath(
+                    update_dict["monitoring_directory_value"] = os.path.abspath(
                         os.path.dirname(self.workspace.h5file)
                     )
 
         # Format updated params to return to the callback
         outputs = []
-        for param in param_list:
+        for param in output_ids:
             if param in update_dict:
                 outputs.append(update_dict[param])
             else:
-                outputs.append(no_update)
+                outputs.append(None)
+
         return tuple(outputs)
 
     @staticmethod
@@ -286,5 +290,8 @@ class BaseDashApplication:
         return self._workspace
 
     @workspace.setter
-    def workspace(self, value):
-        self._workspace = value
+    def workspace(self, workspace):
+        # Close old workspace
+        if self._workspace is not None:
+            self._workspace.close()
+        self._workspace = workspace

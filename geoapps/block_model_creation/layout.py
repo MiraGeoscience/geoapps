@@ -194,13 +194,13 @@ block_model_layout = html.Div(
         ),
         dcc.Checklist(
             id="live_link",
-            options=["Geoscience ANALYST Pro - Live link"],
+            options=[{"label": "Geoscience ANALYST Pro - Live link", "value": True}],
             value=[],
             style={"margin_bottom": "20px"},
         ),
         html.Button("Export", id="export"),
         dcc.Markdown(id="output_message"),
-        dcc.Store(id="ui_json"),
+        dcc.Store(id="ui_json_data"),
     ],
     style={
         "margin_left": "20px",

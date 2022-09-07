@@ -24,11 +24,11 @@ from scipy.spatial import cKDTree
 from geoapps.utils.string import string_to_numeric
 
 
-def hex_to_rgb(hex):
+def hex_to_rgb(hex_color):
     """
     Convert hex color code to RGB
     """
-    code = hex.lstrip("#")
+    code = hex_color.lstrip("#")
     return [int(code[i : i + 2], 16) for i in (0, 2, 4)]
 
 
@@ -103,10 +103,10 @@ def weighted_average(
         values_interp = np.zeros(xyz_out.shape[0])
         weight = np.zeros(xyz_out.shape[0])
 
-        for ii in range(n):
-            v = value[sub][ind[:, ii]] / (rad[:, ii] + threshold)
+        for i in range(n):
+            v = value[sub][ind[:, i]] / (rad[:, i] + threshold)
             values_interp = np.nansum([values_interp, v], axis=0)
-            w = 1.0 / (rad[:, ii] + threshold)
+            w = 1.0 / (rad[:, i] + threshold)
             weight = np.nansum([weight, w], axis=0)
 
         values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
@@ -150,7 +150,7 @@ def window_xy(
 
     """
 
-    if ("center" in window.keys()) & ("size" in window.keys()):
+    if ("center" in window) & ("size" in window):
         x_lim = [
             window["center"][0] - window["size"][0] / 2,
             window["center"][0] + window["size"][0] / 2,
@@ -160,7 +160,7 @@ def window_xy(
             window["center"][1] + window["size"][1] / 2,
         ]
     else:
-        msg = f"Missing window keys: 'center' and 'size'."
+        msg = "Missing window keys: 'center' and 'size'."
         raise KeyError(msg)
 
     window_mask = x >= x_lim[0]
@@ -199,11 +199,11 @@ def downsample_xy(
 
     mask_ind = np.where(downsample_mask)[0]
     nstn = xy.shape[0]
-    for ii in range(nstn):
-        if downsample_mask[mask_ind[ii]]:
-            ind = tree.query_ball_point(xy[ii, :2], distance)
+    for i in range(nstn):
+        if downsample_mask[mask_ind[i]]:
+            ind = tree.query_ball_point(xy[i, :2], distance)
             downsample_mask[mask_ind[ind]] = False
-            downsample_mask[mask_ind[ii]] = True
+            downsample_mask[mask_ind[i]] = True
 
     if mask is not None:
         downsample_mask &= mask
@@ -290,7 +290,7 @@ def filter_xy(
     if angle is not None:
         azim = angle
     elif window is not None:
-        if "azimuth" in window.keys():
+        if "azimuth" in window:
             azim = window["azimuth"]
 
     is_rotated = False if (azim is None) | (azim == 0) else True
@@ -379,19 +379,15 @@ def octree_2_treemesh(mesh):
     Convert a geoh5 octree mesh to discretize.TreeMesh
     Modified code from module discretize.TreeMesh.readUBC function.
     """
-
-    tswCorn = np.asarray(mesh.origin.tolist())
-
-    smallCell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
-
-    nCunderMesh = [mesh.u_count, mesh.v_count, mesh.w_count]
-
-    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(nCunderMesh, smallCell)]
+    tsw_corner = np.asarray(mesh.origin.tolist())
+    small_cell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
+    n_cell_dim = [mesh.u_count, mesh.v_count, mesh.w_count]
+    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell)]
     u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
     h1, h2, h3 = (np.abs(h) for h in cell_sizes)
-    x0 = tswCorn + np.array([u_shift, v_shift, w_shift])
+    x0 = tsw_corner + np.array([u_shift, v_shift, w_shift])
+    ls = np.log2(n_cell_dim).astype(int)
 
-    ls = np.log2(nCunderMesh).astype(int)
     if ls[0] == ls[1] and ls[1] == ls[2]:
         max_level = ls[0]
     else:
@@ -399,18 +395,16 @@ def octree_2_treemesh(mesh):
 
     treemesh = TreeMesh([h1, h2, h3], x0=x0)
 
-    # Convert indArr to points in coordinates of underlying cpp tree
-    # indArr is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
+    # Convert array_ind to points in coordinates of underlying cpp tree
+    # array_ind is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
     cells = np.vstack(mesh.octree_cells.tolist())
-
     levels = cells[:, -1]
-    indArr = cells[:, :-1]
-
-    indArr = 2 * indArr + levels[:, None]  # get cell center index
-    indArr[:, 2] = 2 * nCunderMesh[2] - indArr[:, 2]  # switch direction of iz
+    array_ind = cells[:, :-1]
+    array_ind = 2 * array_ind + levels[:, None]  # get cell center index
+    array_ind[:, 2] = 2 * n_cell_dim[2] - array_ind[:, 2]  # switch direction of iz
     levels = max_level - np.log2(levels)  # calculate level
 
-    treemesh.__setstate__((indArr, levels))
+    treemesh.__setstate__((array_ind, levels))
 
     return treemesh
 
@@ -463,10 +457,10 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
 
     try:
         group = workspace.get_entity(inversion_group)[0]
-    except IndexError:
+    except IndexError as exc:
         raise IndexError(
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
-        )
+        ) from exc
 
     # TODO use a get_entity call here once we update geoh5py entities with the method
     outfile = [c for c in group.children if c.name == "SimPEG.out"][0]

@@ -73,6 +73,8 @@
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
             "{4EA87376-3ECE-438B-BF12-3479733DED46}"
         ],
+        "optional": true,
+        "enabled": false,
         "label": "Conductivity object",
         "value": ""
     },
@@ -88,7 +90,7 @@
         "parent": "conductivity_model_object",
         "label": "Conductivity (Siemens/m)",
         "property": "",
-        "value": 0.0
+        "value": 0.001
     },
     "starting_model_object": {
         "group": "Starting Model",

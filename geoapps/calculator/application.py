@@ -22,25 +22,28 @@ with warn_module_not_found():
     from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
+    "data": ["Al2O3", "CaO"],
+    "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",
+}
+
+
 class Calculator(ObjectDataSelection):
     assert numpy  # to make sure numpy is imported here, as it is required to eval the equation
-
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-        "data": ["Al2O3", "CaO"],
-        "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",
-    }
 
     _select_multiple = True
 
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.var = {}
         self._channel = Text(description="Name: ")
         self._equation = Textarea(layout=Layout(width="75%"))
         self._use = Button(description=">> Add Variable >>")
         self.use.on_click(self.click_use)
+        self.figure = None
 
         super().__init__(**self.defaults)
 
@@ -90,7 +93,7 @@ class Calculator(ObjectDataSelection):
         """
         for uid in self.data.value:
             name = self.data.uid_name_map[uid]
-            if self.data.uid_name_map[uid] not in self.var.keys():
+            if self.data.uid_name_map[uid] not in self.var:
                 self.var[name] = self.workspace.get_entity(uid)[0].values
 
             self.equation.value = self.equation.value + "{" + name + "}"
@@ -99,7 +102,7 @@ class Calculator(ObjectDataSelection):
         """
         Evaluate the expression and output the result to geoh5
         """
-        var = self.var
+        var = self.var  # pylint: disable=unused-variable
         obj = self.workspace.get_entity(self.objects.value)[0]
 
         if obj is None:
@@ -121,7 +124,7 @@ class Calculator(ObjectDataSelection):
 
             variables = re.findall("{(.*?)}", equation)
             for name in variables:
-                if name not in list(self.var.keys()):
+                if name not in list(self.var):
                     if name in obj.get_data_list():
                         self.var[name] = obj.get_data(name)[0].values
                     elif name in "XYZ":
@@ -132,7 +135,7 @@ class Calculator(ObjectDataSelection):
 
             equation = re.sub(r"{", "var['", equation)
             equation = re.sub(r"}", "']", equation).strip()
-            self.var[out_var] = eval(equation)
+            self.var[out_var] = eval(equation)  # pylint: disable=eval-used
 
             options = sorted_children_dict(obj)
             for name, values in self.var.items():
