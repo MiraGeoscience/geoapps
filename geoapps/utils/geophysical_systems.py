@@ -13,6 +13,13 @@ def parameters():
     Dictionary of parameters defining geophysical acquisition systems
     """
     return {
+        "Airborne TEM Survey": {
+            "type": "time",
+            "data_type": "dBzdt",
+            "flag": None,
+            "channel_start_index": 1,
+            "bird_offset": [0, 0, 0],
+        },
         "AeroTEM (2007)": {
             "type": "time",
             "flag": "Zoff",

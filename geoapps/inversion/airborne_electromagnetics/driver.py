@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: skip-file
+
 from __future__ import annotations
 
 import json
@@ -46,12 +48,12 @@ from geoapps.utils import geophysical_systems
 
 def inversion(input_file):
     """"""
-    with open(input_file) as f:
+    with open(input_file, encoding="utf8") as f:
         input_param = json.load(f)
 
     em_specs = geophysical_systems.parameters()[input_param["system"]]
 
-    if "n_cpu" in input_param.keys():
+    if "n_cpu" in input_param:
         n_cpu = int(input_param["n_cpu"])
     else:
         n_cpu = int(multiprocessing.cpu_count() / 2)
@@ -65,24 +67,24 @@ def inversion(input_file):
     ignore_values = input_param["ignore_values"]
     resolution = float(input_param["resolution"])
 
-    if "initial_beta_ratio" in list(input_param.keys()):
+    if "initial_beta_ratio" in list(input_param):
         initial_beta_ratio = input_param["initial_beta_ratio"]
     else:
         initial_beta_ratio = 1e2
 
-    if "initial_beta" in list(input_param.keys()):
+    if "initial_beta" in list(input_param):
         initial_beta = input_param["initial_beta"]
     else:
         initial_beta = None
 
-    if "model_norms" in list(input_param.keys()):
+    if "model_norms" in list(input_param):
         model_norms = input_param["model_norms"]
     else:
         model_norms = [2, 2, 2, 2]
 
     model_norms = np.c_[model_norms].T
 
-    if "alphas" in list(input_param.keys()):
+    if "alphas" in list(input_param):
         alphas = input_param["alphas"]
         if len(alphas) == 4:
             alphas = alphas * 3
@@ -95,7 +97,7 @@ def inversion(input_file):
             1,
         ]
 
-    if "max_iterations" in list(input_param.keys()):
+    if "max_iterations" in list(input_param):
 
         max_iterations = input_param["max_iterations"]
         assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
@@ -110,31 +112,31 @@ def inversion(input_file):
     if "forward_only" in input_param:
         max_iterations = 0
 
-    if "max_cg_iterations" in list(input_param.keys()):
+    if "max_cg_iterations" in list(input_param):
         max_cg_iterations = input_param["max_cg_iterations"]
     else:
         max_cg_iterations = 30
 
-    if "tol_cg" in list(input_param.keys()):
+    if "tol_cg" in list(input_param):
         tol_cg = input_param["tol_cg"]
     else:
         tol_cg = 1e-4
 
-    if "max_global_iterations" in list(input_param.keys()):
+    if "max_global_iterations" in list(input_param):
         max_global_iterations = input_param["max_global_iterations"]
         assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
     else:
         # Spherical or sparse
         max_global_iterations = 100
 
-    if "window" in input_param.keys():
+    if "window" in input_param:
         window = input_param["window"]
         window["center"] = [window["center_x"], window["center_y"]]
         window["size"] = [window["width"], window["height"]]
     else:
         window = None
 
-    if "max_irls_iterations" in list(input_param.keys()):
+    if "max_irls_iterations" in list(input_param):
 
         max_irls_iterations = input_param["max_irls_iterations"]
         assert max_irls_iterations >= 0, "Max IRLS iterations must be >= 0"
@@ -169,37 +171,89 @@ def inversion(input_file):
     channels = {}
     channel_values = []
     offsets = {}
-    for ind, (key, value) in enumerate(em_specs["channels"].items()):
-        if key in input_param["data"]["channels"]:
-            channels[key] = True
-            parameters = input_param["data"]["channels"][key]
-            uid = uuid.UUID(parameters["name"])
+    if input_param["system"] == "Airborne TEM Survey":
+        conversion = {
+            "Seconds (s)": 1.0,
+            "Milliseconds (ms)": 1e-3,
+            "Microseconds (us)": 1e-6,
+        }
 
-            try:
-                data.append(workspace.get_entity(uid)[0].values)
-            except IndexError:
-                raise IndexError(
-                    f"Data {parameters['name']} could not be found associated with "
-                    f"target {entity.name} object."
+        em_specs["channels"] = np.r_[entity.channels] * conversion[entity.unit]
+        waveform = entity.waveform
+        waveform[0, 1] = 1e-8
+        waveform[:, 0] -= entity.timing_mark
+        waveform[:, 0] *= conversion[entity.unit]
+        em_specs["waveform"] = waveform
+        data_group = [
+            prop_group
+            for prop_group in entity.property_groups
+            if prop_group.uid == uuid.UUID(input_param["data"]["channels"])
+        ][0]
+        uncert_group = [
+            prop_group
+            for prop_group in entity.property_groups
+            if prop_group.uid == uuid.UUID(input_param["uncertainty_channel"])
+        ][0]
+        static_offset = np.mean(entity.transmitters.vertices - entity.vertices, axis=0)
+        em_specs["tx_offsets"] = [static_offset]
+        em_specs["tx_specs"] = {
+            "a": float(entity.loop_radius) if entity.loop_radius is not None else 1.0,
+            "I": 1.0,
+        }
+
+        if np.linalg.norm(static_offset) < 1e-1:
+            em_specs["tx_specs"]["type"] = "CircularLoop"
+        else:
+            em_specs["tx_specs"]["type"] = "VMD"
+
+        if "Normalization" in entity.metadata["EM Dataset"]:
+            em_specs["normalization"] = np.prod(
+                entity.metadata["EM Dataset"]["Normalization"]
+            )
+        else:
+            em_specs["normalization"] = 1
+
+        for dat_uid, unc_uid in zip(data_group.properties, uncert_group.properties):
+            d_entity = workspace.get_entity(dat_uid)[0]
+            u_entity = workspace.get_entity(unc_uid)[0]
+            channels[d_entity.name] = True
+            data.append(d_entity.values)
+            uncertainties.append(u_entity.values)
+            offsets[d_entity.name.lower()] = static_offset
+
+        channel_values = em_specs["channels"]
+    else:
+        for ind, (key, value) in enumerate(em_specs["channels"].items()):
+            if key in input_param["data"]["channels"]:
+                channels[key] = True
+                parameters = input_param["data"]["channels"][key]
+                uid = uuid.UUID(parameters["name"])
+
+                try:
+                    data.append(workspace.get_entity(uid)[0].values)
+                except IndexError:
+                    raise IndexError(
+                        f"Data {parameters['name']} could not be found associated with "
+                        f"target {entity.name} object."
+                    )
+
+                uncertainties.append(
+                    np.abs(data[-1]) * parameters["uncertainties"][0]
+                    + parameters["uncertainties"][1]
+                )
+                channel_values += parameters["value"]
+                offsets[key.lower()] = np.linalg.norm(
+                    np.asarray(parameters["offsets"]).astype(float)
                 )
 
-            uncertainties.append(
-                np.abs(data[-1]) * parameters["uncertainties"][0]
-                + parameters["uncertainties"][1]
-            )
-            channel_values += parameters["value"]
-            offsets[key.lower()] = np.linalg.norm(
-                np.asarray(parameters["offsets"]).astype(float)
-            )
-
-        elif em_specs["type"] == "frequency" and value in frequencies:
-            channels[key] = False
-            data.append(np.zeros(entity.n_vertices))
-            uncertainties.append(np.ones(entity.n_vertices) * np.inf)
-            offsets[key.lower()] = np.linalg.norm(
-                np.asarray(em_specs["tx_offsets"][ind]).astype(float)
-            )
-            channel_values += [value]
+            elif em_specs["type"] == "frequency" and value in frequencies:
+                channels[key] = False
+                data.append(np.zeros(entity.n_vertices))
+                uncertainties.append(np.ones(entity.n_vertices) * np.inf)
+                offsets[key.lower()] = np.linalg.norm(
+                    np.asarray(em_specs["tx_offsets"][ind]).astype(float)
+                )
+                channel_values += [value]
 
     offsets = list(offsets.values())
 
@@ -218,18 +272,18 @@ def inversion(input_file):
 
     def get_topography(locations):
         topo = None
-        if "topography" in list(input_param.keys()):
+        if "topography" in list(input_param):
             topo = locations.copy()
-            if "draped" in input_param["topography"].keys():
+            if "draped" in input_param["topography"]:
                 topo[:, 2] += input_param["topography"]["draped"]
-            elif "constant" in input_param["topography"].keys():
+            elif "constant" in input_param["topography"]:
                 topo[:, 2] = input_param["topography"]["constant"]
             else:
-                if "file" in input_param["topography"].keys():
+                if "file" in input_param["topography"]:
                     topo = np.genfromtxt(
                         input_param["topography"]["file"], skip_header=1
                     )
-                elif "GA_object" in list(input_param["topography"].keys()):
+                elif "GA_object" in list(input_param["topography"]):
                     topo_entity = workspace.get_entity(
                         uuid.UUID(input_param["topography"]["GA_object"]["name"])
                     )[0]
@@ -301,9 +355,9 @@ def inversion(input_file):
         return locations
 
     # Get data locations
-    if "receivers_offset" in list(input_param.keys()):
+    if "receivers_offset" in list(input_param):
 
-        if "constant" in list(input_param["receivers_offset"].keys()):
+        if "constant" in list(input_param["receivers_offset"]):
             bird_offset = np.asarray(
                 input_param["receivers_offset"]["constant"]
             ).reshape((-1, 3))
@@ -318,12 +372,12 @@ def inversion(input_file):
             dem = get_topography(locations[win_ind, :])
             F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
 
-            if "constant_drape" in list(input_param["receivers_offset"].keys()):
+            if "constant_drape" in list(input_param["receivers_offset"]):
                 bird_offset = np.asarray(
                     input_param["receivers_offset"]["constant_drape"]
                 ).reshape((-1, 3))
 
-            elif "radar_drape" in list(input_param["receivers_offset"].keys()):
+            elif "radar_drape" in list(input_param["receivers_offset"]):
                 bird_offset = np.asarray(
                     input_param["receivers_offset"]["radar_drape"][:3]
                 ).reshape((-1, 3))
@@ -337,7 +391,7 @@ def inversion(input_file):
 
             locations[:, 2] = z_topo + bird_offset[0, 2]
 
-            if "radar_drape" in list(input_param["receivers_offset"].keys()):
+            if "radar_drape" in list(input_param["receivers_offset"]):
                 try:
                     radar_drape = workspace.get_entity(
                         uuid.UUID(input_param["receivers_offset"]["radar_drape"][3])
@@ -470,10 +524,10 @@ def inversion(input_file):
 
             # Remove triangles beyond surface edges
             indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
-            for ii in range(3):
+            for i in range(3):
 
-                x = tri2D.points[tri2D.simplices[:, ii], 0]
-                z = tri2D.points[tri2D.simplices[:, ii], 1]
+                x = tri2D.points[tri2D.simplices[:, i], 0]
+                z = tri2D.points[tri2D.simplices[:, i], 1]
 
                 indx *= np.any(
                     [
@@ -485,7 +539,7 @@ def inversion(input_file):
 
             # Remove the simplices too long
             tri2D.simplices = tri2D.simplices[indx == False, :]
-            tri2D.vertices = tri2D.vertices[indx == False, :]
+            # tri2D.vertices = tri2D.vertices[indx == False, :]
             temp = np.arange(int(nZ * n_sounding)).reshape((nZ, n_sounding), order="F")
             model_ordering.append(temp[:, order].T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
@@ -526,12 +580,12 @@ def inversion(input_file):
         data_ordering = np.hstack(data_ordering)
 
     reference = "BFHS"
-    if "reference_model" in list(input_param.keys()):
-        if "model" in list(input_param["reference_model"].keys()):
+    if "reference_model" in list(input_param):
+        if "model" in list(input_param["reference_model"]):
 
             input_model = input_param["reference_model"]["model"]
             print(f"Interpolating reference model {input_model}")
-            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model)[0]))[0]
             con_model = workspace.get_entity(uuid.UUID(list(input_model.values())[0]))[
                 0
             ].values
@@ -547,20 +601,20 @@ def inversion(input_file):
             ref = con_model[ind]
             reference = np.log(ref[np.argsort(model_ordering)])
 
-        elif "value" in list(input_param["reference_model"].keys()):
+        elif "value" in list(input_param["reference_model"]):
 
             reference = np.ones(np.vstack(model_vertices).shape[0]) * np.log(
                 input_param["reference_model"]["value"]
             )
 
     starting = np.log(1e-3)
-    if "starting_model" in list(input_param.keys()):
-        if "model" in list(input_param["starting_model"].keys()):
+    if "starting_model" in list(input_param):
+        if "model" in list(input_param["starting_model"]):
 
             input_model = input_param["starting_model"]["model"]
 
             print(f"Interpolating starting model {input_model}")
-            con_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
+            con_object = workspace.get_entity(uuid.UUID(list(input_model)[0]))[0]
             con_model = workspace.get_entity(uuid.UUID(list(input_model.values())[0]))[
                 0
             ].values
@@ -576,17 +630,17 @@ def inversion(input_file):
             ref = con_model[ind]
             starting = np.log(ref[np.argsort(model_ordering)])
 
-        elif "value" in list(input_param["starting_model"].keys()):
+        elif "value" in list(input_param["starting_model"]):
             starting = np.ones(np.vstack(model_vertices).shape[0]) * np.log(
                 input_param["starting_model"]["value"]
             )
 
-    if "susceptibility_model" in list(input_param.keys()):
-        if "model" in list(input_param["susceptibility_model"].keys()):
+    if "susceptibility_model" in list(input_param):
+        if "model" in list(input_param["susceptibility_model"]):
 
             input_model = input_param["susceptibility_model"]["model"]
             print(f"Interpolating susceptibility model {input_model}")
-            sus_object = workspace.get_entity(uuid.UUID(list(input_model.keys())[0]))[0]
+            sus_object = workspace.get_entity(uuid.UUID(list(input_model)[0]))[0]
             sus_model = workspace.get_entity(uuid.UUID(list(input_model.values())[0]))[
                 0
             ].values
@@ -602,7 +656,7 @@ def inversion(input_file):
             sus = sus_model[ind]
             susceptibility = sus[np.argsort(model_ordering)]
 
-        elif "value" in list(input_param["susceptibility_model"].keys()):
+        elif "value" in list(input_param["susceptibility_model"]):
 
             susceptibility = (
                 np.ones(np.vstack(model_vertices).shape[0])
@@ -651,7 +705,7 @@ def inversion(input_file):
     dobs = data_mapping * normalization * dobs
     data_types = {}
     for ind, channel in enumerate(channels):
-        # if channel in list(input_param["data"]["channels"].keys()):
+        # if channel in list(input_param["data"]["channels"]):
         d_i = curve.add_data(
             {
                 channel: {
@@ -707,7 +761,7 @@ def inversion(input_file):
         else:
             offsets = np.zeros((xyz.shape[0], 1))
 
-        time, indt = np.unique(times, return_index=True)
+        time, _ = np.unique(times, return_index=True)
         survey = GlobalEM1DSurveyTD(
             rx_locations=xyz,
             src_locations=xyz + tx_offsets,
@@ -741,6 +795,7 @@ def inversion(input_file):
         )
         print(f"Input chi factor: {input_param['chi_factor']} -> target: {chi_target}")
 
+    workspace.close()
     if isinstance(reference, str):
         print("**** Best-fitting halfspace inversion ****")
         hz_BFHS = np.r_[1.0]
@@ -748,7 +803,6 @@ def inversion(input_file):
         sigmaMap = expmap
 
         if em_specs["type"] == "frequency":
-            uncert_reduced = uncert.copy()
             surveyHS = GlobalEM1DSurveyFD(
                 rx_locations=xyz,
                 src_locations=xyz,
@@ -845,13 +899,13 @@ def inversion(input_file):
             dmisfit, reg_sigma, opt, beta=initial_beta
         )
 
-        directiveList = []
+        directive_list = []
         if initial_beta is None:
-            directiveList.append(
+            directive_list.append(
                 Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
             )
 
-        directiveList.append(
+        directive_list.append(
             Directives.Update_IRLS(
                 maxIRLSiter=0,
                 minGNiter=1,
@@ -861,12 +915,13 @@ def inversion(input_file):
                 chifact_target=chi_target,
             )
         )
-        directiveList.append(Directives.UpdatePreconditioner())
-        inv = Inversion.BaseInversion(invProb_HS, directiveList=directiveList)
+        directive_list.append(Directives.UpdatePreconditioner())
+        inv = Inversion.BaseInversion(invProb_HS, directiveList=directive_list)
         opt.LSshorten = 0.5
         opt.remember("xc")
         mopt = inv.run(m0)
 
+    workspace.open()
     if isinstance(reference, str):
         m0 = mkvc(np.kron(mopt, np.ones_like(hz)))
         mref = mkvc(np.kron(mopt, np.ones_like(hz)))
@@ -904,7 +959,7 @@ def inversion(input_file):
     # Write uncertainties to objects
     for ind, channel in enumerate(channels):
 
-        if channel in list(input_param["data"]["channels"].keys()):
+        if channel in list(input_param["data"]["channels"]):
 
             pc_floor = np.asarray(
                 input_param["data"]["channels"][channel]["uncertainties"]
@@ -942,9 +997,9 @@ def inversion(input_file):
     )
     reg.norms = model_norms
     reg.mref = mref
-    wr = prob.getJtJdiag(m0) ** 0.5
-    wr /= wr.max()
-    surface.add_data({"Cell_weights": {"values": wr[model_ordering]}})
+    weighting = prob.getJtJdiag(m0) ** 0.5
+    weighting /= weighting.max()
+    surface.add_data({"Cell_weights": {"values": weighting[model_ordering]}})
 
     if em_specs["type"] == "frequency":
         surface.add_data({"Susceptibility": {"values": susceptibility[model_ordering]}})
@@ -964,10 +1019,10 @@ def inversion(input_file):
         maxIterCG=max_cg_iterations,
         tolCG=tol_cg,
     )
-    invProb = InvProblem.BaseInvProblem(dmisfit, reg, opt, beta=initial_beta)
-    directiveList = []
-    directiveList.append(Directives.UpdateSensitivityWeights())
-    directiveList.append(
+    inverse_problem = InvProblem.BaseInvProblem(dmisfit, reg, opt, beta=initial_beta)
+    directive_list = []
+    directive_list.append(Directives.UpdateSensitivityWeights())
+    directive_list.append(
         Directives.Update_IRLS(
             maxIRLSiter=max_irls_iterations,
             minGNiter=1,
@@ -979,12 +1034,12 @@ def inversion(input_file):
     )
 
     if initial_beta is None:
-        directiveList.append(
+        directive_list.append(
             Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
         )
 
-    directiveList.append(Directives.UpdatePreconditioner())
-    directiveList.append(
+    directive_list.append(Directives.UpdatePreconditioner())
+    directive_list.append(
         Directives.SaveIterationsGeoH5(
             h5_object=surface,
             sorting=model_ordering,
@@ -992,7 +1047,7 @@ def inversion(input_file):
             attribute="model",
         )
     )
-    directiveList.append(
+    directive_list.append(
         Directives.SaveIterationsGeoH5(
             h5_object=curve,
             sorting=data_ordering,
@@ -1005,23 +1060,23 @@ def inversion(input_file):
         )
     )
     inv = Inversion.BaseInversion(
-        invProb,
-        directiveList=directiveList,
+        inverse_problem,
+        directiveList=directive_list,
     )
     prob.counter = opt.counter = Counter()
     opt.LSshorten = 0.5
     opt.remember("xc")
+    workspace.close()
     inv.run(m0)
 
-    with workspace:
-        workspace.open()
+    with workspace.open():
         for ind, channel in enumerate(channels):
-            if channel in list(input_param["data"]["channels"].keys()):
+            if channel in list(input_param["data"]["channels"]):
                 res = (
-                    invProb.dpred[ind::block][data_ordering]
+                    inverse_problem.dpred[ind::block][data_ordering]
                     - dobs[ind::block][data_ordering]
                 )
-                d = curve.add_data(
+                residual_norm = curve.add_data(
                     {
                         f"Residual_norm{channel}": {
                             "association": "VERTEX",
@@ -1029,11 +1084,11 @@ def inversion(input_file):
                         }
                     }
                 )
-                curve.add_data_to_group(d, f"Residual_pct")
-                d = curve.add_data(
+                curve.add_data_to_group(residual_norm, "Residual_pct")
+                residuals = curve.add_data(
                     {f"Residual{channel}": {"association": "VERTEX", "values": res}}
                 )
-                curve.add_data_to_group(d, f"Residual")
+                curve.add_data_to_group(residuals, "Residual")
 
 
 if __name__ == "__main__":

@@ -32,18 +32,23 @@
         "main": true,
         "min": 1,
         "max": 100,
-        "value": 100
+        "value": 100,
+        "visible": false
     },
     "x": {
         "association": [
-            "Vertex"
+            "Vertex",
+            "Cell"
         ],
         "dataType": "Float",
         "group": "x axis",
         "label": "Data",
+        "optional": true,
+        "enabled": false,
         "main": true,
         "parent": "objects",
-        "value": ""
+        "value": "",
+        "visible": false
     },
     "x_min": {
         "group": "x axis",
@@ -53,7 +58,8 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "x_max": {
         "group": "x axis",
@@ -63,13 +69,15 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "x_log": {
         "group": "x axis",
         "label": "Log10",
         "main": true,
-        "value": false
+        "value": false,
+        "visible": false
     },
     "x_thresh": {
         "group": "x axis",
@@ -77,18 +85,23 @@
         "main": true,
         "value": 0.1,
         "dependency": "x_log",
-        "dependencyType": "enabled"
+        "dependencyType": "enabled",
+        "visible": false
     },
     "y": {
         "association": [
-            "Vertex"
+            "Vertex",
+            "Cell"
         ],
         "dataType": "Float",
         "group": "y axis",
         "label": "Data",
+        "optional": true,
+        "enabled": false,
         "main": true,
         "parent": "objects",
-        "value": ""
+        "value": "",
+        "visible": false
     },
     "y_min": {
         "group": "y axis",
@@ -98,7 +111,8 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "y_max": {
         "group": "y axis",
@@ -108,13 +122,15 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "y_log": {
         "group": "y axis",
         "label": "Log10",
         "main": true,
-        "value": false
+        "value": false,
+        "visible": false
     },
     "y_thresh": {
         "group": "y axis",
@@ -122,11 +138,13 @@
         "main": true,
         "value": 0.1,
         "dependency": "y_log",
-        "dependencyType": "enabled"
+        "dependencyType": "enabled",
+        "visible": false
     },
     "z": {
         "association": [
-            "Vertex"
+            "Vertex",
+            "Cell"
         ],
         "dataType": "Float",
         "group": "z axis",
@@ -135,7 +153,8 @@
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": ""
+        "value": "",
+        "visible": false
     },
     "z_min": {
         "group": "z axis",
@@ -145,7 +164,8 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "z_max": {
         "group": "z axis",
@@ -155,13 +175,15 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "z_log": {
         "group": "z axis",
         "label": "Log10",
         "main": true,
-        "value": false
+        "value": false,
+        "visible": false
     },
     "z_thresh": {
         "group": "z axis",
@@ -169,11 +191,13 @@
         "main": true,
         "value": 0.1,
         "dependency": "z_log",
-        "dependencyType": "enabled"
+        "dependencyType": "enabled",
+        "visible": false
     },
     "color": {
         "association": [
-            "Vertex"
+            "Vertex",
+            "Cell"
         ],
         "dataType": "Float",
         "group": "Color",
@@ -182,7 +206,8 @@
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": ""
+        "value": "",
+        "visible": false
     },
     "color_min": {
         "group": "Color",
@@ -192,7 +217,8 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "color_max": {
         "group": "Color",
@@ -202,13 +228,15 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "color_log": {
         "group": "Color",
         "label": "Log10",
         "main": true,
-        "value": false
+        "value": false,
+        "visible": false
     },
     "color_thresh": {
         "group": "Color",
@@ -216,7 +244,8 @@
         "main": true,
         "value": 0.1,
         "dependency": "color_log",
-        "dependencyType": "enabled"
+        "dependencyType": "enabled",
+        "visible": false
     },
     "color_maps": {
         "choiceList": [
@@ -320,11 +349,13 @@
         "main": true,
         "value": "",
         "enabled": false,
-        "optional": true
+        "optional": true,
+        "visible": false
     },
     "size": {
         "association": [
-            "Vertex"
+            "Vertex",
+            "Cell"
         ],
         "dataType": "Float",
         "group": "Size",
@@ -333,7 +364,8 @@
         "label": "Data",
         "main": true,
         "parent": "objects",
-        "value": ""
+        "value": "",
+        "visible": false
     },
     "size_min": {
         "group": "Size",
@@ -343,7 +375,8 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "size_max": {
         "group": "Size",
@@ -353,13 +386,15 @@
         "enabled": false,
         "value": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "visible": false
     },
     "size_log": {
         "group": "Size",
         "label": "Log10",
         "main": true,
-        "value": false
+        "value": false,
+        "visible": false
     },
     "size_thresh": {
         "group": "Size",
@@ -367,7 +402,8 @@
         "main": true,
         "value": 0.1,
         "dependency": "size_log",
-        "dependencyType": "enabled"
+        "dependencyType": "enabled",
+        "visible": false
     },
     "size_markers": {
         "group": "Size",
@@ -377,6 +413,7 @@
         "max": 100,
         "value": 20,
         "enabled": false,
-        "optional": true
+        "optional": true,
+        "visible": false
     }
 }

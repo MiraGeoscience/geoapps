@@ -4,16 +4,17 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
+# pylint: disable=too-many-locals
 
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.natural_sources.magnetotellurics.params import (
+    MagnetotelluricsParams,
+)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
-
-# import pytest
-# pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
@@ -32,14 +33,10 @@ def test_magnetotellurics_run(
     pytest=True,
     refinement=(2,),
 ):
-    from geoapps.inversion.driver import InversionDriver
-    from geoapps.inversion.natural_sources.magnetotellurics.params import (
-        MagnetotelluricsParams,
-    )
 
     np.random.seed(0)
     # Run the forward
-    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
+    geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.01,
         anomaly=1.0,
@@ -96,19 +93,20 @@ def test_magnetotellurics_run(
         # uncertainties[f"{cname} uncertainties"] = {}
         uncertainties[f"{cname} uncertainties"] = []
         for freq in survey.channels:
-            d = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[0].copy(
+            data_envity = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[0].copy(
                 parent=survey
             )
-            data[cname].append(d)
+            data[cname].append(data_envity)
 
-            u = survey.add_data(
+            uncert = survey.add_data(
                 {
                     f"uncertainty_{comp}_{freq:.2e}": {
-                        "values": np.abs(0.05 * d.values) + d.values.std()
+                        "values": np.abs(0.05 * data_envity.values)
+                        + data_envity.values.std()
                     }
                 }
             )
-            uncertainties[f"{cname} uncertainties"].append(u.copy(parent=survey))
+            uncertainties[f"{cname} uncertainties"].append(uncert.copy(parent=survey))
             # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
 
     survey.add_components_data(data)
@@ -174,10 +172,10 @@ def test_magnetotellurics_run(
         max_iterations=0,
         **data_kwargs,
     )
-    params.workpath = tmp_path
-    driver = InversionDriver(params)
+    params.write_input_file(path=tmp_path, name="Inv_run")
+    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
 
-    driver.run()
+    return driver
 
 
 if __name__ == "__main__":

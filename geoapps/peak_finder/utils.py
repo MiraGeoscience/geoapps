@@ -53,6 +53,11 @@ class LineDataDerivatives:
         self._smoothing = smoothing
         self._residual = residual
         self._sampling = sampling
+        self._values_resampled_raw = None
+        self._values_resampled = None
+        self.Fx = None
+        self.Fy = None
+        self.Fz = None
 
         # if values is not None:
         #     self._values = values[self.sorting]
@@ -171,7 +176,6 @@ class LineDataDerivatives:
             if self._locations[0] == self._locations[-1]:
                 return
 
-            width = self._locations[-1] - self._locations[0]
             dx = np.mean(np.abs(self.locations[1:] - self.locations[:-1]))
             self._sampling_width = np.ceil(
                 (self._locations[-1] - self._locations[0]) / dx
@@ -179,7 +183,6 @@ class LineDataDerivatives:
             self._locations_resampled = np.linspace(
                 self._locations[0], self._locations[-1], self.sampling_width
             )
-            # self._locations_resampled = self._locations_padded[self.sampling_width: -self.sampling_width]
 
     @property
     def locations_resampled(self):
@@ -241,6 +244,13 @@ class LineDataDerivatives:
         self._values_resampled_raw = None
 
     @property
+    def values_resampled_raw(self):
+        """
+        Resampled values prior to smoothing
+        """
+        return self._values_resampled_raw
+
+    @property
     def interpolation(self):
         """
         Method of interpolation: ['linear'], 'nearest', 'slinear', 'quadratic' or 'cubic'
@@ -288,9 +298,13 @@ class LineDataDerivatives:
         Compute and return the first order derivative.
         """
         deriv = self.values_resampled
-        for ii in range(order):
-            deriv = (deriv[1:] - deriv[:-1]) / self.sampling
-            deriv = np.r_[2 * deriv[0] - deriv[1], deriv]
+        for _ in range(order):
+            deriv = (
+                deriv[1:] - deriv[:-1]  # pylint: disable=unsubscriptable-object
+            ) / self.sampling
+            deriv = np.r_[
+                2 * deriv[0] - deriv[1], deriv  # pylint: disable=unsubscriptable-object
+            ]
 
         return deriv
 
@@ -334,7 +348,7 @@ def default_groups_from_property_group(property_group, start_index=0):
     }
 
     channel_groups = {}
-    for ii, (key, default) in enumerate(_default_channel_groups.items()):
+    for i, (key, default) in enumerate(_default_channel_groups.items()):
         prop_group = parent.find_or_create_property_group(name=key)
         prop_group.properties = []
 
@@ -345,7 +359,7 @@ def default_groups_from_property_group(property_group, start_index=0):
         channel_groups[prop_group.name] = {
             "data": prop_group.uid,
             "color": default["color"],
-            "label": [ii + 1],
+            "label": [i + 1],
             "properties": prop_group.properties,
         }
 
@@ -359,7 +373,7 @@ def find_anomalies(
     channel_groups,
     smoothing=1,
     use_residual=False,
-    data_normalization=[1],
+    data_normalization=(1.0,),
     min_amplitude=25,
     min_value=-np.inf,
     min_width=200,
@@ -409,11 +423,11 @@ def find_anomalies(
         "group": [],
         "channel_group": [],
     }
-    data_uid = list(channels.keys())
+    data_uid = list(channels)
     property_groups = [pg for pg in channel_groups.values()]
     group_prop_size = np.r_[[len(grp["properties"]) for grp in channel_groups.values()]]
     for cc, (uid, params) in enumerate(channels.items()):
-        if "values" not in list(params.keys()):
+        if "values" not in list(params):
             continue
 
         values = params["values"][line_indices].copy()
@@ -422,17 +436,25 @@ def find_anomalies(
         dx = profile.derivative(order=1)
         ddx = profile.derivative(order=2)
         peaks = np.where(
-            (np.diff(np.sign(dx)) != 0) & (ddx[1:] < 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(dx)) != 0)
+            & (ddx[1:] < 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
         lows = np.where(
-            (np.diff(np.sign(dx)) != 0) & (ddx[1:] > 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(dx)) != 0)
+            & (ddx[1:] > 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
         lows = np.r_[0, lows, locs.shape[0] - 1]
         up_inflx = np.where(
-            (np.diff(np.sign(ddx)) != 0) & (dx[1:] > 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(ddx)) != 0)
+            & (dx[1:] > 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
         dwn_inflx = np.where(
-            (np.diff(np.sign(ddx)) != 0) & (dx[1:] < 0) & (values[:-1] > min_value)
+            (np.diff(np.sign(ddx)) != 0)
+            & (dx[1:] < 0)
+            & (values[:-1] > min_value)  # pylint: disable=unsubscriptable-object
         )[0]
 
         if len(peaks) == 0 or len(lows) < 2 or len(up_inflx) < 2 or len(dwn_inflx) < 2:
@@ -466,18 +488,32 @@ def find_anomalies(
             # Check amplitude and width thresholds
             delta_amp = (
                 np.abs(
-                    np.min([values[peak] - values[start], values[peak] - values[end]])
+                    np.min(
+                        [
+                            values[peak]  # pylint: disable=unsubscriptable-object
+                            - values[start],  # pylint: disable=unsubscriptable-object
+                            values[peak]  # pylint: disable=unsubscriptable-object
+                            - values[end],  # pylint: disable=unsubscriptable-object
+                        ]
+                    )
                 )
                 / (np.std(values) + 2e-32)
             ) * 100.0
             delta_x = locs[end] - locs[start]
-            amplitude = np.sum(np.abs(values[start:end])) * profile.sampling
+            amplitude = (
+                np.sum(
+                    np.abs(values[start:end])  # pylint: disable=unsubscriptable-object
+                )
+                * profile.sampling
+            )
             if (delta_amp > min_amplitude) & (delta_x > min_width):
                 anomalies["channel"] += [cc]
                 anomalies["start"] += [start]
                 anomalies["inflx_up"] += [inflx_up]
                 anomalies["peak"] += [peak]
-                anomalies["peak_values"] += [values[peak]]
+                anomalies["peak_values"] += [
+                    values[peak]  # pylint: disable=unsubscriptable-object
+                ]
                 anomalies["inflx_dwn"] += [inflx_dwn]
                 anomalies["amplitude"] += [amplitude]
                 anomalies["end"] += [end]
@@ -506,13 +542,13 @@ def find_anomalies(
 
     group_id = -1
     peaks_position = locs[anomalies["peak"]]
-    for ii in range(peaks_position.shape[0]):
+    for i in range(peaks_position.shape[0]):
         # Skip if already labeled
-        if anomalies["group"][ii] != -1:
+        if anomalies["group"][i] != -1:
             continue
 
         group_id += 1  # Increment group id
-        dist = np.abs(peaks_position[ii] - peaks_position)
+        dist = np.abs(peaks_position[i] - peaks_position)
         # Find anomalies across channels within horizontal range
         near = np.where((dist < max_migration) & (anomalies["group"] == -1))[0]
         # Reject from group if channel gap > 1
@@ -583,8 +619,8 @@ def find_anomalies(
         amplitude = np.sum(anomalies["amplitude"][near])
         times = [
             channel["time"]
-            for ii, channel in enumerate(channels.values())
-            if (ii in list(gates) and "time" in channel.keys())
+            for i, channel in enumerate(channels.values())
+            if (i in list(gates) and "time" in channel)
         ]
         linear_fit = None
 

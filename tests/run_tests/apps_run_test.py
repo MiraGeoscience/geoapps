@@ -38,10 +38,11 @@ def test_block_model(tmp_path):
 
     block_model = BlockModelCreation(geoh5=temp_workspace)
     # Test initialization
-    ui_json, object_options = block_model.update_object_options(None, None, trigger="")
+    object_options, objects_uid, ui_json_data, _, _ = block_model.update_object_options(
+        None, None, trigger=""
+    )
     param_list = [
         "new_grid",
-        "objects",
         "cell_size_x",
         "cell_size_y",
         "cell_size_z",
@@ -51,9 +52,8 @@ def test_block_model(tmp_path):
         "expansion_fact",
         "monitoring_directory",
     ]
-    (
+    (  # pylint: disable=W0632
         new_grid,
-        objects_uid,
         cell_size_x,
         cell_size_y,
         cell_size_z,
@@ -61,11 +61,13 @@ def test_block_model(tmp_path):
         horizontal_padding,
         bottom_padding,
         expansion_fact,
-        monitoring_directory,
-    ) = block_model.update_remainder_from_ui_json(ui_json, param_list, trigger="test")
+        _,
+    ) = block_model.update_remainder_from_ui_json(
+        ui_json_data, param_list, trigger="test"
+    )
 
     assert new_grid == block_model.params.new_grid
-    assert objects_uid == str(block_model.params.objects.uid)
+    assert objects_uid == "{" + str(block_model.params.objects.uid) + "}"
     assert cell_size_x == block_model.params.cell_size_x
     assert cell_size_y == block_model.params.cell_size_y
     assert cell_size_z == block_model.params.cell_size_z
@@ -85,7 +87,7 @@ def test_block_model(tmp_path):
     content_bytes = base64.b64encode(decoded)
     content_string = content_bytes.decode("utf-8")
     contents = "".join(["content_type", ",", content_string])
-    ui_json, object_options = block_model.update_object_options(
+    object_options, _, _, _, _ = block_model.update_object_options(
         "ws.geoh5", contents, trigger="upload"
     )
 
@@ -93,7 +95,7 @@ def test_block_model(tmp_path):
     block_model.trigger_click(
         n_clicks=0,
         new_grid=new_grid,
-        objects_uid=object_options[0]["value"],
+        objects=object_options[0]["value"],
         cell_size_x=cell_size_x,
         cell_size_y=cell_size_y,
         cell_size_z=cell_size_z,
@@ -119,7 +121,7 @@ def test_calculator(tmp_path):
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
-    app = Calculator(h5file=temp_workspace)
+    app = Calculator(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -133,7 +135,7 @@ def test_coordinate_transformation(tmp_path):
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
 
-    app = CoordinateTransformation(h5file=temp_workspace)
+    app = CoordinateTransformation(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -148,7 +150,7 @@ def test_contour_values(tmp_path):
         )
 
     app = ContourValues(geoh5=temp_workspace, plot_result=False)
-    app.trigger.click()
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("contours")[0]
@@ -163,8 +165,8 @@ def test_create_surface(tmp_path):
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = Surface2D(h5file=temp_workspace)
-    app.trigger.click()
+    app = Surface2D(geoh5=temp_workspace)
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("CDI")[0]
@@ -176,9 +178,54 @@ def test_clustering(tmp_path):
     with Workspace(temp_workspace) as workspace:
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
-
     app = Clustering(geoh5=temp_workspace, output_path=str(tmp_path))
-    app.trigger_click(None)
+
+    app.trigger_click(
+        n_clicks=0,
+        live_link=[],
+        n_clusters=3,
+        objects="{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
+        data_subset=[
+            "{0e4833e3-74ad-4ca9-a98b-d8119069bc01}",
+            "{18c2560c-6161-468a-8571-5d9d59649535}",
+        ],
+        color_pickers=[],
+        downsampling=80,
+        full_scales={},
+        full_lower_bounds={},
+        full_upper_bounds={},
+        x="{0e4833e3-74ad-4ca9-a98b-d8119069bc01}",
+        x_log=[True],
+        x_thresh=0.1,
+        x_min=0,
+        x_max=0,
+        y="{18c2560c-6161-468a-8571-5d9d59649535}",
+        y_log=[True],
+        y_thresh=0.1,
+        y_min=0,
+        y_max=0,
+        z=None,
+        z_log=[True],
+        z_thresh=0.1,
+        z_min=0,
+        z_max=0,
+        color=None,
+        color_log=[True],
+        color_thresh=0.1,
+        color_min=0,
+        color_max=0,
+        color_maps=None,
+        size=None,
+        size_log=[True],
+        size_thresh=0.1,
+        size_min=0,
+        size_max=0,
+        size_markers=20,
+        channel=None,
+        ga_group_name="Clusters",
+        monitoring_directory=str(tmp_path),
+        trigger="export",
+    )
 
     filename = list(
         filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
@@ -231,8 +278,9 @@ def test_edge_detection(tmp_path):
 
 
 def test_export():
-    app = Export(h5file=PROJECT)
+    app = Export(geoh5=PROJECT)
     app.trigger.click()
+    # TODO write all the files types and check that appropriate files are written
 
 
 def test_iso_surface(tmp_path):
@@ -244,7 +292,7 @@ def test_iso_surface(tmp_path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = IsoSurface(geoh5=temp_workspace)
-    app.trigger.click()
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("Isosurface")[0]

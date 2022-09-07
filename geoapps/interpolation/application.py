@@ -22,7 +22,7 @@ from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
-    from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, Text, VBox
+    from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, VBox
 
 
 class DataInterpolation(ObjectDataSelection):
@@ -40,7 +40,6 @@ class DataInterpolation(ObjectDataSelection):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults = {}
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
@@ -281,9 +280,9 @@ class DataInterpolation(ObjectDataSelection):
                 name=temp_geoh5.replace(".geoh5", ".ui.json"), validate=False
             )
 
-        driver = DataInterpolationDriver(new_params)
-        print("Running data transfer . . .")
-        driver.run()
+            driver = DataInterpolationDriver(new_params)
+            print("Running data transfer . . .")
+            driver.run()
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

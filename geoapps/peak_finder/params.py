@@ -48,10 +48,11 @@ class PeakFinderParams(BaseParams):
         self._template_data = None
         self._template_color = None
         self._plot_result = True
+        self._title = None
 
         if input_file is None:
             free_param_dict = {}
-            for key, value in kwargs.items():
+            for key in kwargs:
                 if (
                     self._free_parameter_identifier in key.lower()
                     and "data" in key.lower()
@@ -280,7 +281,7 @@ class PeakFinderParams(BaseParams):
         """
         count = 0
         channel_groups = {}
-        for label, group_params in self.free_parameter_dict.items():
+        for group_params in self.free_parameter_dict.values():
             if group_params["data"] is not None:
                 prop_group = getattr(self, group_params["data"], None)
 

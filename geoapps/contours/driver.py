@@ -114,11 +114,11 @@ class ContoursDriver:
             workspace.close()
 
     @staticmethod
-    def get_contour_string(min, max, step, fixed_contours):
+    def get_contour_string(min_val, max_val, step, fixed_contours):
         if type(fixed_contours) is list:
             fixed_contours = str(fixed_contours).replace("[", "").replace("]", "")
 
-        contour_string = str(min) + ":" + str(max) + ":" + str(step)
+        contour_string = str(min_val) + ":" + str(max_val) + ":" + str(step)
 
         if fixed_contours is not None:
             contour_string += "," + str(fixed_contours.replace(" ", ""))
@@ -130,8 +130,9 @@ if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
-    params = ContoursParams(ifile)
-    driver = ContoursDriver(params)
+    params_class = ContoursParams(ifile)
+    driver = ContoursDriver(params_class)
     print("Loaded. Running contour creation . . .")
-    driver.run()
+    with params_class.geoh5.open(mode="r+"):
+        driver.run()
     print("Saved to " + ifile.path)
