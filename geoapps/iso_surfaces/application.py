@@ -78,8 +78,8 @@ class IsoSurface(ObjectDataSelection):
                         key = key[1:]
 
                     if (
-                            isinstance(value, uuid.UUID)
-                            and self.workspace.get_entity(value)[0] is not None
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
                     ):
                         value = self.workspace.get_entity(value)[0]
 
@@ -95,9 +95,7 @@ class IsoSurface(ObjectDataSelection):
             param_dict["objects"] = param_dict["objects"].copy(
                 parent=new_workspace, copy_children=False
             )
-            param_dict["data"] = param_dict["data"].copy(
-                parent=param_dict["objects"]
-            )
+            param_dict["data"] = param_dict["data"].copy(parent=param_dict["objects"])
             param_dict["geoh5"] = new_workspace
 
             if self.live_link.value:
