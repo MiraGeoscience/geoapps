@@ -15,7 +15,6 @@ from os import path
 from time import time
 
 import numpy as np
-from geoh5py.data import ReferencedData
 from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
@@ -767,17 +766,6 @@ class PeakFinder(ObjectDataSelection):
         Find the vertices for a given line ID
         """
         line_data = self.workspace.get_entity(self.lines.data.value)[0]
-
-        if isinstance(line_data, ReferencedData):
-            line_id = [
-                key
-                for key, value in line_data.value_map.map.items()
-                if value == line_id
-            ]
-
-            if line_id:
-                line_id = line_id[0]
-
         indices = np.where(np.asarray(line_data.values) == line_id)[0]
 
         if len(indices) == 0:

@@ -716,8 +716,8 @@ app_initializer = {
         "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
     },
     "lines": {
-        "data": "{c004eda2-70f6-4181-9a55-e7b2e1b25da8}",
-        "lines": [6072400.0, 6072600.0, 6072800.0, 6073000.0, 6073200.0],
+        "data": "{b6927372-22d2-4ca1-9c23-372411ddc772}",
+        "lines": [8, 9, 10, 11, 12],
     },
     "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
 }

@@ -486,16 +486,10 @@ def inversion(input_file):
     pred_cells = []
     for key, values in selection.items():
 
-        line_data = workspace.get_entity(uuid.UUID(key))[0]
-        if isinstance(line_data, ReferencedData):
-            values = [
-                key for key, value in line_data.value_map.map.items() if value in values
-            ]
+        line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
 
         for line in values:
-
-            line_ind = np.where(line_data.values[win_ind] == float(line))[0]
-
+            line_ind = np.where(line_data.values[win_ind] == line)[0]
             n_sounding = len(line_ind)
             if n_sounding < 2:
                 continue
@@ -541,8 +535,8 @@ def inversion(input_file):
             model_ordering.append(temp.T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
-            model_line_ids.append(np.ones_like(np.ravel(X)) * line)
-            line_ids.append(np.ones_like(z_loc) * line)
+            model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
+            line_ids.append(np.ones_like(z_loc) * float(line))
             data_ordering.append(np.arange(z_loc.shape[0]) + pred_count)
             pred_vertices.append(xyz)
             pred_cells.append(
