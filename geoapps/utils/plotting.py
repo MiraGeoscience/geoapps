@@ -10,7 +10,7 @@ from __future__ import annotations
 from copy import copy
 
 import numpy as np
-from geoh5py.data import Data, ReferencedData
+from geoh5py.data import Data
 from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
@@ -277,12 +277,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 continue
 
             line_data = entity.workspace.get_entity(key)[0]
-            if isinstance(line_data, ReferencedData):
-                values = [
-                    key
-                    for key, value in line_data.value_map.map.items()
-                    if value in values
-                ]
 
             for line in values:
                 ind = np.where(line_data.values == line)[0]
