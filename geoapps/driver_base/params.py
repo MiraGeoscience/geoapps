@@ -121,6 +121,7 @@ class BaseParams:
         params_dict = self.input_file._promote(  # pylint: disable=protected-access
             params_dict
         )
+        find_all(self.ui_json, "groupOptional")
         for key, value in params_dict.items():
             if key not in self.ui_json or key == "geoh5":
                 continue  # ignores keys not in default_ui_json

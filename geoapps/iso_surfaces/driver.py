@@ -33,12 +33,11 @@ class IsoSurfacesDriver:
         """
         Create iso surfaces from input values
         """
-
-        workspace = self.params.geoh5.open(mode="r+")
         levels = input_string_2_float(self.params.contours)
 
         if levels is None:
             return
+
         print("Starting the isosurface creation.")
         surfaces = self.iso_surface(
             self.params.objects,
@@ -66,7 +65,7 @@ class IsoSurfacesDriver:
         ):
             monitored_directory_copy(self.params.monitoring_directory, container)
         print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
-        workspace.close()
+
         return result
 
     @staticmethod
@@ -193,4 +192,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     params_class = IsoSurfacesParams(InputFile.read_ui_json(file))
     driver = IsoSurfacesDriver(params_class)
-    driver.run()
+
+    with params_class.geoh5.open(mode="r+"):
+        driver.run()
