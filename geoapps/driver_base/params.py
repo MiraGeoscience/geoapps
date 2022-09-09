@@ -121,12 +121,20 @@ class BaseParams:
         params_dict = self.input_file._promote(  # pylint: disable=protected-access
             params_dict
         )
-        find_all(self.ui_json, "groupOptional")
+
         for key, value in params_dict.items():
             if key not in self.ui_json or key == "geoh5":
                 continue  # ignores keys not in default_ui_json
 
             setattr(self, key, value)
+
+        # Set all parameters belonging to groupOptional disabled.
+        for key in utils.find_all(self.ui_json, "groupOptional"):
+            if key in params_dict and params_dict[key] is None:
+                for elem in utils.collect(
+                    self.ui_json, "group", self.ui_json[key]["group"]
+                ):
+                    setattr(self, elem, None)
 
         self.validate = original_validate_state
 
