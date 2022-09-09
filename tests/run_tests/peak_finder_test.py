@@ -19,7 +19,7 @@ from geoapps.peak_finder.application import PeakFinder
 
 
 def test_peak_finder_app(tmp_path):
-    project = "./FlinFlon.geoh5"
+    project = "../FlinFlon.geoh5"
     app = PeakFinder(geoh5=project, plot_result=False)
 
     h5file_path = Path(tmp_path) / r"testPeakFinder.geoh5"
@@ -37,13 +37,21 @@ def test_peak_finder_app(tmp_path):
         )
         curve.add_data_to_group(c, name="obs")
 
-    line = curve.add_data({"line_id": {"values": np.ones_like(x)}})
+    line = curve.add_data(
+        {
+            "line_id": {
+                "values": np.ones_like(x),
+                "value_map": {1: "1", 2: "2", 3: "3"},
+                "type": "referenced",
+            }
+        }
+    )
     curve.add_data_to_group(line, name="Line")
     changes = {
         "objects": curve.uid,
         "data": curve.find_or_create_property_group(name="obs").uid,
         "line_field": line.uid,
-        "line_id": 1.0,
+        "line_id": 1,
         "width": 10.0,
         "center": 1.0,
         "min_amplitude": 1e-2,
