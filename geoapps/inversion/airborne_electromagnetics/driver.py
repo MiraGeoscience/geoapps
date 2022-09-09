@@ -41,7 +41,6 @@ from simpeg_archive.simpegEM1D import (
 )
 from simpeg_archive.utils import Counter, mkvc
 
-from geoapps.driver_base.utils import running_mean
 from geoapps.shared_utils.utils import filter_xy, rotate_xyz
 from geoapps.utils import geophysical_systems
 
@@ -351,7 +350,6 @@ def inversion(input_file):
                 # Compute the orientation between each station
                 angles = np.arctan2(xyz[1:, 1] - xyz[:-1, 1], xyz[1:, 0] - xyz[:-1, 0])
                 angles = np.r_[angles[0], angles].tolist()
-                angles = running_mean(angles, width=5)
                 dxy = np.vstack(
                     [rotate_xyz(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
                 )
