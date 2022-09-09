@@ -1368,8 +1368,13 @@ class InversionApp(PlotSelection2D):
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.params.geoh5.open(mode="r")
+
+                params = self.params.to_dict(ui_json_format=False)
+                if params["resolution"] is None:
+                    params["resolution"] = 0
+
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**params)
                 self.refresh.value = True
 
             elif extension == ".geoh5":
