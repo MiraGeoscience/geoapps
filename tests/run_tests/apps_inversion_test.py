@@ -67,6 +67,12 @@ def test_mag_inversion(tmp_path):
     }
     side_effects = {"starting_inclination": 35}
     app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)
+    app._file_browser.reset(
+        path=r"C:\Users\dominiquef\Desktop\Ron_mag_susc",
+        filename="Mag_susc_30m_L0L0.ui.json",
+    )
+    app._file_browser._apply_selection()
+    app.file_browser_change(None)
 
     assert (
         len(getattr(app, "_lower_bound_group").objects.options) == 2
