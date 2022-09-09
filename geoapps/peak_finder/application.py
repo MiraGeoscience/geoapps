@@ -1302,6 +1302,8 @@ class PeakFinder(ObjectDataSelection):
                 ui_json[name]["group"] = f"Group {label}"
                 param_dict[name] = group[member]
 
+        p_g_uid = {p_g.uid: p_g.name for p_g in param_dict["objects"].property_groups}
+
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
 
         ws, self.live_link.value = BaseApplication.get_output_workspace(
@@ -1320,6 +1322,11 @@ class PeakFinder(ObjectDataSelection):
                         ]
                         if line_field:
                             param_dict["line_field"] = line_field[0]
+
+                elif isinstance(value, uuid.UUID) and value in p_g_uid:
+                    param_dict[key] = param_dict[
+                        "objects"
+                    ].find_or_create_property_group(name=p_g_uid[value])
 
             param_dict["geoh5"] = new_workspace
             if self.live_link.value:
