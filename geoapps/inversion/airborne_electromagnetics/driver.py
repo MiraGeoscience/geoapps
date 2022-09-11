@@ -331,14 +331,8 @@ def inversion(input_file):
 
         for key, values in selection.items():
             line_data = workspace.get_entity(uuid.UUID(key))[0]
-            if isinstance(line_data, ReferencedData):
-                values = [
-                    key
-                    for key, value in line_data.value_map.map.items()
-                    if value in values
-                ]
 
-            for line in values:
+            for line in values[0]:
 
                 line_ind = np.where(line_data.values == float(line))[0]
 
@@ -488,7 +482,7 @@ def inversion(input_file):
 
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
 
-        for line in values:
+        for line in values[0]:
             line_ind = np.where(line_data.values[win_ind] == line)[0]
             n_sounding = len(line_ind)
             if n_sounding < 2:
