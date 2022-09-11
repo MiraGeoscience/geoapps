@@ -340,7 +340,7 @@ def test_em1d_inversion(tmp_path):
 
     changes = {
         "objects": new_obj.uid,
-        "data": (prop_group_uid,),
+        "data": prop_group_uid,
     }
     side_effects = {"system": "VTEM (2007)"}
     app = InversionApp(geoh5=project, plot_result=False)

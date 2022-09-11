@@ -1192,11 +1192,7 @@ class InversionApp(PlotSelection2D):
             "out_group": self.ga_group_name.value,
             "mesh": "Mesh",
             "system": self.system.value,
-            "lines": {
-                str(self.lines.data.value): [
-                    str(line) for line in self.lines.lines.value
-                ]
-            },
+            "lines": {str(self.lines.data.value): [self.lines.lines.value]},
             "mesh 1D": [
                 self.mesh_1D.hz_min.value,
                 self.mesh_1D.hz_expansion.value,
