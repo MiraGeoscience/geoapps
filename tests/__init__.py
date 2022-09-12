@@ -9,12 +9,12 @@ import requests
 
 PROJECT = "FlinFlon.geoh5"
 URL = "https://github.com/MiraGeoscience/geoapps/raw/main/assets/FlinFlon.geoh5"
-r = requests.get(URL)
+r = requests.get(URL, timeout=5)
 with open(PROJECT, "wb") as file:
     file.write(r.content)
 
 PROJECT_DCIP = "FlinFlon_dcip.geoh5"
 URL = "https://github.com/MiraGeoscience/geoapps/raw/develop/assets/FlinFlon_dcip.geoh5"
-r = requests.get(URL)
+r = requests.get(URL, timeout=5)
 with open(PROJECT_DCIP, "wb") as file:
     file.write(r.content)
