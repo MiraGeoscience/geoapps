@@ -10,6 +10,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 from geoh5py.data import NumericData
+
 from geoapps.inversion import InversionBaseParams
 from geoapps.utils.surveys import extract_dcip_survey
 
