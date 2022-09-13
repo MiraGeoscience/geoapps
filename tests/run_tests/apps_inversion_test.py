@@ -18,7 +18,7 @@ from ipywidgets import Widget
 
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
 from geoapps.inversion.driver import InversionDriver
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
+from geoapps.inversion.electricals import DirectCurrent3DParams, InducedPolarizationParams
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
