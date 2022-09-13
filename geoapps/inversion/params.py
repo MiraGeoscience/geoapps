@@ -136,7 +136,7 @@ class InversionBaseParams(BaseParams):
         super().__init__(input_file=input_file, **kwargs)
 
         if not self.forward_only:
-            for key, value in self.__dict__.items():
+            for key in self.__dict__:
                 if "channel_bool" in key and getattr(self, key[:-5], None) is not None:
                     setattr(self, key, True)
 
