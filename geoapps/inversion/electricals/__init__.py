@@ -7,5 +7,5 @@
 
 from __future__ import annotations
 
-from .induced_polarization.params import InducedPolarizationParams
 from .direct_current.three_dimensions import DirectCurrent3DParams
+from .induced_polarization.params import InducedPolarizationParams
