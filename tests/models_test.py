@@ -52,7 +52,9 @@ def test_zero_reference_model(tmp_path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(
+        ws, params, inversion_data, inversion_window.window
+    )
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     _ = InversionModel(ws, params, inversion_mesh, "reference")
     incl = np.unique(ws.get_entity("reference_inclination")[0].values)
@@ -67,7 +69,9 @@ def test_collection(tmp_path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(
+        ws, params, inversion_data, inversion_window.window
+    )
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     active_cells = inversion_topography.active_cells(inversion_mesh, inversion_data)
     models = InversionModelCollection(ws, params, inversion_mesh)
@@ -82,7 +86,9 @@ def test_initialize(tmp_path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(
+        ws, params, inversion_data, inversion_window.window
+    )
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     starting_model = InversionModel(ws, params, inversion_mesh, "starting")
     assert len(starting_model.model) == 3 * inversion_mesh.n_cells
@@ -94,7 +100,9 @@ def test_model_from_object(tmp_path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(
+        ws, params, inversion_data, inversion_window.window
+    )
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     cc = inversion_mesh.mesh.cell_centers
     m0 = np.array([2.0, 3.0, 1.0])
@@ -121,7 +129,9 @@ def test_permute_2_octree(tmp_path):
     params.lower_bound = 0.0
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(
+        ws, params, inversion_data, inversion_window.window
+    )
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     lower_bound = InversionModel(ws, params, inversion_mesh, "lower_bound")
     cc = inversion_mesh.mesh.cell_centers
@@ -178,7 +188,9 @@ def test_permute_2_treemesh(tmp_path):
 
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(
+        ws, params, inversion_data, inversion_window.window
+    )
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     upper_bound = InversionModel(ws, params, inversion_mesh, "upper_bound")
     locs = inversion_mesh.mesh.cell_centers

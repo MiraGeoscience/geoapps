@@ -39,9 +39,23 @@ def next_neighbor(tree, point, nodes, n=3):
         return next_neighbor(tree, point, nodes, n + 3)
 
 
+def find_unique_tops(locations):
+
+    locs, inds = np.unique(locations[:, :2], axis=0, return_inverse=True)
+
+    if len(locs) != len(locations):
+        tops = []
+        for i in range(len(locs)):
+            tops.append(locations[:, 2][np.where(inds == i)[0]].max())
+
+        locations = np.c_[locs, tops]
+
+    return locations
+
+
 def find_endpoints(locs, ends=None, start_index=0):
     """Finds the end locations of a roughly linear point set."""
-
+    locs = find_unique_tops(locs)
     ends = [] if ends is None else ends
     start = locs[start_index, :2]
     dist = np.linalg.norm(start - locs[:, :2], axis=1)
@@ -55,7 +69,11 @@ def find_endpoints(locs, ends=None, start_index=0):
 def compute_alongline_distance(points):
     """Convert from cartesian (x, y, z) points to (distance, z) locations."""
     endpoints = find_endpoints(points, start_index=-1)
-    return np.linalg.norm(endpoints[0] - points, axis=1)
+    distances = np.linalg.norm(endpoints[0][:2] - points[:, :2], axis=1)
+    if points.shape[1] == 3:
+        return np.c_[distances, points[:, 2]]
+    else:
+        return distances
 
 
 def survey_lines(survey, start_loc, save: str | None = None):

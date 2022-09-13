@@ -108,6 +108,7 @@ class InversionData(InversionLocations):
         self.locations: np.ndarray = None
         self.has_pseudo: bool = False
         self.mask: np.ndarray = None
+        self.global_map: np.ndarray = None
         self.indices: np.ndarray = None
         self.vector: bool = None
         self.n_blocks: int = None
@@ -243,12 +244,10 @@ class InversionData(InversionLocations):
                             uncert_entity, f"Uncertainties_{component}"
                         )
         else:
-            for component in data.keys():
+            for component in data:
                 dnorm = self.normalizations[component] * data[component]
                 if "2d" in self.params.inversion_type:
-                    ind = np.ones_like(dnorm, dtype=bool)
-                    ind[self.global_map] = False
-                    dnorm[ind] = np.nan
+                    dnorm = self._embed_2d(dnorm)
                 data_entity[component] = entity.add_data(
                     {f"{basename}_{component}": {"values": dnorm}}
                 )
@@ -259,9 +258,7 @@ class InversionData(InversionLocations):
                     uncerts = self.uncertainties[component].copy()
                     uncerts[np.isinf(uncerts)] = np.nan
                     if "2d" in self.params.inversion_type:
-                        ind = np.ones_like(uncerts, dtype=bool)
-                        ind[self.global_map] = False
-                        uncerts[ind] = np.nan
+                        uncerts = self._embed_2d(uncerts)
                     entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
 
                 if self.params.inversion_type in [
@@ -272,10 +269,12 @@ class InversionData(InversionLocations):
                         geometric_factor(self._survey) + 1e-10
                     )
 
-                    apparent_property = data[component]
+                    apparent_property = data[component].copy()
+                    apparent_property[self.global_map] *= self.transformations[
+                        component
+                    ]
                     if "2d" in self.params.inversion_type:
-                        apparent_property = apparent_property[self.global_map]
-                    apparent_property *= self.transformations[component]
+                        apparent_property = self._embed_2d(apparent_property)
 
                     data_entity["apparent_resistivity"] = entity.add_data(
                         {
@@ -525,3 +524,9 @@ class InversionData(InversionLocations):
         Stored data types
         """
         return self._observed_data_types
+
+    def _embed_2d(self, data):
+        ind = np.ones_like(data, dtype=bool)
+        ind[self.global_map] = False
+        data[ind] = np.nan
+        return data

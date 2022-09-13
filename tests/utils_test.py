@@ -42,6 +42,7 @@ from geoapps.utils.surveys import (
     compute_alongline_distance,
     extract_dcip_survey,
     find_endpoints,
+    find_unique_tops,
     isolate_dcip_line,
     new_neighbors,
     split_dcip_survey,
@@ -60,9 +61,9 @@ def test_get_drape_model(tmp_path):
     locs = np.c_[x, y, np.zeros_like(x)]
     h = [0.5, 0.5]
     depth_core = 5.0
-    pads = [5, 5, 3, 1]
-    expansion_factor = 0.1
-    model, mesh = get_drape_model(
+    pads = [0, 0, 0, 0]  # [5, 5, 3, 1]
+    expansion_factor = 1.1
+    model, mesh, sorting = get_drape_model(
         ws,
         "drape_test",
         locs,
@@ -71,17 +72,41 @@ def test_get_drape_model(tmp_path):
         pads,
         expansion_factor,
         return_colocated_mesh=True,
+        return_sorting=True,
     )
     ws.close()
-    assert True
+    resorted_mesh_centers = mesh.cell_centers[sorting, :]
+    model_centers = compute_alongline_distance(model.centroids)
+    model_centers[:, 0] += h[0] / 2
+    assert np.allclose(model_centers, resorted_mesh_centers)
+
+
+def test_find_unique_tops():
+    x = np.linspace(0, 1, 5)
+    z = np.linspace(-1, 1, 4)
+    X, Z = np.meshgrid(x, z)
+    Z[:, 2] += 1
+    Y = np.zeros_like(X)
+    locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
+    test = find_unique_tops(locs)
+    assert test[2, 2] == 2
 
 
 def test_compute_alongline_distance():
     x = np.arange(11)
     y = -x + 10
     locs = np.c_[x, y]
-    d = compute_alongline_distance(locs)
-    assert np.max(d) == np.sqrt(2) * 10
+    test = compute_alongline_distance(locs)
+    assert np.max(test) == np.sqrt(2) * 10
+
+    x = np.linspace(0, 1, 5)
+    z = np.linspace(-1, 1, 4)
+    X, Z = np.meshgrid(x, z)
+    Z[:, 2] += 1
+    Y = np.zeros_like(X)
+    locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
+    test = compute_alongline_distance(locs)
+    assert True
 
 
 def test_find_endpoints():
