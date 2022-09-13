@@ -5,19 +5,20 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0212
+
 from os import path
 from uuid import UUID
 
 from geoh5py.shared import Entity
 from geoh5py.ui_json.input_file import InputFile
+from geoh5py.ui_json.utils import str2list
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
-from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
-from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,
 )
@@ -53,6 +54,16 @@ def test_mag_inversion(tmp_path):
         "z_from_topo": False,
         "forward_only": False,
         "starting_model": 0.01,
+        "window_width": 100.0,
+        "u_cell_size": 50,
+        "v_cell_size": 60,
+        "w_cell_size": 75,
+        "octree_levels_topo": "1, 2, 3",
+        "octree_levels_obs": "4, 5, 6",
+        "depth_core": 150.0,
+        "horizontal_padding": 150.0,
+        "vertical_padding": 150.0,
+        "max_distance": 150.0,
     }
     side_effects = {"starting_inclination": 35}
     app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)
@@ -73,65 +84,72 @@ def test_mag_inversion(tmp_path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check to make sure this can be run twice
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
-    params_reload = MagneticVectorParams(ifile)
 
-    InversionDriver(params_reload)
+    new_app = MagInversionApp(plot_result=False)
+    new_app._file_browser.reset(
+        path=getattr(app, "_run_params").input_file.path,
+        filename=getattr(app, "_run_params").input_file.name,
+    )
+    new_app._file_browser._apply_selection()
+    new_app.file_browser_change(None)
 
-    objs = params_reload.geoh5.list_entities_name
-    check_objs = [
-        new_obj.uid,
-        UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
-        new_topo.uid,
-        topo_val.uid,
-    ]
-    for o in check_objs:
-        assert o in objs.keys()
+    with new_app.params.geoh5:
+        objs = new_app.params.geoh5.list_entities_name
+        check_objs = [
+            new_obj.uid,
+            UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+            new_topo.uid,
+            topo_val.uid,
+        ]
+        for o in check_objs:
+            assert o in objs.keys()
 
-    for param, value in changes.items():
-        p_value = getattr(params_reload, param)
-        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert p_value == value, f"Parameter {param} not saved and loaded correctly."
+        for param, value in changes.items():
+            p_value = getattr(new_app.params, param)
+            p_value = p_value.uid if isinstance(p_value, Entity) else p_value
+            assert p_value == str2list(
+                value
+            ), f"Parameter {param} not saved and loaded correctly."
 
-    for param, value in side_effects.items():
-        p_value = getattr(params_reload, param)
-        p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert (
-            p_value == value
-        ), f"Side effect parameter {param} not saved and loaded correctly."
-
-    # Test the groups
-    groups = [
-        "topography",
-        "reference_model",
-        "starting_model",
-        "starting_inclination",
-        "starting_declination",
-        "reference_inclination",
-        "reference_declination",
-        "upper_bound",
-        "lower_bound",
-    ]
-
-    for group in groups:
-        if "Constant" in getattr(app, "_" + group + "_group").options.options:
-            setattr(app, group, 1.0)
+        for param, value in side_effects.items():
+            p_value = getattr(new_app.params, param)
+            p_value = p_value.uid if isinstance(p_value, Entity) else p_value
             assert (
-                getattr(app, "_" + group + "_group").options.value == "Constant"
-            ), f"Property group {group} did not reset to 'Constant'"
+                p_value == value
+            ), f"Side effect parameter {param} not saved and loaded correctly."
 
-        if "None" in getattr(app, "_" + group + "_group").options.options:
-            setattr(app, group, None)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "None"
-            ), f"Property group {group} did not reset to 'None'"
+        # Test the groups
+        groups = [
+            "topography",
+            "reference_model",
+            "starting_model",
+            "starting_inclination",
+            "starting_declination",
+            "reference_inclination",
+            "reference_declination",
+            "upper_bound",
+            "lower_bound",
+        ]
 
-        if "Model" in getattr(app, "_" + group + "_group").options.options:
-            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
-            setattr(app, group, new_topo.children[1].uid)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Model"
-            ), f"Property group {group} did not reset to 'Model'"
+        for group in groups:
+            if "Constant" in getattr(app, "_" + group + "_group").options.options:
+                setattr(app, group, 1.0)
+                assert (
+                    getattr(app, "_" + group + "_group").options.value == "Constant"
+                ), f"Property group {group} did not reset to 'Constant'"
+
+            if "None" in getattr(app, "_" + group + "_group").options.options:
+                setattr(app, group, None)
+                assert (
+                    getattr(app, "_" + group + "_group").options.value == "None"
+                ), f"Property group {group} did not reset to 'None'"
+
+            if "Model" in getattr(app, "_" + group + "_group").options.options:
+                getattr(app, "_" + group + "_group").objects.value = new_topo.uid
+                setattr(app, group, new_topo.children[1].uid)
+                assert (
+                    getattr(app, "_" + group + "_group").options.value == "Model"
+                ), f"Property group {group} did not reset to 'Model'"
 
 
 def test_dc_inversion(tmp_path):
