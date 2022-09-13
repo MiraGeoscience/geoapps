@@ -268,17 +268,3 @@ def test_get_survey(tmp_path):
     data = InversionData(ws, params, window)
     survey, _ = data.survey()
     assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)
-
-
-def test_dc2d_data():
-    ifile = InputFile.read_ui_json(
-        "../assets/uijson/direct_current_inversion_2d.ui.json"
-    )
-    params = DirectCurrent2DParams(input_file=ifile)
-    from geoapps.inversion.components import InversionData
-
-    params.geoh5.open(mode="r+")
-    idata = InversionData(params.geoh5, params, None)
-    params.data("potential")
-    assert True
-    params.geoh5.close()

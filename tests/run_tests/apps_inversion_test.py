@@ -71,11 +71,11 @@ def test_mag_inversion(tmp_path):
     app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)
 
     assert (
-        len(getattr(app, "_lower_bound_group").objects.options) == 2
+        len(getattr(app, "_lower_bound_group").objects.options) == 3
     ), "Lower bound group did not reset properly on workspace change."
 
     assert (
-        len(getattr(app, "_upper_bound_group").objects.options) == 2
+        len(getattr(app, "_upper_bound_group").objects.options) == 3
     ), "Upper bound group did not reset properly on workspace change."
 
     for param, value in changes.items():

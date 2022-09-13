@@ -116,13 +116,13 @@ class InversionTopography(InversionLocations):
                 mesh_object, self.locations, grid_reference="cell_centers"
             )
 
-        mesh.entity.add_data(
-            {
-                "active_cells": {
-                    "values": active_cells[mesh.permutation].astype("float64")
-                }
-            }
-        )
+        if "2d" in self.params.inversion_type:
+            ac_model = active_cells.astype("float64")
+            active_cells = active_cells[np.argsort(mesh.permutation)]
+        else:
+            ac_model = active_cells[mesh.permutation].astype("float64")
+
+        mesh.entity.add_data({"active_cells": {"values": ac_model}})
 
         return active_cells
 

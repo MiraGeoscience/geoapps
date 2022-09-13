@@ -86,16 +86,15 @@ class InversionMesh:
         self.uid = self.entity.uid
         self.n_cells = self.entity.n_cells
 
-        if isinstance(self.entity, Octree) and self.entity.rotation:
-            origin = self.entity.origin.tolist()
-            angle = self.entity.rotation[0]
-            self.rotation = {"origin": origin, "angle": angle}
+        if isinstance(self.entity, Octree):
+
+            if self.entity.rotation:
+                origin = self.entity.origin.tolist()
+                angle = self.entity.rotation[0]
+                self.rotation = {"origin": origin, "angle": angle}
 
             self.mesh = octree_2_treemesh(self.entity)
             self.permutation = getattr(self.mesh, "_ubc_order")
-        else:
-            # TODO: figure out what this needs to be for 2d
-            self.permutation = np.arange(self.mesh.n_cells)
 
     def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
         """Collect mesh params from inversion params set and return octree Params object."""
@@ -146,17 +145,18 @@ class InversionMesh:
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
         if self.params.inversion_type in ["direct current 2d"]:
-            self.entity, self.mesh = get_drape_model(
+            self.entity, self.mesh, self.permutation = get_drape_model(
                 self.workspace,
                 "Models",
                 self.inversion_data._survey.unique_locations,
                 [self.params.u_cell_size, self.params.v_cell_size],
                 self.params.depth_core,
                 [self.params.horizontal_padding] * 2
-                + [self.params.vertical_padding, 1],
+                + [self.params.vertical_padding] * 2,
                 self.params.expansion_factor,
                 parent=self.params.ga_group,
                 return_colocated_mesh=True,
+                return_sorting=True,
             )
         else:
             octree_params = self.collect_mesh_params(self.params)
