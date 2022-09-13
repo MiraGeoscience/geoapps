@@ -17,7 +17,7 @@ from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import dict_mapper, entity2uuid, str2uuid
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import monitored_directory_copy
+from geoh5py.ui_json.utils import list2str, monitored_directory_copy
 from geoh5py.workspace import Workspace
 from traitlets import TraitError
 
@@ -31,10 +31,8 @@ with warn_module_not_found():
     from ipywidgets import (
         Button,
         Checkbox,
-        Dropdown,
         HBox,
         Label,
-        SelectMultiple,
         Text,
         ToggleButton,
         VBox,
@@ -121,17 +119,20 @@ class BaseApplication:
             if key[0] == "_":
                 key = key[1:]
             if hasattr(self, "_" + key) or hasattr(self, key):
+
+                if isinstance(value, list):
+                    value = [dict_mapper(val, mappers) for val in value]
+                else:
+                    value = dict_mapper(value, mappers)
+
                 try:
                     if isinstance(getattr(self, key, None), Widget) and not isinstance(
                         value, Widget
                     ):
                         widget = getattr(self, key)
 
-                        if isinstance(widget, (Dropdown, SelectMultiple)):
-                            if isinstance(value, list):
-                                value = [dict_mapper(val, mappers) for val in value]
-                            else:
-                                value = dict_mapper(value, mappers)
+                        if isinstance(widget, Text):
+                            value = list2str(value)
 
                         setattr(widget, "value", value)
                         if hasattr(widget, "style"):
@@ -165,11 +166,15 @@ class BaseApplication:
         if not self.file_browser._select.disabled:  # pylint: disable="protected-access"
             _, extension = path.splitext(self.file_browser.selected)
 
+            if isinstance(self.geoh5, Workspace):
+                self.geoh5.close()
+
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.refresh.value = False
+                self.params.geoh5.open(mode="r")
                 self.__populate__(**self.params.to_dict(ui_json_format=False))
                 self.refresh.value = True
 
