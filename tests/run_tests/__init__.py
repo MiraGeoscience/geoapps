@@ -10,6 +10,6 @@ from dask.distributed import Client, LocalCluster
 cluster = LocalCluster(
     processes=False,
     # n_workers=int(multiprocessing.cpu_count() / 2) - 1,
-    threads_per_worker=1,
+    # threads_per_worker=1,
 )
 Client(cluster)
