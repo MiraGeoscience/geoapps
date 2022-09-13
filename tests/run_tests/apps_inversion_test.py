@@ -288,18 +288,21 @@ def test_ip_inversion(tmp_path):
 
 def test_em1d_inversion(tmp_path):
     """Tests the jupyter application for em1d inversion."""
-    ws = Workspace(project)
-    new_geoh5 = Workspace(path.join(tmp_path, "invtest.geoh5"))
-    new_obj = ws.get_entity(UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"))[0].copy(
-        parent=new_geoh5
-    )
+    with Workspace(project) as ws:
+        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+            new_obj = ws.get_entity(UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"))[
+                0
+            ].copy(parent=new_geoh5)
+
+            prop_group_uid = new_obj.property_groups[0].uid
+
     changes = {
         "objects": new_obj.uid,
-        "data": UUID("{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"),
+        "data": (prop_group_uid,),
     }
     side_effects = {"system": "VTEM (2007)"}
     app = InversionApp(geoh5=project, plot_result=False)
-    app.geoh5 = new_geoh5
+    app.workspace = new_geoh5
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
@@ -309,6 +312,3 @@ def test_em1d_inversion(tmp_path):
 
     for key, value in side_effects.items():
         assert getattr(app, key).value == value, f"Failed to change {key} with {value}."
-
-    app.topography.options.value = "Constant"
-    app.write_trigger(None)
