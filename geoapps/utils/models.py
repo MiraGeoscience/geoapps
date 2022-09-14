@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import numpy as np
 from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel, ObjectBase
+from geoh5py.objects import BlockModel
 from geoh5py.workspace import Workspace
 
 from geoapps.shared_utils.utils import rotate_xyz
@@ -242,7 +242,6 @@ def find_top_padding(obj: BlockModel, core_z_cell_size: int) -> float:
     :param core_z_cell_size: Cell size in z direction.
     :return pad_sum: Top padding.
     """
-    f = np.abs(np.diff(obj.z_cell_delimiters))
     pad_sum = 0.0
     for h in np.abs(np.diff(obj.z_cell_delimiters)):
         if h != core_z_cell_size:

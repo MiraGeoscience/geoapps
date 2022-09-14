@@ -41,7 +41,6 @@ from simpeg_archive.simpegEM1D import (
 )
 from simpeg_archive.utils import Counter, mkvc
 
-from geoapps.driver_base.utils import running_mean
 from geoapps.shared_utils.utils import filter_xy, rotate_xyz
 from geoapps.utils import geophysical_systems
 
@@ -332,14 +331,8 @@ def inversion(input_file):
 
         for key, values in selection.items():
             line_data = workspace.get_entity(uuid.UUID(key))[0]
-            if isinstance(line_data, ReferencedData):
-                values = [
-                    key
-                    for key, value in line_data.value_map.map.items()
-                    if value in values
-                ]
 
-            for line in values:
+            for line in values[0]:
 
                 line_ind = np.where(line_data.values == float(line))[0]
 
@@ -351,7 +344,6 @@ def inversion(input_file):
                 # Compute the orientation between each station
                 angles = np.arctan2(xyz[1:, 1] - xyz[:-1, 1], xyz[1:, 0] - xyz[:-1, 0])
                 angles = np.r_[angles[0], angles].tolist()
-                angles = running_mean(angles, width=5)
                 dxy = np.vstack(
                     [rotate_xyz(offsets, [0, 0], np.rad2deg(angle)) for angle in angles]
                 )
@@ -488,16 +480,10 @@ def inversion(input_file):
     pred_cells = []
     for key, values in selection.items():
 
-        line_data = workspace.get_entity(uuid.UUID(key))[0]
-        if isinstance(line_data, ReferencedData):
-            values = [
-                key for key, value in line_data.value_map.map.items() if value in values
-            ]
+        line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
 
-        for line in values:
-
-            line_ind = np.where(line_data.values[win_ind] == float(line))[0]
-
+        for line in values[0]:
+            line_ind = np.where(line_data.values[win_ind] == line)[0]
             n_sounding = len(line_ind)
             if n_sounding < 2:
                 continue
@@ -543,8 +529,8 @@ def inversion(input_file):
             model_ordering.append(temp.T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_cells.append(tri2D.simplices + model_count)
-            model_line_ids.append(np.ones_like(np.ravel(X)) * line)
-            line_ids.append(np.ones_like(z_loc) * line)
+            model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
+            line_ids.append(np.ones_like(z_loc) * float(line))
             data_ordering.append(np.arange(z_loc.shape[0]) + pred_count)
             pred_vertices.append(xyz)
             pred_cells.append(
