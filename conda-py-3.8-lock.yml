@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 5c32f3796863ea778a2a708e7a430798c4ff3918631ec4b78c551e2b352284a3
-    osx-64: ae4d7dccf1a3bbec1f6f2e8d387b8be1f1ddcd77f8a6320dd83888290547c3b1
-    win-64: fa6359d4a723ddfacc6a1fefa465b75953d43485b5fa1cae5c8ede845dc6abd5
+    linux-64: 03754943558dc24ec5410bf58da8751e7b462c53648d6ca0ce81c870b5454a14
+    osx-64: 87f877c9ea8be5f16648012da8b8e09d7632f5d8b66fc5151a311148f86f527c
+    win-64: 9629b5c18c8a9046922e63a7fe2407a4dbb3666d99c962fd4d2249ce8c34797e
   platforms:
   - win-64
   - osx-64
@@ -46,14 +46,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 2be128ae4d5e44803720d43644ce3e3e
-    sha256: 27a6442ae7ef10d7935cd60aac9f3b33f687cd926ff2559e6bf05c02d8b189e1
+    md5: 64f6be425cd4897e5df1a9e9ac4dcb86
+    sha256: c0b84c0430c4a81c8f5415b268889880bdb695ef74c952378313929869aaec6d
   manager: conda
   name: ca-certificates
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/ca-certificates-2022.6.15.1-ha878542_0.tar.bz2
-  version: 2022.6.15.1
+  url: https://conda.anaconda.org/conda-forge/linux-64/ca-certificates-2022.6.15.2-ha878542_0.tar.bz2
+  version: 2022.6.15.2
 - category: full
   dependencies: {}
   hash:
@@ -1632,14 +1632,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: a7fa4e45a097ccca6b097f097800a7f6
-    sha256: 3953f7ead26d7144abff048fd1e42913d35b7645aa9d1ddea70c41793539a824
+    md5: 1bd4c453b6d4e446333f857907b0f465
+    sha256: c09e9ffb10141d82ddecf114aebff72847fb469de9fcc252fab0d838313c5dcd
   manager: conda
   name: certifi
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/certifi-2022.6.15.1-pyhd8ed1ab_0.tar.bz2
-  version: 2022.6.15.1
+  url: https://conda.anaconda.org/conda-forge/noarch/certifi-2022.6.15.2-pyhd8ed1ab_0.tar.bz2
+  version: 2022.6.15.2
 - category: full
   dependencies:
     bzip2: '>=1.0.8,<2.0a0'
@@ -3330,14 +3330,14 @@ package:
     pyyaml: '>=5.3.1'
     toolz: '>=0.8.2'
   hash:
-    md5: 859607d7a80dc90039b3d94cfa2b1931
-    sha256: 3ca33550d37526eab144dc1391f6e051daf6b58064c5ba642c7272c8acb967e8
+    md5: 291b562cbd17ad2d3d84647bf60f3c0e
+    sha256: fadba19ecd1aaa3dc0c44cc05eaff91ba63af9956f5f3fabd2e4f500914e1b52
   manager: conda
   name: dask-core
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.9.0-pyhd8ed1ab_0.tar.bz2
-  version: 2022.9.0
+  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.7.1-pyhd8ed1ab_0.tar.bz2
+  version: 2022.7.1
 - category: main
   dependencies:
     brotli: ''
@@ -4124,7 +4124,7 @@ package:
     click: '>=6.6'
     cloudpickle: '>=1.5.0'
     cytoolz: '>=0.8.2'
-    dask-core: '>=2022.9.0,<2022.9.1.0a0'
+    dask-core: '>=2022.7.1,<2022.7.2.0a0'
     jinja2: ''
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
@@ -4139,14 +4139,14 @@ package:
     urllib3: ''
     zict: '>=0.1.3'
   hash:
-    md5: 1f3e94b8cc3eef3c71f81d2583a00689
-    sha256: a28b96a30f1266047df84766161211241adb40735eeaf8616fde8d81b80165b0
+    md5: 0d6329c23da4c88750cec9fed27b8d1f
+    sha256: 4ae1e5cadbe905f17560c8d0c5c1fc7822982a75d9c8de622818a24393d8925b
   manager: conda
   name: distributed
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.9.0-pyhd8ed1ab_0.tar.bz2
-  version: 2022.9.0
+  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.7.1-pyhd8ed1ab_0.tar.bz2
+  version: 2022.7.1
 - category: full
   dependencies:
     __linux: ''
@@ -4162,14 +4162,14 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: f58044e785f9e362f300f6ed06c67048
-    sha256: 06b0e1c3775e00c64f775ceef7b942a9491b63ec7f4506f11dc16c939d4367ef
+    md5: e0bced48a34fd27c9487a9bb53105e59
+    sha256: a8afd52ae10c08054f4c399ba1845ea6e6d37bf06d443d7e3bb7437361caca8e
   manager: conda
   name: ipykernel
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.2-pyh210e3f2_0.tar.bz2
-  version: 6.15.2
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.3-pyh210e3f2_0.tar.bz2
+  version: 6.15.3
 - category: full
   dependencies:
     beautifulsoup4: ''
@@ -4397,14 +4397,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 8772d0ba5affccf70b60b2c8e18f46c8
-    sha256: 7e352a6cc1f36c3d6fef9b13c019b4bd5993f42885b6648b5431e350da785f17
+    md5: 1409a47be183249f94d2e29cc2d2fbc2
+    sha256: 5a55a3fc6c80e75daeffb47ef87676398f04deaea89f5db25b93502945187c9b
   manager: conda
   name: ca-certificates
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/ca-certificates-2022.6.15.1-h033912b_0.tar.bz2
-  version: 2022.6.15.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/ca-certificates-2022.6.15.2-h033912b_0.tar.bz2
+  version: 2022.6.15.2
 - category: full
   dependencies: {}
   hash:
@@ -5689,14 +5689,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: a7fa4e45a097ccca6b097f097800a7f6
-    sha256: 3953f7ead26d7144abff048fd1e42913d35b7645aa9d1ddea70c41793539a824
+    md5: 1bd4c453b6d4e446333f857907b0f465
+    sha256: c09e9ffb10141d82ddecf114aebff72847fb469de9fcc252fab0d838313c5dcd
   manager: conda
   name: certifi
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/certifi-2022.6.15.1-pyhd8ed1ab_0.tar.bz2
-  version: 2022.6.15.1
+  url: https://conda.anaconda.org/conda-forge/noarch/certifi-2022.6.15.2-pyhd8ed1ab_0.tar.bz2
+  version: 2022.6.15.2
 - category: full
   dependencies:
     bzip2: '>=1.0.8,<2.0a0'
@@ -7353,14 +7353,14 @@ package:
     pyyaml: '>=5.3.1'
     toolz: '>=0.8.2'
   hash:
-    md5: 859607d7a80dc90039b3d94cfa2b1931
-    sha256: 3ca33550d37526eab144dc1391f6e051daf6b58064c5ba642c7272c8acb967e8
+    md5: 291b562cbd17ad2d3d84647bf60f3c0e
+    sha256: fadba19ecd1aaa3dc0c44cc05eaff91ba63af9956f5f3fabd2e4f500914e1b52
   manager: conda
   name: dask-core
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.9.0-pyhd8ed1ab_0.tar.bz2
-  version: 2022.9.0
+  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.7.1-pyhd8ed1ab_0.tar.bz2
+  version: 2022.7.1
 - category: main
   dependencies:
     brotli: ''
@@ -8130,7 +8130,7 @@ package:
     click: '>=6.6'
     cloudpickle: '>=1.5.0'
     cytoolz: '>=0.8.2'
-    dask-core: '>=2022.9.0,<2022.9.1.0a0'
+    dask-core: '>=2022.7.1,<2022.7.2.0a0'
     jinja2: ''
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
@@ -8145,14 +8145,14 @@ package:
     urllib3: ''
     zict: '>=0.1.3'
   hash:
-    md5: 1f3e94b8cc3eef3c71f81d2583a00689
-    sha256: a28b96a30f1266047df84766161211241adb40735eeaf8616fde8d81b80165b0
+    md5: 0d6329c23da4c88750cec9fed27b8d1f
+    sha256: 4ae1e5cadbe905f17560c8d0c5c1fc7822982a75d9c8de622818a24393d8925b
   manager: conda
   name: distributed
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.9.0-pyhd8ed1ab_0.tar.bz2
-  version: 2022.9.0
+  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.7.1-pyhd8ed1ab_0.tar.bz2
+  version: 2022.7.1
 - category: full
   dependencies:
     __osx: ''
@@ -8169,14 +8169,14 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: 9201c9ed4839fc9a0682763c0b869ae2
-    sha256: 650e89b5a9332501cd6187897c8bc66c2997e302b07d2bc666ad4ddbc4f5de67
+    md5: 8eb9df60c197c9d261a7a5a3ca483493
+    sha256: cb2ef7f1141421b52c910120cd83abb190263007d8ad8031f5a9f2d3f70fe37c
   manager: conda
   name: ipykernel
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.2-pyh736e0ef_0.tar.bz2
-  version: 6.15.2
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.3-pyh736e0ef_0.tar.bz2
+  version: 6.15.3
 - category: full
   dependencies:
     beautifulsoup4: ''
@@ -8382,14 +8382,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 635f0f99dfe9406092e3d566ac055036
-    sha256: d8cf6d88c42cc609a00b1a2b91e32bc690fed0d3b4a9930dd99c551ada6c4aa5
+    md5: 2f6f0d171ed37ea68a784a50094a0238
+    sha256: 67dbddaa3157c728dd824f5d3475ec4e94f9b15ae2d9d8b865b3921cdb6aefcf
   manager: conda
   name: ca-certificates
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/ca-certificates-2022.6.15.1-h5b45459_0.tar.bz2
-  version: 2022.6.15.1
+  url: https://conda.anaconda.org/conda-forge/win-64/ca-certificates-2022.6.15.2-h5b45459_0.tar.bz2
+  version: 2022.6.15.2
 - category: full
   dependencies: {}
   hash:
@@ -9605,14 +9605,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: a7fa4e45a097ccca6b097f097800a7f6
-    sha256: 3953f7ead26d7144abff048fd1e42913d35b7645aa9d1ddea70c41793539a824
+    md5: 1bd4c453b6d4e446333f857907b0f465
+    sha256: c09e9ffb10141d82ddecf114aebff72847fb469de9fcc252fab0d838313c5dcd
   manager: conda
   name: certifi
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/certifi-2022.6.15.1-pyhd8ed1ab_0.tar.bz2
-  version: 2022.6.15.1
+  url: https://conda.anaconda.org/conda-forge/noarch/certifi-2022.6.15.2-pyhd8ed1ab_0.tar.bz2
+  version: 2022.6.15.2
 - category: full
   dependencies:
     libcurl: '>=7.82.0,<8.0a0'
@@ -11359,14 +11359,14 @@ package:
     pyyaml: '>=5.3.1'
     toolz: '>=0.8.2'
   hash:
-    md5: 859607d7a80dc90039b3d94cfa2b1931
-    sha256: 3ca33550d37526eab144dc1391f6e051daf6b58064c5ba642c7272c8acb967e8
+    md5: 291b562cbd17ad2d3d84647bf60f3c0e
+    sha256: fadba19ecd1aaa3dc0c44cc05eaff91ba63af9956f5f3fabd2e4f500914e1b52
   manager: conda
   name: dask-core
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.9.0-pyhd8ed1ab_0.tar.bz2
-  version: 2022.9.0
+  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.7.1-pyhd8ed1ab_0.tar.bz2
+  version: 2022.7.1
 - category: main
   dependencies:
     brotli: ''
@@ -12183,7 +12183,7 @@ package:
     click: '>=6.6'
     cloudpickle: '>=1.5.0'
     cytoolz: '>=0.8.2'
-    dask-core: '>=2022.9.0,<2022.9.1.0a0'
+    dask-core: '>=2022.7.1,<2022.7.2.0a0'
     jinja2: ''
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
@@ -12198,14 +12198,14 @@ package:
     urllib3: ''
     zict: '>=0.1.3'
   hash:
-    md5: 1f3e94b8cc3eef3c71f81d2583a00689
-    sha256: a28b96a30f1266047df84766161211241adb40735eeaf8616fde8d81b80165b0
+    md5: 0d6329c23da4c88750cec9fed27b8d1f
+    sha256: 4ae1e5cadbe905f17560c8d0c5c1fc7822982a75d9c8de622818a24393d8925b
   manager: conda
   name: distributed
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.9.0-pyhd8ed1ab_0.tar.bz2
-  version: 2022.9.0
+  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.7.1-pyhd8ed1ab_0.tar.bz2
+  version: 2022.7.1
 - category: full
   dependencies:
     attrs: '>=17'
@@ -12247,14 +12247,14 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: 3977791ba955ad16f1a137b68545720a
-    sha256: f9855220278e85c3dd0c15e07dd947de55f221cc2c6e5e4fbacaea3f58030ca4
+    md5: 104aa1fd1e2da8527d44743b3807f0b9
+    sha256: 6cafc05dedecfe033f7b04ad252d26a57150643f434c92e8eb5e7206c59a3e75
   manager: conda
   name: ipykernel
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.2-pyh025b116_0.tar.bz2
-  version: 6.15.2
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.3-pyh025b116_0.tar.bz2
+  version: 6.15.3
 - category: full
   dependencies:
     beautifulsoup4: ''
