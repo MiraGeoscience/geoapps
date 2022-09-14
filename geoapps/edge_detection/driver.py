@@ -243,9 +243,9 @@ class EdgeDetectionDriver:
         if window_center_y is None:
             window_center_y = np.mean(lim_y)
         if window_width is None:
-            window_width = (width * 1.2) / 2.0
+            window_width = width * 1.2
         if window_height is None:
-            window_height = (height * 1.2) / 2.0
+            window_height = height * 1.2
 
         xy = object_lines
         indices_1 = filter_xy(
