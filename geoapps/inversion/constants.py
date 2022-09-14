@@ -793,4 +793,5 @@ validations = {
     "norm_x": {"types": [int, float]},
     "norm_y": {"types": [int, float]},
     "norm_z": {"types": [int, float]},
+    "distributed_workers": {"types": [list, type(None)]},
 }

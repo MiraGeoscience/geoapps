@@ -123,7 +123,7 @@ class InversionDriver:
         self.active_cells = self.inversion_topography.active_cells(
             self.inversion_mesh, self.inversion_data
         )
-        self.workspace.remove_entity(self.inversion_topography.entity)
+
         self.models.edit_ndv_model(
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
@@ -405,8 +405,12 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
-        from .potential_fields import MagneticVectorParams as ParamClass
-        from .potential_fields.magnetic_vector.constants import validations
+        from geoapps.inversion.potential_fields import (
+            MagneticVectorParams as ParamClass,
+        )
+        from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+            validations,
+        )
 
     elif inversion_type == "magnetic scalar":
         from .potential_fields import MagneticScalarParams as ParamClass

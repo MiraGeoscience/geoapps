@@ -515,6 +515,6 @@ app_initializer = {
     "data": [UUID("{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}")],
     "max_distance": 250,
     "elevations": {"data": UUID("{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}")},
-    "lines": {"data": UUID("{0be5374c-3ebb-4762-962a-97d99f3cb0e1}")},
+    "lines": {"data": UUID("{50f6be8d-226d-4f07-9a1c-531e722df260}")},
     "topography": {},
 }

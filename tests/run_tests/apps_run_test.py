@@ -163,9 +163,15 @@ def test_create_surface(tmp_path):
         for uid in [
             "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
         ]:
-            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+            new_obj = GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = Surface2D(geoh5=temp_workspace)
+
+    app.data.value = [p_g.uid for p_g in new_obj.property_groups if p_g.name == "COND"]
+    app.elevations.data.value = [
+        p_g.uid for p_g in new_obj.property_groups if p_g.name == "ELEV"
+    ][0]
+
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
