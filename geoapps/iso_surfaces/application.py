@@ -92,13 +92,10 @@ class IsoSurface(ObjectDataSelection):
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:
-            with self.workspace.open(mode="r"):
-                param_dict["objects"] = param_dict["objects"].copy(
-                    parent=new_workspace, copy_children=False
-                )
-                param_dict["data"] = param_dict["data"].copy(
-                    parent=param_dict["objects"]
-                )
+            param_dict["objects"] = param_dict["objects"].copy(
+                parent=new_workspace, copy_children=False
+            )
+            param_dict["data"] = param_dict["data"].copy(parent=param_dict["objects"])
             param_dict["geoh5"] = new_workspace
 
             if self.live_link.value:
@@ -106,7 +103,6 @@ class IsoSurface(ObjectDataSelection):
 
             new_params = IsoSurfacesParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
-
             driver = IsoSurfacesDriver(new_params)
             driver.run()
 
