@@ -66,7 +66,7 @@ def test_contour_values(tmp_path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("Airborne_TMI")[0]
-        assert output.n_vertices == 2740, "Change in output. Need to verify."
+        assert output.n_vertices == 4603, "Change in output. Need to verify."
 
 
 def test_create_surface(tmp_path):
