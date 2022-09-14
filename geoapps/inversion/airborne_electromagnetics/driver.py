@@ -208,17 +208,18 @@ def inversion(input_file):
             "I": 1.0,
         }
 
-        if np.linalg.norm(static_offset) < 1e-1:
-            em_specs["tx_specs"]["type"] = "CircularLoop"
-        else:
-            em_specs["tx_specs"]["type"] = "VMD"
-
         if "Normalization" in entity.metadata["EM Dataset"]:
             em_specs["normalization"] = np.prod(
                 entity.metadata["EM Dataset"]["Normalization"]
             )
         else:
             em_specs["normalization"] = 1
+
+        if np.linalg.norm(static_offset) < 1e-1:
+            em_specs["tx_specs"]["type"] = "CircularLoop"
+            em_specs["normalization"] *= np.pi * em_specs["tx_specs"]["a"] ** 2.0
+        else:
+            em_specs["tx_specs"]["type"] = "VMD"
 
         for dat_uid, unc_uid in zip(data_group.properties, uncert_group.properties):
             d_entity = workspace.get_entity(dat_uid)[0]
