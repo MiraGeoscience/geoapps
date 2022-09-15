@@ -20,6 +20,9 @@ from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
     DirectCurrent3DParams,
 )
+from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
+    DirectCurrentPseudo3DParams
+)
 from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
     DirectCurrent2DParams,
 )
@@ -71,6 +74,13 @@ def write_default_uijson(path, use_initializers=False):
 
     dc_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_2d_init = dc_2d_init if use_initializers else {}
+
+    from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
+        app_initializer as dc_p3d_init,
+    )
+
+    dc_p3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    dc_p3d_init = dc_p3d_init if use_initializers else {}
 
     from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
         app_initializer as dc_3d_init,
@@ -162,6 +172,9 @@ def write_default_uijson(path, use_initializers=False):
         ),
         "direct_current_inversion_2d.ui.json": DirectCurrent2DParams(
             validate=False, **dc_2d_init
+        ),
+        "direct_current_inversion_pseudo_3d.ui.json": DirectCurrentPseudo3DParams(
+            validate=False, **dc_p3d_init
         ),
         "direct_current_inversion_3d.ui.json": DirectCurrent3DParams(
             validate=False, **dc_3d_init
