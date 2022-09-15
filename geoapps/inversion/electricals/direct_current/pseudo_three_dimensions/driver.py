@@ -7,12 +7,14 @@
 
 import os
 import sys
+
 from geoh5py.ui_json import InputFile
 from sweeps.driver import SweepDriver, generate
+
 from .params import DirectCurrentPseudo3DParams
 
-class DirectCurrentPseudo3DDriver:
 
+class DirectCurrentPseudo3DDriver:
     def __init__(self, params: DirectCurrentPseudo3DParams):
         self.params = params
 
@@ -24,7 +26,6 @@ class DirectCurrentPseudo3DDriver:
         params = DirectCurrentPseudo3DParams(input_file=ifile)
         driver = SweepDriver(params)
         driver.run()
-
 
 
 if __name__ == "__main__":

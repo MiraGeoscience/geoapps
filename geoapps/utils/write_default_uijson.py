@@ -17,11 +17,11 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
+from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
+    DirectCurrentPseudo3DParams,
+)
 from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
     DirectCurrent3DParams,
-)
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
-    DirectCurrentPseudo3DParams
 )
 from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
     DirectCurrent2DParams,
