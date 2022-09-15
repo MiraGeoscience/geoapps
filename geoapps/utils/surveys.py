@@ -11,13 +11,20 @@ from typing import Callable
 import numpy as np
 from geoh5py.data import FloatData
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
 from geoapps.utils.statistics import is_outlier
 
 
 def new_neighbors(distances: np.ndarray, neighbors: np.ndarray, nodes: list[int]):
-    """Index into neighbor arrays excluding zero distance and past neighbors."""
+    """
+    Index into neighbor arrays excluding zero distance and past neighbors.
+
+    :param: distances: previously computed distances
+    :param: neighbors: Possible neighbors
+    :param: nodes: Traversed point ids.
+    """
     ind = [
         i in nodes if distances[neighbors.tolist().index(i)] != 0 else False
         for i in neighbors
@@ -26,7 +33,13 @@ def new_neighbors(distances: np.ndarray, neighbors: np.ndarray, nodes: list[int]
 
 
 def next_neighbor(tree: cKDTree, point: list[float], nodes: list[int], n: int = 3):
-    """Returns smallest distance neighbor that has not yet been traversed"""
+    """
+    Returns smallest distance neighbor that has not yet been traversed.
+
+    :param: tree: kd-tree computed for the point cloud of possible neighbors.
+    :param: point: Current point being traversed.
+    :param: nodes: Traversed point ids.
+    """
     distances, neighbors = tree.query(point, n)
     new_ids = new_neighbors(distances, neighbors, nodes)
     if any(new_ids):
@@ -40,7 +53,11 @@ def next_neighbor(tree: cKDTree, point: list[float], nodes: list[int], n: int = 
 
 
 def find_unique_tops(locations: np.ndarray):
-    """Finds the uppermost trace of a 2D section of points."""
+    """
+    Finds the uppermost trace of a 2D section of points.
+
+    :param: locations: Cartesian coordinates for points lying in a 2d section.
+    """
 
     locs, inds = np.unique(locations[:, :2], axis=0, return_inverse=True)
 
@@ -55,7 +72,13 @@ def find_unique_tops(locations: np.ndarray):
 
 
 def find_endpoints(locs: np.ndarray, ends=None, start_index: int = 0):
-    """Finds the end locations of a roughly linear point set."""
+    """
+    Finds the end locations of a roughly linear point set.
+
+    :param: locs: Cartesian coordinates of points lying either roughly within a plane or a line.
+    :param: ends: Any previously computed endpoints.
+    :param: start_index: Index of starting location.
+    """
 
     locs = find_unique_tops(locs)
     ends = [] if ends is None else ends
@@ -69,7 +92,12 @@ def find_endpoints(locs: np.ndarray, ends=None, start_index: int = 0):
 
 
 def compute_alongline_distance(points: np.ndarray):
-    """Convert from cartesian (x, y, z) points to (distance, z) locations."""
+    """
+    Convert from cartesian (x, y, z) points to (distance, z) locations.
+
+    :param: points: Cartesian coordinates of points lying either roughly within a
+        plane or a line.
+    """
     endpoints = find_endpoints(points, start_index=-1)
     distances = np.linalg.norm(endpoints[0][:2] - points[:, :2], axis=1)
     if points.shape[1] == 3:
@@ -79,7 +107,15 @@ def compute_alongline_distance(points: np.ndarray):
 
 
 def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
-    """Build an array of line ids for a survey laid out in a line biased grid."""
+    """
+    Build an array of line ids for a survey laid out in a line biased grid.
+
+    :param: survey: geoh5py.objects.surveys object with .vertices attribute.
+    :param: start_loc: Easting and Northing of a survey extremity from which the
+        all other survey locations will be traversed and assigned line ids.
+    :save: Name assigned to line id (ReferencedData) object if not None.
+
+    """
 
     # extract xy locations and create linear indexing
     locs = survey.vertices[:, :2]
@@ -144,6 +180,7 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
 def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     """
     Slice an array and return both sliced array and global to local map.
+
     :param object: Array to be sliced.
     :param slicer: Boolean index array, Integer index array,  or callable
         that provides a condition to keep or remove each row of object.
@@ -169,8 +206,23 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     return sliced_object, g2l
 
 
-def extract_dcip_survey(workspace, survey, lines, line_id, name="Line"):
-    """Returns a survey containing data from a single line."""
+def extract_dcip_survey(
+    workspace: Workspace,
+    survey: PotentialElectrode,
+    lines: np.ndarray,
+    line_id: int,
+    name: str = "Line",
+):
+    """
+    Returns a survey containing data from a single line.
+
+    :param: workspace: geoh5py workspace containing a valid DCIP survey.
+    :param: survey: PotentialElectrode object.
+    :param: lines: Line indexer for survey.
+    :param: line_id: Index of line to extract data from.
+    :param: name: Name prefix to assign to the new survey object (to be
+        suffixed with the line number).
+    """
 
     current = survey.current_electrodes
 
@@ -246,8 +298,22 @@ def extract_dcip_survey(workspace, survey, lines, line_id, name="Line"):
     return potentials
 
 
-def split_dcip_survey(survey, lines, name="Line", workspace=None):
-    """Split survey into sub-surveys each containing a single line of data."""
+def split_dcip_survey(
+    survey: PotentialElectrode,
+    lines: np.ndarray,
+    name: str = "Line",
+    workspace: Workspace | None = None,
+):
+    """
+    Split survey into sub-surveys each containing a single line of data.
+
+    :param: survey: PotentialElectrode object.
+    :param: lines: Line indexer for survey.
+    :param: name: Name prefix to assign to the new survey object (to be
+        suffixed with the line number).
+    :param: workspace: destination for the resulting survey object (if
+        different from the parent of the survey argument).
+    """
 
     ws = workspace if workspace is not None else survey.workspace
 
