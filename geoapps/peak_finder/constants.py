@@ -15,9 +15,7 @@ from __future__ import annotations
 from copy import deepcopy
 from uuid import UUID
 
-import numpy as np
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
-from geoh5py.workspace import Workspace
 
 from geoapps.utils.geophysical_systems import parameters
 
@@ -94,7 +92,7 @@ default_ui_json.update(
             "value": None,
         },
         "system": {
-            "choiceList": list(parameters().keys()),
+            "choiceList": list(parameters()),
             "main": True,
             "label": "TEM system",
             "dependency": "tem_checkbox",
@@ -185,7 +183,7 @@ template_dict = {
 
 # Over-write validations for jupyter app parameters
 validations = {
-    "line_id": {"types": [float, type(None)]},
+    "line_id": {"types": [str, float, type(None)]},
     "center": {"types": [float, type(None)]},
     "width": {"types": [float, type(None)]},
 }

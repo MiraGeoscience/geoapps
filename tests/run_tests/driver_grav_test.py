@@ -9,6 +9,7 @@
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.driver import start_inversion
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -58,40 +59,42 @@ def test_gravity_run(
     fwr_driver = InversionDriver(params)
     fwr_driver.run()
 
-    geoh5.open()
-    gz = geoh5.get_entity("Iteration_0_gz")[0]
-    orig_gz = gz.values.copy()
+    with geoh5.open(mode="r+"):
+        gz = geoh5.get_entity("Iteration_0_gz")[0]
+        orig_gz = gz.values.copy()
 
-    # Turn some values to nan
-    gz.values[0] = np.nan
+        # Turn some values to nan
+        values = gz.values.copy()
+        values[0] = np.nan
+        gz.values = values
 
-    # Run the inverse
-    np.random.seed(0)
-    params = GravityParams(
-        geoh5=geoh5,
-        mesh=mesh.uid,
-        topography_object=topography.uid,
-        resolution=0.0,
-        data_object=gz.parent.uid,
-        starting_model=1e-4,
-        s_norm=0.0,
-        x_norm=1.0,
-        y_norm=1.0,
-        z_norm=1.0,
-        gradient_type="components",
-        gz_channel_bool=True,
-        z_from_topo=False,
-        gz_channel=gz.uid,
-        gz_uncertainty=2e-3,
-        upper_bound=0.75,
-        max_iterations=max_iterations,
-        initial_beta_ratio=1e-2,
-        prctile=100,
-    )
-    params.workpath = tmp_path
-    driver = InversionDriver(params)
+        # Run the inverse
+        np.random.seed(0)
+        params = GravityParams(
+            geoh5=geoh5,
+            mesh=mesh.uid,
+            topography_object=topography.uid,
+            resolution=0.0,
+            data_object=gz.parent.uid,
+            starting_model=1e-4,
+            s_norm=0.0,
+            x_norm=1.0,
+            y_norm=1.0,
+            z_norm=1.0,
+            gradient_type="components",
+            gz_channel_bool=True,
+            z_from_topo=False,
+            gz_channel=gz.uid,
+            gz_uncertainty=2e-3,
+            upper_bound=0.75,
+            max_iterations=max_iterations,
+            initial_beta_ratio=1e-2,
+            prctile=100,
+        )
+        params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver.run()
+    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
+
     run_ws = Workspace(driver.params.geoh5.h5file)
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
@@ -100,7 +103,11 @@ def test_gravity_run(
     residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
     assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
 
-    predicted = run_ws.get_entity("Iteration_0_gz")[0]
+    predicted = [
+        pred
+        for pred in run_ws.get_entity("Iteration_0_gz")
+        if pred.parent.parent.name == "GravityInversion"
+    ][0]
     assert not any(np.isnan(predicted.values)), "Predicted data should not have nans."
     output["data"] = orig_gz
     if pytest:
@@ -117,8 +124,8 @@ if __name__ == "__main__":
     m_start, m_rec = test_gravity_run(
         "./", n_grid_points=20, max_iterations=30, pytest=False, refinement=(4, 8)
     )
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
+        model_residual < 50.0
+    ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"
     print("Density model is within 15% of the answer. Let's go!!")

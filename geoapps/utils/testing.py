@@ -37,7 +37,7 @@ from geoapps.driver_base.utils import treemesh_2_octree
 class Geoh5Tester:
     """Create temp workspace, copy entities, and setup params class."""
 
-    def __init__(self, geoh5, path, name, ui=None, params_class=None):
+    def __init__(self, geoh5, path, name, params_class=None):
 
         self.geoh5 = geoh5
         self.tmp_path = os.path.join(path, name)
@@ -63,7 +63,7 @@ class Geoh5Tester:
                 uid = UUID(value)
                 entity = self.copy_entity(uid)
                 setattr(self.params, param, entity)
-            except:
+            except (AttributeError, ValueError):
                 setattr(self.params, param, value)
         else:
             msg = "No params class has been initialized."
@@ -237,7 +237,9 @@ def setup_inversion_workspace(
             anomaly,
         )
     model[~active] = np.nan
-    model = octree.add_data({"model": {"values": model[mesh._ubc_order]}})
+    model = octree.add_data(
+        {"model": {"values": model[mesh._ubc_order]}}  # pylint: disable=W0212
+    )  # pylint: disable=W0212
     return geoh5, octree, model, survey, topography
 
 

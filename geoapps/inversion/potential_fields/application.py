@@ -27,7 +27,6 @@ from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
-from geoapps.utils.string import string_2_list
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -94,7 +93,6 @@ class InversionApp(PlotSelection2D):
     _sensor = None
     _topography = None
     inversion_parameters = None
-    defaults = {}
 
     def __init__(self, ui_json=None, **kwargs):
         if "plot_result" in kwargs:
@@ -114,8 +112,8 @@ class InversionApp(PlotSelection2D):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
-        self.defaults["tmi_channel_bool"] = True
 
+        self.defaults["tmi_channel_bool"] = True
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -227,8 +225,13 @@ class InversionApp(PlotSelection2D):
         self._sensor = SensorOptions(
             objects=self._objects,
             add_xyz=False,
-            **self.defaults,
+            receivers_offset_x=self.defaults["receivers_offset_x"],
+            receivers_offset_y=self.defaults["receivers_offset_y"],
+            receivers_offset_z=self.defaults["receivers_offset_z"],
+            z_from_topo=self.defaults["z_from_topo"],
+            receivers_radar_drape=self.defaults["receivers_radar_drape"],
         )
+
         self._detrend_type = Dropdown(
             description="Method", options=["", "all", "perimeter"], value="all"
         )
@@ -327,8 +330,8 @@ class InversionApp(PlotSelection2D):
             "optimization": self._optimization,
         }
         self.option_choices = widgets.Dropdown(
-            options=list(self.inversion_options.keys()),
-            value=list(self.inversion_options.keys())[0],
+            options=list(self.inversion_options),
+            value=list(self.inversion_options)[0],
             disabled=False,
         )
         self.option_choices.observe(self.inversion_option_change, names="value")
@@ -340,11 +343,8 @@ class InversionApp(PlotSelection2D):
         self.data_channel_choices.observe(
             self.data_channel_choices_observer, names="value"
         )
+        self.plotting_data = None
         super().__init__(**self.defaults)
-
-        for item in ["window_width", "window_height", "resolution"]:
-            getattr(self, item).observe(self.update_octree_param, names="value")
-
         self.write.on_click(self.write_trigger)
 
     @property
@@ -781,7 +781,7 @@ class InversionApp(PlotSelection2D):
             getattr(self, "_workspace", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self.workspace = Workspace(self.h5file)
+            self.workspace = Workspace(self.h5file, mode="r")
         return self._workspace
 
     @workspace.setter
@@ -805,6 +805,51 @@ class InversionApp(PlotSelection2D):
     def write(self):
         """"""
         return self._write
+
+    @property
+    def u_cell_size(self):
+        """'u_cell_size' Octree mesh parameter."""
+        return self._mesh_octree.u_cell_size
+
+    @property
+    def v_cell_size(self):
+        """'v_cell_size' Octree mesh parameter."""
+        return self._mesh_octree.v_cell_size
+
+    @property
+    def w_cell_size(self):
+        """'w_cell_size' Octree mesh parameter."""
+        return self._mesh_octree.w_cell_size
+
+    @property
+    def octree_levels_topo(self):
+        """'octree_levels_topo' Octree mesh parameter."""
+        return self._mesh_octree.octree_levels_topo
+
+    @property
+    def octree_levels_obs(self):
+        """'octree_levels_obs' Octree mesh parameter."""
+        return self._mesh_octree.octree_levels_obs
+
+    @property
+    def depth_core(self):
+        """'depth_core' Octree mesh parameter."""
+        return self._mesh_octree.depth_core
+
+    @property
+    def horizontal_padding(self):
+        """'horizontal_padding' Octree mesh parameter."""
+        return self._mesh_octree.horizontal_padding
+
+    @property
+    def vertical_padding(self):
+        """'vertical_padding' Octree mesh parameter."""
+        return self._mesh_octree.vertical_padding
+
+    @property
+    def max_distance(self):
+        """'max_distance' Octree mesh parameter."""
+        return self._mesh_octree.max_distance
 
     # Observers
     def update_ref(self, _):
@@ -912,17 +957,6 @@ class InversionApp(PlotSelection2D):
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
-        obj, _ = self.get_selected_entities()
-        if obj is not None:
-            children_list = {child.uid: child.name for child in obj.children}
-            ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
-            options = [
-                [name, uid]
-                for uid, name in ordered.items()
-                if "visual parameter" not in name.lower()
-            ]
-        else:
-            options = []
 
         def channel_setter(caller):
             channel = caller["owner"]
@@ -1017,9 +1051,7 @@ class InversionApp(PlotSelection2D):
                         ]
                     ),
                 )
-
                 setattr(InversionApp, f"{key}_uncertainty", value_setter)
-
                 data_channel_options[key] = getattr(self, f"{key}_group")
                 data_channel_options[key].children[3].children[0].header = key
                 data_channel_options[key].children[3].children[1].header = key
@@ -1037,15 +1069,12 @@ class InversionApp(PlotSelection2D):
                 data_channel_options[key].children[3].children[1].observe(
                     uncert_setter, names="value"
                 )
-            data_channel_options[key].children[1].options = [["", None]] + options
-            data_channel_options[key].children[3].children[1].options = [
-                ["", None]
-            ] + options
 
         self.data_channel_choices.value = inversion_defaults()["component"][
             self.inversion_type.value
         ]
         self.data_channel_choices.data_channel_options = data_channel_options
+        self.update_data_channel_options()
         self.data_channel_panel.children = [
             self.data_channel_choices,
             data_channel_options[self.data_channel_choices.value],
@@ -1103,17 +1132,38 @@ class InversionApp(PlotSelection2D):
             return
 
         self.update_data_list(None)
+        self.update_data_channel_options()
         self.sensor.update_data_list(None)
         self.inversion_type_observer(None)
         self.write.button_style = "warning"
         self._run_params = None
         self.trigger.button_style = "danger"
 
+    def update_data_channel_options(self):
+        if getattr(self.data_channel_choices, "data_channel_options", None) is None:
+            return
+
+        obj, _ = self.get_selected_entities()
+        if obj is not None:
+            children_list = {child.uid: child.name for child in obj.children}
+            ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
+            options = [
+                [name, uid]
+                for uid, name in ordered.items()
+                if "visual parameter" not in name.lower()
+            ]
+        else:
+            options = []
+
+        for channel_option in self.data_channel_choices.data_channel_options.values():
+            channel_option.children[1].options = [["", None]] + options
+            channel_option.children[3].children[1].options = [["", None]] + options
+
     def data_channel_choices_observer(self, _):
         if hasattr(
             self.data_channel_choices, "data_channel_options"
         ) and self.data_channel_choices.value in (
-            self.data_channel_choices.data_channel_options.keys()
+            self.data_channel_choices.data_channel_options
         ):
             data_widget = self.data_channel_choices.data_channel_options[
                 self.data_channel_choices.value
@@ -1134,22 +1184,6 @@ class InversionApp(PlotSelection2D):
             self.refresh.value = False
             self.refresh.value = True
 
-        self.write.button_style = "warning"
-        self._run_params = None
-        self.trigger.button_style = "danger"
-
-    def update_octree_param(self, _):
-        dl = self.resolution.value
-        self._mesh_octree.u_cell_size.value = f"{dl/2:.0f}"
-        self._mesh_octree.v_cell_size.value = f"{dl / 2:.0f}"
-        self._mesh_octree.w_cell_size.value = f"{dl / 2:.0f}"
-        self._mesh_octree.depth_core.value = np.ceil(
-            np.min([self.window_width.value, self.window_height.value]) / 2.0
-        )
-        self._mesh_octree.horizontal_padding.value = (
-            np.max([self.window_width.value, self.window_width.value]) / 2
-        )
-        self.resolution.indices = None
         self.write.button_style = "warning"
         self._run_params = None
         self.trigger.button_style = "danger"
@@ -1200,7 +1234,7 @@ class InversionApp(PlotSelection2D):
                     if new_obj is None:
                         new_obj = obj.copy(parent=new_workspace, copy_children=False)
                     for d in data:
-                        if new_workspace.get_entity(d.uid)[0] is None:
+                        if d is not None and new_workspace.get_entity(d.uid)[0] is None:
                             d.copy(parent=new_obj)
 
             if self.inversion_type.value == "magnetic vector":
@@ -1228,22 +1262,25 @@ class InversionApp(PlotSelection2D):
 
             new_obj = new_obj[0]
             for key in self.data_channel_choices.options:
-                widget = getattr(self, f"{key}_uncertainty_channel")
-                if widget.value is not None:
-                    param_dict[f"{key}_uncertainty"] = str(widget.value)
-                    if new_workspace.get_entity(widget.value)[0] is None:
-                        self.workspace.get_entity(widget.value)[0].copy(
-                            parent=new_obj, copy_children=False
-                        )
-                else:
-                    widget = getattr(self, f"{key}_uncertainty_floor")
-                    param_dict[f"{key}_uncertainty"] = widget.value
+                if not self.forward_only.value:
+                    widget = getattr(self, f"{key}_uncertainty_channel")
+                    if widget.value is not None:
+                        param_dict[f"{key}_uncertainty"] = str(widget.value)
+                        if new_workspace.get_entity(widget.value)[0] is None:
+                            self.workspace.get_entity(widget.value)[0].copy(
+                                parent=new_obj, copy_children=False
+                            )
+                    else:
+                        widget = getattr(self, f"{key}_uncertainty_floor")
+                        param_dict[f"{key}_uncertainty"] = widget.value
 
                 if getattr(self, f"{key}_channel_bool").value:
                     if not self.forward_only.value:
                         self.workspace.get_entity(
                             getattr(self, f"{key}_channel").value
                         )[0].copy(parent=new_obj)
+                    else:
+                        param_dict[f"{key}_channel_bool"] = True
 
             if self.receivers_radar_drape.value is not None:
                 self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
@@ -1276,13 +1313,7 @@ class InversionApp(PlotSelection2D):
                             param_dict[sub_key.lstrip("_")] = value
 
             # Create new params object and write
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-                workspace=new_workspace,
-            )
-            param_dict["resolution"] = None  # No downsampling for dcip
-            self._run_params = self.params.__class__(input_file=ifile, **param_dict)
+            self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=self.export_directory.selected_path,
@@ -1314,13 +1345,16 @@ class InversionApp(PlotSelection2D):
         """
         Change the target h5file
         """
-        if not self.file_browser._select.disabled:
+        if not self.file_browser._select.disabled:  # pylint: disable=protected-access
             _, extension = path.splitext(self.file_browser.selected)
+
+            if isinstance(self.geoh5, Workspace):
+                self.geoh5.close()
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
 
                 # Read the inversion type first...
-                with open(self.file_browser.selected) as f:
+                with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)
 
                 if data["inversion_type"] == "gravity":
@@ -1333,8 +1367,14 @@ class InversionApp(PlotSelection2D):
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
+                self.params.geoh5.open(mode="r")
+
+                params = self.params.to_dict(ui_json_format=False)
+                if params["resolution"] is None:
+                    params["resolution"] = 0
+
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**params)
                 self.refresh.value = True
 
             elif extension == ".geoh5":
@@ -1347,7 +1387,6 @@ class SensorOptions(ObjectDataSelection):
     """
 
     _options = None
-    defaults = {}
     params_keys = [
         "receivers_offset_x",
         "receivers_offset_y",
@@ -1512,17 +1551,9 @@ class MeshOctreeOptions(ObjectDataSelection):
     def octree_levels_obs(self):
         return self._octree_levels_obs
 
-    @octree_levels_obs.getter
-    def octree_levels_obs(self):
-        return string_2_list(self._octree_levels_obs.value)
-
     @property
     def octree_levels_topo(self):
         return self._octree_levels_topo
-
-    @octree_levels_topo.getter
-    def octree_levels_topo(self):
-        return string_2_list(self._octree_levels_topo.value)
 
     @property
     def horizontal_padding(self):
@@ -1546,8 +1577,6 @@ class ModelOptions(ObjectDataSelection):
     """
     Widgets for the selection of model options
     """
-
-    defaults = {}
 
     def __init__(self, identifier: str = None, **kwargs):
         self._units = "Units"

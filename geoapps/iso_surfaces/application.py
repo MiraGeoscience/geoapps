@@ -41,7 +41,6 @@ class IsoSurface(ObjectDataSelection):
         else:
             self.params = self._param_class(**app_initializer)
 
-        self.defaults = {}
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
@@ -88,11 +87,11 @@ class IsoSurface(ObjectDataSelection):
 
             except AttributeError:
                 continue
+
         temp_geoh5 = f"Isosurface_{time():.0f}.geoh5"
         with self.get_output_workspace(
             self.export_directory.selected_path, temp_geoh5
         ) as new_workspace:
-
             param_dict["objects"] = param_dict["objects"].copy(
                 parent=new_workspace, copy_children=False
             )
@@ -102,14 +101,8 @@ class IsoSurface(ObjectDataSelection):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-
-            new_params = IsoSurfacesParams(input_file=ifile, **param_dict)
+            new_params = IsoSurfacesParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
-
             driver = IsoSurfacesDriver(new_params)
             driver.run()
 
@@ -122,13 +115,6 @@ class IsoSurface(ObjectDataSelection):
 
         if self.data.value:
             self.export_as.value = "Iso_" + self.data.uid_name_map[self.data.value]
-
-    @property
-    def convert(self):
-        """
-        ipywidgets.ToggleButton()
-        """
-        return self._convert
 
     @property
     def contours(self):

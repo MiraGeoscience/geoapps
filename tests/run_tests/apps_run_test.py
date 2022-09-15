@@ -33,7 +33,7 @@ def test_calculator(tmp_path):
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
-    app = Calculator(h5file=temp_workspace)
+    app = Calculator(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -47,7 +47,7 @@ def test_coordinate_transformation(tmp_path):
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
 
-    app = CoordinateTransformation(h5file=temp_workspace)
+    app = CoordinateTransformation(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -61,12 +61,12 @@ def test_contour_values(tmp_path):
             parent=workspace
         )
 
-    app = ContourValues(h5file=temp_workspace, plot_result=False)
-    app.trigger.click()
+    app = ContourValues(geoh5=temp_workspace, plot_result=False)
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("Airborne_TMI")[0]
-        assert output.n_vertices == 2740, "Change in output. Need to verify."
+        assert output.n_vertices == 4603, "Change in output. Need to verify."
 
 
 def test_create_surface(tmp_path):
@@ -75,10 +75,16 @@ def test_create_surface(tmp_path):
         for uid in [
             "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
         ]:
-            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+            new_obj = GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = Surface2D(h5file=temp_workspace)
-    app.trigger.click()
+    app = Surface2D(geoh5=temp_workspace)
+
+    app.data.value = [p_g.uid for p_g in new_obj.property_groups if p_g.name == "COND"]
+    app.elevations.data.value = [
+        p_g.uid for p_g in new_obj.property_groups if p_g.name == "ELEV"
+    ][0]
+
+    app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("CDI")[0]
@@ -91,7 +97,7 @@ def test_clustering(tmp_path):
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = Clustering(h5file=temp_workspace)
+    app = Clustering(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -109,7 +115,7 @@ def test_data_interpolation(tmp_path):
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = DataInterpolation(h5file=temp_workspace)
+    app = DataInterpolation(geoh5=temp_workspace)
     app.trigger.click()
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -124,7 +130,7 @@ def test_edge_detection(tmp_path):
         ]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = EdgeDetectionApp(h5file=temp_workspace, plot_result=False)
+    app = EdgeDetectionApp(geoh5=temp_workspace, plot_result=False)
 
     app.trigger.click()
 
@@ -142,8 +148,9 @@ def test_edge_detection(tmp_path):
 
 
 def test_export():
-    app = Export(h5file=PROJECT)
+    app = Export(geoh5=PROJECT)
     app.trigger.click()
+    # TODO write all the files types and check that appropriate files are written
 
 
 def test_iso_surface(tmp_path):

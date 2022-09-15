@@ -19,13 +19,11 @@ from geoh5py.objects import Curve, Points
 from geoh5py.ui_json import InputFile, monitored_directory_copy
 from tqdm import tqdm
 
-from geoapps.base.application import BaseApplication
+from geoapps.peak_finder.params import PeakFinderParams
+from geoapps.peak_finder.utils import default_groups_from_property_group, find_anomalies
 from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
-
-from .params import PeakFinderParams
-from .utils import default_groups_from_property_group, find_anomalies
 
 
 class PeakFinderDriver:
@@ -40,7 +38,7 @@ class PeakFinderDriver:
         except ValueError:
             client = Client()
 
-        workspace = self.params.geoh5
+        workspace = self.params.geoh5.open(mode="r+")
         survey = self.params.objects
         prop_group = [pg for pg in survey.property_groups if pg.uid == self.params.data]
 
@@ -72,7 +70,7 @@ class PeakFinderDriver:
         for uid, channel_params in active_channels.items():
             obj = workspace.get_entity(uid)[0]
             if self.params.tem_checkbox:
-                channel = [ch for ch in system["channels"].keys() if ch in obj.name]
+                channel = [ch for ch in system["channels"] if ch in obj.name]
                 if any(channel):
                     channel_params["time"] = system["channels"][channel[0]]
                 else:
@@ -125,7 +123,7 @@ class PeakFinderDriver:
         for future_line in tqdm(anomalies):
             line = future_line.result()
             for group in line:
-                if "channel_group" in group.keys() and len(group["cox"]) > 0:
+                if "channel_group" in group and len(group["cox"]) > 0:
                     channel_group += group["channel_group"]["label"]
 
                     if group["linear_fit"] is None:
@@ -277,7 +275,7 @@ class PeakFinderDriver:
                             "type": "referenced",
                             "values": np.repeat(
                                 np.hstack(channel_group),
-                                [ii.shape[0] for ii in inflx_up],
+                                [i.shape[0] for i in inflx_up],
                             ),
                             "value_map": group_map,
                         }
@@ -319,6 +317,7 @@ class PeakFinderDriver:
                 )
 
         print("Process completed.")
+        workspace.close()
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
@@ -330,6 +329,6 @@ class PeakFinderDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = PeakFinderParams(InputFile.read_ui_json(file))
-    driver = PeakFinderDriver(params)
+    params_class = PeakFinderParams(InputFile.read_ui_json(file))
+    driver = PeakFinderDriver(params_class)
     driver.run()

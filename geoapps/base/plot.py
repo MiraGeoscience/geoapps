@@ -30,20 +30,23 @@ with warn_module_not_found():
         VBox,
     )
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+}
+
 
 class PlotSelection2D(ObjectDataSelection):
     """
     Application for selecting data in 2D plan map view
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
-    }
     plot_result = True
 
     def __init__(self, **kwargs):
+
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.axis = None
         self.indices = None
@@ -106,6 +109,7 @@ class PlotSelection2D(ObjectDataSelection):
             icon="check",
         )
         self.objects.observe(self.set_bounding_box, names="value")
+        self.figure = None
         super().__init__(**self.defaults)
 
         self.window_plot = widgets.interactive_output(
@@ -334,10 +338,10 @@ class PlotSelection2D(ObjectDataSelection):
         self.window_center_y.min = lim_y[0] - height * 0.1
 
         self.window_width.max = width * 1.2
-        self.window_width.value = self.window_width.max / 2.0
+        self.window_width.value = self.window_width.max
         self.window_width.min = 0
 
         self.window_height.max = height * 1.2
         self.window_height.min = 0
-        self.window_height.value = self.window_height.max / 2.0
+        self.window_height.value = self.window_height.max
         self.refresh.value = True
