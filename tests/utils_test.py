@@ -43,7 +43,6 @@ from geoapps.utils.surveys import (
     extract_dcip_survey,
     find_endpoints,
     find_unique_tops,
-    isolate_dcip_line,
     new_neighbors,
     split_dcip_survey,
     survey_lines,
@@ -64,7 +63,7 @@ def test_get_drape_model(tmp_path):
     depth_core = 5.0
     pads = [0, 0, 0, 0]  # [5, 5, 3, 1]
     expansion_factor = 1.1
-    model, mesh, sorting = get_drape_model(
+    model, mesh, sorting = get_drape_model(  # pylint: disable=W0632
         ws,
         "drape_test",
         locs,
@@ -82,7 +81,7 @@ def test_get_drape_model(tmp_path):
     assert np.allclose(model_centers, resorted_mesh_centers)
 
 
-def test_find_unique_tops():
+def test_find_unique_tops_xz():
     x = np.linspace(0, 1, 5)
     z = np.linspace(-1, 1, 4)
     X, Z = np.meshgrid(x, z)
@@ -91,6 +90,17 @@ def test_find_unique_tops():
     locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
     test = find_unique_tops(locs)
     assert test[2, 2] == 2
+
+
+def test_find_unique_tops_xyz():
+    x = np.arange(-5, 6)
+    y = -x
+    z = np.arange(-10, 1)
+    X, Z = np.meshgrid(x, z)
+    locs = np.c_[X.flatten(), np.tile(y, len(x)), Z.flatten()]
+    tops = find_unique_tops(locs)
+    assert np.all(tops[:, 2] == 0)
+    assert np.allclose(tops[:, :2], np.c_[x, y])
 
 
 def test_compute_alongline_distance():
@@ -139,7 +149,6 @@ def test_new_neighbors():
 def test_survey_lines(tmp_path):
     with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
         with Workspace(dc_geoh5) as ws:
-
             old_survey = ws.get_entity("DC_Survey")[0]
             _ = old_survey.copy(parent=test_workspace)
 
@@ -148,17 +157,6 @@ def test_survey_lines(tmp_path):
                 np.unique(test_workspace.get_entity("test_line_ids")[0].values)
                 == np.arange(1, 11)
             )
-
-
-def test_isolate_dcip_line(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
-    survey = ws.get_entity("DC_Survey")[0]
-    test_survey = survey.copy(parent=test_workspace, copy_children=True)
-
-    lines = survey_lines(test_survey, [314529, 6071402])
-    isolate_dcip_line(test_workspace, test_survey, lines, 2)
-    assert True
 
 
 def test_extract_dcip_survey(tmp_path):
@@ -326,7 +324,8 @@ def test_sorted_alphanumeric_list():
 
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
-        import os as test_import  # pylint: disable=reimported
+        import os as test_import  # pylint: disable=W0404
+
     assert test_import == os
 
     with warn_module_not_found():
@@ -334,7 +333,7 @@ def test_no_warn_module_not_found(recwarn):
     assert test_import_from == os.system
 
     with warn_module_not_found():
-        import geoh5py.objects as test_import_submodule  # pylint: disable=reimported
+        import geoh5py.objects as test_import_submodule  # pylint: disable=W0404
     assert test_import_submodule == geoh5py.objects
 
     with warn_module_not_found():
