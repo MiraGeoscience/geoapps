@@ -36,11 +36,90 @@ from geoapps.shared_utils.utils import (
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.models import RectangularBlock
+from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
+from geoapps.utils.surveys import (
+    extract_dcip_survey,
+    find_endpoints,
+    find_unique_tops,
+    new_neighbors,
+    split_dcip_survey,
+    survey_lines,
+)
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+dc_geoh5 = "./FlinFlon_dcip.geoh5"
+
+
+def test_find_endpoints():
+    x = np.arange(11)
+    y = -x + 10
+    p = find_endpoints(np.c_[x, y])
+    assert np.allclose(p, [[10, 0], [0, 10]])
+
+
+def test_find_unique_tops():
+    x = np.arange(-5, 6)
+    y = -x
+    z = np.arange(-10, 1)
+    X, Z = np.meshgrid(x, z)
+    locs = np.c_[X.flatten(), np.tile(y, len(x)), Z.flatten()]
+    tops = find_unique_tops(locs)
+    assert np.all(tops[:, 2] == 0)
+    assert np.allclose(tops[:, :2], np.c_[x, y])
+
+
+def test_is_outlier():
+    assert is_outlier([25.1, 25.3], 50.0)
+    assert not is_outlier([25.1, 25.3], 25.2)
+    assert is_outlier([25.1, 25.3], 25.4, 1)
+    assert not is_outlier([25.1, 25.3], 25.4, 3)
+    assert is_outlier([25, 25], 26)
+    assert not is_outlier([25, 25], 25)
+
+
+def test_new_neighbors():
+
+    nodes = [2, 3, 4, 5, 6]
+    dist = np.array([25, 50, 0])
+    neighbors = np.array([1, 2, 3])
+    neighbor_id = new_neighbors(dist, neighbors, nodes)
+    assert len(neighbor_id) == 1
+    assert neighbor_id[0] == 1
+
+
+def test_survey_lines(tmp_path):
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+
+            old_survey = ws.get_entity("DC_Survey")[0]
+            _ = old_survey.copy(parent=test_workspace)
+
+            _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
+            assert np.all(
+                np.unique(test_workspace.get_entity("test_line_ids")[0].values)
+                == np.arange(1, 11)
+            )
+
+
+def test_extract_dcip_survey(tmp_path):
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+            survey = ws.get_entity("DC_Survey")[0]
+            lines = survey_lines(survey, [314529, 6071402])
+            extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
+            assert test_workspace.get_entity("test_survey_line 4")[0] is not None
+
+
+def test_split_dcip_survey(tmp_path):
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+            survey = ws.get_entity("DC_Survey")[0]
+            lines = survey_lines(survey, [314529, 6071402])
+            split_dcip_survey(survey, lines, "DC Survey Line", test_workspace)
+            assert test_workspace.get_entity("DC Survey Line 10")[0] is not None
 
 
 def test_rectangular_block():
