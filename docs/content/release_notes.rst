@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+Release 0.8.1 - 2022/09/15
+--------------------------
+
+**(Hot fix)**
+
+- Fix corruption of geoh5 file for inversions from ANALYST runs.
+- Fix issues with iso-surface introduced by geoh5py v0.4.0 update.
+- Fix re-load of jupyter apps (Peak Finder, 3D inversions)  from ui.json.
+- PEP8 (pylint) compliance code update.
+
+
 Release 0.8.0 - 2022/07/06
 --------------------------
 
