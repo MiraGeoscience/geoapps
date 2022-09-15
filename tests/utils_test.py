@@ -40,8 +40,8 @@ from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
     extract_dcip_survey,
-    find_unique_tops,
     find_endpoints,
+    find_unique_tops,
     new_neighbors,
     split_dcip_survey,
     survey_lines,
@@ -57,6 +57,7 @@ def test_find_endpoints():
     y = -x + 10
     p = find_endpoints(np.c_[x, y])
     assert np.allclose(p, [[10, 0], [0, 10]])
+
 
 def test_find_unique_tops():
     x = np.arange(-5, 6)
