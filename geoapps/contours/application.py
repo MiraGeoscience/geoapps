@@ -25,22 +25,23 @@ from geoapps.utils.plotting import input_string_2_float, plot_plan_data_selectio
 with warn_module_not_found():
     from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, interactive_output
 
+app_initializer = {
+    "geoh5": "../../assets/FlinFlon.geoh5",
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "contours": "-400:2000:100,-240",
+    "resolution": 50,
+    "ga_group_name": "Contours",
+}
+
 
 class ContourValues(PlotSelection2D):
     """
     Application for 2D contouring of spatial data.
     """
 
-    defaults = {
-        "h5file": "../../assets/FlinFlon.geoh5",
-        "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
-        "contours": "-400:2000:100,-240",
-        "resolution": 50,
-        "ga_group_name": "Contours",
-    }
-
     def __init__(self, **kwargs):
+        self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self._contours = Text(
             value="", description="Contours", disabled=False, continuous_update=False
@@ -58,6 +59,7 @@ class ContourValues(PlotSelection2D):
                 "contour_values": self.contours,
             },
         )
+        self._export = None
 
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export"
@@ -133,7 +135,7 @@ class ContourValues(PlotSelection2D):
         """
         Get current selection and trigger update
         """
-        entity, data = self.get_selected_entities()
+        _, data = self.get_selected_entities()
         if data is None:
             return
         if contour_values is not None:

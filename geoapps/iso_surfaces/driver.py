@@ -33,11 +33,11 @@ class IsoSurfacesDriver:
         """
         Create iso surfaces from input values
         """
-
         levels = input_string_2_float(self.params.contours)
 
         if levels is None:
             return
+
         print("Starting the isosurface creation.")
         surfaces = self.iso_surface(
             self.params.objects,
@@ -49,7 +49,7 @@ class IsoSurfacesDriver:
 
         container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
         result = []
-        for ii, (surface, level) in enumerate(zip(surfaces, levels)):
+        for surface, level in zip(surfaces, levels):
             if len(surface[0]) > 0 and len(surface[1]) > 0:
                 result += [
                     Surface.create(
@@ -65,6 +65,7 @@ class IsoSurfacesDriver:
         ):
             monitored_directory_copy(self.params.monitoring_directory, container)
         print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
+
         return result
 
     @staticmethod
@@ -118,18 +119,18 @@ class IsoSurfacesDriver:
             ).transpose((1, 2, 0))
 
             grid = []
-            for ii in ["u", "v", "z"]:
-                cell_delimiters = getattr(entity, ii + "_cell_delimiters")
+            for i in ["u", "v", "z"]:
+                cell_delimiters = getattr(entity, i + "_cell_delimiters")
                 dx = cell_delimiters[1:] - cell_delimiters[:-1]
                 grid.append(cell_delimiters[:-1] + dx / 2)
 
         else:
             grid = []
-            for ii in range(3):
+            for i in range(3):
                 grid += [
                     np.arange(
-                        locations[:, ii].min(),
-                        locations[:, ii].max() + resolution,
+                        locations[:, i].min(),
+                        locations[:, i].max() + resolution,
                         resolution,
                     )
                 ]
@@ -163,11 +164,11 @@ class IsoSurfacesDriver:
                 faces = inv_map[faces].astype("uint32")
 
                 vertices = []
-                for ii in range(3):
+                for i in range(3):
                     F = interp1d(
-                        np.arange(grid[ii].shape[0]), grid[ii], fill_value="extrapolate"
+                        np.arange(grid[i].shape[0]), grid[i], fill_value="extrapolate"
                     )
-                    vertices += [F(verts[:, ii])]
+                    vertices += [F(verts[:, i])]
 
                 if isinstance(entity, BlockModel):
                     vertices = rotate_xy(
@@ -189,6 +190,8 @@ class IsoSurfacesDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params = IsoSurfacesParams(InputFile.read_ui_json(file))
-    driver = IsoSurfacesDriver(params)
-    driver.run()
+    params_class = IsoSurfacesParams(InputFile.read_ui_json(file))
+    driver = IsoSurfacesDriver(params_class)
+
+    with params_class.geoh5.open(mode="r+"):
+        driver.run()
