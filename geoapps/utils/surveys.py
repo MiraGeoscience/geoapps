@@ -16,8 +16,8 @@ from scipy.spatial import cKDTree
 from geoapps.utils.statistics import is_outlier
 
 
-def new_neighbors(distances, neighbors, nodes):
-    """index into neighbor arrays excluding zero distance and past neighbors."""
+def new_neighbors(distances: np.ndarray, neighbors: np.ndarray, nodes: list[int]):
+    """Index into neighbor arrays excluding zero distance and past neighbors."""
     ind = [
         i in nodes if distances[neighbors.tolist().index(i)] != 0 else False
         for i in neighbors
@@ -25,7 +25,7 @@ def new_neighbors(distances, neighbors, nodes):
     return np.where(ind)[0].tolist()
 
 
-def next_neighbor(tree, point, nodes, n=3):
+def next_neighbor(tree: cKDTree, point: list[float], nodes: list[int], n: int = 3):
     """Returns smallest distance neighbor that has not yet been traversed"""
     distances, neighbors = tree.query(point, n)
     new_ids = new_neighbors(distances, neighbors, nodes)
@@ -39,7 +39,8 @@ def next_neighbor(tree, point, nodes, n=3):
         return next_neighbor(tree, point, nodes, n + 3)
 
 
-def find_unique_tops(locations):
+def find_unique_tops(locations: np.ndarray):
+    """Finds the uppermost trace of a 2D section of points."""
 
     locs, inds = np.unique(locations[:, :2], axis=0, return_inverse=True)
 
@@ -53,7 +54,7 @@ def find_unique_tops(locations):
     return locations
 
 
-def find_endpoints(locs, ends=None, start_index=0):
+def find_endpoints(locs: np.ndarray, ends=None, start_index: int = 0):
     """Finds the end locations of a roughly linear point set."""
 
     locs = find_unique_tops(locs)
@@ -67,7 +68,7 @@ def find_endpoints(locs, ends=None, start_index=0):
     return ends
 
 
-def compute_alongline_distance(points):
+def compute_alongline_distance(points: np.ndarray):
     """Convert from cartesian (x, y, z) points to (distance, z) locations."""
     endpoints = find_endpoints(points, start_index=-1)
     distances = np.linalg.norm(endpoints[0][:2] - points[:, :2], axis=1)
@@ -77,7 +78,7 @@ def compute_alongline_distance(points):
         return distances
 
 
-def survey_lines(survey, start_loc, save: str | None = None):
+def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
     """Build an array of line ids for a survey laid out in a line biased grid."""
 
     # extract xy locations and create linear indexing
@@ -85,9 +86,7 @@ def survey_lines(survey, start_loc, save: str | None = None):
     nodes = np.arange(len(locs)).tolist()
 
     # find the id of the closest point to the starting location
-    start_id = np.argmin(
-        np.sqrt(((locs[:, 0] - start_loc[0]) ** 2) + ((locs[:, 1]) - start_loc[1]) ** 2)
-    )
+    start_id = np.argmin(np.linalg.norm(locs - start_loc, axis=1))
 
     # pop the starting location and index out of their respective lists
     locs = locs.tolist()
