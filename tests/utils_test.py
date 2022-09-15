@@ -50,6 +50,7 @@ from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+dc_geoh5 = "./FlinFlon_dcip.geoh5"
 
 
 def test_find_endpoints():
@@ -90,37 +91,35 @@ def test_new_neighbors():
 
 
 def test_survey_lines(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
 
-    old_survey = ws.get_entity("DC_Survey")[0]
-    _ = old_survey.copy(parent=test_workspace)
+            old_survey = ws.get_entity("DC_Survey")[0]
+            _ = old_survey.copy(parent=test_workspace)
 
-    _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
-    assert np.all(
-        np.unique(test_workspace.get_entity("test_line_ids")[0].values)
-        == np.arange(1, 11)
-    )
+            _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
+            assert np.all(
+                np.unique(test_workspace.get_entity("test_line_ids")[0].values)
+                == np.arange(1, 11)
+            )
 
 
 def test_extract_dcip_survey(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
-
-    survey = ws.get_entity("DC_Survey")[0]
-    lines = survey_lines(survey, [314529, 6071402])
-    extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
-    assert test_workspace.get_entity("test_survey_line 4")[0] is not None
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+            survey = ws.get_entity("DC_Survey")[0]
+            lines = survey_lines(survey, [314529, 6071402])
+            extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
+            assert test_workspace.get_entity("test_survey_line 4")[0] is not None
 
 
 def test_split_dcip_survey(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
-
-    survey = ws.get_entity("DC_Survey")[0]
-    lines = survey_lines(survey, [314529, 6071402])
-    split_dcip_survey(survey, lines, "DC Survey Line", test_workspace)
-    assert test_workspace.get_entity("DC Survey Line 10")[0] is not None
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+            survey = ws.get_entity("DC_Survey")[0]
+            lines = survey_lines(survey, [314529, 6071402])
+            split_dcip_survey(survey, lines, "DC Survey Line", test_workspace)
+            assert test_workspace.get_entity("DC Survey Line 10")[0] is not None
 
 
 def test_rectangular_block():
