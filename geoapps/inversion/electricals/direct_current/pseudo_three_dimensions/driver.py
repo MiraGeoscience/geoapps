@@ -7,9 +7,11 @@
 
 import os
 import sys
+import numpy as np
 
 from geoh5py.ui_json import InputFile
 from sweeps.driver import SweepDriver, generate
+from sweeps.params import SweepParams
 
 from .params import DirectCurrentPseudo3DParams
 
@@ -19,11 +21,15 @@ class DirectCurrentPseudo3DDriver:
         self.params = params
 
     def run(self):
-        filepath = self.params.input_file.path_name
-        generate(filepath)
-        ifile = InputFile(os.path.join(filepath.replace("ui.json", "_sweep.ui.json")))
-        ifile.data[""]
-        params = DirectCurrentPseudo3DParams(input_file=ifile)
+        filepath = self.params.geoh5.h5file.replace(".geoh5", ".json")
+        with self.params.geoh5.open(mode='r'):
+            lines = self.params.line_object.values
+        generate(filepath, parameters=["line_id"])
+        ifile_sweep = InputFile.read_ui_json(os.path.join(filepath.replace(".ui.json", "_sweep.ui.json")))
+        ifile_sweep.data["line_id_start"] = lines.min()
+        ifile_sweep.data["line_id_end"] = lines.max()
+        ifile_sweep.data["line_id_n"] = len(np.unique(lines))
+        params = SweepParams(ifile_sweep)
         driver = SweepDriver(params)
         driver.run()
 
