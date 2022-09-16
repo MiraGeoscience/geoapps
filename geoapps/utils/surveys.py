@@ -142,7 +142,7 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
 
         outlier = False
         if len(distances) > 1:
-            if all(dist == distances):
+            if all((dist - distances) < 1e-6):
                 outlier = False
             else:
                 outlier = is_outlier(distances, dist)
