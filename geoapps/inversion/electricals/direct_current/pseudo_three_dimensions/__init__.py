@@ -5,5 +5,5 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from .params import DirectCurrentPseudo3DParams
 from .driver import DirectCurrentPseudo3DDriver
+from .params import DirectCurrentPseudo3DParams
