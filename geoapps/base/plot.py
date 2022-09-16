@@ -7,6 +7,8 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
@@ -32,8 +34,8 @@ with warn_module_not_found():
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
 }
 
 

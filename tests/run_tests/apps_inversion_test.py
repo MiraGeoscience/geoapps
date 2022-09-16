@@ -17,17 +17,8 @@ from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
-from geoapps.inversion.driver import InversionDriver
-from geoapps.inversion.electricals import (
-    DirectCurrent3DParams,
-    InducedPolarizationParams,
-)
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
-from geoapps.inversion.electricals.direct_current.three_dimensions import (
-    DirectCurrent3DParams,
-)
 from geoapps.inversion.electricals.induced_polarization import InducedPolarizationParams
-from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,
 )
@@ -54,16 +45,6 @@ def test_mag_inversion(tmp_path):
             ].copy(parent=new_geoh5)
             topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
 
-    ws = Workspace(project)
-    new_geoh5 = Workspace(path.join(tmp_path, "invtest.geoh5"))
-
-    new_topo = ws.get_entity(UUID("ab3c2083-6ea8-4d31-9230-7aad3ec09525"))[0].copy(
-        parent=new_geoh5
-    )
-    new_obj = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
-        parent=new_geoh5
-    )
-    topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
     changes = {
         "data_object": new_obj.uid,
         "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
@@ -88,11 +69,11 @@ def test_mag_inversion(tmp_path):
     app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)
 
     assert (
-        len(getattr(app, "_lower_bound_group").objects.options) == 3
+        len(getattr(app, "_lower_bound_group").objects.options) == 2
     ), "Lower bound group did not reset properly on workspace change."
 
     assert (
-        len(getattr(app, "_upper_bound_group").objects.options) == 3
+        len(getattr(app, "_upper_bound_group").objects.options) == 2
     ), "Upper bound group did not reset properly on workspace change."
 
     for param, value in changes.items():
