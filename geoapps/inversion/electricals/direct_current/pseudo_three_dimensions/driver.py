@@ -22,6 +22,9 @@ class DirectCurrentPseudo3DDriver:
 
     def run(self):
         filepath = self.params.geoh5.h5file.replace(".geoh5", ".json")
+        ifile = InputFile.read_ui_json(filepath)
+        ifile.data["run_command"] = "geoapps.inversion.driver"
+        ifile.write_ui_json(filepath)
         with self.params.geoh5.open(mode="r"):
             lines = self.params.line_object.values
         generate(filepath, parameters=["line_id"])
@@ -39,10 +42,10 @@ class DirectCurrentPseudo3DDriver:
 if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    params_class = DirectCurrentPseudo3DParams(ifile)
-    driver = DirectCurrentPseudo3DDriver(params_class)
+    input_file = InputFile.read_ui_json(file)
+    params_class = DirectCurrentPseudo3DParams(input_file)
+    inversion_driver = DirectCurrentPseudo3DDriver(params_class)
     print("Loaded. Running pseudo 3d inversion . . .")
     with params_class.geoh5.open(mode="r+"):
-        driver.run()
-    print("Saved to " + ifile.path)
+        inversion_driver.run()
+    print("Saved to " + input_file.path)
