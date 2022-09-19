@@ -764,6 +764,12 @@ default_ui_json = {
         "label": "Number of cpu",
         "value": 1,
     },
+    "store_sensitivities": {
+        "choiceList": ["disk", "ram"],
+        "group": "Compute",
+        "label": "Storage device",
+        "value": "disk",
+    },
     "max_ram": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
