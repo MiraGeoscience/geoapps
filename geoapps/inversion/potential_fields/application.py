@@ -139,6 +139,9 @@ class InversionApp(PlotSelection2D):
             options=["magnetic vector", "magnetic scalar", "gravity"],
             description="inversion Type:",
         )
+        self._store_sensitivities = Dropdown(
+            options=["ram", "disk"], description="Storage device:", value="disk"
+        )
         self._write = Button(
             value=False,
             description="Write input",
@@ -179,6 +182,7 @@ class InversionApp(PlotSelection2D):
                 self._max_cg_iterations,
                 self._tol_cg,
                 self._n_cpu,
+                self._store_sensitivities,
                 self._tile_spatial,
             ]
         )
@@ -434,6 +438,10 @@ class InversionApp(PlotSelection2D):
     @property
     def ga_group_name(self):
         return self._ga_group_name
+
+    @property
+    def store_sensitivities(self):
+        return self._store_sensitivities
 
     @property
     def reference_model(self):

@@ -124,6 +124,7 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "max_ram": None,
+    "store_sensitivities": "disk",
     "out_group": "VectorInversion",
     "monitoring_directory": None,
     "workspace_geoh5": None,

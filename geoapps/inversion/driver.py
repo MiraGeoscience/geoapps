@@ -37,6 +37,10 @@ from geoapps.inversion.components import (
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+
 
 class InversionDriver:
     def __init__(self, params: InversionBaseParams, warmstart=True):
@@ -449,5 +453,8 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
 
 
 if __name__ == "__main__":
-    start_inversion(sys.argv[1])
+    # start_inversion(sys.argv[1])
+    start_inversion(
+        r"C:\Users\dominiquef\Documents\GIT\mira\geoapps\assets\Temp\VectorInversion_1663622323.ui.json"
+    )
     sys.stdout.close()
