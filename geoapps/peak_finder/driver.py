@@ -317,6 +317,8 @@ class PeakFinderDriver:
 
         print("Process completed.")
 
+        del client
+
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
         ):

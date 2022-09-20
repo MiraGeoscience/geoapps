@@ -170,7 +170,7 @@ def test_dc_inversion(tmp_path):
     }
     side_effects = {}
     app = DCInversionApp(geoh5=project_dcip, plot_result=False)
-    app.geoh5 = new_geoh5
+    app.geoh5 = path.join(tmp_path, "invtest.geoh5")
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
