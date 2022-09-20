@@ -63,6 +63,8 @@ def test_tipper_fwr_run(
     fwr_driver = InversionDriver(params, warmstart=False)
 
     fwr_driver.run()
+
+    del fwr_driver
     return model
 
 

@@ -56,6 +56,7 @@ def test_dc_fwr_run(
     fwr_driver = InversionDriver(params)
     fwr_driver.run()
 
+    del fwr_driver
     return model
 
 
