@@ -21,9 +21,7 @@ if not os.path.isfile("FlinFlon.geoh5"):
         file.write(r.content)
 
 PROJECT_DCIP = "FlinFlon_dcip.geoh5"
-URL = (
-    "https://github.com/MiraGeoscience/geoapps/raw/GEOPY-614/assets/FlinFlon_dcip.geoh5"
-)
+URL = "https://github.com/MiraGeoscience/geoapps/raw/release/0.9.0/assets/FlinFlon_dcip.geoh5"
 
 if not os.path.isfile("FlinFlon_dcip.geoh5"):
     r = requests.get(URL, timeout=5)
