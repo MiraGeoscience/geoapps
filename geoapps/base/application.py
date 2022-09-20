@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 import types
+import uuid
 from os import makedirs, mkdir, path
 from shutil import copyfile
 
@@ -295,16 +296,16 @@ class BaseApplication:
         else:
             raise ValueError
 
-    def get_output_workspace(self, workpath: str = "./", name: str = "Temp.geoh5"):
+    @staticmethod
+    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
         """
         Create an active workspace with check for GA monitoring directory
         """
         if not name.endswith(".geoh5"):
             name += ".geoh5"
-
         workspace = Workspace(path.join(workpath, name))
         workspace.close()
-        live_link = False
+        new_live_link = False
         time.sleep(1)
         # Check if GA digested the file already
         if not path.exists(workspace.h5file):
@@ -313,20 +314,18 @@ class BaseApplication:
                 makedirs(workpath)
             workspace = Workspace(path.join(workpath, name))
             workspace.close()
-            live_link = True
-            if not self.live_link.value:
+            new_live_link = True
+            if not live_link:
                 print(
                     "ANALYST Pro active live link found. Switching to monitoring directory..."
                 )
-        elif self.live_link.value:
+        elif live_link:
             print(
                 "ANALYST Pro 'monitoring directory' inactive. Reverting to standalone mode..."
             )
-
-        self.live_link.value = live_link
-
         workspace.open()
-        return workspace
+        # return new live link
+        return workspace, new_live_link
 
     @property
     def h5file(self):
@@ -467,7 +466,7 @@ class BaseApplication:
         self.run(self.params)
 
     @classmethod
-    def run(cls, _params):
+    def run(cls, params: BaseParams):
         """
         Static run method.
         """
@@ -489,6 +488,27 @@ class BaseApplication:
             export_path, ""
         )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
+
+    def get_param_dict(self):
+        param_dict = {}
+        for key in self.__dict__:
+            try:
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
+            except AttributeError:
+                continue
+        return param_dict
 
 
 def working_copy(h5file):

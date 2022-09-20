@@ -316,7 +316,7 @@ def test_em1d_inversion(tmp_path):
 
     changes = {
         "objects": new_obj.uid,
-        "data": (prop_group_uid,),
+        "data": prop_group_uid,
     }
     side_effects = {"system": "VTEM (2007)"}
     app = InversionApp(geoh5=project, plot_result=False)
@@ -330,3 +330,6 @@ def test_em1d_inversion(tmp_path):
 
     for key, value in side_effects.items():
         assert getattr(app, key).value == value, f"Failed to change {key} with {value}."
+
+    app.topography.options.value = "Constant"
+    app.write_trigger(None)

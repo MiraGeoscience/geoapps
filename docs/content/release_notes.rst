@@ -121,8 +121,7 @@ The application provides an interface to the open-source `SimPEG <https://simpeg
 
 All inversions are performed on a 3D octree mesh.
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - All 3D inversions have been updated to SimPEG v0.15.1.
     - The transition also includes several updates to parallelization allowing computations on distributed systems.

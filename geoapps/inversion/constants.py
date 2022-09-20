@@ -194,7 +194,7 @@ default_ui_json = {
         "value": None,
     },
     "topography": {
-        "association": "Vertex",
+        "association": ["Vertex", "Cell"],
         "dataType": "Float",
         "group": "Topography",
         "main": True,

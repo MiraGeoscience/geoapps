@@ -38,7 +38,6 @@ class PeakFinderDriver:
         except ValueError:
             client = Client()
 
-        workspace = self.params.geoh5.open(mode="r+")
         survey = self.params.objects
         prop_group = [pg for pg in survey.property_groups if pg.uid == self.params.data]
 
@@ -50,7 +49,7 @@ class PeakFinderDriver:
 
         if output_group is None:
             output_group = ContainerGroup.create(
-                workspace, name=string_name(self.params.ga_group_name)
+                self.params.geoh5, name=string_name(self.params.ga_group_name)
             )
 
         line_field = self.params.line_field
@@ -64,11 +63,11 @@ class PeakFinderDriver:
         active_channels = {}
         for group in channel_groups.values():
             for channel in group["properties"]:
-                obj = workspace.get_entity(channel)[0]
+                obj = self.params.geoh5.get_entity(channel)[0]
                 active_channels[channel] = {"name": obj.name}
 
         for uid, channel_params in active_channels.items():
-            obj = workspace.get_entity(uid)[0]
+            obj = self.params.geoh5.get_entity(uid)[0]
             if self.params.tem_checkbox:
                 channel = [ch for ch in system["channels"] if ch in obj.name]
                 if any(channel):
@@ -317,7 +316,6 @@ class PeakFinderDriver:
                 )
 
         print("Process completed.")
-        workspace.close()
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
@@ -331,4 +329,5 @@ if __name__ == "__main__":
     file = sys.argv[1]
     params_class = PeakFinderParams(InputFile.read_ui_json(file))
     driver = PeakFinderDriver(params_class)
-    driver.run()
+    with params_class.geoh5.open(mode="r+"):
+        driver.run()

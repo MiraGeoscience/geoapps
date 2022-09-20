@@ -20,8 +20,9 @@ from geoh5py.ui_json.utils import monitored_directory_copy
 
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import warn_module_not_found
-from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
+
+from ..base.application import BaseApplication
 
 with warn_module_not_found():
     from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
@@ -31,6 +32,8 @@ with warn_module_not_found():
 
 with warn_module_not_found():
     from osgeo import gdal, osr
+
+    from geoapps.utils.io import export_grid_2_geotiff
 
     from .utils import geotiff_2_grid
 
@@ -98,9 +101,10 @@ class CoordinateTransformation(ObjectDataSelection):
                 ax2 = plt.subplot(1, 2, 2)
 
             temp_geoh5 = f"CoordinateTransformation_{time():.0f}.geoh5"
-            with self.get_output_workspace(
-                self.export_directory.selected_path, temp_geoh5
-            ) as workspace:
+            ws, self.live_link.value = BaseApplication.get_output_workspace(
+                self.live_link.value, self.export_directory.selected_path, temp_geoh5
+            )
+            with ws as workspace:
                 out_entity = ContainerGroup.create(
                     workspace, name=self.ga_group_name.value
                 )

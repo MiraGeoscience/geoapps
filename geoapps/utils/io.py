@@ -12,7 +12,7 @@ from geoh5py.objects import Grid2D
 from geoh5py.objects.object_base import Entity
 from scipy.interpolate import interp1d
 
-from geoapps.shared_utils.utils import rotate_xy
+from geoapps.shared_utils.utils import rotate_xyz
 
 
 def export_grid_2_geotiff(
@@ -102,7 +102,7 @@ def export_grid_2_geotiff(
 
     # Get rotation
     angle = -grid2d.rotation
-    vec = rotate_xy(np.r_[np.c_[1, 0], np.c_[0, 1]], [0, 0], angle)
+    vec = rotate_xyz(np.r_[np.c_[1, 0], np.c_[0, 1]], [0, 0], angle)
 
     dataset.SetGeoTransform(
         (

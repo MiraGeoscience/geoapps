@@ -7,5 +7,7 @@
 
 from dask.distributed import Client, LocalCluster
 
-cluster = LocalCluster(processes=False)
+cluster = LocalCluster(
+    processes=False,
+)
 Client(cluster)
