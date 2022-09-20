@@ -146,6 +146,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             max_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
+            store_sensitivities="ram",
             **data_kwargs,
         )
         params.workpath = tmp_path
@@ -176,6 +177,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
         starting_model=0.01,
         conductivity_model=1e-2,
         max_iterations=0,
+        store_sensitivities="ram",
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
