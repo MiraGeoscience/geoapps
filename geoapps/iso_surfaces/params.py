@@ -32,7 +32,6 @@ class IsoSurfacesParams(BaseParams):
         self._interval_max = None
         self._interval_spacing = None
         self._fixed_contours = None
-        self._contours = None
         self._max_distance = None
         self._resolution = None
         self._export_as = None
@@ -70,60 +69,49 @@ class IsoSurfacesParams(BaseParams):
         self.setter_validator("data", val)
 
     @property
-    def interval_min(self):
+    def interval_min(self) -> float | None:
+        """
+        Minimum value for contours.
+        """
+
         return self._interval_min
 
     @interval_min.setter
     def interval_min(self, val):
-        self._interval_min = val
+        self.setter_validator("interval_min", val)
 
     @property
-    def interval_max(self):
+    def interval_max(self) -> float | None:
+        """
+        Maximum value for contours.
+        """
         return self._interval_max
 
     @interval_max.setter
     def interval_max(self, val):
-        self._interval_max = val
+        self.setter_validator("interval_max", val)
 
     @property
-    def interval_spacing(self):
+    def interval_spacing(self) -> float | None:
+        """
+        Step size for contours.
+        """
         return self._interval_spacing
 
+    @interval_spacing.setter
+    def interval_spacing(self, val):
+        self.setter_validator("interval_spacing", val)
+
     @property
-    def fixed_contours(self):
+    def fixed_contours(self) -> str | None:
+        """
+        String defining list of fixed contours.
+        """
         return self._fixed_contours
 
     @fixed_contours.setter
     def fixed_contours(self, val):
-        self._fixed_contours = val
-
-    @interval_spacing.setter
-    def interval_spacing(self, val):
-        self._interval_spacing = val
-
-    @property
-    def contours(self) -> str | None:
-        """
-        String defining sets of contours.
-        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
-        Any combination of the above can be used:
-        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
-        """
-        if self._contours is None:
-
-            contour_list = [self.interval_min, self.interval_max, self.interval_spacing]
-            if None not in contour_list:
-                contour_str = ":".join([str(k) for k in contour_list])
-            if self.fixed_contours is not None:
-                contour_str += f", {','.join([str(k) for k in self.fixed_contours])}"
-            return contour_str
-
-        else:
-            return self._contours
-
-    @contours.setter
-    def contours(self, val):
-        self.setter_validator("contours", val)
+        self.setter_validator("fixed_contours", val)
 
     @property
     def max_distance(self) -> float | None:

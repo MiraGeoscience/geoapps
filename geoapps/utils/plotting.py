@@ -7,12 +7,10 @@
 
 from __future__ import annotations
 
-import re
 from copy import copy
 
 import numpy as np
-import numpy.typing as npt
-from geoh5py.data import Data, ReferencedData
+from geoh5py.data import Data
 from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoh5py.workspace import Workspace
@@ -279,12 +277,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
                 continue
 
             line_data = entity.workspace.get_entity(key)[0]
-            if isinstance(line_data, ReferencedData):
-                values = [
-                    key
-                    for key, value in line_data.value_map.map.items()
-                    if value in values
-                ]
 
             for line in values:
                 ind = np.where(line_data.values == line)[0]
@@ -584,33 +576,3 @@ def plot_convergence_curve(h5file):
     interactive_plot = widgets.interactive(plot_curve, objects=objects)
 
     return interactive_plot
-
-
-def input_string_2_float(input_string: str) -> npt.NDArray[np.int_]:
-    """
-    Function to input interval and value as string to a list of floats.
-
-    :param input_string: Input string value of type `val1:val2:ii` and/or
-        a list of values `val3, val4`
-
-
-    :return: Corresponding list of values in float format
-    """
-
-    # TODO this function seems like it overlaps with string_2_list, can we use that
-    #  function here to handle the comma separated case??
-    if input_string != "":
-        vals = re.split(",", input_string)
-        cntrs = []
-        for val in vals:
-            if ":" in val:
-                param = np.asarray(re.split(":", val), dtype="float")
-                if len(param) == 2:
-                    cntrs += [np.arange(param[0], param[1] + 1)]
-                else:
-                    cntrs += [np.arange(param[0], param[1] + param[2], param[2])]
-            else:
-                cntrs += [float(val)]
-        return np.unique(np.sort(np.hstack(cntrs)))
-
-    return None

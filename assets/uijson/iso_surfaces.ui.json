@@ -37,10 +37,34 @@
         "parent": "objects",
         "value": ""
     },
-    "contours": {
+    "interval_min": {
         "main": true,
-        "label": "Iso-values",
-        "value": "0.005: 0.02: 0.005, 0.0025"
+        "group": "Interval Contours",
+        "groupOptional": true,
+        "label": "Interval min",
+        "value": 0.0,
+        "enabled": true
+    },
+    "interval_max": {
+        "main": true,
+        "group": "Interval Contours",
+        "label": "Interval max",
+        "value": 0.0,
+        "enabled": true
+    },
+    "interval_spacing": {
+        "main": true,
+        "group": "Interval Contours",
+        "label": "Interval spacing",
+        "value": 0.0,
+        "enabled": true
+    },
+    "fixed_contours": {
+        "main": true,
+        "label": "Fixed Contours",
+        "value": "0.0",
+        "optional": true,
+        "enabled": true
     },
     "max_distance": {
         "enabled": true,
@@ -57,6 +81,6 @@
     "export_as": {
         "main": true,
         "label": "Name",
-        "value": "Iso"
+        "value": "Iso_"
     }
 }

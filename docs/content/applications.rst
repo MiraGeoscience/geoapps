@@ -28,6 +28,7 @@ Utilities
     applications/scatter
     applications/export
     applications/create_octree
+    applications/create_block_model
     applications/triangulated_surfaces
     applications/create_isosurface
     applications/data_interpolation
@@ -109,7 +110,7 @@ Need help? Contact us at support@mirageoscience.com
     :align: center
     :width: 0
 
-.. figure:: applications/images/cluster_thumbnail.png
+.. figure:: applications/images/cluster/cluster_thumbnail.png
     :align: center
     :width: 0
 
@@ -118,6 +119,10 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/iso_surface.png
+    :align: center
+    :width: 0
+
+.. figure:: applications/images/block_model/block_model_thumbnail.png
     :align: center
     :width: 0
 

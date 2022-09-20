@@ -1,0 +1,74 @@
+{
+    "title": "Block Model Creation",
+    "geoh5": "",
+    "run_command": "geoapps.block_model_creation.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
+    "objects": {
+        "main": true,
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "label": "Object",
+        "value": ""
+    },
+    "new_grid": {
+        "main": true,
+        "label": "Name",
+        "value": ""
+    },
+    "cell_size_x": {
+        "main": true,
+        "label": "Minimum x cell size",
+        "value": 1.0,
+        "min": 1e-14
+    },
+    "cell_size_y": {
+        "main": true,
+        "label": "Minimum y cell size",
+        "value": 1.0,
+        "min": 1e-14
+    },
+    "cell_size_z": {
+        "main": true,
+        "label": "Minimum z cell size",
+        "value": 1.0,
+        "min": 1e-14
+    },
+    "depth_core": {
+        "main": true,
+        "label": "Core depth (m)",
+        "value": 0.0,
+        "min": 0.0
+    },
+    "horizontal_padding": {
+        "main": true,
+        "label": "Horizontal padding",
+        "value": 0.0,
+        "min": 0.0
+    },
+    "bottom_padding": {
+        "main": true,
+        "label": "Bottom padding",
+        "value": 0.0,
+        "min": 0.0
+    },
+    "expansion_fact": {
+        "main": true,
+        "label": "Expansion factor",
+        "value": 0.0
+    }
+}
