@@ -26,8 +26,8 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.7"
 
-dask = {version = "<2022.8", extras = ["distributed"]}
-distributed = "<2022.8"
+dask = {version = "2022.*", extras = ["distributed"]}
+distributed = "2022.*"
 discretize = "~0.7.4" # also in simpeg
 fsspec = "2022.*" # also in simpeg
 matplotlib = "^3.5.1" # also in simpeg and geoana
