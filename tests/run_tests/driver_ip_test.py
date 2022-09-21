@@ -99,7 +99,7 @@ def test_ip_run(
             prctile=100,
             upper_bound=0.1,
             tile_spatial=n_lines,
-            store_sensitivities="ram",
+            # store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
     driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))

@@ -138,7 +138,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             initial_beta_ratio=1e0,
             sens_wts_threshold=60.0,
             prctile=100,
-            store_sensitivities="ram",
+            # store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
