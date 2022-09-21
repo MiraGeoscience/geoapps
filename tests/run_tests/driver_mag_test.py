@@ -96,9 +96,9 @@ def test_susceptibility_run(
             starting_model=1e-4,
             reference_model=0.0,
             s_norm=0.0,
-            x_norm=0.0,
-            y_norm=0.0,
-            z_norm=0.0,
+            x_norm=1.0,
+            y_norm=1.0,
+            z_norm=1.0,
             gradient_type="components",
             lower_bound=0.0,
             tmi_channel_bool=True,
@@ -106,7 +106,7 @@ def test_susceptibility_run(
             tmi_channel=tmi.uid,
             tmi_uncertainty=4.0,
             max_iterations=max_iterations,
-            initial_beta_ratio=1 - 2,
+            initial_beta_ratio=1e0,
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
