@@ -6,6 +6,8 @@
 #  (see LICENSE file at the root of this source code package).
 # pylint: disable=too-many-locals
 
+import os
+
 import numpy as np
 from geoh5py.workspace import Workspace
 
@@ -69,14 +71,17 @@ def test_magnetotellurics_fwr_run(
 
     fwr_driver.run()
 
-    del fwr_driver
-    return model
+    return fwr_driver.starting_model
 
 
 def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
-    with Workspace(
-        str(tmp_path / "../test_magnetotellurics_fwr_run0/inversion_test.geoh5")
-    ) as geoh5:
+    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    if pytest:
+        workpath = str(
+            tmp_path / "../test_magnetotellurics_fwr_run0/inversion_test.geoh5"
+        )
+
+    with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("Topo")[0]
@@ -148,7 +153,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             max_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
-            # store_sensitivities="ram",
+            store_sensitivities="ram",
             **data_kwargs,
         )
         params.workpath = tmp_path
@@ -183,7 +188,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
+    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     return driver
 

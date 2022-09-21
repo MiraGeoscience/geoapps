@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+import os
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -56,8 +57,7 @@ def test_dc_fwr_run(
     fwr_driver = InversionDriver(params)
     fwr_driver.run()
 
-    del fwr_driver
-    return model
+    return fwr_driver.starting_model
 
 
 def test_dc_run(
@@ -66,7 +66,11 @@ def test_dc_run(
     pytest=True,
     n_lines=3,
 ):
-    with Workspace(str(tmp_path / "../test_dc_fwr_run0/inversion_test.geoh5")) as geoh5:
+    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    if pytest:
+        workpath = str(tmp_path / "../test_dc_fwr_run0/inversion_test.geoh5")
+
+    with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("Topo")[0]
@@ -94,11 +98,11 @@ def test_dc_run(
             prctile=100,
             upper_bound=10,
             tile_spatial=n_lines,
-            # store_sensitivities="ram",
+            store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
+    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
