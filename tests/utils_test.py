@@ -170,7 +170,6 @@ def test_new_neighbors():
 def test_survey_lines(tmp_path):
     with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
         with Workspace(dc_geoh5) as ws:
-
             old_survey = ws.get_entity("DC_Survey")[0]
             _ = old_survey.copy(parent=test_workspace)
 
@@ -347,6 +346,7 @@ def test_sorted_alphanumeric_list():
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
         import os as test_import  # pylint: disable=W0404
+
     assert test_import == os
 
     with warn_module_not_found():

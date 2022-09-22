@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from geoh5py.objects import Octree, PotentialElectrode, DrapeModel
+from geoh5py.objects import DrapeModel, Octree, PotentialElectrode
 
 from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.octree_creation.params import OctreeParams

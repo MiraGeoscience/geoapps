@@ -358,9 +358,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         if "2d" in self.factory_type:
             # TODO - verify this works once the driver is running through
             def transform(x):
-                expanded_data = np.array(
-                    [np.nan] * len(inversion_object.indices)
-                )
+                expanded_data = np.array([np.nan] * len(inversion_object.indices))
                 expanded_data[inversion_object.global_map] = x
                 return expanded_data
 
