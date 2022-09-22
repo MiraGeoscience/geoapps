@@ -58,7 +58,7 @@ def test_dc_2d_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         line_object=geoh5.get_entity("line_ids")[0].uid,
-        line_id=2
+        line_id=2,
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
