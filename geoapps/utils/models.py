@@ -28,6 +28,7 @@ def compute_pad_distance(h, expansion_factor, pad):
 
     return pad_distance
 
+
 def get_drape_model(
     workspace: Workspace,
     name: str,

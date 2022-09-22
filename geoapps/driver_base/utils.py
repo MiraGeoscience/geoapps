@@ -100,7 +100,9 @@ def active_from_xyz(
 
     if grid_reference == "cell_centers":
         # this should work for all 4 mesh types...
-        locations = mesh.centroids if isinstance(mesh, (DrapeModel, Octree)) else mesh.gridCC
+        locations = (
+            mesh.centroids if isinstance(mesh, (DrapeModel, Octree)) else mesh.gridCC
+        )
 
     elif grid_reference == "top_nodes":
         locations = np.vstack(
