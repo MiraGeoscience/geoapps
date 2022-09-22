@@ -18,27 +18,27 @@ import geoh5py.objects
 import numpy as np
 import pandas as pd
 import pytest
-from discretize import TreeMesh, TensorMesh
+from discretize import TreeMesh
 from geoh5py.objects import Grid2D
 from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
 from geoapps.shared_utils.utils import (
+    cell_centers_to_faces,
     downsample_grid,
     downsample_xy,
+    drape_2_tensor,
     filter_xy,
     get_locations,
     octree_2_treemesh,
     rotate_xyz,
     weighted_average,
     window_xy,
-    cell_centers_to_faces,
-    drape_2_tensor,
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
-from geoapps.utils.models import RectangularBlock, get_drape_model, compute_pad_distance
+from geoapps.utils.models import RectangularBlock, get_drape_model
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
@@ -130,6 +130,24 @@ def test_find_endpoints():
     assert np.allclose(p, [[10, 0], [0, 10]])
 
 
+def test_cell_centers_to_faces():
+    test_faces = [0, 3, 5, 6, 7, 8, 10, 13]
+    centers = pd.DataFrame(test_faces).rolling(2).mean().values[1:].flatten()
+    faces = cell_centers_to_faces(centers)
+    assert np.allclose(test_faces, faces)
+
+
+def test_find_unique_tops():
+    x = np.arange(-5, 6)
+    y = -x
+    z = np.arange(-10, 1)
+    X, Z = np.meshgrid(x, z)
+    locs = np.c_[X.flatten(), np.tile(y, len(x)), Z.flatten()]
+    tops = find_unique_tops(locs)
+    assert np.all(tops[:, 2] == 0)
+    assert np.allclose(tops[:, :2], np.c_[x, y])
+
+
 def test_is_outlier():
     assert is_outlier([25.1, 25.3], 50.0)
     assert not is_outlier([25.1, 25.3], 25.2)
@@ -152,6 +170,7 @@ def test_new_neighbors():
 def test_survey_lines(tmp_path):
     with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
         with Workspace(dc_geoh5) as ws:
+
             old_survey = ws.get_entity("DC_Survey")[0]
             _ = old_survey.copy(parent=test_workspace)
 
@@ -328,7 +347,6 @@ def test_sorted_alphanumeric_list():
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
         import os as test_import  # pylint: disable=W0404
-
     assert test_import == os
 
     with warn_module_not_found():
@@ -572,13 +590,6 @@ def test_treemesh_2_octree(tmp_path):
         assert np.all([k in expected_refined_cells for k in ijk_refined])
 
 
-def test_cell_centers_to_faces():
-    test_faces = [0, 3, 5, 6, 7, 8, 10, 13]
-    centers = pd.DataFrame(test_faces).rolling(2).mean().values[1:].flatten()
-    faces = cell_centers_to_faces(centers)
-    assert np.allclose(test_faces, faces)
-
-
 def test_drape_2_tensormesh(tmp_path):
     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
     x = np.linspace(358600, 359500, 10)
@@ -587,9 +598,9 @@ def test_drape_2_tensormesh(tmp_path):
     locs = np.c_[x, y, z]
     h = [20, 40]
     depth_core = 200
-    pads = [500]*4
+    pads = [500] * 4
     expfact = 1.1
-    drape, tensor, tensor_2_drape = get_drape_model(
+    drape, tensor, _ = get_drape_model(  # pylint: disable=W0632
         ws,
         "test_drape",
         locs,
@@ -599,14 +610,12 @@ def test_drape_2_tensormesh(tmp_path):
         expansion_factor=expfact,
         parent=None,
         return_colocated_mesh=True,
-        return_sorting=True
+        return_sorting=True,
     )
 
     new_tensor = drape_2_tensor(drape)
 
     assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
-
-
 
 
 def test_octree_2_treemesh(tmp_path):
