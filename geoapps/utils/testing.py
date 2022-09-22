@@ -31,7 +31,7 @@ from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.driver_base.utils import treemesh_2_octree, active_from_xyz
+from geoapps.driver_base.utils import active_from_xyz, treemesh_2_octree
 from geoapps.utils.models import get_drape_model
 from geoapps.utils.surveys import survey_lines
 
@@ -109,7 +109,9 @@ def setup_inversion_workspace(
     )
     # Observation points
     n_electrodes = (
-        4 if (inversion_type in ["dcip", "dcip_2d"]) & (n_electrodes < 4) else n_electrodes
+        4
+        if (inversion_type in ["dcip", "dcip_2d"]) & (n_electrodes < 4)
+        else n_electrodes
     )
     xr = np.linspace(-100.0, 100.0, n_electrodes)
     yr = np.linspace(-100.0, 100.0, n_lines)
@@ -123,10 +125,12 @@ def setup_inversion_workspace(
 
     if inversion_type in ["dcip", "dcip_2d"]:
 
-        ab_vertices = np.c_[X[:, :-2].flatten(), Y[:, :-2].flatten(), Z[:, :-2].flatten()]
+        ab_vertices = np.c_[
+            X[:, :-2].flatten(), Y[:, :-2].flatten(), Z[:, :-2].flatten()
+        ]
         mn_vertices = np.c_[X[:, 2:].flatten(), Y[:, 2:].flatten(), Z[:, 2:].flatten()]
 
-        parts = np.repeat(np.arange(n_lines), n_electrodes-2).astype("int32")
+        parts = np.repeat(np.arange(n_lines), n_electrodes - 2).astype("int32")
         currents = CurrentElectrode.create(
             geoh5, name="survey (currents)", vertices=ab_vertices, parts=parts
         )
@@ -142,10 +146,14 @@ def setup_inversion_workspace(
             cell_id = int(currents.ab_map[val]) - 1  # Python 0 indexing
             line = currents.parts[currents.cells[cell_id, 0]]
             for m_n in range(N):
-                dipole_ids = (currents.cells[cell_id, :] + m_n).astype("uint32")  # Skip two poles
+                dipole_ids = (currents.cells[cell_id, :] + m_n).astype(
+                    "uint32"
+                )  # Skip two poles
 
                 # Shorten the array as we get to the end of the line
-                if any(dipole_ids > (survey.n_vertices - 1)) or any(currents.parts[dipole_ids] != line):
+                if any(dipole_ids > (survey.n_vertices - 1)) or any(
+                    currents.parts[dipole_ids] != line
+                ):
                     continue
 
                 dipoles += [dipole_ids]  # Save the receiver id
@@ -207,21 +215,21 @@ def setup_inversion_workspace(
         locs = np.unique(np.vstack([ab_vertices, mn_vertices]), axis=0)
         lines = survey_lines(locs, [-100, -100])
 
-
         entity, mesh, permutation = get_drape_model(
             geoh5,
             "Models",
             locs[lines == 2],
             [cell_size[0], cell_size[2]],
             100.0,
-            [padding_distance] * 2
-            + [padding_distance] * 2,
+            [padding_distance] * 2 + [padding_distance] * 2,
             1.1,
             parent=None,
             return_colocated_mesh=True,
             return_sorting=True,
         )
-        active = active_from_xyz(entity, topography.vertices, grid_reference="cell_centers")
+        active = active_from_xyz(
+            entity, topography.vertices, grid_reference="cell_centers"
+        )
 
     else:
         padDist = np.ones((3, 2)) * padding_distance
@@ -278,10 +286,10 @@ def setup_inversion_workspace(
             anomaly,
         )
 
-    model[~(active[np.argsort(permutation)] if "2d" in inversion_type else active)] = np.nan
-    model = entity.add_data(
-        {"model": {"values": model[permutation]}}
-    )
+    model[
+        ~(active[np.argsort(permutation)] if "2d" in inversion_type else active)
+    ] = np.nan
+    model = entity.add_data({"model": {"values": model[permutation]}})
     return geoh5, entity, model, survey, topography
 
 
