@@ -100,7 +100,7 @@ def active_from_xyz(
 
     if grid_reference == "cell_centers":
         # this should work for all 4 mesh types...
-        locations = mesh.centroids if isinstance(mesh, DrapeModel) else mesh.gridCC
+        locations = mesh.centroids if isinstance(mesh, (DrapeModel, Octree)) else mesh.gridCC
 
     elif grid_reference == "top_nodes":
         locations = np.vstack(
@@ -141,7 +141,7 @@ def active_from_xyz(
 
     # Create an active bool of all True
 
-    n_cells = mesh.n_cells if isinstance(mesh, DrapeModel) else mesh.nC
+    n_cells = mesh.n_cells if isinstance(mesh, (DrapeModel, Octree)) else mesh.nC
     active = getattr(np, logical)(
         (locations[:, -1] < z_xyz).reshape((n_cells, -1), order="F"), axis=1
     )

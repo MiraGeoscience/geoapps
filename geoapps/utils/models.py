@@ -20,6 +20,14 @@ from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
 
 
+def compute_pad_distance(h, expansion_factor, pad):
+    pad_distance = 0
+    while pad_distance < pad:
+        h *= expansion_factor
+        pad_distance += h
+
+    return pad_distance
+
 def get_drape_model(
     workspace: Workspace,
     name: str,

@@ -16,12 +16,13 @@ import re
 from uuid import UUID
 
 import numpy as np
-from discretize import TreeMesh
+from discretize import TreeMesh, TensorMesh
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
 from geoapps.utils.string import string_to_numeric
+from geoapps.utils.surveys import compute_alongline_distance
 
 
 def hex_to_rgb(hex_color):
@@ -373,6 +374,41 @@ def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
     else:
         return xyz_out
 
+def cell_centers_to_faces(centers: np.ndarray) -> np.ndarray:
+    """Compute faces from centers of cells containing a evenly spaced core region."""
+
+    h = np.diff(centers)
+    icore = np.where(np.isclose(h, h.min()))[0]
+    icore = np.append(icore, icore[-1] + 1) # index of core hs to core centers
+    faces = np.hstack([centers[icore] - h.min()/2, centers[icore][-1] + h.min()/2])
+
+    # Don't assume symmetric padding loop over each extremity individually
+    right_pad_inds = np.arange(icore[-1] + 1, len(centers))
+    for i in right_pad_inds:
+        faces = np.hstack([faces, 2*centers[i] - faces[-1]])
+
+    left_pad_inds = np.arange(icore[0])[::-1]
+    for i in left_pad_inds:
+        faces = np.hstack([2*centers[i] - faces[0], faces])
+
+    return faces
+
+def drape_2_tensor(drape_model):
+    """
+    Convert a geoh5 drape model to discretize.TensorMesh
+    """
+    prisms = drape_model.prisms
+    layers = drape_model.layers
+
+
+    z = np.append(np.unique(layers[:, 2]), prisms[:, 2].max())
+    x = compute_alongline_distance(prisms[:, :2])
+    x = cell_centers_to_faces(x)
+    dx = np.diff(np.unique(x))
+    h = [np.diff(x), np.diff(z)]
+    origin = [-dx[:np.argmin(dx.round(6))].sum(), layers[:, 2].min()]
+
+    return TensorMesh(h, origin)
 
 def octree_2_treemesh(mesh):
     """
