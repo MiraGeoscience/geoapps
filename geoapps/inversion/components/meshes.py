@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from geoh5py.objects import Octree, PotentialElectrode
+from geoh5py.objects import Octree, PotentialElectrode, DrapeModel
 
 from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.octree_creation.params import OctreeParams
@@ -95,6 +95,9 @@ class InversionMesh:
 
             self.mesh = octree_2_treemesh(self.entity)
             self.permutation = getattr(self.mesh, "_ubc_order")
+
+        if isinstance(self.entity, DrapeModel):
+            self.mesh = drape_2_tensormesh(self.entity)
 
     def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
         """Collect mesh params from inversion params set and return octree Params object."""

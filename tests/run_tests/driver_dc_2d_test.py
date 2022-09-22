@@ -44,7 +44,7 @@ def test_dc_2d_run(
         n_electrodes=n_electrodes,
         n_lines=n_lines,
         refinement=refinement,
-        inversion_type="dcip",
+        inversion_type="dcip_2d",
         flatten=False,
     )
     lines = survey_lines(survey, [-100, -100], save="line_ids")
@@ -58,7 +58,7 @@ def test_dc_2d_run(
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
         line_object=geoh5.get_entity("line_ids")[0].uid,
-        line_id=1
+        line_id=2
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
@@ -66,6 +66,8 @@ def test_dc_2d_run(
 
     geoh5.open()
     potential = geoh5.get_entity("Iteration_0_dc")[0]
+    line = survey_lines(potential.parent, [-100, 100], save="line_IDs")
+    # potential.parent.add_data({"line_ids": {"values": geoh5.get_entity("line_ids")[0].values}})
     # Run the inverse
     np.random.seed(0)
     params = DirectCurrent2DParams(
@@ -73,6 +75,8 @@ def test_dc_2d_run(
         mesh=mesh.uid,
         topography_object=topography.uid,
         data_object=potential.parent.uid,
+        line_object=geoh5.get_entity("line_IDs")[0].uid,
+        line_id=2,
         starting_model=1e-2,
         s_norm=0.0,
         x_norm=1.0,

@@ -109,14 +109,18 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
     """
     Build an array of line ids for a survey laid out in a line biased grid.
 
-    :param: survey: geoh5py.objects.surveys object with .vertices attribute.
+    :param: survey: geoh5py.objects.surveys object with .vertices attribute or xyz array.
     :param: start_loc: Easting and Northing of a survey extremity from which the
         all other survey locations will be traversed and assigned line ids.
     :save: Name assigned to line id (ReferencedData) object if not None.
 
     """
     # extract xy locations and create linear indexing
-    locs = survey.vertices[:, :2]
+    try:
+        locs = survey.vertices[:, :2]
+    except AttributeError:
+        locs = survey[:, :2]
+
     nodes = np.arange(len(locs)).tolist()
 
     # find the id of the closest point to the starting location
@@ -125,7 +129,9 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
     # pop the starting location and index out of their respective lists
     locs = locs.tolist()
     loc = locs[start_id]
-    _ = nodes.pop(start_id)
+    inds = []
+    n = nodes.pop(start_id)
+    inds.append(n)
 
     # compute the tree of the remaining points and begin to traverse the tree
     # in the direction of closest neighbors.  Label points with same line id
@@ -153,16 +159,18 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
         else:
             distances.append(dist)
 
-        nodes.pop(nodes.index(next_id))
+        n = nodes.pop(nodes.index(next_id))
+        inds.append(n)
         loc = locs[next_id]
 
     lines += [line_id]  # nodes run out before last id assigned
 
+    inds = np.argsort(inds)
     if save is not None:
         survey.add_data(
             {
                 save: {
-                    "values": np.array(lines),
+                    "values": np.array(lines)[inds],
                     "association": "VERTEX",
                     "entity_type": {
                         "primitive_type": "REFERENCED",
@@ -172,7 +180,7 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
             }
         )
 
-    return np.array(lines)
+    return np.array(lines)[inds]
 
 
 def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):

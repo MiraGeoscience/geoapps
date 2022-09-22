@@ -16,8 +16,9 @@ import random
 
 import geoh5py.objects
 import numpy as np
+import pandas as pd
 import pytest
-from discretize import TreeMesh
+from discretize import TreeMesh, TensorMesh
 from geoh5py.objects import Grid2D
 from geoh5py.workspace import Workspace
 
@@ -32,10 +33,12 @@ from geoapps.shared_utils.utils import (
     rotate_xyz,
     weighted_average,
     window_xy,
+    cell_centers_to_faces,
+    drape_2_tensor,
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
-from geoapps.utils.models import RectangularBlock, get_drape_model
+from geoapps.utils.models import RectangularBlock, get_drape_model, compute_pad_distance
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
@@ -567,6 +570,43 @@ def test_treemesh_2_octree(tmp_path):
         ].tolist()
         assert np.all([k in ijk_refined for k in expected_refined_cells])
         assert np.all([k in expected_refined_cells for k in ijk_refined])
+
+
+def test_cell_centers_to_faces():
+    test_faces = [0, 3, 5, 6, 7, 8, 10, 13]
+    centers = pd.DataFrame(test_faces).rolling(2).mean().values[1:].flatten()
+    faces = cell_centers_to_faces(centers)
+    assert np.allclose(test_faces, faces)
+
+
+def test_drape_2_tensormesh(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    x = np.linspace(358600, 359500, 10)
+    y = np.linspace(5885500, 5884600, 10)
+    z = 300 * np.ones_like(x)
+    locs = np.c_[x, y, z]
+    h = [20, 40]
+    depth_core = 200
+    pads = [500]*4
+    expfact = 1.1
+    drape, tensor, tensor_2_drape = get_drape_model(
+        ws,
+        "test_drape",
+        locs,
+        h,
+        depth_core,
+        pads,
+        expansion_factor=expfact,
+        parent=None,
+        return_colocated_mesh=True,
+        return_sorting=True
+    )
+
+    new_tensor = drape_2_tensor(drape)
+
+    assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
+
+
 
 
 def test_octree_2_treemesh(tmp_path):
