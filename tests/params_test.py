@@ -247,28 +247,31 @@ def test_chunk_validation_grav(tmp_path):
 
 
 def test_chunk_validation_dc(tmp_path):
+    with Workspace("./FlinFlon_dcip.geoh5") as dc_geoh5:
+        test_dict = dc_initializer.copy()
+        test_dict.update({"geoh5": dc_geoh5})
+        test_dict.pop("topography_object")
+        params = DirectCurrent3DParams(**test_dict)  # pylint: disable=repeated-keyword
 
-    dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
-    test_dict = dict(dc_initializer, **{"geoh5": dc_geoh5})
-    test_dict.pop("topography_object")
-    params = DirectCurrent3DParams(**test_dict)  # pylint: disable=repeated-keyword
-
-    with pytest.raises(OptionalValidationError) as excinfo:
-        params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Cannot set a None value", "topography_object"]:
-        assert a in str(excinfo.value)
+        with pytest.raises(OptionalValidationError) as excinfo:
+            params.write_input_file(name="test.ui.json", path=tmp_path)
+        for a in ["Cannot set a None value", "topography_object"]:
+            assert a in str(excinfo.value)
 
 
 def test_chunk_validation_ip(tmp_path):
-    dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
-    test_dict = dict(ip_initializer, **{"geoh5": dc_geoh5})
-    test_dict.pop("conductivity_model")
-    params = InducedPolarizationParams(**test_dict)  # pylint: disable=repeated-keyword
+    with Workspace("./FlinFlon_dcip.geoh5") as dc_geoh5:
+        test_dict = ip_initializer.copy()
+        test_dict.update({"geoh5": dc_geoh5})
+        test_dict.pop("conductivity_model")
+        params = InducedPolarizationParams(
+            **test_dict
+        )  # pylint: disable=repeated-keyword
 
-    with pytest.raises(OptionalValidationError) as excinfo:
-        params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Cannot set a None", "conductivity_model"]:
-        assert a in str(excinfo.value)
+        with pytest.raises(OptionalValidationError) as excinfo:
+            params.write_input_file(name="test.ui.json", path=tmp_path)
+        for a in ["Cannot set a None", "conductivity_model"]:
+            assert a in str(excinfo.value)
 
 
 def test_chunk_validation_octree(tmp_path):
