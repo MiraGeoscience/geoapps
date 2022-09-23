@@ -17,7 +17,7 @@ import warnings
 from uuid import UUID
 
 import numpy as np
-from discretize.utils import active_from_xyz, mesh_builder_xyz, refine_tree_xyz
+from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import (
     CurrentElectrode,
     MTReceivers,
@@ -215,7 +215,7 @@ def setup_inversion_workspace(
         locs = np.unique(np.vstack([ab_vertices, mn_vertices]), axis=0)
         lines = survey_lines(locs, [-100, -100])
 
-        entity, mesh, permutation = get_drape_model(
+        entity, mesh, permutation = get_drape_model(  # pylint: disable=W0632
             geoh5,
             "Models",
             locs[lines == 2],
@@ -249,7 +249,7 @@ def setup_inversion_workspace(
             finalize=True,
         )
         entity = treemesh_2_octree(geoh5, mesh, name="mesh")
-        active = active_from_xyz(mesh, topography.vertices, grid_reference="N")
+        active = active_from_xyz(mesh, topography.vertices, grid_reference="top_nodes")
         permutation = mesh._ubc_order  # pylint: disable=W0212
 
     # Model

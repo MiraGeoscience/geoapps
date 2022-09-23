@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import numpy as np
 from geoh5py.data import Data
+from geoh5py.objects import DrapeModel
 from geoh5py.workspace import Workspace
 from SimPEG.utils.mat_utils import (
     cartesian2amplitude_dip_azimuth,
@@ -419,7 +420,10 @@ class InversionModel:
         else:
             xyz_in = parent.vertices
 
-        return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
+        if (xyz_out.shape[1]) == 2 and isinstance(parent, DrapeModel):
+            return obj[np.argsort(self.mesh.permutation)]
+        else:
+            return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
 
     @property
     def model_type(self):
