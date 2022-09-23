@@ -74,7 +74,7 @@
     },
     "Refinement A object": {
         "groupOptional": true,
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Object",
         "meshType": [
@@ -85,7 +85,7 @@
         "value": ""
     },
     "Refinement A levels": {
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Levels",
         "value": "4.0, 4.0, 4.0"
@@ -95,13 +95,13 @@
             "surface",
             "radial"
         ],
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Type",
         "value": "radial"
     },
     "Refinement A distance": {
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Distance",
         "value": 1000.0

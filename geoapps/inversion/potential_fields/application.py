@@ -141,6 +141,9 @@ class InversionApp(PlotSelection2D):
             options=["magnetic vector", "magnetic scalar", "gravity"],
             description="inversion Type:",
         )
+        self._store_sensitivities = Dropdown(
+            options=["ram", "disk"], description="Storage device:", value="disk"
+        )
         self._write = Button(
             value=False,
             description="Write input",
@@ -181,6 +184,7 @@ class InversionApp(PlotSelection2D):
                 self._max_cg_iterations,
                 self._tol_cg,
                 self._n_cpu,
+                self._store_sensitivities,
                 self._tile_spatial,
             ]
         )
@@ -436,6 +440,10 @@ class InversionApp(PlotSelection2D):
     @property
     def ga_group_name(self):
         return self._ga_group_name
+
+    @property
+    def store_sensitivities(self):
+        return self._store_sensitivities
 
     @property
     def reference_model(self):
@@ -959,17 +967,6 @@ class InversionApp(PlotSelection2D):
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
-        obj, _ = self.get_selected_entities()
-        if obj is not None:
-            children_list = {child.uid: child.name for child in obj.children}
-            ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
-            options = [
-                [name, uid]
-                for uid, name in ordered.items()
-                if "visual parameter" not in name.lower()
-            ]
-        else:
-            options = []
 
         def channel_setter(caller):
             channel = caller["owner"]
@@ -1064,9 +1061,7 @@ class InversionApp(PlotSelection2D):
                         ]
                     ),
                 )
-
                 setattr(InversionApp, f"{key}_uncertainty", value_setter)
-
                 data_channel_options[key] = getattr(self, f"{key}_group")
                 data_channel_options[key].children[3].children[0].header = key
                 data_channel_options[key].children[3].children[1].header = key
@@ -1084,15 +1079,12 @@ class InversionApp(PlotSelection2D):
                 data_channel_options[key].children[3].children[1].observe(
                     uncert_setter, names="value"
                 )
-            data_channel_options[key].children[1].options = [["", None]] + options
-            data_channel_options[key].children[3].children[1].options = [
-                ["", None]
-            ] + options
 
         self.data_channel_choices.value = inversion_defaults()["component"][
             self.inversion_type.value
         ]
         self.data_channel_choices.data_channel_options = data_channel_options
+        self.update_data_channel_options()
         self.data_channel_panel.children = [
             self.data_channel_choices,
             data_channel_options[self.data_channel_choices.value],
@@ -1150,11 +1142,32 @@ class InversionApp(PlotSelection2D):
             return
 
         self.update_data_list(None)
+        self.update_data_channel_options()
         self.sensor.update_data_list(None)
         self.inversion_type_observer(None)
         self.write.button_style = "warning"
         self._run_params = None
         self.trigger.button_style = "danger"
+
+    def update_data_channel_options(self):
+        if getattr(self.data_channel_choices, "data_channel_options", None) is None:
+            return
+
+        obj, _ = self.get_selected_entities()
+        if obj is not None:
+            children_list = {child.uid: child.name for child in obj.children}
+            ordered = OrderedDict(sorted(children_list.items(), key=lambda t: t[1]))
+            options = [
+                [name, uid]
+                for uid, name in ordered.items()
+                if "visual parameter" not in name.lower()
+            ]
+        else:
+            options = []
+
+        for channel_option in self.data_channel_choices.data_channel_options.values():
+            channel_option.children[1].options = [["", None]] + options
+            channel_option.children[3].children[1].options = [["", None]] + options
 
     def data_channel_choices_observer(self, _):
         if hasattr(
@@ -1366,8 +1379,13 @@ class InversionApp(PlotSelection2D):
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.params.geoh5.open(mode="r")
+
+                params = self.params.to_dict(ui_json_format=False)
+                if params["resolution"] is None:
+                    params["resolution"] = 0
+
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**params)
                 self.refresh.value = True
 
             elif extension == ".geoh5":
