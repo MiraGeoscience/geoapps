@@ -101,7 +101,7 @@ def test_gravity_run(
             max_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
-            store_sensitivities="ram",
+            # store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
