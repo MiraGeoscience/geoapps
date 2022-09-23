@@ -98,7 +98,7 @@ def test_dc_run(
             prctile=100,
             upper_bound=10,
             tile_spatial=n_lines,
-            # store_sensitivities="ram",
+            store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 

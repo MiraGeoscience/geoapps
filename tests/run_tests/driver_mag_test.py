@@ -107,7 +107,7 @@ def test_susceptibility_run(
             tmi_uncertainty=4.0,
             max_iterations=max_iterations,
             initial_beta_ratio=1e0,
-            # store_sensitivities="ram",
+            store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
         driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
