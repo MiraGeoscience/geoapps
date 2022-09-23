@@ -153,7 +153,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             max_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
-            # store_sensitivities="ram",
+            store_sensitivities="ram",
             **data_kwargs,
         )
         params.workpath = tmp_path

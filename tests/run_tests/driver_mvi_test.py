@@ -104,7 +104,7 @@ def test_magnetic_vector_run(
             tmi_uncertainty=4.0,
             max_iterations=max_iterations,
             initial_beta_ratio=1e1,
-            # store_sensitivities="ram",
+            store_sensitivities="ram",
             prctile=100,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
