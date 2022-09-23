@@ -372,10 +372,10 @@ class PlotSelection2D(ObjectDataSelection):
         self.window_center_y.min = lim_y[0] - height * 0.1
 
         self.window_width.max = width * 1.2
-        self.window_width.value = self.window_width.max / 2.0
+        self.window_width.value = self.window_width.max
         self.window_width.min = 0
 
         self.window_height.max = height * 1.2
         self.window_height.min = 0
-        self.window_height.value = self.window_height.max / 2.0
+        self.window_height.value = self.window_height.max
         self.refresh.value = True

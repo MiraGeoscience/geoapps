@@ -130,7 +130,6 @@ class IsoSurface(ObjectDataSelection):
 
             new_params = IsoSurfacesParams(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
-
             driver = IsoSurfacesDriver(new_params)
             driver.run()
 

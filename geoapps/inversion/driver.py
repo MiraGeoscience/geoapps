@@ -413,28 +413,40 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         )
 
     elif inversion_type == "magnetic scalar":
-        from .potential_fields import MagneticScalarParams as ParamClass
-        from .potential_fields.magnetic_scalar.constants import validations
+        from geoapps.inversion.potential_fields import (
+            MagneticScalarParams as ParamClass,
+        )
+        from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
+            validations,
+        )
 
     elif inversion_type == "gravity":
         from geoapps.inversion.potential_fields import GravityParams as ParamClass
         from geoapps.inversion.potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from .natural_sources import MagnetotelluricsParams as ParamClass
-        from .natural_sources.magnetotellurics.constants import validations
+        from geoapps.inversion.natural_sources import (
+            MagnetotelluricsParams as ParamClass,
+        )
+        from geoapps.inversion.natural_sources.magnetotellurics.constants import (
+            validations,
+        )
 
     elif inversion_type == "tipper":
-        from .natural_sources import TipperParams as ParamClass
-        from .natural_sources.tipper.constants import validations
+        from geoapps.inversion.natural_sources import TipperParams as ParamClass
+        from geoapps.inversion.natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
-        from .electricals import DirectCurrentParams as ParamClass
-        from .electricals.direct_current.constants import validations
+        from geoapps.inversion.electricals import DirectCurrentParams as ParamClass
+        from geoapps.inversion.electricals.direct_current.constants import validations
 
     elif inversion_type == "induced polarization":
-        from .electricals import InducedPolarizationParams as ParamClass
-        from .electricals.induced_polarization.constants import validations
+        from geoapps.inversion.electricals import (
+            InducedPolarizationParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.constants import (
+            validations,
+        )
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")
