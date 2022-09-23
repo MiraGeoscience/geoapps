@@ -14,7 +14,7 @@ from geoh5py.objects import DrapeModel, Octree, PotentialElectrode
 
 from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.octree_creation.params import OctreeParams
-from geoapps.shared_utils.utils import octree_2_treemesh
+from geoapps.shared_utils.utils import drape_2_tensor, octree_2_treemesh
 from geoapps.utils.models import get_drape_model
 
 if TYPE_CHECKING:
@@ -97,7 +97,9 @@ class InversionMesh:
             self.permutation = getattr(self.mesh, "_ubc_order")
 
         if isinstance(self.entity, DrapeModel):
-            self.mesh = drape_2_tensormesh(self.entity)
+            self.mesh, self.permutation = drape_2_tensor(
+                self.entity, return_sorting=True
+            )
 
     def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
         """Collect mesh params from inversion params set and return octree Params object."""
@@ -148,10 +150,14 @@ class InversionMesh:
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
         if self.params.inversion_type in ["direct current 2d"]:
-            self.entity, self.mesh, self.permutation = get_drape_model(
+            (  # pylint: disable=W0632
+                self.entity,
+                self.mesh,
+                self.permutation,
+            ) = get_drape_model(
                 self.workspace,
                 "Models",
-                self.inversion_data._survey.unique_locations,
+                self.inversion_data._survey.unique_locations,  # pylint: disable=W0212
                 [self.params.u_cell_size, self.params.v_cell_size],
                 self.params.depth_core,
                 [self.params.horizontal_padding] * 2
