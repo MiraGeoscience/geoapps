@@ -111,6 +111,7 @@ class InversionBaseParams(BaseParams):
         self._parallelized: bool = None
         self._n_cpu: int = None
         self._max_ram: float = None
+        self._store_sensitivities: str = None
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
@@ -134,6 +135,11 @@ class InversionBaseParams(BaseParams):
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+        if not self.forward_only:
+            for key in self.__dict__:
+                if "channel_bool" in key and getattr(self, key[:-5], None) is not None:
+                    setattr(self, key, True)
 
     def data_channel(self, component: str):
         """Return uuid of data channel."""
@@ -843,6 +849,14 @@ class InversionBaseParams(BaseParams):
     @max_ram.setter
     def max_ram(self, val):
         self.setter_validator("max_ram", val)
+
+    @property
+    def store_sensitivities(self):
+        return self._store_sensitivities
+
+    @store_sensitivities.setter
+    def store_sensitivities(self, val):
+        self.setter_validator("store_sensitivities", val)
 
     @property
     def out_group(self):
