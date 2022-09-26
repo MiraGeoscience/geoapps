@@ -306,7 +306,6 @@ class InversionDriver:
 
         if self.params.inversion_type in [
             "direct current",
-            "direct current 2d",
             "induced polarization",
         ]:
             tiles = []
@@ -333,6 +332,8 @@ class InversionDriver:
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
+        elif "2d" in self.params.inversion_type:
+            tiles = [self.inversion_data.indices]
         else:
             tiles = tile_locations(
                 self.locations,
