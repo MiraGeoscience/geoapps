@@ -47,7 +47,7 @@ def test_dc_2d_run(
         inversion_type="dcip_2d",
         flatten=False,
     )
-    lines = survey_lines(survey, [-100, -100], save="line_ids")
+    _ = survey_lines(survey, [-100, -100], save="line_ids")
     params = DirectCurrent2DParams(
         forward_only=True,
         geoh5=geoh5,
@@ -66,8 +66,8 @@ def test_dc_2d_run(
 
     geoh5.open()
     potential = geoh5.get_entity("Iteration_0_dc")[0]
-    line = survey_lines(potential.parent, [-100, 100], save="line_IDs")
-    # potential.parent.add_data({"line_ids": {"values": geoh5.get_entity("line_ids")[0].values}})
+    _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
+
     # Run the inverse
     np.random.seed(0)
     params = DirectCurrent2DParams(
@@ -75,6 +75,8 @@ def test_dc_2d_run(
         mesh=mesh.uid,
         topography_object=topography.uid,
         data_object=potential.parent.uid,
+        potential_channel=potential.uid,
+        potential_uncertainty=1e-3,
         line_object=geoh5.get_entity("line_IDs")[0].uid,
         line_id=2,
         starting_model=1e-2,
@@ -85,14 +87,11 @@ def test_dc_2d_run(
         gradient_type="components",
         potential_channel_bool=True,
         z_from_topo=True,
-        potential_channel=potential.uid,
-        potential_uncertainty=1e-3,
         max_iterations=max_iterations,
         initial_beta=None,
         initial_beta_ratio=1e0,
         prctile=100,
         upper_bound=10,
-        tile_spatial=n_lines,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
     driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
@@ -109,7 +108,7 @@ def test_dc_2d_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start, m_rec = test_dc_run(
+    m_start, m_rec = test_dc_2d_run(
         "./",
         n_electrodes=20,
         n_lines=5,
