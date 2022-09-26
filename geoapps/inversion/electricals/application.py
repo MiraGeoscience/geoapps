@@ -142,6 +142,9 @@ class InversionApp(PlotSelection2D):
         self._ignore_values = widgets.Text(
             description="Value (i.e. '<0' for no negatives)",
         )
+        self._store_sensitivities = Dropdown(
+            options=["ram", "disk"], description="Storage device:", value="disk"
+        )
         self._max_iterations = IntText(value=10, description="Max beta Iterations")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
@@ -161,6 +164,7 @@ class InversionApp(PlotSelection2D):
                 self._max_cg_iterations,
                 self._tol_cg,
                 self._n_cpu,
+                self._store_sensitivities,
                 self._tile_spatial,
             ]
         )
@@ -410,6 +414,10 @@ class InversionApp(PlotSelection2D):
     @property
     def ga_group_name(self):
         return self._ga_group_name
+
+    @property
+    def store_sensitivities(self):
+        return self._store_sensitivities
 
     @property
     def reference_model(self):
@@ -1040,7 +1048,6 @@ class InversionApp(PlotSelection2D):
             except AttributeError:
                 continue
 
-        self.workspace.open(mode="r")
         # Create a new workapce and copy objects into it
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
@@ -1137,7 +1144,6 @@ class InversionApp(PlotSelection2D):
 
         self.write.button_style = ""
         self.trigger.button_style = "success"
-        self.workspace.close()
 
     @staticmethod
     def run(params):

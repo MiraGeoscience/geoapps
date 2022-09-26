@@ -40,7 +40,9 @@ class IsoSurfacesDriver:
         )
 
         if len(levels) < 1:
+
             return
+
         print("Starting the isosurface creation.")
         surfaces = self.iso_surface(
             self.params.objects,
@@ -197,6 +199,7 @@ if __name__ == "__main__":
     file = sys.argv[1]
     params_class = IsoSurfacesParams(InputFile.read_ui_json(file))
     driver = IsoSurfacesDriver(params_class)
+
     print("Loaded. Running iso surface creation . . .")
     with params_class.geoh5.open(mode="r+"):
         driver.run()

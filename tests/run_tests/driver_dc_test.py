@@ -4,10 +4,13 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+import os
 
 import numpy as np
+from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import start_inversion
+from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.electricals import DirectCurrentParams
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -20,21 +23,17 @@ target_run = {
     "phi_m": 79.91,
 }
 
+np.random.seed(0)
 
-def test_dc_run(
+
+def test_dc_fwr_run(
     tmp_path,
     n_electrodes=4,
     n_lines=3,
-    max_iterations=1,
-    pytest=True,
     refinement=(4, 6),
 ):
-    from geoapps.inversion.driver import InversionDriver
-    from geoapps.inversion.electricals import DirectCurrentParams
-
-    np.random.seed(0)
     # Run the forward
-    geoh5, mesh, model, survey, topography = setup_inversion_workspace(
+    geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.01,
         anomaly=10,
@@ -58,54 +57,79 @@ def test_dc_run(
     fwr_driver = InversionDriver(params)
     fwr_driver.run()
 
-    geoh5.open()
-    potential = geoh5.get_entity("Iteration_0_dc")[0]
-    # Run the inverse
-    np.random.seed(0)
-    params = DirectCurrentParams(
-        geoh5=geoh5,
-        mesh=mesh.uid,
-        topography_object=topography.uid,
-        data_object=potential.parent.uid,
-        starting_model=1e-2,
-        s_norm=0.0,
-        x_norm=1.0,
-        y_norm=1.0,
-        z_norm=1.0,
-        gradient_type="components",
-        potential_channel_bool=True,
-        z_from_topo=True,
-        potential_channel=potential.uid,
-        potential_uncertainty=1e-3,
-        max_iterations=max_iterations,
-        initial_beta=None,
-        initial_beta_ratio=1e0,
-        prctile=100,
-        upper_bound=10,
-        tile_spatial=n_lines,
-    )
-    params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
+    return fwr_driver.starting_model
+
+
+def test_dc_run(
+    tmp_path,
+    max_iterations=1,
+    pytest=True,
+    n_lines=3,
+):
+    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    if pytest:
+        workpath = str(tmp_path / "../test_dc_fwr_run0/inversion_test.geoh5")
+
+    with Workspace(workpath) as geoh5:
+        potential = geoh5.get_entity("Iteration_0_dc")[0]
+        mesh = geoh5.get_entity("mesh")[0]
+        topography = geoh5.get_entity("Topo")[0]
+
+        # Run the inverse
+        np.random.seed(0)
+        params = DirectCurrentParams(
+            geoh5=geoh5,
+            mesh=mesh.uid,
+            topography_object=topography.uid,
+            data_object=potential.parent.uid,
+            starting_model=1e-2,
+            s_norm=0.0,
+            x_norm=1.0,
+            y_norm=1.0,
+            z_norm=1.0,
+            gradient_type="components",
+            potential_channel_bool=True,
+            z_from_topo=True,
+            potential_channel=potential.uid,
+            potential_uncertainty=1e-3,
+            max_iterations=max_iterations,
+            initial_beta=None,
+            initial_beta_ratio=1e0,
+            prctile=100,
+            upper_bound=10,
+            tile_spatial=n_lines,
+            store_sensitivities="ram",
+        )
+        params.write_input_file(path=tmp_path, name="Inv_run")
+
+    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
-    output["data"] = potential.values
+    if geoh5.open():
+        output["data"] = potential.values
     if pytest:
         check_target(output, target_run)
     else:
-        return fwr_driver.starting_model, driver.inverse_problem.model
+        return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    m_start, m_rec = test_dc_run(
+
+    m_start = test_dc_fwr_run(
         "./",
         n_electrodes=20,
         n_lines=5,
+        refinement=(4, 8),
+    )
+
+    m_rec = test_dc_run(
+        "./",
+        n_lines=5,
         max_iterations=15,
         pytest=False,
-        refinement=(4, 8),
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
