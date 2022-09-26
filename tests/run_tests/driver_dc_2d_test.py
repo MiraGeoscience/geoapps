@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
+
 import numpy as np
 
 from geoapps.inversion.driver import start_inversion
@@ -94,7 +96,8 @@ def test_dc_2d_run(
         upper_bound=10,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
+    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+    # driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
@@ -111,7 +114,7 @@ if __name__ == "__main__":
     m_start, m_rec = test_dc_2d_run(
         "./",
         n_electrodes=20,
-        n_lines=5,
+        n_lines=3,
         max_iterations=15,
         pytest=False,
         refinement=(4, 8),
