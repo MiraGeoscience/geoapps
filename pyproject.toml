@@ -70,7 +70,7 @@ geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v
 #geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="branch_or_tag" }
 simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725" }
 #simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag" }
-simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-641.tar.gz#sha256=None", extras = ["dask"] }
+simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-643.tar.gz#sha256=None", extras = ["dask"] }
 #simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag", extras = ["dask"] }
 
 [tool.poetry.dev-dependencies]
