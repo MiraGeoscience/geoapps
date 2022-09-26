@@ -276,7 +276,7 @@ def setup_inversion_workspace(
             p1 = np.r_[120, 25]
         else:
             p0 = np.r_[-20, -20, -20]
-            p1 = np.r_[20, 20, -25]
+            p1 = np.r_[20, 20, 25]
 
         model = utils.model_builder.addBlock(
             mesh.gridCC,
