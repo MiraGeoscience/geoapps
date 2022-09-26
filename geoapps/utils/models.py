@@ -31,7 +31,7 @@ def get_drape_model(
     parent: Group = None,
     return_colocated_mesh: bool = False,
     return_sorting: bool = False,
-):
+) -> tuple:
     """
     Create a BlockModel object from parameters.
 

@@ -660,6 +660,15 @@
         "value": 1
     },
     "max_ram": "",
+    "store_sensitivities": {
+        "choiceList": [
+            "disk",
+            "ram"
+        ],
+        "group": "Compute",
+        "label": "Storage device",
+        "value": "disk"
+    },
     "out_group": {
         "label": "Results group name",
         "value": "InducedPolarizationInversion"

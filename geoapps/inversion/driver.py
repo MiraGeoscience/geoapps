@@ -418,38 +418,52 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         )
 
     elif inversion_type == "magnetic scalar":
-        from .potential_fields import MagneticScalarParams as ParamClass
-        from .potential_fields.magnetic_scalar.constants import validations
+        from geoapps.inversion.potential_fields import (
+            MagneticScalarParams as ParamClass,
+        )
+        from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
+            validations,
+        )
 
     elif inversion_type == "gravity":
         from geoapps.inversion.potential_fields import GravityParams as ParamClass
         from geoapps.inversion.potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from .natural_sources import MagnetotelluricsParams as ParamClass
-        from .natural_sources.magnetotellurics.constants import validations
+        from geoapps.inversion.natural_sources import (
+            MagnetotelluricsParams as ParamClass,
+        )
+        from geoapps.inversion.natural_sources.magnetotellurics.constants import (
+            validations,
+        )
 
     elif inversion_type == "tipper":
-        from .natural_sources import TipperParams as ParamClass
-        from .natural_sources.tipper.constants import validations
+        from geoapps.inversion.natural_sources import TipperParams as ParamClass
+        from geoapps.inversion.natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
         from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
             validations,
         )
-
-        from .electricals.direct_current.three_dimensions.params import (
+        from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
             DirectCurrent3DParams as ParamClass,
         )
     elif inversion_type == "direct current 2d":
-        from .electricals.direct_current.two_dimensions.constants import validations
-        from .electricals.direct_current.two_dimensions.params import (
+        from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
             DirectCurrent2DParams as ParamClass,
         )
 
     elif inversion_type == "induced polarization":
-        from .electricals.induced_polarization.constants import validations
-        from .electricals.induced_polarization.params import (
+        from geoapps.inversion.electricals import (
+            InducedPolarizationParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.induced_polarization.params import (
             InducedPolarizationParams as ParamClass,
         )
 
