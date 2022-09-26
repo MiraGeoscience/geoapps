@@ -16,7 +16,6 @@ import random
 
 import geoh5py.objects
 import numpy as np
-import pandas as pd
 import pytest
 from discretize import TreeMesh
 from geoh5py.objects import Grid2D
@@ -92,8 +91,8 @@ def test_get_drape_model(tmp_path):
 
 
 def test_cell_centers_to_faces():
-    test_faces = [0, 3, 5, 6, 7, 8, 10, 13]
-    centers = pd.DataFrame(test_faces).rolling(2).mean().values[1:].flatten()
+    test_faces = np.array([0, 3, 5, 6, 7, 8, 10, 13], dtype=float)
+    centers = running_mean(test_faces, width=1, method="forward")[1:]
     faces = cell_centers_to_faces(centers)
     assert np.allclose(test_faces, faces)
 
