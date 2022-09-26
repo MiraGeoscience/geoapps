@@ -293,7 +293,7 @@ app_initializer = {
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
     "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
     "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
-    "line_object": UUID("{92acb7ee-07bd-4538-8a0e-b5e295bd3f83}"),
+    "line_object": UUID("{d400e8f1-8460-4609-b852-b3b93f945770}"),
     "line_id": 1,
     "reference_model": 1e-1,
     "starting_model": 1e-1,
