@@ -17,6 +17,7 @@ from uuid import UUID
 
 import numpy as np
 from discretize import TensorMesh, TreeMesh
+from geoh5py.objects import DrapeModel
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
@@ -376,7 +377,11 @@ def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
 
 
 def cell_centers_to_faces(centers: np.ndarray) -> np.ndarray:
-    """Compute faces from centers of cells containing a evenly spaced core region."""
+    """
+    Compute faces from centers of cells containing a evenly spaced core region.
+
+    :param: centers: Array of grid centers in one dimension.
+    """
 
     h = np.diff(centers)
     icore = np.where(np.isclose(h, h.min()))[0]
@@ -395,9 +400,13 @@ def cell_centers_to_faces(centers: np.ndarray) -> np.ndarray:
     return faces
 
 
-def drape_2_tensor(drape_model, return_sorting=False):
+def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tuple:
     """
-    Convert a geoh5 drape model to discretize.TensorMesh
+    Convert a geoh5 drape model to discretize.TensorMesh.
+
+    :param: drape_model: geoh5py.DrapeModel object.
+    :param: return_sorting: If True then return an index array that would
+        re-sort a model in TensorMesh order to DrapeModel order.
     """
     prisms = drape_model.prisms
     layers = drape_model.layers
@@ -414,7 +423,7 @@ def drape_2_tensor(drape_model, return_sorting=False):
         sorting = np.arange(mesh.n_cells)
         sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
         sorting = sorting[::-1].T.flatten()
-        return mesh, sorting
+        return (mesh, sorting)
     else:
         return mesh
 
