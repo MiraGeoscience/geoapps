@@ -24,8 +24,10 @@ from geoh5py.workspace import Workspace
 from geoapps.driver_base.utils import running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
 from geoapps.shared_utils.utils import (
+    cell_centers_to_faces,
     downsample_grid,
     downsample_xy,
+    drape_2_tensor,
     filter_xy,
     get_locations,
     octree_2_treemesh,
@@ -35,10 +37,11 @@ from geoapps.shared_utils.utils import (
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
-from geoapps.utils.models import RectangularBlock
+from geoapps.utils.models import RectangularBlock, get_drape_model
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
+    compute_alongline_distance,
     extract_dcip_survey,
     find_endpoints,
     find_unique_tops,
@@ -58,6 +61,68 @@ def test_find_endpoints():
     y = -x + 10
     p = find_endpoints(np.c_[x, y])
     assert np.allclose(p, [[10, 0], [0, 10]])
+
+
+def test_get_drape_model(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    x = np.arange(11)
+    y = -x + 10
+    locs = np.c_[x, y, np.zeros_like(x)]
+    h = [0.5, 0.5]
+    depth_core = 5.0
+    pads = [0, 0, 0, 0]  # [5, 5, 3, 1]
+    expansion_factor = 1.1
+    model, mesh, sorting = get_drape_model(  # pylint: disable=W0632
+        ws,
+        "drape_test",
+        locs,
+        h,
+        depth_core,
+        pads,
+        expansion_factor,
+        return_colocated_mesh=True,
+        return_sorting=True,
+    )
+    ws.close()
+    resorted_mesh_centers = mesh.cell_centers[sorting, :]
+    model_centers = compute_alongline_distance(model.centroids)
+    model_centers[:, 0] += h[0] / 2
+    assert np.allclose(model_centers, resorted_mesh_centers)
+
+
+def test_cell_centers_to_faces():
+    test_faces = np.array([0, 3, 5, 6, 7, 8, 10, 13], dtype=float)
+    centers = running_mean(test_faces, width=1, method="forward")[1:]
+    faces = cell_centers_to_faces(centers)
+    assert np.allclose(test_faces, faces)
+
+
+def test_drape_2_tensormesh(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    x = np.linspace(358600, 359500, 10)
+    y = np.linspace(5885500, 5884600, 10)
+    z = 300 * np.ones_like(x)
+    locs = np.c_[x, y, z]
+    h = [20, 40]
+    depth_core = 200
+    pads = [500] * 4
+    expfact = 1.1
+    drape, tensor, _ = get_drape_model(  # pylint: disable=W0632
+        ws,
+        "test_drape",
+        locs,
+        h,
+        depth_core,
+        pads,
+        expansion_factor=expfact,
+        parent=None,
+        return_colocated_mesh=True,
+        return_sorting=True,
+    )
+
+    new_tensor = drape_2_tensor(drape)
+
+    assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
 
 
 def test_find_unique_tops():

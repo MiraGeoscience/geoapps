@@ -10,10 +10,104 @@ from __future__ import annotations
 
 import numpy as np
 from discretize.utils import mesh_utils
-from geoh5py.objects import BlockModel
+from geoh5py.groups import Group
+from geoh5py.objects import BlockModel, DrapeModel
 from geoh5py.workspace import Workspace
+from scipy.interpolate import interp1d
 
+from geoapps.block_model_creation.driver import BlockModelDriver
 from geoapps.shared_utils.utils import rotate_xyz
+from geoapps.utils.surveys import compute_alongline_distance
+
+
+def get_drape_model(
+    workspace: Workspace,
+    name: str,
+    locations: np.ndarray,
+    h: list,
+    depth_core: float,
+    pads: list,
+    expansion_factor: float,
+    parent: Group = None,
+    return_colocated_mesh: bool = False,
+    return_sorting: bool = False,
+) -> tuple:
+    """
+    Create a BlockModel object from parameters.
+    :param workspace: Workspace.
+    :param parent: Group to contain the result.
+    :param name: Block model name.
+    :param locations: Location points.
+    :param h: Cell size(s) for the core mesh.
+    :param depth_core: Depth of core mesh below locs.
+    :param pads: len(6) Padding distances [W, E, N, S, Down, Up]
+    :param expansion_factor: Expansion factor for padding cells.
+    :param return_colocated_mesh: If true return TensorMesh.
+    :param return_sorting: If true, return the indices required to map
+        values stored in the TensorMesh to the drape model.
+    :return object_out: Output block model.
+    """
+
+    locations = BlockModelDriver.truncate_locs_depths(locations, depth_core)
+    depth_core = BlockModelDriver.minimum_depth_core(locations, depth_core, h[1])
+    locs = compute_alongline_distance(locations)
+    x_interp = interp1d(locs[:, 0], locations[:, 0], fill_value="extrapolate")
+    y_interp = interp1d(locs[:, 0], locations[:, 1], fill_value="extrapolate")
+
+    mesh = mesh_utils.mesh_builder_xyz(
+        locs,
+        h,
+        padding_distance=[
+            [pads[0], pads[1]],
+            [pads[2], pads[3]],
+        ],
+        depth_core=depth_core,
+        expansion_factor=expansion_factor,
+        mesh_type="tensor",
+    )
+
+    cc = mesh.cell_centers
+    hz = mesh.h[1]
+    top = np.max(cc[:, 1].reshape(len(hz), -1)[:, 0] + (hz / 2))
+    bottoms = cc[:, 1].reshape(len(hz), -1)[:, 0] - (hz / 2)
+    n_layers = len(bottoms)
+
+    prisms = []
+    layers = []
+    indices = []
+    index = 0
+    for i, d in enumerate(np.unique(mesh.cell_centers[:, 0])):
+        prisms.append(
+            [float(x_interp(d)), float(y_interp(d)), top, i * n_layers, n_layers]
+        )
+        for k, b in enumerate(bottoms):
+            layers.append([i, k, b])
+            indices.append(index)
+            index += 1
+
+    model = DrapeModel.create(workspace, name=name, parent=parent)
+    model.prisms = np.vstack(prisms)
+    layers = np.vstack(layers)
+    layers[:, 2] = layers[:, 2][::-1]
+    model.layers = layers
+
+    model.add_data(
+        {
+            "indices": {
+                "values": np.array(indices, dtype=np.int32),
+                "association": "CELL",
+            }
+        }
+    )
+    val = [model]
+    if return_colocated_mesh:
+        val.append(mesh)
+    if return_sorting:
+        sorting = np.arange(mesh.n_cells)
+        sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
+        sorting = sorting[::-1].T.flatten()
+        val.append(sorting)
+    return val
 
 
 class RectangularBlock:
