@@ -295,7 +295,7 @@ class PlotSelection2D(ObjectDataSelection):
         data_obj = None
 
         if hasattr(self, "plotting_data"):
-            data_channel = self.plotting_data
+            data_channel = self.plotting_data  # pylint: disable=E1101
         else:
             if self.select_multiple and data_name:
                 data_channel = data_name[0]

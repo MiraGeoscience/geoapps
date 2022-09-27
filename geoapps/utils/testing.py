@@ -105,7 +105,10 @@ def setup_inversion_workspace(
     topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
     triang = Delaunay(topo[:, :2])
     topography = Surface.create(
-        geoh5, vertices=topo, cells=triang.simplices, name="topography"
+        geoh5,
+        vertices=topo,
+        cells=triang.simplices,
+        name="topography",  # pylint: disable=E1101
     )
     # Observation points
     n_electrodes = (
