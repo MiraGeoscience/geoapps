@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 4a36d6198cebd3d00bdb4737cde0bdc4f0ed98f953799702f936d6d6638aed1a
-    osx-64: 389d8165448d39be1adfb01e37963bd928fbffb85f9200b2ac90f20590e179a7
-    win-64: b3dabf7c680e7bfc300139a09ed4409b3ccfe580b4cc15d2975eef920290adcc
+    linux-64: ccdbfbe659d9628aa5f8956772d7f01ca18e37a50829cf312501d5b648d7eb1f
+    osx-64: 69afa7aafa976a826564c1b628af933ee158af8c66431646c4baf4b6ee82074f
+    win-64: 2bffd2b873d922655aaf169bdd38f1079974558b048ea9880d94273dcba5c6c4
   platforms:
   - win-64
   - osx-64
@@ -4344,8 +4344,8 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-643.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-643.tar.gz
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz
   version: 0.15.1.dev3+geoapps.0.8.0
 - category: full
   dependencies: {}
@@ -8322,8 +8322,8 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-643.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-643.tar.gz
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz
   version: 0.15.1.dev3+geoapps.0.8.0
 - category: main
   dependencies: {}
@@ -12191,14 +12191,14 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: 104aa1fd1e2da8527d44743b3807f0b9
-    sha256: 6cafc05dedecfe033f7b04ad252d26a57150643f434c92e8eb5e7206c59a3e75
+    md5: aa16e35a4bce9c90df913fa8f3b19d2d
+    sha256: c505d0c91762152edf70f1ec2730c8a78cbfc01bb56c522375ab861105bdb05a
   manager: conda
   name: ipykernel
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.15.3-pyh025b116_0.tar.bz2
-  version: 6.15.3
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.16.0-pyh025b116_0.tar.bz2
+  version: 6.16.0
 - category: full
   dependencies:
     nbconvert-core: 7.0.0 pyhd8ed1ab_0
@@ -12373,7 +12373,7 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-643.tar.gz#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-643.tar.gz
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz
   version: 0.15.1.dev3+geoapps.0.8.0
 version: 1
