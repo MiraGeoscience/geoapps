@@ -107,8 +107,8 @@ def setup_inversion_workspace(
     topography = Surface.create(
         geoh5,
         vertices=topo,
-        cells=triang.simplices,
-        name="topography",  # pylint: disable=E1101
+        cells=triang.simplices,  # pylint: disable=E1101
+        name="topography",
     )
     # Observation points
     n_electrodes = (
