@@ -161,7 +161,7 @@ class InversionMesh:
                 [self.params.u_cell_size, self.params.v_cell_size],
                 self.params.depth_core,
                 [self.params.horizontal_padding] * 2
-                + [self.params.vertical_padding] * 2,
+                + [self.params.vertical_padding, 1],
                 self.params.expansion_factor,
                 parent=self.params.ga_group,
                 return_colocated_mesh=True,

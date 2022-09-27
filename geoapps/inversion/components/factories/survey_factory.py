@@ -147,10 +147,13 @@ class SurveyFactory(SimPEGFactory):
             active_cells=active_cells,
             channel=channel,
         )
-        condition = local_index is None or "2d" in self.params.inversion_type
-        local_index = self.local_index if condition else local_index
+
         if not self.params.forward_only:
-            self._add_data(survey, data, local_index, channel)
+
+            if local_index is None or "2d" in self.factory_type:
+                self._add_data(survey, data, self.local_index, channel)
+            else:
+                self._add_data(survey, data, local_index, channel)
 
         if self.factory_type in [
             "direct current",
@@ -225,12 +228,12 @@ class SurveyFactory(SimPEGFactory):
             survey.std = uncertainty_vec
 
         else:
-            map = (
+            index_map = (
                 data.global_map[local_index]
                 if data.global_map is not None
                 else local_index
             )
-            local_data = {k: v[map] for k, v in data.observed.items()}
+            local_data = {k: v[index_map] for k, v in data.observed.items()}
             local_uncertainties = {
                 k: v[local_index] for k, v in data.uncertainties.items()
             }
@@ -272,7 +275,6 @@ class SurveyFactory(SimPEGFactory):
 
         receiver_entity = data.entity
         if self.factory_type == "direct current 2d":
-            lines = self.params.line_object
             receiver_entity = extract_dcip_survey(
                 self.params.geoh5,
                 receiver_entity,

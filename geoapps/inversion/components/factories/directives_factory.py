@@ -356,13 +356,13 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["sorting"] = np.hstack(sorting)
 
         if "2d" in self.factory_type:
-            # TODO - verify this works once the driver is running through
-            def transform(x):
+
+            def transform_2d(x):
                 expanded_data = np.array([np.nan] * len(inversion_object.indices))
                 expanded_data[inversion_object.global_map] = x
                 return expanded_data
 
-            kwargs["transforms"].insert(0, transform)
+            kwargs["transforms"].insert(0, transform_2d)
 
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].insert(
