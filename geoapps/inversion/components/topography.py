@@ -156,7 +156,7 @@ class InversionTopography(InversionLocations):
         """Write out the survey to geoh5"""
 
         if "2d" in self.params.inversion_type:
-            locs = self.inversion_data._survey.unique_locations
+            locs = self.inversion_data._survey.unique_locations  # pylint: disable=W0212
             entity = super().create_entity("Topo", locs, Curve)
         else:
             entity = super().create_entity("Topo", self.locations)

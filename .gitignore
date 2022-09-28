@@ -135,9 +135,6 @@ dmypy.json
 !/.idea/copyright/
 /assets/EM1DInversion_.json
 /assets/Inversion_.json
-/tests/run_em1d.py
-/tests/run_mvi.py
-/tests/run_pf.py
 /assets/dask-worker-space/
 /assets/SimPEG_PFInversion/
 /assets/Temp/
@@ -153,7 +150,6 @@ dmypy.json
 /tests/Gravity*
 /tests/FlinFlon.geoh5
 /tests/Inversion_.json
-/tests/run*
 /assets/Temp/*
 *.lock
 /tests/Temp/*

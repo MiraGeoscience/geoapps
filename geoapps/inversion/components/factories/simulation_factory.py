@@ -104,7 +104,11 @@ class SimulationFactory(SimPEGFactory):
         kwargs["survey"] = survey
         kwargs["sensitivity_path"] = sensitivity_path
         kwargs["max_chunk_size"] = self.params.max_chunk_size
-
+        kwargs["store_sensitivities"] = (
+            "forward_only"
+            if self.params.forward_only
+            else self.params.store_sensitivities
+        )
         if self.factory_type == "magnetic vector":
             return self._magnetic_vector_keywords(kwargs, active_cells=active_cells)
         if self.factory_type == "magnetic scalar":
@@ -128,9 +132,6 @@ class SimulationFactory(SimPEGFactory):
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
         kwargs["model_type"] = "vector"
-        kwargs["store_sensitivities"] = (
-            "forward_only" if self.params.forward_only else "disk"
-        )
         kwargs["chunk_format"] = "row"
 
         return kwargs
@@ -138,9 +139,6 @@ class SimulationFactory(SimPEGFactory):
     def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
         kwargs["actInd"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
-        kwargs["store_sensitivities"] = (
-            "forward_only" if self.params.forward_only else "disk"
-        )
         kwargs["chunk_format"] = "row"
 
         return kwargs
@@ -148,9 +146,6 @@ class SimulationFactory(SimPEGFactory):
     def _gravity_keywords(self, kwargs, active_cells=None):
         kwargs["actInd"] = active_cells
         kwargs["rhoMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
-        kwargs["store_sensitivities"] = (
-            "forward_only" if self.params.forward_only else "disk"
-        )
         kwargs["chunk_format"] = "row"
 
         return kwargs
@@ -159,8 +154,6 @@ class SimulationFactory(SimPEGFactory):
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
-        kwargs["store_sensitivities"] = False if self.params.forward_only else True
-
         return kwargs
 
     def _induced_polarization_keywords(
@@ -174,7 +167,6 @@ class SimulationFactory(SimPEGFactory):
         kwargs["etaMap"] = etamap
         kwargs["sigmaMap"] = actmap
         kwargs["solver"] = self.solver
-        kwargs["store_sensitivities"] = False if self.params.forward_only else True
         kwargs["max_ram"] = 1
 
         return kwargs
@@ -183,7 +175,6 @@ class SimulationFactory(SimPEGFactory):
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
-        kwargs["store_sensitivities"] = False if self.params.forward_only else True
 
         return kwargs
 
