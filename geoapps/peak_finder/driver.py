@@ -12,8 +12,8 @@ import sys
 from os import path
 
 import numpy as np
-from dask import delayed
-from dask.distributed import Client, get_client
+from dask import compute, delayed
+from dask.diagnostics import ProgressBar
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
 from geoh5py.ui_json import InputFile, monitored_directory_copy
@@ -33,11 +33,6 @@ class PeakFinderDriver:
     def run(self, output_group=None):
 
         print("Reading parameters...")
-        try:
-            client = get_client()
-        except ValueError:
-            client = Client()
-
         survey = self.params.objects
         prop_group = [pg for pg in survey.property_groups if pg.uid == self.params.data]
 
@@ -74,33 +69,32 @@ class PeakFinderDriver:
                     channel_params["time"] = system["channels"][channel[0]]
                 else:
                     continue
-            channel_params["values"] = client.scatter(
+            channel_params["values"] = (
                 obj.values.copy() * (-1.0) ** self.params.flip_sign
             )
 
         print("Submitting parallel jobs:")
         anomalies = []
-        locations = client.scatter(survey.vertices.copy())
+        locations = survey.vertices.copy()
 
+        line_computation = delayed(find_anomalies, pure=True)
         for line_id in tqdm(list(lines)):
             line_indices = np.where(line_field.values == line_id)[0]
 
             anomalies += [
-                client.compute(
-                    delayed(find_anomalies)(
-                        locations,
-                        line_indices,
-                        active_channels,
-                        channel_groups,
-                        data_normalization=normalization,
-                        smoothing=self.params.smoothing,
-                        min_amplitude=self.params.min_amplitude,
-                        min_value=self.params.min_value,
-                        min_width=self.params.min_width,
-                        max_migration=self.params.max_migration,
-                        min_channels=self.params.min_channels,
-                        minimal_output=True,
-                    )
+                line_computation(
+                    locations,
+                    line_indices,
+                    active_channels,
+                    channel_groups,
+                    data_normalization=normalization,
+                    smoothing=self.params.smoothing,
+                    min_amplitude=self.params.min_amplitude,
+                    min_value=self.params.min_value,
+                    min_width=self.params.min_width,
+                    max_migration=self.params.max_migration,
+                    min_channels=self.params.min_channels,
+                    minimal_output=True,
                 )
             ]
         (
@@ -119,8 +113,10 @@ class PeakFinderDriver:
         ) = ([], [], [], [], [], [], [], [], [], [], [], [])
 
         print("Processing and collecting results:")
-        for future_line in tqdm(anomalies):
-            line = future_line.result()
+        with ProgressBar():
+            results = compute(anomalies)[0]
+
+        for line in tqdm(results):
             for group in line:
                 if "channel_group" in group and len(group["cox"]) > 0:
                     channel_group += group["channel_group"]["label"]

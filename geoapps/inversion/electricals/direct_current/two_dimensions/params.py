@@ -9,10 +9,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from geoh5py.data import NumericData
-
 from geoapps.inversion import InversionBaseParams
-from geoapps.utils.surveys import extract_dcip_survey
 
 from .constants import (
     default_ui_json,
@@ -45,11 +42,11 @@ class DirectCurrent2DParams(InversionBaseParams):
         self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "direct current"
         self._validations = validations
-        self.potential_channel_bool = None
-        self.potential_channel = None
-        self.potential_uncertainty = None
-        self.line_object = None
-        self.line_id = None
+        self._potential_channel_bool = None
+        self._potential_channel = None
+        self._potential_uncertainty = None
+        self._line_object = None
+        self._line_id = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 

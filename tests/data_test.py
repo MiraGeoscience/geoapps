@@ -10,14 +10,10 @@ import os
 import numpy as np
 import SimPEG
 from geoh5py.objects import Points
-from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components import InversionData
 from geoapps.inversion.driver import InversionDriver
-from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
-    DirectCurrent2DParams,
-)
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 

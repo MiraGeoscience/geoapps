@@ -24,8 +24,10 @@ from geoh5py.workspace import Workspace
 from geoapps.driver_base.utils import running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
 from geoapps.shared_utils.utils import (
+    cell_centers_to_faces,
     downsample_grid,
     downsample_xy,
+    drape_2_tensor,
     filter_xy,
     get_locations,
     octree_2_treemesh,
@@ -43,7 +45,6 @@ from geoapps.utils.surveys import (
     extract_dcip_survey,
     find_endpoints,
     find_unique_tops,
-    isolate_dcip_line,
     new_neighbors,
     split_dcip_survey,
     survey_lines,
@@ -52,6 +53,7 @@ from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
+dc_geoh5 = "./FlinFlon_dcip.geoh5"
 
 
 def test_get_drape_model(tmp_path):
@@ -63,7 +65,7 @@ def test_get_drape_model(tmp_path):
     depth_core = 5.0
     pads = [0, 0, 0, 0]  # [5, 5, 3, 1]
     expansion_factor = 1.1
-    model, mesh, sorting = get_drape_model(
+    model, mesh, sorting = get_drape_model(  # pylint: disable=W0632
         ws,
         "drape_test",
         locs,
@@ -81,7 +83,7 @@ def test_get_drape_model(tmp_path):
     assert np.allclose(model_centers, resorted_mesh_centers)
 
 
-def test_find_unique_tops():
+def test_find_unique_tops_xz():
     x = np.linspace(0, 1, 5)
     z = np.linspace(-1, 1, 4)
     X, Z = np.meshgrid(x, z)
@@ -90,6 +92,17 @@ def test_find_unique_tops():
     locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
     test = find_unique_tops(locs)
     assert test[2, 2] == 2
+
+
+def test_find_unique_tops_xyz():
+    x = np.arange(-5, 6)
+    y = -x
+    z = np.arange(-10, 1)
+    X, Z = np.meshgrid(x, z)
+    locs = np.c_[X.flatten(), np.tile(y, len(x)), Z.flatten()]
+    tops = find_unique_tops(locs)
+    assert np.all(tops[:, 2] == 0)
+    assert np.allclose(tops[:, :2], np.c_[x, y])
 
 
 def test_compute_alongline_distance():
@@ -116,6 +129,24 @@ def test_find_endpoints():
     assert np.allclose(p, [[10, 0], [0, 10]])
 
 
+def test_cell_centers_to_faces():
+    test_faces = np.array([0, 3, 5, 6, 7, 8, 10, 13], dtype=float)
+    centers = running_mean(test_faces, width=1, method="forward")[1:]
+    faces = cell_centers_to_faces(centers)
+    assert np.allclose(test_faces, faces)
+
+
+def test_find_unique_tops():
+    x = np.arange(-5, 6)
+    y = -x
+    z = np.arange(-10, 1)
+    X, Z = np.meshgrid(x, z)
+    locs = np.c_[X.flatten(), np.tile(y, len(x)), Z.flatten()]
+    tops = find_unique_tops(locs)
+    assert np.all(tops[:, 2] == 0)
+    assert np.allclose(tops[:, :2], np.c_[x, y])
+
+
 def test_is_outlier():
     assert is_outlier([25.1, 25.3], 50.0)
     assert not is_outlier([25.1, 25.3], 25.2)
@@ -136,48 +167,34 @@ def test_new_neighbors():
 
 
 def test_survey_lines(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+            old_survey = ws.get_entity("DC_Survey")[0]
+            _ = old_survey.copy(parent=test_workspace)
 
-    old_survey = ws.get_entity("DC_Survey")[0]
-    _ = old_survey.copy(parent=test_workspace)
-
-    _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
-    assert np.all(
-        np.unique(test_workspace.get_entity("test_line_ids")[0].values)
-        == np.arange(1, 11)
-    )
-
-
-def test_isolate_dcip_line(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
-    survey = ws.get_entity("DC_Survey")[0]
-    test_survey = survey.copy(parent=test_workspace, copy_children=True)
-
-    lines = survey_lines(test_survey, [314529, 6071402])
-    isolate_dcip_line(test_workspace, test_survey, lines, 2)
-    assert True
+            _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
+            assert np.all(
+                np.unique(test_workspace.get_entity("test_line_ids")[0].values)
+                == np.arange(1, 11)
+            )
 
 
 def test_extract_dcip_survey(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
-
-    survey = ws.get_entity("DC_Survey")[0]
-    lines = survey_lines(survey, [314529, 6071402])
-    extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
-    assert test_workspace.get_entity("test_survey_line 4")[0] is not None
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+            survey = ws.get_entity("DC_Survey")[0]
+            lines = survey_lines(survey, [314529, 6071402])
+            extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
+            assert test_workspace.get_entity("test_survey_line 4")[0] is not None
 
 
 def test_split_dcip_survey(tmp_path):
-    test_workspace = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    ws = Workspace("../assets/FlinFlon_dcip.geoh5")
-
-    survey = ws.get_entity("DC_Survey")[0]
-    lines = survey_lines(survey, [314529, 6071402])
-    split_dcip_survey(survey, lines, "DC Survey Line", test_workspace)
-    assert test_workspace.get_entity("DC Survey Line 10")[0] is not None
+    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+        with Workspace(dc_geoh5) as ws:
+            survey = ws.get_entity("DC_Survey")[0]
+            lines = survey_lines(survey, [314529, 6071402])
+            split_dcip_survey(survey, lines, "DC Survey Line", test_workspace)
+            assert test_workspace.get_entity("DC Survey Line 10")[0] is not None
 
 
 def test_rectangular_block():
@@ -327,7 +344,8 @@ def test_sorted_alphanumeric_list():
 
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
-        import os as test_import  # pylint: disable=reimported
+        import os as test_import  # pylint: disable=W0404
+
     assert test_import == os
 
     with warn_module_not_found():
@@ -335,7 +353,7 @@ def test_no_warn_module_not_found(recwarn):
     assert test_import_from == os.system
 
     with warn_module_not_found():
-        import geoh5py.objects as test_import_submodule  # pylint: disable=reimported
+        import geoh5py.objects as test_import_submodule  # pylint: disable=W0404
     assert test_import_submodule == geoh5py.objects
 
     with warn_module_not_found():
@@ -569,6 +587,34 @@ def test_treemesh_2_octree(tmp_path):
         ].tolist()
         assert np.all([k in ijk_refined for k in expected_refined_cells])
         assert np.all([k in expected_refined_cells for k in ijk_refined])
+
+
+def test_drape_2_tensormesh(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    x = np.linspace(358600, 359500, 10)
+    y = np.linspace(5885500, 5884600, 10)
+    z = 300 * np.ones_like(x)
+    locs = np.c_[x, y, z]
+    h = [20, 40]
+    depth_core = 200
+    pads = [500] * 4
+    expfact = 1.1
+    drape, tensor, _ = get_drape_model(  # pylint: disable=W0632
+        ws,
+        "test_drape",
+        locs,
+        h,
+        depth_core,
+        pads,
+        expansion_factor=expfact,
+        parent=None,
+        return_colocated_mesh=True,
+        return_sorting=True,
+    )
+
+    new_tensor = drape_2_tensor(drape)
+
+    assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
 
 
 def test_octree_2_treemesh(tmp_path):

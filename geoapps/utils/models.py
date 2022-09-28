@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
-from geoh5py.objects import BlockModel, DrapeModel, ObjectBase
+from geoh5py.objects import BlockModel, DrapeModel
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
 
@@ -31,7 +31,7 @@ def get_drape_model(
     parent: Group = None,
     return_colocated_mesh: bool = False,
     return_sorting: bool = False,
-):
+) -> tuple:
     """
     Create a BlockModel object from parameters.
 
@@ -338,7 +338,6 @@ def find_top_padding(obj: BlockModel, core_z_cell_size: int) -> float:
     :param core_z_cell_size: Cell size in z direction.
     :return pad_sum: Top padding.
     """
-    f = np.abs(np.diff(obj.z_cell_delimiters))
     pad_sum = 0.0
     for h in np.abs(np.diff(obj.z_cell_delimiters)):
         if h != core_z_cell_size:

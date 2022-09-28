@@ -73,7 +73,7 @@ class InversionLocations:
         self.has_pseudo: bool = False
         self.pseudo_locations: np.ndarray = None
 
-        if params.mesh is not None:
+        if params.mesh is not None and "2d" not in params.inversion_type:
             if params.mesh.rotation is not None:
                 self.origin = np.asarray(params.mesh.origin.tolist())
                 self.angle = -1 * params.mesh.rotation

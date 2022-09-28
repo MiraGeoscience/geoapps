@@ -65,12 +65,12 @@ class SimPEGFactory:
         return self._factory_type
 
     @factory_type.setter
-    def factory_type(self, p):
-        if p not in self.valid_factory_types:
-            msg = f"Factory type: {p} not implemented yet."
+    def factory_type(self, val):
+        if val not in self.valid_factory_types:
+            msg = f"Factory type: {val} not implemented yet."
             raise NotImplementedError(msg)
         else:
-            self._factory_type = p
+            self._factory_type = val
 
     def concrete_object(self):
         """To be over-ridden in factory implementations."""
