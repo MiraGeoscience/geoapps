@@ -877,10 +877,6 @@ def inversion(input_file):
             alpha_y=alphas[2],
         )
         min_distance = None
-
-        if resolution > 0:
-            min_distance = resolution * 4
-
         reg_sigma.get_grad_horizontal(
             xyz[:, :2] + np.random.randn(xyz.shape[0], 2),
             hz_BFHS,
