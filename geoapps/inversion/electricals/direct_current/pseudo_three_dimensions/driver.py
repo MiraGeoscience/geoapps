@@ -10,7 +10,7 @@ import os
 import sys
 
 import numpy as np
-from geoh5py.groups import SimPEGGroup
+from geoh5py.groups import ContainerGroup, SimPEGGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from sweeps.driver import SweepDriver, generate
@@ -77,6 +77,7 @@ class DirectCurrentPseudo3DDriver:
         files = DirectCurrentPseudo3DDriver.line_files(path)
         lines = np.unique(self.params.line_object.values)
         results_group = SimPEGGroup.create(self.workspace, name="Pseudo3DInversion")
+        models_group = ContainerGroup.create(self.workspace, name="Models")
         data_result = self.params.data_object.copy(parent=results_group)
 
         data = {}
@@ -85,10 +86,11 @@ class DirectCurrentPseudo3DDriver:
             survey = ws.get_entity("Data")[0]
             data = self.collect_line_data(survey, data)
             mesh = ws.get_entity("Models")[0]
-            mesh = mesh.copy(parent=results_group)
-            mesh.name = f"Line {line} models"
+            mesh = mesh.copy(parent=models_group)
+            mesh.name = f"Line {line}"
 
         data_result.add_data(data)
+        models_group.parent = results_group
 
     def collect_line_data(self, survey, data):
 
