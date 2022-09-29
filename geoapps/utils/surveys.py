@@ -148,7 +148,7 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
 
         outlier = False
         if len(distances) > 1:
-            if all((dist - distances) < 1e-6):
+            if np.allclose(dist, distances, atol=1e-6):
                 outlier = False
             else:
                 outlier = is_outlier(distances, dist)
@@ -276,7 +276,7 @@ def extract_dcip_survey(
     potentials.add_data(
         {
             "A-B Cell ID": {
-                "values": ab_cell_ids + 1,
+                "values": np.array(ab_cell_ids + 1, dtype=np.int32),
                 "association": "CELL",
                 "entity_type": {
                     "primitive_type": "REFERENCED",
@@ -284,7 +284,7 @@ def extract_dcip_survey(
                 },
             },
             "Global Map": {
-                "values": np.array(list(survey_cell_map)),
+                "values": np.array(list(survey_cell_map), dtype=np.int32),
                 "association": "CELL",
                 "entity_type": {
                     "primitive_type": "REFERENCED",
