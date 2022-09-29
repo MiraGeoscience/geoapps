@@ -93,6 +93,7 @@ inversion_defaults = {
     "n_cpu": None,
     "max_ram": None,
     "out_group": "DirectCurrentInversion",
+    "cleanup": True,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver",
@@ -255,16 +256,28 @@ default_ui_json = {
         "optional": True,
         "value": 0.0,
     },
+    "mesh": {
+        "group": "Mesh",
+        "main": True,
+        "optional": True,
+        "enabled": False,
+        "label": "Mesh",
+        "meshType": "{C94968EA-CF7D-11EB-B8BC-0242AC130003}",
+        "value": None,
+    },
     "expansion_factor": {
         "main": True,
         "group": "Mesh",
         "label": "Expansion factor",
+        "dependency": "mesh",
+        "dependencyType": "disabled",
         "value": 1.1,
     },
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
     "out_group": {"label": "Results group name", "value": "direct_current"},
+    "cleanup": {"label": "Clean directory", "value": True},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -287,7 +300,7 @@ app_initializer = {
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
     "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
     "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
-    "line_object": UUID("{92acb7ee-07bd-4538-8a0e-b5e295bd3f83}"),
+    "line_object": UUID("{d400e8f1-8460-4609-b852-b3b93f945770}"),
     "line_id": 1,
     "reference_model": 1e-1,
     "starting_model": 1e-1,
@@ -319,4 +332,5 @@ app_initializer = {
     "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
     "out_group": "DCInversion",
+    "cleanup": True,
 }
