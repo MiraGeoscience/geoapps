@@ -74,7 +74,7 @@ class InversionLocations:
         self.pseudo_locations: np.ndarray = None
 
         if params.mesh is not None:
-            if params.mesh.rotation is not None:
+            if hasattr(params.mesh, "rotation"):
                 self.origin = np.asarray(params.mesh.origin.tolist())
                 self.angle = -1 * params.mesh.rotation
                 self.is_rotated = True if np.abs(self.angle) != 0 else False
