@@ -100,6 +100,7 @@ inversion_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "potential_channel_bool": True,
+    "store_sensitivities": "ram",
 }
 forward_defaults = {
     "title": "SimPEG Direct Current Forward",
