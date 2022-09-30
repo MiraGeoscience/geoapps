@@ -9,12 +9,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from geoh5py.shared import Entity
-
-from geoapps.inversion.natural_sources.magnetotellurics.params import (
-    MagnetotelluricsParams,
-)
-
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.drivers import BaseParams
@@ -24,8 +18,13 @@ if TYPE_CHECKING:
 from copy import deepcopy
 
 import numpy as np
+from geoh5py.objects import Curve
+from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
+from geoapps.inversion.natural_sources.magnetotellurics.params import (
+    MagnetotelluricsParams,
+)
 from geoapps.shared_utils.utils import filter_xy
 
 from .data import InversionData
@@ -52,7 +51,11 @@ class InversionTopography(InversionLocations):
     """
 
     def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+        self,
+        workspace: Workspace,
+        params: BaseParams,
+        inversion_data: InversionData,
+        window: dict[str, Any],
     ):
         """
         :param: workspace: Geoh5py workspace object containing location based data.
@@ -60,6 +63,7 @@ class InversionTopography(InversionLocations):
         :param: window: Center and size defining window for data, topography, etc.
         """
         super().__init__(workspace, params, window)
+        self.inversion_data = inversion_data
         self.locations: np.ndarray = None
         self.mask: np.ndarray = None
         self._initialize()
@@ -105,17 +109,20 @@ class InversionTopography(InversionLocations):
                 )
             ] = True
         else:
+            mesh_object = (
+                mesh.entity if "2d" in self.params.inversion_type else mesh.mesh
+            )
             active_cells = active_from_xyz(
-                mesh.mesh, self.locations, grid_reference="cell_centers"
+                mesh_object, self.locations, grid_reference="cell_centers"
             )
 
-        mesh.entity.add_data(
-            {
-                "active_cells": {
-                    "values": active_cells[mesh.octree_permutation].astype("float64")
-                }
-            }
-        )
+        if "2d" in self.params.inversion_type:
+            ac_model = active_cells.astype("float64")
+            active_cells = active_cells[np.argsort(mesh.permutation)]
+        else:
+            ac_model = active_cells[mesh.permutation].astype("float64")
+
+        mesh.entity.add_data({"active_cells": {"values": ac_model}})
 
         return active_cells
 
@@ -148,6 +155,10 @@ class InversionTopography(InversionLocations):
     def write_entity(self):
         """Write out the survey to geoh5"""
 
-        entity = super().create_entity("Topo", self.locations)
+        if "2d" in self.params.inversion_type:
+            locs = self.inversion_data._survey.unique_locations  # pylint: disable=W0212
+            entity = super().create_entity("Topo", locs, Curve)
+        else:
+            entity = super().create_entity("Topo", self.locations)
 
         return entity

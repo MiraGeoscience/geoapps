@@ -23,10 +23,13 @@ from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import requires_value
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.electricals.direct_current.constants import (
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer as dc_initializer,
 )
+from geoapps.inversion.electricals.induced_polarization import InducedPolarizationParams
 from geoapps.inversion.electricals.induced_polarization.constants import (
     app_initializer as ip_initializer,
 )
@@ -110,7 +113,7 @@ def test_params_initialize():
         MagneticScalarParams(),
         MagneticVectorParams(),
         GravityParams(),
-        DirectCurrentParams(),
+        DirectCurrent3DParams(),
         InducedPolarizationParams(),
         OctreeParams(),
         PeakFinderParams(),
@@ -142,7 +145,7 @@ def test_input_file_construction(tmp_path):
         GravityParams,
         MagneticScalarParams,
         MagneticVectorParams,
-        DirectCurrentParams,
+        DirectCurrent3DParams,
         InducedPolarizationParams,
         OctreeParams,
         PeakFinderParams,
@@ -178,7 +181,7 @@ def test_default_input_file(tmp_path):
         MagneticScalarParams,
         MagneticVectorParams,
         GravityParams,
-        DirectCurrentParams,
+        DirectCurrent3DParams,
         InducedPolarizationParams,
     ]:
         filename = os.path.join(tmp_path, "test.ui.json")
@@ -248,7 +251,7 @@ def test_chunk_validation_dc(tmp_path):
         test_dict = dc_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
         test_dict.pop("topography_object")
-        params = DirectCurrentParams(**test_dict)  # pylint: disable=repeated-keyword
+        params = DirectCurrent3DParams(**test_dict)  # pylint: disable=repeated-keyword
 
         with pytest.raises(OptionalValidationError) as excinfo:
             params.write_input_file(name="test.ui.json", path=tmp_path)
@@ -1801,7 +1804,7 @@ def test_bz_uncertainty():
 
 
 def test_direct_current_inversion_type():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     params.inversion_type = "direct current"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
@@ -1815,7 +1818,7 @@ def test_direct_current_inversion_type():
 
 
 def test_direct_current_data_object():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     params.data_object = uuid4()
 
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1830,7 +1833,7 @@ def test_direct_current_data_object():
 
 
 def test_potential_channel_bool():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     with pytest.raises(TypeValidationError) as excinfo:
         params.potential_channel_bool = "alskdj"
 
@@ -1843,7 +1846,7 @@ def test_potential_channel_bool():
 
 
 def test_potential_channel():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     params.potential_channel = uuid4()
     params.potential_channel = uuid4()
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1858,7 +1861,7 @@ def test_potential_channel():
 
 
 def test_potential_uncertainty():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     params.potential_uncertainty = uuid4()
     params.potential_uncertainty = uuid4()
     params.potential_uncertainty = 4

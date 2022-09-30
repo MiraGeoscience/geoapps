@@ -100,7 +100,7 @@ class InversionDriver:
         self.inversion_data = InversionData(self.workspace, self.params, self.window)
 
         self.inversion_topography = InversionTopography(
-            self.workspace, self.params, self.window
+            self.workspace, self.params, self.inversion_data, self.window
         )
 
         self.inversion_mesh = InversionMesh(
@@ -304,7 +304,10 @@ class InversionDriver:
 
     def get_tiles(self):
 
-        if self.params.inversion_type in ["direct current", "induced polarization"]:
+        if self.params.inversion_type in [
+            "direct current",
+            "induced polarization",
+        ]:
             tiles = []
             potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
@@ -329,6 +332,8 @@ class InversionDriver:
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
+        elif "2d" in self.params.inversion_type:
+            tiles = [self.inversion_data.indices]
         else:
             tiles = tile_locations(
                 self.locations,
@@ -437,8 +442,19 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         from geoapps.inversion.natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
-        from geoapps.inversion.electricals import DirectCurrentParams as ParamClass
-        from geoapps.inversion.electricals.direct_current.constants import validations
+        from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+            DirectCurrent3DParams as ParamClass,
+        )
+    elif inversion_type == "direct current 2d":
+        from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
+            DirectCurrent2DParams as ParamClass,
+        )
 
     elif inversion_type == "induced polarization":
         from geoapps.inversion.electricals import (
@@ -446,6 +462,9 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         )
         from geoapps.inversion.electricals.induced_polarization.constants import (
             validations,
+        )
+        from geoapps.inversion.electricals.induced_polarization.params import (
+            InducedPolarizationParams as ParamClass,
         )
 
     else:

@@ -32,8 +32,15 @@ from geoh5py.workspace import Workspace
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.electricals.direct_current.constants import app_initializer
+from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+    app_initializer,
+)
+from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.params import (
+    InducedPolarizationParams,
+)
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 
@@ -86,7 +93,7 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = DirectCurrentParams
+    _param_class = DirectCurrent3DParams
     _select_multiple = True
     _add_groups = False
     _sensor = None
@@ -789,9 +796,9 @@ class InversionApp(PlotSelection2D):
         """
         params = self.params.to_dict(ui_json_format=False)
         if self.inversion_type.value == "direct current" and not isinstance(
-            self.params, DirectCurrentParams
+            self.params, DirectCurrent3DParams
         ):
-            self._param_class = DirectCurrentParams
+            self._param_class = DirectCurrent3DParams
             params["inversion_type"] = "direct current"
             params["out_group"] = "DCInversion"
             self.option_choices.options = list(self.inversion_options)[1:]
@@ -1148,7 +1155,7 @@ class InversionApp(PlotSelection2D):
     @staticmethod
     def run(params):
 
-        if not isinstance(params, (DirectCurrentParams, InducedPolarizationParams)):
+        if not isinstance(params, (DirectCurrent3DParams, InducedPolarizationParams)):
             raise ValueError(
                 "Parameter 'inversion_type' must be one of "
                 "'direct current' or 'induced polarization'"
@@ -1177,7 +1184,7 @@ class InversionApp(PlotSelection2D):
                     data = json.load(f)
 
                 if data["inversion_type"] == "direct current":
-                    self._param_class = DirectCurrentParams
+                    self._param_class = DirectCurrent3DParams
 
                 elif data["inversion_type"] == "induced polarization":
                     self._param_class = InducedPolarizationParams
