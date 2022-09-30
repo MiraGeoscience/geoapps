@@ -25,7 +25,7 @@ class DirectCurrentPseudo3DDriver:
         self.workspace = params.geoh5
 
     def run(self):
-        path = self.params.geoh5.h5file.replace(".geoh5", ".json")
+        path = self.workspace.h5file.replace(".geoh5", ".json")
         ifile = InputFile.read_ui_json(path)
         ifile.data["run_command"] = "geoapps.inversion.driver"
         ifile.write_ui_json(path)
