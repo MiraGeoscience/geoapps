@@ -17,8 +17,11 @@ from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization import InducedPolarizationParams
 from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,
 )
@@ -181,7 +184,8 @@ def test_dc_inversion(tmp_path):
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
     ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
-    params_reload = DirectCurrentParams(ifile)
+
+    params_reload = DirectCurrent3DParams(ifile)
 
     for param, value in changes.items():
         p_value = getattr(params_reload, param)

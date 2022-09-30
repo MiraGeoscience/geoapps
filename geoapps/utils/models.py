@@ -34,6 +34,7 @@ def get_drape_model(
 ) -> tuple:
     """
     Create a BlockModel object from parameters.
+
     :param workspace: Workspace.
     :param parent: Group to contain the result.
     :param name: Block model name.
@@ -45,6 +46,7 @@ def get_drape_model(
     :param return_colocated_mesh: If true return TensorMesh.
     :param return_sorting: If true, return the indices required to map
         values stored in the TensorMesh to the drape model.
+
     :return object_out: Output block model.
     """
 

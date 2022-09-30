@@ -21,7 +21,7 @@ from .constants import (
 )
 
 
-class DirectCurrentParams(InversionBaseParams):
+class DirectCurrent2DParams(InversionBaseParams):
     """
     Parameter class for electrical->conductivity inversion.
     """
@@ -45,6 +45,8 @@ class DirectCurrentParams(InversionBaseParams):
         self._potential_channel_bool = None
         self._potential_channel = None
         self._potential_uncertainty = None
+        self._line_object = None
+        self._line_id = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
@@ -55,6 +57,22 @@ class DirectCurrentParams(InversionBaseParams):
     @inversion_type.setter
     def inversion_type(self, val):
         self.setter_validator("inversion_type", val)
+
+    @property
+    def line_object(self):
+        return self._line_object
+
+    @line_object.setter
+    def line_object(self, val):
+        self._line_object = val
+
+    @property
+    def line_id(self):
+        return self._line_id
+
+    @line_id.setter
+    def line_id(self, val):
+        self._line_id = val
 
     @property
     def potential_channel_bool(self):

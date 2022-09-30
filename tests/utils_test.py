@@ -56,13 +56,6 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 dc_geoh5 = "./FlinFlon_dcip.geoh5"
 
 
-def test_find_endpoints():
-    x = np.arange(11)
-    y = -x + 10
-    p = find_endpoints(np.c_[x, y])
-    assert np.allclose(p, [[10, 0], [0, 10]])
-
-
 def test_get_drape_model(tmp_path):
     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
     x = np.arange(11)
@@ -90,39 +83,57 @@ def test_get_drape_model(tmp_path):
     assert np.allclose(model_centers, resorted_mesh_centers)
 
 
+def test_find_unique_tops_xz():
+    x = np.linspace(0, 1, 5)
+    z = np.linspace(-1, 1, 4)
+    X, Z = np.meshgrid(x, z)
+    Z[:, 2] += 1
+    Y = np.zeros_like(X)
+    locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
+    test = find_unique_tops(locs)
+    assert test[2, 2] == 2
+
+
+def test_find_unique_tops_xyz():
+    x = np.arange(-5, 6)
+    y = -x
+    z = np.arange(-10, 1)
+    X, Z = np.meshgrid(x, z)
+    locs = np.c_[X.flatten(), np.tile(y, len(x)), Z.flatten()]
+    tops = find_unique_tops(locs)
+    assert np.all(tops[:, 2] == 0)
+    assert np.allclose(tops[:, :2], np.c_[x, y])
+
+
+def test_compute_alongline_distance():
+    x = np.arange(11)
+    y = -x + 10
+    locs = np.c_[x, y]
+    test = compute_alongline_distance(locs)
+    assert np.max(test) == np.sqrt(2) * 10
+
+    x = np.linspace(0, 1, 5)
+    z = np.linspace(-1, 1, 4)
+    X, Z = np.meshgrid(x, z)
+    Z[:, 2] += 1
+    Y = np.zeros_like(X)
+    locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
+    test = compute_alongline_distance(locs)
+    assert True
+
+
+def test_find_endpoints():
+    x = np.arange(11)
+    y = -x + 10
+    p = find_endpoints(np.c_[x, y])
+    assert np.allclose(p, [[10, 0], [0, 10]])
+
+
 def test_cell_centers_to_faces():
     test_faces = np.array([0, 3, 5, 6, 7, 8, 10, 13], dtype=float)
     centers = running_mean(test_faces, width=1, method="forward")[1:]
     faces = cell_centers_to_faces(centers)
     assert np.allclose(test_faces, faces)
-
-
-def test_drape_2_tensormesh(tmp_path):
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
-    x = np.linspace(358600, 359500, 10)
-    y = np.linspace(5885500, 5884600, 10)
-    z = 300 * np.ones_like(x)
-    locs = np.c_[x, y, z]
-    h = [20, 40]
-    depth_core = 200
-    pads = [500] * 4
-    expfact = 1.1
-    drape, tensor, _ = get_drape_model(  # pylint: disable=W0632
-        ws,
-        "test_drape",
-        locs,
-        h,
-        depth_core,
-        pads,
-        expansion_factor=expfact,
-        parent=None,
-        return_colocated_mesh=True,
-        return_sorting=True,
-    )
-
-    new_tensor = drape_2_tensor(drape)
-
-    assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
 
 
 def test_find_unique_tops():
@@ -158,7 +169,6 @@ def test_new_neighbors():
 def test_survey_lines(tmp_path):
     with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
         with Workspace(dc_geoh5) as ws:
-
             old_survey = ws.get_entity("DC_Survey")[0]
             _ = old_survey.copy(parent=test_workspace)
 
@@ -335,6 +345,7 @@ def test_sorted_alphanumeric_list():
 def test_no_warn_module_not_found(recwarn):
     with warn_module_not_found():
         import os as test_import  # pylint: disable=W0404
+
     assert test_import == os
 
     with warn_module_not_found():
@@ -576,6 +587,34 @@ def test_treemesh_2_octree(tmp_path):
         ].tolist()
         assert np.all([k in ijk_refined for k in expected_refined_cells])
         assert np.all([k in expected_refined_cells for k in ijk_refined])
+
+
+def test_drape_2_tensormesh(tmp_path):
+    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    x = np.linspace(358600, 359500, 10)
+    y = np.linspace(5885500, 5884600, 10)
+    z = 300 * np.ones_like(x)
+    locs = np.c_[x, y, z]
+    h = [20, 40]
+    depth_core = 200
+    pads = [500] * 4
+    expfact = 1.1
+    drape, tensor, _ = get_drape_model(  # pylint: disable=W0632
+        ws,
+        "test_drape",
+        locs,
+        h,
+        depth_core,
+        pads,
+        expansion_factor=expfact,
+        parent=None,
+        return_colocated_mesh=True,
+        return_sorting=True,
+    )
+
+    new_tensor = drape_2_tensor(drape)
+
+    assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
 
 
 def test_octree_2_treemesh(tmp_path):
