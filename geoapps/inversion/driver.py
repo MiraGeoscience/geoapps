@@ -405,9 +405,11 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
     if filepath is not None:
         input_file = InputFile.read_ui_json(filepath)
         inversion_type = input_file.data.get("inversion_type")
+        line_sweep = input_file.data.get("sweep", False)
     else:
         input_file = None
         inversion_type = kwargs.get("inversion_type")
+        line_sweep = kwargs.get("sweep", False)
 
     if inversion_type == "magnetic vector":
         from geoapps.inversion.potential_fields import (
@@ -473,7 +475,12 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
 
-    driver = InversionDriver(params)
+    if line_sweep:
+        from geoapps.inversion.line_sweep import LineSweepDriver
+
+        driver = LineSweepDriver(params)
+    else:
+        driver = InversionDriver(params)
 
     with params.geoh5.open(mode="r+"):
         driver.run()

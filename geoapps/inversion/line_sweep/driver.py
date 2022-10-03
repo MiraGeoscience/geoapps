@@ -7,48 +7,47 @@
 
 import json
 import os
-import sys
 
 import numpy as np
 from geoh5py.groups import ContainerGroup, SimPEGGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from sweeps.driver import SweepDriver, generate
-from sweeps.params import SweepParams
-
-from .params import DirectCurrentPseudo3DParams
+from sweeps.driver import SweepDriver, SweepParams, generate
 
 
-class DirectCurrentPseudo3DDriver:
-    def __init__(self, params: DirectCurrentPseudo3DParams):
-        self.params = params
+class LineSweepDriver(SweepDriver):
+    def __init__(self, params):
         self.workspace = params.geoh5
+        self.cleanup = params.cleanup
+        self.worker_params = params
+        sweep_params = self.setup_params()
+        super().__init__(sweep_params)
 
     def run(self):
-        path = self.workspace.h5file.replace(".geoh5", ".json")
-        ifile = InputFile.read_ui_json(path)
-        ifile.data["run_command"] = "geoapps.inversion.driver"
-        ifile.write_ui_json(path)
-        with self.workspace.open(mode="r"):
-            lines = self.params.line_object.values
-        generate(path, parameters=["line_id"])
-        ifile_sweep = InputFile.read_ui_json(
-            os.path.join(path.replace(".ui.json", "_sweep.ui.json"))
-        )
-        ifile_sweep.data["line_id_start"] = lines.min()
-        ifile_sweep.data["line_id_end"] = lines.max()
-        ifile_sweep.data["line_id_n"] = len(np.unique(lines))
-        params = SweepParams(ifile_sweep)
-        driver = SweepDriver(params)
-        driver.run()
-
+        super().run()
         with self.workspace.open(mode="r+"):
             self.collect_results()
+        if self.cleanup:
+            self.file_cleanup()
 
-        if self.params.cleanup:
-            self.cleanup()
+    def setup_params(self):
+        path = self.workspace.h5file.replace(".geoh5", ".json")
+        worker = InputFile.read_ui_json(path)
+        worker.data.pop("sweep")
+        worker.ui_json.pop("sweep")
+        worker.write_ui_json(path)
+        generate(path, parameters=["line_id"])
+        ifile = InputFile.read_ui_json(
+            os.path.join(path.replace(".ui.json", "_sweep.ui.json"))
+        )
+        with self.workspace.open(mode="r"):
+            lines = self.worker_params.line_object.values
+        ifile.data["line_id_start"] = lines.min()
+        ifile.data["line_id_end"] = lines.max()
+        ifile.data["line_id_n"] = len(np.unique(lines))
+        return SweepParams(ifile)
 
-    def cleanup(self):
+    def file_cleanup(self):
         """Remove files associated with the parameter sweep."""
         path = os.path.join(os.path.dirname(self.workspace.h5file))
         with open(os.path.join(path, "lookup.json"), encoding="utf8") as f:
@@ -74,11 +73,11 @@ class DirectCurrentPseudo3DDriver:
 
     def collect_results(self):
         path = os.path.join(os.path.dirname(self.workspace.h5file))
-        files = DirectCurrentPseudo3DDriver.line_files(path)
-        lines = np.unique(self.params.line_object.values)
+        files = LineSweepDriver.line_files(path)
+        lines = np.unique(self.worker_params.line_object.values)
         results_group = SimPEGGroup.create(self.workspace, name="Pseudo3DInversion")
         models_group = ContainerGroup.create(self.workspace, name="Models")
-        data_result = self.params.data_object.copy(parent=results_group)
+        data_result = self.worker_params.data_object.copy(parent=results_group)
 
         data = {}
         for line in lines:
@@ -106,15 +105,3 @@ class DirectCurrentPseudo3DDriver:
                 data[child.name]["values"][ind] = child.values[ind]
 
         return data
-
-
-if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
-    filepath = sys.argv[1]
-    input_file = InputFile.read_ui_json(filepath)
-    params_class = DirectCurrentPseudo3DParams(input_file)
-    inversion_driver = DirectCurrentPseudo3DDriver(params_class)
-    print("Loaded. Running pseudo 3d inversion . . .")
-    with params_class.geoh5.open(mode="r+"):
-        inversion_driver.run()
-    print("Saved to " + input_file.path)
