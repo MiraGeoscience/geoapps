@@ -9,9 +9,7 @@ import json
 import os
 import uuid
 
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver import (
-    DirectCurrentPseudo3DDriver,
-)
+from geoapps.inversion.line_sweep.driver import LineSweepDriver
 
 
 def test_line_files(tmp_path):
@@ -19,5 +17,5 @@ def test_line_files(tmp_path):
     file_lines = {str(uuid.uuid4()): {"line_id": k} for k in range(1, 3)}
     with open(filepath, "w", encoding="utf-8") as file:
         json.dump(file_lines, file)
-    line_files = DirectCurrentPseudo3DDriver.line_files(os.path.dirname(filepath))
+    line_files = LineSweepDriver.line_files(os.path.dirname(filepath))
     assert line_files == {v["line_id"]: k for k, v in file_lines.items()}
