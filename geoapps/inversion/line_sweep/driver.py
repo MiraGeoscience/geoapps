@@ -45,7 +45,7 @@ class LineSweepDriver(SweepDriver):
         ifile.data["line_id_start"] = lines.min()
         ifile.data["line_id_end"] = lines.max()
         ifile.data["line_id_n"] = len(np.unique(lines))
-        return SweepParams(ifile)
+        return SweepParams.from_input_file(ifile)
 
     def file_cleanup(self):
         """Remove files associated with the parameter sweep."""
