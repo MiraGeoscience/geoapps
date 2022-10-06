@@ -30,7 +30,7 @@ from geoapps.inversion.electricals.direct_current.three_dimensions.constants imp
     app_initializer as dc_initializer,
 )
 from geoapps.inversion.electricals.induced_polarization import InducedPolarizationParams
-from geoapps.inversion.electricals.induced_polarization.constants import (
+from geoapps.inversion.electricals.induced_polarization import (
     app_initializer as ip_initializer,
 )
 from geoapps.inversion.potential_fields import (

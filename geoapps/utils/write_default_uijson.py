@@ -17,14 +17,17 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
-from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
+from geoapps.inversion.electricals.direct_current.two_dimensions import (
     DirectCurrent2DParams,
 )
-from geoapps.inversion.electricals.induced_polarization.params import (
-    InducedPolarizationParams,
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
+    InducedPolarization2DParams,
 )
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
@@ -65,13 +68,6 @@ def write_default_uijson(path, use_initializers=False):
     mvi_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
     mvi_init = mvi_init if use_initializers else {}
 
-    from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
-        app_initializer as dc_2d_init,
-    )
-
-    dc_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
-    dc_2d_init = dc_2d_init if use_initializers else {}
-
     from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
         app_initializer as dc_3d_init,
     )
@@ -79,12 +75,26 @@ def write_default_uijson(path, use_initializers=False):
     dc_3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_3d_init = dc_3d_init if use_initializers else {}
 
-    from geoapps.inversion.electricals.induced_polarization.constants import (
-        app_initializer as ip_init,
+    from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
+        app_initializer as dc_2d_init,
     )
 
-    ip_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
-    ip_init = ip_init if use_initializers else {}
+    dc_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    dc_2d_init = dc_2d_init if use_initializers else {}
+
+    from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
+        app_initializer as ip_3d_init,
+    )
+
+    ip_3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_3d_init = ip_3d_init if use_initializers else {}
+
+    from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import (
+        app_initializer as ip_2d_init,
+    )
+
+    ip_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_2d_init = ip_2d_init if use_initializers else {}
 
     from geoapps.inversion.natural_sources.magnetotellurics.constants import (
         app_initializer as mt_init,
@@ -169,10 +179,13 @@ def write_default_uijson(path, use_initializers=False):
         "direct_current_forward.ui.json": DirectCurrent3DParams(
             forward_only=True, validate=False
         ),
-        "induced_polarization_inversion.ui.json": InducedPolarizationParams(
-            validate=False, **ip_init
+        "induced_polarization_inversion_2d.ui.json": InducedPolarization2DParams(
+            validate=False, **ip_2d_init
         ),
-        "induced_polarization_forward.ui.json": InducedPolarizationParams(
+        "induced_polarization_inversion_3d.ui.json": InducedPolarization3DParams(
+            validate=False, **ip_3d_init
+        ),
+        "induced_polarization_forward.ui.json": InducedPolarization3DParams(
             forward_only=True, validate=False
         ),
         "magnetotellurics_inversion.ui.json": MagnetotelluricsParams(
