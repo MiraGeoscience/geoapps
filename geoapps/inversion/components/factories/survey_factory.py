@@ -79,10 +79,10 @@ class SurveyFactory(SimPEGFactory):
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import survey
 
-        elif self.factory_type in ["direct current", "direct current 2d"]:
+        elif "direct current" in self.factory_type:
             from SimPEG.electromagnetics.static.resistivity import survey
 
-        elif self.factory_type == "induced polarization":
+        elif "induced polarization" in self.factory_type:
             from SimPEG.electromagnetics.static.induced_polarization import survey
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
@@ -101,6 +101,7 @@ class SurveyFactory(SimPEGFactory):
                 "direct current",
                 "direct current 2d",
                 "induced polarization",
+                "induced polarization 2d",
             ]:
                 n_data = receiver_entity.n_cells
             else:
@@ -114,6 +115,7 @@ class SurveyFactory(SimPEGFactory):
             "direct current",
             "direct current 2d",
             "induced polarization",
+            "induced polarization 2d",
         ]:
             return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
@@ -159,6 +161,7 @@ class SurveyFactory(SimPEGFactory):
             "direct current",
             "direct current 2d",
             "induced polarization",
+            "induced polarization 2d",
         ]:
             if (
                 (mesh is not None)
@@ -274,7 +277,7 @@ class SurveyFactory(SimPEGFactory):
             return None
 
         receiver_entity = data.entity
-        if self.factory_type == "direct current 2d":
+        if self.factory_type in ["direct current 2d", "induced polarization 2d"]:
             receiver_entity = extract_dcip_survey(
                 self.params.geoh5,
                 receiver_entity,
@@ -330,7 +333,7 @@ class SurveyFactory(SimPEGFactory):
             if receivers.nD == 0:
                 continue
 
-            if self.factory_type == "induced polarization":
+            if "induced polarization" in self.factory_type:
                 receivers.data_type = "apparent_chargeability"
 
             cell_ind = int(np.where(currents.ab_cell_id.values == source_id)[0])

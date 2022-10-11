@@ -40,12 +40,12 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.SourceField
 
-        elif self.factory_type in ["direct current", "direct current 2d"]:
+        elif "direct current" in self.factory_type:
             from SimPEG.electromagnetics.static.resistivity import sources
 
             return sources.Dipole
 
-        elif self.factory_type == "induced polarization":
+        elif "induced polarization" in self.factory_type:
             from SimPEG.electromagnetics.static.induced_polarization import sources
 
             return sources.Dipole
@@ -68,6 +68,7 @@ class SourcesFactory(SimPEGFactory):
             "direct current",
             "direct current 2d",
             "induced polarization",
+            "induced polarization 2d",
         ]:
             args += self._dcip_arguments(
                 receivers=receivers,
@@ -115,7 +116,7 @@ class SourcesFactory(SimPEGFactory):
         args.append(locations_a)
 
         if np.all(locations_a == locations_b):
-            if self.factory_type in ["direct current", "direct current 2d"]:
+            if "direct current" in self.factory_type:
                 from SimPEG.electromagnetics.static.resistivity import sources
             else:
                 from SimPEG.electromagnetics.static.induced_polarization import sources

@@ -45,6 +45,7 @@ class SimPEGFactory:
         "direct current",
         "direct current 2d",
         "induced polarization",
+        "induced polarization 2d",
         "magnetotellurics",
         "tipper",
     ]
