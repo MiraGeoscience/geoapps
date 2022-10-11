@@ -166,7 +166,12 @@ class InversionData(InversionLocations):
         """Remove vertices based on mask property."""
         if (
             self.params.inversion_type
-            in ["direct current", "direct current 2d", "induced polarization"]
+            in [
+                "direct current",
+                "direct current 2d",
+                "induced polarization",
+                "induced polarization 2d",
+            ]
             and self.indices is None
         ):
             ab_ind = np.where(np.any(self.mask[self.params.data_object.cells], axis=1))[

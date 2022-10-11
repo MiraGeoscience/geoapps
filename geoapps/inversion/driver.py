@@ -459,10 +459,20 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         from geoapps.inversion.electricals import (
             InducedPolarization3DParams as ParamClass,
         )
-        from geoapps.inversion.electricals.induced_polarization import (
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
             InducedPolarization3DParams as ParamClass,
         )
-        from geoapps.inversion.electricals.induced_polarization import validations
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
+            validations,
+        )
+
+    elif inversion_type == "induced polarization 2d":
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
+            InducedPolarization2DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import (
+            validations,
+        )
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")

@@ -38,7 +38,7 @@ from geoapps.inversion.electricals.direct_current.three_dimensions.constants imp
 from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
     DirectCurrent3DParams,
 )
-from geoapps.inversion.electricals.induced_polarization import (
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
     InducedPolarization3DParams,
 )
 from geoapps.utils import warn_module_not_found
@@ -1027,7 +1027,7 @@ class InversionApp(PlotSelection2D):
     def write_trigger(self, _):
 
         if (
-            self.inversion_type.value == "induced polarization"
+            "induced polarization" in self.inversion_type.value
             and self._conductivity_model_group.data.value is None
         ):
             print(
