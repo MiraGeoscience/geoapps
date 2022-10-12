@@ -60,7 +60,6 @@ def test_ip_fwr_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
-
     fwr_driver.run()
 
     return fwr_driver.starting_model
