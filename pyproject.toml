@@ -72,6 +72,7 @@ simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/
 #simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag" }
 simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz#sha256=None", extras = ["dask"] }
 #simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag", extras = ["dask"] }
+param-sweeps = { url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/tags/v0.1.0.tar.gz#sha256=ba042338603b44cdaa56f4004773e873f5f04eb478ab8847a7731a3e62303cc8"}
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.14.4"
