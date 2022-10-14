@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 from discretize import TreeMesh
 from geoh5py.objects import Grid2D
+from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import running_mean, treemesh_2_octree
@@ -167,25 +168,109 @@ def test_new_neighbors():
 
 
 def test_survey_lines(tmp_path):
-    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
-        with Workspace(dc_geoh5) as ws:
-            old_survey = ws.get_entity("DC_Survey")[0]
-            _ = old_survey.copy(parent=test_workspace)
+    # with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+    #     with Workspace(dc_geoh5) as ws:
+    #         old_survey = ws.get_entity("DC_Survey")[0]
+    #         _ = old_survey.copy(parent=test_workspace)
+    #
+    #         _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
+    #         assert np.all(
+    #             np.unique(test_workspace.get_entity("test_line_ids")[0].values)
+    #             == np.arange(1, 11)
+    #         )
 
-            _ = survey_lines(old_survey, [314529, 6071402], save="test_line_ids")
-            assert np.all(
-                np.unique(test_workspace.get_entity("test_line_ids")[0].values)
-                == np.arange(1, 11)
-            )
+    name = "TestCurrents"
+    n_data = 15
+    path = tmp_path / r"testDC.geoh5"
+    workspace = Workspace(path)
+
+    # Create sources along line
+    x_loc, y_loc = np.meshgrid(np.linspace(0, 10, n_data), np.arange(-1, 3))
+    vertices = np.c_[x_loc.ravel(), y_loc.ravel(), np.zeros_like(x_loc).ravel()]
+    parts = np.kron(np.arange(4), np.ones(n_data)).astype("int")
+    currents = CurrentElectrode.create(
+        workspace, name=name, vertices=vertices, parts=parts
+    )
+    currents.add_default_ab_cell_id()
+    potentials = PotentialElectrode.create(
+        workspace, name=name + "_rx", vertices=vertices
+    )
+    n_dipoles = 9
+    dipoles = []
+    current_id = []
+    for val in currents.ab_cell_id.values:
+        cell_id = int(currents.ab_map[val]) - 1
+
+        for dipole in range(n_dipoles):
+            dipole_ids = currents.cells[cell_id, :] + 2 + dipole
+
+            if (
+                any(dipole_ids > (potentials.n_vertices - 1))
+                or len(np.unique(parts[dipole_ids])) > 1
+            ):
+                continue
+
+            dipoles += [dipole_ids]
+            current_id += [val]
+
+    potentials.cells = np.vstack(dipoles).astype("uint32")
+    potentials.ab_cell_id = np.hstack(current_id).astype("int32")
+    potentials.current_electrodes = currents
+    currents.potential_electrodes = potentials
+    _ = survey_lines(potentials, [-1, -1], save="test_line_ids")
+    assert np.all(
+        np.unique(workspace.get_entity("test_line_ids")[0].values) == np.arange(1, 5)
+    )
 
 
 def test_extract_dcip_survey(tmp_path):
-    with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
-        with Workspace(dc_geoh5) as ws:
-            survey = ws.get_entity("DC_Survey")[0]
-            lines = survey_lines(survey, [314529, 6071402])
-            extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
-            assert test_workspace.get_entity("test_survey_line 4")[0] is not None
+    # with Workspace(os.path.join(tmp_path, "test.geoh5")) as test_workspace:
+    #     with Workspace(dc_geoh5) as ws:
+    #         survey = ws.get_entity("DC_Survey")[0]
+    #         lines = survey_lines(survey, [314529, 6071402])
+    #         extract_dcip_survey(test_workspace, survey, lines, 4, "test_survey_line")
+    #         assert test_workspace.get_entity("test_survey_line 4")[0] is not None
+
+    name = "TestCurrents"
+    n_data = 12
+    path = tmp_path / r"testDC.geoh5"
+    workspace = Workspace(path)
+
+    # Create sources along line
+    x_loc, y_loc = np.meshgrid(np.arange(n_data), np.arange(-1, 3))
+    vertices = np.c_[x_loc.ravel(), y_loc.ravel(), np.zeros_like(x_loc).ravel()]
+    parts = np.kron(np.arange(4), np.ones(n_data)).astype("int")
+    currents = CurrentElectrode.create(
+        workspace, name=name, vertices=vertices, parts=parts
+    )
+    currents.add_default_ab_cell_id()
+    potentials = PotentialElectrode.create(
+        workspace, name=name + "_rx", vertices=vertices
+    )
+    n_dipoles = 9
+    dipoles = []
+    current_id = []
+    for val in currents.ab_cell_id.values:
+        cell_id = int(currents.ab_map[val]) - 1
+
+        for dipole in range(n_dipoles):
+            dipole_ids = currents.cells[cell_id, :] + 2 + dipole
+
+            if (
+                any(dipole_ids > (potentials.n_vertices - 1))
+                or len(np.unique(parts[dipole_ids])) > 1
+            ):
+                continue
+
+            dipoles += [dipole_ids]
+            current_id += [val]
+
+    potentials.cells = np.vstack(dipoles).astype("uint32")
+    potentials.ab_cell_id = np.hstack(current_id).astype("int32")
+    potentials.current_electrodes = currents
+    currents.potential_electrodes = potentials
+    extract_dcip_survey(workspace, potentials, parts, 4, "test_survey_line")
+    assert workspace.get_entity("test_survey_line 4")[0] is not None
 
 
 def test_split_dcip_survey(tmp_path):

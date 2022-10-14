@@ -262,13 +262,13 @@ def extract_dcip_survey(
     currents = CurrentElectrode.create(
         workspace, name=f"{line_name} (currents)", vertices=current_locs
     )
-    currents.cells = np.array(current_cells)
+    currents.cells = np.array(current_cells, dtype=np.int32)
     currents.add_default_ab_cell_id()
 
     potentials = PotentialElectrode.create(
         workspace, name=line_name, vertices=survey_locs
     )
-    potentials.cells = np.array(survey_cells)
+    potentials.cells = np.array(survey_cells, dtype=np.int32)
 
     # Add ab_cell_id as referenced data object
     value_map = {k + 1: str(k + 1) for k in ab_cell_ids}
