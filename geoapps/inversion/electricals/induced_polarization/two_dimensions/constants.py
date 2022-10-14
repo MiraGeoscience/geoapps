@@ -15,8 +15,8 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "SimPEG Direct Current inversion",
-    "inversion_type": "direct current 2d",
+    "title": "SimPEG Induced Polarization inversion",
+    "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -24,8 +24,10 @@ inversion_defaults = {
     "line_object": None,
     "line_id": 1,
     "data_object": None,
-    "potential_channel": None,
-    "potential_uncertainty": 1.0,
+    "chargeability_channel": None,
+    "chargeability_uncertainty": 1.0,
+    "conductivity_model_object": None,
+    "conductivity_model": None,
     "starting_model_object": None,
     "starting_model": None,
     "tile_spatial": 1,
@@ -92,19 +94,19 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "max_ram": None,
-    "out_group": "DirectCurrentInversion",
+    "out_group": "InducedPolarizationInversion",
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "potential_channel_bool": True,
+    "chargeability_channel_bool": True,
     "store_sensitivities": "ram",
 }
 forward_defaults = {
-    "title": "SimPEG Direct Current Forward",
-    "inversion_type": "direct current 2d",
+    "title": "SimPEG Induced Polarization Forward",
+    "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -112,7 +114,9 @@ forward_defaults = {
     "line_object": None,
     "line_id": 1,
     "data_object": None,
-    "potential_channel_bool": True,
+    "chargeability_channel_bool": True,
+    "conductivity_model_object": None,
+    "conductivity_model": None,
     "starting_model_object": None,
     "starting_model": None,
     "tile_spatial": 1,
@@ -140,7 +144,7 @@ forward_defaults = {
     "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
-    "out_group": "DirectCurrentForward",
+    "out_group": "InducedPolarizationForward",
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -159,7 +163,7 @@ forward_defaults = {
 }
 
 inversion_ui_json = {
-    "potential_channel_bool": True,
+    "chargeability_channel_bool": True,
 }
 
 forward_ui_json = {
@@ -175,8 +179,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Direct Current inversion",
-    "inversion_type": "direct current 2d",
+    "title": "SimPEG Induced Polarization inversion",
+    "inversion_type": "induced polarization 2d",
     "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
@@ -200,23 +204,23 @@ default_ui_json = {
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": None,
     },
-    "potential_channel_bool": True,
-    "potential_channel": {
+    "chargeability_channel_bool": True,
+    "chargeability_channel": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "group": "Data",
         "main": True,
-        "label": "Potential channel",
+        "label": "Chargeability channel",
         "parent": "data_object",
         "value": None,
     },
-    "potential_uncertainty": {
+    "chargeability_uncertainty": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "group": "Data",
         "main": True,
         "isValue": True,
-        "label": "Potential uncertainty",
+        "label": "Chargeability uncertainty",
         "parent": "data_object",
         "property": None,
         "value": 1.0,
@@ -239,7 +243,27 @@ default_ui_json = {
         "parent": "starting_model_object",
         "label": "Conductivity (Siemens/m)",
         "property": None,
-        "value": 1e-1,
+        "value": 0.0,
+    },
+    "conductivity_model_object": {
+        "group": "Starting Models",
+        "main": True,
+        "meshType": "{C94968EA-CF7D-11EB-B8BC-0242AC130003}",
+        "optional": True,
+        "enabled": False,
+        "label": "Conductivity object",
+        "value": None,
+    },
+    "conductivity_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Starting Models",
+        "main": True,
+        "isValue": True,
+        "parent": "conductivity_model_object",
+        "label": "Conductivity (Siemens/m)",
+        "property": None,
+        "value": 1e-3,
     },
     "reference_model_object": {
         "group": "Regularization",
@@ -282,7 +306,7 @@ default_ui_json = {
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
-    "out_group": {"label": "Results group name", "value": "direct_current"},
+    "out_group": {"label": "Results group name", "value": "induced_polarization"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -293,7 +317,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["direct current 2d"],
+        "values": ["induced polarization 2d"],
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
@@ -303,12 +327,12 @@ validations = dict(base_validations, **validations)
 app_initializer = {
     "geoh5": "../../../assets/FlinFlon_dcip.geoh5",
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
-    "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
-    "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
+    "chargeability_channel": UUID("{162320e6-2b80-4877-9ec1-a8f5b6a13673}"),
+    "chargeability_uncertainty": 0.001,
     "line_object": UUID("{d400e8f1-8460-4609-b852-b3b93f945770}"),
     "line_id": 1,
-    "starting_model": 1e-1,
-    "reference_model": 1e-1,
+    "starting_model": 1e-4,
+    "conductivity_model": 0.1,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "depth_core": 500.0,
@@ -334,5 +358,5 @@ app_initializer = {
     "receivers_offset_x": 0.0,
     "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
-    "out_group": "DCInversion",
+    "out_group": "IPInversion",
 }
