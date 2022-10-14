@@ -21,7 +21,7 @@ set env_path=%project_dir%\.conda-env
 call !MY_CONDA_EXE! activate
 call mamba env update -p %env_path% -f %project_dir%\environments\conda-py-3.9-win-64-dev.lock.yml
 call conda activate %env_path%
-call pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py --no-deps
+call pip install --upgrade --force-reinstall --no-deps -e %project_dir%\..\geoh5py -e %project_dir%\..\param-sweeps
 
 pause
 cmd /k
