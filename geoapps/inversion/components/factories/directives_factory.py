@@ -133,7 +133,7 @@ class DirectivesFactory:
                 name="Residual",
             )
 
-            if self.factory_type in ["direct current", "direct current 2d"]:
+            if "direct current" in self.factory_type:
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
                         inversion_object=inversion_data,
@@ -202,6 +202,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "direct current",
                 "direct current 2d",
                 "induced polarization",
+                "induced polarization 2d",
             ]:
 
                 kwargs = self.assemble_data_keywords_dcip(

@@ -23,7 +23,6 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import dask  # pylint: disable=unused-import
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
@@ -458,13 +457,21 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
 
     elif inversion_type == "induced polarization":
         from geoapps.inversion.electricals import (
-            InducedPolarizationParams as ParamClass,
+            InducedPolarization3DParams as ParamClass,
         )
-        from geoapps.inversion.electricals.induced_polarization.constants import (
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+            InducedPolarization3DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
             validations,
         )
-        from geoapps.inversion.electricals.induced_polarization.params import (
-            InducedPolarizationParams as ParamClass,
+
+    elif inversion_type == "induced polarization 2d":
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
+            InducedPolarization2DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import (
+            validations,
         )
 
     else:

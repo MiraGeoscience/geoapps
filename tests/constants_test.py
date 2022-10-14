@@ -9,7 +9,7 @@
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     constants as direct_current_constants,
 )
-from geoapps.inversion.electricals.induced_polarization import (
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
     constants as induced_polarization_constants,
 )
 from geoapps.inversion.potential_fields.gravity import constants as gravity_constants

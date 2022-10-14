@@ -11,7 +11,9 @@ import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.driver import InversionDriver, start_inversion
-from geoapps.inversion.electricals import InducedPolarizationParams
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -44,7 +46,7 @@ def test_ip_fwr_run(
         inversion_type="dcip",
         flatten=False,
     )
-    params = InducedPolarizationParams(
+    params = InducedPolarization3DParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
@@ -58,7 +60,6 @@ def test_ip_fwr_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
-
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -82,7 +83,7 @@ def test_ip_run(
 
         # Run the inverse
         np.random.seed(0)
-        params = InducedPolarizationParams(
+        params = InducedPolarization3DParams(
             geoh5=geoh5,
             mesh=mesh.uid,
             topography_object=topography.uid,

@@ -38,8 +38,8 @@ from geoapps.inversion.electricals.direct_current.three_dimensions.constants imp
 from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
     DirectCurrent3DParams,
 )
-from geoapps.inversion.electricals.induced_polarization.params import (
-    InducedPolarizationParams,
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
+    InducedPolarization3DParams,
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
@@ -804,9 +804,9 @@ class InversionApp(PlotSelection2D):
             self.option_choices.options = list(self.inversion_options)[1:]
 
         elif self.inversion_type.value == "induced polarization" and not isinstance(
-            self.params, InducedPolarizationParams
+            self.params, InducedPolarization3DParams
         ):
-            self._param_class = InducedPolarizationParams
+            self._param_class = InducedPolarization3DParams
             params["inversion_type"] = "induced polarization"
             params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options)
@@ -1027,7 +1027,7 @@ class InversionApp(PlotSelection2D):
     def write_trigger(self, _):
 
         if (
-            self.inversion_type.value == "induced polarization"
+            "induced polarization" in self.inversion_type.value
             and self._conductivity_model_group.data.value is None
         ):
             print(
@@ -1155,7 +1155,7 @@ class InversionApp(PlotSelection2D):
     @staticmethod
     def run(params):
 
-        if not isinstance(params, (DirectCurrent3DParams, InducedPolarizationParams)):
+        if not isinstance(params, (DirectCurrent3DParams, InducedPolarization3DParams)):
             raise ValueError(
                 "Parameter 'inversion_type' must be one of "
                 "'direct current' or 'induced polarization'"
@@ -1187,7 +1187,7 @@ class InversionApp(PlotSelection2D):
                     self._param_class = DirectCurrent3DParams
 
                 elif data["inversion_type"] == "induced polarization":
-                    self._param_class = InducedPolarizationParams
+                    self._param_class = InducedPolarization3DParams
 
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)

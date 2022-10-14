@@ -21,7 +21,9 @@ from geoapps.inversion.electricals.application import InversionApp as DCInversio
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
-from geoapps.inversion.electricals.induced_polarization import InducedPolarizationParams
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
 from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,
 )
@@ -264,7 +266,7 @@ def test_ip_inversion(tmp_path):
 
     app.write_trigger(None)
     ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
-    params_reload = InducedPolarizationParams(ifile)
+    params_reload = InducedPolarization3DParams(ifile)
 
     for param, value in changes.items():
         p_value = getattr(params_reload, param)
