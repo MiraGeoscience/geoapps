@@ -29,8 +29,10 @@ from geoapps.inversion.electricals.direct_current.three_dimensions import (
 from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer as dc_initializer,
 )
-from geoapps.inversion.electricals.induced_polarization import InducedPolarizationParams
-from geoapps.inversion.electricals.induced_polarization.constants import (
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
     app_initializer as ip_initializer,
 )
 from geoapps.inversion.potential_fields import (
@@ -114,7 +116,7 @@ def test_params_initialize():
         MagneticVectorParams(),
         GravityParams(),
         DirectCurrent3DParams(),
-        InducedPolarizationParams(),
+        InducedPolarization3DParams(),
         OctreeParams(),
         PeakFinderParams(),
     ]:
@@ -146,7 +148,7 @@ def test_input_file_construction(tmp_path):
         MagneticScalarParams,
         MagneticVectorParams,
         DirectCurrent3DParams,
-        InducedPolarizationParams,
+        InducedPolarization3DParams,
         OctreeParams,
         PeakFinderParams,
     ]
@@ -182,7 +184,7 @@ def test_default_input_file(tmp_path):
         MagneticVectorParams,
         GravityParams,
         DirectCurrent3DParams,
-        InducedPolarizationParams,
+        InducedPolarization3DParams,
     ]:
         filename = os.path.join(tmp_path, "test.ui.json")
         params = params_class()
@@ -264,7 +266,7 @@ def test_chunk_validation_ip(tmp_path):
         test_dict = ip_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
         test_dict.pop("conductivity_model")
-        params = InducedPolarizationParams(
+        params = InducedPolarization3DParams(
             **test_dict
         )  # pylint: disable=repeated-keyword
 
@@ -1886,7 +1888,7 @@ def test_potential_uncertainty():
 
 
 def test_induced_polarization_inversion_type():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.inversion_type = "induced polarization"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
@@ -1900,7 +1902,7 @@ def test_induced_polarization_inversion_type():
 
 
 def test_chargeability_channel_bool():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.chargeability_channel_bool = True
     with pytest.raises(TypeValidationError) as excinfo:
         params.chargeability_channel_bool = "alskdj"
@@ -1914,7 +1916,7 @@ def test_chargeability_channel_bool():
 
 
 def test_chargeability_channel():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.chargeability_channel = uuid4()
     params.chargeability_channel = uuid4()
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1929,7 +1931,7 @@ def test_chargeability_channel():
 
 
 def test_chargeability_uncertainty():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.chargeability_uncertainty = uuid4()
     params.chargeability_uncertainty = uuid4()
     params.chargeability_uncertainty = 4
@@ -1954,7 +1956,7 @@ def test_chargeability_uncertainty():
 
 
 def conductivity_model_object():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.conductivity_model_object = uuid4()
     params.conductivity_model_object = uuid4()
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1969,7 +1971,7 @@ def conductivity_model_object():
 
 
 def test_conductivity_model():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.conductivity_model = uuid4()
     params.conductivity_model = uuid4()
     params.conductivity_model = 4
