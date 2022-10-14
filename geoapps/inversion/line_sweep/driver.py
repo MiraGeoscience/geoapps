@@ -12,8 +12,8 @@ import numpy as np
 from geoh5py.groups import ContainerGroup, SimPEGGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from sweeps.driver import SweepDriver, SweepParams
-from sweeps.generate import generate
+from param_sweeps.driver import SweepDriver, SweepParams
+from param_sweeps.generate import generate
 
 
 class LineSweepDriver(SweepDriver):
