@@ -87,7 +87,7 @@ class MisfitFactory(SimPEGFactory):
 
             # TODO Parse workers to simulations
             lsim.workers = self.params.distributed_workers
-            if self.params.inversion_type == "induced polarization":
+            if "induced polarization" in self.params.inversion_type:
                 # TODO this should be done in the simulation factory
                 lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
 

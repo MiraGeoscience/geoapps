@@ -216,7 +216,7 @@ default_ui_json = {
         "parent": "starting_model_object",
         "label": "Conductivity (Siemens/m)",
         "property": None,
-        "value": 0.0,
+        "value": 1e-1,
     },
     "resolution": None,
     "detrend_order": None,

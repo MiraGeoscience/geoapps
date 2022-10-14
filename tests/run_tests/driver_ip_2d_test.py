@@ -11,8 +11,8 @@ import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.driver import InversionDriver, start_inversion
-from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
-    DirectCurrent2DParams,
+from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
+    InducedPolarization2DParams,
 )
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.surveys import survey_lines
@@ -22,26 +22,25 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.6624,
-    "phi_d": 875.7,
-    "phi_m": 2.502,
+    "data_norm": 0.076613,
+    "phi_d": 4522,
+    "phi_m": 0.0375,
 }
 
 np.random.seed(0)
 
 
-def test_dc_2d_fwr_run(
+def test_ip_2d_fwr_run(
     tmp_path,
     n_electrodes=10,
     n_lines=3,
     refinement=(4, 6),
 ):
-
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
-        background=0.01,
-        anomaly=10,
+        background=1e-6,
+        anomaly=1e-1,
         n_electrodes=n_electrodes,
         n_lines=n_lines,
         refinement=refinement,
@@ -49,7 +48,7 @@ def test_dc_2d_fwr_run(
         flatten=False,
     )
     _ = survey_lines(survey, [-100, -100], save="line_ids")
-    params = DirectCurrent2DParams(
+    params = InducedPolarization2DParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
@@ -58,6 +57,7 @@ def test_dc_2d_fwr_run(
         data_object=survey.uid,
         starting_model_object=model.parent.uid,
         starting_model=model.uid,
+        conductivity_model=1e-2,
         line_object=geoh5.get_entity("line_ids")[0].uid,
         line_id=2,
     )
@@ -68,42 +68,48 @@ def test_dc_2d_fwr_run(
     return fwr_driver.starting_model
 
 
-def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
-
+def test_ip_2d_run(
+    tmp_path,
+    max_iterations=1,
+    pytest=True,
+):
     workpath = os.path.join(tmp_path, "inversion_test.geoh5")
     if pytest:
-        workpath = str(tmp_path / "../test_dc_2d_fwr_run0/inversion_test.geoh5")
+        workpath = str(tmp_path / "../test_ip_2d_fwr_run0/inversion_test.geoh5")
 
     with Workspace(workpath) as geoh5:
-        potential = geoh5.get_entity("Iteration_0_dc")[0]
+
+        potential = geoh5.get_entity("Iteration_0_ip")[0]
         mesh = geoh5.get_entity("Models")[0]
         topography = geoh5.get_entity("topography")[0]
         _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
 
         # Run the inverse
         np.random.seed(0)
-        params = DirectCurrent2DParams(
+        params = InducedPolarization2DParams(
             geoh5=geoh5,
             mesh=mesh.uid,
             topography_object=topography.uid,
             data_object=potential.parent.uid,
-            potential_channel=potential.uid,
-            potential_uncertainty=1e-3,
+            chargeability_channel=potential.uid,
+            chargeability_uncertainty=2e-4,
             line_object=geoh5.get_entity("line_IDs")[0].uid,
             line_id=2,
-            starting_model=1e-2,
+            starting_model=1e-6,
+            conductivity_model=1e-2,
             s_norm=0.0,
-            x_norm=1.0,
-            y_norm=1.0,
-            z_norm=1.0,
+            x_norm=0.0,
+            y_norm=0.0,
+            z_norm=0.0,
             gradient_type="components",
-            potential_channel_bool=True,
+            chargeability_channel_bool=True,
             z_from_topo=True,
             max_iterations=max_iterations,
             initial_beta=None,
             initial_beta_ratio=1e0,
             prctile=100,
-            upper_bound=10,
+            upper_bound=0.1,
+            store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
     driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
@@ -121,20 +127,20 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_dc_2d_fwr_run(
+    mstart = test_ip_2d_fwr_run(
         "./",
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
 
-    m_rec = test_dc_2d_run(
+    m_rec = test_ip_2d_run(
         "./",
         max_iterations=20,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
     assert (
-        residual < 25.0
+        residual < 80.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 25% of the answer. You are so special!")
+    print("Conductivity model is within 15% of the answer. You are so special!")

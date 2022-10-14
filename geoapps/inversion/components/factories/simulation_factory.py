@@ -36,6 +36,7 @@ class SimulationFactory(SimPEGFactory):
             "direct current",
             "direct current 2d",
             "induced polarization",
+            "induced polarization 2d",
             "magnetotellurics",
             "tipper",
         ]:
@@ -69,6 +70,13 @@ class SimulationFactory(SimPEGFactory):
             from SimPEG.electromagnetics.static.induced_polarization import simulation
 
             return simulation.Simulation3DNodal
+
+        if self.factory_type == "induced polarization 2d":
+            from SimPEG.electromagnetics.static.induced_polarization import (
+                simulation_2d,
+            )
+
+            return simulation_2d.Simulation2DNodal
 
         if self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import simulation
@@ -115,11 +123,11 @@ class SimulationFactory(SimPEGFactory):
             return self._magnetic_scalar_keywords(kwargs, active_cells=active_cells)
         if self.factory_type == "gravity":
             return self._gravity_keywords(kwargs, active_cells=active_cells)
-        if self.factory_type in ["direct current", "direct current 2d"]:
+        if "direct current" in self.factory_type:
             return self._direct_current_keywords(
                 kwargs, mesh, active_cells=active_cells
             )
-        if self.factory_type == "induced polarization":
+        if "induced polarization" in self.factory_type:
             return self._induced_polarization_keywords(
                 kwargs,
                 mesh,
