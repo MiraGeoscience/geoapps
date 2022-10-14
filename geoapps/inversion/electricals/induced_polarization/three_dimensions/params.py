@@ -50,6 +50,8 @@ class InducedPolarization3DParams(InversionBaseParams):
         self._chargeability_channel_bool = None
         self._chargeability_channel = None
         self._chargeability_uncertainty = None
+        self._conductivity_model_object = None
+        self._conductivity_model = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
