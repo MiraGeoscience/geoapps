@@ -104,7 +104,7 @@ def test_ip_2d_run(
             gradient_type="components",
             chargeability_channel_bool=True,
             z_from_topo=True,
-            max_iterations=max_iterations,
+            max_beta_iterations=max_iterations,
             initial_beta=None,
             initial_beta_ratio=1e0,
             prctile=100,
