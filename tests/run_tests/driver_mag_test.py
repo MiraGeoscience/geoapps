@@ -105,7 +105,7 @@ def test_susceptibility_run(
             z_from_topo=False,
             tmi_channel=tmi.uid,
             tmi_uncertainty=4.0,
-            max_beta_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e0,
             store_sensitivities="ram",
         )

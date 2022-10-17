@@ -98,7 +98,7 @@ def test_gravity_run(
             gz_channel=gz.uid,
             gz_uncertainty=2e-3,
             lower_bound=0.0,
-            max_beta_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
             store_sensitivities="ram",

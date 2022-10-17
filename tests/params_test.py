@@ -634,8 +634,8 @@ def test_validate_chi_factor():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_max_beta_iterations():
-    param = "max_beta_iterations"
+def test_validate_max_global_iterations():
+    param = "max_global_iterations"
     newval = 2
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
