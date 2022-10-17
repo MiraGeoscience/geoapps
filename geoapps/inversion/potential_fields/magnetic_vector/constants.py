@@ -90,6 +90,7 @@ inversion_defaults = {
     "beta_tol": 0.5,
     "prctile": 95,
     "coolingRate": 1,
+    "coolingFactor": 2.0,
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,

@@ -95,7 +95,7 @@ def test_dc_run(
             z_from_topo=True,
             potential_channel=potential.uid,
             potential_uncertainty=1e-3,
-            max_iterations=max_iterations,
+            max_beta_iterations=max_iterations,
             initial_beta=None,
             initial_beta_ratio=1e0,
             prctile=100,
