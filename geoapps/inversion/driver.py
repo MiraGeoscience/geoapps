@@ -155,7 +155,7 @@ class InversionDriver:
 
         # Specify optimization algorithm and set parameters
         self.optimization = optimization.ProjectedGNCG(
-            maxIter=self.params.max_iterations,
+            maxIter=self.params.max_beta_iterations,
             lower=self.lower_bound,
             upper=self.upper_bound,
             maxIterLS=self.params.max_line_search_iterations,

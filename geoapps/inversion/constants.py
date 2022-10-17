@@ -500,11 +500,6 @@ default_ui_json = {
         "label": "f min change",
         "value": 1e-4,
     },
-    "minGNiter": {
-        "group": "Update IRLS directive",
-        "label": "Minimum Gauss-Newton iterations",
-        "value": 1,
-    },
     "beta_tol": {
         "group": "Update IRLS directive",
         "label": "Beta tolerance",
@@ -516,9 +511,15 @@ default_ui_json = {
         "value": 95,
     },
     "coolingRate": {
-        "group": "Update IRLS directive",
-        "label": "Beta cooling rate",
+        "group": "Optimization",
+        "label": "Iterations per beta",
         "value": 1,
+    },
+    "coolingFactor": {
+        "group": "Optimization",
+        "label": "Beta cooling factor",
+        "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
+        "value": 2.0,
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
@@ -544,7 +545,7 @@ default_ui_json = {
         "tooltip": "This chi factor will be used to determine the misfit"
         " threshold after which IRLS iterations begin.",
     },
-    "max_iterations": {
+    "max_irls_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Maximum number of IRLS iterations",
@@ -552,7 +553,7 @@ default_ui_json = {
         "value": 25,
         "enabled": True,
     },
-    "max_global_iterations": {
+    "max_beta_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Max iterations",
