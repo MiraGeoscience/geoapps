@@ -67,7 +67,7 @@ class DirectivesFactory:
         self.update_irls_directive = directives.Update_IRLS(
             f_min_change=self.params.f_min_change,
             max_irls_iterations=self.params.max_irls_iterations,
-            max_beta_iterations=self.params.max_beta_iterations,
+            max_beta_iterations=self.params.max_global_iterations,
             beta_tol=self.params.beta_tol,
             prctile=self.params.prctile,
             coolingRate=self.params.coolingRate,

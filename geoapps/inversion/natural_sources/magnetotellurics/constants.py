@@ -85,7 +85,7 @@ inversion_defaults = {
     "coolEpsFact": 1.2,
     "beta_search": False,
     "starting_chi_factor": None,
-    "max_beta_iterations": 100,
+    "max_global_iterations": 100,
     "max_irls_iterations": 25,
     "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
@@ -564,6 +564,6 @@ app_initializer = {
     "z_norm": 2.0,
     "upper_bound": 100.0,
     "lower_bound": 1e-5,
-    "max_beta_iterations": 15,
+    "max_global_iterations": 15,
     "out_group": "MTInversion",
 }

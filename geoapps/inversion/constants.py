@@ -553,7 +553,7 @@ default_ui_json = {
         "value": 25,
         "enabled": True,
     },
-    "max_beta_iterations": {
+    "max_global_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Max iterations",

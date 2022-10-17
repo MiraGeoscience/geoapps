@@ -87,7 +87,7 @@ class InversionBaseParams(BaseParams):
         self._beta_search: bool = None
         self._starting_chi_factor: float = None
         self._max_irls_iterations: int = None
-        self._max_beta_iterations: int = None
+        self._max_global_iterations: int = None
         self._max_line_search_iterations: int = None
         self._max_cg_iterations: int = None
         self._initial_beta: float = None
@@ -659,12 +659,12 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("max_irls_iterations", val)
 
     @property
-    def max_beta_iterations(self):
-        return self._max_beta_iterations
+    def max_global_iterations(self):
+        return self._max_global_iterations
 
-    @max_beta_iterations.setter
-    def max_beta_iterations(self, val):
-        self.setter_validator("max_beta_iterations", val)
+    @max_global_iterations.setter
+    def max_global_iterations(self, val):
+        self.setter_validator("max_global_iterations", val)
 
     @property
     def max_line_search_iterations(self):
