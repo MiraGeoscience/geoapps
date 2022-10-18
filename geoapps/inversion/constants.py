@@ -520,6 +520,7 @@ default_ui_json = {
         "label": "Beta cooling factor",
         "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
         "value": 2.0,
+        "min": 1.0,
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
