@@ -1,29 +1,8 @@
 {
-    "title": "SimPEG Magnetic Susceptibility inversion",
-    "inversion_type": "magnetic scalar",
+    "title": "SimPEG Direct Current inversion",
+    "inversion_type": "direct current",
     "geoh5": "",
     "forward_only": false,
-    "inducing_field_strength": {
-        "min": 0.0,
-        "main": true,
-        "group": "Inducing Field",
-        "label": "Strength",
-        "value": 50000.0
-    },
-    "inducing_field_inclination": {
-        "min": -90.0,
-        "max": 90.0,
-        "main": true,
-        "group": "Inducing Field",
-        "label": "Inclination",
-        "value": 90.0
-    },
-    "inducing_field_declination": {
-        "main": true,
-        "group": "Inducing Field",
-        "label": "Declination",
-        "value": 0.0
-    },
     "topography_object": {
         "main": true,
         "group": "Topography",
@@ -57,17 +36,10 @@
         "main": true,
         "group": "Data",
         "label": "Object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}"
-        ],
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": ""
     },
-    "tmi_channel": {
+    "potential_channel": {
         "association": [
             "Cell",
             "Vertex"
@@ -75,13 +47,11 @@
         "dataType": "Float",
         "group": "Data",
         "main": true,
-        "label": "TMI channel",
+        "label": "Potential channel",
         "parent": "data_object",
-        "optional": true,
-        "enabled": false,
         "value": ""
     },
-    "tmi_uncertainty": {
+    "potential_uncertainty": {
         "association": [
             "Cell",
             "Vertex"
@@ -90,280 +60,8 @@
         "group": "Data",
         "main": true,
         "isValue": true,
-        "label": "TMI uncertainty",
+        "label": "Potential uncertainty",
         "parent": "data_object",
-        "dependency": "tmi_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "bxx_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Bxx channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "bxx_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Bxx uncertainty",
-        "parent": "data_object",
-        "dependency": "bxx_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "bxy_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Bxy channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "bxy_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Bxy uncertainty",
-        "parent": "data_object",
-        "dependency": "bxy_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "bxz_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Bxz channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "bxz_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Bxz uncertainty",
-        "parent": "data_object",
-        "dependency": "bxz_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "byy_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Byy channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "byy_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Byy uncertainty",
-        "parent": "data_object",
-        "dependency": "byy_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "byz_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Byz channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "byz_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Byz uncertainty",
-        "parent": "data_object",
-        "dependency": "byz_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "bzz_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Bzz channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "bzz_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Bzz uncertainty",
-        "parent": "data_object",
-        "dependency": "bzz_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "bx_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Bx channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "bx_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Bx uncertainty",
-        "parent": "data_object",
-        "dependency": "bx_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "by_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "By channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "by_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "By uncertainty",
-        "parent": "data_object",
-        "dependency": "by_channel",
-        "dependencyType": "enabled",
-        "property": "",
-        "value": 1.0
-    },
-    "bz_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "label": "Bz channel",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "bz_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "main": true,
-        "isValue": true,
-        "label": "Bz uncertainty",
-        "parent": "data_object",
-        "dependency": "bz_channel",
-        "dependencyType": "enabled",
         "property": "",
         "value": 1.0
     },
@@ -393,9 +91,9 @@
         "main": true,
         "isValue": true,
         "parent": "starting_model_object",
-        "label": "Susceptibility (SI)",
+        "label": "Conductivity (Siemens/m)",
         "property": "",
-        "value": 0.0001
+        "value": 0.0
     },
     "tile_spatial": {
         "group": "Receivers location options",
@@ -457,36 +155,9 @@
         "label": "Values to ignore",
         "value": ""
     },
-    "resolution": {
-        "min": 0.0,
-        "group": "Data pre-processing",
-        "optional": true,
-        "enabled": false,
-        "label": "Downsampling resolution",
-        "value": 0.0
-    },
-    "detrend_order": {
-        "min": 0,
-        "group": "Data pre-processing",
-        "enabled": false,
-        "dependencyType": "enabled",
-        "label": "Detrend order",
-        "optional": true,
-        "value": 0
-    },
-    "detrend_type": {
-        "choiceList": [
-            "all",
-            "perimeter"
-        ],
-        "group": "Data pre-processing",
-        "dependency": "detrend_order",
-        "dependencyType": "enabled",
-        "enabled": false,
-        "optional": true,
-        "label": "Detrend type",
-        "value": "all"
-    },
+    "resolution": "",
+    "detrend_order": "",
+    "detrend_type": "",
     "max_chunk_size": {
         "min": 0,
         "group": "Data pre-processing",
@@ -644,12 +315,12 @@
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "label": "Update sensitivity weight threshold",
-        "value": 0.0
+        "value": 30.0
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
         "label": "Update every iteration",
-        "value": false
+        "value": true
     },
     "f_min_change": {
         "group": "Update IRLS directive",
@@ -847,7 +518,7 @@
         "property": "",
         "optional": true,
         "value": 0.0,
-        "enabled": true
+        "enabled": false
     },
     "gradient_type": {
         "choiceList": [
@@ -948,7 +619,7 @@
     },
     "out_group": {
         "label": "Results group name",
-        "value": "SusceptibilityInversion"
+        "value": "DirectCurrentInversion"
     },
     "monitoring_directory": "",
     "workspace_geoh5": "",
@@ -961,14 +632,5 @@
     },
     "conda_environment": "geoapps",
     "distributed_workers": "",
-    "tmi_channel_bool": false,
-    "bxx_channel_bool": false,
-    "bxy_channel_bool": false,
-    "bxz_channel_bool": false,
-    "byy_channel_bool": false,
-    "byz_channel_bool": false,
-    "bzz_channel_bool": false,
-    "bx_channel_bool": false,
-    "by_channel_bool": false,
-    "bz_channel_bool": false
+    "potential_channel_bool": true
 }

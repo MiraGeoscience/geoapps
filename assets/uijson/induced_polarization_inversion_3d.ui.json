@@ -1,6 +1,6 @@
 {
-    "title": "SimPEG Direct Current inversion",
-    "inversion_type": "direct current",
+    "title": "SimPEG Induced Polarization inversion",
+    "inversion_type": "induced polarization",
     "geoh5": "",
     "forward_only": false,
     "topography_object": {
@@ -17,7 +17,10 @@
         "value": ""
     },
     "topography": {
-        "association": "Vertex",
+        "association": [
+            "Vertex",
+            "Cell"
+        ],
         "dataType": "Float",
         "group": "Topography",
         "main": true,
@@ -36,7 +39,7 @@
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": ""
     },
-    "potential_channel": {
+    "chargeability_channel": {
         "association": [
             "Cell",
             "Vertex"
@@ -44,11 +47,11 @@
         "dataType": "Float",
         "group": "Data",
         "main": true,
-        "label": "Potential channel",
+        "label": "Chargeability channel",
         "parent": "data_object",
         "value": ""
     },
-    "potential_uncertainty": {
+    "chargeability_uncertainty": {
         "association": [
             "Cell",
             "Vertex"
@@ -57,10 +60,40 @@
         "group": "Data",
         "main": true,
         "isValue": true,
-        "label": "Potential uncertainty",
+        "label": "Chargeability uncertainty",
         "parent": "data_object",
         "property": "",
         "value": 1.0
+    },
+    "conductivity_model_object": {
+        "group": "Starting Models",
+        "main": true,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}"
+        ],
+        "optional": true,
+        "enabled": false,
+        "label": "Conductivity object",
+        "value": ""
+    },
+    "conductivity_model": {
+        "association": [
+            "Cell",
+            "Vertex"
+        ],
+        "dataType": "Float",
+        "group": "Starting Models",
+        "main": true,
+        "isValue": true,
+        "parent": "conductivity_model_object",
+        "label": "Conductivity (Siemens/m)",
+        "property": "",
+        "value": 0.001
     },
     "starting_model_object": {
         "group": "Starting Model",
@@ -84,11 +117,11 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Starting Model",
+        "group": "Starting Models",
         "main": true,
         "isValue": true,
         "parent": "starting_model_object",
-        "label": "Conductivity (Siemens/m)",
+        "label": "Chargeability (V/V)",
         "property": "",
         "value": 0.0
     },
@@ -152,9 +185,36 @@
         "label": "Values to ignore",
         "value": ""
     },
-    "resolution": "",
-    "detrend_order": "",
-    "detrend_type": "",
+    "resolution": {
+        "min": 0.0,
+        "group": "Data pre-processing",
+        "optional": true,
+        "enabled": false,
+        "label": "Downsampling resolution",
+        "value": 0.0
+    },
+    "detrend_order": {
+        "min": 0,
+        "group": "Data pre-processing",
+        "enabled": false,
+        "dependencyType": "enabled",
+        "label": "Detrend order",
+        "optional": true,
+        "value": 0
+    },
+    "detrend_type": {
+        "choiceList": [
+            "all",
+            "perimeter"
+        ],
+        "group": "Data pre-processing",
+        "dependency": "detrend_order",
+        "dependencyType": "enabled",
+        "enabled": false,
+        "optional": true,
+        "label": "Detrend type",
+        "value": "all"
+    },
     "max_chunk_size": {
         "min": 0,
         "group": "Data pre-processing",
@@ -312,22 +372,17 @@
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "label": "Update sensitivity weight threshold",
-        "value": 30.0
+        "value": 0.001
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
         "label": "Update every iteration",
-        "value": true
+        "value": false
     },
     "f_min_change": {
         "group": "Update IRLS directive",
         "label": "f min change",
         "value": 0.0001
-    },
-    "minGNiter": {
-        "group": "Update IRLS directive",
-        "label": "Minimum Gauss-Newton iterations",
-        "value": 1
     },
     "beta_tol": {
         "group": "Update IRLS directive",
@@ -337,12 +392,19 @@
     "prctile": {
         "group": "Update IRLS directive",
         "label": "percentile",
-        "value": 95
+        "value": 50
     },
     "coolingRate": {
-        "group": "Update IRLS directive",
-        "label": "Beta cooling rate",
+        "group": "Optimization",
+        "label": "Iterations per beta",
         "value": 1
+    },
+    "coolingFactor": {
+        "group": "Optimization",
+        "label": "Beta cooling factor",
+        "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
+        "value": 2.0,
+        "min": 1.0
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
@@ -367,7 +429,15 @@
         "value": 1.0,
         "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin."
     },
-    "max_iterations": {
+    "max_global_iterations": {
+        "min": 0,
+        "group": "Optimization",
+        "label": "Max iterations",
+        "tooltip": "Number of L2 and IRLS iterations combined",
+        "value": 100,
+        "enabled": true
+    },
+    "max_irls_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Maximum number of IRLS iterations",
@@ -386,14 +456,6 @@
         "group": "Optimization",
         "label": "Maximum CG iterations",
         "value": 30,
-        "enabled": true
-    },
-    "max_global_iterations": {
-        "min": 0,
-        "group": "Optimization",
-        "label": "Max iterations",
-        "tooltip": "Number of L2 and IRLS iterations combined",
-        "value": 100,
         "enabled": true
     },
     "initial_beta_ratio": {
@@ -513,7 +575,7 @@
         "property": "",
         "optional": true,
         "value": 0.0,
-        "enabled": false
+        "enabled": true
     },
     "gradient_type": {
         "choiceList": [
@@ -614,7 +676,7 @@
     },
     "out_group": {
         "label": "Results group name",
-        "value": "DirectCurrentInversion"
+        "value": "InducedPolarizationInversion"
     },
     "monitoring_directory": "",
     "workspace_geoh5": "",
@@ -627,5 +689,5 @@
     },
     "conda_environment": "geoapps",
     "distributed_workers": "",
-    "potential_channel_bool": true
+    "chargeability_channel_bool": true
 }
