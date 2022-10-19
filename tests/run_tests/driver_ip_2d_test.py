@@ -55,7 +55,6 @@ def test_ip_2d_fwr_run(
         topography_object=topography.uid,
         z_from_topo=True,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
         conductivity_model=1e-2,
         line_object=geoh5.get_entity("line_ids")[0].uid,

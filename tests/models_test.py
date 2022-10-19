@@ -111,7 +111,6 @@ def test_model_from_object(tmp_path):
     point_object = Points.create(ws, name="test_point", vertices=cc)
     point_object.add_data({"test_data": {"values": vals}})
     data_object = ws.get_entity("test_data")[0]
-    params.lower_bound_object = point_object.uid
     params.lower_bound = data_object.uid
     lower_bound = InversionModel(ws, params, inversion_mesh, "lower_bound")
     nc = int(len(lower_bound.model) / 3)
