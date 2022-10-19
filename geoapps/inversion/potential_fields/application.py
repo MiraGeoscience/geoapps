@@ -465,10 +465,6 @@ class InversionApp(PlotSelection2D):
             self._reference_model_group.data.value = value
 
     @property
-    def reference_model_object(self):
-        return self._reference_model_group.objects
-
-    @property
     def reference_inclination(self):
         if self._reference_inclination_group.options.value == "Model":
             return self._reference_inclination_group.data.value
@@ -486,10 +482,6 @@ class InversionApp(PlotSelection2D):
             self._reference_inclination_group.options.value = "None"
         else:
             self._reference_inclination_group.data.value = value
-
-    @property
-    def reference_inclination_object(self):
-        return self._reference_inclination_group.objects
 
     @property
     def reference_declination(self):
@@ -511,10 +503,6 @@ class InversionApp(PlotSelection2D):
             self._reference_declination_group.data.value = value
 
     @property
-    def reference_declination_object(self):
-        return self._reference_declination_group.objects
-
-    @property
     def starting_model(self):
         if self._starting_model_group.options.value == "Model":
             return self._starting_model_group.data.value
@@ -530,10 +518,6 @@ class InversionApp(PlotSelection2D):
             self._starting_model_group.constant.value = value
         else:
             self._starting_model_group.data.value = value
-
-    @property
-    def starting_model_object(self):
-        return self._starting_model_group.objects
 
     @property
     def starting_inclination(self):
@@ -555,10 +539,6 @@ class InversionApp(PlotSelection2D):
             self._starting_inclination_group.data.value = value
 
     @property
-    def starting_inclination_object(self):
-        return self._starting_inclination_group.objects
-
-    @property
     def starting_declination(self):
         if self._starting_declination_group.options.value == "Model":
             return self._starting_declination_group.data.value
@@ -576,10 +556,6 @@ class InversionApp(PlotSelection2D):
             self._starting_declination_group.options.value = "None"
         else:
             self._starting_declination_group.data.value = value
-
-    @property
-    def starting_declination_object(self):
-        return self._starting_declination_group.objects
 
     @property
     def lower_bound(self):
@@ -601,10 +577,6 @@ class InversionApp(PlotSelection2D):
             self._lower_bound_group.data.value = value
 
     @property
-    def lower_bound_object(self):
-        return self._lower_bound_group.objects
-
-    @property
     def upper_bound(self):
         if self._upper_bound_group.options.value == "Model":
             return self._upper_bound_group.data.value
@@ -622,10 +594,6 @@ class InversionApp(PlotSelection2D):
             self._upper_bound_group.options.value = "None"
         else:
             self._upper_bound_group.data.value = value
-
-    @property
-    def upper_bound_object(self):
-        return self._upper_bound_group.objects
 
     @property
     def tol_cg(self):

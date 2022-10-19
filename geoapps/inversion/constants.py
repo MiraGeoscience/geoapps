@@ -11,173 +11,6 @@ from uuid import UUID
 
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
-octree_defaults = {
-    "title": "Inversion mesh creator",
-    "geoh5": None,
-    "objects": None,
-    "u_cell_size": 25.0,
-    "v_cell_size": 25.0,
-    "w_cell_size": 25.0,
-    "depth_core": 500.0,
-    "horizontal_padding": 1000.0,
-    "vertical_padding": 1000.0,
-    "Refinement A object": None,
-    "Refinement A levels": [4, 4, 4, 4],
-    "Refinement A type": "radial",
-    "Refinement A distance": 5000.0,
-    "Refinement B object": None,
-    "Refinement B levels": [0, 0, 4, 4],
-    "Refinement B type": "surface",
-    "Refinement B distance": 5000.0,
-    "ga_group_name": "Inversion Mesh",
-    "run_command": "geoapps.octree_creation.application",
-    "run_command_boolean": False,
-    "monitoring_directory": None,
-    "workspace_geoh5": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": False,
-}
-
-
-default_octree_ui_json = {
-    "title": None,
-    "geoh5": None,
-    "objects": {
-        "enabled": True,
-        "group": "Mesh",
-        "label": "Core hull extent",
-        "main": True,
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-        ],
-        "value": None,
-    },
-    "u_cell_size": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": True,
-        "enabled": True,
-        "label": "Easting core cell size (m)",
-        "value": 25.0,
-    },
-    "v_cell_size": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": True,
-        "enabled": True,
-        "label": "Northing core cell size (m)",
-        "value": 25.0,
-    },
-    "w_cell_size": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": True,
-        "enabled": True,
-        "label": "Vertical core cell size (m)",
-        "value": 25.0,
-    },
-    "depth_core": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": True,
-        "enabled": True,
-        "label": "Depth of core refinement volume",
-        "value": 500.0,
-    },
-    "horizontal_padding": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": True,
-        "enabled": True,
-        "label": "Horizontal padding",
-        "value": 1000.0,
-    },
-    "vertical_padding": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": True,
-        "enabled": True,
-        "label": "Vertical padding",
-        "value": 1000.0,
-    },
-    "Refinement A object": {
-        "groupOptional": True,
-        "enabled": True,
-        "group": "Data refinement",
-        "label": "Data object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-        ],
-        "value": None,
-    },
-    "Refinement A levels": {
-        "enabled": True,
-        "group": "Data refinement",
-        "label": "Levels",
-        "value": "4, 4, 4, 4",
-    },
-    "Refinement A type": {
-        "choiceList": ["surface", "radial"],
-        "enabled": True,
-        "group": "Data refinement",
-        "label": "Type",
-        "value": "radial",
-    },
-    "Refinement A distance": {
-        "enabled": True,
-        "group": "Data refinement",
-        "label": "Distance",
-        "value": 5000.0,
-    },
-    "Refinement B object": {
-        "groupOptional": True,
-        "enabled": True,
-        "group": "Topography refinement",
-        "label": "Topography object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-        ],
-        "value": None,
-    },
-    "Refinement B levels": {
-        "enabled": True,
-        "group": "Topography refinement",
-        "label": "Levels",
-        "value": "0, 0, 4, 4",
-    },
-    "Refinement B type": {
-        "choiceList": ["surface", "radial"],
-        "enabled": True,
-        "group": "Topography refinement",
-        "label": "Type",
-        "value": "surface",
-    },
-    "Refinement B distance": {
-        "enabled": True,
-        "group": "Topography refinement",
-        "label": "Distance",
-        "value": 5000.0,
-    },
-    "ga_group_name": {"enabled": True, "label": "Name:", "value": "Inversion Mesh"},
-    "run_command": "geoapps.octree_creation.application",
-    "run_command_boolean": {
-        "value": False,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": True,
-    },
-    "monitoring_directory": None,
-    "workspace_geoh5": None,
-    "conda_environment": "geoapps",
-    "conda_environment_boolean": False,
-}
-
 default_ui_json = {
     "forward_only": False,
     "topography_object": {
@@ -205,7 +38,6 @@ default_ui_json = {
         "parent": "topography_object",
         "property": None,
         "value": 0.0,
-        "verbose": 3,
     },
     "data_object": {
         "main": True,
@@ -242,7 +74,6 @@ default_ui_json = {
         "value": 1,
         "min": 1,
         "max": 1000,
-        "verbose": 2,
     },
     "output_tile_files": False,
     "z_from_topo": {
@@ -250,7 +81,6 @@ default_ui_json = {
         "group": "Receivers location options",
         "label": "Take z from topography",
         "value": False,
-        "verbose": 3,
     },
     "receivers_radar_drape": {
         "association": ["Cell", "Vertex"],
@@ -262,7 +92,6 @@ default_ui_json = {
         "parent": "data_object",
         "value": None,
         "enabled": False,
-        "verbose": 3,
     },
     "receivers_offset_x": {
         "group": "Receivers location options",
@@ -270,7 +99,6 @@ default_ui_json = {
         "label": "Receiver X offset (m)",
         "value": 0.0,
         "enabled": True,
-        "verbose": 3,
     },
     "receivers_offset_y": {
         "group": "Receivers location options",
@@ -278,7 +106,6 @@ default_ui_json = {
         "label": "Receiver Y offset (m)",
         "value": 0.0,
         "enabled": True,
-        "verbose": 3,
     },
     "receivers_offset_z": {
         "group": "Receivers location options",
@@ -286,7 +113,6 @@ default_ui_json = {
         "label": "Receiver Z offset (m)",
         "value": 0.0,
         "enabled": True,
-        "verbose": 3,
     },
     "gps_receivers_offset": None,
     "ignore_values": {
@@ -295,7 +121,6 @@ default_ui_json = {
         "enabled": False,
         "label": "Values to ignore",
         "value": None,
-        "verbose": 3,
     },
     "resolution": {
         "min": 0.0,
@@ -304,7 +129,6 @@ default_ui_json = {
         "enabled": False,
         "label": "Downsampling resolution",
         "value": 0.0,
-        "verbose": 3,
     },
     "detrend_order": {
         "min": 0,
@@ -314,7 +138,6 @@ default_ui_json = {
         "label": "Detrend order",
         "optional": True,
         "value": 0,
-        "verbose": 3,
     },
     "detrend_type": {
         "choiceList": ["all", "perimeter"],
@@ -325,7 +148,6 @@ default_ui_json = {
         "optional": True,
         "label": "Detrend type",
         "value": "all",
-        "verbose": 3,
     },
     "max_chunk_size": {
         "min": 0,
@@ -334,13 +156,11 @@ default_ui_json = {
         "enabled": True,
         "label": "Maximum chunk size",
         "value": 128,
-        "verbose": 3,
     },
     "chunk_by_rows": {
         "group": "Data pre-processing",
         "label": "Chunk by rows",
         "value": True,
-        "verbose": 3,
     },
     "mesh": {
         "group": "Mesh and Models",
@@ -357,14 +177,12 @@ default_ui_json = {
         "groupOptional": True,
         "label": "Window center easting",
         "value": 0.0,
-        "verbose": 3,
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": False,
         "label": "Window center northing",
         "value": 0.0,
-        "verbose": 3,
     },
     "window_width": {
         "min": 0.0,
@@ -372,7 +190,6 @@ default_ui_json = {
         "enabled": False,
         "label": "Window width",
         "value": 0.0,
-        "verbose": 3,
     },
     "window_height": {
         "min": 0.0,
@@ -380,7 +197,6 @@ default_ui_json = {
         "enabled": False,
         "label": "Window height",
         "value": 0.0,
-        "verbose": 3,
     },
     "window_azimuth": {
         "min": -180,
@@ -389,7 +205,6 @@ default_ui_json = {
         "enabled": False,
         "label": "Window azimuth",
         "value": 0.0,
-        "verbose": 3,
     },
     "inversion_style": "voxel",
     "chi_factor": {
@@ -409,28 +224,24 @@ default_ui_json = {
         "min": 1.0,
         "precision": 1,
         "lineEdit": False,
-        "verbose": 2,
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
         "tooltip": "Update weights at every iteration",
         "label": "Every iteration",
         "value": False,
-        "verbose": 2,
     },
     "f_min_change": {
         "group": "Update IRLS directive",
         "label": "f min change",
         "value": 1e-4,
         "min": 1e-6,
-        "verbose": 3,
     },
     "beta_tol": {
         "group": "Update IRLS directive",
         "label": "Beta tolerance",
         "value": 0.5,
         "min": 0.0001,
-        "verbose": 3,
     },
     "prctile": {
         "group": "Update IRLS directive",
@@ -438,7 +249,6 @@ default_ui_json = {
         "value": 95,
         "max": 100,
         "min": 5,
-        "verbose": 3,
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
@@ -480,14 +290,12 @@ default_ui_json = {
         "tooltip": "Incomplete Re-weighted Least Squares iterations for non-L2 problems",
         "value": 25,
         "enabled": True,
-        "verbose": 2,
     },
     "coolingRate": {
         "group": "Optimization",
         "label": "Iterations per beta",
         "value": 1,
         "min": 1,
-        "verbose": 3,
     },
     "coolingFactor": {
         "group": "Optimization",
@@ -495,7 +303,6 @@ default_ui_json = {
         "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
         "value": 2.0,
         "min": 1.0,
-        "verbose": 3,
     },
     "max_line_search_iterations": {
         "group": "Optimization",
@@ -503,7 +310,6 @@ default_ui_json = {
         "value": 20,
         "min": 1,
         "enabled": True,
-        "verbose": 2,
     },
     "max_cg_iterations": {
         "min": 0,
@@ -511,7 +317,6 @@ default_ui_json = {
         "label": "Maximum CG iterations",
         "value": 30,
         "enabled": True,
-        "verbose": 2,
     },
     "initial_beta_ratio": {
         "min": 0.0,
@@ -540,7 +345,6 @@ default_ui_json = {
         "label": "Conjugate gradient tolerance",
         "value": 1e-4,
         "enabled": True,
-        "verbose": 2,
     },
     "alpha_s": {
         "min": 0.0,
@@ -583,7 +387,6 @@ default_ui_json = {
         "precision": 2,
         "lineEdit": False,
         "enabled": True,
-        "verbose": 2,
     },
     "x_norm": {
         "min": 0.0,
@@ -594,7 +397,6 @@ default_ui_json = {
         "precision": 2,
         "lineEdit": False,
         "enabled": True,
-        "verbose": 2,
     },
     "y_norm": {
         "min": 0.0,
@@ -605,7 +407,6 @@ default_ui_json = {
         "precision": 2,
         "lineEdit": False,
         "enabled": True,
-        "verbose": 2,
     },
     "z_norm": {
         "min": 0.0,
@@ -616,7 +417,6 @@ default_ui_json = {
         "precision": 2,
         "lineEdit": False,
         "enabled": True,
-        "verbose": 2,
     },
     "reference_model": {
         "association": ["Cell", "Vertex"],
@@ -634,7 +434,6 @@ default_ui_json = {
         "group": "Regularization",
         "label": "Gradient type",
         "value": "total",
-        "verbose": 3,
     },
     "lower_bound": {
         "association": ["Cell", "Vertex"],
@@ -646,7 +445,7 @@ default_ui_json = {
         "label": "Lower bound",
         "property": None,
         "optional": True,
-        "value": 0.0,
+        "value": -10.0,
         "enabled": False,
     },
     "upper_bound": {
@@ -659,14 +458,13 @@ default_ui_json = {
         "label": "Upper bound",
         "property": None,
         "optional": True,
-        "value": 0.0,
+        "value": 10.0,
         "enabled": False,
     },
     "parallelized": {
         "group": "Compute",
         "label": "Use parallelization",
         "value": True,
-        "verbose": 2,
     },
     "n_cpu": {
         "min": 1,
@@ -677,14 +475,12 @@ default_ui_json = {
         "enabled": False,
         "label": "Number of cpu",
         "value": 1,
-        "verbose": 2,
     },
     "store_sensitivities": {
         "choiceList": ["disk", "ram"],
         "group": "Compute",
         "label": "Storage device",
         "value": "disk",
-        "verbose": 2,
     },
     "max_ram": None,
     "monitoring_directory": None,

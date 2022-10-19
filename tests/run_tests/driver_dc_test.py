@@ -53,7 +53,6 @@ def test_dc_fwr_run(
         topography_object=topography.uid,
         z_from_topo=True,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
     params.workpath = tmp_path

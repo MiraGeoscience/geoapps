@@ -381,36 +381,8 @@ def test_validate_tmi_uncertainty():
     catch_invalid_generator(param, {}, "type")
 
 
-def test_validate_starting_model_object():
-    param = "starting_model_object"
-    newval = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
-    param_test_generator(param, newval)
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_starting_inclination_object():
-    param = "starting_inclination_object"
-    newval = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
-    param_test_generator(param, newval)
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_starting_declination_object():
-    param = "starting_declination_object"
-    newval = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
-    param_test_generator(param, newval)
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
 def test_validate_starting_model():
     param = "starting_model"
-    mvi_params.starting_model_object = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
     param_test_generator(param, 1.0)
     newval = uuid4()
     catch_invalid_generator(param, newval, "association")
@@ -419,7 +391,6 @@ def test_validate_starting_model():
 
 def test_validate_starting_inclination():
     param = "starting_inclination"
-    mvi_params.starting_model_object = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
     param_test_generator(param, 1.0)
     newval = uuid4()
     catch_invalid_generator(param, newval, "association")
@@ -428,7 +399,6 @@ def test_validate_starting_inclination():
 
 def test_validate_starting_declination():
     param = "starting_declination"
-    mvi_params.starting_model_object = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
     param_test_generator(param, 1.0)
     newval = uuid4()
     catch_invalid_generator(param, newval, "association")
@@ -807,27 +777,6 @@ def test_validate_z_norm():
     newval = 0.5
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
-
-
-def test_validate_reference_model_object():
-    param = "reference_model_object"
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_reference_inclination_object():
-    param = "reference_inclination_object"
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_reference_declination_object():
-    param = "reference_declination_object"
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
 
 
 def test_validate_reference_model():
@@ -2075,7 +2024,6 @@ def test_conductivity_model():
 def test_isValue(tmp_path):
     file_name = "test.ui.json"
     mesh = geoh5.get_entity("O2O_Interp_25m")[0]
-    mag_params.starting_model_object = mesh.uid
     mag_params.starting_model = 0.0
     mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
 
