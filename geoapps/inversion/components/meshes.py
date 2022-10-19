@@ -149,7 +149,7 @@ class InversionMesh:
 
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
-        if self.params.inversion_type in ["direct current 2d"]:
+        if "2d" in self.params.inversion_type:
             (  # pylint: disable=W0632
                 self.entity,
                 self.mesh,
