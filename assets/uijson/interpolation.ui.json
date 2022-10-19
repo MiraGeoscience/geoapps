@@ -1,6 +1,6 @@
 {
     "title": "Data Transfer",
-    "geoh5": "C:\\Users\\Benjamink\\GIT\\geoapps\\assets\\FlinFlon.geoh5",
+    "geoh5": "",
     "run_command": "geoapps.interpolation.driver",
     "run_command_boolean": {
         "value": false,
@@ -26,7 +26,7 @@
         "main": true,
         "group": "Data Selection",
         "label": "Object",
-        "value": "{2e814779-c35f-4da0-ad6a-39a6912361f9}"
+        "value": ""
     },
     "data": {
         "main": true,
@@ -38,7 +38,7 @@
         "dataType": "Float",
         "label": "Data",
         "parent": "objects",
-        "value": "{f3e36334-be0a-4210-b13e-06933279de25}"
+        "value": ""
     },
     "out_object": {
         "meshType": [
@@ -54,7 +54,7 @@
         "main": true,
         "group": "Destination",
         "label": "Object",
-        "value": "{7450be38-1327-4336-a9e4-5cff587b6715}"
+        "value": ""
     },
     "skew_angle": {
         "main": false,
@@ -79,7 +79,7 @@
         "group": "Horizontal Extent",
         "optional": true,
         "enabled": true,
-        "value": 2000.0,
+        "value": 0.0,
         "label": "Maximum distance (m)"
     },
     "xy_extent": {
@@ -112,9 +112,9 @@
         "main": false,
         "group": "Upper Limit",
         "optional": true,
-        "enabled": true,
+        "enabled": false,
         "label": "Object",
-        "value": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"
+        "value": ""
     },
     "topography_data": {
         "main": false,
@@ -136,7 +136,7 @@
         "group": "Lower Limit (m)",
         "groupOptional": true,
         "enabled": true,
-        "value": 1000.0,
+        "value": 0.0,
         "label": "Value"
     },
     "space": {

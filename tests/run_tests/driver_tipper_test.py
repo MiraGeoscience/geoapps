@@ -135,7 +135,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             gradient_type="components",
             z_from_topo=False,
             upper_bound=0.75,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e0,
             sens_wts_threshold=60.0,
             prctile=100,

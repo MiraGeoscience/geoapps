@@ -1,6 +1,6 @@
 {
-    "title": "SimPEG Induced Polarization inversion",
-    "inversion_type": "induced polarization",
+    "title": "SimPEG Direct Current inversion",
+    "inversion_type": "direct current 2d",
     "geoh5": "",
     "forward_only": false,
     "topography_object": {
@@ -17,7 +17,10 @@
         "value": ""
     },
     "topography": {
-        "association": "Vertex",
+        "association": [
+            "Vertex",
+            "Cell"
+        ],
         "dataType": "Float",
         "group": "Topography",
         "main": true,
@@ -29,6 +32,25 @@
         "property": "",
         "value": 0.0
     },
+    "line_object": {
+        "association": [
+            "Cell",
+            "Vertex"
+        ],
+        "dataType": "Referenced",
+        "group": "Data",
+        "main": true,
+        "label": "Line field",
+        "parent": "data_object",
+        "value": ""
+    },
+    "line_id": {
+        "group": "Data",
+        "main": true,
+        "min": 1,
+        "label": "Line number",
+        "value": 1
+    },
     "data_object": {
         "main": true,
         "group": "Data",
@@ -36,7 +58,7 @@
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": ""
     },
-    "chargeability_channel": {
+    "potential_channel": {
         "association": [
             "Cell",
             "Vertex"
@@ -44,11 +66,11 @@
         "dataType": "Float",
         "group": "Data",
         "main": true,
-        "label": "Chargeability channel",
+        "label": "Potential channel",
         "parent": "data_object",
         "value": ""
     },
-    "chargeability_uncertainty": {
+    "potential_uncertainty": {
         "association": [
             "Cell",
             "Vertex"
@@ -57,68 +79,28 @@
         "group": "Data",
         "main": true,
         "isValue": true,
-        "label": "Chargeability uncertainty",
+        "label": "Potential uncertainty",
         "parent": "data_object",
         "property": "",
         "value": 1.0
     },
-    "conductivity_model_object": {
-        "group": "Starting Models",
-        "main": true,
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4EA87376-3ECE-438B-BF12-3479733DED46}"
-        ],
-        "optional": true,
-        "enabled": false,
-        "label": "Conductivity object",
-        "value": ""
-    },
-    "conductivity_model": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Starting Models",
-        "main": true,
-        "isValue": true,
-        "parent": "conductivity_model_object",
-        "label": "Conductivity (Siemens/m)",
-        "property": "",
-        "value": 0.001
-    },
     "starting_model_object": {
         "group": "Starting Model",
         "main": true,
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}"
-        ],
+        "meshType": "{c94968ea-cf7d-11eb-b8bc-0242ac130003}",
         "optional": true,
         "enabled": false,
         "label": "Object",
         "value": ""
     },
     "starting_model": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
+        "association": "Cell",
         "dataType": "Float",
-        "group": "Starting Models",
+        "group": "Starting Model",
         "main": true,
         "isValue": true,
         "parent": "starting_model_object",
-        "label": "Chargeability (V/V)",
+        "label": "Conductivity (Siemens/m)",
         "property": "",
         "value": 0.0
     },
@@ -182,36 +164,9 @@
         "label": "Values to ignore",
         "value": ""
     },
-    "resolution": {
-        "min": 0.0,
-        "group": "Data pre-processing",
-        "optional": true,
-        "enabled": false,
-        "label": "Downsampling resolution",
-        "value": 0.0
-    },
-    "detrend_order": {
-        "min": 0,
-        "group": "Data pre-processing",
-        "enabled": false,
-        "dependencyType": "enabled",
-        "label": "Detrend order",
-        "optional": true,
-        "value": 0
-    },
-    "detrend_type": {
-        "choiceList": [
-            "all",
-            "perimeter"
-        ],
-        "group": "Data pre-processing",
-        "dependency": "detrend_order",
-        "dependencyType": "enabled",
-        "enabled": false,
-        "optional": true,
-        "label": "Detrend type",
-        "value": "all"
-    },
+    "resolution": "",
+    "detrend_order": "",
+    "detrend_type": "",
     "max_chunk_size": {
         "min": 0,
         "group": "Data pre-processing",
@@ -231,7 +186,7 @@
         "optional": true,
         "enabled": false,
         "label": "Mesh",
-        "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        "meshType": "{c94968ea-cf7d-11eb-b8bc-0242ac130003}",
         "value": ""
     },
     "u_cell_size": {
@@ -254,34 +209,6 @@
         "label": "Northing core cell size (m)",
         "value": 25.0
     },
-    "w_cell_size": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "Vertical core cell size (m)",
-        "value": 25.0
-    },
-    "octree_levels_topo": {
-        "group": "Mesh",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "octree levels topography",
-        "value": "0, 0, 4, 4"
-    },
-    "octree_levels_obs": {
-        "group": "Mesh",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "octree levels observations",
-        "value": "4, 4, 4, 4"
-    },
     "depth_core": {
         "min": 0.0,
         "group": "Mesh",
@@ -291,16 +218,6 @@
         "dependencyType": "disabled",
         "label": "Depth of core refinement volume",
         "value": 500.0
-    },
-    "max_distance": {
-        "min": 0.0,
-        "group": "Mesh",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "Maximum padding distance",
-        "value": 5000.0
     },
     "horizontal_padding": {
         "min": 0.0,
@@ -321,6 +238,14 @@
         "dependencyType": "disabled",
         "label": "Vertical padding",
         "value": 1000.0
+    },
+    "expansion_factor": {
+        "main": true,
+        "group": "Mesh",
+        "label": "Expansion factor",
+        "dependency": "mesh",
+        "dependencyType": "disabled",
+        "value": 1.1
     },
     "window_center_x": {
         "group": "Data window",
@@ -369,22 +294,17 @@
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "label": "Update sensitivity weight threshold",
-        "value": 0.001
+        "value": 30.0
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
         "label": "Update every iteration",
-        "value": false
+        "value": true
     },
     "f_min_change": {
         "group": "Update IRLS directive",
         "label": "f min change",
         "value": 0.0001
-    },
-    "minGNiter": {
-        "group": "Update IRLS directive",
-        "label": "Minimum Gauss-Newton iterations",
-        "value": 1
     },
     "beta_tol": {
         "group": "Update IRLS directive",
@@ -394,12 +314,19 @@
     "prctile": {
         "group": "Update IRLS directive",
         "label": "percentile",
-        "value": 50
+        "value": 95
     },
     "coolingRate": {
-        "group": "Update IRLS directive",
-        "label": "Beta cooling rate",
+        "group": "Optimization",
+        "label": "Iterations per beta",
         "value": 1
+    },
+    "coolingFactor": {
+        "group": "Optimization",
+        "label": "Beta cooling factor",
+        "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
+        "value": 2.0,
+        "min": 1.0
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
@@ -424,7 +351,15 @@
         "value": 1.0,
         "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin."
     },
-    "max_iterations": {
+    "max_global_iterations": {
+        "min": 0,
+        "group": "Optimization",
+        "label": "Max iterations",
+        "tooltip": "Number of L2 and IRLS iterations combined",
+        "value": 100,
+        "enabled": true
+    },
+    "max_irls_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Maximum number of IRLS iterations",
@@ -443,14 +378,6 @@
         "group": "Optimization",
         "label": "Maximum CG iterations",
         "value": 30,
-        "enabled": true
-    },
-    "max_global_iterations": {
-        "min": 0,
-        "group": "Optimization",
-        "label": "Max iterations",
-        "tooltip": "Number of L2 and IRLS iterations combined",
-        "value": 100,
         "enabled": true
     },
     "initial_beta_ratio": {
@@ -543,23 +470,13 @@
     "reference_model_object": {
         "group": "Regularization",
         "label": "Reference model object",
-        "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}"
-        ],
+        "meshType": "{c94968ea-cf7d-11eb-b8bc-0242ac130003}",
         "optional": true,
         "enabled": false,
         "value": ""
     },
     "reference_model": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Regularization",
         "isValue": true,
@@ -570,7 +487,7 @@
         "property": "",
         "optional": true,
         "value": 0.0,
-        "enabled": true
+        "enabled": false
     },
     "gradient_type": {
         "choiceList": [
@@ -660,18 +577,9 @@
         "value": 1
     },
     "max_ram": "",
-    "store_sensitivities": {
-        "choiceList": [
-            "disk",
-            "ram"
-        ],
-        "group": "Compute",
-        "label": "Storage device",
-        "value": "disk"
-    },
     "out_group": {
         "label": "Results group name",
-        "value": "InducedPolarizationInversion"
+        "value": "DirectCurrentInversion"
     },
     "monitoring_directory": "",
     "workspace_geoh5": "",
@@ -684,5 +592,14 @@
     },
     "conda_environment": "geoapps",
     "distributed_workers": "",
-    "chargeability_channel_bool": true
+    "potential_channel_bool": true,
+    "store_sensitivities": {
+        "choiceList": [
+            "disk",
+            "ram"
+        ],
+        "group": "Compute",
+        "label": "Storage device",
+        "value": "ram"
+    }
 }

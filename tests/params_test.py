@@ -634,22 +634,99 @@ def test_validate_chi_factor():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_max_iterations():
-    param = "max_iterations"
-    newval = 2
+def test_sens_wts_threshold():
+    param = "sens_wts_threshold"
+    newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_max_cg_iterations():
-    param = "max_cg_iterations"
-    newval = 2
+def test_every_iteration_bool():
+    param = "every_iteration_bool"
+    newval = True
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_f_min_change():
+    param = "f_min_change"
+    newval = 1e-3
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_beta_tol():
+    param = "beta_tol"
+    newval = 0.2
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_prctile():
+    param = "prctile"
+    newval = 90
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolingRate():
+    param = "coolingRate"
+    newval = 3
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolingFactor():
+    param = "coolingFactor"
+    newval = 4.0
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolEps_q():
+    param = "coolEps_q"
+    newval = False
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolEpsFact():
+    param = "coolEpsFact"
+    newval = 1.1
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_beta_search():
+    param = "beta_search"
+    newval = True
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_starting_chi_factor():
+    param = "starting_chi_factor"
+    newval = 2.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
 def test_validate_max_global_iterations():
     param = "max_global_iterations"
+    newval = 2
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_validate_max_irls_iterations():
+    param = "max_irls_iterations"
+    newval = 1
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_validate_max_cg_iterations():
+    param = "max_cg_iterations"
     newval = 2
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
