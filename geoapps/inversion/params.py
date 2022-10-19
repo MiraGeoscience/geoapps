@@ -78,18 +78,18 @@ class InversionBaseParams(BaseParams):
         self._sens_wts_threshold: float = None
         self._every_iteration_bool: bool = None
         self._f_min_change: float = None
-        self._minGNiter: float = None
         self._beta_tol: float = None
         self._prctile: float = None
         self._coolingRate: float = None
+        self._coolingFactor: float = None
         self._coolEps_q: bool = None
         self._coolEpsFact: float = None
         self._beta_search: bool = None
         self._starting_chi_factor: float = None
-        self._max_iterations: int = None
+        self._max_irls_iterations: int = None
+        self._max_global_iterations: int = None
         self._max_line_search_iterations: int = None
         self._max_cg_iterations: int = None
-        self._max_global_iterations: int = None
         self._initial_beta: float = None
         self._initial_beta_ratio: float = None
         self._tol_cg: float = None
@@ -587,14 +587,6 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("f_min_change", val)
 
     @property
-    def minGNiter(self):
-        return self._minGNiter
-
-    @minGNiter.setter
-    def minGNiter(self, val):
-        self.setter_validator("minGNiter", val)
-
-    @property
     def beta_tol(self):
         return self._beta_tol
 
@@ -617,6 +609,14 @@ class InversionBaseParams(BaseParams):
     @coolingRate.setter
     def coolingRate(self, val):
         self.setter_validator("coolingRate", val)
+
+    @property
+    def coolingFactor(self):
+        return self._coolingFactor
+
+    @coolingFactor.setter
+    def coolingFactor(self, val):
+        self.setter_validator("coolingFactor", val)
 
     @property
     def coolEps_q(self):
@@ -651,12 +651,20 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("starting_chi_factor", val)
 
     @property
-    def max_iterations(self):
-        return self._max_iterations
+    def max_irls_iterations(self):
+        return self._max_irls_iterations
 
-    @max_iterations.setter
-    def max_iterations(self, val):
-        self.setter_validator("max_iterations", val)
+    @max_irls_iterations.setter
+    def max_irls_iterations(self, val):
+        self.setter_validator("max_irls_iterations", val)
+
+    @property
+    def max_global_iterations(self):
+        return self._max_global_iterations
+
+    @max_global_iterations.setter
+    def max_global_iterations(self, val):
+        self.setter_validator("max_global_iterations", val)
 
     @property
     def max_line_search_iterations(self):
@@ -673,14 +681,6 @@ class InversionBaseParams(BaseParams):
     @max_cg_iterations.setter
     def max_cg_iterations(self, val):
         self.setter_validator("max_cg_iterations", val)
-
-    @property
-    def max_global_iterations(self):
-        return self._max_global_iterations
-
-    @max_global_iterations.setter
-    def max_global_iterations(self, val):
-        self.setter_validator("max_global_iterations", val)
 
     @property
     def initial_beta(self):

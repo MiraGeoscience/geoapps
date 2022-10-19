@@ -102,7 +102,7 @@ def test_magnetic_vector_run(
             z_from_topo=False,
             tmi_channel=tmi.uid,
             tmi_uncertainty=4.0,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e1,
             store_sensitivities="ram",
             prctile=100,

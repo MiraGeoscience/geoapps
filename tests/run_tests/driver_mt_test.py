@@ -150,7 +150,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             z_from_topo=False,
             upper_bound=0.75,
             conductivity_model=1e-2,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
             store_sensitivities="ram",
@@ -183,7 +183,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
         data_object=survey.uid,
         starting_model=0.01,
         conductivity_model=1e-2,
-        max_iterations=0,
+        max_global_iterations=0,
         # store_sensitivities="ram",
         **data_kwargs,
     )
