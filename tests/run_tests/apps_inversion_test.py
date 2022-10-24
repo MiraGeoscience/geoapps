@@ -60,15 +60,6 @@ def test_mag_inversion(tmp_path):
         "forward_only": False,
         "starting_model": 0.01,
         "window_width": 100.0,
-        "u_cell_size": 50,
-        "v_cell_size": 60,
-        "w_cell_size": 75,
-        "octree_levels_topo": "1, 2, 3",
-        "octree_levels_obs": "4, 5, 6",
-        "depth_core": 150.0,
-        "horizontal_padding": 150.0,
-        "vertical_padding": 150.0,
-        "max_distance": 150.0,
     }
     side_effects = {"starting_inclination": 35}
     app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)

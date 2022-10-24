@@ -196,9 +196,9 @@ class InversionBaseParams(BaseParams):
     def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
         offsets = [
-            self.receivers_offset_x,
-            self.receivers_offset_y,
-            self.receivers_offset_z,
+            0 if self.receivers_offset_x is None else self.receivers_offset_x,
+            0 if self.receivers_offset_y is None else self.receivers_offset_y,
+            0 if self.receivers_offset_z is None else self.receivers_offset_z,
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
