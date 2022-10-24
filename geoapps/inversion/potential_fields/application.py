@@ -17,6 +17,7 @@ from collections import OrderedDict
 from time import time
 
 import numpy as np
+from geoh5py.data import Data
 from geoh5py.objects import Octree
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
@@ -427,6 +428,10 @@ class InversionApp(PlotSelection2D):
     @property
     def max_global_iterations(self):
         return self._max_global_iterations
+
+    @property
+    def max_irls_iterations(self):
+        return self._max_irls_iterations
 
     @property
     def max_cg_iterations(self):
@@ -1210,7 +1215,7 @@ class InversionApp(PlotSelection2D):
                             )
                         for d in data:
                             if (
-                                d is not None
+                                isinstance(d, Data)
                                 and new_workspace.get_entity(d.uid)[0] is None
                             ):
                                 d.copy(parent=new_obj)
