@@ -124,7 +124,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             resolution=0.0,
             data_object=survey.uid,
             starting_model=0.01,
-            reference_model=None,
+            reference_model=0.01,
             conductivity_model=1e-2,
             s_norm=1.0,
             x_norm=1.0,
