@@ -13,7 +13,7 @@ from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase, Octree
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import InputFile, monitored_directory_copy, utils
 
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation.params import OctreeParams
@@ -78,7 +78,7 @@ class OctreeDriver:
                 treemesh,
                 getattr(params, value["object"]).vertices,
                 method=getattr(params, value["type"]),
-                octree_levels=getattr(params, value["levels"]),
+                octree_levels=utils.str2list(getattr(params, value["levels"])),
                 max_distance=getattr(params, value["distance"]),
                 finalize=False,
             )
