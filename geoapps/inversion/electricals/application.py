@@ -17,15 +17,7 @@ from time import time
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.objects import (
-    BlockModel,
-    CurrentElectrode,
-    Curve,
-    Octree,
-    Points,
-    PotentialElectrode,
-    Surface,
-)
+from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -40,6 +32,10 @@ from geoapps.inversion.electricals.direct_current.three_dimensions.params import
 )
 from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
     InducedPolarization3DParams,
+)
+from geoapps.inversion.potential_fields.application import (
+    MeshOctreeOptions,
+    ModelOptions,
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
@@ -140,11 +136,18 @@ class InversionApp(PlotSelection2D):
         self._chi_factor = FloatText(
             value=1, description="Target misfit", disabled=False
         )
+        self._mesh_octree = MeshOctreeOptions(**self.defaults)
         self._lower_bound_group = ModelOptions(
-            "lower_bound", add_xyz=False, **self.defaults
+            "lower_bound",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._upper_bound_group = ModelOptions(
-            "upper_bound", add_xyz=False, **self.defaults
+            "upper_bound",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._ignore_values = widgets.Text(
             description="Value (i.e. '<0' for no negatives)",
@@ -152,8 +155,16 @@ class InversionApp(PlotSelection2D):
         self._store_sensitivities = Dropdown(
             options=["ram", "disk"], description="Storage device:", value="disk"
         )
-        self._max_iterations = IntText(value=10, description="Max beta Iterations")
+        self._max_global_iterations = IntText(
+            value=10, description="Max beta Iterations"
+        )
+        self._max_irls_iterations = IntText(value=10, description="Max IRLS iterations")
+        self._coolingRate = IntText(value=1, description="Iterations per beta")
+        self._coolingFactor = FloatText(value=2, description="Beta cooling factor")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
+        self._sens_wts_threshold = FloatText(
+            value=80, description="Threshold sensitivity weights", max=100, min=0
+        )
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
         self._n_cpu = IntText(
             value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
@@ -165,26 +176,39 @@ class InversionApp(PlotSelection2D):
         self._initial_beta_panel = HBox([self._initial_beta_ratio])
         self._optimization = VBox(
             [
-                self._max_iterations,
+                self._max_global_iterations,
+                self._max_irls_iterations,
+                self._coolingRate,
+                self._coolingFactor,
                 self._chi_factor,
                 self._initial_beta_panel,
                 self._max_cg_iterations,
                 self._tol_cg,
                 self._n_cpu,
                 self._store_sensitivities,
+                self._sens_wts_threshold,
                 self._tile_spatial,
             ]
         )
         self._starting_model_group = ModelOptions(
-            "starting_model", add_xyz=False, **self.defaults
+            "starting_model",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._starting_model_group.options.options = ["Constant", "Model"]
         self._conductivity_model_group = ModelOptions(
-            "conductivity_model", add_xyz=False, **self.defaults
+            "conductivity_model",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._conductivity_model_group.options.options = ["Model"]
         self._reference_model_group = ModelOptions(
-            "reference_model", add_xyz=False, **self.defaults
+            "reference_model",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._reference_model_group.options.observe(self.update_ref)
         self._topography_group = TopographyOptions(add_xyz=False, **self.defaults)
@@ -194,8 +218,6 @@ class InversionApp(PlotSelection2D):
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
             add_xyz=False,
-            receivers_offset_x=self.defaults["receivers_offset_x"],
-            receivers_offset_y=self.defaults["receivers_offset_y"],
             receivers_offset_z=self.defaults["receivers_offset_z"],
             z_from_topo=self.defaults["z_from_topo"],
             receivers_radar_drape=self.defaults["receivers_radar_drape"],
@@ -269,7 +291,6 @@ class InversionApp(PlotSelection2D):
                 ),
             ]
         )
-        self._mesh_octree = MeshOctreeOptions(**self.defaults)
         self.inversion_options = {
             "conductivity model": VBox(
                 [
@@ -341,6 +362,14 @@ class InversionApp(PlotSelection2D):
     #     return self._initial_beta
 
     @property
+    def coolingRate(self):
+        return self._coolingRate
+
+    @property
+    def coolingFactor(self):
+        return self._coolingFactor
+
+    @property
     def initial_beta(self):
         return self._initial_beta_ratio
 
@@ -365,8 +394,12 @@ class InversionApp(PlotSelection2D):
         return self._ignore_values
 
     @property
-    def max_iterations(self):
-        return self._max_iterations
+    def max_global_iterations(self):
+        return self._max_global_iterations
+
+    @property
+    def max_irls_iterations(self):
+        return self._max_irls_iterations
 
     @property
     def max_cg_iterations(self):
@@ -446,10 +479,6 @@ class InversionApp(PlotSelection2D):
             self._reference_model_group.data.value = value
 
     @property
-    def reference_model_object(self):
-        return self._reference_model_group.objects
-
-    @property
     def starting_model(self):
         if self._starting_model_group.options.value == "Model":
             return self._starting_model_group.data.value
@@ -465,10 +494,6 @@ class InversionApp(PlotSelection2D):
             self._starting_model_group.constant.value = value
         else:
             self._starting_model_group.data.value = value
-
-    @property
-    def starting_model_object(self):
-        return self._starting_model_group.objects
 
     @property
     def conductivity_model(self):
@@ -511,10 +536,6 @@ class InversionApp(PlotSelection2D):
             self._lower_bound_group.data.value = value
 
     @property
-    def lower_bound_object(self):
-        return self._lower_bound_group.objects
-
-    @property
     def upper_bound(self):
         if self._upper_bound_group.options.value == "Model":
             return self._upper_bound_group.data.value
@@ -534,8 +555,8 @@ class InversionApp(PlotSelection2D):
             self._upper_bound_group.data.value = value
 
     @property
-    def upper_bound_object(self):
-        return self._upper_bound_group.objects
+    def sens_wts_threshold(self):
+        return self._sens_wts_threshold
 
     @property
     def tol_cg(self):
@@ -641,14 +662,6 @@ class InversionApp(PlotSelection2D):
         return self.sensor.data
 
     @property
-    def receivers_offset_x(self):
-        return self.sensor.receivers_offset_x
-
-    @property
-    def receivers_offset_y(self):
-        return self.sensor.receivers_offset_y
-
-    @property
     def receivers_offset_z(self):
         return self.sensor.receivers_offset_z
 
@@ -720,51 +733,6 @@ class InversionApp(PlotSelection2D):
     def write(self):
         """"""
         return self._write
-
-    @property
-    def u_cell_size(self):
-        """'u_cell_size' Octree mesh parameter."""
-        return self._mesh_octree.u_cell_size
-
-    @property
-    def v_cell_size(self):
-        """'v_cell_size' Octree mesh parameter."""
-        return self._mesh_octree.v_cell_size
-
-    @property
-    def w_cell_size(self):
-        """'w_cell_size' Octree mesh parameter."""
-        return self._mesh_octree.w_cell_size
-
-    @property
-    def octree_levels_topo(self):
-        """'octree_levels_topo' Octree mesh parameter."""
-        return self._mesh_octree.octree_levels_topo
-
-    @property
-    def octree_levels_obs(self):
-        """'octree_levels_obs' Octree mesh parameter."""
-        return self._mesh_octree.octree_levels_obs
-
-    @property
-    def depth_core(self):
-        """'depth_core' Octree mesh parameter."""
-        return self._mesh_octree.depth_core
-
-    @property
-    def horizontal_padding(self):
-        """'horizontal_padding' Octree mesh parameter."""
-        return self._mesh_octree.horizontal_padding
-
-    @property
-    def vertical_padding(self):
-        """'vertical_padding' Octree mesh parameter."""
-        return self._mesh_octree.vertical_padding
-
-    @property
-    def max_distance(self):
-        """'max_distance' Octree mesh parameter."""
-        return self._mesh_octree.max_distance
 
     # Observers
     def update_ref(self, _):
@@ -1127,8 +1095,11 @@ class InversionApp(PlotSelection2D):
                         param_dict[key.lstrip("_")] = value
                 else:
                     sub_keys = []
-                    if isinstance(attr, (ModelOptions, TopographyOptions)):
+                    if isinstance(attr, TopographyOptions):
                         sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        attr = self
+                    elif isinstance(attr, ModelOptions):
+                        sub_keys = [attr.identifier]
                         attr = self
                     elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
                         sub_keys = attr.params_keys
@@ -1209,8 +1180,6 @@ class SensorOptions(ObjectDataSelection):
     _options = None
     defaults = {}
     params_keys = [
-        "receivers_offset_x",
-        "receivers_offset_y",
         "receivers_offset_z",
         "z_from_topo",
         "receivers_radar_drape",
@@ -1218,10 +1187,10 @@ class SensorOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
-        self._receivers_offset_x = FloatText(description="dx (+East)", value=0.0)
-        self._receivers_offset_y = FloatText(description="dy (+North)", value=0.0)
         self._receivers_offset_z = FloatText(description="dz (+ve up)", value=0.0)
-        self._z_from_topo = Checkbox(description="Set Z from topo + offsets")
+        self._z_from_topo = Checkbox(
+            description="Set Z from topo + offsets", value=True
+        )
         self.data.description = "Radar (Optional):"
         self._receivers_radar_drape = self.data
         self._offset = None
@@ -1234,8 +1203,6 @@ class SensorOptions(ObjectDataSelection):
                 [
                     self.z_from_topo,
                     Label("Offsets"),
-                    self._receivers_offset_x,
-                    self._receivers_offset_y,
                     self._receivers_offset_z,
                     # self._receivers_radar_drape,
                 ]
@@ -1252,218 +1219,9 @@ class SensorOptions(ObjectDataSelection):
         return self._offset
 
     @property
-    def receivers_offset_x(self):
-        return self._receivers_offset_x
-
-    @property
-    def receivers_offset_y(self):
-        return self._receivers_offset_y
-
-    @property
     def receivers_offset_z(self):
         return self._receivers_offset_z
 
     @property
     def z_from_topo(self):
         return self._z_from_topo
-
-
-class MeshOctreeOptions(ObjectDataSelection):
-    """
-    Widget used for the creation of an octree meshes
-    """
-
-    params_keys = [
-        "mesh",
-        "u_cell_size",
-        "v_cell_size",
-        "w_cell_size",
-        "octree_levels_topo",
-        "octree_levels_obs",
-        "depth_core",
-        "horizontal_padding",
-        "vertical_padding",
-        "max_distance",
-    ]
-
-    def __init__(self, **kwargs):
-        self._mesh = self.objects
-        self._u_cell_size = widgets.FloatText(
-            value=25.0,
-            description="",
-        )
-        self._v_cell_size = widgets.FloatText(
-            value=25.0,
-            description="",
-        )
-        self._w_cell_size = widgets.FloatText(
-            value=25.0,
-            description="",
-        )
-        self._octree_levels_topo = widgets.Text(
-            value="0, 0, 0, 2",
-            description="# Cells below topography",
-        )
-        self._octree_levels_obs = widgets.Text(
-            value="5, 5, 5, 5",
-            description="# Cells below sensors",
-        )
-        self._depth_core = FloatText(
-            value=500,
-            description="Minimum depth (m)",
-        )
-        self._horizontal_padding = widgets.FloatText(
-            value=1000.0,
-            description="Horizontal padding (m)",
-        )
-        self._vertical_padding = widgets.FloatText(
-            value=1000.0,
-            description="Vertical padding (m)",
-        )
-        self._max_distance = FloatText(
-            value=1000,
-            description="Maximum distance (m)",
-        )
-        self._parameters = widgets.VBox(
-            [
-                Label("Core cell size (u, v, z)"),
-                self._u_cell_size,
-                self._v_cell_size,
-                self._w_cell_size,
-                Label("Refinement Layers"),
-                self._octree_levels_topo,
-                self._octree_levels_obs,
-                self._max_distance,
-                Label("Dimensions"),
-                self._horizontal_padding,
-                self._vertical_padding,
-                self._depth_core,
-            ]
-        )
-        self._main = VBox([self.objects, self._parameters])
-        self._objects.observe(self.mesh_selection, names="value")
-
-        super().__init__(**kwargs)
-
-    @property
-    def main(self):
-        return self._main
-
-    @property
-    def mesh(self):
-        return self._mesh
-
-    @property
-    def u_cell_size(self):
-        return self._u_cell_size
-
-    @property
-    def v_cell_size(self):
-        return self._v_cell_size
-
-    @property
-    def w_cell_size(self):
-        return self._w_cell_size
-
-    @property
-    def depth_core(self):
-        return self._depth_core
-
-    @property
-    def max_distance(self):
-        return self._max_distance
-
-    @property
-    def octree_levels_obs(self):
-        return self._octree_levels_obs
-
-    @property
-    def octree_levels_topo(self):
-        return self._octree_levels_topo
-
-    @property
-    def horizontal_padding(self):
-        return self._horizontal_padding
-
-    @property
-    def vertical_padding(self):
-        return self._vertical_padding
-
-    def mesh_selection(self, _):
-        if self._mesh.value is None:
-            self._main.children = [
-                self.objects,
-                self._parameters,
-            ]
-        else:
-            self._main.children = [self.objects]
-
-
-class ModelOptions(ObjectDataSelection):
-    """
-    Widgets for the selection of model options
-    """
-
-    def __init__(self, identifier: str = None, **kwargs):
-        self._units = "Units"
-        self._identifier = identifier
-        self._object_types = (BlockModel, Octree, Surface, Curve, Points)
-        self._options = widgets.RadioButtons(
-            options=["Model", "Constant", "None"],
-            value="Constant",
-            disabled=False,
-        )
-        self._options.observe(self.update_panel, names="value")
-        self.objects.description = "Object"
-
-        self.data.description = "Values"
-        self._constant = FloatText(description=self.units)
-        self._description = Label()
-
-        super().__init__(**kwargs)
-
-        self.objects.observe(self.objects_setter, names="value")
-        self.selection_widget = self.main
-        self._main = widgets.VBox(
-            [self._description, widgets.VBox([self._options, self._constant])]
-        )
-
-    def update_panel(self, _):
-
-        if self._options.value == "Model":
-            self._main.children[1].children = [self._options, self.selection_widget]
-            self._main.children[1].children[1].layout.visibility = "visible"
-        elif self._options.value == "Constant":
-            self._main.children[1].children = [self._options, self._constant]
-            self._main.children[1].children[1].layout.visibility = "visible"
-        else:
-            self._main.children[1].children[1].layout.visibility = "hidden"
-
-    def objects_setter(self, _):
-        if self.objects.value is not None:
-            self.options.value = "Model"
-
-    @property
-    def constant(self):
-        return self._constant
-
-    @property
-    def description(self):
-        return self._description
-
-    @property
-    def identifier(self):
-        return self._identifier
-
-    @property
-    def options(self):
-        return self._options
-
-    @property
-    def units(self):
-        return self._units
-
-    @units.setter
-    def units(self, value):
-        self._units = value
-        self._constant.description = value

@@ -42,7 +42,6 @@ class InversionBaseParams(BaseParams):
         self._topography_object: UUID = None
         self._topography: UUID | float = None
         self._data_object: UUID = None
-        self._starting_model_object: UUID = None
         self._starting_model: UUID | float = None
         self._tile_spatial = None
         self._z_from_topo: bool = None
@@ -59,15 +58,6 @@ class InversionBaseParams(BaseParams):
         self._chunk_by_rows: bool = None
         self._output_tile_files: bool = None
         self._mesh = None
-        self._u_cell_size: float = None
-        self._v_cell_size: float = None
-        self._w_cell_size: float = None
-        self._octree_levels_topo: list[int] = None
-        self._octree_levels_obs: list[int] = None
-        self._depth_core: float = None
-        self._max_distance: float = None
-        self._horizontal_padding: float = None
-        self._vertical_padding: float = None
         self._window_azimuth: float = None
         self._window_center_x: float = None
         self._window_center_y: float = None
@@ -101,12 +91,9 @@ class InversionBaseParams(BaseParams):
         self._x_norm: float = None
         self._y_norm: float = None
         self._z_norm: float = None
-        self._reference_model_object: UUID = None
         self._reference_model = None
         self._gradient_type: str = None
-        self._lower_bound_object: UUID = None
         self._lower_bound = None
-        self._upper_bound_object: UUID = None
         self._upper_bound = None
         self._parallelized: bool = None
         self._n_cpu: int = None
@@ -115,6 +102,8 @@ class InversionBaseParams(BaseParams):
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
+        self._documentation: str = None
+        self._icon: str = None
         self._defaults = (
             self.forward_defaults if self.forward_only else self.inversion_defaults
         )
@@ -171,10 +160,6 @@ class InversionBaseParams(BaseParams):
         else:
             return None
 
-    def cell_size(self):
-        """Returns core cell size in all 3 dimensions."""
-        return [self.u_cell_size, self.v_cell_size, self.w_cell_size]
-
     def components(self) -> list[str]:
         """Retrieve component names used to index channel and uncertainty data."""
         comps = []
@@ -211,9 +196,9 @@ class InversionBaseParams(BaseParams):
     def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
         offsets = [
-            self.receivers_offset_x,
-            self.receivers_offset_y,
-            self.receivers_offset_z,
+            0 if self.receivers_offset_x is None else self.receivers_offset_x,
+            0 if self.receivers_offset_y is None else self.receivers_offset_y,
+            0 if self.receivers_offset_z is None else self.receivers_offset_z,
         ]
         is_offset = any([(k != 0) for k in offsets])
         offsets = offsets if is_offset else None
@@ -289,14 +274,6 @@ class InversionBaseParams(BaseParams):
     @data_object.setter
     def data_object(self, val):
         self.setter_validator("data_object", val, fun=self._uuid_promoter)
-
-    @property
-    def starting_model_object(self):
-        return self._starting_model_object
-
-    @starting_model_object.setter
-    def starting_model_object(self, val):
-        self.setter_validator("starting_model_object", val, fun=self._uuid_promoter)
 
     @property
     def starting_model(self):
@@ -433,78 +410,6 @@ class InversionBaseParams(BaseParams):
     @mesh.setter
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
-
-    @property
-    def u_cell_size(self):
-        return self._u_cell_size
-
-    @u_cell_size.setter
-    def u_cell_size(self, val):
-        self.setter_validator("u_cell_size", val)
-
-    @property
-    def v_cell_size(self):
-        return self._v_cell_size
-
-    @v_cell_size.setter
-    def v_cell_size(self, val):
-        self.setter_validator("v_cell_size", val)
-
-    @property
-    def w_cell_size(self):
-        return self._w_cell_size
-
-    @w_cell_size.setter
-    def w_cell_size(self, val):
-        self.setter_validator("w_cell_size", val)
-
-    @property
-    def octree_levels_topo(self):
-        return self._octree_levels_topo
-
-    @octree_levels_topo.setter
-    def octree_levels_topo(self, val):
-        self.setter_validator("octree_levels_topo", val)
-
-    @property
-    def octree_levels_obs(self):
-        return self._octree_levels_obs
-
-    @octree_levels_obs.setter
-    def octree_levels_obs(self, val):
-        self.setter_validator("octree_levels_obs", val)
-
-    @property
-    def depth_core(self):
-        return self._depth_core
-
-    @depth_core.setter
-    def depth_core(self, val):
-        self.setter_validator("depth_core", val)
-
-    @property
-    def max_distance(self):
-        return self._max_distance
-
-    @max_distance.setter
-    def max_distance(self, val):
-        self.setter_validator("max_distance", val)
-
-    @property
-    def horizontal_padding(self):
-        return self._horizontal_padding
-
-    @horizontal_padding.setter
-    def horizontal_padding(self, val):
-        self.setter_validator("horizontal_padding", val)
-
-    @property
-    def vertical_padding(self):
-        return self._vertical_padding
-
-    @vertical_padding.setter
-    def vertical_padding(self, val):
-        self.setter_validator("vertical_padding", val)
 
     @property
     def window_center_x(self):
@@ -771,14 +676,6 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("z_norm", val)
 
     @property
-    def reference_model_object(self):
-        return self._reference_model_object
-
-    @reference_model_object.setter
-    def reference_model_object(self, val):
-        self.setter_validator("reference_model_object", val, fun=self._uuid_promoter)
-
-    @property
     def reference_model(self):
         return self._reference_model
 
@@ -795,28 +692,12 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("gradient_type", val)
 
     @property
-    def lower_bound_object(self):
-        return self._lower_bound_object
-
-    @lower_bound_object.setter
-    def lower_bound_object(self, val):
-        self.setter_validator("lower_bound_object", val, fun=self._uuid_promoter)
-
-    @property
     def lower_bound(self):
         return self._lower_bound
 
     @lower_bound.setter
     def lower_bound(self, val):
         self.setter_validator("lower_bound", val, fun=self._uuid_promoter)
-
-    @property
-    def upper_bound_object(self):
-        return self._upper_bound_object
-
-    @upper_bound_object.setter
-    def upper_bound_object(self, val):
-        self.setter_validator("upper_bound_object", val, fun=self._uuid_promoter)
 
     @property
     def upper_bound(self):
