@@ -9,9 +9,11 @@ import os
 
 import numpy as np
 import SimPEG
+from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
+from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.inversion.components import InversionData
 from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields import MagneticVectorParams
@@ -60,18 +62,34 @@ def test_survey_data(tmp_path):
         _ = test_topo_object.add_data(
             {"elev": {"association": "VERTEX", "values": 100 * np.ones(len(verts))}}
         )
+        topo = workspace.get_entity("elev")[0]
+        mesh = mesh_builder_xyz(
+            verts,
+            [20, 20, 20],
+            depth_core=50,
+            mesh_type="TREE",
+        )
+        mesh = refine_tree_xyz(
+            mesh,
+            test_topo_object.vertices,
+            method="surface",
+            finalize=True,
+        )
+
+        mesh = treemesh_2_octree(workspace, mesh)
         params = MagneticVectorParams(
             forward_only=False,
             geoh5=workspace,
             data_object=test_data_object.uid,
             topography_object=test_topo_object.uid,
-            topography=workspace.get_entity("elev")[0].uid,
+            topography=topo,
             bxx_channel=bxx_data.uid,
             bxx_uncertainty=0.1,
             byy_channel=byy_data.uid,
             byy_uncertainty=0.2,
             bzz_channel=bzz_data.uid,
             bzz_uncertainty=0.3,
+            mesh=mesh.uid,
             starting_model=0.0,
             tile_spatial=2,
             z_from_topo=True,

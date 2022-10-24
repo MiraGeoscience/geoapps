@@ -93,6 +93,7 @@ def test_magnetic_vector_run(
             resolution=0.0,
             data_object=tmi.parent.uid,
             starting_model=1e-4,
+            reference_model=0.0,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
