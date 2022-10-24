@@ -95,6 +95,7 @@ def test_ip_2d_run(
             line_object=geoh5.get_entity("line_IDs")[0].uid,
             line_id=2,
             starting_model=1e-6,
+            reference_model=1e-6,
             conductivity_model=1e-2,
             s_norm=0.0,
             x_norm=0.0,
@@ -109,6 +110,7 @@ def test_ip_2d_run(
             prctile=100,
             upper_bound=0.1,
             store_sensitivities="ram",
+            coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
     driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
