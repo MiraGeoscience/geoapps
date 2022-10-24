@@ -85,6 +85,7 @@ def test_dc_run(
             topography_object=topography.uid,
             data_object=potential.parent.uid,
             starting_model=1e-2,
+            reference_model=1e-2,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -101,6 +102,7 @@ def test_dc_run(
             upper_bound=10,
             tile_spatial=n_lines,
             store_sensitivities="ram",
+            coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 

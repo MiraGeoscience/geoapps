@@ -91,6 +91,7 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
             line_object=geoh5.get_entity("line_IDs")[0].uid,
             line_id=2,
             starting_model=1e-2,
+            reference_model=1e-2,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -103,6 +104,7 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
             initial_beta_ratio=1e0,
             prctile=100,
             upper_bound=10,
+            coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
     driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
