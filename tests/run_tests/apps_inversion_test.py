@@ -49,6 +49,9 @@ def test_mag_inversion(tmp_path):
                 0
             ].copy(parent=new_geoh5)
             topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
+            ws.get_entity(UUID("{e334f687-df71-4538-ad28-264e420210b8}"))[0].copy(
+                parent=new_geoh5
+            )
 
     changes = {
         "data_object": new_obj.uid,
@@ -140,13 +143,6 @@ def test_mag_inversion(tmp_path):
                     getattr(app, "_" + group + "_group").options.value == "None"
                 ), f"Property group {group} did not reset to 'None'"
 
-            if "Model" in getattr(app, "_" + group + "_group").options.options:
-                getattr(app, "_" + group + "_group").objects.value = new_topo.uid
-                setattr(app, group, new_topo.children[1].uid)
-                assert (
-                    getattr(app, "_" + group + "_group").options.value == "Model"
-                ), f"Property group {group} did not reset to 'Model'"
-
 
 def test_dc_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
@@ -213,13 +209,6 @@ def test_dc_inversion(tmp_path):
             assert (
                 getattr(app, "_" + group + "_group").options.value == "None"
             ), f"Property group {group} did not reset to 'None'"
-
-        if "Model" in getattr(app, "_" + group + "_group").options.options:
-            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
-            setattr(app, group, new_topo.children[1].uid)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Model"
-            ), f"Property group {group} did not reset to 'Model'"
 
 
 def test_ip_inversion(tmp_path):
