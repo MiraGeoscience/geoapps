@@ -21,8 +21,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.152097,
-    "phi_d": 9.878,
-    "phi_m": 79.91,
+    "phi_d": 5.578,
+    "phi_m": 110.1,
 }
 
 np.random.seed(0)
@@ -140,4 +140,4 @@ if __name__ == "__main__":
     assert (
         residual < 20.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. You are so special!")
+    print("Conductivity model is within 20% of the answer. You are so special!")
