@@ -154,6 +154,9 @@ def test_dc_inversion(tmp_path):
             # dc object
             currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
             currents.copy(parent=new_geoh5)
+            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+                parent=new_geoh5
+            )
     changes = {
         "topography_object": new_topo.uid,
         "z_from_topo": False,
@@ -213,39 +216,43 @@ def test_dc_inversion(tmp_path):
 
 def test_ip_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
-    ws = Workspace(project_dcip)
-    new_geoh5 = Workspace(path.join(tmp_path, "invtest.geoh5"))
-    new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[0].copy(
-        parent=new_geoh5
-    )
-    # Conductivity mesh + model
-    ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
-        parent=new_geoh5
-    )
-    # dc object
-    currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
-    currents.copy(parent=new_geoh5)
+    with Workspace(project_dcip) as ws:
+        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+            new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
+                0
+            ].copy(parent=new_geoh5)
+            # Conductivity mesh + model
+            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+                parent=new_geoh5
+            )
+            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+                parent=new_geoh5
+            )
+
+            # dc object
+            currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
+            currents.copy(parent=new_geoh5)
+
     changes = {
         "topography_object": new_topo.uid,
         "z_from_topo": False,
         "forward_only": False,
         "inversion_type": "induced polarization",
         "chargeability_channel": UUID("502e7256-aafa-4016-969f-5cc3a4f27315"),
-        "conductivity_model_object": UUID("da109284-aa8c-4824-a647-29951109b058"),
         "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
-        "resolution": None,
     }
     side_effects = {"starting_model": 1e-4}
     app = DCInversionApp(geoh5=project_dcip, plot_result=False)
-    app.geoh5 = new_geoh5
+    with new_geoh5.open(mode="r"):
+        app.geoh5 = new_geoh5
 
-    for param, value in changes.items():
-        if isinstance(getattr(app, param), Widget):
-            getattr(app, param).value = value
-        else:
-            setattr(app, param, value)
+        for param, value in changes.items():
+            if isinstance(getattr(app, param), Widget):
+                getattr(app, param).value = value
+            else:
+                setattr(app, param, value)
 
-    app.write_trigger(None)
+        app.write_trigger(None)
     ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
     params_reload = InducedPolarization3DParams(ifile)
 
@@ -282,13 +289,6 @@ def test_ip_inversion(tmp_path):
             assert (
                 getattr(app, "_" + group + "_group").options.value == "None"
             ), f"Property group {group} did not reset to 'None'"
-
-        if "Model" in getattr(app, "_" + group + "_group").options.options:
-            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
-            setattr(app, group, new_topo.children[1].uid)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Model"
-            ), f"Property group {group} did not reset to 'Model'"
 
 
 def test_em1d_inversion(tmp_path):
