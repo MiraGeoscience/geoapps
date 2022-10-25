@@ -197,6 +197,7 @@ class InversionApp(PlotSelection2D):
             **self.defaults,
         )
         self._starting_model_group.options.options = ["Constant", "Model"]
+        self._starting_model_group.options.value = "Constant"
         self._conductivity_model_group = ModelOptions(
             "conductivity_model",
             add_xyz=False,
@@ -792,6 +793,7 @@ class InversionApp(PlotSelection2D):
 
         flag = self.inversion_type.value
         self._reference_model_group.units = inversion_defaults()["units"][flag]
+        self._reference_model_group.options.value = "Constant"
         self._reference_model_group.constant.value = inversion_defaults()[
             "reference_value"
         ][flag]
@@ -799,6 +801,7 @@ class InversionApp(PlotSelection2D):
             "Reference " + inversion_defaults()["property"][flag]
         )
         self._starting_model_group.units = inversion_defaults()["units"][flag]
+        self._starting_model_group.options.value = "Constant"
         self._starting_model_group.constant.value = inversion_defaults()[
             "starting_value"
         ][flag]
