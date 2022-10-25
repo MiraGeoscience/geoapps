@@ -532,7 +532,7 @@ default_ui_json = {
         "parent": "mesh",
         "label": "Initial Density (g/cc)",
         "property": None,
-        "value": 0.0,
+        "value": 1e-3,
     },
     "reference_model": {
         "association": ["Cell", "Vertex"],
@@ -543,7 +543,7 @@ default_ui_json = {
         "parent": "mesh",
         "label": "Reference Density (g/cc)",
         "property": None,
-        "value": 0.0,
+        "value": 1e-3,
     },
     "lower_bound": {
         "association": ["Cell", "Vertex"],
