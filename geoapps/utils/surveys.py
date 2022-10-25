@@ -260,9 +260,11 @@ def extract_dcip_survey(
     # Save objects
     line_name = f"{name} {line_id}"
     currents = CurrentElectrode.create(
-        workspace, name=f"{line_name} (currents)", vertices=current_locs
+        workspace,
+        name=f"{line_name} (currents)",
+        vertices=current_locs,
+        cells=np.array(current_cells, dtype=np.int32),
     )
-    currents.cells = np.array(current_cells, dtype=np.int32)
     currents.add_default_ab_cell_id()
 
     potentials = PotentialElectrode.create(

@@ -233,6 +233,7 @@ def test_ip_inversion(tmp_path):
         "chargeability_channel": UUID("502e7256-aafa-4016-969f-5cc3a4f27315"),
         "conductivity_model_object": UUID("da109284-aa8c-4824-a647-29951109b058"),
         "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
+        "resolution": None,
     }
     side_effects = {"starting_model": 1e-4}
     app = DCInversionApp(geoh5=project_dcip, plot_result=False)
