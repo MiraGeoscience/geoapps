@@ -731,7 +731,5 @@ app_initializer = {
     "z_from_topo": True,
     "detrend_order": 0,
     "detrend_type": None,
-    "receivers_offset_x": 0.0,
-    "receivers_offset_y": 0.0,
     "receivers_offset_z": 60.0,
 }
