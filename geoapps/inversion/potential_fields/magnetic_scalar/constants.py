@@ -647,6 +647,7 @@ app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "resolution": 50.0,
     "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "tmi_uncertainty": 10.0,
     "mesh": UUID("{e334f687-df71-4538-ad28-264e420210b8}"),

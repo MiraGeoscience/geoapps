@@ -54,6 +54,7 @@ def test_dc_fwr_run(
         z_from_topo=True,
         data_object=survey.uid,
         starting_model=model.uid,
+        resolution=None,
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
@@ -103,6 +104,7 @@ def test_dc_run(
             tile_spatial=n_lines,
             store_sensitivities="ram",
             coolingRate=1,
+            resolution=None,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 

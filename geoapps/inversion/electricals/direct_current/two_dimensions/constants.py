@@ -300,7 +300,7 @@ app_initializer = {
     "line_id": 1,
     "starting_model": 1e-1,
     "reference_model": 1e-1,
-    "resolution": None,
+    "resolution": 50.0,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,

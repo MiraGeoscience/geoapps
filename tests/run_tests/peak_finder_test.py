@@ -35,7 +35,7 @@ def test_peak_finder_app(tmp_path):
         c = curve.add_data(
             {f"d{ii}": {"values": np.sin(x + np.pi / 8.0 * ii) - 0.1 * ii}}
         )
-        curve.add_data_to_group(c, name="obs")
+        curve.add_data_to_group(c, property_group="obs")
 
     line = curve.add_data(
         {
@@ -46,7 +46,7 @@ def test_peak_finder_app(tmp_path):
             }
         }
     )
-    curve.add_data_to_group(line, name="Line")
+    curve.add_data_to_group(line, property_group="Line")
     changes = {
         "objects": curve.uid,
         "data": curve.find_or_create_property_group(name="obs").uid,
