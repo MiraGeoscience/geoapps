@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: a5c3ccfa72fae926c3c9702ce3b7879ae9ca0f832e34f2ab50ecd311cd496e45
-    osx-64: e625747d53d9f9c0502a09acd26307a6d6ac07ff3bb10f08f3b273bcf8a368b4
-    win-64: 3be0d4f8c155f483197e3dc24fcc979df768a9aad20b0080738e045857a67c0e
+    linux-64: 5586b1d1f6f8c3326f1574fabad9f368739f473ab564e26b3768e98520c18dbe
+    osx-64: c300c9b1ed58fde9b982ef44e9aa645ef09b5c749e07821561280d5b4eb1022f
+    win-64: 690faef6667a37e2ee71469057f0990cc2ec622b08d128cac90510e23e4d7774
   platforms:
   - win-64
   - osx-64
@@ -4056,20 +4056,20 @@ package:
     libcblas: '>=3.9.0,<4.0a0'
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-    numpy: '>=1.19.5,<2.0a0'
+    numpy: '>=1.20.3,<2.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.* *_cp39
     scipy: ''
     threadpoolctl: '>=2.0.0'
   hash:
-    md5: 52c40321f32e147c5a692bcab1b20a0b
-    sha256: b9e2b4e7ac53aab5ca479d1bfe323fd6578e461824666546864efc41e1aa2d30
+    md5: b42c42b04e55bc923d1713cfad34a46f
+    sha256: ca46e53659c1defbe262b6807e58c601e641210a7c6e46ec0094375460824bff
   manager: conda
   name: scikit-learn
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.1.2-py39he5e8d7e_0.tar.bz2
-  version: 1.1.2
+  url: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.1.3-py39hd5c8da3_0.tar.bz2
+  version: 1.1.3
 - category: full
   dependencies:
     imagecodecs: '>=2021.11.20'
@@ -4577,16 +4577,16 @@ package:
     numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
+    sha256: b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz#sha256=b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz
-  version: 0.4.0
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz#sha256=b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz
+  version: 0.5.0-alpha.1
 - category: main
   dependencies:
     discretize: '*'
@@ -8315,22 +8315,22 @@ package:
   dependencies:
     joblib: '>=1.0.0'
     libcblas: '>=3.9.0,<4.0a0'
-    libcxx: '>=13.0.1'
-    llvm-openmp: '>=13.0.1'
-    numpy: '>=1.19.5,<2.0a0'
+    libcxx: '>=14.0.4'
+    llvm-openmp: '>=14.0.4'
+    numpy: '>=1.20.3,<2.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.* *_cp39
     scipy: ''
     threadpoolctl: '>=2.0.0'
   hash:
-    md5: 1865224710cfc7b5262d270ca84c80c0
-    sha256: 16be81e2455a3a0786bf0022392ae21d1ca4f272afbd9bde5091afd386d3ce9e
+    md5: 555e8ef0d982c30a4d4819bd4e01cb02
+    sha256: 639d90d4b7081994e4e4dd4e93061b17559d81b6b4d3145f67a082f048603405
   manager: conda
   name: scikit-learn
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/scikit-learn-1.1.2-py39h8031a56_0.tar.bz2
-  version: 1.1.2
+  url: https://conda.anaconda.org/conda-forge/osx-64/scikit-learn-1.1.3-py39hdbdcc14_0.tar.bz2
+  version: 1.1.3
 - category: full
   dependencies:
     imagecodecs: '>=2021.11.20'
@@ -8838,16 +8838,16 @@ package:
     numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
+    sha256: b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz#sha256=b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz
-  version: 0.4.0
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz#sha256=b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz
+  version: 0.5.0-alpha.1
 - category: main
   dependencies:
     discretize: '*'
@@ -12687,22 +12687,23 @@ package:
   dependencies:
     joblib: '>=1.0.0'
     libcblas: '>=3.9.0,<4.0a0'
-    numpy: '>=1.19.5,<2.0a0'
+    numpy: '>=1.20.3,<2.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.* *_cp39
     scipy: ''
     threadpoolctl: '>=2.0.0'
-    vc: '>=14.1,<15'
-    vs2015_runtime: '>=14.16.27033'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: c8b48bbbb246d7bc590a210d2d2f90b3
-    sha256: 1d97781ce6e8fb5e8d8e02ac24774f5129d9bd5b2f43c4e017810f6cc6114ec7
+    md5: 675301108441b9d6d33f1946e11b2fb1
+    sha256: 8e428c7f986ad307711f7f58e722395aa11c4b1bb58755b843a7c5c9711d447e
   manager: conda
   name: scikit-learn
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/scikit-learn-1.1.2-py39hfd4428b_0.tar.bz2
-  version: 1.1.2
+  url: https://conda.anaconda.org/conda-forge/win-64/scikit-learn-1.1.3-py39h6fe01c0_0.tar.bz2
+  version: 1.1.3
 - category: full
   dependencies:
     imagecodecs: '>=2021.11.20'
@@ -13231,16 +13232,16 @@ package:
     numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
+    sha256: b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz#sha256=b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz
-  version: 0.4.0
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz#sha256=b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz
+  version: 0.5.0-alpha.1
 - category: main
   dependencies:
     discretize: '*'

@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: d48794cacec0268aef23ea44f9faf794058dc3a81aab28079caff0e4c3edbbaf
-    osx-64: b3b47f5ee37ff84ca8743953db3ae5ce9deb505e82e48c2f71f0a013e8846726
-    win-64: aa9b92a6368525fd30016cfd25206ef41116f0a01d485c4936f9fd7472c1c71f
+    linux-64: 702e488afd770c0ee5f0ffc56f3835d0d485e66e6852dab3e9a8a0d67ffc7a3c
+    osx-64: 8d2e2724e399c24158a4879730c045c42bf9840d75f11bb8785948b3a1c45031
+    win-64: d190eacf011d72a3d96a95c0179e982cee95e481b9df6a00090df1931e09f99c
   platforms:
   - win-64
   - osx-64
@@ -4374,16 +4374,16 @@ package:
     numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
+    sha256: b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz#sha256=b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz
-  version: 0.4.0
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz#sha256=b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz
+  version: 0.5.0-alpha.1
 - category: main
   dependencies:
     discretize: '*'
@@ -8443,16 +8443,16 @@ package:
     numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
+    sha256: b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz#sha256=b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz
-  version: 0.4.0
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz#sha256=b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz
+  version: 0.5.0-alpha.1
 - category: main
   dependencies:
     discretize: '*'
@@ -12598,16 +12598,16 @@ package:
     numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
+    sha256: b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz#sha256=b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz
-  version: 0.4.0
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz#sha256=b69d66921dfebff8513397a900bba15a634f56461c3e193137606f177fdd2302
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.5.0.tar.gz
+  version: 0.5.0-alpha.1
 - category: main
   dependencies:
     discretize: '*'
