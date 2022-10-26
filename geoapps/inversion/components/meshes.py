@@ -80,6 +80,10 @@ class InversionMesh:
                 parent=self.params.ga_group, copy_children=False
             )
 
+        if getattr(self.entity, "rotation", None) and self.inversion_data.has_tensor:
+            msg = "Cannot use tensor components with rotated mesh."
+            raise NotImplementedError(msg)
+
         self.uid = self.entity.uid
         self.n_cells = self.entity.n_cells
 

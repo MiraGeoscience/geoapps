@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
 import numpy as np
 
+from geoapps.shared_utils.utils import rotate_xyz
+
 from .simpeg_factory import SimPEGFactory
 
 
@@ -69,6 +71,13 @@ class ReceiversFactory(SimPEGFactory):
         """Provides implementations to assemble arguments for receivers object."""
 
         args = []
+
+        if self.params.mesh.rotation:
+            locations = rotate_xyz(
+                locations,
+                self.params.mesh.origin.tolist(),
+                -1 * self.params.mesh.rotation[0],
+            )
 
         if self.factory_type in [
             "direct current",
