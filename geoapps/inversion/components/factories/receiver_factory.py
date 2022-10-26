@@ -72,7 +72,7 @@ class ReceiversFactory(SimPEGFactory):
 
         args = []
 
-        if self.params.mesh.rotation:
+        if getattr(self.params.mesh, "rotation", None):
             locations = rotate_xyz(
                 locations,
                 self.params.mesh.origin.tolist(),
