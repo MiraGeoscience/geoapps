@@ -62,7 +62,7 @@ def test_zero_reference_model(tmp_path):
     assert len(incl) == 1
     assert len(decl) == 1
     assert np.isclose(incl[0], 79.0)
-    assert np.isclose(decl[0], 11.0)
+    assert np.isclose(decl[0], 31.0)
 
 
 def test_collection(tmp_path):
