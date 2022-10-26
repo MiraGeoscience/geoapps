@@ -272,8 +272,9 @@ class InversionModel:
                         np.ones(self.mesh.n_cells)
                         * self.params.inducing_field_declination
                     )
-                    if self.mesh.rotation is not None:
-                        declination += self.mesh.rotation["angle"]
+
+                if self.mesh.rotation is not None:
+                    declination += self.mesh.rotation["angle"]
 
                 inclination[np.isnan(inclination)] = 0
                 declination[np.isnan(declination)] = 0

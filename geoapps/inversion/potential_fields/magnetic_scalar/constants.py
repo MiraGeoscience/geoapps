@@ -97,7 +97,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 0.0,
+    "sens_wts_threshold": 1.0,
     "every_iteration_bool": False,
     "parallelized": True,
     "n_cpu": None,
@@ -574,7 +574,7 @@ default_ui_json = {
         "parent": "mesh",
         "label": "Reference Susceptibility (SI)",
         "property": None,
-        "value": 1e-4,
+        "value": 0.0,
     },
     "lower_bound": {
         "association": ["Cell", "Vertex"],

@@ -28,6 +28,7 @@ def setup_params(tmp):
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
+    geotest.set_param("gyz_channel", "{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
@@ -156,6 +157,20 @@ def test_save_data(tmp_path):
     data = InversionData(ws, params, window)
 
     assert len(data.entity.vertices) > 0
+
+
+def test_has_tensor():
+    assert InversionData.check_tensor(["Gxx"])
+    assert InversionData.check_tensor(["Gxy"])
+    assert InversionData.check_tensor(["Gxz"])
+    assert InversionData.check_tensor(["Gyy"])
+    assert InversionData.check_tensor(["Gyx"])
+    assert InversionData.check_tensor(["Gyz"])
+    assert InversionData.check_tensor(["Gzz"])
+    assert InversionData.check_tensor(["Gzx"])
+    assert InversionData.check_tensor(["Gzy"])
+    assert InversionData.check_tensor(["Gxx", "Gyy", "tmi"])
+    assert not InversionData.check_tensor(["tmi"])
 
 
 def test_get_uncertainty_component(tmp_path):
