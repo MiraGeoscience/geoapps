@@ -6,8 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-import numpy as np
-import pytest
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
