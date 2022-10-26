@@ -67,7 +67,7 @@ class SourcesFactory(SimPEGFactory):
 
         args = []
 
-        if locations is not None and self.params.mesh.rotation:
+        if locations is not None and getattr(self.params.mesh, "rotation", None):
             locations = rotate_xyz(
                 locations,
                 self.params.mesh.origin.tolist(),
