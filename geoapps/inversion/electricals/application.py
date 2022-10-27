@@ -330,7 +330,7 @@ class InversionApp(PlotSelection2D):
         )
         self.plotting = None
         self._starting_channel = None
-        self._mesh = None
+        self._mesh = self._mesh_octree.mesh
         self._detrend_type = None
         self._detrend_order = None
         self._initial_beta_options = None
@@ -512,10 +512,6 @@ class InversionApp(PlotSelection2D):
             self._conductivity_model_group.constant.value = value
         else:
             self._conductivity_model_group.data.value = value
-
-    @property
-    def conductivity_model_object(self):
-        return self._conductivity_model_group.objects
 
     @property
     def lower_bound(self):

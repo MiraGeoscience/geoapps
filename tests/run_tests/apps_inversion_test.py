@@ -225,9 +225,6 @@ def test_ip_inversion(tmp_path):
             ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
                 parent=new_geoh5
             )
-            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
-                parent=new_geoh5
-            )
 
             # dc object
             currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
@@ -237,12 +234,14 @@ def test_ip_inversion(tmp_path):
         "topography_object": new_topo.uid,
         "z_from_topo": False,
         "forward_only": False,
+        "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
         "inversion_type": "induced polarization",
         "chargeability_channel": UUID("502e7256-aafa-4016-969f-5cc3a4f27315"),
         "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
     }
     side_effects = {"starting_model": 1e-4}
     app = DCInversionApp(geoh5=project_dcip, plot_result=False)
+    app.mesh.value = None
     with new_geoh5.open(mode="r"):
         app.geoh5 = new_geoh5
 
