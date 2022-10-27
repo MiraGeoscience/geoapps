@@ -8,7 +8,8 @@
 import dash_daq as daq
 from dash import dash_table, dcc, html
 
-from geoapps.scatter_plot.layout import axis_layout, plot_layout, workspace_layout
+from geoapps.scatter_plot.layout import (axis_layout, plot_layout,
+                                         workspace_layout)
 
 # Layout for histogram, stats table, confusion matrix
 norm_tabs_layout = html.Div(

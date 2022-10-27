@@ -11,14 +11,8 @@ from copy import deepcopy
 
 from geoapps.inversion.params import InversionBaseParams
 
-from .constants import (
-    default_ui_json,
-    forward_defaults,
-    forward_ui_json,
-    inversion_defaults,
-    inversion_ui_json,
-    validations,
-)
+from .constants import (default_ui_json, forward_defaults, forward_ui_json,
+                        inversion_defaults, inversion_ui_json, validations)
 
 
 class GravityParams(InversionBaseParams):
