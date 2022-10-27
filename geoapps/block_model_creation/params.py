@@ -12,8 +12,11 @@ from copy import deepcopy
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
-from geoapps.block_model_creation.constants import (default_ui_json, defaults,
-                                                    validations)
+from geoapps.block_model_creation.constants import (
+    default_ui_json,
+    defaults,
+    validations,
+)
 from geoapps.driver_base.params import BaseParams
 
 

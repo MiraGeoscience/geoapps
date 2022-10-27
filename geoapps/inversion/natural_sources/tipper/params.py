@@ -12,8 +12,14 @@ from uuid import UUID
 
 from geoapps.inversion import InversionBaseParams
 
-from .constants import (default_ui_json, forward_defaults, forward_ui_json,
-                        inversion_defaults, inversion_ui_json, validations)
+from .constants import (
+    default_ui_json,
+    forward_defaults,
+    forward_ui_json,
+    inversion_defaults,
+    inversion_ui_json,
+    validations,
+)
 
 
 class TipperParams(InversionBaseParams):

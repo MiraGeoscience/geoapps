@@ -20,8 +20,7 @@ from geoh5py.ui_json import InputFile, monitored_directory_copy
 from tqdm import tqdm
 
 from geoapps.peak_finder.params import PeakFinderParams
-from geoapps.peak_finder.utils import (default_groups_from_property_group,
-                                       find_anomalies)
+from geoapps.peak_finder.utils import default_groups_from_property_group, find_anomalies
 from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name

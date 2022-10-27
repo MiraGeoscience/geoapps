@@ -18,8 +18,7 @@ if TYPE_CHECKING:
 import numpy as np
 from scipy.interpolate import interp1d
 
-from geoapps.utils.surveys import (compute_alongline_distance,
-                                   extract_dcip_survey)
+from geoapps.utils.surveys import compute_alongline_distance, extract_dcip_survey
 
 from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
@@ -84,8 +83,7 @@ class SurveyFactory(SimPEGFactory):
             from SimPEG.electromagnetics.static.resistivity import survey
 
         elif "induced polarization" in self.factory_type:
-            from SimPEG.electromagnetics.static.induced_polarization import \
-                survey
+            from SimPEG.electromagnetics.static.induced_polarization import survey
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import survey

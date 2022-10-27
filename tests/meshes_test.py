@@ -9,8 +9,12 @@
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.components import (InversionData, InversionMesh,
-                                          InversionTopography, InversionWindow)
+from geoapps.inversion.components import (
+    InversionData,
+    InversionMesh,
+    InversionTopography,
+    InversionWindow,
+)
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
