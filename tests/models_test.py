@@ -35,7 +35,7 @@ def setup_params(path):
     geotest.set_param("window_width", 1000.0)
     geotest.set_param("window_height", 1000.0)
     geotest.set_param("out_group", "MVIInversion")
-    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    geotest.set_param("mesh", "{385f341f-1027-4b8e-9a86-93be239aa3fb}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("starting_model", 1e-04)
@@ -62,7 +62,7 @@ def test_zero_reference_model(tmp_path):
     assert len(incl) == 1
     assert len(decl) == 1
     assert np.isclose(incl[0], 79.0)
-    assert np.isclose(decl[0], 31.0)
+    assert np.isclose(decl[0], 11.0)
 
 
 def test_collection(tmp_path):
@@ -193,13 +193,10 @@ def test_permute_2_treemesh(tmp_path):
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     upper_bound = InversionModel(ws, params, inversion_mesh, "upper_bound")
     locs = inversion_mesh.mesh.cell_centers
-    locs_rot = rotate_xyz(
-        locs, inversion_mesh.rotation["origin"], inversion_mesh.rotation["angle"]
-    )
-    locs_rot = locs_rot[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
-    assert xmin <= locs_rot[:, 0].min()
-    assert xmax >= locs_rot[:, 0].max()
-    assert ymin <= locs_rot[:, 1].min()
-    assert ymax >= locs_rot[:, 1].max()
-    assert zmin <= locs_rot[:, 2].min()
-    assert zmax >= locs_rot[:, 2].max()
+    locs = locs[upper_bound.model[: inversion_mesh.mesh.nC] == 1, :]
+    assert xmin <= locs[:, 0].min()
+    assert xmax >= locs[:, 0].max()
+    assert ymin <= locs[:, 1].min()
+    assert ymax >= locs[:, 1].max()
+    assert zmin <= locs[:, 2].min()
+    assert zmax >= locs[:, 2].max()

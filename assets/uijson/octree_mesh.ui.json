@@ -72,6 +72,7 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
+    "workspace_geoh5": "",
     "Refinement A object": {
         "groupOptional": true,
         "enabled": false,
