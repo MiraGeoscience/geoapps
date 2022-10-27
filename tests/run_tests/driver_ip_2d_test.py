@@ -11,9 +11,8 @@ import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.driver import InversionDriver, start_inversion
-from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
-    InducedPolarization2DParams,
-)
+from geoapps.inversion.electricals.induced_polarization.two_dimensions import \
+    InducedPolarization2DParams
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.surveys import survey_lines
 from geoapps.utils.testing import check_target, setup_inversion_workspace

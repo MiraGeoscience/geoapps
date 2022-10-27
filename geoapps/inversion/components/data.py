@@ -27,12 +27,8 @@ from SimPEG.utils.drivers import create_nested_mesh
 from geoapps.inversion.utils import calculate_2D_trend
 from geoapps.shared_utils.utils import filter_xy
 
-from .factories import (
-    EntityFactory,
-    SaveIterationGeoh5Factory,
-    SimulationFactory,
-    SurveyFactory,
-)
+from .factories import (EntityFactory, SaveIterationGeoh5Factory,
+                        SimulationFactory, SurveyFactory)
 from .locations import InversionLocations
 
 

@@ -14,19 +14,14 @@ import os
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import (
-    AirborneTEMReceivers,
-    BlockModel,
-    Curve,
-    Octree,
-    Points,
-    Surface,
-)
+from geoh5py.objects import (AirborneTEMReceivers, BlockModel, Curve, Octree,
+                             Points, Surface)
 from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
-from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
+from geoapps.base.selection import (LineOptions, ObjectDataSelection,
+                                    TopographyOptions)
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
@@ -36,18 +31,8 @@ with warn_module_not_found():
 
 with warn_module_not_found():
     import ipywidgets as widgets
-    from ipywidgets.widgets import (
-        Button,
-        Checkbox,
-        Dropdown,
-        FloatText,
-        HBox,
-        IntText,
-        Label,
-        Layout,
-        Text,
-        VBox,
-    )
+    from ipywidgets.widgets import (Button, Checkbox, Dropdown, FloatText,
+                                    HBox, IntText, Label, Layout, Text, VBox)
 
 
 class ChannelOptions:

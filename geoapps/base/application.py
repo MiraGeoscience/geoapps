@@ -28,16 +28,8 @@ with warn_module_not_found():
     from ipyfilechooser import FileChooser
 
 with warn_module_not_found():
-    from ipywidgets import (
-        Button,
-        Checkbox,
-        HBox,
-        Label,
-        Text,
-        ToggleButton,
-        VBox,
-        Widget,
-    )
+    from ipywidgets import (Button, Checkbox, HBox, Label, Text, ToggleButton,
+                            VBox, Widget)
 
 
 class BaseApplication:
