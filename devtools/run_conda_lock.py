@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     patchPyprojectToml()
     with print_execution_time("run_conda_lock"):
-        for py_ver in ["3.9", "3.8", "3.7"]:
+        for py_ver in ["3.10", "3.9"]:
             create_multi_platform_lock(py_ver)
             per_platform_env(py_ver, ["full"], dev=False)
             per_platform_env(py_ver, ["full"], dev=True)
