@@ -42,7 +42,7 @@ def patchPyprojectToml():
     assert pyproject.is_file()
 
     tag_url_re = re.compile(
-        r"""^(\s*\w*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/tags/.*)#sha256=\w*"(.*}.*)"""
+        r"""^(\s*\w*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/((heads)|(tags))/.*)#sha256=\w*"(.*}.*)"""
     )
     pyproject_sha = Path("pyproject-sha.toml")
     with open(pyproject_sha, "w") as patched:
@@ -55,7 +55,7 @@ def patchPyprojectToml():
                     line_start = match.group(1)
                     package_name = line_start.strip()
                     url = match.group(2)
-                    line_end = match.group(3)
+                    line_end = match.group(6)
                     sha = computeSha256(url, package_name)
                     patched_line = f"""{line_start}"{url}#sha256={sha}"{line_end}\n"""
                     patched.write(patched_line)
