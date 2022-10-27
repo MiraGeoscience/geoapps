@@ -9,7 +9,8 @@ from os import path
 
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.airborne_electromagnetics.application import InversionApp
+from geoapps.inversion.airborne_electromagnetics.application import \
+    InversionApp
 from geoapps.inversion.airborne_electromagnetics.driver import inversion
 
 project = "FlinFlon.geoh5"

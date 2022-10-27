@@ -6,19 +6,16 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-from geoapps.inversion.electricals.direct_current.three_dimensions import (
-    constants as direct_current_constants,
-)
-from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
-    constants as induced_polarization_constants,
-)
-from geoapps.inversion.potential_fields.gravity import constants as gravity_constants
-from geoapps.inversion.potential_fields.magnetic_scalar import (
-    constants as magnetic_scalar_constants,
-)
-from geoapps.inversion.potential_fields.magnetic_vector import (
-    constants as magnetic_vector_constants,
-)
+from geoapps.inversion.electricals.direct_current.three_dimensions import \
+    constants as direct_current_constants
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import \
+    constants as induced_polarization_constants
+from geoapps.inversion.potential_fields.gravity import \
+    constants as gravity_constants
+from geoapps.inversion.potential_fields.magnetic_scalar import \
+    constants as magnetic_scalar_constants
+from geoapps.inversion.potential_fields.magnetic_vector import \
+    constants as magnetic_vector_constants
 
 constants = [
     gravity_constants,

@@ -12,7 +12,8 @@ from copy import deepcopy
 
 import plotly.express as px
 
-from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
+from geoapps.scatter_plot.constants import \
+    default_ui_json as base_default_ui_json
 
 defaults = {
     "title": "Clustering",

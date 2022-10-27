@@ -23,11 +23,8 @@ from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import LineOptions, ObjectDataSelection
-from geoapps.peak_finder.constants import (
-    app_initializer,
-    default_ui_json,
-    template_dict,
-)
+from geoapps.peak_finder.constants import (app_initializer, default_ui_json,
+                                           template_dict)
 from geoapps.utils import geophysical_systems, warn_module_not_found
 
 from . import PeakFinderParams
@@ -38,24 +35,10 @@ with warn_module_not_found():
     from matplotlib import pyplot as plt
 
 with warn_module_not_found():
-    from ipywidgets import (
-        Box,
-        Checkbox,
-        ColorPicker,
-        Dropdown,
-        FloatLogSlider,
-        FloatSlider,
-        FloatText,
-        HBox,
-        IntSlider,
-        Label,
-        Layout,
-        ToggleButton,
-        ToggleButtons,
-        VBox,
-        Widget,
-        interactive_output,
-    )
+    from ipywidgets import (Box, Checkbox, ColorPicker, Dropdown,
+                            FloatLogSlider, FloatSlider, FloatText, HBox,
+                            IntSlider, Label, Layout, ToggleButton,
+                            ToggleButtons, VBox, Widget, interactive_output)
     from ipywidgets.widgets.widget_selection import TraitError
 
 

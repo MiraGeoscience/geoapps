@@ -18,15 +18,9 @@ from uuid import UUID
 
 import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import (
-    CurrentElectrode,
-    MTReceivers,
-    Points,
-    PotentialElectrode,
-    Surface,
-    TipperBaseStations,
-    TipperReceivers,
-)
+from geoh5py.objects import (CurrentElectrode, MTReceivers, Points,
+                             PotentialElectrode, Surface, TipperBaseStations,
+                             TipperReceivers)
 from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 from SimPEG import utils
