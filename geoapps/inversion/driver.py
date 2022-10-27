@@ -23,15 +23,17 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import (inverse_problem, inversion, maps, optimization,
-                    regularization)
+from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
-from geoapps.inversion.components import (InversionData, InversionMesh,
-                                          InversionModelCollection,
-                                          InversionTopography, InversionWindow)
-from geoapps.inversion.components.factories import (DirectivesFactory,
-                                                    MisfitFactory)
+from geoapps.inversion.components import (
+    InversionData,
+    InversionMesh,
+    InversionModelCollection,
+    InversionTopography,
+    InversionWindow,
+)
+from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 
 
@@ -407,59 +409,70 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         inversion_type = kwargs.get("inversion_type")
 
     if inversion_type == "magnetic vector":
-        from geoapps.inversion.potential_fields import \
-            MagneticVectorParams as ParamClass
-        from geoapps.inversion.potential_fields.magnetic_vector.constants import \
-            validations
+        from geoapps.inversion.potential_fields import (
+            MagneticVectorParams as ParamClass,
+        )
+        from geoapps.inversion.potential_fields.magnetic_vector.constants import (
+            validations,
+        )
 
     elif inversion_type == "magnetic scalar":
-        from geoapps.inversion.potential_fields import \
-            MagneticScalarParams as ParamClass
-        from geoapps.inversion.potential_fields.magnetic_scalar.constants import \
-            validations
+        from geoapps.inversion.potential_fields import (
+            MagneticScalarParams as ParamClass,
+        )
+        from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
+            validations,
+        )
 
     elif inversion_type == "gravity":
-        from geoapps.inversion.potential_fields import \
-            GravityParams as ParamClass
-        from geoapps.inversion.potential_fields.gravity.constants import \
-            validations
+        from geoapps.inversion.potential_fields import GravityParams as ParamClass
+        from geoapps.inversion.potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from geoapps.inversion.natural_sources import \
-            MagnetotelluricsParams as ParamClass
-        from geoapps.inversion.natural_sources.magnetotellurics.constants import \
-            validations
+        from geoapps.inversion.natural_sources import (
+            MagnetotelluricsParams as ParamClass,
+        )
+        from geoapps.inversion.natural_sources.magnetotellurics.constants import (
+            validations,
+        )
 
     elif inversion_type == "tipper":
-        from geoapps.inversion.natural_sources import \
-            TipperParams as ParamClass
-        from geoapps.inversion.natural_sources.tipper.constants import \
-            validations
+        from geoapps.inversion.natural_sources import TipperParams as ParamClass
+        from geoapps.inversion.natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
-        from geoapps.inversion.electricals.direct_current.three_dimensions.constants import \
-            validations
-        from geoapps.inversion.electricals.direct_current.three_dimensions.params import \
-            DirectCurrent3DParams as ParamClass
+        from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+            DirectCurrent3DParams as ParamClass,
+        )
     elif inversion_type == "direct current 2d":
-        from geoapps.inversion.electricals.direct_current.two_dimensions.constants import \
-            validations
-        from geoapps.inversion.electricals.direct_current.two_dimensions.params import \
-            DirectCurrent2DParams as ParamClass
+        from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
+            DirectCurrent2DParams as ParamClass,
+        )
 
     elif inversion_type == "induced polarization":
-        from geoapps.inversion.electricals import \
-            InducedPolarization3DParams as ParamClass
-        from geoapps.inversion.electricals.induced_polarization.three_dimensions import \
-            InducedPolarization3DParams as ParamClass
-        from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import \
-            validations
+        from geoapps.inversion.electricals import (
+            InducedPolarization3DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+            InducedPolarization3DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
+            validations,
+        )
 
     elif inversion_type == "induced polarization 2d":
-        from geoapps.inversion.electricals.induced_polarization.two_dimensions import \
-            InducedPolarization2DParams as ParamClass
-        from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import \
-            validations
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
+            InducedPolarization2DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import (
+            validations,
+        )
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")

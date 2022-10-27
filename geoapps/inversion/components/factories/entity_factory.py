@@ -27,8 +27,7 @@ if TYPE_CHECKING:
 import numpy as np
 from geoh5py.objects import Curve, Grid2D
 
-from geoapps.inversion.components.factories.abstract_factory import \
-    AbstractFactory
+from geoapps.inversion.components.factories.abstract_factory import AbstractFactory
 
 
 class EntityFactory(AbstractFactory):

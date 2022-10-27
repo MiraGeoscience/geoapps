@@ -22,8 +22,9 @@ from geoh5py.objects import Curve
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
-from geoapps.inversion.natural_sources.magnetotellurics.params import \
-    MagnetotelluricsParams
+from geoapps.inversion.natural_sources.magnetotellurics.params import (
+    MagnetotelluricsParams,
+)
 from geoapps.shared_utils.utils import filter_xy
 
 from .data import InversionData
