@@ -19,7 +19,7 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 def setup_params(tmp):
     geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", MagneticVectorParams)
-    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    geotest.set_param("mesh", "{385f341f-1027-4b8e-9a86-93be239aa3fb}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
