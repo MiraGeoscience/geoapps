@@ -24,7 +24,10 @@ _url_filename_re = re.compile(".*/([^/]*)")
 
 
 def computeSha256(url: str, base_name: str = None) -> str:
-    filename = _url_filename_re.match(url).group(1)
+    filename_match = _url_filename_re.match(url)
+    assert filename_match
+
+    filename = filename_match[1]
     if base_name:
         filename = f"{base_name}-{filename}"
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -42,7 +45,7 @@ def patchPyprojectToml():
     assert pyproject.is_file()
 
     tag_url_re = re.compile(
-        r"""^(\s*\w*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/((heads)|(tags))/.*)#sha256=\w*"(.*}.*)"""
+        r"""^(\s*\w*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/tags/.*)#sha256=\w*"(.*}.*)"""
     )
     pyproject_sha = Path("pyproject-sha.toml")
     with open(pyproject_sha, "w") as patched:
@@ -52,10 +55,10 @@ def patchPyprojectToml():
                 if not match:
                     patched.write(line)
                 else:
-                    line_start = match.group(1)
+                    line_start = match[1]
                     package_name = line_start.strip()
-                    url = match.group(2)
-                    line_end = match.group(6)
+                    url = match[2]
+                    line_end = match[3]
                     sha = computeSha256(url, package_name)
                     patched_line = f"""{line_start}"{url}#sha256={sha}"{line_end}\n"""
                     patched.write(patched_line)
