@@ -238,19 +238,20 @@ class OctreeMesh(ObjectDataSelection):
 
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(
-                        parent=new_workspace, copy_children=True
-                    )
+                    obj = new_workspace.get_entity(value.uid)[0]
+                    if obj is None:
+                        obj = value.copy(parent=new_workspace, copy_children=True)
+                    param_dict[key] = obj
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = OctreeParams(**param_dict)
-            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
-            self.run(new_params)
+        new_params = OctreeParams(**param_dict)
+        new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+        self.run(new_params)
 
-            if self.live_link.value:
-                print("Live link active. Check your ANALYST session for new mesh.")
+        if self.live_link.value:
+            print("Live link active. Check your ANALYST session for new mesh.")
 
     @classmethod
     def run(cls, params: OctreeParams) -> Octree:
