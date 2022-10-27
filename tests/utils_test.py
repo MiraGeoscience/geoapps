@@ -19,37 +19,26 @@ import numpy as np
 import pytest
 from discretize import TreeMesh
 from geoh5py.objects import Grid2D
-from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
+from geoh5py.objects.surveys.direct_current import (CurrentElectrode,
+                                                    PotentialElectrode)
 from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.shared_utils.utils import (
-    cell_centers_to_faces,
-    downsample_grid,
-    downsample_xy,
-    drape_2_tensor,
-    filter_xy,
-    get_locations,
-    octree_2_treemesh,
-    rotate_xyz,
-    weighted_average,
-    window_xy,
-)
+from geoapps.shared_utils.utils import (cell_centers_to_faces, downsample_grid,
+                                        downsample_xy, drape_2_tensor,
+                                        filter_xy, get_locations,
+                                        octree_2_treemesh, rotate_xyz,
+                                        weighted_average, window_xy)
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.models import RectangularBlock, get_drape_model
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
-from geoapps.utils.surveys import (
-    compute_alongline_distance,
-    extract_dcip_survey,
-    find_endpoints,
-    find_unique_tops,
-    new_neighbors,
-    split_dcip_survey,
-    survey_lines,
-)
+from geoapps.utils.surveys import (compute_alongline_distance,
+                                   extract_dcip_survey, find_endpoints,
+                                   find_unique_tops, new_neighbors,
+                                   split_dcip_survey, survey_lines)
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
@@ -506,7 +495,8 @@ def test_warn_module_not_found():
 
     with pytest.warns(match="Module 'nonexisting' is missing from the environment."):
         with warn_module_not_found():
-            from nonexisting.nope import nada as test_import_from_nonexisting_submodule
+            from nonexisting.nope import \
+                nada as test_import_from_nonexisting_submodule
     with pytest.raises(NameError):
         noop(test_import_from_nonexisting_submodule)
 

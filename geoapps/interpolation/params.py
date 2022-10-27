@@ -14,7 +14,8 @@ from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile
 
 from geoapps.driver_base.params import BaseParams
-from geoapps.interpolation.constants import default_ui_json, defaults, validations
+from geoapps.interpolation.constants import (default_ui_json, defaults,
+                                             validations)
 
 
 class DataInterpolationParams(BaseParams):

@@ -24,36 +24,21 @@ from geoh5py.workspace import Workspace
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
-    app_initializer,
-)
-from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
-    DirectCurrent3DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
-    InducedPolarization3DParams,
-)
-from geoapps.inversion.potential_fields.application import (
-    MeshOctreeOptions,
-    ModelOptions,
-)
+from geoapps.inversion.electricals.direct_current.three_dimensions.constants import \
+    app_initializer
+from geoapps.inversion.electricals.direct_current.three_dimensions.params import \
+    DirectCurrent3DParams
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import \
+    InducedPolarization3DParams
+from geoapps.inversion.potential_fields.application import (MeshOctreeOptions,
+                                                            ModelOptions)
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 
 with warn_module_not_found():
     import ipywidgets as widgets
-    from ipywidgets.widgets import (
-        Button,
-        Checkbox,
-        Dropdown,
-        FloatText,
-        HBox,
-        IntText,
-        Label,
-        Layout,
-        VBox,
-        Widget,
-    )
+    from ipywidgets.widgets import (Button, Checkbox, Dropdown, FloatText,
+                                    HBox, IntText, Label, Layout, VBox, Widget)
 
 
 def inversion_defaults():

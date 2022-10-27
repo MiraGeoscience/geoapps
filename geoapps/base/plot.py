@@ -22,15 +22,8 @@ with warn_module_not_found():
 
 with warn_module_not_found():
     import ipywidgets as widgets
-    from ipywidgets import (
-        FloatSlider,
-        FloatText,
-        HBox,
-        Label,
-        Layout,
-        ToggleButton,
-        VBox,
-    )
+    from ipywidgets import (FloatSlider, FloatText, HBox, Label, Layout,
+                            ToggleButton, VBox)
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
