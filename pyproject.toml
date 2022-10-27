@@ -24,7 +24,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.7, < 3.11"
 
 dask = {version = "2022.*", extras = ["distributed"]}
 distributed = "2022.*"
@@ -67,11 +67,8 @@ zarr = "^2.8.1" # from simpgeg using Dask
 # Note - conda-lock does not support the syntaxe: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 geoh5py = { url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.4.0.tar.gz#sha256=b71aee6fe66787fe65021ebadb224dd2154a975fe352ed1b43e3e31c4808f704" }
-#geoh5py = { git = "https://github.com/MiraGeoscience/geoh5py.git", tag="branch_or_tag" }
 simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725" }
-#simpeg_archive = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag" }
-simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz#sha256=None", extras = ["dask"] }
-#simpeg = { git = "https://github.com/sebhmg/simpeg.git", tag="branch_or_tag", extras = ["dask"] }
+mira-simpeg = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/geoapps-0.9.0.tar.gz#sha256=None", extras = ["dask"] }
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.14.4"
@@ -105,6 +102,8 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
+# auto-updated by seed-isort-config
+known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "plotly", "pymatsolver", "pytest", "requests", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "tqdm", "traitlets", "urllib2"]
 
 [tool.black]
 # defaults are just fine
