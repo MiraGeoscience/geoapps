@@ -105,6 +105,8 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
+# auto-updated by seed-isort-config
+known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "plotly", "pymatsolver", "pytest", "requests", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "tqdm", "traitlets", "urllib2"]
 
 [tool.black]
 # defaults are just fine

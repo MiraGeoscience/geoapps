@@ -16,6 +16,9 @@ on:
       - feature/**
       - hotfix/**
 
+env:
+  source_dir: geoapps
+
 jobs:
   pytest:
     name: pytest (Unix)
@@ -32,13 +35,13 @@ jobs:
       PYTHONUTF8: 1
       CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-${{ startsWith(matrix.os, 'macos') && 'osx' || 'linux' }}-64-dev.lock.yml
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup conda env
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
-          environment-name: geoapps
+          environment-name: test_env
           cache-downloads: true
       - name: pytest
         run: |
-          pytest --cov=geoapps --cov-report=xml --cov-branch
+          pytest --cov=${source_dir} --cov-report=xml --cov-branch
