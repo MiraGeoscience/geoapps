@@ -40,73 +40,80 @@
     },
     "interval_min": {
         "main": true,
-        "group": "Interval Contours",
-        "groupOptional": true,
+        "group": "Contours",
+        "optional": true,
+        "enabled": false,
         "label": "Interval min",
-        "value": 0.0,
-        "enabled": true
+        "value": 0.0
     },
     "interval_max": {
         "main": true,
-        "group": "Interval Contours",
+        "group": "Contours",
+        "dependency": "interval_min",
+        "dependencyType": "enabled",
         "label": "Interval max",
-        "value": 0.0,
-        "enabled": true
+        "value": 0.0
     },
     "interval_spacing": {
         "main": true,
-        "group": "Interval Contours",
+        "group": "Contours",
+        "dependency": "interval_min",
+        "dependencyType": "enabled",
         "label": "Interval spacing",
-        "value": 0.0,
-        "enabled": true
+        "value": 0.0
     },
     "fixed_contours": {
         "main": true,
+        "group": "Contours",
         "label": "Fixed Contours",
         "value": "0.0",
         "optional": true,
-        "enabled": true
+        "enabled": false
     },
     "window_azimuth": {
-        "group": "Figure Options",
+        "group": "Window",
         "groupOptional": true,
+        "enabled": false,
         "main": true,
         "label": "Azimuth",
         "min": -90.0,
         "max": 90.0,
-        "value": 0.0,
-        "enabled": false
+        "value": 0.0
     },
     "window_center_x": {
-        "group": "Figure Options",
+        "group": "Window",
+        "enabled": false,
         "main": true,
         "label": "Easting",
         "value": 0.0
     },
     "window_center_y": {
-        "group": "Figure Options",
+        "group": "Window",
+        "enabled": false,
         "main": true,
         "label": "Northing",
         "value": 0.0
     },
     "window_width": {
-        "group": "Figure Options",
+        "group": "Window",
+        "enabled": false,
         "main": true,
         "label": "Width",
         "min": 0.0,
-        "value": 100.0
+        "value": 0.0
     },
     "window_height": {
-        "group": "Figure Options",
+        "group": "Window",
+        "enabled": false,
         "main": true,
         "label": "Height",
         "min": 0.0,
-        "value": 100.0
+        "value": 0.0
     },
     "export_as": {
         "main": true,
         "label": "Save as",
-        "value": "",
+        "value": "contours",
         "group": "Python run preferences"
     },
     "z_value": {
@@ -118,8 +125,9 @@
     "ga_group_name": {
         "main": true,
         "label": "Group",
-        "value": "",
+        "value": "Contours",
         "group": "Python run preferences"
     },
-    "resolution": 50.0
+    "resolution": 50.0,
+    "plot_result": true
 }
