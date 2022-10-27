@@ -416,13 +416,10 @@ class InversionData(InversionLocations):
             if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
             elif self.params.inversion_type in ["magnetotellurics"]:
-                # if "real" in comp:
                 normalizations[comp] = -1.0
             elif self.params.inversion_type in ["tipper"]:
                 if "imag" in comp:
                     normalizations[comp] = -1.0
-            if normalizations[comp] == -1.0:
-                print(f"Sign flip for component {comp}.")
 
         return normalizations
 
