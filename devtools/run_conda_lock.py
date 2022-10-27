@@ -72,7 +72,7 @@ def per_platform_env(py_ver: str, extras=[], dev=False, suffix="") -> None:
     )
     dev_dep_option = "--dev-dependencies" if dev else "--no-dev-dependencies"
     dev_suffix = "-dev" if dev else ""
-    extras_option = "--extras ".join(extras) if extras else ""
+    extras_option = " ".join(f"--extras {i}" for i in extras) if extras else ""
     subprocess.run(
         (
             f"conda-lock render {dev_dep_option} {extras_option} -k env"
