@@ -177,7 +177,7 @@ default_ui_json = {
     "inversion_type": "tipper",
     "data_object": {
         "main": True,
-        "group": "Survey",
+        "group": "Data",
         "label": "Object",
         "meshType": "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
         "value": None,
