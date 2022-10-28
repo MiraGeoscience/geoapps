@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: f00b48916f2e203bce998affd1c4c3338871087d916872e132e0c4b3fbc48284
-    osx-64: c5c359bcb0211374d824b8e1526473428fb45de34699640c1e878420c5e81422
-    win-64: 071d935e226875ccf0244ab70c2a2c1ae1b2074b6efd65349a8438f62700ee4c
+    linux-64: 7112c3580be4fc208bae5d0fba9fed0df6ec7e07297ab029adfb651e8c6a87d4
+    osx-64: 9760811c2945c5886193eae3759b9f08a2e2bdb72b9495c7c72b02a57733685c
+    win-64: e3e4dfc9a28bec2dc194d6567fb9b52a43b92310b283413817691b4614bf26f7
   platforms:
   - win-64
   - osx-64
@@ -2730,17 +2730,17 @@ package:
     libgcc-ng: '>=12'
     libllvm11: '>=11.1.0,<11.2.0a0'
     libstdcxx-ng: '>=12'
-    libzlib: '>=1.2.12,<1.3.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: 1d88f5ba822721a91f679a218199a058
-    sha256: 7cf97d4d4999ce49bec678f801696418c789fa4fe340fbec7d235aa5bed8f3ae
+    md5: 18c28e036ae9c5366c56ecd0c875a108
+    sha256: 9215e71d019f1b99f687700fe00dc5d4fba9edc9a482ce5c8aa321d62772a479
   manager: conda
   name: llvmlite
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/llvmlite-0.39.1-py310h58363a5_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/llvmlite-0.39.1-py310h58363a5_1.tar.bz2
   version: 0.39.1
 - category: main
   dependencies:
@@ -2840,26 +2840,26 @@ package:
   version: 4.8.0
 - category: main
   dependencies:
-    freetype: '>=2.10.4,<3.0a0'
+    freetype: '>=2.12.1,<3.0a0'
     jpeg: '>=9e,<10a'
     lcms2: '>=2.12,<3.0a0'
     libgcc-ng: '>=12'
     libtiff: '>=4.4.0,<5.0a0'
     libwebp-base: '>=1.2.4,<2.0a0'
     libxcb: '>=1.13,<1.14.0a0'
-    libzlib: '>=1.2.12,<1.3.0a0'
-    openjpeg: '>=2.5.0,<2.6.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    openjpeg: '>=2.5.0,<3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
     tk: '>=8.6.12,<8.7.0a0'
   hash:
-    md5: 443272de4234f6df4a78f50105edc741
-    sha256: 4264beb95b603c7a2f37bcd305beacdafab9806eb31e200f6a614795070851af
+    md5: eb354ff791f505b1d6f13f776359d88e
+    sha256: 202cc5b4c60e32096b67791f822699bf91670584ac3db7e86ebb1b6a4c584218
   manager: conda
   name: pillow
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pillow-9.2.0-py310hbd86126_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/pillow-9.2.0-py310h454ad03_3.tar.bz2
   version: 9.2.0
 - category: main
   dependencies:
@@ -3919,13 +3919,13 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: ada8cb1e6f574fa708fa23cfe1c14fa7
-    sha256: b0065b4840f639e231f0049f5bfc9d7e2d30f02c53314a875e2540bcefaaf189
+    md5: e5519576751b59d67164b965a4eb4406
+    sha256: 4038c550c2fbaf644d8fdb723e5f2ea77745098036f6025f0aaecd0af86d0dbb
   manager: conda
   name: shapely
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/shapely-1.8.5-py310h5e49deb_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/shapely-1.8.5-py310h5e49deb_1.tar.bz2
   version: 1.8.5
 - category: main
   dependencies:
@@ -4046,13 +4046,13 @@ package:
     python_abi: 3.10.* *_cp310
     tk: '>=8.6.12,<8.7.0a0'
   hash:
-    md5: 90ef88eb81a9b8b967eae65468f86559
-    sha256: eb84b385818486a0d1fec50cdbc18c59abe354cfb8599fc89a785658e420529f
+    md5: bc8d8dcad6b921b0996df46f0e7f120d
+    sha256: 9e0a0de339385807957939d690ebedbf674c7f34df465f0c512be3887f92141e
   manager: conda
   name: matplotlib-base
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.6.1-py310h8d5ebf3_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/matplotlib-base-3.6.1-py310h8d5ebf3_1.tar.bz2
   version: 3.6.1
 - category: full
   dependencies:
@@ -4302,14 +4302,14 @@ package:
     tinycss2: ''
     traitlets: '>=5.0'
   hash:
-    md5: bc8fa5e7bf8ae7705f0a6079a446676a
-    sha256: 0973bd812d10e90cd718108a2b579b80c3855404bc21bbfef98add145ab00dde
+    md5: fa00f301fe82fe2b260f58789440587b
+    sha256: fd5f7512edd5b13d0aa09be9bf1336de433886fdf94bf668220e3e74b36ac3f7
   manager: conda
   name: nbconvert-core
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: main
   dependencies:
     numpy: ''
@@ -4430,32 +4430,32 @@ package:
   version: 1.21.0
 - category: full
   dependencies:
-    nbconvert-core: 7.2.2 pyhd8ed1ab_0
+    nbconvert-core: 7.2.3 pyhd8ed1ab_0
     pandoc: ''
     python: '>=3.7'
   hash:
-    md5: cd6961f30cdaa6bf89a7c4c276298093
-    sha256: 748c69fdaee47da079ef48335c966e34c24b811ed3880dc6c3707d73539e5e48
+    md5: 895c58bc1aa507933ad2ed9759682d9f
+    sha256: 5f7f9a907a1897fbe2139b176650b780d738e4b2dd5daac03bfdd6b957be2ffa
   manager: conda
   name: nbconvert-pandoc
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: full
   dependencies:
-    nbconvert-core: 7.2.2 pyhd8ed1ab_0
-    nbconvert-pandoc: 7.2.2 pyhd8ed1ab_0
+    nbconvert-core: 7.2.3 pyhd8ed1ab_0
+    nbconvert-pandoc: 7.2.3 pyhd8ed1ab_0
     python: '>=3.7'
   hash:
-    md5: fbbb9fcafa577deac8e9b4977a1357b5
-    sha256: 7cbc23a01bfb82bf3d019a3a5bea4dbecb2f4ef94f343f4a89e47cb5467dd6fc
+    md5: 7c1dbb2baf7c43c56fe1940a721f2678
+    sha256: 207c88766cf465ce4f4a56e4439c83236a987fd737e4e83a9866f32b6e98747c
   manager: conda
   name: nbconvert
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: full
   dependencies:
     jupyter_server: '>=1.8,<3'
@@ -4616,14 +4616,14 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: 7d76709357ddfde845ac7c68756f1e61a82e69e9263fa882f54726da24deda3e
+    sha256: b1343e81535c83051201ae5aefef4d301effe04e5786bd19e3ce15ffb69471c7
   manager: pip
   name: mira-simpeg
   optional: false
   platform: linux-64
   source: null
-  url: https://files.pythonhosted.org/packages/48/ba/82024048692e2f35bb02d1505d67041975eccac62093bfb65e3b2c4f65d6/Mira_SimPEG-0.15.1.dev5-py2.py3-none-any.whl
-  version: 0.15.1.dev5
+  url: https://files.pythonhosted.org/packages/0f/00/ac96a8523e2327727bc14577ec06507d76fd9e258cf4689dc06334eb0e1f/Mira_SimPEG-0.15.1.dev6-py2.py3-none-any.whl
+  version: 0.15.1.dev6
 - category: main
   dependencies: {}
   hash:
@@ -7029,17 +7029,17 @@ package:
   dependencies:
     libcxx: '>=14.0.4'
     libllvm11: '>=11.1.0,<11.2.0a0'
-    libzlib: '>=1.2.12,<1.3.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: 528d2796574c9254f1a93aa33f502d85
-    sha256: d96984211fb822af7b4b2e93884aee0dbe2accc7d17231fcf2b74785a6365593
+    md5: 50be72775bc4e8db5c65c2a274febea2
+    sha256: 00878cc3bce34e944b5761ecad5033661aa7b3533f072243bdaae026e93d7871
   manager: conda
   name: llvmlite
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.39.1-py310h2bfb868_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.39.1-py310h2bfb868_1.tar.bz2
   version: 0.39.1
 - category: main
   dependencies:
@@ -7137,25 +7137,25 @@ package:
   version: 4.8.0
 - category: main
   dependencies:
-    freetype: '>=2.10.4,<3.0a0'
+    freetype: '>=2.12.1,<3.0a0'
     jpeg: '>=9e,<10a'
     lcms2: '>=2.12,<3.0a0'
     libtiff: '>=4.4.0,<5.0a0'
     libwebp-base: '>=1.2.4,<2.0a0'
     libxcb: '>=1.13,<1.14.0a0'
-    libzlib: '>=1.2.12,<1.3.0a0'
-    openjpeg: '>=2.5.0,<2.6.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    openjpeg: '>=2.5.0,<3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
     tk: '>=8.6.12,<8.7.0a0'
   hash:
-    md5: 025d9395d2a08163343c3ca733244c28
-    sha256: 5f25375187d465c5864e0507e8e10f5dbc0fd464cc9bd7b3663475853e7da5bf
+    md5: a7b7035e6aeace50e0023839f3f5beaa
+    sha256: a06836c203d0c848d89d48710856bacf8ca427b38653e9efd6543a5d5bcaa2a3
   manager: conda
   name: pillow
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pillow-9.2.0-py310h54af1cc_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/pillow-9.2.0-py310hffcf78b_3.tar.bz2
   version: 9.2.0
 - category: main
   dependencies:
@@ -8181,13 +8181,13 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: 5660e3f2d93ebd1955b73afb714d43d8
-    sha256: d6b5f721c600faac1fae70b3ced9c4888225bfc17baca88d1a2e869961552277
+    md5: 36905d3f926a3d6c7be81e7bc5f68d04
+    sha256: 76152a528b09d82e638786545df94202656a69064a66709582a7fb0704504d45
   manager: conda
   name: shapely
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/shapely-1.8.5-py310hd79a494_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/shapely-1.8.5-py310hd79a494_1.tar.bz2
   version: 1.8.5
 - category: main
   dependencies:
@@ -8306,13 +8306,13 @@ package:
     python-dateutil: '>=2.7'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: ea8b301f119ba6fca9ef68f85d37796c
-    sha256: cd7873f52f50a109a8475a44e5a3ff003643383cdd7b3641c592c006194f84fb
+    md5: dda371b6edd9ed02082eb5c708bace4c
+    sha256: ff3dadacca61206535ac6b4843c29ee1e78b55ff878f20489a3080c432d32b2f
   manager: conda
   name: matplotlib-base
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.6.1-py310he725631_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/matplotlib-base-3.6.1-py310he725631_1.tar.bz2
   version: 3.6.1
 - category: full
   dependencies:
@@ -8561,14 +8561,14 @@ package:
     tinycss2: ''
     traitlets: '>=5.0'
   hash:
-    md5: bc8fa5e7bf8ae7705f0a6079a446676a
-    sha256: 0973bd812d10e90cd718108a2b579b80c3855404bc21bbfef98add145ab00dde
+    md5: fa00f301fe82fe2b260f58789440587b
+    sha256: fd5f7512edd5b13d0aa09be9bf1336de433886fdf94bf668220e3e74b36ac3f7
   manager: conda
   name: nbconvert-core
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: main
   dependencies:
     numpy: ''
@@ -8688,32 +8688,32 @@ package:
   version: 1.21.0
 - category: full
   dependencies:
-    nbconvert-core: 7.2.2 pyhd8ed1ab_0
+    nbconvert-core: 7.2.3 pyhd8ed1ab_0
     pandoc: ''
     python: '>=3.7'
   hash:
-    md5: cd6961f30cdaa6bf89a7c4c276298093
-    sha256: 748c69fdaee47da079ef48335c966e34c24b811ed3880dc6c3707d73539e5e48
+    md5: 895c58bc1aa507933ad2ed9759682d9f
+    sha256: 5f7f9a907a1897fbe2139b176650b780d738e4b2dd5daac03bfdd6b957be2ffa
   manager: conda
   name: nbconvert-pandoc
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: full
   dependencies:
-    nbconvert-core: 7.2.2 pyhd8ed1ab_0
-    nbconvert-pandoc: 7.2.2 pyhd8ed1ab_0
+    nbconvert-core: 7.2.3 pyhd8ed1ab_0
+    nbconvert-pandoc: 7.2.3 pyhd8ed1ab_0
     python: '>=3.7'
   hash:
-    md5: fbbb9fcafa577deac8e9b4977a1357b5
-    sha256: 7cbc23a01bfb82bf3d019a3a5bea4dbecb2f4ef94f343f4a89e47cb5467dd6fc
+    md5: 7c1dbb2baf7c43c56fe1940a721f2678
+    sha256: 207c88766cf465ce4f4a56e4439c83236a987fd737e4e83a9866f32b6e98747c
   manager: conda
   name: nbconvert
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: full
   dependencies:
     jupyter_server: '>=1.8,<3'
@@ -8874,14 +8874,14 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: 7d76709357ddfde845ac7c68756f1e61a82e69e9263fa882f54726da24deda3e
+    sha256: b1343e81535c83051201ae5aefef4d301effe04e5786bd19e3ce15ffb69471c7
   manager: pip
   name: mira-simpeg
   optional: false
   platform: osx-64
   source: null
-  url: https://files.pythonhosted.org/packages/48/ba/82024048692e2f35bb02d1505d67041975eccac62093bfb65e3b2c4f65d6/Mira_SimPEG-0.15.1.dev5-py2.py3-none-any.whl
-  version: 0.15.1.dev5
+  url: https://files.pythonhosted.org/packages/0f/00/ac96a8523e2327727bc14577ec06507d76fd9e258cf4689dc06334eb0e1f/Mira_SimPEG-0.15.1.dev6-py2.py3-none-any.whl
+  version: 0.15.1.dev6
 - category: main
   dependencies: {}
   hash:
@@ -11254,19 +11254,20 @@ package:
   version: '1.13'
 - category: main
   dependencies:
-    libzlib: '>=1.2.12,<1.3.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
+    ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: 611947ca8ee59768d908aa156de7a955
-    sha256: 506b3e2b7a0c72413e103f37852c18e3ee07e771d0235c8a03542722101c4d42
+    md5: db4165b53b8010875cc8b663714363cb
+    sha256: 8231cbb3ce448957410876ee2177ff9a73fb1517405cf9520ac7c10c2fd20cb8
   manager: conda
   name: llvmlite
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.39.1-py310hb84602e_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.39.1-py310hb84602e_1.tar.bz2
   version: 0.39.1
 - category: main
   dependencies:
@@ -11513,14 +11514,14 @@ package:
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: 94cbb032d4d5d9a830e536faa2bc7e45
-    sha256: a0f023874930496685d2baf46c2afa4c42b14853589b97e597db2ff3b189e619
+    md5: 31e62b98360c9f31b1c7b9e65acf7f3d
+    sha256: d923f156f5416b4401e2acfb2d190cf1a3cc93109f733ebe7eaace784617f7c6
   manager: conda
   name: pywin32
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/pywin32-303-py310h8d17308_1.tar.bz2
-  version: '303'
+  url: https://conda.anaconda.org/conda-forge/win-64/pywin32-304-py310h00ffb61_1.tar.bz2
+  version: '304'
 - category: full
   dependencies:
     python: '>=3.10,<3.11.0a0'
@@ -12033,27 +12034,28 @@ package:
   version: 1.23.4
 - category: main
   dependencies:
-    freetype: '>=2.10.4,<3.0a0'
+    freetype: '>=2.12.1,<3.0a0'
     jpeg: '>=9e,<10a'
     lcms2: '>=2.12,<3.0a0'
     libtiff: '>=4.4.0,<5.0a0'
     libwebp-base: '>=1.2.4,<2.0a0'
     libxcb: '>=1.13,<1.14.0a0'
-    libzlib: '>=1.2.12,<1.3.0a0'
-    openjpeg: '>=2.5.0,<2.6.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    openjpeg: '>=2.5.0,<3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
     tk: '>=8.6.12,<8.7.0a0'
-    vc: '>=14.1,<15'
-    vs2015_runtime: '>=14.16.27033'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: 35d157d2b289e21645930bb30e854790
-    sha256: 1839637750eff45fd30675ef8e0ae0fd61e63640a05b82ab36c11f54145d7644
+    md5: 96a1ddd65392fb64636dd8311f862e14
+    sha256: 8d8e0df565b8f3c886792fc7b58d8b50344f891e289df825199c3b257a3f9db9
   manager: conda
   name: pillow
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/pillow-9.2.0-py310h52929f7_2.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/win-64/pillow-9.2.0-py310hd4fb230_3.tar.bz2
   version: 9.2.0
 - category: main
   dependencies:
@@ -12525,13 +12527,13 @@ package:
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: a6620127c4d4629b92948b270773ac1d
-    sha256: 0260de11dd5ec8d91a33990f25b9478572747a8c5dfba012df6f7524f90fcc89
+    md5: a42a90263395ce482d8649dcc32a2f1d
+    sha256: 30b29253738eaf2eeee140e5c61316e97cd4dd5a00e7d906f02a94e1aa3860cd
   manager: conda
   name: shapely
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/shapely-1.8.5-py310h3734685_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/win-64/shapely-1.8.5-py310h3734685_1.tar.bz2
   version: 1.8.5
 - category: main
   dependencies:
@@ -12930,14 +12932,14 @@ package:
     tinycss2: ''
     traitlets: '>=5.0'
   hash:
-    md5: bc8fa5e7bf8ae7705f0a6079a446676a
-    sha256: 0973bd812d10e90cd718108a2b579b80c3855404bc21bbfef98add145ab00dde
+    md5: fa00f301fe82fe2b260f58789440587b
+    sha256: fd5f7512edd5b13d0aa09be9bf1336de433886fdf94bf668220e3e74b36ac3f7
   manager: conda
   name: nbconvert-core
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: main
   dependencies:
     numpy: ''
@@ -13085,32 +13087,32 @@ package:
   version: 1.21.0
 - category: full
   dependencies:
-    nbconvert-core: 7.2.2 pyhd8ed1ab_0
+    nbconvert-core: 7.2.3 pyhd8ed1ab_0
     pandoc: ''
     python: '>=3.7'
   hash:
-    md5: cd6961f30cdaa6bf89a7c4c276298093
-    sha256: 748c69fdaee47da079ef48335c966e34c24b811ed3880dc6c3707d73539e5e48
+    md5: 895c58bc1aa507933ad2ed9759682d9f
+    sha256: 5f7f9a907a1897fbe2139b176650b780d738e4b2dd5daac03bfdd6b957be2ffa
   manager: conda
   name: nbconvert-pandoc
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: full
   dependencies:
-    nbconvert-core: 7.2.2 pyhd8ed1ab_0
-    nbconvert-pandoc: 7.2.2 pyhd8ed1ab_0
+    nbconvert-core: 7.2.3 pyhd8ed1ab_0
+    nbconvert-pandoc: 7.2.3 pyhd8ed1ab_0
     python: '>=3.7'
   hash:
-    md5: fbbb9fcafa577deac8e9b4977a1357b5
-    sha256: 7cbc23a01bfb82bf3d019a3a5bea4dbecb2f4ef94f343f4a89e47cb5467dd6fc
+    md5: 7c1dbb2baf7c43c56fe1940a721f2678
+    sha256: 207c88766cf465ce4f4a56e4439c83236a987fd737e4e83a9866f32b6e98747c
   manager: conda
   name: nbconvert
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-7.2.2-pyhd8ed1ab_0.tar.bz2
-  version: 7.2.2
+  url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-7.2.3-pyhd8ed1ab_0.tar.bz2
+  version: 7.2.3
 - category: full
   dependencies:
     jupyter_server: '>=1.8,<3'
@@ -13271,12 +13273,12 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: 7d76709357ddfde845ac7c68756f1e61a82e69e9263fa882f54726da24deda3e
+    sha256: b1343e81535c83051201ae5aefef4d301effe04e5786bd19e3ce15ffb69471c7
   manager: pip
   name: mira-simpeg
   optional: false
   platform: win-64
   source: null
-  url: https://files.pythonhosted.org/packages/48/ba/82024048692e2f35bb02d1505d67041975eccac62093bfb65e3b2c4f65d6/Mira_SimPEG-0.15.1.dev5-py2.py3-none-any.whl
-  version: 0.15.1.dev5
+  url: https://files.pythonhosted.org/packages/0f/00/ac96a8523e2327727bc14577ec06507d76fd9e258cf4689dc06334eb0e1f/Mira_SimPEG-0.15.1.dev6-py2.py3-none-any.whl
+  version: 0.15.1.dev6
 version: 1
