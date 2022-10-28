@@ -34,7 +34,9 @@ class PeakFinderDriver:
 
         print("Reading parameters...")
         survey = self.params.objects
-        prop_group = [pg for pg in survey.property_groups if pg.uid == self.params.data]
+        prop_group = [
+            pg for pg in survey.property_groups if pg.uid == self.params.data.uid
+        ]
 
         if self.params.tem_checkbox:
             system = geophysical_systems.parameters()[self.params.system]
