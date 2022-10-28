@@ -24,7 +24,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.9, < 3.11"
+python = "^3.7"
 
 dask = {version = "2022.*", extras = ["distributed"]}
 distributed = "2022.*"
@@ -66,56 +66,3 @@ zarr = "^2.8.1" # from simpgeg using Dask
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=None" }
 # Note - conda-lock does not support the syntaxe: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
-geoh5py = { version = "0.5.0", source = "pypi" }
-simpeg_archive = { url = "https://github.com/MiraGeoscience/simpeg/archive/refs/tags/v0.9.1.dev4+geoapps.0.8.0.tar.gz#sha256=4aab03957c20d21235996796072a3e28fd0745524c44dfd911689d1cc7752725" }
-mira-simpeg = {version = "0.15.1dev5", source = "pypi"}
-
-[tool.poetry.dev-dependencies]
-pylint = "^2.14.4"
-pytest = "^7.1.2"
-pytest-cov = "^3.0.0"
-requests = "^2.27.1" # for tests only
-
-[tool.poetry.extras]
-full = [
-    "fiona",
-    "gdal",
-    "ipyfilechooser",
-    "ipywidgets",
-    "plotly",
-    "scikit-image",
-    "jupyter-dash",
-    "dash-daq"
-]
-
-[tool.conda-lock]
-platforms = ['win-64', 'osx-64', 'linux-64']
-channels = ['conda-forge', 'defaults']
-
-[tool.conda-lock.dependencies]
-libblas = "*=*mkl"
-
-[tool.isort]
-# settings for compatibility between ``isort`` and ``black`` formatting
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 88
-# auto-updated by seed-isort-config
-known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "plotly", "pymatsolver", "pytest", "requests", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "tqdm", "traitlets", "urllib2"]
-
-[tool.black]
-# defaults are just fine
-
-[tool.poetry2conda]
-name = "geoapps"
-## usage of poetry2conda
-# As poetry2conda does not support url sources for pip dependencies,
-# temporarily edit this file and use git sources instead, with 'tag=' indifferently whether it is actually a branch or rev.
-#> poetry2conda pyproject.toml -E full environment.yml
-#> poetry2conda pyproject.toml -E full --dev environment-dev.yml
-
-[build-system]
-requires = ["poetry-core>=1.0.0", "setuptools"]
-build-backend = "poetry.core.masonry.api"
