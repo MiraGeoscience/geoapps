@@ -62,7 +62,7 @@
     },
     "data_object": {
         "main": true,
-        "group": "Survey",
+        "group": "Data",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -76,23 +76,20 @@
     },
     "resolution": {
         "min": 0.0,
-        "group": "Survey",
-        "main": true,
+        "group": "Data pre-processing",
         "optional": true,
         "enabled": true,
         "label": "Downsampling resolution",
         "value": 50.0
     },
     "z_from_topo": {
-        "main": true,
-        "group": "Survey",
+        "group": "Data pre-processing",
         "label": "Take z from topography",
         "tooltip": "Sets survey elevation to topography before any offsets are applied.",
         "value": false
     },
     "receivers_offset_x": {
-        "group": "Survey",
-        "main": true,
+        "group": "Data pre-processing",
         "label": "Receiver X offset (m)",
         "optional": true,
         "enabled": false,
@@ -100,8 +97,7 @@
         "visible": false
     },
     "receivers_offset_y": {
-        "group": "Survey",
-        "main": true,
+        "group": "Data pre-processing",
         "label": "Receiver Y offset (m)",
         "optional": true,
         "enabled": false,
@@ -109,8 +105,7 @@
         "visible": false
     },
     "receivers_offset_z": {
-        "group": "Survey",
-        "main": true,
+        "group": "Data pre-processing",
         "label": "Z static offset",
         "optional": true,
         "enabled": false,
@@ -122,8 +117,7 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "main": true,
-        "group": "Survey",
+        "group": "Data pre-processing",
         "label": "Z radar offset",
         "tooltip": "Apply a non-homogeneous offset to survey object from radar channel.",
         "optional": true,
