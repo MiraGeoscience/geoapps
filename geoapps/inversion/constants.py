@@ -42,7 +42,7 @@ default_ui_json = {
     },
     "data_object": {
         "main": True,
-        "group": "Survey",
+        "group": "Data",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
@@ -77,15 +77,13 @@ default_ui_json = {
     },
     "output_tile_files": False,
     "z_from_topo": {
-        "main": True,
-        "group": "Survey",
+        "group": "Data pre-processing",
         "label": "Take z from topography",
         "tooltip": "Sets survey elevation to topography before any offsets are applied.",
         "value": False,
     },
     "receivers_offset_x": {
-        "group": "Survey",
-        "main": True,
+        "group": "Data pre-processing",
         "label": "Receiver X offset (m)",
         "optional": True,
         "enabled": False,
@@ -93,8 +91,7 @@ default_ui_json = {
         "visible": False,
     },
     "receivers_offset_y": {
-        "group": "Survey",
-        "main": True,
+        "group": "Data pre-processing",
         "label": "Receiver Y offset (m)",
         "optional": True,
         "enabled": False,
@@ -102,8 +99,7 @@ default_ui_json = {
         "visible": False,
     },
     "receivers_offset_z": {
-        "group": "Survey",
-        "main": True,
+        "group": "Data pre-processing",
         "label": "Z static offset",
         "optional": True,
         "enabled": False,
@@ -112,8 +108,7 @@ default_ui_json = {
     "receivers_radar_drape": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "main": True,
-        "group": "Survey",
+        "group": "Data pre-processing",
         "label": "Z radar offset",
         "tooltip": "Apply a non-homogeneous offset to survey object from radar channel.",
         "optional": True,
@@ -131,8 +126,7 @@ default_ui_json = {
     },
     "resolution": {
         "min": 0.0,
-        "group": "Survey",
-        "main": True,
+        "group": "Data pre-processing",
         "optional": True,
         "enabled": False,
         "label": "Downsampling resolution",

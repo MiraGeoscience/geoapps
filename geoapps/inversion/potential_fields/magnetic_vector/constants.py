@@ -247,7 +247,7 @@ default_ui_json = {
     },
     "data_object": {
         "main": True,
-        "group": "Survey",
+        "group": "Data",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
