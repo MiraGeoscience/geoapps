@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 
 import numpy as np
 
+from geoapps.shared_utils.utils import rotate_xyz
+
 from .simpeg_factory import SimPEGFactory
 
 
@@ -64,6 +66,14 @@ class SourcesFactory(SimPEGFactory):
         """Provides implementations to assemble arguments for sources object."""
 
         args = []
+
+        if locations is not None and getattr(self.params.mesh, "rotation", None):
+            locations = rotate_xyz(
+                locations,
+                self.params.mesh.origin.tolist(),
+                -1 * self.params.mesh.rotation[0],
+            )
+
         if self.factory_type in [
             "direct current",
             "direct current 2d",

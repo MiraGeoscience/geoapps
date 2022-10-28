@@ -138,9 +138,6 @@ def setup_inversion_workspace(
             geoh5, name="survey (currents)", vertices=ab_vertices, parts=parts
         )
         currents.add_default_ab_cell_id()
-        survey = PotentialElectrode.create(geoh5, name="survey", vertices=mn_vertices)
-        survey.current_electrodes = currents
-        currents.potential_electrodes = survey
 
         N = 6
         dipoles = []
@@ -154,7 +151,7 @@ def setup_inversion_workspace(
                 )  # Skip two poles
 
                 # Shorten the array as we get to the end of the line
-                if any(dipole_ids > (survey.n_vertices - 1)) or any(
+                if any(dipole_ids > (len(mn_vertices) - 1)) or any(
                     currents.parts[dipole_ids] != line
                 ):
                     continue
@@ -162,8 +159,15 @@ def setup_inversion_workspace(
                 dipoles += [dipole_ids]  # Save the receiver id
                 current_id += [val]  # Save the source id
 
-        survey.cells = np.vstack(dipoles).astype("uint32")
+        survey = PotentialElectrode.create(
+            geoh5,
+            name="survey",
+            vertices=mn_vertices,
+            cells=np.vstack(dipoles).astype("uint32"),
+        )
+        survey.current_electrodes = currents
         survey.ab_cell_id = np.asarray(current_id).astype("int32")
+        currents.potential_electrodes = survey
 
     elif inversion_type == "magnetotellurics":
         survey = MTReceivers.create(
@@ -202,7 +206,8 @@ def setup_inversion_workspace(
             - survey.vertices[survey.cells[:, 1], :],
             axis=1,
         )
-        survey.cells = survey.cells[dist < 100.0, :]
+        # survey.cells = survey.cells[dist < 100.0, :]
+        survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
 
     else:
         survey = Points.create(
