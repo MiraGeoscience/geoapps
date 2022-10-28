@@ -84,7 +84,7 @@ default_ui_json.update(
         },
         "line_field": {
             "association": "Vertex",
-            "dataType": "Float",
+            "dataType": "Referenced",
             "group": "Data",
             "main": True,
             "label": "Line Field",
