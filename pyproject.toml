@@ -24,7 +24,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7, < 3.11"
+python = "^3.9, < 3.11"
 
 dask = {version = "2022.*", extras = ["distributed"]}
 distributed = "2022.*"
