@@ -16,19 +16,19 @@ import geoh5py.objects
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D
-from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
 
 
-class EdgeDetectionDriver:
+class EdgeDetectionDriver(BaseDriver):
     def __init__(self, params: EdgeDetectionParams):
-        self.params: EdgeDetectionParams = params
+        super().__init__(params)
 
     def run(self):
         """
@@ -292,10 +292,13 @@ class EdgeDetectionDriver:
 if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    params_class = EdgeDetectionParams(ifile)
-    driver = EdgeDetectionDriver(params_class)
-    print("Loaded. Running edge detection . . .")
-    with params_class.geoh5.open(mode="r+"):
-        driver.run()
-    print("Saved to " + ifile.path)
+    EdgeDetectionDriver.drive_or_sweep(file)
+
+    # TODO - need to generalize what we can of the logging
+    # ifile = InputFile.read_ui_json(file)
+    # params_class = EdgeDetectionParams(ifile)
+    # driver = EdgeDetectionDriver(params_class)
+    # print("Loaded. Running edge detection . . .")
+    # with params_class.geoh5.open(mode="r+"):
+    #     driver.run()
+    # print("Saved to " + ifile.path)
