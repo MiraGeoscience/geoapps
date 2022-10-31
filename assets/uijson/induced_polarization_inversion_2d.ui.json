@@ -204,7 +204,7 @@
         "main": true,
         "isValue": true,
         "parent": "mesh",
-        "label": "Conductivity (Siemens/m)",
+        "label": "Conductivity (S/m)",
         "property": "",
         "value": 0.001
     },

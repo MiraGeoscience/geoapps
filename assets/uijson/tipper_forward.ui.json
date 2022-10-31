@@ -133,7 +133,7 @@
         "main": true,
         "isValue": true,
         "parent": "mesh",
-        "label": "Background Conductivity (Siemens/m)",
+        "label": "Background Conductivity (S/m)",
         "property": "",
         "value": 0.001
     },
@@ -147,7 +147,7 @@
         "main": true,
         "isValue": true,
         "parent": "mesh",
-        "label": "Initial Conductivity (Siemens/m)",
+        "label": "Initial Conductivity (S/m)",
         "property": "",
         "value": 0.001
     },
