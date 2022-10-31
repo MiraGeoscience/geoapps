@@ -198,7 +198,7 @@ default_ui_json = {
     "inversion_type": "magnetotellurics",
     "data_object": {
         "main": True,
-        "group": "Survey",
+        "group": "Data",
         "label": "Object",
         "meshType": "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
         "value": None,
