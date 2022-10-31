@@ -168,7 +168,6 @@ def test_new_neighbors():
 
 
 def test_survey_lines(tmp_path):
-
     name = "TestCurrents"
     n_data = 15
     path = tmp_path / r"testDC.geoh5"
@@ -214,7 +213,6 @@ def test_survey_lines(tmp_path):
 
 
 def test_extract_dcip_survey(tmp_path):
-
     name = "TestCurrents"
     n_data = 12
     path = tmp_path / r"testDC.geoh5"
@@ -258,7 +256,6 @@ def test_extract_dcip_survey(tmp_path):
 
 
 def test_split_dcip_survey(tmp_path):
-
     name = "TestCurrents"
     n_data = 12
     path = tmp_path / r"testDC.geoh5"
