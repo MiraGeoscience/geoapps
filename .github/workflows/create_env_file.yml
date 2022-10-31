@@ -21,8 +21,8 @@ jobs:
     env:
       releaseFullEnv: false
       PYTHONUTF8: 1
-      ARTIFACT_NAME: ${{ env.source_dir }}.conda-env
-      CONDA_ENV_FILE_GLOB_PATTERN: conda-py-*-${{ env.source_dir }}*.lock.yml
+      ARTIFACT_NAME: ${source_dir}.conda-env
+      CONDA_ENV_FILE_GLOB_PATTERN: conda-py-*-${source_dir}*.lock.yml
       CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
     outputs:
       releaseFullEnv: ${{ env.releaseFullEnv }}
