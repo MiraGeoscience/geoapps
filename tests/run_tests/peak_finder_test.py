@@ -35,15 +35,23 @@ def test_peak_finder_app(tmp_path):
         c = curve.add_data(
             {f"d{ii}": {"values": np.sin(x + np.pi / 8.0 * ii) - 0.1 * ii}}
         )
-        curve.add_data_to_group(c, name="obs")
+        curve.add_data_to_group(c, property_group="obs")
 
-    line = curve.add_data({"line_id": {"values": np.ones_like(x)}})
-    curve.add_data_to_group(line, name="Line")
+    line = curve.add_data(
+        {
+            "line_id": {
+                "values": np.ones_like(x),
+                "value_map": {1: "1", 2: "2", 3: "3"},
+                "type": "referenced",
+            }
+        }
+    )
+    curve.add_data_to_group(line, property_group="Line")
     changes = {
         "objects": curve.uid,
         "data": curve.find_or_create_property_group(name="obs").uid,
         "line_field": line.uid,
-        "line_id": 1.0,
+        "line_id": 1,
         "width": 10.0,
         "center": 1.0,
         "min_amplitude": 1e-2,

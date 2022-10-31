@@ -7,13 +7,15 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.shared_utils.utils import rotate_xy
+from geoapps.shared_utils.utils import get_contours, rotate_xyz
 from geoapps.utils import warn_module_not_found
-from geoapps.utils.plotting import input_string_2_float, plot_plan_data_selection
+from geoapps.utils.plotting import plot_plan_data_selection
 
 with warn_module_not_found():
     from matplotlib import pyplot as plt
@@ -32,8 +34,8 @@ with warn_module_not_found():
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
 }
 
 
@@ -76,9 +78,18 @@ class PlotSelection2D(ObjectDataSelection):
             orientation="vertical",
         )
         self._colorbar = widgets.Checkbox(description="Colorbar")
-        self._contours = widgets.Text(
+        self._interval_min = FloatText(
+            description="Contour min:",
+        )
+        self._interval_max = FloatText(
+            description="Contour max:",
+        )
+        self._interval_spacing = FloatText(
+            description="Contour spacing:",
+        )
+        self._fixed_contours = widgets.Text(
             value="",
-            description="Contours",
+            description="Fixed contours",
             disabled=False,
             continuous_update=False,
         )
@@ -123,7 +134,10 @@ class PlotSelection2D(ObjectDataSelection):
                 "height": self.window_height,
                 "azimuth": self.window_azimuth,
                 "zoom_extent": self.zoom_extent,
-                "contours": self.contours,
+                "interval_min": self.interval_min,
+                "interval_max": self.interval_max,
+                "interval_spacing": self.interval_spacing,
+                "fixed_contours": self.fixed_contours,
                 "refresh": self.refresh,
                 "colorbar": self.colorbar,
             },
@@ -188,14 +202,32 @@ class PlotSelection2D(ObjectDataSelection):
         return self._colorbar
 
     @property
-    def contours(self):
+    def interval_min(self):
         """
-        :obj:`ipywidgets.widgets.Text` String defining sets of contours.
-        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
-        Any combination of the above can be used:
-        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
+        ipywidgets.FloatText(): Minimum value for contours.
         """
-        return self._contours
+        return self._interval_min
+
+    @property
+    def interval_max(self):
+        """
+        ipywidgets.FloatText(): Maximum value for contours.
+        """
+        return self._interval_max
+
+    @property
+    def interval_spacing(self):
+        """
+        ipywidgets.FloatText(): Step size for contours.
+        """
+        return self._interval_spacing
+
+    @property
+    def fixed_contours(self):
+        """
+        :obj:`ipywidgets.Text`: String defining sets of fixed_contours.
+        """
+        return self._fixed_contours
 
     @property
     def data_count(self):
@@ -242,7 +274,10 @@ class PlotSelection2D(ObjectDataSelection):
         height,
         azimuth,
         zoom_extent,
-        contours,
+        interval_min,
+        interval_max,
+        interval_spacing,
+        fixed_contours,
         refresh,
         colorbar,
     ):
@@ -250,7 +285,9 @@ class PlotSelection2D(ObjectDataSelection):
             return
 
         # Parse the contours string
-        contours = input_string_2_float(contours)
+        contours = get_contours(
+            interval_min, interval_max, interval_spacing, fixed_contours
+        )
 
         entity, _ = self.get_selected_entities()
         if entity is None:
@@ -258,7 +295,7 @@ class PlotSelection2D(ObjectDataSelection):
         data_obj = None
 
         if hasattr(self, "plotting_data"):
-            data_channel = self.plotting_data
+            data_channel = self.plotting_data  # pylint: disable=E1101
         else:
             if self.select_multiple and data_name:
                 data_channel = data_name[0]
@@ -282,9 +319,9 @@ class PlotSelection2D(ObjectDataSelection):
             ]
             corners[:, 0] *= width / 2
             corners[:, 1] *= height / 2
-            corners = rotate_xy(corners, [0, 0], -azimuth)
+            corners = rotate_xyz(corners, [0, 0], -azimuth)
             self.axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
-            self.axis, _, ind_filter, _, contour_set = plot_plan_data_selection(
+            self.axis, _, ind_filter, _, _ = plot_plan_data_selection(
                 entity,
                 data_obj,
                 **{
@@ -305,7 +342,6 @@ class PlotSelection2D(ObjectDataSelection):
             )
             plt.show()
             self.indices = ind_filter
-            self.contours.contour_set = contour_set
             self.data_count.value = f"Data Count: {ind_filter.sum()}"
 
     def set_bounding_box(self, _):

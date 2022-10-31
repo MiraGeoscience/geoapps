@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import numpy as np
-from geoh5py.objects import Octree
+from geoh5py.objects import DrapeModel, Octree
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
@@ -87,8 +87,11 @@ def active_from_xyz(
 
     **** ADAPTED FROM discretize.utils.mesh_utils.active_from_xyz ****
 
-
     """
+
+    if isinstance(mesh, DrapeModel) and grid_reference != "cell_centers":
+        raise ValueError("Drape models must use cell_centers grid reference.")
+
     if method == "linear":
         delaunay_2d = Delaunay(xyz[:, :2])
         z_interpolate = LinearNDInterpolator(delaunay_2d, xyz[:, 2])
@@ -97,7 +100,9 @@ def active_from_xyz(
 
     if grid_reference == "cell_centers":
         # this should work for all 4 mesh types...
-        locations = mesh.gridCC
+        locations = (
+            mesh.centroids if isinstance(mesh, (DrapeModel, Octree)) else mesh.gridCC
+        )
 
     elif grid_reference == "top_nodes":
         locations = np.vstack(
@@ -137,8 +142,10 @@ def active_from_xyz(
         z_xyz[ind_nan] = xyz[ind, -1]
 
     # Create an active bool of all True
+
+    n_cells = mesh.n_cells if isinstance(mesh, (DrapeModel, Octree)) else mesh.nC
     active = getattr(np, logical)(
-        (locations[:, -1] < z_xyz).reshape((mesh.nC, -1), order="F"), axis=1
+        (locations[:, -1] < z_xyz).reshape((n_cells, -1), order="F"), axis=1
     )
 
     return active.ravel()

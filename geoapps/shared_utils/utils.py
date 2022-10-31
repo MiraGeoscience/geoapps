@@ -12,15 +12,18 @@
 
 from __future__ import annotations
 
+import re
 from uuid import UUID
 
 import numpy as np
-from discretize import TreeMesh
+from discretize import TensorMesh, TreeMesh
+from geoh5py.objects import DrapeModel
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
 from geoapps.utils.string import string_to_numeric
+from geoapps.utils.surveys import compute_alongline_distance
 
 
 def hex_to_rgb(hex_color):
@@ -294,7 +297,7 @@ def filter_xy(
 
     is_rotated = False if (azim is None) | (azim == 0) else True
     if is_rotated:
-        xy_locs = rotate_xy(np.c_[x.ravel(), y.ravel()], window["center"], azim)
+        xy_locs = rotate_xyz(np.c_[x.ravel(), y.ravel()], window["center"], azim)
         xr = xy_locs[:, 0].reshape(x.shape)
         yr = xy_locs[:, 1].reshape(y.shape)
 
@@ -327,26 +330,102 @@ def filter_xy(
     return mask
 
 
-def rotate_xy(xyz: np.ndarray, center: list, angle: float):
+def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
     """
-    Perform a counterclockwise rotation on the XY plane about a center point.
+    Perform a counterclockwise rotation of scatter points around the z-axis, then x-axis, about a center point.
 
-    :param xyz: shape(*, 3) Input coordinates
-    :param center: len(2) Coordinates for the center of rotation.
-    :param  angle: Angle of rotation in degree
+    :param xyz: shape(*, 2) or shape(*, 3) Input coordinates.
+    :param center: len(2) or len(3) Coordinates for the center of rotation.
+    :param theta: Angle of rotation around z-axis in degrees.
+    :param phi: Angle of rotation around x-axis in degrees.
     """
-    R = np.r_[
-        np.c_[np.cos(np.pi * angle / 180), -np.sin(np.pi * angle / 180)],
-        np.c_[np.sin(np.pi * angle / 180), np.cos(np.pi * angle / 180)],
-    ]
-
+    return2d = False
     locs = xyz.copy()
-    locs[:, 0] -= center[0]
-    locs[:, 1] -= center[1]
 
-    xy_rot = np.dot(R, locs[:, :2].T).T
+    # If the input is 2-dimensional, add zeros in the z column.
+    if len(center) == 2:
+        center.append(0)
+    if locs.shape[1] == 2:
+        locs = np.concatenate((locs, np.zeros((locs.shape[0], 1))), axis=1)
+        return2d = True
 
-    return np.c_[xy_rot[:, 0] + center[0], xy_rot[:, 1] + center[1], locs[:, 2:]]
+    locs = np.subtract(locs, center)
+    phi = np.deg2rad(phi)
+    theta = np.deg2rad(theta)
+
+    # Construct rotation matrix
+    Rx = np.r_[
+        np.c_[1, 0, 0],
+        np.c_[0, np.cos(phi), -np.sin(phi)],
+        np.c_[0, np.sin(phi), np.cos(phi)],
+    ]
+    Rz = np.r_[
+        np.c_[np.cos(theta), -np.sin(theta), 0],
+        np.c_[np.sin(theta), np.cos(theta), 0],
+        np.c_[0, 0, 1],
+    ]
+    R = Rz.dot(Rx)
+
+    xyz_rot = R.dot(locs.T).T
+    xyz_out = xyz_rot + center
+
+    if return2d:
+        # Return 2-dimensional data if the input xyz was 2-dimensional.
+        return xyz_out[:, :2]
+    else:
+        return xyz_out
+
+
+def cell_centers_to_faces(centers: np.ndarray) -> np.ndarray:
+    """
+    Compute faces from centers of cells containing a evenly spaced core region.
+
+    :param: centers: Array of grid centers in one dimension.
+    """
+
+    h = np.diff(centers)
+    icore = np.where(np.isclose(h, h.min()))[0]
+    icore = np.append(icore, icore[-1] + 1)  # index of core hs to core centers
+    faces = np.hstack([centers[icore] - h.min() / 2, centers[icore][-1] + h.min() / 2])
+
+    # Don't assume symmetric padding loop over each extremity individually
+    right_pad_inds = np.arange(icore[-1] + 1, len(centers))
+    for i in right_pad_inds:
+        faces = np.hstack([faces, 2 * centers[i] - faces[-1]])
+
+    left_pad_inds = np.arange(icore[0])[::-1]
+    for i in left_pad_inds:
+        faces = np.hstack([2 * centers[i] - faces[0], faces])
+
+    return faces
+
+
+def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tuple:
+    """
+    Convert a geoh5 drape model to discretize.TensorMesh.
+
+    :param: drape_model: geoh5py.DrapeModel object.
+    :param: return_sorting: If True then return an index array that would
+        re-sort a model in TensorMesh order to DrapeModel order.
+    """
+    prisms = drape_model.prisms
+    layers = drape_model.layers
+
+    z = np.append(np.unique(layers[:, 2]), prisms[:, 2].max())
+    x = compute_alongline_distance(prisms[:, :2])
+    x = cell_centers_to_faces(x)
+    dx = np.diff(np.unique(x))
+    h = [np.diff(x), np.diff(z)]
+    origin = [-dx[: np.argmin(dx.round(6))].sum(), layers[:, 2].min()]
+    mesh = TensorMesh(h, origin)
+
+    if return_sorting:
+        sorting = np.arange(mesh.n_cells)
+        sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
+        sorting = sorting[::-1].T.flatten()
+        return (mesh, sorting)
+    else:
+        return mesh
 
 
 def octree_2_treemesh(mesh):
@@ -382,6 +461,43 @@ def octree_2_treemesh(mesh):
     treemesh.__setstate__((array_ind, levels))
 
     return treemesh
+
+
+def get_contours(
+    interval_min: float,
+    interval_max: float,
+    interval_spacing: float,
+    fixed_contours: str | list[float] | None,
+) -> list[float]:
+    """
+    Function to input interval contour and fixed contour information and get contours as a list of floats.
+
+    :params interval_min: Minimum value for contour list.
+    :params interval_max: Maximum value for contour list.
+    :params interval_spacing: Step size for contour list.
+    :params fixed_contours: List of fixed contours.
+    :return : Corresponding list of values in float format.
+    """
+
+    if (
+        None not in [interval_min, interval_max, interval_spacing]
+        and interval_spacing != 0
+    ):
+        interval_contours = np.arange(
+            interval_min, interval_max + interval_spacing, interval_spacing
+        ).tolist()
+    else:
+        interval_contours = []
+
+    if fixed_contours != "" and fixed_contours is not None:
+        if type(fixed_contours) is str:
+            fixed_contours = re.split(",", fixed_contours.replace(" ", ""))
+            fixed_contours = [float(c) for c in fixed_contours]
+    else:
+        fixed_contours = []
+
+    contours = np.unique(np.sort(interval_contours + fixed_contours))
+    return contours
 
 
 def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):

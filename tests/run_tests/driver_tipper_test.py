@@ -5,6 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+import os
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -51,7 +52,6 @@ def test_tipper_fwr_run(
         resolution=0.0,
         z_from_topo=False,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
         conductivity_model=1e-2,
         txz_real_channel_bool=True,
@@ -61,15 +61,17 @@ def test_tipper_fwr_run(
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params, warmstart=False)
-
     fwr_driver.run()
-    return model
+
+    return fwr_driver.starting_model
 
 
 def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
-    with Workspace(
-        str(tmp_path / "../test_tipper_fwr_run0/inversion_test.geoh5")
-    ) as geoh5:
+    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    if pytest:
+        workpath = str(tmp_path / "../test_tipper_fwr_run0/inversion_test.geoh5")
+
+    with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("Topo")[0]
@@ -122,7 +124,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             resolution=0.0,
             data_object=survey.uid,
             starting_model=0.01,
-            reference_model=None,
+            reference_model=0.01,
             conductivity_model=1e-2,
             s_norm=1.0,
             x_norm=1.0,
@@ -132,14 +134,15 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             gradient_type="components",
             z_from_topo=False,
             upper_bound=0.75,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e0,
             sens_wts_threshold=60.0,
             prctile=100,
+            store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = start_inversion(str(tmp_path / "Inv_run.ui.json"))
+        driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(

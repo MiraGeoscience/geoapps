@@ -12,8 +12,8 @@ import sys
 from os import path
 
 import numpy as np
-from dask import delayed
-from dask.distributed import Client, get_client
+from dask import compute, delayed
+from dask.diagnostics import ProgressBar
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
 from geoh5py.ui_json import InputFile, monitored_directory_copy
@@ -33,14 +33,10 @@ class PeakFinderDriver:
     def run(self, output_group=None):
 
         print("Reading parameters...")
-        try:
-            client = get_client()
-        except ValueError:
-            client = Client()
-
-        workspace = self.params.geoh5.open(mode="r+")
         survey = self.params.objects
-        prop_group = [pg for pg in survey.property_groups if pg.uid == self.params.data]
+        prop_group = [
+            pg for pg in survey.property_groups if pg.uid == self.params.data.uid
+        ]
 
         if self.params.tem_checkbox:
             system = geophysical_systems.parameters()[self.params.system]
@@ -50,7 +46,7 @@ class PeakFinderDriver:
 
         if output_group is None:
             output_group = ContainerGroup.create(
-                workspace, name=string_name(self.params.ga_group_name)
+                self.params.geoh5, name=string_name(self.params.ga_group_name)
             )
 
         line_field = self.params.line_field
@@ -64,44 +60,43 @@ class PeakFinderDriver:
         active_channels = {}
         for group in channel_groups.values():
             for channel in group["properties"]:
-                obj = workspace.get_entity(channel)[0]
+                obj = self.params.geoh5.get_entity(channel)[0]
                 active_channels[channel] = {"name": obj.name}
 
         for uid, channel_params in active_channels.items():
-            obj = workspace.get_entity(uid)[0]
+            obj = self.params.geoh5.get_entity(uid)[0]
             if self.params.tem_checkbox:
                 channel = [ch for ch in system["channels"] if ch in obj.name]
                 if any(channel):
                     channel_params["time"] = system["channels"][channel[0]]
                 else:
                     continue
-            channel_params["values"] = client.scatter(
+            channel_params["values"] = (
                 obj.values.copy() * (-1.0) ** self.params.flip_sign
             )
 
         print("Submitting parallel jobs:")
         anomalies = []
-        locations = client.scatter(survey.vertices.copy())
+        locations = survey.vertices.copy()
 
+        line_computation = delayed(find_anomalies, pure=True)
         for line_id in tqdm(list(lines)):
             line_indices = np.where(line_field.values == line_id)[0]
 
             anomalies += [
-                client.compute(
-                    delayed(find_anomalies)(
-                        locations,
-                        line_indices,
-                        active_channels,
-                        channel_groups,
-                        data_normalization=normalization,
-                        smoothing=self.params.smoothing,
-                        min_amplitude=self.params.min_amplitude,
-                        min_value=self.params.min_value,
-                        min_width=self.params.min_width,
-                        max_migration=self.params.max_migration,
-                        min_channels=self.params.min_channels,
-                        minimal_output=True,
-                    )
+                line_computation(
+                    locations,
+                    line_indices,
+                    active_channels,
+                    channel_groups,
+                    data_normalization=normalization,
+                    smoothing=self.params.smoothing,
+                    min_amplitude=self.params.min_amplitude,
+                    min_value=self.params.min_value,
+                    min_width=self.params.min_width,
+                    max_migration=self.params.max_migration,
+                    min_channels=self.params.min_channels,
+                    minimal_output=True,
                 )
             ]
         (
@@ -120,8 +115,10 @@ class PeakFinderDriver:
         ) = ([], [], [], [], [], [], [], [], [], [], [], [])
 
         print("Processing and collecting results:")
-        for future_line in tqdm(anomalies):
-            line = future_line.result()
+        with ProgressBar():
+            results = compute(anomalies)[0]
+
+        for line in tqdm(results):
             for group in line:
                 if "channel_group" in group and len(group["cox"]) > 0:
                     channel_group += group["channel_group"]["label"]
@@ -317,7 +314,6 @@ class PeakFinderDriver:
                 )
 
         print("Process completed.")
-        workspace.close()
 
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
@@ -331,4 +327,5 @@ if __name__ == "__main__":
     file = sys.argv[1]
     params_class = PeakFinderParams(InputFile.read_ui_json(file))
     driver = PeakFinderDriver(params_class)
-    driver.run()
+    with params_class.geoh5.open(mode="r+"):
+        driver.run()

@@ -1,6 +1,31 @@
 Release Notes
 =============
 
+Release 0.9.0 - 2022/10/28
+--------------------------
+
+**(Major Release)**
+
+This release focuses on SimPEG DC/IP 2D inversion as well as a revamp of all inversion UIs.
+
+- GEOPY-604-606: Create inversion UI and mechanics for SimPEG DC/IP 2D inversion.
+- GEOPY-657: Standardization and update of all inversion UIs (Grav, MVI, DCIP, Natural Sources)
+    - Removal of octree mesh creation within the inversion UI. Creation must be done prior to running the inversion.
+    - Reference, starting and bound models referenced to the input mesh. Interpolation most be done prior to running the inversion.
+    - General UX improvements to layout.
+- GEOPY-645: Add beta cooling rate and cooling factor option.
+- GEOPY-641: Add option to store sensitivities on RAM or SSD (default).
+- GEOPY-613: Allow for TEM survey entities as input for SimPEG EM1D inversions.
+
+New or revamped applications:
+- GEOPY-579: New BlockModel creation application.
+- GEOPY-592: Conversion of Clustering to Dash (Plotly) app with ui.json implementation.
+- GEOPY-588: Conversion of Scatter Plot to Dash (Plotly) app with ui.json implementation.
+- GEOPY-534: Conversion of Edge Detection to Dash (Plotly) app with ui.json implementation.
+- GEOPY-456: Conversion of Contouring to Dash (Plotly) app with ui.json implementation.
+
+
+
 Release 0.8.1 - 2022/09/15
 --------------------------
 
@@ -121,8 +146,7 @@ The application provides an interface to the open-source `SimPEG <https://simpeg
 
 All inversions are performed on a 3D octree mesh.
 
-Application Updates
-^^^^^^^^^^^^^^^^^^^
+**Application Updates**
 
 - All 3D inversions have been updated to SimPEG v0.15.1.
     - The transition also includes several updates to parallelization allowing computations on distributed systems.

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import re
 from time import time
+from uuid import UUID
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -18,6 +19,7 @@ from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
@@ -314,9 +316,11 @@ class Surface2D(ObjectDataSelection):
                 self.models += [data_obj.values[ind]]
 
         temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as workspace:
+
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as workspace:
             out_entity = ContainerGroup.create(workspace, name=self.ga_group_name.value)
 
             if len(model_cells) > 0:
@@ -507,10 +511,10 @@ class Surface2D(ObjectDataSelection):
 
 app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
-    "data": ["{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}"],
+    "objects": UUID("{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}"),
+    "data": [UUID("{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}")],
     "max_distance": 250,
-    "elevations": {"data": "{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}"},
-    "lines": {"data": "{0be5374c-3ebb-4762-962a-97d99f3cb0e1}"},
+    "elevations": {"data": UUID("{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}")},
+    "lines": {"data": UUID("{50f6be8d-226d-4f07-9a1c-531e722df260}")},
     "topography": {},
 }

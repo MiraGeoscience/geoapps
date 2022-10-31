@@ -84,7 +84,7 @@ default_ui_json.update(
         },
         "line_field": {
             "association": "Vertex",
-            "dataType": "Float",
+            "dataType": "Referenced",
             "group": "Data",
             "main": True,
             "label": "Line Field",
@@ -183,7 +183,7 @@ template_dict = {
 
 # Over-write validations for jupyter app parameters
 validations = {
-    "line_id": {"types": [str, float, type(None)]},
+    "line_id": {"types": [int, type(None)]},
     "center": {"types": [float, type(None)]},
     "width": {"types": [float, type(None)]},
 }
@@ -192,9 +192,9 @@ app_initializer = {
     "geoh5": "../../assets/FlinFlon.geoh5",
     "objects": UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"),
     "data": UUID("{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"),
-    "line_field": UUID("{ea658d13-9c6f-4ddc-8b53-68a3d1bf2e5c}"),
+    "line_field": UUID("{90b1d710-8a0f-4f69-bd38-6c06c7a977ed}"),
     "system": "VTEM (2007)",
-    "line_id": 6073400.0,
+    "line_id": 13,
     "center": 4041.2,
     "width": 1000.0,
     "tem_checkbox": True,

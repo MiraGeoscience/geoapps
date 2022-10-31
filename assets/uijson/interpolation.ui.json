@@ -1,0 +1,164 @@
+{
+    "title": "Data Transfer",
+    "geoh5": "",
+    "run_command": "geoapps.interpolation.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
+    "objects": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
+            "{B020A277-90E2-4CD7-84D6-612EE3F25051}",
+            "{7CAEBF0E-D16E-11E3-BC69-E4632694AA37}"
+        ],
+        "main": true,
+        "group": "Data Selection",
+        "label": "Object",
+        "value": ""
+    },
+    "data": {
+        "main": true,
+        "group": "Data Selection",
+        "association": [
+            "Vertex",
+            "Cell"
+        ],
+        "dataType": "Float",
+        "label": "Data",
+        "parent": "objects",
+        "value": ""
+    },
+    "out_object": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
+            "{B020A277-90E2-4CD7-84D6-612EE3F25051}",
+            "{7CAEBF0E-D16E-11E3-BC69-E4632694AA37}"
+        ],
+        "main": true,
+        "group": "Destination",
+        "label": "Object",
+        "value": ""
+    },
+    "skew_angle": {
+        "main": false,
+        "group": "Inverse Distance",
+        "groupOptional": true,
+        "enabled": false,
+        "value": 0.0,
+        "label": "Azimuth (d.dd)",
+        "tooltip": "Overrides default nearest neighbor method."
+    },
+    "skew_factor": {
+        "main": false,
+        "group": "Inverse Distance",
+        "enabled": false,
+        "min": 1e-14,
+        "value": 1.0,
+        "label": "Factor",
+        "tooltip": "Overrides default nearest neighbor method."
+    },
+    "max_distance": {
+        "main": false,
+        "group": "Horizontal Extent",
+        "optional": true,
+        "enabled": true,
+        "value": 0.0,
+        "label": "Maximum distance (m)"
+    },
+    "xy_extent": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
+            "{B020A277-90E2-4CD7-84D6-612EE3F25051}",
+            "{7CAEBF0E-D16E-11E3-BC69-E4632694AA37}"
+        ],
+        "main": false,
+        "optional": true,
+        "enabled": false,
+        "group": "Horizontal Extent",
+        "label": "Object hull",
+        "value": ""
+    },
+    "topography_objects": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "main": false,
+        "group": "Upper Limit",
+        "optional": true,
+        "enabled": false,
+        "label": "Object",
+        "value": ""
+    },
+    "topography_data": {
+        "main": false,
+        "group": "Upper Limit",
+        "optional": true,
+        "enabled": false,
+        "association": [
+            "Vertex",
+            "Cell"
+        ],
+        "dataType": "Float",
+        "label": "Data",
+        "parent": "topography_objects",
+        "dependency": "topography_objects",
+        "value": ""
+    },
+    "max_depth": {
+        "main": false,
+        "group": "Lower Limit (m)",
+        "groupOptional": true,
+        "enabled": true,
+        "value": 0.0,
+        "label": "Value"
+    },
+    "space": {
+        "main": false,
+        "group": "Scaling",
+        "value": "Linear",
+        "choiceList": [
+            "Linear",
+            "Log"
+        ],
+        "label": "Value"
+    },
+    "no_data_value": {
+        "main": false,
+        "group": "No-data-value",
+        "value": 1e-08,
+        "label": "Value"
+    },
+    "ga_group_name": {
+        "main": true,
+        "label": "Output Label",
+        "value": "_Interp",
+        "group": "Python run preferences"
+    }
+}

@@ -1,0 +1,133 @@
+{
+    "title": "Create Contours",
+    "geoh5": "",
+    "run_command": "geoapps.contours.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
+    "objects": {
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "main": true,
+        "group": "Data Selection",
+        "label": "Object",
+        "value": ""
+    },
+    "data": {
+        "main": true,
+        "group": "Data Selection",
+        "association": [
+            "Vertex",
+            "Cell"
+        ],
+        "dataType": "Float",
+        "label": "Value fields",
+        "parent": "objects",
+        "value": ""
+    },
+    "interval_min": {
+        "main": true,
+        "group": "Contours",
+        "optional": true,
+        "enabled": false,
+        "label": "Interval min",
+        "value": 0.0
+    },
+    "interval_max": {
+        "main": true,
+        "group": "Contours",
+        "dependency": "interval_min",
+        "dependencyType": "enabled",
+        "label": "Interval max",
+        "value": 0.0
+    },
+    "interval_spacing": {
+        "main": true,
+        "group": "Contours",
+        "dependency": "interval_min",
+        "dependencyType": "enabled",
+        "label": "Interval spacing",
+        "value": 0.0
+    },
+    "fixed_contours": {
+        "main": true,
+        "group": "Contours",
+        "label": "Fixed Contours",
+        "value": "0.0",
+        "optional": true,
+        "enabled": false
+    },
+    "window_azimuth": {
+        "group": "Window",
+        "groupOptional": true,
+        "enabled": false,
+        "main": true,
+        "label": "Azimuth",
+        "min": -90.0,
+        "max": 90.0,
+        "value": 0.0
+    },
+    "window_center_x": {
+        "group": "Window",
+        "enabled": false,
+        "main": true,
+        "label": "Easting",
+        "value": 0.0
+    },
+    "window_center_y": {
+        "group": "Window",
+        "enabled": false,
+        "main": true,
+        "label": "Northing",
+        "value": 0.0
+    },
+    "window_width": {
+        "group": "Window",
+        "enabled": false,
+        "main": true,
+        "label": "Width",
+        "min": 0.0,
+        "value": 0.0
+    },
+    "window_height": {
+        "group": "Window",
+        "enabled": false,
+        "main": true,
+        "label": "Height",
+        "min": 0.0,
+        "value": 0.0
+    },
+    "export_as": {
+        "main": true,
+        "label": "Save as",
+        "value": "contours",
+        "group": "Python run preferences"
+    },
+    "z_value": {
+        "main": true,
+        "label": "Assign Z from values",
+        "value": false,
+        "group": "Python run preferences"
+    },
+    "ga_group_name": {
+        "main": true,
+        "label": "Group",
+        "value": "Contours",
+        "group": "Python run preferences"
+    },
+    "resolution": 50.0,
+    "plot_result": true
+}

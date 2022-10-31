@@ -66,12 +66,12 @@ class DirectivesFactory:
         has_chi_start = self.params.starting_chi_factor is not None
         self.update_irls_directive = directives.Update_IRLS(
             f_min_change=self.params.f_min_change,
-            max_irls_iterations=self.params.max_iterations,
-            max_beta_iterations=self.params.max_iterations,
-            minGNiter=self.params.minGNiter,
+            max_irls_iterations=self.params.max_irls_iterations,
+            max_beta_iterations=self.params.max_global_iterations,
             beta_tol=self.params.beta_tol,
             prctile=self.params.prctile,
             coolingRate=self.params.coolingRate,
+            coolingFactor=self.params.coolingFactor,
             coolEps_q=self.params.coolEps_q,
             coolEpsFact=self.params.coolEpsFact,
             beta_search=self.params.beta_search,
@@ -133,7 +133,7 @@ class DirectivesFactory:
                 name="Residual",
             )
 
-            if self.factory_type in ["direct current"]:
+            if "direct current" in self.factory_type:
                 self.save_iteration_apparent_resistivity_directive = (
                     SaveIterationGeoh5Factory(self.params).build(
                         inversion_object=inversion_data,
@@ -198,7 +198,13 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     name=name,
                 )
 
-            elif self.factory_type in ["direct current", "induced polarization"]:
+            elif self.factory_type in [
+                "direct current",
+                "direct current 2d",
+                "induced polarization",
+                "induced polarization 2d",
+            ]:
+
                 kwargs = self.assemble_data_keywords_dcip(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
@@ -229,11 +235,13 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             active_cells_map = maps.InjectActiveCells(
                 inversion_object.mesh, active_cells, np.nan
             )
+            sorting = inversion_object.permutation  # pylint: disable=W0212
+
             kwargs = {
                 "save_objective_function": save_objective_function,
                 "label": "model",
                 "association": "CEll",
-                "sorting": inversion_object.mesh._ubc_order,  # pylint: disable=W0212
+                "sorting": sorting,
                 "transforms": [active_cells_map],
             }
 
@@ -245,7 +253,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     active_cells_map,
                 ]
 
-            if self.factory_type in ["direct current", "magnetotellurics", "tipper"]:
+            if self.factory_type in [
+                "direct current",
+                "direct current 2d",
+                "magnetotellurics",
+                "tipper",
+            ]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
 
@@ -314,7 +327,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
     ):
         components = list(inversion_object.observed)
         channels = [""]
-        is_dc = True if self.factory_type == "direct current" else False
+        is_dc = True if "direct current" in self.factory_type else False
         component = "dc" if is_dc else "ip"
         kwargs = {
             "save_objective_function": save_objective_function,
@@ -340,11 +353,22 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "association": "CELL",
         }
 
-        if sorting is not None:
+        if sorting is not None and "2d" not in self.factory_type:
             kwargs["sorting"] = np.hstack(sorting)
 
+        if "2d" in self.factory_type:
+
+            def transform_2d(x):
+                expanded_data = np.array([np.nan] * len(inversion_object.indices))
+                expanded_data[inversion_object.global_map] = x
+                return expanded_data
+
+            kwargs["transforms"].insert(0, transform_2d)
+
         if is_dc and name == "Apparent Resistivity":
-            kwargs["transforms"].append(inversion_object.transformations["potential"])
+            kwargs["transforms"].insert(
+                0, inversion_object.transformations["potential"]
+            )
             phys_prop = "resistivity"
             kwargs["channels"] = [f"apparent_{phys_prop}"]
             apparent_measurement_entity_type = self.params.geoh5.get_entity(
@@ -363,7 +387,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 sorting_stack = np.tile(np.argsort(sorting), len(data))
                 return data_stack[sorting_stack] - x
 
-            kwargs["transforms"].append(dcip_transform)
+            kwargs["transforms"].insert(0, dcip_transform)
 
         return kwargs
 

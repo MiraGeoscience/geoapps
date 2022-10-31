@@ -38,10 +38,12 @@ class BaseParams:
     _default_ui_json = None
     _free_parameter_keys: list[str] | None = None
     _free_parameter_identifier: str | None = None
-    _input_file: InputFile | None = None
+    _input_file: InputFile = None
     _monitoring_directory = None
     _ui_json = None
+    _input_file = None
     _validations = None
+    _validation_options = None
     _validator: InputValidation = None
     validate = True
 
@@ -49,7 +51,7 @@ class BaseParams:
         self,
         input_file=None,
         validate=True,
-        validation_options: dict | None = None,
+        validation_options=None,
         workpath=None,
         **kwargs,
     ):
@@ -58,17 +60,13 @@ class BaseParams:
         self._geoh5 = None
         self._run_command: str = None
         self._run_command_boolean: bool = None
+        self._title = None
         self._conda_environment: str = None
         self._conda_environment_boolean: bool = None
         self.workpath = workpath
         self.input_file = input_file
         self.validate = validate
-
-        self.validation_options = {}
-        if isinstance(validation_options, dict):
-            self.validation_options = validation_options
-
-        self._title = None
+        self.validation_options = validation_options
 
         self._initialize(**kwargs)
 
@@ -83,7 +81,7 @@ class BaseParams:
                 validation_options={"disabled": True},
             )
         self.update(self.input_file.data, validate=False)
-        self.param_names = list(self.input_file.data)
+        self.param_names = list(self.input_file.data.keys())
         self.input_file.validation_options["disabled"] = False
 
         # Apply user input
@@ -111,19 +109,14 @@ class BaseParams:
         self.validate = validate
 
         params_dict = self.input_file.numify(params_dict)
-        if "geoh5" in params_dict:
+        if "geoh5" in params_dict.keys():
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
 
-        if self.input_file.workspace is None:
-            self.input_file.workspace = self.geoh5
-
-        params_dict = self.input_file._promote(  # pylint: disable=protected-access
-            params_dict
-        )
+        params_dict = self.input_file._promote(params_dict)  # pylint: disable=W0212
 
         for key, value in params_dict.items():
-            if key not in self.ui_json or key == "geoh5":
+            if key not in self.ui_json.keys() or key == "geoh5":
                 continue  # ignores keys not in default_ui_json
 
             setattr(self, key, value)
@@ -158,6 +151,23 @@ class BaseParams:
             val = os.path.abspath(val)
 
         self._workpath = val
+
+    @property
+    def validation_options(self):
+        """Optional validation directives."""
+        if self._validation_options is None:
+            return {}
+
+        return self._validation_options
+
+    @validation_options.setter
+    def validation_options(self, value: dict | None):
+        if not isinstance(value, (dict, type(None))):
+            raise UserWarning(
+                "Input 'validation_options' must a dictionary of options or None."
+            )
+
+        self._validation_options = value
 
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
@@ -218,12 +228,15 @@ class BaseParams:
         return free_parameter_dict
 
     @property
-    def free_parameter_keys(self) -> list[str]:
-        """List of free parameter keys."""
+    def free_parameter_keys(self) -> list | None:
+        """
+        String identifiers for free form parameters.
+        """
         return self._free_parameter_keys
 
     @property
     def validations(self) -> dict[str, Any]:
+        """Encoded parameter validator type and associated validations."""
         if getattr(self, "_validations", None) is None:
             self._validations = self.input_file.validations
         return self._validations
@@ -258,10 +271,10 @@ class BaseParams:
             self._geoh5 = val
             return
         self.setter_validator(
-            "geoh5",
-            val,
-            fun=lambda x: Workspace(x, mode="r") if isinstance(val, str) else x,
+            "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
         )
+        if self.input_file.workspace != self.geoh5:
+            self.input_file.workspace = self.geoh5
 
     @property
     def run_command(self):
@@ -313,7 +326,7 @@ class BaseParams:
 
     @property
     def workspace_geoh5(self):
-        """Reference to the source geoh5 file."""
+        """Source geoh5 file."""
         return self._workspace_geoh5
 
     @workspace_geoh5.setter

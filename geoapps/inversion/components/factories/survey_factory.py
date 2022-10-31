@@ -16,6 +16,9 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
+from scipy.interpolate import interp1d
+
+from geoapps.utils.surveys import compute_alongline_distance, extract_dcip_survey
 
 from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
@@ -76,10 +79,10 @@ class SurveyFactory(SimPEGFactory):
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import survey
 
-        elif self.factory_type == "direct current":
+        elif "direct current" in self.factory_type:
             from SimPEG.electromagnetics.static.resistivity import survey
 
-        elif self.factory_type == "induced polarization":
+        elif "induced polarization" in self.factory_type:
             from SimPEG.electromagnetics.static.induced_polarization import survey
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
@@ -94,7 +97,12 @@ class SurveyFactory(SimPEGFactory):
         receiver_entity = data.entity
 
         if local_index is None:
-            if self.factory_type in ["direct current", "induced polarization"]:
+            if self.factory_type in [
+                "direct current",
+                "direct current 2d",
+                "induced polarization",
+                "induced polarization 2d",
+            ]:
                 n_data = receiver_entity.n_cells
             else:
                 n_data = receiver_entity.n_vertices
@@ -103,8 +111,13 @@ class SurveyFactory(SimPEGFactory):
         else:
             self.local_index = local_index
 
-        if self.factory_type in ["direct current", "induced polarization"]:
-            return self._dcip_arguments(data=data)
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+            "induced polarization 2d",
+        ]:
+            return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
                 data=data, mesh=mesh, active_cells=active_cells, frequency=channel
@@ -137,11 +150,19 @@ class SurveyFactory(SimPEGFactory):
             channel=channel,
         )
 
-        local_index = self.local_index if local_index is None else local_index
         if not self.params.forward_only:
-            self._add_data(survey, data, local_index, channel)
 
-        if self.factory_type in ["direct current", "induced polarization"]:
+            if local_index is None or "2d" in self.factory_type:
+                self._add_data(survey, data, self.local_index, channel)
+            else:
+                self._add_data(survey, data, local_index, channel)
+
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+            "induced polarization 2d",
+        ]:
             if (
                 (mesh is not None)
                 and (active_cells is not None)
@@ -210,8 +231,12 @@ class SurveyFactory(SimPEGFactory):
             survey.std = uncertainty_vec
 
         else:
-
-            local_data = {k: v[local_index] for k, v in data.observed.items()}
+            index_map = (
+                data.global_map[local_index]
+                if data.global_map is not None
+                else local_index
+            )
+            local_data = {k: v[index_map] for k, v in data.observed.items()}
             local_uncertainties = {
                 k: v[local_index] for k, v in data.uncertainties.items()
             }
@@ -247,11 +272,23 @@ class SurveyFactory(SimPEGFactory):
         elif mode == "row":
             return np.row_stack(list(channel_data.values())).ravel()
 
-    def _dcip_arguments(self, data=None):
+    def _dcip_arguments(self, data=None, local_index=None):
         if getattr(data, "entity", None) is None:
             return None
 
         receiver_entity = data.entity
+        if self.factory_type in ["direct current 2d", "induced polarization 2d"]:
+            receiver_entity = extract_dcip_survey(
+                self.params.geoh5,
+                receiver_entity,
+                self.params.line_object.values,
+                self.params.line_id,
+            )
+            self.local_index = np.arange(receiver_entity.n_cells)
+            data.global_map = [
+                k for k in receiver_entity.children if k.name == "Global Map"
+            ][0].values
+
         source_ids, order = np.unique(
             receiver_entity.ab_cell_id.values[self.local_index], return_index=True
         )
@@ -261,24 +298,51 @@ class SurveyFactory(SimPEGFactory):
         sources = []
         self.local_index = []
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
-            local_index = receiver_group(source_id, receiver_entity)
+
+            receiver_indices = receiver_group(source_id, receiver_entity)
+
+            if "2d" in self.params.inversion_type:
+                receiver_locations = receiver_entity.vertices
+                source_locations = currents.vertices
+                if local_index is not None:
+                    locations = np.vstack([receiver_locations, source_locations])
+                    locations = np.unique(locations, axis=0)
+                    distances = compute_alongline_distance(locations)
+                    xrange = locations[:, 0].max() - locations[:, 0].min()
+                    yrange = locations[:, 1].max() - locations[:, 1].min()
+                    use_x = xrange >= yrange
+                    if use_x:
+                        to_distance = interp1d(locations[:, 0], distances[:, 0])
+                        rec_dist = to_distance(receiver_locations[:, 0])
+                        src_dist = to_distance(source_locations[:, 0])
+                    else:
+                        to_distance = interp1d(locations[:, 1], distances[:, 0])
+                        rec_dist = to_distance(receiver_locations[:, 1])
+                        src_dist = to_distance(source_locations[:, 1])
+
+                    receiver_locations = np.c_[rec_dist, receiver_locations[:, 2]]
+                    source_locations = np.c_[src_dist, source_locations[:, 2]]
+            else:
+                receiver_locations = data.locations
+                source_locations = currents.vertices
+
             receivers = ReceiversFactory(self.params).build(
-                locations=data.locations,
-                local_index=receiver_entity.cells[local_index],
+                locations=receiver_locations,
+                local_index=receiver_entity.cells[receiver_indices],
             )
             if receivers.nD == 0:
                 continue
 
-            if self.factory_type == "induced polarization":
+            if "induced polarization" in self.factory_type:
                 receivers.data_type = "apparent_chargeability"
 
             cell_ind = int(np.where(currents.ab_cell_id.values == source_id)[0])
             source = SourcesFactory(self.params).build(
                 receivers=receivers,
-                locations=currents.vertices[currents.cells[cell_ind]],
+                locations=source_locations[currents.cells[cell_ind]],
             )
             sources.append(source)
-            self.local_index.append(local_index)
+            self.local_index.append(receiver_indices)
 
         self.local_index = np.hstack(self.local_index)
 

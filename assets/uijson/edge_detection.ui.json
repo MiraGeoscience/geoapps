@@ -1,0 +1,137 @@
+{
+    "title": "Edge Detection",
+    "geoh5": "",
+    "run_command": "geoapps.edge_detection.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
+    "objects": {
+        "group": "Data Selection",
+        "meshType": [
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "main": true,
+        "label": "Object",
+        "value": ""
+    },
+    "data": {
+        "group": "Data Selection",
+        "main": true,
+        "association": [
+            "Cell"
+        ],
+        "dataType": "Float",
+        "label": "Data",
+        "parent": "objects",
+        "value": ""
+    },
+    "line_length": {
+        "group": "Parameters",
+        "main": true,
+        "label": "Line Length",
+        "min": 1,
+        "max": 100,
+        "value": 1
+    },
+    "line_gap": {
+        "group": "Parameters",
+        "main": true,
+        "label": "Line Gap",
+        "min": 1,
+        "max": 100,
+        "value": 1
+    },
+    "sigma": {
+        "group": "Parameters",
+        "main": true,
+        "label": "Sigma",
+        "value": 1.0,
+        "min": 0.0,
+        "precision": 1,
+        "lineEdit": false,
+        "max": 10.0
+    },
+    "threshold": {
+        "group": "Parameters",
+        "main": true,
+        "label": "Threshold",
+        "min": 1,
+        "max": 100,
+        "value": 1
+    },
+    "window_size": {
+        "group": "Parameters",
+        "main": true,
+        "label": "Window Size",
+        "min": 16,
+        "max": 512,
+        "value": 64
+    },
+    "window_azimuth": {
+        "group": "Figure Options",
+        "main": true,
+        "label": "Azimuth",
+        "min": -90.0,
+        "max": 90.0,
+        "value": 0.0,
+        "optional": true,
+        "enabled": false
+    },
+    "window_center_x": {
+        "group": "Figure Options",
+        "main": true,
+        "label": "Easting",
+        "value": 0.0,
+        "optional": true,
+        "enabled": false
+    },
+    "window_center_y": {
+        "group": "Figure Options",
+        "main": true,
+        "label": "Northing",
+        "value": 0.0,
+        "optional": true,
+        "enabled": false
+    },
+    "window_width": {
+        "group": "Figure Options",
+        "main": true,
+        "label": "Width",
+        "min": 0.0,
+        "value": 100.0,
+        "optional": true,
+        "enabled": false
+    },
+    "window_height": {
+        "group": "Figure Options",
+        "main": true,
+        "label": "Height",
+        "min": 0.0,
+        "value": 100.0,
+        "optional": true,
+        "enabled": false
+    },
+    "export_as": {
+        "main": true,
+        "label": "Save as",
+        "value": "",
+        "group": "Python run preferences"
+    },
+    "ga_group_name": {
+        "main": true,
+        "label": "Group",
+        "value": "",
+        "group": "Python run preferences"
+    },
+    "resolution": 50.0,
+    "colorbar": false,
+    "zoom_extent": false,
+    "plot_result": true
+}

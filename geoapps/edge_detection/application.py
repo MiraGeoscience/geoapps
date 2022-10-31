@@ -7,15 +7,19 @@
 
 from __future__ import annotations
 
+import os
 from time import time
 
 import numpy as np
-from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D
-from geoh5py.ui_json.utils import monitored_directory_copy
+from geoh5py.objects import Grid2D, ObjectBase
+from geoh5py.shared import Entity
+from geoh5py.ui_json import InputFile
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
-from geoapps.shared_utils.utils import filter_xy
+from geoapps.edge_detection.constants import app_initializer
+from geoapps.edge_detection.driver import EdgeDetectionDriver
+from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
@@ -25,27 +29,11 @@ with warn_module_not_found():
 with warn_module_not_found():
     from matplotlib import collections
 
-with warn_module_not_found():
-    from skimage.feature import canny
-    from skimage.transform import probabilistic_hough_line
-
-app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-    "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
-    "resolution": 50,
-    "sigma": 0.5,
-    "window": {
-        "azimuth": -20,
-    },
-    "ga_group_name": "Edges",
-}
-
 
 class EdgeDetectionApp(PlotSelection2D):
     """
     Widget for Grid2D objects for the automated detection of line features.
-    The application relies on the Canny and Hough trandforms from the
+    The application relies on the Canny and Hough transforms from the
     Scikit-Image library.
 
     :param grid: Grid2D object
@@ -61,10 +49,21 @@ class EdgeDetectionApp(PlotSelection2D):
     """
 
     _object_types = (Grid2D,)
+    _param_class = EdgeDetectionParams
 
-    def __init__(self, **kwargs):
-        self.defaults.update(**app_initializer)
-        self.defaults.update(**kwargs)
+    def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
+        if ui_json is not None and os.path.exists(ui_json):
+            self.params = self._param_class(InputFile(ui_json))
+        else:
+            self.params = self._param_class(**app_initializer)
+
+        for key, value in self.params.to_dict().items():
+            if isinstance(value, Entity):
+                self.defaults[key] = value.uid
+            else:
+                self.defaults[key] = value
+
         self._compute = Button(
             description="Compute",
             button_style="warning",
@@ -115,7 +114,7 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
-        self._unique_object = {}
+
         super().__init__(**self.defaults)
 
         # Make changes to trigger warning color
@@ -194,30 +193,31 @@ class EdgeDetectionApp(PlotSelection2D):
         return self._window_size
 
     def trigger_click(self, _):
+        param_dict = self.get_param_dict()
+        temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.0f}.geoh5"
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as workspace:
+            for key, value in param_dict.items():
+                if isinstance(value, ObjectBase):
+                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
 
-        if getattr(self.trigger, "vertices", None) is not None:
-            name = string_name(self.export_as.value)
-            temp_geoh5 = f"{string_name(self.export_as.value)}_{time():.0f}.geoh5"
-            with self.get_output_workspace(
-                self.export_directory.selected_path, temp_geoh5
-            ) as workspace:
-                out_entity = ContainerGroup.create(
-                    workspace,
-                    name=self.ga_group_name.value,
-                    uid=self._unique_object.get(self.ga_group_name.value, None),
-                )
-                curve = Curve.create(
-                    workspace,
-                    name=name,
-                    vertices=self.trigger.vertices,
-                    cells=self.trigger.cells,
-                    parent=out_entity,
-                    uid=self._unique_object.get(name, None),
-                )
-                self._unique_object[name] = curve.uid
-                self._unique_object[self.ga_group_name.value] = out_entity.uid
+            param_dict["geoh5"] = workspace
+
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
+
+            ifile = InputFile(
+                ui_json=self.params.input_file.ui_json,
+                validation_options={"disabled": True},
+            )
+            new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
+            driver = EdgeDetectionDriver(new_params)
+            driver.run()
+
         if self.live_link.value:
-            monitored_directory_copy(self.export_directory.selected_path, out_entity)
+            print("Live link active. Check your ANALYST session for new mesh.")
 
     def update_name(self, _):
         if self.data.value is not None:
@@ -226,147 +226,17 @@ class EdgeDetectionApp(PlotSelection2D):
             self.export_as.value = "Edges"
 
     def compute_trigger(self, _):
-        grid, data = self.get_selected_entities()
-
-        if grid is None or len(data) == 0:
-            return
-
-        x = grid.centroids[:, 0].reshape(grid.shape, order="F")
-        y = grid.centroids[:, 1].reshape(grid.shape, order="F")
-        z = grid.centroids[:, 2].reshape(grid.shape, order="F")
-        grid_data = data[0].values.reshape(grid.shape, order="F")
-        indices = self.indices
-        if indices is None:
-            indices = np.ones_like(grid_data, dtype="bool")
-
-        ind_x, ind_y = (
-            np.any(indices, axis=1),
-            np.any(indices, axis=0),
-        )
-        x = x[ind_x, :][:, ind_y]
-        y = y[ind_x, :][:, ind_y]
-        z = z[ind_x, :][:, ind_y]
-        grid_data = grid_data[ind_x, :][:, ind_y]
-        grid_data -= np.nanmin(grid_data)
-        grid_data /= np.nanmax(grid_data)
-        grid_data[np.isnan(grid_data)] = 0
-
-        if np.any(grid_data):
-            # Find edges
-            edges = canny(grid_data, sigma=self.sigma.value, use_quantiles=True)
-            shape = edges.shape
-            # Cycle through tiles of square size
-            max_l = np.min([self.window_size.value, shape[0], shape[1]])
-            half = np.floor(max_l / 2)
-            overlap = 1.25
-
-            n_cell_y = (shape[0] - 2 * half) * overlap / max_l
-            n_cell_x = (shape[1] - 2 * half) * overlap / max_l
-
-            if n_cell_x > 0:
-                cnt_x = np.linspace(
-                    half, shape[1] - half, 2 + int(np.round(n_cell_x)), dtype=int
-                ).tolist()
-                half_x = half
-            else:
-                cnt_x = [np.ceil(shape[1] / 2)]
-                half_x = np.ceil(shape[1] / 2)
-
-            if n_cell_y > 0:
-                cnt_y = np.linspace(
-                    half, shape[0] - half, 2 + int(np.round(n_cell_y)), dtype=int
-                ).tolist()
-                half_y = half
-            else:
-                cnt_y = [np.ceil(shape[0] / 2)]
-                half_y = np.ceil(shape[0] / 2)
-
-            coords = []
-            for cx in cnt_x:
-                for cy in cnt_y:
-
-                    i_min, i_max = int(cy - half_y), int(cy + half_y)
-                    j_min, j_max = int(cx - half_x), int(cx + half_x)
-                    lines = probabilistic_hough_line(
-                        edges[i_min:i_max, j_min:j_max],
-                        line_length=self.line_length.value,
-                        threshold=self.threshold.value,
-                        line_gap=self.line_gap.value,
-                        seed=0,
-                    )
-
-                    if np.any(lines):
-                        coord = np.vstack(lines)
-                        coords.append(
-                            np.c_[
-                                x[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
-                                y[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
-                                z[i_min:i_max, j_min:j_max][coord[:, 1], coord[:, 0]],
-                            ]
-                        )
-            if coords:
-                coord = np.vstack(coords)
-                self.objects.lines = coord
-                self.plot_store_lines()
-            else:
-                self.objects.lines = None
-
-    def plot_store_lines(self):
-
-        xy = self.objects.lines
-        indices_1 = filter_xy(
-            xy[1::2, 0],
-            xy[1::2, 1],
-            self.resolution.value,
-            window={
-                "center": [
-                    self.window_center_x.value,
-                    self.window_center_y.value,
-                ],
-                "size": [
-                    self.window_width.value,
-                    self.window_height.value,
-                ],
-                "azimuth": self.window_azimuth.value,
-            },
-        )
-        indices_2 = filter_xy(
-            xy[::2, 0],
-            xy[::2, 1],
-            self.resolution.value,
-            window={
-                "center": [
-                    self.window_center_x.value,
-                    self.window_center_y.value,
-                ],
-                "size": [
-                    self.window_width.value,
-                    self.window_height.value,
-                ],
-                "azimuth": self.window_azimuth.value,
-            },
-        )
-
-        indices = np.kron(
-            np.any(np.c_[indices_1, indices_2], axis=1),
-            np.ones(2),
-        ).astype(bool)
-
-        xy = self.objects.lines[indices, :2]
+        param_dict = self.get_param_dict()
+        param_dict["geoh5"] = self.params.geoh5
+        self.params.update(param_dict)
+        self.refresh.value = False
+        (
+            vertices,
+            _,
+        ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
         self.collections = [
             collections.LineCollection(
-                np.reshape(xy, (-1, 2, 2)), colors="k", linewidths=2
+                np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
             )
         ]
-        self.refresh.value = False
-        self.refresh.value = True  # Trigger refresh
-
-        if np.any(xy):
-            vertices = np.vstack(self.objects.lines[indices, :])
-            cells = np.arange(vertices.shape[0]).astype("uint32").reshape((-1, 2))
-            if np.any(cells):
-                self.trigger.vertices = vertices
-                self.trigger.cells = cells
-        else:
-            self.trigger.vertices = None
-            self.trigger.cells = None
+        self.refresh.value = True

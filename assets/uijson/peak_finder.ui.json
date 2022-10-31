@@ -44,7 +44,7 @@
     },
     "line_field": {
         "association": "Vertex",
-        "dataType": "Float",
+        "dataType": "Referenced",
         "group": "Data",
         "main": true,
         "label": "Line Field",
@@ -53,6 +53,7 @@
     },
     "system": {
         "choiceList": [
+            "Airborne TEM Survey",
             "AeroTEM (2007)",
             "AeroTEM (2010)",
             "DIGHEM",

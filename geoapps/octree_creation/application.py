@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=E0401
+
 from __future__ import annotations
 
 import os
@@ -18,6 +20,7 @@ from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import warn_module_not_found
 
@@ -226,36 +229,39 @@ class OctreeMesh(ObjectDataSelection):
                 continue
 
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
 
             param_dict["geoh5"] = new_workspace
 
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(
-                        parent=new_workspace, copy_children=True
-                    )
+                    obj = new_workspace.get_entity(value.uid)[0]
+                    if obj is None:
+                        obj = value.copy(parent=new_workspace, copy_children=True)
+                    param_dict[key] = obj
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = OctreeParams(**param_dict)
-            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
-            self.run(new_params)
+        new_params = OctreeParams(**param_dict)
+        new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+        self.run(new_params)
 
-            if self.live_link.value:
-                print("Live link active. Check your ANALYST session for new mesh.")
+        if self.live_link.value:
+            print("Live link active. Check your ANALYST session for new mesh.")
 
-    @staticmethod
-    def run(params: OctreeParams) -> Octree:
+    @classmethod
+    def run(cls, params: OctreeParams) -> Octree:
         """
         Create an octree mesh from input values
         """
 
         driver = OctreeDriver(params)
-        octree = driver.run()
+        with params.geoh5.open(mode="r+"):
+            octree = driver.run()
 
         return octree
 

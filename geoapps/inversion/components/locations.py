@@ -22,7 +22,7 @@ from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.shared_utils.utils import get_locations as get_locs
-from geoapps.shared_utils.utils import rotate_xy
+from geoapps.shared_utils.utils import rotate_xyz
 
 
 class InversionLocations:
@@ -74,7 +74,7 @@ class InversionLocations:
         self.pseudo_locations: np.ndarray = None
 
         if params.mesh is not None:
-            if params.mesh.rotation is not None:
+            if hasattr(params.mesh, "rotation"):
                 self.origin = np.asarray(params.mesh.origin.tolist())
                 self.angle = -1 * params.mesh.rotation
                 self.is_rotated = True if np.abs(self.angle) != 0 else False
@@ -99,7 +99,7 @@ class InversionLocations:
         """Create Data group and Points object with observed data."""
 
         if self.is_rotated:
-            locs[:, :2] = rotate_xy(
+            locs[:, :2] = rotate_xyz(
                 locs[:, :2],
                 self.origin,
                 -1 * self.angle,
@@ -190,7 +190,7 @@ class InversionLocations:
         if locs is None:
             return None
 
-        xy = rotate_xy(locs[:, :2], self.origin, self.angle)
+        xy = rotate_xyz(locs[:, :2], self.origin, self.angle)
         return np.c_[xy, locs[:, 2]]
 
     def set_z_from_topo(self, locs: np.ndarray):

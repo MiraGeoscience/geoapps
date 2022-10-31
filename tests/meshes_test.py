@@ -6,8 +6,6 @@
 #  (see LICENSE file at the root of this source code package).
 
 
-import numpy as np
-import pytest
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
@@ -25,7 +23,7 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 def setup_params(tmp):
     geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", MagneticVectorParams)
-    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    geotest.set_param("mesh", "{385f341f-1027-4b8e-9a86-93be239aa3fb}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("tmi_channel_bool", True)
@@ -40,38 +38,8 @@ def test_initialize(tmp_path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
+    inversion_topography = InversionTopography(
+        ws, params, inversion_data, inversion_window.window
+    )
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     assert isinstance(inversion_mesh.mesh, TreeMesh)
-    assert inversion_mesh.rotation["angle"] == 20
-
-
-def test_collect_mesh_params(tmp_path):
-    ws, params = setup_params(tmp_path)
-    inversion_window = InversionWindow(ws, params)
-    inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(ws, params, inversion_window.window)
-    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
-    octree_params = inversion_mesh.collect_mesh_params(params)
-    assert "Refinement A" in octree_params.free_parameter_dict.keys()
-    assert "Refinement B" in octree_params.free_parameter_dict.keys()
-    with pytest.raises(ValueError) as excinfo:
-        params.u_cell_size = None
-        octree_params = inversion_mesh.collect_mesh_params(params)
-    assert "Cannot create OctreeParams" in str(excinfo.value)
-
-
-def test_mesh_from_params(tmp_path):
-    ws, params = setup_params(tmp_path)
-    locs = params.data_object.centroids
-    window = {
-        "center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])],
-        "size": [100.0, 100.0],
-    }
-    params.mesh_from_params = True
-    params.mesh = None
-    params.u_cell_size, params.v_cell_size, params.w_cell_size = 19.0, 25.0, 25.0
-    inversion_data = InversionData(ws, params, window)
-    inversion_topography = InversionTopography(ws, params, window)
-    inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
-    assert all(inversion_mesh.mesh.h[0] == 19)
