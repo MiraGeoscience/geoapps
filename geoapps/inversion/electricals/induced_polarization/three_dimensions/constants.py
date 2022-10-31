@@ -213,7 +213,7 @@ default_ui_json = {
         "main": True,
         "isValue": True,
         "parent": "mesh",
-        "label": "Conductivity (Siemens/m)",
+        "label": "Conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
