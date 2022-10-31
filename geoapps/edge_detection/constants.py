@@ -21,6 +21,7 @@ defaults = {
     "window_azimuth": None,
     "export_as": "",
     "ga_group_name": None,
+    "generate_sweep": False,
     "run_command": "geoapps.edge_detection.driver",
     "run_command_boolean": False,
     "workspace_geoh5": None,
@@ -157,6 +158,12 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
+        },
         "resolution": 50.0,
         "colorbar": False,
         "zoom_extent": False,
@@ -173,4 +180,5 @@ app_initializer = {
     "sigma": 0.5,
     "window_azimuth": -20.0,
     "ga_group_name": "Edges",
+    "export_as": "edges",
 }

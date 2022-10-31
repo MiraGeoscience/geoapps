@@ -27,6 +27,9 @@ from geoapps.utils.formatters import string_name
 
 
 class EdgeDetectionDriver(BaseDriver):
+
+    _params_class = EdgeDetectionParams
+
     def __init__(self, params: EdgeDetectionParams):
         super().__init__(params)
 
@@ -36,27 +39,30 @@ class EdgeDetectionDriver(BaseDriver):
         The application relies on the Canny and Hough transforms from the
         Scikit-Image library.
         """
-        vertices, cells = EdgeDetectionDriver.get_edges(*self.params.edge_args())
+        with self.params.geoh5.open(mode="r+"):
+            vertices, cells = EdgeDetectionDriver.get_edges(*self.params.edge_args())
 
-        if vertices is not None:
-            name = string_name(self.params.export_as)
+            if vertices is not None:
+                name = string_name(self.params.export_as)
 
-            out_entity = ContainerGroup.create(
-                workspace=self.params.geoh5,
-                name=self.params.ga_group_name,
-            )
-            Curve.create(
-                workspace=self.params.geoh5,
-                name=name,
-                vertices=vertices,
-                cells=cells,
-                parent=out_entity,
-            )
+                out_entity = ContainerGroup.create(
+                    workspace=self.params.geoh5,
+                    name=self.params.ga_group_name,
+                )
+                Curve.create(
+                    workspace=self.params.geoh5,
+                    name=name,
+                    vertices=vertices,
+                    cells=cells,
+                    parent=out_entity,
+                )
 
-            if self.params.monitoring_directory is not None and path.exists(
-                self.params.monitoring_directory
-            ):
-                monitored_directory_copy(self.params.monitoring_directory, out_entity)
+                if self.params.monitoring_directory is not None and path.exists(
+                    self.params.monitoring_directory
+                ):
+                    monitored_directory_copy(
+                        self.params.monitoring_directory, out_entity
+                    )
 
     @staticmethod
     def get_edges(
@@ -292,6 +298,8 @@ class EdgeDetectionDriver(BaseDriver):
 if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
+    # drive_or_sweep(file, EdgeDetectionDriver)
+
     EdgeDetectionDriver.drive_or_sweep(file)
 
     # TODO - need to generalize what we can of the logging
