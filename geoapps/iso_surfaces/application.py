@@ -14,6 +14,7 @@ from time import time
 from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.iso_surfaces.constants import app_initializer
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
@@ -53,8 +54,20 @@ class IsoSurface(ObjectDataSelection):
         self._resolution = FloatText(
             description="Base grid resolution (m):",
         )
-        self._contours = Text(
-            value="", description="Iso-values", disabled=False, continuous_update=False
+        self._interval_min = FloatText(
+            description="Contour min:",
+        )
+        self._interval_max = FloatText(
+            description="Contour max:",
+        )
+        self._interval_spacing = FloatText(
+            description="Contour spacing:",
+        )
+        self._fixed_contours = Text(
+            value="",
+            description="Fixed contours:",
+            disabled=False,
+            continuous_update=False,
         )
         self._export_as = Text("Iso_", description="Surface:")
 
@@ -63,8 +76,17 @@ class IsoSurface(ObjectDataSelection):
         self.data.description = "Value fields: "
         self.trigger.on_click(self.trigger_click)
 
+        self.defaults["fixed_contours"] = str(self.defaults["fixed_contours"])[1:-1]
         super().__init__(**self.defaults)
 
+        self.contours = VBox(
+            [
+                self.interval_min,
+                self.interval_max,
+                self.interval_spacing,
+                self.fixed_contours,
+            ]
+        )
         self.output_panel = VBox([self.export_as, self.output_panel])
 
     def trigger_click(self, _) -> str:
@@ -89,13 +111,18 @@ class IsoSurface(ObjectDataSelection):
                 continue
 
         temp_geoh5 = f"Isosurface_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
-            param_dict["objects"] = param_dict["objects"].copy(
-                parent=new_workspace, copy_children=False
-            )
-            param_dict["data"] = param_dict["data"].copy(parent=param_dict["objects"])
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
+            with self.workspace.open(mode="r"):
+                param_dict["objects"] = param_dict["objects"].copy(
+                    parent=new_workspace, copy_children=False
+                )
+                param_dict["data"] = param_dict["data"].copy(
+                    parent=param_dict["objects"]
+                )
+
             param_dict["geoh5"] = new_workspace
 
             if self.live_link.value:
@@ -117,14 +144,32 @@ class IsoSurface(ObjectDataSelection):
             self.export_as.value = "Iso_" + self.data.uid_name_map[self.data.value]
 
     @property
-    def contours(self):
+    def interval_min(self):
         """
-        :obj:`ipywidgets.Text`: String defining sets of contours.
-        Contours can be defined over an interval `50:200:10` and/or at a fix value `215`.
-        Any combination of the above can be used:
-        50:200:10, 215 => Contours between values 50 and 200 every 10, with a contour at 215.
+        ipywidgets.FloatText(): Minimum value for contours.
         """
-        return self._contours
+        return self._interval_min
+
+    @property
+    def interval_max(self):
+        """
+        ipywidgets.FloatText(): Maximum value for contours.
+        """
+        return self._interval_max
+
+    @property
+    def interval_spacing(self):
+        """
+        ipywidgets.FloatText(): Step size for contours.
+        """
+        return self._interval_spacing
+
+    @property
+    def fixed_contours(self):
+        """
+        :obj:`ipywidgets.Text`: String defining sets of fixed_contours.
+        """
+        return self._fixed_contours
 
     @property
     def export_as(self):
@@ -142,7 +187,7 @@ class IsoSurface(ObjectDataSelection):
                         [
                             self.project_panel,
                             self.data_panel,
-                            self._contours,
+                            self.contours,
                             self.max_distance,
                             self.resolution,
                             Label("Output"),

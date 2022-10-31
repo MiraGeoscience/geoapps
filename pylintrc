@@ -132,7 +132,6 @@ score=yes
 # all. Valid levels: HIGH, CONTROL_FLOW, INFERENCE, INFERENCE_FAILURE,
 # UNDEFINED.
 confidence=HIGH,
-           CONTROL_FLOW,
            INFERENCE,
            INFERENCE_FAILURE,
            UNDEFINED

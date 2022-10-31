@@ -43,7 +43,12 @@ class EntityFactory(AbstractFactory):
     @property
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+            "induced polarization 2d",
+        ]:
 
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
@@ -60,7 +65,12 @@ class EntityFactory(AbstractFactory):
     def build(self, inversion_data: InversionData):
         """Constructs geoh5py object for provided inversion type."""
 
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+            "induced polarization 2d",
+        ]:
             return self._build_dcip(inversion_data)
         else:
             return self._build(inversion_data)
@@ -119,11 +129,25 @@ class EntityFactory(AbstractFactory):
             entity.channels = [float(val) for val in self.params.data_object.channels]
 
         if getattr(self.params.data_object, "cells", None) is not None:
+
+            indices = np.where(
+                [c not in self.params.data_object.cells for c in entity.cells]
+            )
+            if indices:
+                entity.remove_cells(
+                    indices
+                )  # Remove auto-generated cells that connect different lines
+
             active_cells = inversion_data.mask[self.params.data_object.cells]
             active_ind = np.all(active_cells, axis=1)
-            new_verts = np.zeros_like(inversion_data.mask, dtype=int)
-            new_verts[inversion_data.mask] = np.arange(int(inversion_data.mask.sum()))
-            entity.cells = new_verts[self.params.data_object.cells[active_ind, :]]
+            indices = np.where(
+                [
+                    c not in self.params.data_object.cells[active_ind, :]
+                    for c in entity.cells
+                ]
+            )[0]
+            if indices:
+                entity.remove_cells(indices)
 
         return entity
 

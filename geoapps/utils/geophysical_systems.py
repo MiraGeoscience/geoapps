@@ -5,12 +5,21 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 
 def parameters():
     """
     Dictionary of parameters defining geophysical acquisition systems
     """
     return {
+        "Airborne TEM Survey": {
+            "type": "time",
+            "data_type": "dBzdt",
+            "flag": None,
+            "channel_start_index": 1,
+            "bird_offset": [0, 0, 0],
+        },
         "AeroTEM (2007)": {
             "type": "time",
             "flag": "Zoff",

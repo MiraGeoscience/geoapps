@@ -126,6 +126,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# isort config is in pyproject.toml
+.isort.cfg
+
 # Pyre type checker
 .pyre/
 
@@ -133,31 +136,25 @@ dmypy.json
 /.idea/*
 !/.idea/scopes/
 !/.idea/copyright/
+
+# customization
+get_custom_conda.bat
+
+# cleanup after tests
+*.lock
 /assets/EM1DInversion_.json
 /assets/Inversion_.json
-/tests/run_em1d.py
-/tests/run_mvi.py
-/tests/run_pf.py
-/assets/dask-worker-space/
 /assets/SimPEG_PFInversion/
 /assets/Temp/
-/tests/Temp/
-/tests/run_tests/Temp/
-
-#cleanup
-/assets/sensitivity/*
-/assets/SimPEG_PFInversion/*
+/assets/dask-worker-space/
+/assets/sensitivity/
 /assets/test_*
-/tests/SimPEG_PFInversion/*
+/tests/**/*ui.json
 /tests/GEOSCIENCEtemp
 /tests/Gravity*
-/tests/FlinFlon.geoh5
 /tests/Inversion_.json
-/tests/run*
-/assets/Temp/*
-*.lock
-/tests/Temp/*
+/tests/SimPEG_PFInversion/
+/tests/Temp/
+/tests/dask-worker-space/
+/tests/run_tests/Temp/
 tests/**/*.geoh5
-/tests/**/*ui.json
-get_custom_conda.bat
-/tests/dask-worker-space/*

@@ -17,8 +17,13 @@ from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
 from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,
 )
@@ -44,6 +49,9 @@ def test_mag_inversion(tmp_path):
                 0
             ].copy(parent=new_geoh5)
             topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
+            ws.get_entity(UUID("{385f341f-1027-4b8e-9a86-93be239aa3fb}"))[0].copy(
+                parent=new_geoh5
+            )
 
     changes = {
         "data_object": new_obj.uid,
@@ -55,15 +63,6 @@ def test_mag_inversion(tmp_path):
         "forward_only": False,
         "starting_model": 0.01,
         "window_width": 100.0,
-        "u_cell_size": 50,
-        "v_cell_size": 60,
-        "w_cell_size": 75,
-        "octree_levels_topo": "1, 2, 3",
-        "octree_levels_obs": "4, 5, 6",
-        "depth_core": 150.0,
-        "horizontal_padding": 150.0,
-        "vertical_padding": 150.0,
-        "max_distance": 150.0,
     }
     side_effects = {"starting_inclination": 35}
     app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)
@@ -144,13 +143,6 @@ def test_mag_inversion(tmp_path):
                     getattr(app, "_" + group + "_group").options.value == "None"
                 ), f"Property group {group} did not reset to 'None'"
 
-            if "Model" in getattr(app, "_" + group + "_group").options.options:
-                getattr(app, "_" + group + "_group").objects.value = new_topo.uid
-                setattr(app, group, new_topo.children[1].uid)
-                assert (
-                    getattr(app, "_" + group + "_group").options.value == "Model"
-                ), f"Property group {group} did not reset to 'Model'"
-
 
 def test_dc_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
@@ -162,6 +154,9 @@ def test_dc_inversion(tmp_path):
             # dc object
             currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
             currents.copy(parent=new_geoh5)
+            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+                parent=new_geoh5
+            )
     changes = {
         "topography_object": new_topo.uid,
         "z_from_topo": False,
@@ -170,7 +165,7 @@ def test_dc_inversion(tmp_path):
     }
     side_effects = {}
     app = DCInversionApp(geoh5=project_dcip, plot_result=False)
-    app.geoh5 = new_geoh5
+    app.geoh5 = path.join(tmp_path, "invtest.geoh5")
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
@@ -181,7 +176,8 @@ def test_dc_inversion(tmp_path):
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
     ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
-    params_reload = DirectCurrentParams(ifile)
+
+    params_reload = DirectCurrent3DParams(ifile)
 
     for param, value in changes.items():
         p_value = getattr(params_reload, param)
@@ -217,50 +213,47 @@ def test_dc_inversion(tmp_path):
                 getattr(app, "_" + group + "_group").options.value == "None"
             ), f"Property group {group} did not reset to 'None'"
 
-        if "Model" in getattr(app, "_" + group + "_group").options.options:
-            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
-            setattr(app, group, new_topo.children[1].uid)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Model"
-            ), f"Property group {group} did not reset to 'Model'"
-
 
 def test_ip_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
-    ws = Workspace(project_dcip)
-    new_geoh5 = Workspace(path.join(tmp_path, "invtest.geoh5"))
-    new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[0].copy(
-        parent=new_geoh5
-    )
-    # Conductivity mesh + model
-    ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
-        parent=new_geoh5
-    )
-    # dc object
-    currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
-    currents.copy(parent=new_geoh5)
+    with Workspace(project_dcip) as ws:
+        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+            new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
+                0
+            ].copy(parent=new_geoh5)
+            # Conductivity mesh + model
+            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+                parent=new_geoh5
+            )
+
+            # dc object
+            currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
+            currents.copy(parent=new_geoh5)
+
     changes = {
         "topography_object": new_topo.uid,
         "z_from_topo": False,
         "forward_only": False,
+        "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
         "inversion_type": "induced polarization",
         "chargeability_channel": UUID("502e7256-aafa-4016-969f-5cc3a4f27315"),
-        "conductivity_model_object": UUID("da109284-aa8c-4824-a647-29951109b058"),
         "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
     }
     side_effects = {"starting_model": 1e-4}
     app = DCInversionApp(geoh5=project_dcip, plot_result=False)
-    app.geoh5 = new_geoh5
+    app.mesh.value = None
+    with new_geoh5.open(mode="r"):
+        app.geoh5 = new_geoh5
 
-    for param, value in changes.items():
-        if isinstance(getattr(app, param), Widget):
-            getattr(app, param).value = value
-        else:
-            setattr(app, param, value)
+        for param, value in changes.items():
+            if isinstance(getattr(app, param), Widget):
+                getattr(app, param).value = value
+            else:
+                setattr(app, param, value)
 
-    app.write_trigger(None)
+        app.write_trigger(None)
     ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
-    params_reload = InducedPolarizationParams(ifile)
+    params_reload = InducedPolarization3DParams(ifile)
 
     for param, value in changes.items():
         p_value = getattr(params_reload, param)
@@ -296,13 +289,6 @@ def test_ip_inversion(tmp_path):
                 getattr(app, "_" + group + "_group").options.value == "None"
             ), f"Property group {group} did not reset to 'None'"
 
-        if "Model" in getattr(app, "_" + group + "_group").options.options:
-            getattr(app, "_" + group + "_group").objects.value = new_topo.uid
-            setattr(app, group, new_topo.children[1].uid)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Model"
-            ), f"Property group {group} did not reset to 'Model'"
-
 
 def test_em1d_inversion(tmp_path):
     """Tests the jupyter application for em1d inversion."""
@@ -316,7 +302,7 @@ def test_em1d_inversion(tmp_path):
 
     changes = {
         "objects": new_obj.uid,
-        "data": (prop_group_uid,),
+        "data": prop_group_uid,
     }
     side_effects = {"system": "VTEM (2007)"}
     app = InversionApp(geoh5=project, plot_result=False)
@@ -330,3 +316,6 @@ def test_em1d_inversion(tmp_path):
 
     for key, value in side_effects.items():
         assert getattr(app, key).value == value, f"Failed to change {key} with {value}."
+
+    app.topography.options.value = "Constant"
+    app.write_trigger(None)

@@ -5,942 +5,548 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+# pylint: disable=W0613
+
 from __future__ import annotations
 
 import os
+import sys
+import uuid
+from time import time
 
 import numpy as np
+import plotly.graph_objects as go
+from dash import callback_context, no_update
+from dash.dependencies import Input, Output
+from flask import Flask
+from geoh5py.objects import ObjectBase
+from geoh5py.ui_json import InputFile
+from jupyter_dash import JupyterDash
 
-from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils import warn_module_not_found
-from geoapps.utils.plotting import format_axis, normalize, symlog
-from geoapps.utils.statistics import random_sampling
-
-with warn_module_not_found():
-    import plotly.express as px
-    from plotly import graph_objects as go
-
-with warn_module_not_found():
-    from ipywidgets import (
-        Checkbox,
-        Dropdown,
-        FloatText,
-        HBox,
-        IntSlider,
-        Label,
-        Layout,
-        ToggleButton,
-        VBox,
-        interactive_output,
-    )
+from geoapps.base.application import BaseApplication
+from geoapps.base.dash_application import BaseDashApplication
+from geoapps.scatter_plot.constants import app_initializer
+from geoapps.scatter_plot.driver import ScatterPlotDriver
+from geoapps.scatter_plot.layout import scatter_layout
+from geoapps.scatter_plot.params import ScatterPlotParams
 
 
-class ScatterPlots(ObjectDataSelection):
+class ScatterPlots(BaseDashApplication):
     """
-    Application for 2D and 3D crossplots of data using symlog scaling
+    Dash app to make a scatter plot.
     """
 
-    _defaults = {
-        "geoh5": "../../assets/FlinFlon.geoh5",
-        "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-        "data": [
-            "{18c2560c-6161-468a-8571-5d9d59649535}",
-            "{41d51965-3670-43ba-8a10-d399070689e3}",
-            "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
-            "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
-            "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
-        ],
-        "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
-        "x_active": True,
-        "y": "{18c2560c-6161-468a-8571-5d9d59649535}",
-        "y_active": True,
-        "z": "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
-        "y_log": True,
-        "z_log": True,
-        "z_active": True,
-        "color": "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
-        "color_active": True,
-        "color_log": True,
-        "size": "{41d51965-3670-43ba-8a10-d399070689e3}",
-        "size_active": True,
-        "color_maps": "inferno",
-        "refresh": True,
-    }
+    _param_class = ScatterPlotParams
+    _driver_class = ScatterPlotDriver
 
-    _select_multiple = True
-    _add_groups = False
-    _downsampling = None
-    _color = None
-    _x = None
-    _y = None
-    _z = None
-    _size = None
+    def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
+        if ui_json is not None and os.path.exists(ui_json.path):
+            self.params = self._param_class(ui_json)
+        else:
+            self.params = self._param_class(**app_initializer)
 
-    def __init__(self, **kwargs):
-        self.defaults.update(**kwargs)
-        self.custom_colormap = []
-        self._indices = None
+        super().__init__()
 
-        def channel_bounds_setter(caller):
-            self.set_channel_bounds(caller["owner"].name)
-
-        self.x.observe(channel_bounds_setter, names="value")
-        self.x.name = "x"
-        self._x_active = Checkbox(description="Active", value=True, indent=False)
-        self._x_log = Checkbox(
-            description="Log10",
-            value=False,
-            indent=False,
-        )
-        self._x_thresh = FloatText(
-            description="Threshold",
-            value=1e-1,
-        )
-        self._x_min = FloatText(
-            description="Min",
-        )
-        self._x_max = FloatText(
-            description="Max",
-        )
-        self._x_panel = VBox(
-            [
-                self._x_active,
-                HBox([self._x]),
-                HBox([self._x_log, self._x_thresh]),
-                HBox([self._x_min, self._x_max]),
-            ]
-        )
-        self.y.observe(channel_bounds_setter, names="value")
-        self.y.name = "y"
-        self._y_active = Checkbox(
-            description="Active",
-            value=True,
-            indent=False,
-        )
-        self._y_log = Checkbox(description="Log10", value=False, indent=False)
-        self._y_thresh = FloatText(
-            description="Threshold",
-            value=1e-1,
-        )
-        self._y_min = FloatText(
-            description="Min",
-        )
-        self._y_max = FloatText(
-            description="Max",
-        )
-        self._y_panel = VBox(
-            [
-                self._y_active,
-                HBox([self._y]),
-                HBox([self._y_log, self._y_thresh]),
-                HBox([self._y_min, self._y_max]),
-            ]
-        )
-        self.z.observe(channel_bounds_setter, names="value")
-        self.z.name = "z"
-        self._z_active = Checkbox(
-            description="Active",
-            value=False,
-            indent=False,
-        )
-        self._z_log = Checkbox(
-            description="Log10",
-            value=False,
-            indent=False,
-        )
-        self._z_thresh = FloatText(
-            description="Threshold",
-            value=1e-1,
-        )
-        self._z_min = FloatText(
-            description="Min",
-        )
-        self._z_max = FloatText(
-            description="Max",
-        )
-        self._z_panel = VBox(
-            [
-                self._z_active,
-                HBox([self._z]),
-                HBox([self._z_log, self._z_thresh]),
-                HBox([self._z_min, self._z_max]),
-            ]
-        )
-        self.color.observe(channel_bounds_setter, names="value")
-        self.color.name = "color"
-        self._color_log = Checkbox(
-            description="Log10",
-            value=False,
-            indent=False,
-        )
-        self._color_thresh = FloatText(
-            description="Threshold",
-            value=1e-1,
-        )
-        self._color_active = Checkbox(
-            description="Active",
-            value=False,
-            indent=False,
-        )
-        self._color_maps = Dropdown(
-            description="Colormaps",
-            options=px.colors.named_colorscales(),
-            value="viridis",
-        )
-        self._color_min = FloatText(
-            description="Min",
-        )
-        self._color_max = FloatText(
-            description="Max",
-        )
-        self._color_panel = VBox(
-            [
-                self._color_active,
-                HBox([self._color]),
-                self._color_maps,
-                HBox([self._color_log, self._color_thresh]),
-                HBox([self._color_min, self._color_max]),
-            ]
-        )
-        self.size.observe(channel_bounds_setter, names="value")
-        self.size.name = "size"
-        self._size_active = Checkbox(
-            description="Active",
-            value=False,
-            indent=False,
-        )
-        self._size_log = Checkbox(
-            description="Log10",
-            value=False,
-            indent=False,
-        )
-        self._size_thresh = FloatText(
-            description="Threshold",
-            value=1e-1,
-        )
-        self._size_markers = IntSlider(
-            min=1, max=100, value=20, description="Marker size", continuous_update=False
-        )
-        self._size_min = FloatText(
-            description="Min",
-        )
-        self._size_max = FloatText(
-            description="Max",
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
         )
 
-        self._size_panel = VBox(
-            [
-                self._size_active,
-                HBox([self._size]),
-                self._size_markers,
-                HBox([self._size_log, self._size_thresh]),
-                HBox([self._size_min, self._size_max]),
-            ]
-        )
-        self._refresh = ToggleButton(description="Refresh Plot", value=False)
+        self.app.layout = scatter_layout
 
-        # Wrap all axis panels into dropdown
-        def axes_pannels_trigger(_):
-            self.axes_pannels_trigger()
+        # Set up callbacks
+        self.app.callback(
+            Output(component_id="x_div", component_property="style"),
+            Output(component_id="y_div", component_property="style"),
+            Output(component_id="z_div", component_property="style"),
+            Output(component_id="color_div", component_property="style"),
+            Output(component_id="size_div", component_property="style"),
+            Input(component_id="axes_panels", component_property="value"),
+        )(ScatterPlots.update_visibility)
+        self.app.callback(
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="ui_json_data", component_property="data"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+        self.app.callback(
+            Output(component_id="x", component_property="options"),
+            Output(component_id="y", component_property="options"),
+            Output(component_id="z", component_property="options"),
+            Output(component_id="color", component_property="options"),
+            Output(component_id="size", component_property="options"),
+            Output(component_id="x", component_property="value"),
+            Output(component_id="y", component_property="value"),
+            Output(component_id="z", component_property="value"),
+            Output(component_id="color", component_property="value"),
+            Output(component_id="size", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="objects", component_property="value"),
+        )(self.update_data_options)
+        self.app.callback(
+            Output(component_id="x_min", component_property="value"),
+            Output(component_id="x_max", component_property="value"),
+            Output(component_id="y_min", component_property="value"),
+            Output(component_id="y_max", component_property="value"),
+            Output(component_id="z_min", component_property="value"),
+            Output(component_id="z_max", component_property="value"),
+            Output(component_id="color_min", component_property="value"),
+            Output(component_id="color_max", component_property="value"),
+            Output(component_id="size_min", component_property="value"),
+            Output(component_id="size_max", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="size", component_property="value"),
+        )(self.update_channel_bounds)
+        self.app.callback(
+            Output(component_id="downsampling", component_property="value"),
+            Output(component_id="x_log", component_property="value"),
+            Output(component_id="x_thresh", component_property="value"),
+            Output(component_id="y_log", component_property="value"),
+            Output(component_id="y_thresh", component_property="value"),
+            Output(component_id="z_log", component_property="value"),
+            Output(component_id="z_thresh", component_property="value"),
+            Output(component_id="color_log", component_property="value"),
+            Output(component_id="color_thresh", component_property="value"),
+            Output(component_id="color_maps", component_property="value"),
+            Output(component_id="size_log", component_property="value"),
+            Output(component_id="size_thresh", component_property="value"),
+            Output(component_id="size_markers", component_property="value"),
+            Output(component_id="monitoring_directory", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+        )(self.update_remainder_from_ui_json)
+        self.app.callback(
+            Output(component_id="crossplot", component_property="figure"),
+            Input(component_id="downsampling", component_property="value"),
+            Input(component_id="objects", component_property="value"),
+            Input(component_id="x", component_property="value"),
+            Input(component_id="x_log", component_property="value"),
+            Input(component_id="x_thresh", component_property="value"),
+            Input(component_id="x_min", component_property="value"),
+            Input(component_id="x_max", component_property="value"),
+            Input(component_id="y", component_property="value"),
+            Input(component_id="y_log", component_property="value"),
+            Input(component_id="y_thresh", component_property="value"),
+            Input(component_id="y_min", component_property="value"),
+            Input(component_id="y_max", component_property="value"),
+            Input(component_id="z", component_property="value"),
+            Input(component_id="z_log", component_property="value"),
+            Input(component_id="z_thresh", component_property="value"),
+            Input(component_id="z_min", component_property="value"),
+            Input(component_id="z_max", component_property="value"),
+            Input(component_id="color", component_property="value"),
+            Input(component_id="color_log", component_property="value"),
+            Input(component_id="color_thresh", component_property="value"),
+            Input(component_id="color_min", component_property="value"),
+            Input(component_id="color_max", component_property="value"),
+            Input(component_id="color_maps", component_property="value"),
+            Input(component_id="size", component_property="value"),
+            Input(component_id="size_log", component_property="value"),
+            Input(component_id="size_thresh", component_property="value"),
+            Input(component_id="size_min", component_property="value"),
+            Input(component_id="size_max", component_property="value"),
+            Input(component_id="size_markers", component_property="value"),
+        )(self.update_plot)
+        self.app.callback(
+            Output(component_id="export", component_property="n_clicks"),
+            Input(component_id="export", component_property="n_clicks"),
+            Input(component_id="monitoring_directory", component_property="value"),
+            Input(component_id="crossplot", component_property="figure"),
+        )(self.trigger_click)
 
-        self.panels = {
-            "X-axis": self._x_panel,
-            "Y-axis": self._y_panel,
-            "Z-axis": self._z_panel,
-            "Color": self._color_panel,
-            "Size": self._size_panel,
-        }
-        self.axes_pannels = Dropdown(
-            options=["X-axis", "Y-axis", "Z-axis", "Color", "Size"],
-            layout=Layout(width="300px"),
-        )
-        self.axes_pannels.observe(axes_pannels_trigger, names="value")
-        self.axes_options = VBox([self.axes_pannels, self._x_panel])
-        self.data_channels = {}
-        self.data.observe(self.update_choices, names="value")
-        self.objects.observe(self.update_objects, names="value")
-        self.downsampling.observe(self.update_downsampling, names="value")
-        self.figure = go.FigureWidget()
-        self.crossplot = interactive_output(
-            self.plot_selection,
-            {
-                "x": self.x,
-                "x_log": self.x_log,
-                "x_active": self.x_active,
-                "x_thresh": self.x_thresh,
-                "x_min": self.x_min,
-                "x_max": self.x_max,
-                "y": self.y,
-                "y_log": self.y_log,
-                "y_thresh": self.y_thresh,
-                "y_active": self.y_active,
-                "y_min": self.y_min,
-                "y_max": self.y_max,
-                "z": self.z,
-                "z_log": self.z_log,
-                "z_thresh": self.z_thresh,
-                "z_active": self.z_active,
-                "z_min": self.z_min,
-                "z_max": self.z_max,
-                "color": self.color,
-                "color_log": self.color_log,
-                "color_thresh": self.color_thresh,
-                "color_active": self.color_active,
-                "color_maps": self.color_maps,
-                "color_min": self.color_min,
-                "color_max": self.color_max,
-                "size": self.size,
-                "size_log": self.size_log,
-                "size_thresh": self.size_thresh,
-                "size_active": self.size_active,
-                "size_markers": self.size_markers,
-                "size_min": self.size_min,
-                "size_max": self.size_max,
-                "refresh": self.refresh,
-            },
-        )
-        self.trigger.on_click(self.trigger_click)
-        self.trigger.description = "Save HTML"
-
-        super().__init__(**self.defaults)
-
-    @property
-    def n_values(self):
+    @staticmethod
+    def update_visibility(axis: str) -> (dict, dict, dict, dict, dict):
         """
-        Number of values contained by the current object
-        """
+        Change the visibility of the dash components depending on the axis selected.
 
-        obj, _ = self.get_selected_entities()
-        if obj is not None:
-            # Check number of points
-            if hasattr(obj, "centroids"):
-                return obj.n_cells
-            elif hasattr(obj, "vertices"):
-                return obj.n_vertices
-        return None
+        :param axis: Selected data axis.
 
-    @property
-    def indices(self):
+        :return x-style: X axis style dict.
+        :return y-style: Y axis style dict.
+        :return z-style: Z axis style dict.
+        :return color-style: Color axis style dict.
+        :return size-style: Size axis style dict.
         """
-        Bool or array of int
-        Indices of data to be plotted
-        """
-        if getattr(self, "_indices", None) is None:
-            if self.n_values is not None:
-                self._indices = np.arange(self.n_values)
-            else:
-                return None
-
-        return self._indices
-
-    @property
-    def color(self):
-        """
-        Widget for the selection of color values
-        """
-        if getattr(self, "_color", None) is None:
-            self._color = Dropdown(description="Data:")
-
-        return self._color
-
-    @property
-    def color_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._color_log
-
-    @property
-    def color_thresh(self):
-        """
-        :obj:`ipywidgets.FloatText`
-        """
-        return self._color_thresh
-
-    @property
-    def color_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._color_active
-
-    @property
-    def color_maps(self):
-        """
-        :obj:`ipywidgets.Dropdown`
-        """
-        return self._color_maps
-
-    @property
-    def color_min(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._color_min
-
-    @property
-    def color_max(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._color_max
-
-    @property
-    def downsampling(self) -> IntSlider:
-        """
-        Widget controlling the size of the population.
-        """
-        if getattr(self, "_downsampling", None) is None:
-            self._downsampling = IntSlider(
-                description="Population Downsampling:",
-                min=1,
-                style={"description_width": "initial"},
-                continuous_update=False,
+        if axis == "x":
+            return (
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
             )
-        return self._downsampling
-
-    @property
-    def main(self):
-        if self._main is None:
-            self._main = VBox(
-                [
-                    self.project_panel,
-                    HBox([self.objects, self.data]),
-                    VBox([Label("Downsampling"), self.downsampling]),
-                    self.axes_options,
-                    self.refresh,
-                    self.figure,
-                    self.trigger,
-                ]
+        elif axis == "y":
+            return (
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif axis == "z":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+                {"display": "none"},
+            )
+        elif axis == "color":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
+                {"display": "none"},
+            )
+        elif axis == "size":
+            return (
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "none"},
+                {"display": "block"},
             )
 
-        return self._main
+    def update_data_options(self, ui_json_data: dict, object_uid: str):
+        """
+        Get data dropdown options from a given object.
 
-    @property
-    def refresh(self):
-        """"""
-        return self._refresh
+        :param ui_json_data: Uploaded ui.json data to read object from.
+        :param object_uid: Selected object in object dropdown.
 
-    @property
-    def size(self):
+        :return options: Data dropdown options for x-axis of scatter plot.
+        :return options: Data dropdown options for y-axis of scatter plot.
+        :return options: Data dropdown options for z-axis of scatter plot.
+        :return options: Data dropdown options for color-axis of scatter plot.
+        :return options: Data dropdown options for size-axis of scatter plot.
+        :return x_value: Data dropdown options for x-axis of scatter plot.
+        :return y_value: Data dropdown options for y-axis of scatter plot.
+        :return z_value: Data dropdown options for z-axis of scatter plot.
+        :return color_value: Data dropdown options for color-axis of scatter plot.
+        :return size_value: Data dropdown options for size-axis of scatter plot.
         """
-        Widget for the selection of size scaling values
-        """
-        if getattr(self, "_size", None) is None:
-            self._size = Dropdown(description="Data:")
-        return self._size
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-    @property
-    def size_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._size_active
+        if "ui_json_data" in triggers:
+            x_value = ui_json_data.get("x", None)
+            y_value = ui_json_data.get("y", None)
+            z_value = ui_json_data.get("z", None)
+            color_value = ui_json_data.get("color", None)
+            size_value = ui_json_data.get("size", None)
+            trigger = "ui_json"
+        else:
+            x_value, y_value, z_value, color_value, size_value = (
+                None,
+                None,
+                None,
+                None,
+                None,
+            )
+            trigger = "objects"
 
-    @property
-    def size_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._size_log
+        options = self.get_data_options(trigger, ui_json_data, object_uid)
 
-    @property
-    def size_thresh(self):
-        """
-        :obj:`ipywidgets.FloatText`
-        """
-        return self._size_thresh
+        return (
+            options,
+            options,
+            options,
+            options,
+            options,
+            x_value,
+            y_value,
+            z_value,
+            color_value,
+            size_value,
+        )
 
-    @property
-    def size_markers(self):
+    def get_channel_bounds(self, channel: str, kmeans: list = None) -> (float, float):
         """
-        :obj:`ipywidgets.IntSlider`
-        """
-        return self._size_markers
+        Set the min and max values for the given axis channel.
 
-    @property
-    def size_min(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._size_min
+        :param channel: Name of channel to find data for.
+        :param kmeans: Optional data to use instead of channel name.
 
-    @property
-    def size_max(self):
+        :return cmin: Minimum value for input channel.
+        :return cmax: Maximum value for input channel.
         """
-        :obj:`ipywidgets.Text`
-        """
-        return self._size_max
+        data, cmin, cmax = None, None, None
 
-    @property
-    def x(self):
-        """
-        Widget for the selection of x-axis values
-        """
-        if getattr(self, "_x", None) is None:
-            self._x = Dropdown(description="Data:")
-        return self._x
-
-    @property
-    def x_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._x_active
-
-    @property
-    def x_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._x_log
-
-    @property
-    def x_thresh(self):
-        """
-        :obj:`ipywidgets.FloatText`
-        """
-        return self._x_thresh
-
-    @property
-    def x_min(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._x_min
-
-    @property
-    def x_max(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._x_max
-
-    @property
-    def y(self):
-        """
-        Widget for the selection of y-axis values
-        """
-        if getattr(self, "_y", None) is None:
-            self._y = Dropdown(description="Data:")
-        return self._y
-
-    @property
-    def y_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._y_active
-
-    @property
-    def y_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._y_log
-
-    @property
-    def y_thresh(self):
-        """
-        :obj:`ipywidgets.FloatText`
-        """
-        return self._y_thresh
-
-    @property
-    def y_min(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._y_min
-
-    @property
-    def y_max(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._y_max
-
-    @property
-    def z(self):
-        """
-        Widget for the selection of z-axis values
-        """
-        if getattr(self, "_z", None) is None:
-            self._z = Dropdown(description="Data:")
-        return self._z
-
-    @property
-    def z_active(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._z_active
-
-    @property
-    def z_log(self):
-        """
-        :obj:`ipywidgets.Checkbox`
-        """
-        return self._z_log
-
-    @property
-    def z_thresh(self):
-        """
-        :obj:`ipywidgets.FloatText`
-        """
-        return self._z_thresh
-
-    @property
-    def z_min(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._z_min
-
-    @property
-    def z_max(self):
-        """
-        :obj:`ipywidgets.Text`
-        """
-        return self._z_max
-
-    def axes_pannels_trigger(self):
-        self.axes_options.children = [
-            self.axes_pannels,
-            self.panels[self.axes_pannels.value],
-        ]
-
-    def get_channel(self, channel):
-        obj, _ = self.get_selected_entities()
-
-        if channel is None:
-            return None
-
-        if channel not in self.data_channels:
-
-            if self.workspace.get_entity(channel):
-                values = np.asarray(
-                    self.workspace.get_entity(channel)[0].values, dtype=float
-                ).copy()
-            elif channel in "XYZ":
-                # Check number of points
-                if hasattr(obj, "centroids"):
-                    values = obj.centroids[:, "XYZ".index(channel)]
-                elif hasattr(obj, "vertices"):
-                    values = obj.vertices[:, "XYZ".index(channel)]
-            else:
-                return
-
-            self.data_channels[channel] = values
-
-        return self.data_channels[channel].copy()
-
-    def set_channel_bounds(self, name):
-        """
-        Set the min and max values for the given axis channel
-        """
-
-        channel = getattr(self, "_" + name).value
-        self.get_channel(channel)
-
-        if channel in self.data_channels:
-
-            values = self.data_channels[channel]
-            values = values[~np.isnan(values)]
-
-            cmin = getattr(self, "_" + name + "_min")
-            cmin.value = f"{np.min(values):.2e}"
-            cmax = getattr(self, "_" + name + "_max")
-            cmax.value = f"{np.max(values):.2e}"
-
-    def plot_selection(
-        self,
-        x,
-        x_log,
-        x_active,
-        x_thresh,
-        x_min,
-        x_max,
-        y,
-        y_log,
-        y_active,
-        y_thresh,
-        y_min,
-        y_max,
-        z,
-        z_log,
-        z_active,
-        z_thresh,
-        z_min,
-        z_max,
-        color,
-        color_log,
-        color_active,
-        color_thresh,
-        color_maps,
-        color_min,
-        color_max,
-        size,
-        size_log,
-        size_active,
-        size_thresh,
-        size_markers,
-        size_min,
-        size_max,
-        refresh,  # pylint: disable=unused-argument
-    ):
-
-        if not self.refresh.value or self.indices is None:
-            return None
-
-        if (
-            self.downsampling.value != self.n_values
-            and self.indices.shape[0] == self.n_values
+        if channel == "kmeans" and kmeans is not None:
+            data = kmeans
+        elif (
+            channel is not None
+            and self.workspace.get_entity(uuid.UUID(channel))[0] is not None
         ):
-            return self.update_downsampling(None)
+            data = self.workspace.get_entity(uuid.UUID(channel))[0].values
 
-        if self.get_channel(size) is not None and size_active:
-            vals = self.get_channel(size)[self.indices]
-            inbound = (vals > size_min) * (vals < size_max)
-            vals[~inbound] = np.nan
-            size = normalize(vals)
+        if data is not None:
+            cmin = float(f"{np.nanmin(data):.2e}")
+            cmax = float(f"{np.nanmax(data):.2e}")
 
-            if size_log:
-                size = symlog(size, size_thresh)
-            size *= size_markers
-        else:
-            size = None
+        return cmin, cmax
 
-        if self.get_channel(color) is not None and color_active:
-            vals = self.get_channel(color)[self.indices]
-            inbound = (vals >= color_min) * (vals <= color_max)
-            vals[~inbound] = np.nan
-            color = normalize(vals)
-            if color_log:
-                color = symlog(color, color_thresh)
-        else:
-            color = "black"
+    def update_channel_bounds(
+        self,
+        ui_json_data: dict,
+        x: str,
+        y: str,
+        z: str,
+        color: str,
+        size: str,
+        kmeans: list = None,
+    ):
+        """
+        Update min and max for all channels, either from uploaded ui.json or from change of data.
 
-        x_axis, y_axis, z_axis = None, None, None
+        :param ui_json_data: Uploaded ui.json data.
+        :param x: Name of selected x data.
+        :param y: Name of selected y data.
+        :param z: Name of selected z data.
+        :param color: Name of selected color data.
+        :param size: Name of selected size data.
+        :param kmeans: Optional data to use instead of channel name.
 
-        if np.sum([x_active, y_active, z_active]) > 1:
-
-            if x_active:
-                x_axis = self.get_channel(x)
-                if x_axis is None:
-                    x_active = False
-                else:
-                    x_axis = x_axis[self.indices]
-
-            if y_active:
-                y_axis = self.get_channel(y)
-                if y_axis is None:
-                    y_active = False
-                else:
-                    y_axis = y_axis[self.indices]
-
-            if z_active:
-                z_axis = self.get_channel(z)
-                if z_axis is None:
-                    z_active = False
-                else:
-                    z_axis = z_axis[self.indices]
-
-            if np.sum([axis is not None for axis in [x_axis, y_axis, z_axis]]) < 2:
-                self.figure.data = []
-                return
-
-            if x_axis is not None:
-                inbound = (x_axis >= x_min) * (x_axis <= x_max)
-                x_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, _ = format_axis(
-                    self.data.uid_name_map[x], x_axis, x_log, x_thresh
-                )
-            else:
-                inbound = (z_axis >= z_min) * (z_axis <= z_max)
-                z_axis[~inbound] = np.nan
-                x_axis, x_label, x_ticks, _ = format_axis(
-                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
-                )
-
-            if y_axis is not None:
-                inbound = (y_axis >= y_min) * (y_axis <= y_max)
-                y_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, _ = format_axis(
-                    self.data.uid_name_map[y], y_axis, y_log, y_thresh
-                )
-            else:
-                inbound = (z_axis >= z_min) * (z_axis <= z_max)
-                z_axis[~inbound] = np.nan
-                y_axis, y_label, y_ticks, _ = format_axis(
-                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
-                )
-
-            if z_axis is not None:
-                inbound = (z_axis >= z_min) * (z_axis <= z_max)
-                z_axis[~inbound] = np.nan
-                z_axis, z_label, z_ticks, _ = format_axis(
-                    self.data.uid_name_map[z], z_axis, z_log, z_thresh
-                )
-
-            if self.custom_colormap:
-                color_maps = self.custom_colormap
-
-            # 3D Scatter
-            if np.sum([x_active, y_active, z_active]) == 3:
-
-                plot = go.Scatter3d(
-                    x=x_axis,
-                    y=y_axis,
-                    z=z_axis,
-                    mode="markers",
-                    marker={"color": color, "size": size, "colorscale": color_maps},
-                )
-
-                layout = {
-                    "margin": dict(l=0, r=0, b=0, t=0),
-                    "scene": {
-                        "xaxis_title": x_label,
-                        "yaxis_title": y_label,
-                        "zaxis_title": z_label,
-                        "xaxis": {
-                            "tickvals": x_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
-                        },
-                        "yaxis": {
-                            "tickvals": y_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
-                        },
-                        "zaxis": {
-                            "tickvals": z_ticks,
-                            # "ticktext": [f"{label:.2e}" for label in z_ticklabels],
-                        },
-                    },
-                }
-            # 2D Scatter
-            else:
-                plot = go.Scatter(
-                    x=x_axis,
-                    y=y_axis,
-                    mode="markers",
-                    marker={"color": color, "size": size, "colorscale": color_maps},
-                )
-
-                layout = {
-                    "margin": dict(l=0, r=0, b=0, t=0),
-                    "xaxis": {
-                        "tickvals": x_ticks,
-                        # "ticktext": [f"{label:.2e}" for label in x_ticklabels],
-                        "exponentformat": "e",
-                        "title": x_label,
-                    },
-                    "yaxis": {
-                        "tickvals": y_ticks,
-                        # "ticktext": [f"{label:.2e}" for label in y_ticklabels],
-                        "exponentformat": "e",
-                        "title": y_label,
-                    },
-                }
-
-            self.figure.data = []
-            self.figure.add_trace(plot)
-            self.figure.update_layout(layout)
-
-        else:
-            self.figure.data = []
-
-    def update_axes(self, refresh_plot=True):
-
-        for name in [
-            "x",
-            "y",
-            "z",
-            "color",
-            "size",
-        ]:
-            self.refresh.value = False
-            widget = getattr(self, "_" + name)
-            val = widget.value
-            widget.options = [
-                [self.data.uid_name_map[key], key] for key in self.data_channels
-            ]
-
-            if val in list(dict(widget.options).values()):
-                widget.value = val
-            else:
-                widget.value = None
-        if refresh_plot:
-            self.refresh.value = True
-
-    def update_choices(self, _):
-        self.refresh.value = False
-
-        for channel in self.data.value:
-            self.get_channel(channel)
-
-        keys = list(self.data_channels)
-        for key in keys:
-            if key not in self.data.value:
-                del self.data_channels[key]
-
-        self.update_axes(refresh_plot=False)
-
-        if self.downsampling.value != self.n_values:
-            self.update_downsampling(None, refresh_plot=False)
-
-        self.refresh.value = True
-
-    def update_downsampling(self, _, refresh_plot=True):
-
-        if not list(self.data_channels.values()):
-            return
-
-        self.refresh.value = False
-        values = []
-        for axis in [self.x, self.y, self.z]:
-            vals = self.get_channel(axis.value)
-            if vals is not None:
-                values.append(np.asarray(vals, dtype=float))
-
-        if len(values) < 2:
-            return
-
-        values = np.vstack(values)
-        nans = np.isnan(values)
-        values[nans] = 0
-        # Normalize all columns
-        values = (values - np.min(values, axis=1)[:, None]) / (
-            np.max(values, axis=1) - np.min(values, axis=1)
-        )[:, None]
-        values[nans] = np.nan
-        self._indices = random_sampling(
-            values.T,
-            self.downsampling.value,
-            bandwidth=2.0,
-            rtol=1e0,
-            method="histogram",
+        :return x_min: Minimum value for x data.
+        :return x_max: Maximum value for x data.
+        :return y_min: Minimum value for y data.
+        :return y_max: Maximum value for y data.
+        :return z_min: Minimum value for z data.
+        :return z_max: Maximum value for z data.
+        :return color_min: Minimum value for color data.
+        :return color_max: Maximum value for color data.
+        :return size_min: Minimum value for size data.
+        :return size_max: Maximum value for size data.
+        """
+        (
+            x_min,
+            x_max,
+            y_min,
+            y_max,
+            z_min,
+            z_max,
+            color_min,
+            color_max,
+            size_min,
+            size_max,
+        ) = (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+            no_update,
         )
-        self.refresh.value = refresh_plot
 
-    def update_objects(self, _):
-        self.data_channels = {}
-        self.refresh.value = False
-        self.figure.data = []
-        self.x_active.value = False
-        self.y_active.value = False
-        self.z_active.value = False
-        self.color_active.value = False
-        self.size_active.value = False
-        if self.n_values is not None:
-            self.downsampling.max = self.n_values
-            self.downsampling.value = np.min([5000, self.n_values])
-        self._indices = None
-        self.update_downsampling(None, refresh_plot=False)
-        self.refresh.value = True
-
-    def trigger_click(self, _):
-        self.figure.write_html(
-            os.path.join(
-                os.path.abspath(os.path.dirname(self.h5file)), "Crossplot.html"
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "ui_json_data":
+            x_min, x_max = ui_json_data.get("x_min", None), ui_json_data.get(
+                "x_max", None
             )
+            y_min, y_max = ui_json_data.get("y_min", None), ui_json_data.get(
+                "y_max", None
+            )
+            z_min, z_max = ui_json_data.get("z_min", None), ui_json_data.get(
+                "z_max", None
+            )
+            color_min, color_max = ui_json_data.get(
+                "color_min", None
+            ), ui_json_data.get("color_max", None)
+            size_min, size_max = ui_json_data.get("size_min", None), ui_json_data.get(
+                "size_max", None
+            )
+
+        elif trigger == "x":
+            x_min, x_max = self.get_channel_bounds(x, kmeans)
+        elif trigger == "y":
+            y_min, y_max = self.get_channel_bounds(y, kmeans)
+        elif trigger == "z":
+            z_min, z_max = self.get_channel_bounds(z, kmeans)
+        elif trigger == "color":
+            color_min, color_max = self.get_channel_bounds(color, kmeans)
+        elif trigger == "size":
+            size_min, size_max = self.get_channel_bounds(size, kmeans)
+
+        return (
+            x_min,
+            x_max,
+            y_min,
+            y_max,
+            z_min,
+            z_max,
+            color_min,
+            color_max,
+            size_min,
+            size_max,
         )
+
+    def update_plot(
+        self,
+        downsampling: int,
+        objects: str,
+        x: str,
+        x_log: list,
+        x_thresh: float,
+        x_min: float,
+        x_max: float,
+        y: str,
+        y_log: list,
+        y_thresh: float,
+        y_min: float,
+        y_max: float,
+        z: str,
+        z_log: list,
+        z_thresh: float,
+        z_min: float,
+        z_max: float,
+        color: str,
+        color_log: list,
+        color_thresh: float,
+        color_min: float,
+        color_max: float,
+        color_maps: str,
+        size: str,
+        size_log: list,
+        size_thresh: float,
+        size_min: float,
+        size_max: float,
+        size_markers: int,
+    ) -> go.Figure:
+        """
+        Run scatter plot driver, and if export was clicked save the figure as html.
+
+        :param downsampling: Percent of total values to plot.
+        :param objects: UUID of selected object.
+        :param x: UUID of selected x data.
+        :param x_log: Whether or not to plot the log of x data.
+        :param x_thresh: X threshold.
+        :param x_min: Minimum value for x data.
+        :param x_max: Maximum value for x data.
+        :param y: UUID of selected y data.
+        :param y_log: Whether or not to plot the log of y data.
+        :param y_thresh: Y threshold.
+        :param y_min: Minimum value for y data.
+        :param y_max: Maximum value for y data.
+        :param z: UUID of selected z data.
+        :param z_log: Whether or not to plot the log of z data.
+        :param z_thresh: Z threshold.
+        :param z_min: Minimum value for z data.
+        :param z_max: Maximum value for x data.
+        :param color: UUID of selected color data.
+        :param color_log: Whether or not to plot the log of color data.
+        :param color_thresh: Color threshold.
+        :param color_min: Minimum value for color data.
+        :param color_max: Maximum value for color data.
+        :param color_maps: Color map.
+        :param size: UUID of selected size data.
+        :param size_log: Whether or not to plot the log of size data.
+        :param size_thresh: Size threshold.
+        :param size_min: Minimum value for size data.
+        :param size_max: Maximum value for size data.
+        :param size_markers: Max size for markers.
+
+        :return figure: Scatter plot.
+        """
+        update_dict = {}
+        # Get list of parameters to update in self.params, from callback trigger.
+        for item in callback_context.triggered:
+            update_dict[item["prop_id"].split(".")[0]] = item["value"]
+
+        # Don't update plot if objects triggered the callback, but use objects to update self.params.
+        if "objects" in update_dict and len(update_dict) == 1:
+            return go.Figure()
+        elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
+            update_dict.update({"objects": objects})
+
+        # Update self.params
+        param_dict = self.get_params_dict(update_dict)
+        self.params.update(param_dict)
+        # Run driver to get updated scatter plot.
+        figure = go.Figure(self.driver.run())
+
+        return figure
+
+    def trigger_click(
+        self, n_clicks: int, monitoring_directory: str, figure: go.Figure = None
+    ):
+        """
+        Save the plot as html, write out ui.json.
+
+        :param n_clicks: Trigger export from button.
+        :param monitoring_directory: Output path.
+        :param figure: Figure created by update_plots.
+        """
+
+        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if trigger == "export":
+            param_dict = self.params.to_dict()
+
+            # Get output path.
+            if (
+                (monitoring_directory is not None)
+                and (monitoring_directory != "")
+                and (os.path.exists(os.path.abspath(monitoring_directory)))
+            ):
+                param_dict["monitoring_directory"] = os.path.abspath(
+                    monitoring_directory
+                )
+                temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
+
+                # Get output workspace.
+                ws, _ = BaseApplication.get_output_workspace(
+                    False, param_dict["monitoring_directory"], temp_geoh5
+                )
+
+                with ws as new_workspace:
+                    # Put entities in output workspace.
+                    param_dict["geoh5"] = new_workspace
+                    for key, value in param_dict.items():
+                        if isinstance(value, ObjectBase):
+                            param_dict[key] = value.copy(
+                                parent=new_workspace, copy_children=True
+                            )
+
+                    # Write output uijson.
+                    new_params = ScatterPlotParams(**param_dict)
+                    new_params.write_input_file(
+                        name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                        path=param_dict["monitoring_directory"],
+                        validate=False,
+                    )
+
+                    go.Figure(figure).write_html(
+                        os.path.join(
+                            param_dict["monitoring_directory"],
+                            temp_geoh5.replace(".geoh5", ".html"),
+                        )
+                    )
+                print("Saved to " + param_dict["monitoring_directory"])
+            else:
+                print("Invalid output path.")
+
+        return no_update
+
+
+if __name__ == "__main__":
+    print("Loading geoh5 file . . .")
+    file = sys.argv[1]
+    ifile = InputFile.read_ui_json(file)
+    ifile.workspace.open("r")
+    app = ScatterPlots(ui_json=ifile)
+    print("Loaded. Building the plotly scatterplot . . .")
+    app.run()
+    print("Done")

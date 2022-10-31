@@ -23,7 +23,6 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from SimPEG import dask  # pylint: disable=unused-import
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
@@ -100,7 +99,7 @@ class InversionDriver:
         self.inversion_data = InversionData(self.workspace, self.params, self.window)
 
         self.inversion_topography = InversionTopography(
-            self.workspace, self.params, self.window
+            self.workspace, self.params, self.inversion_data, self.window
         )
 
         self.inversion_mesh = InversionMesh(
@@ -156,7 +155,7 @@ class InversionDriver:
 
         # Specify optimization algorithm and set parameters
         self.optimization = optimization.ProjectedGNCG(
-            maxIter=self.params.max_iterations,
+            maxIter=self.params.max_global_iterations,
             lower=self.lower_bound,
             upper=self.upper_bound,
             maxIterLS=self.params.max_line_search_iterations,
@@ -304,7 +303,10 @@ class InversionDriver:
 
     def get_tiles(self):
 
-        if self.params.inversion_type in ["direct current", "induced polarization"]:
+        if self.params.inversion_type in [
+            "direct current",
+            "induced polarization",
+        ]:
             tiles = []
             potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
@@ -329,6 +331,8 @@ class InversionDriver:
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
+        elif "2d" in self.params.inversion_type:
+            tiles = [self.inversion_data.indices]
         else:
             tiles = tile_locations(
                 self.locations,
@@ -413,37 +417,73 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
         )
 
     elif inversion_type == "magnetic scalar":
-        from .potential_fields import MagneticScalarParams as ParamClass
-        from .potential_fields.magnetic_scalar.constants import validations
+        from geoapps.inversion.potential_fields import (
+            MagneticScalarParams as ParamClass,
+        )
+        from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
+            validations,
+        )
 
     elif inversion_type == "gravity":
         from geoapps.inversion.potential_fields import GravityParams as ParamClass
         from geoapps.inversion.potential_fields.gravity.constants import validations
 
     elif inversion_type == "magnetotellurics":
-        from .natural_sources import MagnetotelluricsParams as ParamClass
-        from .natural_sources.magnetotellurics.constants import validations
+        from geoapps.inversion.natural_sources import (
+            MagnetotelluricsParams as ParamClass,
+        )
+        from geoapps.inversion.natural_sources.magnetotellurics.constants import (
+            validations,
+        )
 
     elif inversion_type == "tipper":
-        from .natural_sources import TipperParams as ParamClass
-        from .natural_sources.tipper.constants import validations
+        from geoapps.inversion.natural_sources import TipperParams as ParamClass
+        from geoapps.inversion.natural_sources.tipper.constants import validations
 
     elif inversion_type == "direct current":
-        from .electricals import DirectCurrentParams as ParamClass
-        from .electricals.direct_current.constants import validations
+        from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+            DirectCurrent3DParams as ParamClass,
+        )
+    elif inversion_type == "direct current 2d":
+        from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
+            validations,
+        )
+        from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
+            DirectCurrent2DParams as ParamClass,
+        )
 
     elif inversion_type == "induced polarization":
-        from .electricals import InducedPolarizationParams as ParamClass
-        from .electricals.induced_polarization.constants import validations
+        from geoapps.inversion.electricals import (
+            InducedPolarization3DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+            InducedPolarization3DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
+            validations,
+        )
+
+    elif inversion_type == "induced polarization 2d":
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
+            InducedPolarization2DParams as ParamClass,
+        )
+        from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import (
+            validations,
+        )
 
     else:
         raise UserWarning("A supported 'inversion_type' must be provided.")
 
     input_file = InputFile.read_ui_json(filepath, validations=validations)
     params = ParamClass(input_file=input_file, **kwargs)
-    params.geoh5.close()
+
     driver = InversionDriver(params)
-    driver.run()
+
+    with params.geoh5.open(mode="r+"):
+        driver.run()
 
     return driver
 

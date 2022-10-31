@@ -111,10 +111,10 @@ class Calculator(ObjectDataSelection):
         out_var, equation = re.split("=", self.equation.value)
         out_var = out_var.strip()[1:-1]
         temp_geoh5 = f"{obj.name}_{out_var}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as workspace:
-
+        ws, self.live_link.value = self.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as workspace:
             obj = obj.copy(parent=workspace)
 
             if getattr(obj, "vertices", None) is not None:

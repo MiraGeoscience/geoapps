@@ -17,6 +17,8 @@ if TYPE_CHECKING:
 
 import numpy as np
 
+from geoapps.shared_utils.utils import rotate_xyz
+
 from .simpeg_factory import SimPEGFactory
 
 
@@ -43,12 +45,12 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Point
 
-        elif self.factory_type == "direct current":
+        elif "direct current" in self.factory_type:
             from SimPEG.electromagnetics.static.resistivity import receivers
 
             return receivers.Dipole
 
-        elif self.factory_type == "induced polarization":
+        elif "induced polarization" in self.factory_type:
             from SimPEG.electromagnetics.static.induced_polarization import receivers
 
             return receivers.Dipole
@@ -70,7 +72,19 @@ class ReceiversFactory(SimPEGFactory):
 
         args = []
 
-        if self.factory_type in ["direct current", "induced polarization"]:
+        if getattr(self.params.mesh, "rotation", None):
+            locations = rotate_xyz(
+                locations,
+                self.params.mesh.origin.tolist(),
+                -1 * self.params.mesh.rotation[0],
+            )
+
+        if self.factory_type in [
+            "direct current",
+            "direct current 2d",
+            "induced polarization",
+            "induced polarization 2d",
+        ]:
             args += self._dcip_arguments(
                 locations=locations,
                 local_index=local_index,
@@ -137,7 +151,7 @@ class ReceiversFactory(SimPEGFactory):
         args.append(locations_m)
 
         if np.all(locations_m == locations_n):
-            if self.factory_type == "direct current":
+            if "direct current" in self.factory_type:
                 from SimPEG.electromagnetics.static.resistivity import receivers
             else:
                 from SimPEG.electromagnetics.static.induced_polarization import (

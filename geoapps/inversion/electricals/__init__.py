@@ -7,5 +7,8 @@
 
 from __future__ import annotations
 
-from .direct_current.params import DirectCurrentParams
-from .induced_polarization.params import InducedPolarizationParams
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
+    InducedPolarization3DParams,
+)
+
+from .direct_current.three_dimensions import DirectCurrent3DParams

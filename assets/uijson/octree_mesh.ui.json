@@ -20,7 +20,10 @@
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+            "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}"
         ],
         "value": ""
     },
@@ -72,20 +75,24 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
+    "workspace_geoh5": "",
     "Refinement A object": {
         "groupOptional": true,
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Object",
         "meshType": [
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}"
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+            "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}"
         ],
         "value": ""
     },
     "Refinement A levels": {
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Levels",
         "value": "4.0, 4.0, 4.0"
@@ -95,13 +102,13 @@
             "surface",
             "radial"
         ],
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Type",
         "value": "radial"
     },
     "Refinement A distance": {
-        "enabled": true,
+        "enabled": false,
         "group": "Refinement A",
         "label": "Distance",
         "value": 1000.0

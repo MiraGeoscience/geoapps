@@ -9,9 +9,11 @@ import os
 
 import numpy as np
 import SimPEG
+from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
+from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.inversion.components import InversionData
 from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields import MagneticVectorParams
@@ -22,10 +24,11 @@ geoh5 = Workspace("./FlinFlon.geoh5")
 
 def setup_params(tmp):
     geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", params_class=MagneticVectorParams)
-    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    geotest.set_param("mesh", "{385f341f-1027-4b8e-9a86-93be239aa3fb}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
+    geotest.set_param("gyz_channel", "{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
@@ -60,18 +63,34 @@ def test_survey_data(tmp_path):
         _ = test_topo_object.add_data(
             {"elev": {"association": "VERTEX", "values": 100 * np.ones(len(verts))}}
         )
+        topo = workspace.get_entity("elev")[0]
+        mesh = mesh_builder_xyz(
+            verts,
+            [20, 20, 20],
+            depth_core=50,
+            mesh_type="TREE",
+        )
+        mesh = refine_tree_xyz(
+            mesh,
+            test_topo_object.vertices,
+            method="surface",
+            finalize=True,
+        )
+
+        mesh = treemesh_2_octree(workspace, mesh)
         params = MagneticVectorParams(
             forward_only=False,
             geoh5=workspace,
             data_object=test_data_object.uid,
             topography_object=test_topo_object.uid,
-            topography=workspace.get_entity("elev")[0].uid,
+            topography=topo,
             bxx_channel=bxx_data.uid,
             bxx_uncertainty=0.1,
             byy_channel=byy_data.uid,
             byy_uncertainty=0.2,
             bzz_channel=bzz_data.uid,
             bzz_uncertainty=0.3,
+            mesh=mesh.uid,
             starting_model=0.0,
             tile_spatial=2,
             z_from_topo=True,
@@ -138,6 +157,20 @@ def test_save_data(tmp_path):
     data = InversionData(ws, params, window)
 
     assert len(data.entity.vertices) > 0
+
+
+def test_has_tensor():
+    assert InversionData.check_tensor(["Gxx"])
+    assert InversionData.check_tensor(["Gxy"])
+    assert InversionData.check_tensor(["Gxz"])
+    assert InversionData.check_tensor(["Gyy"])
+    assert InversionData.check_tensor(["Gyx"])
+    assert InversionData.check_tensor(["Gyz"])
+    assert InversionData.check_tensor(["Gzz"])
+    assert InversionData.check_tensor(["Gzx"])
+    assert InversionData.check_tensor(["Gzy"])
+    assert InversionData.check_tensor(["Gxx", "Gyy", "tmi"])
+    assert not InversionData.check_tensor(["tmi"])
 
 
 def test_get_uncertainty_component(tmp_path):

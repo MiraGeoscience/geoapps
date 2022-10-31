@@ -36,6 +36,7 @@ class OctreeDriver:
 
         else:
             print(f"Result exported to: {self.params.geoh5.h5file}")
+
         return octree
 
     @staticmethod
@@ -93,7 +94,6 @@ class OctreeDriver:
 if __name__ == "__main__":
     file = sys.argv[1]
     params_class = OctreeParams(InputFile.read_ui_json(file))
-    params_class.geoh5.close()
 
     with params_class.geoh5.open(mode="r+"):
         driver = OctreeDriver(params_class)

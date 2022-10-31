@@ -45,6 +45,9 @@ default_ui_json.update(
                 "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
                 "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
                 "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+                "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+                "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+                "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
             ],
             "value": None,
         },
@@ -97,6 +100,7 @@ default_ui_json.update(
             "value": "Octree_Mesh",
         },
         "conda_environment": "geoapps",
+        "workspace_geoh5": None,
         "run_command": "geoapps.octree_creation.driver",
     }
 )
@@ -111,6 +115,9 @@ template_dict = {
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+            "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
         ],
         "value": None,
     },

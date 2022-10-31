@@ -1,0 +1,68 @@
+[tool.poetry]
+name = "geoapps"
+version = "0.9.0"
+description = "Open-sourced Applications in Geoscience"
+authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
+repository = "https://github.com/MiraGeoscience/geoapps"
+documentation = "https://geoapps.readthedocs.io/en/latest/"
+homepage = "https://mirageoscience.com"
+readme = "README.md"
+keywords = ["geology", "geophysics", "earth sciences"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Natural Language :: English",
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+dask = {version = "2022.*", extras = ["distributed"]}
+distributed = "2022.*"
+discretize = "~0.7.4" # also in simpeg
+fsspec = "2022.*" # also in simpeg
+matplotlib = "^3.5.1" # also in simpeg and geoana
+numpy = "!=1.19.4, ^1.21.5" # also in simpeg and geoana
+pandas = "^1.3.5" # also in simpeg
+scikit-learn = "^1.0.2" # also in simpeg
+scipy = "^1.7.3" # also in simpeg and geoana
+tqdm = "^4.64.0"
+
+## "soft" dependencies
+fiona = {version = "^1.8.21", optional = true}
+gdal = {version = "^3.5.1", optional = true}
+ipyfilechooser = {version = "~0.6.0", optional = true}
+ipywidgets = {version = "^7.6.5", optional = true}
+plotly = {version = "^5.8.0", optional = true}
+scikit-image = {version = "~0.19.2", optional = true}
+jupyter-dash = {version = "^0.4.2", optional = true}
+dash-daq = {version = "^0.5.0", optional = true}
+
+## indirect dependencies, forcing them here for installation through Conda not pip
+empymod = "^2.1.3" # from simpeg and geoana
+geoana = "~0.0.6" # from simpeg
+h5py = "^3.2.1" # from geoh5py
+mkl = "2022.*" # from simpeg
+properties = "~0.6.1" # from simpeg and geoana
+pydiso = "~0.0.3" # from simpeg
+pymatsolver = "~0.2.0" # from simpeg
+utm = "~0.7.0"
+zarr = "^2.8.1" # from simpgeg using Dask
+
+## pip dependencies
+# to be specified to work with conda-lock
+# - from PyPI: my_package = { version = "1.2.3", source = "pypi" }
+# - from URL:
+#   - for a tags: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.zip#sha256=None" }
+#   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=None" }
+# Note - conda-lock does not support the syntaxe: my_package = { git = ... }
+#        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }

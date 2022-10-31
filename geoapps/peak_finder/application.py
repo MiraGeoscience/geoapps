@@ -21,6 +21,7 @@ from geoh5py.shared import Entity
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
+from geoapps.base.application import BaseApplication
 from geoapps.base.selection import LineOptions, ObjectDataSelection
 from geoapps.peak_finder.constants import (
     app_initializer,
@@ -767,15 +768,8 @@ class PeakFinder(ObjectDataSelection):
         """
         line_data = self.workspace.get_entity(self.lines.data.value)[0]
 
-        if isinstance(line_data, ReferencedData):
-            line_id = [
-                key
-                for key, value in line_data.value_map.map.items()
-                if value == line_id
-            ]
-
-            if line_id:
-                line_id = line_id[0]
+        if not isinstance(line_data, ReferencedData):
+            return
 
         indices = np.where(np.asarray(line_data.values) == line_id)[0]
 
@@ -884,7 +878,7 @@ class PeakFinder(ObjectDataSelection):
             child.children[0].options = self.data.options
 
         for aem_system, specs in self.em_system_specs.items():
-            if any(
+            if specs["flag"] is not None and any(
                 [specs["flag"] in channel for channel in self._survey.get_data_list()]
             ):
                 if aem_system in self.system.options:
@@ -1304,9 +1298,11 @@ class PeakFinder(ObjectDataSelection):
         p_g_uid = {p_g.uid: p_g.name for p_g in param_dict["objects"].property_groups}
 
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
-        with self.get_output_workspace(
-            self.export_directory.selected_path, temp_geoh5
-        ) as new_workspace:
+
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
 
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
@@ -1343,14 +1339,14 @@ class PeakFinder(ObjectDataSelection):
         if hasattr(self.lines, "anomalies"):
             self.center.value = self.group_display.value
 
-    @staticmethod
-    def run(params, output_group=None):
+    @classmethod
+    def run(cls, params: PeakFinderParams):
         """
         Create an octree mesh from input values
         """
-        params.geoh5.close()
         driver = PeakFinderDriver(params)
-        driver.run(output_group)
+        with params.geoh5.open(mode="r+"):
+            driver.run()
 
     def show_decay_trigger(self, _):
         """

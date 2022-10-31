@@ -20,9 +20,8 @@ from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 
 from geoapps.iso_surfaces.params import IsoSurfacesParams
-from geoapps.shared_utils.utils import rotate_xy, weighted_average
+from geoapps.shared_utils.utils import get_contours, rotate_xyz, weighted_average
 from geoapps.utils.formatters import string_name
-from geoapps.utils.plotting import input_string_2_float
 
 
 class IsoSurfacesDriver:
@@ -31,11 +30,17 @@ class IsoSurfacesDriver:
 
     def run(self):
         """
-        Create iso surfaces from input values
+        Create iso surfaces from input values.
         """
-        levels = input_string_2_float(self.params.contours)
+        levels = get_contours(
+            self.params.interval_min,
+            self.params.interval_max,
+            self.params.interval_spacing,
+            self.params.fixed_contours,
+        )
 
-        if levels is None:
+        if len(levels) < 1:
+
             return
 
         print("Starting the isosurface creation.")
@@ -64,6 +69,7 @@ class IsoSurfacesDriver:
             self.params.monitoring_directory
         ):
             monitored_directory_copy(self.params.monitoring_directory, container)
+
         print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
 
         return result
@@ -72,7 +78,7 @@ class IsoSurfacesDriver:
     def iso_surface(
         entity: ObjectBase,
         values: np.ndarray,
-        levels: str,
+        levels: list,
         resolution: float = 100,
         max_distance: float = np.inf,
     ):
@@ -171,7 +177,7 @@ class IsoSurfacesDriver:
                     vertices += [F(verts[:, i])]
 
                 if isinstance(entity, BlockModel):
-                    vertices = rotate_xy(
+                    vertices = rotate_xyz(
                         np.vstack(vertices).T, [0, 0, 0], entity.rotation
                     )
                     vertices[:, 0] += entity.origin["x"]
@@ -189,9 +195,12 @@ class IsoSurfacesDriver:
 
 
 if __name__ == "__main__":
+    print("Loading geoh5 file . . .")
     file = sys.argv[1]
     params_class = IsoSurfacesParams(InputFile.read_ui_json(file))
     driver = IsoSurfacesDriver(params_class)
 
+    print("Loaded. Running iso surface creation . . .")
     with params_class.geoh5.open(mode="r+"):
         driver.run()
+    print("Done.")

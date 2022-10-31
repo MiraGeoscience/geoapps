@@ -4,10 +4,12 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
 from __future__ import annotations
 
 import numpy as np
 from geoh5py.data import Data
+from geoh5py.objects import DrapeModel
 from geoh5py.workspace import Workspace
 from SimPEG.utils.mat_utils import (
     cartesian2amplitude_dip_azimuth,
@@ -16,7 +18,7 @@ from SimPEG.utils.mat_utils import (
 )
 
 from geoapps.driver_base.params import BaseParams
-from geoapps.shared_utils.utils import rotate_xy, weighted_average
+from geoapps.shared_utils.utils import rotate_xyz, weighted_average
 
 from . import InversionMesh
 
@@ -117,7 +119,7 @@ class InversionModelCollection:
         self.is_sigma = (
             True
             if self.params.inversion_type
-            in ["direct current", "magnetotellurics", "tipper"]
+            in ["direct current", "direct current 2d", "magnetotellurics", "tipper"]
             else False
         )
         self.is_vector = (
@@ -270,8 +272,9 @@ class InversionModel:
                         np.ones(self.mesh.n_cells)
                         * self.params.inducing_field_declination
                     )
-                    if self.mesh.rotation is not None:
-                        declination += self.mesh.rotation["angle"]
+
+                if self.mesh.rotation is not None:
+                    declination += self.mesh.rotation["angle"]
 
                 inclination[np.isnan(inclination)] = 0
                 declination[np.isnan(declination)] = 0
@@ -313,9 +316,9 @@ class InversionModel:
         """
         if self.is_vector:
             return mkvc(
-                self.model.reshape((-1, 3), order="F")[self.mesh.octree_permutation, :]
+                self.model.reshape((-1, 3), order="F")[self.mesh.permutation, :]
             )
-        return self.model[self.mesh.octree_permutation]
+        return self.model[self.mesh.permutation]
 
     def permute_2_treemesh(self, model):
         """
@@ -325,7 +328,7 @@ class InversionModel:
         :param model: octree sorted model
         :return: Vector of model values reordered for TreeMesh.
         """
-        return model[np.argsort(self.mesh.octree_permutation)]
+        return model[np.argsort(self.mesh.permutation)]
 
     def save_model(self):
         """Resort model to the octree object's ordering and save to workspace."""
@@ -411,14 +414,17 @@ class InversionModel:
         if hasattr(parent, "centroids"):
             xyz_in = parent.centroids
             if self.mesh.rotation is not None:
-                xyz_out = rotate_xy(
+                xyz_out = rotate_xyz(
                     xyz_out, self.mesh.rotation["origin"], self.mesh.rotation["angle"]
                 )
 
         else:
             xyz_in = parent.vertices
 
-        return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
+        if (xyz_out.shape[1]) == 2 and isinstance(parent, DrapeModel):
+            return obj[np.argsort(self.mesh.permutation)]
+        else:
+            return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
 
     @property
     def model_type(self):
