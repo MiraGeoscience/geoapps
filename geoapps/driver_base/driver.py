@@ -7,14 +7,19 @@
 
 from __future__ import annotations
 
+import os
 from abc import ABC, abstractmethod
 
 from geoh5py.ui_json import InputFile
+from param_sweeps.generate import generate
 
 from geoapps.driver_base.params import BaseParams
 
 
 class BaseDriver(ABC):
+
+    _params_class = BaseParams
+
     def __init__(self, params: BaseParams):
         self.params = params
 
@@ -23,9 +28,18 @@ class BaseDriver(ABC):
         """Run the application."""
         raise NotImplementedError
 
-    @staticmethod
-    def drive_or_sweep(filepath):
+    @classmethod
+    def drive_or_sweep(cls, filepath):
+        filepath = os.path.abspath(filepath)
         ifile = InputFile.read_ui_json(filepath)
-        sweep = getattr(ifile.data, "sweep", None)
-        if sweep:
-            pass
+        generate_sweep = ifile.data.get("generate_sweep", None)
+        if generate_sweep:
+            ifile.data["generate_sweep"] = False
+            name = os.path.basename(filepath)
+            path = os.path.dirname(filepath)
+            ifile.write_ui_json(name=name, path=path)
+            generate(filepath)
+        else:
+            params = cls._params_class(ifile)
+            driver = cls(params)
+            driver.run()

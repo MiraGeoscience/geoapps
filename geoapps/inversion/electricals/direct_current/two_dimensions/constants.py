@@ -15,7 +15,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "SimPEG Direct Current inversion",
+    "title": "Direct Current inversion",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -99,7 +99,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "SimPEG Direct Current Forward",
+    "title": "Direct Current Forward",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -170,19 +170,19 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Direct Current inversion",
+    "title": "Direct Current inversion",
     "inversion_type": "direct current 2d",
     "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
-        "group": "Survey",
+        "group": "Data",
         "main": True,
         "label": "Line field",
         "parent": "data_object",
         "value": None,
     },
     "line_id": {
-        "group": "Survey",
+        "group": "Data",
         "main": True,
         "min": 1,
         "label": "Line number",
@@ -331,4 +331,5 @@ app_initializer = {
     "receivers_offset_x": 0.0,
     "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
+    "out_grop": "DCInversion",
 }
