@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 22e1ae619feafd36a5a5920bf2aa3c34a88538d66f5d403b16f3ff55559fe4bc
-    osx-64: a9edfc86695f9078eeb0af9a7471242ac9c9c7f858bf82b2c9c85d59443e9863
-    win-64: 7f06b5caf87f6f6a4da8726cbcb66c1580f73e802e69c2be27edb0024f8ffa5e
+    linux-64: 8ecdd0d8c7d7d17c0e3a4ad1c0eb249ab1ddaf023e1e0ef702bac2e9095ad55c
+    osx-64: 8a80e23af8fa4dbfcd3a5f529e2618075ca38860292ce44bdcc0815f3b34f846
+    win-64: 5ea9d9c263b785a8e81c144a01e560eb53aaf945ca8817591f16f443fe302144
   platforms:
   - win-64
   - osx-64
@@ -3416,7 +3416,6 @@ package:
   version: 38.0.2
 - category: main
   dependencies:
-    click: '>=7.0'
     cloudpickle: '>=1.1.1'
     fsspec: '>=0.6.0'
     packaging: '>=20.0'
@@ -3425,14 +3424,14 @@ package:
     pyyaml: '>=5.3.1'
     toolz: '>=0.8.2'
   hash:
-    md5: 6f837aa0cbc910b39207fe5d97dfdf1e
-    sha256: 805cedd9d20088ae705467ee0fc7202ae1152c38fd747f110f797a7d2f9c47cf
+    md5: 9cc22a4ec18254035da0c88a04b73a5d
+    sha256: 462be037a4e5d796ea251c9177b91308e07c76d1dfe78cbff853eef0d6bebf56
   manager: conda
   name: dask-core
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.10.2-pyhd8ed1ab_0.tar.bz2
-  version: 2022.10.2
+  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.10.0-pyhd8ed1ab_2.tar.bz2
+  version: 2022.10.0
 - category: main
   dependencies:
     brotli: ''
@@ -4281,7 +4280,7 @@ package:
     click: '>=6.6'
     cloudpickle: '>=1.5.0'
     cytoolz: '>=0.8.2'
-    dask-core: '>=2022.10.2,<2022.10.3.0a0'
+    dask-core: '>=2022.10.0,<2022.10.1.0a0'
     jinja2: ''
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
@@ -4296,14 +4295,14 @@ package:
     urllib3: ''
     zict: '>=0.1.3'
   hash:
-    md5: 7ffdc4f6105bde64a844bbb57653293e
-    sha256: 89af5ba4a35f4780676aa757ec0396f1ccb7f5cfd528cf9d78338c0fa764ade8
+    md5: 3dc3dceb9ad4ce190fcd4e31d903ac5f
+    sha256: 5cad2f5416814c4c72504741594f9167f2d49b79e3c5316545f33135b53da676
   manager: conda
   name: distributed
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.10.2-pyhd8ed1ab_0.tar.bz2
-  version: 2022.10.2
+  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.10.0-pyhd8ed1ab_2.tar.bz2
+  version: 2022.10.0
 - category: full
   dependencies:
     __linux: ''
@@ -7690,7 +7689,6 @@ package:
   version: 38.0.2
 - category: main
   dependencies:
-    click: '>=7.0'
     cloudpickle: '>=1.1.1'
     fsspec: '>=0.6.0'
     packaging: '>=20.0'
@@ -7699,14 +7697,14 @@ package:
     pyyaml: '>=5.3.1'
     toolz: '>=0.8.2'
   hash:
-    md5: 6f837aa0cbc910b39207fe5d97dfdf1e
-    sha256: 805cedd9d20088ae705467ee0fc7202ae1152c38fd747f110f797a7d2f9c47cf
+    md5: 9cc22a4ec18254035da0c88a04b73a5d
+    sha256: 462be037a4e5d796ea251c9177b91308e07c76d1dfe78cbff853eef0d6bebf56
   manager: conda
   name: dask-core
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.10.2-pyhd8ed1ab_0.tar.bz2
-  version: 2022.10.2
+  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.10.0-pyhd8ed1ab_2.tar.bz2
+  version: 2022.10.0
 - category: main
   dependencies:
     brotli: ''
@@ -8539,7 +8537,7 @@ package:
     click: '>=6.6'
     cloudpickle: '>=1.5.0'
     cytoolz: '>=0.8.2'
-    dask-core: '>=2022.10.2,<2022.10.3.0a0'
+    dask-core: '>=2022.10.0,<2022.10.1.0a0'
     jinja2: ''
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
@@ -8554,14 +8552,14 @@ package:
     urllib3: ''
     zict: '>=0.1.3'
   hash:
-    md5: 7ffdc4f6105bde64a844bbb57653293e
-    sha256: 89af5ba4a35f4780676aa757ec0396f1ccb7f5cfd528cf9d78338c0fa764ade8
+    md5: 3dc3dceb9ad4ce190fcd4e31d903ac5f
+    sha256: 5cad2f5416814c4c72504741594f9167f2d49b79e3c5316545f33135b53da676
   manager: conda
   name: distributed
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.10.2-pyhd8ed1ab_0.tar.bz2
-  version: 2022.10.2
+  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.10.0-pyhd8ed1ab_2.tar.bz2
+  version: 2022.10.0
 - category: full
   dependencies:
     __osx: ''
@@ -12022,7 +12020,6 @@ package:
   version: 38.0.2
 - category: main
   dependencies:
-    click: '>=7.0'
     cloudpickle: '>=1.1.1'
     fsspec: '>=0.6.0'
     packaging: '>=20.0'
@@ -12031,14 +12028,14 @@ package:
     pyyaml: '>=5.3.1'
     toolz: '>=0.8.2'
   hash:
-    md5: 6f837aa0cbc910b39207fe5d97dfdf1e
-    sha256: 805cedd9d20088ae705467ee0fc7202ae1152c38fd747f110f797a7d2f9c47cf
+    md5: 9cc22a4ec18254035da0c88a04b73a5d
+    sha256: 462be037a4e5d796ea251c9177b91308e07c76d1dfe78cbff853eef0d6bebf56
   manager: conda
   name: dask-core
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.10.2-pyhd8ed1ab_0.tar.bz2
-  version: 2022.10.2
+  url: https://conda.anaconda.org/conda-forge/noarch/dask-core-2022.10.0-pyhd8ed1ab_2.tar.bz2
+  version: 2022.10.0
 - category: main
   dependencies:
     brotli: ''
@@ -12917,7 +12914,7 @@ package:
     click: '>=6.6'
     cloudpickle: '>=1.5.0'
     cytoolz: '>=0.8.2'
-    dask-core: '>=2022.10.2,<2022.10.3.0a0'
+    dask-core: '>=2022.10.0,<2022.10.1.0a0'
     jinja2: ''
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
@@ -12932,14 +12929,14 @@ package:
     urllib3: ''
     zict: '>=0.1.3'
   hash:
-    md5: 7ffdc4f6105bde64a844bbb57653293e
-    sha256: 89af5ba4a35f4780676aa757ec0396f1ccb7f5cfd528cf9d78338c0fa764ade8
+    md5: 3dc3dceb9ad4ce190fcd4e31d903ac5f
+    sha256: 5cad2f5416814c4c72504741594f9167f2d49b79e3c5316545f33135b53da676
   manager: conda
   name: distributed
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.10.2-pyhd8ed1ab_0.tar.bz2
-  version: 2022.10.2
+  url: https://conda.anaconda.org/conda-forge/noarch/distributed-2022.10.0-pyhd8ed1ab_2.tar.bz2
+  version: 2022.10.0
 - category: full
   dependencies:
     attrs: '>=17'
