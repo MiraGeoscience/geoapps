@@ -43,8 +43,8 @@ class LineSweepDriver(SweepDriver):
         )
         with self.workspace.open(mode="r"):
             lines = self.worker_params.line_object.values
-        ifile.data["line_id_start"] = lines.min()
-        ifile.data["line_id_end"] = lines.max()
+        ifile.data["line_id_start"] = int(lines.min())
+        ifile.data["line_id_end"] = int(lines.max())
         ifile.data["line_id_n"] = len(np.unique(lines))
         return SweepParams.from_input_file(ifile)
 
