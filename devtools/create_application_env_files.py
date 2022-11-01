@@ -29,7 +29,7 @@ from run_conda_lock import per_platform_env
 
 _archive_ext = ".tar.gz"
 
-app_name = "my-app"
+app_name = "geoapps"
 
 
 def create_standalone_geoapps_lock(git_url: str):
