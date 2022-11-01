@@ -16,6 +16,8 @@ Usage: from the conda base environment, at the root of the project:
 To prepare the conda base environment, see devtools/setup-conda-base.bat
 """
 
+from __future__ import annotations
+
 import argparse
 import re
 import subprocess
@@ -81,7 +83,7 @@ def add_application(git_url: str, lock_file: Path, output_file: Path):
                     patched.write(application_pip)
 
 
-def build_git_url(args) -> str:
+def git_url_with_ref(args) -> tuple[str, str]:
     assert args.repo_url
     if args.ref_type == "sha":
         ref = args.ref
@@ -91,10 +93,14 @@ def build_git_url(args) -> str:
         ref = f"refs/heads/{args.ref}"
     else:
         raise RuntimeError(f"Unhandled reference type ${args.ref_type}")
-    return f"{args.repo_url}/archive/{ref}{_archive_ext}"
+    return args.repo_url, ref
 
 
-def git_url():
+def build_git_url(repo_url: str, ref: str) -> str:
+    return f"{repo_url}/archive/{ref}{_archive_ext}"
+
+
+def get_git_url():
     process = subprocess.run(
         ["git", "config", "--get-regexp", "remote.*.url"],
         check=True,
@@ -106,14 +112,14 @@ def git_url():
     for line in process.stdout.splitlines():
         match = mira_remote_re.match(line)
         if match:
-            segment = match[1].removesuffix(".git")
+            segment = match[1][:-4] if match[1].endswith(".git") else match[1]
             return f"https://github.com/{segment}"
         warnings.warn(
             "Could not detect the remote MiraGeoscience github repository for this application."
         )
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Creates locked environment files for Conda to install application within the environment."
     )
@@ -124,17 +130,22 @@ if __name__ == "__main__":
     parser.add_argument(
         "--url",
         dest="repo_url",
-        default=git_url(),
+        default=get_git_url(),
         help="the URL of the git repo for the application pip dependency",
     )
 
-    git_download_url = build_git_url(parser.parse_args())
-    basename_match = re.match(r".*/([^/\s]+)\.git/.*$", git_download_url)
+    repo_url, ref_path = git_url_with_ref(parser.parse_args())
+    basename_match = re.match(r".*/([^/]*)$", repo_url)
     assert basename_match
     basename = basename_match[1]
+    git_download_url = build_git_url(repo_url, ref_path)
     checksum = computeSha256(git_download_url, basename)
     checked_git_url = f"{git_download_url}#sha256={checksum}"
 
     create_standalone_geoapps_lock(checked_git_url)
     create_standalone_simpeg_lock(checked_git_url)
     create_standalone_lock(checked_git_url)
+
+
+if __name__ == "__main__":
+    main()
