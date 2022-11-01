@@ -15,7 +15,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current inversion",
+    "title": "Direct Current 2d inversion",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -99,7 +99,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current Forward",
+    "title": "Direct Current 2d forward",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
