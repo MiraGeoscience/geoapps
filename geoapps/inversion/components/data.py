@@ -130,6 +130,7 @@ class InversionData(InversionLocations):
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
+        self.has_tensor = InversionData.check_tensor(self.components)
         self.offset, self.radar = self.params.offset()
         self.locations = super().get_locations(self.params.data_object)
         self.mask = filter_xy(
@@ -415,13 +416,10 @@ class InversionData(InversionLocations):
             if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
             elif self.params.inversion_type in ["magnetotellurics"]:
+                normalizations[comp] = -1.0
+            elif self.params.inversion_type in ["tipper"]:
                 if "imag" in comp:
                     normalizations[comp] = -1.0
-            elif self.params.inversion_type in ["tipper"]:
-                if "real" in comp:
-                    normalizations[comp] = -1.0
-            if normalizations[comp] == -1.0:
-                print(f"Sign flip for component {comp}.")
 
         return normalizations
 
@@ -535,3 +533,10 @@ class InversionData(InversionLocations):
         ind[self.global_map] = False
         data[ind] = np.nan
         return data
+
+    @staticmethod
+    def check_tensor(channels):
+
+        tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
+        has_tensor = lambda c: any(k in c for k in tensor_components)
+        return any(has_tensor(c) for c in channels)

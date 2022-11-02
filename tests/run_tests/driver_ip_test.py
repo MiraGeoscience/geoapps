@@ -51,10 +51,8 @@ def test_ip_fwr_run(
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=topography.uid,
-        resolution=0.0,
         z_from_topo=True,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
         conductivity_model=1e-2,
     )
@@ -79,7 +77,7 @@ def test_ip_run(
 
         potential = geoh5.get_entity("Iteration_0_ip")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         # Run the inverse
         np.random.seed(0)
@@ -87,9 +85,9 @@ def test_ip_run(
             geoh5=geoh5,
             mesh=mesh.uid,
             topography_object=topography.uid,
-            resolution=0.0,
             data_object=potential.parent.uid,
             conductivity_model=1e-2,
+            reference_model=1e-6,
             starting_model=1e-6,
             s_norm=0.0,
             x_norm=0.0,
@@ -107,6 +105,7 @@ def test_ip_run(
             upper_bound=0.1,
             tile_spatial=n_lines,
             store_sensitivities="ram",
+            coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
     driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))

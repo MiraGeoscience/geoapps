@@ -21,8 +21,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.152097,
-    "phi_d": 9.878,
-    "phi_m": 79.91,
+    "phi_d": 5.578,
+    "phi_m": 110.1,
 }
 
 np.random.seed(0)
@@ -53,8 +53,8 @@ def test_dc_fwr_run(
         topography_object=topography.uid,
         z_from_topo=True,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
+        resolution=None,
     )
     params.workpath = tmp_path
     fwr_driver = InversionDriver(params)
@@ -86,6 +86,7 @@ def test_dc_run(
             topography_object=topography.uid,
             data_object=potential.parent.uid,
             starting_model=1e-2,
+            reference_model=1e-2,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -102,6 +103,7 @@ def test_dc_run(
             upper_bound=10,
             tile_spatial=n_lines,
             store_sensitivities="ram",
+            coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
@@ -138,4 +140,4 @@ if __name__ == "__main__":
     assert (
         residual < 20.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. You are so special!")
+    print("Conductivity model is within 20% of the answer. You are so special!")

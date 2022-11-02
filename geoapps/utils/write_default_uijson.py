@@ -9,8 +9,6 @@ from __future__ import annotations
 
 import argparse
 
-from geoh5py.ui_json import InputFile
-
 import geoapps
 from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.clustering.params import ClusteringParams
@@ -173,19 +171,25 @@ def write_default_uijson(path, use_initializers=False):
         "direct_current_inversion_2d.ui.json": DirectCurrent2DParams(
             validate=False, **dc_2d_init
         ),
+        "direct_current_forward_2d.ui.json": DirectCurrent2DParams(
+            forward_only=True, validate=False
+        ),
         "direct_current_inversion_3d.ui.json": DirectCurrent3DParams(
             validate=False, **dc_3d_init
         ),
-        "direct_current_forward.ui.json": DirectCurrent3DParams(
+        "direct_current_forward_3d.ui.json": DirectCurrent3DParams(
             forward_only=True, validate=False
         ),
         "induced_polarization_inversion_2d.ui.json": InducedPolarization2DParams(
             validate=False, **ip_2d_init
         ),
+        "induced_polarization_forward_2d.ui.json": InducedPolarization2DParams(
+            forward_only=True, validate=False
+        ),
         "induced_polarization_inversion_3d.ui.json": InducedPolarization3DParams(
             validate=False, **ip_3d_init
         ),
-        "induced_polarization_forward.ui.json": InducedPolarization3DParams(
+        "induced_polarization_forward_3d.ui.json": InducedPolarization3DParams(
             forward_only=True, validate=False
         ),
         "magnetotellurics_inversion.ui.json": MagnetotelluricsParams(
@@ -211,15 +215,6 @@ def write_default_uijson(path, use_initializers=False):
 
     for filename, params in filedict.items():
         params.write_input_file(name=filename, path=path, validate=False)
-
-    from geoapps.inversion.constants import default_octree_ui_json, octree_defaults
-
-    ifile = InputFile(
-        ui_json=default_octree_ui_json,
-        data=octree_defaults,
-        validation_options={"disabled": True},
-    )
-    ifile.write_ui_json(name="inversion_mesh.ui.json", path=".")
 
 
 if __name__ == "__main__":
