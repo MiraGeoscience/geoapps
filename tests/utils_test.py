@@ -253,8 +253,8 @@ def test_extract_dcip_survey(tmp_path):
     potentials.ab_cell_id = np.hstack(current_id).astype("int32")
     potentials.current_electrodes = currents
     currents.potential_electrodes = potentials
-    extract_dcip_survey(workspace, potentials, parts, 4, "test_survey_line")
-    assert workspace.get_entity("test_survey_line 4")[0] is not None
+    extract_dcip_survey(workspace, potentials, parts, 3, "test_survey_line")
+    assert workspace.get_entity("test_survey_line 3")[0] is not None
 
 
 def test_split_dcip_survey(tmp_path):

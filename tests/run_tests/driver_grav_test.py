@@ -49,7 +49,6 @@ def test_gravity_fwr_run(
         resolution=0.0,
         z_from_topo=False,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
     fwr_driver = InversionDriver(params)
