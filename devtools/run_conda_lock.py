@@ -101,7 +101,7 @@ def patch_none_hash(file: Path) -> None:
     """
 
     none_hash_re = re.compile(r"(.*)(?:\s--hash=md5:None|#sha256=None)\b(.*)")
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    with tempfile.TemporaryDirectory(dir=str(file.parent)) as tmpdirname:
         patched_file = Path(tmpdirname) / file.name
         with open(patched_file, "w") as patched:
             with open(file) as f:
