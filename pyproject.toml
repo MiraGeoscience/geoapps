@@ -64,7 +64,7 @@ zarr = "^2.8.1" # from simpgeg using Dask
 # - from URL:
 #   - for a tags: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.zip#sha256=None" }
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=None" }
-# Note - conda-lock does not support the syntaxe: my_package = { git = ... }
+# Note - conda-lock does not support the syntax: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 geoh5py = { version = "0.5.0", source = "pypi" }
 simpeg_archive = {version = "0.9.1.dev5", source = "pypi"}
