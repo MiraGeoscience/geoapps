@@ -63,12 +63,12 @@ def create_standalone_lock(git_url: str, extras=[], suffix=""):
 def add_application(git_url: str, lock_file: Path, output_file: Path):
     print(f"# Patching {lock_file} for standalone environment ...")
     pip_dependency_re = re.compile(r"^\s*- (geoh5py|mira-simpeg|simpeg-archive)\s")
-    sha_re = re.compile(r".*\s--hash=\S*")
+    sha_re = re.compile(r"(.*)\s--hash=\S*")
     pip_dependency_lines = []
     with open(lock_file) as input_file:
         for line in input_file:
             if pip_dependency_re.match(line):
-                patched_line = sha_re.sub("", line)
+                patched_line = sha_re.sub(r"\1", line)
                 assert len(patched_line)
                 pip_dependency_lines.append(patched_line)
 
