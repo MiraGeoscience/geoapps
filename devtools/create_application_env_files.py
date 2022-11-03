@@ -147,7 +147,6 @@ def main():
 
     create_standalone_geoapps_lock(checked_git_url)
     create_standalone_simpeg_lock(checked_git_url)
-    create_standalone_lock(checked_git_url)
 
 
 if __name__ == "__main__":
