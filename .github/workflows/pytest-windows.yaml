@@ -45,7 +45,7 @@ jobs:
         run: |
           pytest --cov=${source_dir} --cov-report=xml --cov-branch
       - name: Codecov
-        if: ${{ success() && matrix.python_ver == '3.10' }}
+        if: ${{ success() && matrix.python_ver == '3.9' }}
         uses: codecov/codecov-action@v3
         with:
           name: GitHub

@@ -17,7 +17,7 @@ jobs:
     runs-on: windows-latest
     env:
       releaseFullEnv: false
-      python_ver: 3.10
+      python_ver: '3.9'
       PYTHONUTF8: 1
       ARTIFACT_NAME: geoapps.conda-env
       CONDA_ENV_FILE_GLOB_PATTERN: conda-py-*-geoapps*.lock.yml
@@ -38,7 +38,7 @@ jobs:
       - name: Activate conda base env
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: environments\env-python-{{ env.python_ver }}.yml
+          environment-file: environments\env-python-${{ env.python_ver }}.yml
           environment-name: conda-lock
           cache-downloads: true
           cache-env: true
