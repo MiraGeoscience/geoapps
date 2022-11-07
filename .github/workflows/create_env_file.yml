@@ -17,10 +17,10 @@ jobs:
     runs-on: windows-latest
     env:
       releaseFullEnv: false
+      python_ver: '3.9'
       PYTHONUTF8: 1
       ARTIFACT_NAME: geoapps.conda-env
       CONDA_ENV_FILE_GLOB_PATTERN: conda-py-*-geoapps*.lock.yml
-      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64.lock.yml
     outputs:
       releaseFullEnv: ${{ env.releaseFullEnv }}
       full_env_file: ${{ steps.create-env-file.outputs.full_env_file }}
@@ -38,7 +38,7 @@ jobs:
       - name: Activate conda base env
         uses: mamba-org/provision-with-micromamba@main
         with:
-          environment-file: environments\env-python-3.9.yml
+          environment-file: environments\env-python-${{ env.python_ver }}.yml
           environment-name: conda-lock
           cache-downloads: true
           cache-env: true
@@ -50,8 +50,8 @@ jobs:
           [ $GITHUB_REF_TYPE == tag ] && REF_TYPE=tag || REF_TYPE=sha
           [ $REF_TYPE == tag ] && REF=${GITHUB_REF_NAME} || REF=${GITHUB_SHA}
           python devtools/create_application_env_files.py $REF_TYPE $REF --url $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
-          echo "full_env_file=conda-py-3.9-win-64-geoapps.lock.yml" >> $GITHUB_OUTPUT
-          echo "simpeg_env_file=conda-py-3.9-win-64-geoapps-simpeg.lock.yml" >> $GITHUB_OUTPUT
+          echo "full_env_file=conda-py-${{ env.python_ver }}-win-64-geoapps.lock.yml" >> $GITHUB_OUTPUT
+          echo "simpeg_env_file=conda-py-${{ env.python_ver }}-win-64-geoapps-simpeg.lock.yml" >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}

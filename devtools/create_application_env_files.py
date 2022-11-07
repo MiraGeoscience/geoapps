@@ -62,19 +62,22 @@ def create_standalone_lock(git_url: str, extras=[], suffix=""):
 
 def add_application(git_url: str, lock_file: Path, output_file: Path):
     print(f"# Patching {lock_file} for standalone environment ...")
-    pip_dependency_re = re.compile(r"^\s*- (geoh5py|simpeg|simpeg-archive) @")
+    pip_dependency_re = re.compile(r"^\s*- (geoh5py|mira-simpeg|simpeg-archive)\s")
+    sha_re = re.compile(r"(.*)\s--hash=\S*")
     pip_dependency_lines = []
-    with open(lock_file) as input:
-        for line in input:
+    with open(lock_file) as input_file:
+        for line in input_file:
             if pip_dependency_re.match(line):
-                pip_dependency_lines.append(line)
+                patched_line = sha_re.sub(r"\1", line)
+                assert len(patched_line)
+                pip_dependency_lines.append(patched_line)
 
     pip_section_re = re.compile(r"^\s*- pip:\s*$")
     application_pip = f"    - {app_name} @ {git_url}\n"
     print(f"# Patched file: {output_file}")
     with open(output_file, "w") as patched:
-        with open(lock_file) as input:
-            for line in input:
+        with open(lock_file) as input_file:
+            for line in input_file:
                 if not pip_dependency_re.match(line):
                     patched.write(line)
                 if pip_section_re.match(line):
@@ -144,7 +147,6 @@ def main():
 
     create_standalone_geoapps_lock(checked_git_url)
     create_standalone_simpeg_lock(checked_git_url)
-    create_standalone_lock(checked_git_url)
 
 
 if __name__ == "__main__":

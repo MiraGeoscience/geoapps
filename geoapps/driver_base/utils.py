@@ -33,16 +33,16 @@ def running_mean(
 
     # Forward averaging
     if method in ["centered", "forward"]:
-        padd = np.r_[np.zeros(width + 1), values]
-        cumsum = np.cumsum(padd)
+        padded = np.r_[np.zeros(width + 1), values]
+        cumsum = np.cumsum(padded)
         mean += (cumsum[(width + 1) :] - cumsum[: (-width - 1)]) / (
             sum_weights[(width + 1) :] - sum_weights[: (-width - 1)]
         )
 
     # Backward averaging
     if method in ["centered", "backward"]:
-        padd = np.r_[np.zeros(width + 1), values[::-1]]
-        cumsum = np.cumsum(padd)
+        padded = np.r_[np.zeros(width + 1), values[::-1]]
+        cumsum = np.cumsum(padded)
         mean += (
             (cumsum[(width + 1) :] - cumsum[: (-width - 1)])
             / (sum_weights[(width + 1) :] - sum_weights[: (-width - 1)])
