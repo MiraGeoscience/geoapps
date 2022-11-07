@@ -8,13 +8,12 @@
 #  (see LICENSE file at the root of this source code package).
 
 """
-Creates cross platform lock files for each python version and per-platform conda environment files.
+Creates cross-platform lock files for each python version and per-platform conda environment files.
 
-Cross platform lock files are created at the root of the project.
+Cross-platform lock files are created at the root of the project.
 Per-platform conda environment files with and without dev dependencies, are placed under the `environments` sub-folder.
-They include an environment file for Python 3.9 with fewer dependencies for simpeg.
 
-Usage: from a the conda base environment, at the root of the project:
+Usage: from the conda base environment, at the root of the project:
 > python devtools/run_conda_lock.py
 
 To prepare the conda base environment, see devtools/setup-conda-base.bat
