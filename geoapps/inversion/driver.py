@@ -23,9 +23,11 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
+from param_sweeps.generate import generate
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
@@ -34,11 +36,18 @@ from geoapps.inversion.components import (
     InversionWindow,
 )
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.line_sweep import LineSweepDriver
 from geoapps.inversion.params import InversionBaseParams
 
 
-class InversionDriver:
+class InversionDriver(BaseDriver):
+
+    _params_class = InversionBaseParams  # pylint disable=E0601
+    _validations = None
+
     def __init__(self, params: InversionBaseParams, warmstart=True):
+        super().__init__(params)
+
         self.params = params
         self.warmstart = warmstart
         self.workspace = params.geoh5
@@ -214,6 +223,27 @@ class InversionDriver:
         self.running = True
         self.inversion.run(self.starting_model)
         self.logger.end()
+
+    @classmethod
+    def start(cls, filepath):
+        filepath = os.path.abspath(filepath)
+        ifile = InputFile.read_ui_json(filepath, validations=cls._validations)
+        generate_sweep = ifile.data.get("generate_sweep", None)
+        line_sweep = ifile.data.get("sweep", None)
+        if generate_sweep:
+            ifile.data["generate_sweep"] = False
+            name = os.path.basename(filepath)
+            path = os.path.dirname(filepath)
+            ifile.write_ui_json(name=name, path=path)
+            generate(filepath)
+        elif line_sweep:
+            params = cls._params_class(ifile)
+            driver = LineSweepDriver(params)
+            driver.run()
+        else:
+            params = cls._params_class(ifile)
+            driver = cls(params)
+            driver.run()
 
     def start_inversion_message(self):
 
@@ -483,8 +513,6 @@ def start_inversion(filepath=None, **kwargs) -> InversionDriver:
     params = ParamClass(input_file=input_file, **kwargs)
 
     if line_sweep:
-        from geoapps.inversion.line_sweep import LineSweepDriver
-
         driver = LineSweepDriver(params)
     else:
         driver = InversionDriver(params)
