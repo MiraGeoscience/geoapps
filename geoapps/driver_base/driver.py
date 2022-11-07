@@ -29,7 +29,7 @@ class BaseDriver(ABC):
         raise NotImplementedError
 
     @classmethod
-    def drive_or_sweep(cls, filepath):
+    def start(cls, filepath):
         filepath = os.path.abspath(filepath)
         ifile = InputFile.read_ui_json(filepath)
         generate_sweep = ifile.data.get("generate_sweep", None)

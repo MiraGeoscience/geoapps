@@ -567,6 +567,12 @@ default_ui_json = {
         "label": "Chunk by rows",
         "value": True,
     },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": True,
+        "value": False,
+    },
     "max_ram": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,

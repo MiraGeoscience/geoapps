@@ -298,9 +298,8 @@ class EdgeDetectionDriver(BaseDriver):
 if __name__ == "__main__":
     print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    # drive_or_sweep(file, EdgeDetectionDriver)
 
-    EdgeDetectionDriver.drive_or_sweep(file)
+    EdgeDetectionDriver.start(file)
 
     # TODO - need to generalize what we can of the logging
     # ifile = InputFile.read_ui_json(file)
