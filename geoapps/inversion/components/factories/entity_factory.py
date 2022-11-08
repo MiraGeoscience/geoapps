@@ -115,8 +115,9 @@ class EntityFactory(AbstractFactory):
         return entity
 
     def _build(self, inversion_data: InversionData):
+
         entity = inversion_data.create_entity(
-            "Data", self.params.data_object.vertices, geoh5_object=self.concrete_object
+            "Data", inversion_data.locations, geoh5_object=self.concrete_object
         )
 
         if np.any(~inversion_data.mask):
