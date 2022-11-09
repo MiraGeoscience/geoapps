@@ -158,3 +158,4 @@ get_custom_conda.bat
 /tests/dask-worker-space/
 /tests/run_tests/Temp/
 tests/**/*.geoh5
+/devtools/pyproject-sha.toml
