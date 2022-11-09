@@ -24,6 +24,7 @@ class ScatterPlotDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: ScatterPlotParams):
+        super().__init__(params)
         self.params: ScatterPlotParams = params
 
     def run(self):

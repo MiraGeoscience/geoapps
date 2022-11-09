@@ -14,7 +14,6 @@ import sys
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, ObjectBase, Surface
-from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
@@ -32,6 +31,7 @@ class IsoSurfacesDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: IsoSurfacesParams):
+        super().__init__(params)
         self.params: IsoSurfacesParams = params
 
     def run(self):

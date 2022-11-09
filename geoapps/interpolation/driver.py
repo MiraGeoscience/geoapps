@@ -28,6 +28,7 @@ class DataInterpolationDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: DataInterpolationParams):
+        super().__init__(params)
         self.params: DataInterpolationParams = params
 
     def run(self):

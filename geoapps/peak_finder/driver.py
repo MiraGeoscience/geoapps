@@ -16,7 +16,7 @@ from dask import compute, delayed
 from dask.diagnostics import ProgressBar
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import monitored_directory_copy
 from tqdm import tqdm
 
 from geoapps.driver_base.driver import BaseDriver
@@ -34,9 +34,10 @@ class PeakFinderDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: PeakFinderParams):
+        super().__init__(params)
         self.params: PeakFinderParams = params
 
-    def run(self, output_group=None):
+    def run(self):
 
         survey = self.params.objects
         prop_group = [
@@ -49,10 +50,9 @@ class PeakFinderDriver(BaseDriver):
         else:
             normalization = [1]
 
-        if output_group is None:
-            output_group = ContainerGroup.create(
-                self.params.geoh5, name=string_name(self.params.ga_group_name)
-            )
+        output_group = ContainerGroup.create(
+            self.params.geoh5, name=string_name(self.params.ga_group_name)
+        )
 
         line_field = self.params.line_field
         lines = np.unique(line_field.values)

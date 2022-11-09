@@ -23,7 +23,6 @@ import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
-from param_sweeps.generate import generate
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
@@ -38,16 +37,10 @@ from geoapps.inversion.components import (
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 
-# from geoapps.inversion import (
-#     GravityDriver, MagneticScalarDriver, MagneticVectorDriver, DirectCurrent3DDriver,
-#     DirectCurrent2DDriver, DirectCurrentPseudo3DDriver, InducedPolarization3DDriver,
-#     InducedPolarization2DDriver, MagnetotelluricsDriver, TipperDriver
-# )
-
 
 class InversionDriver(BaseDriver):
 
-    _params_class = InversionBaseParams  # pylint disable=E0601
+    _params_class = InversionBaseParams  # pylint: disable=E0601
     _validations = None
 
     def __init__(self, params: InversionBaseParams, warmstart=True):
@@ -456,14 +449,14 @@ if __name__ == "__main__":
         "tipper": TipperDriver,
     }
 
-    file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
+    filepath = sys.argv[1]
+    ifile = InputFile.read_ui_json(filepath)
     inversion_type = ifile.data["inversion_type"]
-    driver = DRIVER_MAP.get(inversion_type, None)
-    if driver is None:
+    inversion_driver = DRIVER_MAP.get(inversion_type, None)
+    if inversion_driver is None:
         msg = f"Inversion type {inversion_type} is not supported."
         msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
         raise NotImplementedError(msg)
 
-    driver.start(file)
+    inversion_driver.start(filepath)
     sys.stdout.close()

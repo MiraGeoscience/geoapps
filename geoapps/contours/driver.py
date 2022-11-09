@@ -32,6 +32,7 @@ class ContoursDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: ContoursParams):
+        super().__init__(params)
         self.params: ContoursParams = params
         self._unique_object = {}
 
