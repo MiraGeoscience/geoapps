@@ -145,7 +145,6 @@ class InversionData(InversionLocations):
             if any(np.isnan(self.radar)):
                 self.mask[np.isnan(self.radar)] = False
 
-        self.locations = self.locations[self.mask, :]
         self.observed = self.filter(self.observed)
         self.radar = self.filter(self.radar)
         self.uncertainties = self.filter(self.uncertainties)
