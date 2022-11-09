@@ -271,6 +271,7 @@ def test_edge_detection(tmp_path):
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
+        print([child for child in workspace.get_entity("Airborne_Gxx")])
         assert (
             len(
                 [

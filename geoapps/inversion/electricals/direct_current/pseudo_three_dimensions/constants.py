@@ -16,7 +16,7 @@ from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
     "title": "Direct Current 2d batch inversion",
-    "inversion_type": "direct current 2d",
+    "inversion_type": "direct current pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -90,7 +90,7 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentInversion",
-    "sweep": True,
+    "generate_sweep": False,
     "cleanup": True,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -102,7 +102,7 @@ inversion_defaults = {
 }
 forward_defaults = {
     "title": "Direct Current 2d batch forward",
-    "inversion_type": "direct current 2d",
+    "inversion_type": "direct current pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -138,6 +138,7 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentForward",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -173,7 +174,7 @@ forward_ui_json = {
 
 default_ui_json = {
     "title": "Direct Current inversion",
-    "inversion_type": "direct current 2d",
+    "inversion_type": "direct current pseudo 3d",
     "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
@@ -283,7 +284,6 @@ default_ui_json = {
     "detrend_type": None,
     "tile_spatial": 1,
     "out_group": {"label": "Results group name", "value": "direct_current"},
-    "sweep": True,
     "cleanup": {"label": "Clean directory", "value": True},
 }
 
@@ -295,7 +295,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["direct current 2d"],
+        "values": ["direct current pseudo 3d", "direct current 2d"],
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }

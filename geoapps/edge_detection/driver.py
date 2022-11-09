@@ -21,6 +21,7 @@ from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
 from geoapps.driver_base.driver import BaseDriver
+from geoapps.edge_detection.constants import validations
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
@@ -29,6 +30,7 @@ from geoapps.utils.formatters import string_name
 class EdgeDetectionDriver(BaseDriver):
 
     _params_class = EdgeDetectionParams
+    _validations = validations
 
     def __init__(self, params: EdgeDetectionParams):
         super().__init__(params)
@@ -296,16 +298,5 @@ class EdgeDetectionDriver(BaseDriver):
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
     file = sys.argv[1]
-
     EdgeDetectionDriver.start(file)
-
-    # TODO - need to generalize what we can of the logging
-    # ifile = InputFile.read_ui_json(file)
-    # params_class = EdgeDetectionParams(ifile)
-    # driver = EdgeDetectionDriver(params_class)
-    # print("Loaded. Running edge detection . . .")
-    # with params_class.geoh5.open(mode="r+"):
-    #     driver.run()
-    # print("Saved to " + ifile.path)

@@ -9,9 +9,12 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.direct_current.three_dimensions.driver import (
+    DirectCurrent3DDriver,
 )
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
@@ -107,7 +110,7 @@ def test_dc_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = DirectCurrent3DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
