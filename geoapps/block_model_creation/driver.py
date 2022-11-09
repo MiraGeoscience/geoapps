@@ -14,7 +14,7 @@ from os import path
 import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
@@ -33,6 +33,7 @@ class BlockModelDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: BlockModelParams):
+        super().__init__(params)
         self.params: BlockModelParams = params
 
     @staticmethod
@@ -167,7 +168,7 @@ class BlockModelDriver(BaseDriver):
             0.0,
         ]
 
-        print(f"Creating block model . . .")
+        print("Creating block model . . .")
         object_out = BlockModelDriver.get_block_model(
             self.params.geoh5,
             self.params.new_grid,
