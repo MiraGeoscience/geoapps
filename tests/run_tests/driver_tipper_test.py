@@ -10,7 +10,6 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.natural_sources import TipperParams
 from geoapps.inversion.natural_sources.tipper.driver import TipperDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -61,7 +60,7 @@ def test_tipper_fwr_run(
         tyz_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params, warmstart=False)
+    fwr_driver = TipperDriver(params, warmstart=False)
     fwr_driver.run()
 
     return fwr_driver.starting_model

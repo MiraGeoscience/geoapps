@@ -10,11 +10,12 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver
+from geoapps.inversion.electricals.direct_current.two_dimensions.driver import (
+    DirectCurrent2DDriver,
+)
 from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
     DirectCurrent2DParams,
 )
-from geoapps.inversion.electricals.direct_current.two_dimensions.driver import DirectCurrent2DDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.surveys import survey_lines
 from geoapps.utils.testing import check_target, setup_inversion_workspace
@@ -62,7 +63,7 @@ def test_dc_2d_fwr_run(
         line_id=2,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params)
+    fwr_driver = DirectCurrent2DDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model

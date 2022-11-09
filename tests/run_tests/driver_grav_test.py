@@ -10,7 +10,6 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -52,7 +51,7 @@ def test_gravity_fwr_run(
         data_object=survey.uid,
         starting_model=model.uid,
     )
-    fwr_driver = InversionDriver(params)
+    fwr_driver = GravityDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model

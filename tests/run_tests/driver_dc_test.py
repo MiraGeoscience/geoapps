@@ -9,7 +9,6 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
@@ -60,7 +59,7 @@ def test_dc_fwr_run(
         resolution=None,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params)
+    fwr_driver = DirectCurrent3DDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model
