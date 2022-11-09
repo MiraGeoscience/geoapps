@@ -13,7 +13,7 @@ from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase, Octree
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import monitored_directory_copy
 
 from geoapps.driver_base.driver import BaseDriver
 from geoapps.driver_base.utils import treemesh_2_octree
@@ -27,6 +27,7 @@ class OctreeDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: OctreeParams):
+        super().__init__(params)
         self.params: OctreeParams = params
 
     def run(self) -> Octree:

@@ -35,6 +35,7 @@ class ClusteringDriver(BaseDriver):
     _validations = validations
 
     def __init__(self, params: ClusteringParams):
+        super().__init__(params)
         self.params: ClusteringParams = params
 
     @staticmethod

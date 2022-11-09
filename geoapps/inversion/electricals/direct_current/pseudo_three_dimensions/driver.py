@@ -16,5 +16,5 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
     _params_class = DirectCurrentPseudo3DParams
     _validations = validations
 
-    def __init__(self, params: DirectCurrentPseudo3DParams):
+    def __init__(self, params: DirectCurrentPseudo3DParams):  # pylint: disable=W0235
         super().__init__(params)
