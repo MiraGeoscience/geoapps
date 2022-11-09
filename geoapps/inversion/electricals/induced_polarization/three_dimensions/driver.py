@@ -16,5 +16,5 @@ class InducedPolarization3DDriver(InversionDriver):
     _params_class = InducedPolarization3DParams
     _validations = validations
 
-    def __init__(self, params: InducedPolarization3DParams):
-        super().__init__(params)
+    def __init__(self, params: InducedPolarization3DParams, warmstart=True):
+        super().__init__(params, warmstart)

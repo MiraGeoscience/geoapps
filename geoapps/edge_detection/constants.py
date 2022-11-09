@@ -180,5 +180,4 @@ app_initializer = {
     "sigma": 0.5,
     "window_azimuth": -20.0,
     "ga_group_name": "Edges",
-    "export_as": "edges",
 }

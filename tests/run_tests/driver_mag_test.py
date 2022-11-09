@@ -10,9 +10,10 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields import MagneticScalarParams
-from geoapps.inversion.potential_fields.magnetic_scalar.driver import MagneticScalarDriver
+from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
+    MagneticScalarDriver,
+)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -58,7 +59,7 @@ def test_susceptibility_fwr_run(
     )
     params.workpath = tmp_path
 
-    fwr_driver = InversionDriver(params)
+    fwr_driver = MagneticScalarDriver(params)
 
     fwr_driver.run()
     return fwr_driver.starting_model
