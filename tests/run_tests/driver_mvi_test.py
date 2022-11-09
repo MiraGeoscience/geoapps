@@ -8,6 +8,7 @@
 import os
 
 import numpy as np
+from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 from SimPEG import utils
 
@@ -34,7 +35,7 @@ def test_magnetic_vector_fwr_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    geoh5, _, model, survey, topography = setup_inversion_workspace(
+    geoh5, _, model, points, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -42,6 +43,11 @@ def test_magnetic_vector_fwr_run(
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
     )
+
+    # Unitest dealing with Curve
+    survey = Curve.create(geoh5, name=points.name, vertices=points.vertices)
+    geoh5.remove_entity(points)
+
     params = MagneticVectorParams(
         forward_only=True,
         geoh5=geoh5,
