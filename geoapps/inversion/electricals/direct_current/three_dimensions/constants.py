@@ -18,7 +18,7 @@ inversion_defaults = {
     "title": "Direct Current 3d inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -84,6 +84,7 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentInversion",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -96,7 +97,7 @@ forward_defaults = {
     "title": "Direct Current 2d forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -124,6 +125,7 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentForward",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -161,7 +163,7 @@ default_ui_json = {
     "title": "SimPEG Direct Current inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "data_object": {
         "main": True,
         "group": "Data",
@@ -252,7 +254,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["direct current"],
+        "values": ["direct current 3d"],
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }

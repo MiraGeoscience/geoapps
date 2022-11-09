@@ -11,8 +11,9 @@ import numpy as np
 from geoh5py.workspace import Workspace
 from SimPEG import utils
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields import MagneticVectorParams
+from geoapps.inversion.potential_fields.magnetic_vector.driver import MagneticVectorDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -109,7 +110,7 @@ def test_magnetic_vector_run(
             prctile=100,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = MagneticVectorDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
 

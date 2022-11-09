@@ -1769,7 +1769,7 @@ def test_bz_uncertainty():
 
 def test_direct_current_inversion_type():
     params = DirectCurrent3DParams()
-    params.inversion_type = "direct current"
+    params.inversion_type = "direct current 3d"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
 
@@ -1851,7 +1851,7 @@ def test_potential_uncertainty():
 
 def test_induced_polarization_inversion_type():
     params = InducedPolarization3DParams()
-    params.inversion_type = "induced polarization"
+    params.inversion_type = "induced polarization 3d"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
 

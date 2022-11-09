@@ -30,8 +30,11 @@ class BaseDriver(ABC):
 
     @classmethod
     def start(cls, filepath):
+
+        print("Loading input file . . .")
         filepath = os.path.abspath(filepath)
-        ifile = InputFile.read_ui_json(filepath)
+        ifile = InputFile.read_ui_json(filepath, validations=cls._validations)
+
         generate_sweep = ifile.data.get("generate_sweep", None)
         if generate_sweep:
             ifile.data["generate_sweep"] = False
@@ -41,5 +44,13 @@ class BaseDriver(ABC):
             generate(filepath)
         else:
             params = cls._params_class(ifile)
+            if hasattr(params, "inversion_type"):
+                params.inversion_type = params.inversion_type.replace("pseudo 3d", "2d")
+            print("Initializing application . . .")
             driver = cls(params)
-            driver.run()
+            with params.geoh5.open("r+"):
+                print("Running application . . .")
+                driver.run()
+                print(f"Results saved to {params.geoh5.h5file}")
+
+        return driver

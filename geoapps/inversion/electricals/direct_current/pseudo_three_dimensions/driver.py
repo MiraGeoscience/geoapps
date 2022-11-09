@@ -5,17 +5,16 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
-from geoapps.inversion.driver import InversionDriver
+from geoapps.inversion.line_sweep.driver import LineSweepDriver
 
 from .constants import validations
-from .params import DirectCurrent2DParams
+from .params import DirectCurrentPseudo3DParams
 
 
-class DirectCurrent2DDriver(InversionDriver):
+class DirectCurrentPseudo3DDriver(LineSweepDriver):
 
-    _params_class = DirectCurrent2DParams
+    _params_class = DirectCurrentPseudo3DParams
     _validations = validations
 
-    def __init__(self, params: DirectCurrent2DParams):
+    def __init__(self, params: DirectCurrentPseudo3DParams):
         super().__init__(params)

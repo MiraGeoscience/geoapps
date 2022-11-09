@@ -5,17 +5,16 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-
 from geoapps.inversion.driver import InversionDriver
 
 from .constants import validations
-from .params import DirectCurrent2DParams
+from .params import MagnetotelluricsParams
 
 
-class DirectCurrent2DDriver(InversionDriver):
+class MagnetotelluricsDriver(InversionDriver):
 
-    _params_class = DirectCurrent2DParams
+    _params_class = MagnetotelluricsParams
     _validations = validations
 
-    def __init__(self, params: DirectCurrent2DParams):
+    def __init__(self, params: MagnetotelluricsParams):
         super().__init__(params)

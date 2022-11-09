@@ -15,8 +15,10 @@ from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
 from param_sweeps.generate import generate
 
+from geoapps.driver_base.driver import BaseDriver
 
-class LineSweepDriver(SweepDriver):
+
+class LineSweepDriver(SweepDriver, BaseDriver):
     def __init__(self, params):
         self.workspace = params.geoh5
         self.cleanup = params.cleanup
@@ -34,8 +36,10 @@ class LineSweepDriver(SweepDriver):
     def setup_params(self):
         path = self.workspace.h5file.replace(".geoh5", ".json")
         worker = InputFile.read_ui_json(path)
-        worker.data.pop("sweep")
-        worker.ui_json.pop("sweep")
+        print(worker.data["inversion_type"])
+        worker.data["inversion_type"] = worker.data["inversion_type"].replace(
+            "pseudo 3d", "2d"
+        )
         worker.write_ui_json(path)
         generate(path, parameters=["line_id"])
         ifile = InputFile.read_ui_json(

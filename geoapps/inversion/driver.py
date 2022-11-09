@@ -36,8 +36,13 @@ from geoapps.inversion.components import (
     InversionWindow,
 )
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
-from geoapps.inversion.line_sweep import LineSweepDriver
 from geoapps.inversion.params import InversionBaseParams
+
+# from geoapps.inversion import (
+#     GravityDriver, MagneticScalarDriver, MagneticVectorDriver, DirectCurrent3DDriver,
+#     DirectCurrent2DDriver, DirectCurrentPseudo3DDriver, InducedPolarization3DDriver,
+#     InducedPolarization2DDriver, MagnetotelluricsDriver, TipperDriver
+# )
 
 
 class InversionDriver(BaseDriver):
@@ -151,7 +156,7 @@ class InversionDriver(BaseDriver):
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
 
         self.n_tiles = len(self.tiles)
-        print(f"Setting up {self.n_tiles} tile(s) ...")
+        print(f"Setting up {self.n_tiles} tile(s) . . .")
         # Build tiled misfits and combine to form global misfit
 
         self.global_misfit, self.sorting = MisfitFactory(
@@ -183,7 +188,7 @@ class InversionDriver(BaseDriver):
         )
 
         if self.warmstart and not self.params.forward_only:
-            print("Pre-computing sensitivities ...")
+            print("Pre-computing sensitivities . . .")
             self.inverse_problem.dpred = self.inversion_data.simulate(  # pylint: disable=assignment-from-no-return
                 self.starting_model, self.inverse_problem, self.sorting
             )
@@ -223,27 +228,6 @@ class InversionDriver(BaseDriver):
         self.running = True
         self.inversion.run(self.starting_model)
         self.logger.end()
-
-    @classmethod
-    def start(cls, filepath):
-        filepath = os.path.abspath(filepath)
-        ifile = InputFile.read_ui_json(filepath, validations=cls._validations)
-        generate_sweep = ifile.data.get("generate_sweep", None)
-        line_sweep = ifile.data.get("sweep", None)
-        if generate_sweep:
-            ifile.data["generate_sweep"] = False
-            name = os.path.basename(filepath)
-            path = os.path.dirname(filepath)
-            ifile.write_ui_json(name=name, path=path)
-            generate(filepath)
-        elif line_sweep:
-            params = cls._params_class(ifile)
-            driver = LineSweepDriver(params)
-            driver.run()
-        else:
-            params = cls._params_class(ifile)
-            driver = cls(params)
-            driver.run()
 
     def start_inversion_message(self):
 
@@ -334,8 +318,8 @@ class InversionDriver(BaseDriver):
     def get_tiles(self):
 
         if self.params.inversion_type in [
-            "direct current",
-            "induced polarization",
+            "direct current 3d",
+            "induced polarization 3d",
         ]:
             tiles = []
             potential_electrodes = self.inversion_data.entity
@@ -428,101 +412,58 @@ class InversionLogger:
         return os.path.join(root_directory, file)
 
 
-def start_inversion(filepath=None, **kwargs) -> InversionDriver:
-    """Starts inversion with parameters defined in input file."""
-
-    if filepath is not None:
-        input_file = InputFile.read_ui_json(filepath)
-        inversion_type = input_file.data.get("inversion_type")
-        line_sweep = input_file.data.get("sweep", False)
-    else:
-        input_file = None
-        inversion_type = kwargs.get("inversion_type")
-        line_sweep = kwargs.get("sweep", False)
-
-    if inversion_type == "magnetic vector":
-        from geoapps.inversion.potential_fields import (
-            MagneticVectorParams as ParamClass,
-        )
-        from geoapps.inversion.potential_fields.magnetic_vector.constants import (
-            validations,
-        )
-
-    elif inversion_type == "magnetic scalar":
-        from geoapps.inversion.potential_fields import (
-            MagneticScalarParams as ParamClass,
-        )
-        from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
-            validations,
-        )
-
-    elif inversion_type == "gravity":
-        from geoapps.inversion.potential_fields import GravityParams as ParamClass
-        from geoapps.inversion.potential_fields.gravity.constants import validations
-
-    elif inversion_type == "magnetotellurics":
-        from geoapps.inversion.natural_sources import (
-            MagnetotelluricsParams as ParamClass,
-        )
-        from geoapps.inversion.natural_sources.magnetotellurics.constants import (
-            validations,
-        )
-
-    elif inversion_type == "tipper":
-        from geoapps.inversion.natural_sources import TipperParams as ParamClass
-        from geoapps.inversion.natural_sources.tipper.constants import validations
-
-    elif inversion_type == "direct current":
-        from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
-            validations,
-        )
-        from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
-            DirectCurrent3DParams as ParamClass,
-        )
-    elif inversion_type == "direct current 2d":
-        from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
-            validations,
-        )
-        from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
-            DirectCurrent2DParams as ParamClass,
-        )
-
-    elif inversion_type == "induced polarization":
-        from geoapps.inversion.electricals import (
-            InducedPolarization3DParams as ParamClass,
-        )
-        from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
-            InducedPolarization3DParams as ParamClass,
-        )
-        from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
-            validations,
-        )
-
-    elif inversion_type == "induced polarization 2d":
-        from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
-            InducedPolarization2DParams as ParamClass,
-        )
-        from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import (
-            validations,
-        )
-
-    else:
-        raise UserWarning("A supported 'inversion_type' must be provided.")
-
-    input_file = InputFile.read_ui_json(filepath, validations=validations)
-    params = ParamClass(input_file=input_file, **kwargs)
-
-    if line_sweep:
-        driver = LineSweepDriver(params)
-    else:
-        driver = InversionDriver(params)
-
-    with params.geoh5.open(mode="r+"):
-        driver.run()
-
-    return driver
-
-
 if __name__ == "__main__":
-    start_inversion(sys.argv[1])
+
+    from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver import (
+        DirectCurrentPseudo3DDriver,
+    )
+    from geoapps.inversion.electricals.direct_current.three_dimensions.driver import (
+        DirectCurrent3DDriver,
+    )
+    from geoapps.inversion.electricals.direct_current.two_dimensions.driver import (
+        DirectCurrent2DDriver,
+    )
+    from geoapps.inversion.electricals.induced_polarization.three_dimensions.driver import (
+        InducedPolarization3DDriver,
+    )
+    from geoapps.inversion.electricals.induced_polarization.two_dimensions.driver import (
+        InducedPolarization2DDriver,
+    )
+    # from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver import InducedPolarizationPseudo3DDriver
+    from geoapps.inversion.natural_sources.magnetotellurics.driver import (
+        MagnetotelluricsDriver,
+    )
+    from geoapps.inversion.natural_sources.tipper.driver import TipperDriver
+    from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
+    from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
+        MagneticScalarDriver,
+    )
+    from geoapps.inversion.potential_fields.magnetic_vector.driver import (
+        MagneticVectorDriver,
+    )
+
+    DRIVER_MAP = {
+        "gravity": GravityDriver,
+        "magnetic scalar": MagneticScalarDriver,
+        "magnetic vector": MagneticVectorDriver,
+        "direct current 3d": DirectCurrent3DDriver,
+        "direct current 2d": DirectCurrent2DDriver,
+        "direct current pseudo 3d": DirectCurrentPseudo3DDriver,
+        "induced polarization 3d": InducedPolarization3DDriver,
+        "induced polarization 2d": InducedPolarization2DDriver,
+        "induced polarization pseudo 3d": None,  # InducedPolarizationPseudo3DDriver,
+        "magnetotellurics": MagnetotelluricsDriver,
+        "tipper": TipperDriver,
+    }
+
+    file = sys.argv[1]
+    ifile = InputFile.read_ui_json(file)
+    inversion_type = ifile.data["inversion_type"]
+    driver = DRIVER_MAP.get(inversion_type, None)
+    if driver is None:
+        msg = f"Inversion type {inversion_type} is not supported."
+        msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
+        raise NotImplementedError(msg)
+
+    driver.start(file)
     sys.stdout.close()

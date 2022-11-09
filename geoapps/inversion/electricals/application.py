@@ -62,24 +62,24 @@ def inversion_defaults():
     """
     return {
         "units": {
-            "direct current": "S/m",
-            "induced polarization": "V/V",
+            "direct current 3d": "S/m",
+            "induced polarization 3d": "V/V",
         },
         "property": {
-            "direct current": "conductivity",
-            "induced polarization": "chargeability",
+            "direct current 3d": "conductivity",
+            "induced polarization 3d": "chargeability",
         },
         "reference_value": {
-            "direct current": 1e-1,
-            "induced polarization": 0.0,
+            "direct current 3d": 1e-1,
+            "induced polarization 3d": 0.0,
         },
         "starting_value": {
-            "direct current": 1e-1,
-            "induced polarization": 1e-4,
+            "direct current 3d": 1e-1,
+            "induced polarization 3d": 1e-4,
         },
         "component": {
-            "direct current": "potential",
-            "induced polarization": "chargeability",
+            "direct current 3d": "potential",
+            "induced polarization 3d": "chargeability",
         },
     }
 
@@ -120,7 +120,7 @@ class InversionApp(PlotSelection2D):
             description="Forward only",
         )
         self._inversion_type = Dropdown(
-            options=["direct current", "induced polarization"],
+            options=["direct current 3d", "induced polarization 3d"],
             description="inversion Type:",
         )
         self._write = Button(
@@ -760,19 +760,19 @@ class InversionApp(PlotSelection2D):
         Change the application on change of system
         """
         params = self.params.to_dict(ui_json_format=False)
-        if self.inversion_type.value == "direct current" and not isinstance(
+        if self.inversion_type.value == "direct current 3d" and not isinstance(
             self.params, DirectCurrent3DParams
         ):
             self._param_class = DirectCurrent3DParams
-            params["inversion_type"] = "direct current"
+            params["inversion_type"] = "direct current 3d"
             params["out_group"] = "DCInversion"
             self.option_choices.options = list(self.inversion_options)[1:]
 
-        elif self.inversion_type.value == "induced polarization" and not isinstance(
+        elif self.inversion_type.value == "induced polarization 3d" and not isinstance(
             self.params, InducedPolarization3DParams
         ):
             self._param_class = InducedPolarization3DParams
-            params["inversion_type"] = "induced polarization"
+            params["inversion_type"] = "induced polarization 3d"
             params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options)
 
@@ -780,7 +780,7 @@ class InversionApp(PlotSelection2D):
             # validator_opts={"ignore_requirements": True}
         )
 
-        if self.inversion_type.value in ["direct current"]:
+        if self.inversion_type.value in ["direct current 3d"]:
             data_type_list = ["potential"]
         else:
             data_type_list = ["chargeability"]
@@ -940,7 +940,7 @@ class InversionApp(PlotSelection2D):
         self._run_params = None
         self.trigger.button_style = "danger"
 
-        if self.inversion_type.value == "direct current":
+        if self.inversion_type.value == "direct current 3d":
             self._lower_bound_group.options.value = "Constant"
             self._lower_bound_group.constant.value = 1e-5
         else:
@@ -994,7 +994,7 @@ class InversionApp(PlotSelection2D):
     def write_trigger(self, _):
 
         if (
-            "induced polarization" in self.inversion_type.value
+            "induced polarization 3d" in self.inversion_type.value
             and self._conductivity_model_group.data.value is None
         ):
             print(
@@ -1128,7 +1128,7 @@ class InversionApp(PlotSelection2D):
         if not isinstance(params, (DirectCurrent3DParams, InducedPolarization3DParams)):
             raise ValueError(
                 "Parameter 'inversion_type' must be one of "
-                "'direct current' or 'induced polarization'"
+                "'direct current 3d' or 'induced polarization 3d'"
             )
 
         os.system(
@@ -1153,10 +1153,10 @@ class InversionApp(PlotSelection2D):
                 with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)
 
-                if data["inversion_type"] == "direct current":
+                if data["inversion_type"] == "direct current 3d":
                     self._param_class = DirectCurrent3DParams
 
-                elif data["inversion_type"] == "induced polarization":
+                elif data["inversion_type"] == "induced polarization 3d":
                     self._param_class = InducedPolarization3DParams
 
                 self.params = getattr(self, "_param_class")(
