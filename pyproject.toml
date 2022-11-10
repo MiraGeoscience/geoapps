@@ -69,8 +69,7 @@ zarr = "^2.8.1" # from simpgeg using Dask
 geoh5py = { version = "0.5.0", source = "pypi" }
 simpeg_archive = {version = "0.9.1.dev5", source = "pypi"}
 mira-simpeg = {version = "0.15.1dev6", source = "pypi"}
-
-param-sweeps = { url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.tar.gz#sha256=None"}
+param-sweeps = {version = "0.1.2", source = "pypi"}
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.14.4"
