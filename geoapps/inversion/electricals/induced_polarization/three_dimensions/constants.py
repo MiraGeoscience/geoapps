@@ -14,7 +14,9 @@ from geoh5py.objects.surveys.direct_current import PotentialElectrode
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
-    "title": "SimPEG Induced Polarization inversion",
+    "title": "Induced Polarization (IP) inversion",
+    "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -85,14 +87,15 @@ inversion_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "chargeability_channel_bool": True,
 }
 
 forward_defaults = {
-    "title": "SimPEG Induced Polarization Forward",
+    "title": "Induced Polarization (IP) inversion",
+    "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -125,7 +128,6 @@ forward_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
@@ -154,7 +156,9 @@ forward_ui_json = {
     "z_norm": 2.0,
 }
 default_ui_json = {
-    "title": "SimPEG Induced Polarization inversion",
+    "title": "Induced Polarization (IP) inversion",
+    "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization",
     "data_object": {
         "main": True,
