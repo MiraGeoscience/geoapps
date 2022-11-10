@@ -15,9 +15,6 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
-    DirectCurrentPseudo3DParams,
-)
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
@@ -82,13 +79,6 @@ def write_default_uijson(path, use_initializers=False):
 
     dc_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_2d_init = dc_2d_init if use_initializers else {}
-
-    from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
-        app_initializer as dc_p3d_init,
-    )
-
-    dc_p3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
-    dc_p3d_init = dc_p3d_init if use_initializers else {}
 
     from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
         app_initializer as ip_3d_init,
@@ -189,12 +179,6 @@ def write_default_uijson(path, use_initializers=False):
         ),
         "direct_current_forward_3d.ui.json": DirectCurrent3DParams(
             forward_only=True, validate=False
-        ),
-        "direct_current_inversion_pseudo_3d.ui.json": DirectCurrentPseudo3DParams(
-            validate=False, **dc_p3d_init
-        ),
-        "direct_current_forward_pseudo_3d.ui.json": DirectCurrentPseudo3DParams(
-            validate=False, forward=True
         ),
         "induced_polarization_inversion_2d.ui.json": InducedPolarization2DParams(
             validate=False, **ip_2d_init
