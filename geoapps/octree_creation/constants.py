@@ -24,7 +24,6 @@ defaults = {
     "depth_core": 500.0,
     "ga_group_name": "Octree_Mesh",
     "run_command": "geoapps.octree_creation.driver",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",

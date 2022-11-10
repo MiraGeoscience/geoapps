@@ -17,7 +17,8 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Magnetotellurics inversion",
+    "title": "Magnetotellurics (MT) inversion",
+    "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -94,7 +95,7 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
@@ -102,7 +103,6 @@ inversion_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "zxx_real_channel_bool": False,
@@ -116,7 +116,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Magnetotellurics Forward",
+    "title": "Magnetotellurics (MT) inversion",
+    "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -156,7 +157,6 @@ forward_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
@@ -194,7 +194,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Magnetotellurics inversion",
+    "title": "Magnetotellurics (MT) inversion",
+    "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "data_object": {
         "main": True,
@@ -450,7 +451,7 @@ default_ui_json = {
         "main": True,
         "isValue": False,
         "parent": "mesh",
-        "label": "Initial Conductivity (S/m)",
+        "label": "Initial conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
@@ -461,7 +462,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Conductivity (S/m)",
+        "label": "Reference conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },

@@ -59,7 +59,6 @@ class BaseParams:
         self._workspace_geoh5: str = None
         self._geoh5 = None
         self._run_command: str = None
-        self._run_command_boolean: bool = None
         self._title = None
         self._conda_environment: str = None
         self._conda_environment_boolean: bool = None
@@ -283,14 +282,6 @@ class BaseParams:
     @run_command.setter
     def run_command(self, val):
         self.setter_validator("run_command", val)
-
-    @property
-    def run_command_boolean(self):
-        return self._run_command_boolean
-
-    @run_command_boolean.setter
-    def run_command_boolean(self, val):
-        self.setter_validator("run_command_boolean", val)
 
     @property
     def monitoring_directory(self):

@@ -41,7 +41,6 @@ defaults = {
     "center": None,
     "width": None,
     "run_command": "geoapps.peak_finder.driver",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
