@@ -419,7 +419,6 @@ if __name__ == "__main__":
     from geoapps.inversion.electricals.induced_polarization.two_dimensions.driver import (
         InducedPolarization2DDriver,
     )
-    # from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver import InducedPolarizationPseudo3DDriver
     from geoapps.inversion.natural_sources.magnetotellurics.driver import (
         MagnetotelluricsDriver,
     )
