@@ -99,7 +99,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current (DC) 2D Inversion",
+    "title": "Direct Current (DC) 2D forward",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -107,10 +107,10 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
+    "z_from_topo": True,
     "line_object": None,
     "line_id": 1,
     "resolution": None,
-    "z_from_topo": True,
     "receivers_radar_drape": None,
     "receivers_offset_x": None,
     "receivers_offset_y": None,
@@ -312,7 +312,7 @@ default_ui_json = {
         "min": 1.0,
         "max": 2.0,
         "precision": 1,
-        "lineEdit": False
+        "lineEdit": False,
     },
     "receivers_offset_x": {
         "group": "Data pre-processing",
@@ -356,7 +356,6 @@ default_ui_json = {
     "detrend_order": None,
     "detrend_type": None,
     "tile_spatial": 1,
-
     "out_group": {"label": "Results group name", "value": "DirectCurrentInversion"},
 }
 

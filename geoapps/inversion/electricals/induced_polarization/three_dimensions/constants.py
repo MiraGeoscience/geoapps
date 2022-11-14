@@ -24,7 +24,7 @@ inversion_defaults = {
     "topography": None,
     "data_object": None,
     "resolution": None,
-    "z_from_topo": False,
+    "z_from_topo": True,
     "receivers_radar_drape": None,
     "receivers_offset_x": None,
     "receivers_offset_y": None,
@@ -80,7 +80,7 @@ inversion_defaults = {
     "n_cpu": None,
     "tile_spatial": 1,
     "max_ram": None,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "InducedPolarizationInversion",
@@ -93,7 +93,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Induced Polarization (IP) inversion",
+    "title": "Induced Polarization (IP) forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization",
@@ -103,7 +103,7 @@ forward_defaults = {
     "topography": None,
     "data_object": None,
     "resolution": None,
-    "z_from_topo": False,
+    "z_from_topo": True,
     "receivers_radar_drape": None,
     "receivers_offset_x": None,
     "receivers_offset_y": None,
@@ -166,6 +166,13 @@ default_ui_json = {
         "label": "Object",
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": None,
+    },
+    "z_from_topo": {
+        "group": "Data",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
     },
     "chargeability_channel_bool": True,
     "chargeability_channel": {
@@ -253,6 +260,42 @@ default_ui_json = {
     "out_group": {
         "label": "Results group name",
         "value": "InducedPolarizationInversion",
+    },
+    "receivers_offset_x": {
+        "group": "Data pre-processing",
+        "label": "Receiver X offset (m)",
+        "optional": True,
+        "enabled": False,
+        "value": 0.0,
+        "visible": False,
+    },
+    "receivers_offset_y": {
+        "group": "Data pre-processing",
+        "label": "Receiver Y offset (m)",
+        "optional": True,
+        "enabled": False,
+        "value": 0.0,
+        "visible": False,
+    },
+    "receivers_offset_z": {
+        "group": "Data pre-processing",
+        "label": "Z static offset",
+        "optional": True,
+        "enabled": False,
+        "value": 0.0,
+        "visible": False,
+    },
+    "receivers_radar_drape": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Data pre-processing",
+        "label": "Z radar offset",
+        "tooltip": "Apply a non-homogeneous offset to survey object from radar channel.",
+        "optional": True,
+        "parent": "data_object",
+        "value": None,
+        "enabled": False,
+        "visible": False,
     },
 }
 

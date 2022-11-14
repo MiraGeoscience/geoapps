@@ -121,7 +121,7 @@ inversion_defaults = {
     "gy_channel_bool": False,
 }
 forward_defaults = {
-    "title": "Gravity Forward",
+    "title": "Gravity forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -130,8 +130,8 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
+    "resolution": None,
     "receivers_radar_drape": None,
     "receivers_offset_x": None,
     "receivers_offset_y": None,
