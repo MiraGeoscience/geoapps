@@ -115,9 +115,14 @@ class EntityFactory(AbstractFactory):
         return entity
 
     def _build(self, inversion_data: InversionData):
+
         entity = inversion_data.create_entity(
             "Data", inversion_data.locations, geoh5_object=self.concrete_object
         )
+
+        if np.any(~inversion_data.mask):
+            entity.remove_vertices(~inversion_data.mask)
+
         if getattr(self.params.data_object, "base_stations", None) is not None:
             entity.base_stations = type(self.params.data_object.base_stations).create(
                 entity.workspace,
@@ -127,27 +132,6 @@ class EntityFactory(AbstractFactory):
 
         if getattr(self.params.data_object, "channels", None) is not None:
             entity.channels = [float(val) for val in self.params.data_object.channels]
-
-        if getattr(self.params.data_object, "cells", None) is not None:
-
-            indices = np.where(
-                [c not in self.params.data_object.cells for c in entity.cells]
-            )
-            if indices:
-                entity.remove_cells(
-                    indices
-                )  # Remove auto-generated cells that connect different lines
-
-            active_cells = inversion_data.mask[self.params.data_object.cells]
-            active_ind = np.all(active_cells, axis=1)
-            indices = np.where(
-                [
-                    c not in self.params.data_object.cells[active_ind, :]
-                    for c in entity.cells
-                ]
-            )[0]
-            if indices:
-                entity.remove_cells(indices)
 
         return entity
 
