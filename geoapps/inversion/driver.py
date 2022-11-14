@@ -407,9 +407,6 @@ class InversionLogger:
 
 if __name__ == "__main__":
 
-    from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver import (
-        DirectCurrentPseudo3DDriver,
-    )
     from geoapps.inversion.electricals.direct_current.three_dimensions.driver import (
         DirectCurrent3DDriver,
     )
@@ -441,7 +438,6 @@ if __name__ == "__main__":
         "magnetic vector": MagneticVectorDriver,
         "direct current 3d": DirectCurrent3DDriver,
         "direct current 2d": DirectCurrent2DDriver,
-        "direct current pseudo 3d": DirectCurrentPseudo3DDriver,
         "induced polarization 3d": InducedPolarization3DDriver,
         "induced polarization 2d": InducedPolarization2DDriver,
         "induced polarization pseudo 3d": None,  # InducedPolarizationPseudo3DDriver,
