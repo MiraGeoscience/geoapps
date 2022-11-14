@@ -16,7 +16,8 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Tipper inversion",
+    "title": "Tipper inversion",
+    "icon": "surveyztem",
     "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -86,7 +87,7 @@ inversion_defaults = {
     "n_cpu": None,
     "tile_spatial": 1,
     "max_ram": None,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "TipperInversion",
@@ -102,7 +103,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Tipper Forward",
+    "title": "Tipper forward",
+    "icon": "surveyztem",
     "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -171,7 +173,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Tipper inversion",
+    "title": "Tipper inversion",
+    "icon": "surveyztem",
     "inversion_type": "tipper",
     "data_object": {
         "main": True,
@@ -307,7 +310,7 @@ default_ui_json = {
         "main": True,
         "isValue": False,
         "parent": "mesh",
-        "label": "Initial Conductivity (S/m)",
+        "label": "Initial conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
@@ -318,7 +321,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Conductivity (S/m)",
+        "label": "Reference conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
@@ -329,7 +332,7 @@ default_ui_json = {
         "main": True,
         "isValue": True,
         "parent": "mesh",
-        "label": "Background Conductivity (S/m)",
+        "label": "Background conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },

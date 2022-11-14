@@ -17,9 +17,9 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetic Susceptibility inversion",
+    "title": "Magnetic inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
-    "icon": "surveyairbornegravity",
+    "icon": "surveyairbornemagnetics",
     "inversion_type": "magnetic scalar",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -102,7 +102,7 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
@@ -124,7 +124,7 @@ inversion_defaults = {
     "bz_channel_bool": False,
 }
 forward_defaults = {
-    "title": "Magnetic Susceptibility Forward",
+    "title": "Magnetic Susceptibility forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "magnetic scalar",
@@ -214,7 +214,10 @@ default_ui_json = {
     "icon": "surveyairbornegravity",
     "inversion_type": "magnetic scalar",
     "inducing_field_strength": {
-        "min": 1.0,
+        "min": 0.0,
+        "max": 100000.0,
+        "precision": 2,
+        "lineEdit": False,
         "main": True,
         "group": "Inducing Field",
         "label": "Strength (nT)",
@@ -224,18 +227,20 @@ default_ui_json = {
         "min": -90.0,
         "max": 90.0,
         "precision": 2,
+        "lineEdit": False,
         "main": True,
         "group": "Inducing Field",
-        "label": "Inclination (degrees from North)",
+        "label": "Inclination (deg)",
         "value": 90.0,
     },
     "inducing_field_declination": {
         "min": -180.0,
         "max": 180.0,
         "precision": 2,
+        "lineEdit": False,
         "main": True,
         "group": "Inducing Field",
-        "label": "Declination (degrees from horizontal)",
+        "label": "Declination (deg)",
         "value": 0.0,
     },
     "data_object": {
@@ -559,7 +564,7 @@ default_ui_json = {
         "main": True,
         "isValue": True,
         "parent": "mesh",
-        "label": "Initial Susceptibility (SI)",
+        "label": "Initial susceptibility (SI)",
         "property": None,
         "value": 1e-4,
     },
@@ -570,7 +575,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Susceptibility (SI)",
+        "label": "Reference susceptibility (SI)",
         "property": None,
         "value": 0.0,
     },

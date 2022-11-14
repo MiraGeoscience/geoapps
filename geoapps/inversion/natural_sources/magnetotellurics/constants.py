@@ -116,7 +116,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Magnetotellurics (MT) inversion",
+    "title": "Magnetotellurics (MT) forward",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization

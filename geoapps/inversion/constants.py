@@ -73,6 +73,7 @@ default_ui_json = {
         "value": 1,
         "min": 1,
         "max": 1000,
+        "verbose": 2,
     },
     "output_tile_files": False,
     "z_from_topo": {
@@ -80,7 +81,7 @@ default_ui_json = {
         "label": "Take z from topography",
         "tooltip": "Sets survey elevation to topography before any offsets are applied.",
         "value": False,
-        "verbose": 3
+        "verbose": 3,
     },
     "receivers_offset_x": {
         "group": "Data pre-processing",
@@ -136,7 +137,7 @@ default_ui_json = {
         "enabled": False,
         "label": "Downsampling resolution",
         "value": 0.0,
-        "verbose": 3
+        "verbose": 3,
     },
     "detrend_order": {
         "min": 0,
@@ -314,7 +315,7 @@ default_ui_json = {
         "min": 0.0,
         "precision": 1,
         "lineEdit": False,
-        "verbose": 2
+        "verbose": 2,
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
@@ -371,7 +372,7 @@ default_ui_json = {
         "value": 1.0,
         "tooltip": "This chi factor will be used to determine the misfit"
         " threshold after which IRLS iterations begin.",
-        "verbose": 3
+        "verbose": 3,
     },
     "max_global_iterations": {
         "min": 1,
@@ -389,7 +390,7 @@ default_ui_json = {
         "tooltip": "Incomplete Re-weighted Least Squares iterations for non-L2 problems",
         "value": 25,
         "enabled": True,
-        "verbose": 2
+        "verbose": 2,
     },
     "coolingRate": {
         "group": "Optimization",
@@ -399,7 +400,7 @@ default_ui_json = {
         "LineEdit": False,
         "max": 10,
         "precision": 1,
-        "verbose": 2
+        "verbose": 2,
     },
     "coolingFactor": {
         "group": "Optimization",
@@ -544,7 +545,7 @@ default_ui_json = {
         "group": "Regularization",
         "label": "Gradient type",
         "value": "total",
-        "verbose": 3
+        "verbose": 3,
     },
     "lower_bound": {
         "association": ["Cell", "Vertex"],
