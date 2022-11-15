@@ -102,7 +102,7 @@ forward_defaults = {
     "topography": None,
     "data_object": None,
     "resolution": None,
-    "z_from_topo": False,
+    "z_from_topo": True,
     "receivers_offset_x": None,
     "receivers_offset_y": None,
     "receivers_offset_z": None,
@@ -144,6 +144,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and Models`",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Conductivity (S/m)",
+        "property": None,
+        "value": 0.0,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,

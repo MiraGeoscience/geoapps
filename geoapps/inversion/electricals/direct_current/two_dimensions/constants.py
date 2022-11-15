@@ -158,6 +158,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Mesh and Models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Conductivity (S/m)",
+        "property": None,
+        "value": 1e-3,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -321,7 +332,6 @@ default_ui_json = {
         "enabled": False,
         "value": 0.0,
         "visible": False,
-        "visible": False,
     },
     "receivers_offset_y": {
         "group": "Data pre-processing",
@@ -329,7 +339,6 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "value": 0.0,
-        "visible": False,
         "visible": False,
     },
     "receivers_offset_z": {
