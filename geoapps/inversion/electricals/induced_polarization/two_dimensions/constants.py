@@ -160,6 +160,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Mesh and Models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Chargeability (V/V)",
+        "property": None,
+        "value": 0.0,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -320,7 +331,6 @@ default_ui_json = {
         "label": "Expansion factor",
         "dependency": "mesh",
         "dependencyType": "disabled",
-        "value": 1.1,
         "value": 1.1,
         "min": 1.0,
         "max": 2.0,

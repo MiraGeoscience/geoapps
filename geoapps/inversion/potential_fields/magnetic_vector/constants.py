@@ -148,7 +148,7 @@ forward_defaults = {
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
-    "tmi_channel_bool": False,
+    "tmi_channel_bool": True,
     "bx_channel_bool": False,
     "by_channel_bool": False,
     "bz_channel_bool": False,
@@ -204,6 +204,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and Models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Susceptibility (SI)",
+        "property": None,
+        "value": 1e-4,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,

@@ -118,10 +118,10 @@ forward_defaults = {
     "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
-    "txz_real_channel_bool": False,
-    "txz_imag_channel_bool": False,
-    "tyz_real_channel_bool": False,
-    "tyz_imag_channel_bool": False,
+    "txz_real_channel_bool": True,
+    "txz_imag_channel_bool": True,
+    "tyz_real_channel_bool": True,
+    "tyz_imag_channel_bool": True,
     "mesh": None,
     "background_conductivity": 1e-3,
     "starting_model": 1e-3,
@@ -158,6 +158,8 @@ inversion_ui_json = {
     "txz_imag_channel_bool": False,
     "tyz_real_channel_bool": False,
     "tyz_imag_channel_bool": False,
+    "detrend_type": None,
+    "detrend_order": None,
 }
 
 forward_ui_json = {

@@ -99,7 +99,7 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
@@ -137,7 +137,7 @@ forward_defaults = {
     "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
-    "gz_channel_bool": False,
+    "gz_channel_bool": True,
     "gx_channel_bool": False,
     "gy_channel_bool": False,
     "guv_channel_bool": False,
@@ -191,6 +191,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and Models",
+        "main": True,
+        "isValue": True,
+        "parent": "mesh",
+        "label": "Density contrast (g/cc)",
+        "property": None,
+        "value": 1e-3,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
