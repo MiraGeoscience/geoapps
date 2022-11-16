@@ -5,8 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from __future__ import annotations
+# isort: skip_file
 
+from __future__ import annotations
+from geoapps.inversion.params import InversionBaseParams  # isort: skip
+from geoapps.inversion.constants import default_ui_json
 from geoapps.inversion.electricals.direct_current.three_dimensions.driver import (
     DirectCurrent3DDriver,
 )
@@ -23,6 +26,7 @@ from geoapps.inversion.natural_sources.magnetotellurics.driver import (
     MagnetotelluricsDriver,
 )
 from geoapps.inversion.natural_sources.tipper.driver import TipperDriver
+
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
     MagneticScalarDriver,
@@ -30,9 +34,6 @@ from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
 from geoapps.inversion.potential_fields.magnetic_vector.driver import (
     MagneticVectorDriver,
 )
-
-from .constants import default_ui_json
-from .params import InversionBaseParams
 
 DRIVER_MAP = {
     "gravity": GravityDriver,
