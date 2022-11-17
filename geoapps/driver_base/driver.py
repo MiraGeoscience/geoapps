@@ -30,7 +30,12 @@ class BaseDriver(ABC):
         raise NotImplementedError
 
     @classmethod
-    def start(cls, filepath):
+    def start(cls, filepath: str):
+        """
+        Run application specified by 'filepath' ui.json file.
+
+        :param filepath: Path to valid ui.json file for the application driver.
+        """
 
         print("Loading input file . . .")
         filepath = os.path.abspath(filepath)
@@ -42,7 +47,7 @@ class BaseDriver(ABC):
             name = os.path.basename(filepath)
             path = os.path.dirname(filepath)
             ifile.write_ui_json(name=name, path=path)
-            generate(filepath)
+            generate(filepath, update_values={"conda_environment": "geoapps"})
         else:
             params = cls._params_class(ifile)
             if hasattr(params, "inversion_type"):
