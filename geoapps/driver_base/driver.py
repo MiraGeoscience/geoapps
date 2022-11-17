@@ -47,9 +47,9 @@ class BaseDriver(ABC):
             name = os.path.basename(filepath)
             path = os.path.dirname(filepath)
             ifile.write_ui_json(name=name, path=path)
-            generate(
+            generate(  # pylint: disable=E1123
                 filepath, update_values={"conda_environment": "geoapps"}
-            )  # pylint: disable=E1123
+            )
         else:
             params = cls._params_class(ifile)
             if hasattr(params, "inversion_type"):
