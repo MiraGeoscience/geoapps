@@ -14,19 +14,25 @@ from os import path
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
-from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from matplotlib.pyplot import axes
 from scipy.interpolate import LinearNDInterpolator
 
+from geoapps.contours.constants import validations
 from geoapps.contours.params import ContoursParams
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.utils import get_contours
 from geoapps.utils.formatters import string_name
 from geoapps.utils.plotting import plot_plan_data_selection
 
 
-class ContoursDriver:
+class ContoursDriver(BaseDriver):
+
+    _params_class = ContoursParams
+    _validations = validations
+
     def __init__(self, params: ContoursParams):
+        super().__init__(params)
         self.params: ContoursParams = params
         self._unique_object = {}
 
@@ -42,6 +48,7 @@ class ContoursDriver:
             self.params.fixed_contours,
         )
 
+        print("Generating contours . . .")
         _, _, _, _, contour_set = plot_plan_data_selection(
             entity,
             data,
@@ -127,12 +134,5 @@ class ContoursDriver:
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    params_class = ContoursParams(ifile)
-    driver = ContoursDriver(params_class)
-    print("Loaded. Running contour creation . . .")
-    with params_class.geoh5.open(mode="r+"):
-        driver.run()
-    print("Saved to " + ifile.path)
+    ContoursDriver.start(file)

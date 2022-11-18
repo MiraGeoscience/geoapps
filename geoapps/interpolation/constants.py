@@ -25,6 +25,7 @@ defaults = {
     "no_data_value": None,
     "out_object": None,
     "ga_group_name": None,
+    "generate_sweep": False,
     "run_command": "geoapps.interpolation.driver",
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
@@ -180,6 +181,12 @@ default_ui_json.update(
             "label": "Output Label",
             "value": "_Interp",
             "group": "Python run preferences",
+        },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
         },
     }
 )

@@ -12,17 +12,23 @@ import sys
 from os import path
 
 import numpy as np
-from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
+from geoapps.driver_base.driver import BaseDriver
+from geoapps.interpolation.constants import validations
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.shared_utils.utils import get_locations, weighted_average
 
 
-class DataInterpolationDriver:
+class DataInterpolationDriver(BaseDriver):
+
+    _params_class = DataInterpolationParams
+    _validations = validations
+
     def __init__(self, params: DataInterpolationParams):
+        super().__init__(params)
         self.params: DataInterpolationParams = params
 
     def run(self):
@@ -174,14 +180,15 @@ class DataInterpolationDriver:
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    params_class = DataInterpolationParams(ifile)
-    params_class.geoh5.close()
-    driver = DataInterpolationDriver(params_class)
-    print("Loaded. Starting data transfer . . .")
-    with params_class.geoh5.open(mode="r+"):
-        driver.run()
+    DataInterpolationDriver.start(file)
 
-    print("Saved to " + params_class.geoh5.h5file)
+    # ifile = InputFile.read_ui_json(file)
+    # params_class = DataInterpolationParams(ifile)
+    # params_class.geoh5.close()
+    # driver = DataInterpolationDriver(params_class)
+    # print("Loaded. Starting data transfer . . .")
+    # with params_class.geoh5.open(mode="r+"):
+    #     driver.run()
+    #
+    # print("Saved to " + params_class.geoh5.h5file)

@@ -80,9 +80,9 @@ class ReceiversFactory(SimPEGFactory):
             )
 
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
         ]:
             args += self._dcip_arguments(

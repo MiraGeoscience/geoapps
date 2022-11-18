@@ -14,10 +14,10 @@ from geoh5py.objects.surveys.direct_current import PotentialElectrode
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
-    "title": "Induced Polarization (IP) inversion",
+    "title": "SimPEG Induced Polarization 3d inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "induced polarization",
+    "inversion_type": "induced polarization 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -84,6 +84,7 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "InducedPolarizationInversion",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -93,10 +94,10 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Induced Polarization (IP) forward",
+    "title": "SimPEG Induced Polarization 3d Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "induced polarization",
+    "inversion_type": "induced polarization 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -125,6 +126,7 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "InducedPolarizationForward",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -167,10 +169,10 @@ forward_ui_json = {
     "z_norm": 2.0,
 }
 default_ui_json = {
-    "title": "Induced Polarization (IP) inversion",
+    "title": "SimPEG Induced Polarization 3d inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "induced polarization",
+    "inversion_type": "induced polarization 3d",
     "data_object": {
         "main": True,
         "group": "Data",
@@ -318,7 +320,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["induced polarization"],
+        "values": ["induced polarization 3d"],
     },
     "conductivity_model": {"required": True},
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},

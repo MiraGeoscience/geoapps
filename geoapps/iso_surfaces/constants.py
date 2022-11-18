@@ -23,6 +23,7 @@ defaults = {
     "fixed_contours": "0.0025",
     "max_distance": 500.0,
     "resolution": 50.0,
+    "generate_sweep": False,
     "run_command": "geoapps.iso_surfaces.driver",
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -98,6 +99,12 @@ default_ui_json.update(
             "label": "Base grid resolution (m)",
             "main": True,
             "value": 50.0,
+        },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
         },
         "export_as": {"main": True, "label": "Name", "value": "Iso_"},
     }
