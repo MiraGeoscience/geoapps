@@ -98,9 +98,9 @@ class SurveyFactory(SimPEGFactory):
 
         if local_index is None:
             if self.factory_type in [
-                "direct current",
+                "direct current 3d",
                 "direct current 2d",
-                "induced polarization",
+                "induced polarization 3d",
                 "induced polarization 2d",
             ]:
                 n_data = receiver_entity.n_cells
@@ -112,9 +112,9 @@ class SurveyFactory(SimPEGFactory):
             self.local_index = local_index
 
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
         ]:
             return self._dcip_arguments(data=data, local_index=local_index)
@@ -158,9 +158,9 @@ class SurveyFactory(SimPEGFactory):
                 self._add_data(survey, data, local_index, channel)
 
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
         ]:
             if (
