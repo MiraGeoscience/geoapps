@@ -96,7 +96,14 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        if self.params.inversion_type == "magnetotellurics":
+        forced_to_surface = [
+            "magnetotellurics",
+            "direct current 3d",
+            "direct current 2d",
+            "induced polarization 3d",
+            "induced polarization 2d",
+        ]
+        if self.params.inversion_type in forced_to_surface:
             active_cells = active_from_xyz(
                 mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
             )
