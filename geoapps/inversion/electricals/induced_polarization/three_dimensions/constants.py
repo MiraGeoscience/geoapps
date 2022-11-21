@@ -14,7 +14,7 @@ from geoh5py.objects.surveys.direct_current import PotentialElectrode
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
-    "title": "SimPEG Induced Polarization 3d inversion",
+    "title": "SimPEG Induced Polarization 3D inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -92,7 +92,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Induced Polarization 3d Forward",
+    "title": "SimPEG Induced Polarization 3D Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -165,7 +165,7 @@ forward_ui_json = {
     "z_norm": 2.0,
 }
 default_ui_json = {
-    "title": "SimPEG Induced Polarization 3d inversion",
+    "title": "SimPEG Induced Polarization 3D inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
