@@ -46,8 +46,6 @@ class InversionBaseParams(BaseParams):
         self._tile_spatial = None
         self._z_from_topo: bool = None
         self._receivers_radar_drape = None
-        self._receivers_offset_x: float = None
-        self._receivers_offset_y: float = None
         self._receivers_offset_z: float = None
         self._gps_receivers_offset = None
         self._ignore_values: str = None
@@ -196,8 +194,8 @@ class InversionBaseParams(BaseParams):
     def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
         offsets = [
-            0 if self.receivers_offset_x is None else self.receivers_offset_x,
-            0 if self.receivers_offset_y is None else self.receivers_offset_y,
+            0,
+            0,
             0 if self.receivers_offset_z is None else self.receivers_offset_z,
         ]
         is_offset = any([(k != 0) for k in offsets])
@@ -306,22 +304,6 @@ class InversionBaseParams(BaseParams):
     @receivers_radar_drape.setter
     def receivers_radar_drape(self, val):
         self.setter_validator("receivers_radar_drape", val, fun=self._uuid_promoter)
-
-    @property
-    def receivers_offset_x(self):
-        return self._receivers_offset_x
-
-    @receivers_offset_x.setter
-    def receivers_offset_x(self, val):
-        self.setter_validator("receivers_offset_x", val)
-
-    @property
-    def receivers_offset_y(self):
-        return self._receivers_offset_y
-
-    @receivers_offset_y.setter
-    def receivers_offset_y(self, val):
-        self.setter_validator("receivers_offset_y", val)
 
     @property
     def receivers_offset_z(self):
