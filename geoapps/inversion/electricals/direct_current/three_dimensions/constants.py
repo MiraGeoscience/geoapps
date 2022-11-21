@@ -165,7 +165,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Direct Current inversion",
+    "title": "Direct Current 3D inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",

@@ -17,7 +17,7 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetic inversion",
+    "title": "Magnetic Susceptibility inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornemagnetics",
     "inversion_type": "magnetic scalar",

@@ -15,7 +15,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Induced Polarization (IP) 2D Inversion",
+    "title": "Induced Polarization 2D inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -99,7 +99,7 @@ inversion_defaults = {
     "chargeability_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Induced Polarization (IP) 2D forward",
+    "title": "Induced Polarization 2D forward",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -181,7 +181,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Induced Polarization (IP) 2D Inversion",
+    "title": "Induced Polarization 2D inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "line_object": {
