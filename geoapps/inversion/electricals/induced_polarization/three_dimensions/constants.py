@@ -144,7 +144,7 @@ inversion_ui_json = {
 
 forward_ui_json = {
     "starting_model": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models",
         "main": True,
