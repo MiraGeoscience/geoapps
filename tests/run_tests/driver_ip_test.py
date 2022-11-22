@@ -10,9 +10,11 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
 from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.driver import (
+    InducedPolarization3DDriver,
 )
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
@@ -57,7 +59,7 @@ def test_ip_fwr_run(
         conductivity_model=1e-2,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params)
+    fwr_driver = InducedPolarization3DDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -108,7 +110,9 @@ def test_ip_run(
             coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = InducedPolarization3DDriver.start(
+        os.path.join(tmp_path, "Inv_run.ui.json")
+    )
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

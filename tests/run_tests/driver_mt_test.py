@@ -11,7 +11,9 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.natural_sources.magnetotellurics.driver import (
+    MagnetotelluricsDriver,
+)
 from geoapps.inversion.natural_sources.magnetotellurics.params import (
     MagnetotelluricsParams,
 )
@@ -66,8 +68,7 @@ def test_magnetotellurics_fwr_run(
         zyy_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params, warmstart=False)
-
+    fwr_driver = MagnetotelluricsDriver(params, warmstart=False)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -140,7 +141,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             resolution=0.0,
             data_object=survey.uid,
             starting_model=0.01,
-            reference_model=None,
+            reference_model=0.01,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -155,9 +156,8 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             store_sensitivities="ram",
             **data_kwargs,
         )
-        params.workpath = tmp_path
-        driver = InversionDriver(params)
-        driver.run()
+        params.write_input_file(path=tmp_path, name="Inv_run")
+        driver = MagnetotelluricsDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
@@ -187,7 +187,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = MagnetotelluricsDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     return driver
 

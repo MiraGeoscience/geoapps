@@ -22,9 +22,6 @@ from geoh5py.objects import Curve
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
-from geoapps.inversion.natural_sources.magnetotellurics.params import (
-    MagnetotelluricsParams,
-)
 from geoapps.shared_utils.utils import filter_xy
 
 from .data import InversionData
@@ -99,7 +96,7 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        if isinstance(self.params, MagnetotelluricsParams):
+        if self.params.inversion_type == "magnetotellurics":
             active_cells = active_from_xyz(
                 mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
             )

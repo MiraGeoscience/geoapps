@@ -130,6 +130,12 @@
         "value": "",
         "group": "Python run preferences"
     },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
+    },
     "resolution": 50.0,
     "colorbar": false,
     "zoom_extent": false,

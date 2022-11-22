@@ -167,9 +167,9 @@ class InversionData(InversionLocations):
         if (
             self.params.inversion_type
             in [
-                "direct current",
+                "direct current 3d",
                 "direct current 2d",
-                "induced polarization",
+                "induced polarization 3d",
                 "induced polarization 2d",
             ]
             and self.indices is None
@@ -266,10 +266,7 @@ class InversionData(InversionLocations):
                         uncerts = self._embed_2d(uncerts)
                     entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
 
-                if self.params.inversion_type in [
-                    "direct current",
-                    "direct current 2d",
-                ]:
+                if "direct current" in self.params.inversion_type:
                     self.transformations[component] = 1 / (
                         geometric_factor(self._survey) + 1e-10
                     )
