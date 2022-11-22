@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
+import json
 import multiprocessing
 import os
 import sys
@@ -22,7 +23,6 @@ from time import time
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
-from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 from SimPEG.utils import tile_locations
 
@@ -407,11 +407,13 @@ class InversionLogger:
 
 if __name__ == "__main__":
 
-    from . import DRIVER_MAP
+    from geoapps.inversion import DRIVER_MAP
 
     filepath = sys.argv[1]
-    ifile = InputFile.read_ui_json(filepath)
-    inversion_type = ifile.data["inversion_type"]
+
+    with open(filepath, encoding="utf-8") as ifile:
+        inversion_type = json.load(ifile)["inversion_type"]
+
     inversion_driver = DRIVER_MAP.get(inversion_type, None)
     if inversion_driver is None:
         msg = f"Inversion type {inversion_type} is not supported."
