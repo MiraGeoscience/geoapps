@@ -56,7 +56,8 @@ class BaseDriver(ABC):
                 params.inversion_type = params.inversion_type.replace("pseudo 3d", "2d")
             print("Initializing application . . .")
             driver = cls(params)
-            with params.geoh5.open("r+"):
+
+            with params.geoh5:
                 print("Running application . . .")
                 driver.run()
                 print(f"Results saved to {params.geoh5.h5file}")
