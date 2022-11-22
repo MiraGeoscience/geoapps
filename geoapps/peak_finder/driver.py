@@ -16,9 +16,11 @@ from dask import compute, delayed
 from dask.diagnostics import ProgressBar
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import monitored_directory_copy
 from tqdm import tqdm
 
+from geoapps.driver_base.driver import BaseDriver
+from geoapps.peak_finder.constants import validations
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.peak_finder.utils import default_groups_from_property_group, find_anomalies
 from geoapps.shared_utils.utils import hex_to_rgb
@@ -26,13 +28,17 @@ from geoapps.utils import geophysical_systems
 from geoapps.utils.formatters import string_name
 
 
-class PeakFinderDriver:
+class PeakFinderDriver(BaseDriver):
+
+    _params_class = PeakFinderParams
+    _validations = validations
+
     def __init__(self, params: PeakFinderParams):
+        super().__init__(params)
         self.params: PeakFinderParams = params
 
-    def run(self, output_group=None):
+    def run(self):
 
-        print("Reading parameters...")
         survey = self.params.objects
         prop_group = [
             pg for pg in survey.property_groups if pg.uid == self.params.data.uid
@@ -44,10 +50,9 @@ class PeakFinderDriver:
         else:
             normalization = [1]
 
-        if output_group is None:
-            output_group = ContainerGroup.create(
-                self.params.geoh5, name=string_name(self.params.ga_group_name)
-            )
+        output_group = ContainerGroup.create(
+            self.params.geoh5, name=string_name(self.params.ga_group_name)
+        )
 
         line_field = self.params.line_field
         lines = np.unique(line_field.values)
@@ -138,7 +143,7 @@ class PeakFinderDriver:
                     skew += [group["skew"]]
                     peaks += [group["peaks"]]
 
-        print("Exporting...")
+        print("Exporting . . .")
         if cox:
             channel_group = np.hstack(channel_group)  # Start count at 1
 
@@ -313,19 +318,12 @@ class PeakFinderDriver:
                     parent=output_group,
                 )
 
-        print("Process completed.")
-
         if self.params.monitoring_directory is not None and path.exists(
             self.params.monitoring_directory
         ):
             monitored_directory_copy(self.params.monitoring_directory, output_group)
-        else:
-            print(f"Result exported to: {self.params.geoh5.h5file}")
 
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params_class = PeakFinderParams(InputFile.read_ui_json(file))
-    driver = PeakFinderDriver(params_class)
-    with params_class.geoh5.open(mode="r+"):
-        driver.run()
+    PeakFinderDriver.start(file)

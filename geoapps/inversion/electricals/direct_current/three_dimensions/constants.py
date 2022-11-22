@@ -11,14 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
-from geoapps.inversion import default_ui_json as base_default_ui_json
+from geoapps.inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current (DC) inversion",
+    "title": "Direct Current 3d inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -84,6 +84,7 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentInversion",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -93,10 +94,10 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "SimPEG Direct Current Forward",
+    "title": "Direct Current 2d forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -124,6 +125,7 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentForward",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -161,7 +163,7 @@ default_ui_json = {
     "title": "SimPEG Direct Current inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "data_object": {
         "main": True,
         "group": "Data",
@@ -199,7 +201,7 @@ default_ui_json = {
         "parent": "mesh",
         "label": "Initial Conductivity (S/m)",
         "property": None,
-        "value": 0.0,
+        "value": 1e-1,
     },
     "reference_model": {
         "association": ["Cell", "Vertex"],
@@ -252,7 +254,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["direct current"],
+        "values": ["direct current 3d"],
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }

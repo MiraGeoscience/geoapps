@@ -15,7 +15,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "SimPEG Direct Current inversion",
+    "title": "Direct Current 2d inversion",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -90,6 +90,7 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentInversion",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -99,7 +100,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "SimPEG Direct Current Forward",
+    "title": "Direct Current 2d forward",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -136,6 +137,7 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentForward",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -170,19 +172,19 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Direct Current inversion",
+    "title": "Direct Current inversion",
     "inversion_type": "direct current 2d",
     "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
-        "group": "Survey",
+        "group": "Data",
         "main": True,
         "label": "Line field",
         "parent": "data_object",
         "value": None,
     },
     "line_id": {
-        "group": "Survey",
+        "group": "Data",
         "main": True,
         "min": 1,
         "label": "Line number",
@@ -281,6 +283,46 @@ default_ui_json = {
         "dependencyType": "disabled",
         "value": 1.1,
     },
+    "window_center_x": {
+        "group": "Data window",
+        "enabled": False,
+        "groupOptional": True,
+        "label": "Window center easting",
+        "value": 0.0,
+        "visible": False,
+    },
+    "window_center_y": {
+        "group": "Data window",
+        "enabled": False,
+        "label": "Window center northing",
+        "value": 0.0,
+        "visible": False,
+    },
+    "window_width": {
+        "min": 0.0,
+        "group": "Data window",
+        "enabled": False,
+        "label": "Window width",
+        "value": 0.0,
+        "visible": False,
+    },
+    "window_height": {
+        "min": 0.0,
+        "group": "Data window",
+        "enabled": False,
+        "label": "Window height",
+        "value": 0.0,
+        "visible": False,
+    },
+    "window_azimuth": {
+        "min": -180,
+        "max": 180,
+        "group": "Data window",
+        "enabled": False,
+        "label": "Window azimuth",
+        "value": 0.0,
+        "visible": False,
+    },
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
@@ -331,4 +373,5 @@ app_initializer = {
     "receivers_offset_x": 0.0,
     "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
+    "out_grop": "DCInversion",
 }

@@ -10,7 +10,9 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.electricals.direct_current.two_dimensions.driver import (
+    DirectCurrent2DDriver,
+)
 from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
     DirectCurrent2DParams,
 )
@@ -61,7 +63,7 @@ def test_dc_2d_fwr_run(
         line_id=2,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params)
+    fwr_driver = DirectCurrent2DDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -107,7 +109,8 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
             coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+
+    driver = DirectCurrent2DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
