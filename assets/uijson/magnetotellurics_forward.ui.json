@@ -1,5 +1,6 @@
 {
-    "title": "SimPEG Magnetotellurics Forward",
+    "title": "Magnetotellurics forward",
+    "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": "",
     "forward_only": true,
@@ -26,12 +27,11 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "isValue": true,
-        "label": "Elevation adjustment",
-        "tooltip": "Adjust elevation given from topography object",
+        "label": "Elevation channel",
+        "tooltip": "Set elevation from channel",
         "parent": "topography_object",
-        "property": "",
-        "value": 0.0
+        "value": "",
+        "verbose": 2
     },
     "data_object": {
         "main": true,
@@ -46,13 +46,15 @@
         "optional": true,
         "enabled": false,
         "label": "Downsampling resolution",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "z_from_topo": {
         "group": "Data pre-processing",
         "label": "Take z from topography",
         "tooltip": "Sets survey elevation to topography before any offsets are applied.",
-        "value": false
+        "value": false,
+        "verbose": 3
     },
     "receivers_radar_drape": {
         "association": [
@@ -66,79 +68,65 @@
         "optional": true,
         "parent": "data_object",
         "value": "",
-        "enabled": false
-    },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": true,
         "enabled": false,
-        "value": 0.0,
-        "visible": false
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": true,
-        "enabled": false,
-        "value": 0.0,
-        "visible": false
+        "verbose": 3
     },
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",
         "optional": true,
         "enabled": false,
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "gps_receivers_offset": "",
     "zxx_real_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zxx real",
-        "value": false
+        "value": true
     },
     "zxx_imag_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zxx imaginary",
-        "value": false
+        "value": true
     },
     "zxy_real_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zxy real",
-        "value": false
+        "value": true
     },
     "zxy_imag_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zxy imaginary",
-        "value": false
+        "value": true
     },
     "zyx_real_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zyx real",
-        "value": false
+        "value": true
     },
     "zyx_imag_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zyx imaginary",
-        "value": false
+        "value": true
     },
     "zyy_real_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zyy real",
-        "value": false
+        "value": true
     },
     "zyy_imag_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Zyy imaginary",
-        "value": false
+        "value": true
     },
     "mesh": {
         "group": "Mesh and Models",
@@ -171,7 +159,7 @@
         "main": true,
         "isValue": true,
         "parent": "mesh",
-        "label": "Initial Conductivity (S/m)",
+        "label": "Initial conductivity (S/m)",
         "property": "",
         "value": 0.001
     },
@@ -181,27 +169,31 @@
         "enabled": false,
         "groupOptional": true,
         "label": "Window center easting",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": false,
         "label": "Window center northing",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_width": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window width",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_height": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window height",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_azimuth": {
         "min": -180,
@@ -209,7 +201,8 @@
         "group": "Data window",
         "enabled": false,
         "label": "Window azimuth",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "parallelized": {
         "group": "Compute",
@@ -223,7 +216,7 @@
         "dependencyType": "enabled",
         "optional": true,
         "enabled": false,
-        "label": "Number of cpu",
+        "label": "Number of CPUs",
         "value": 1
     },
     "tile_spatial": {
@@ -234,7 +227,8 @@
         "property": "",
         "value": 1,
         "min": 1,
-        "max": 1000
+        "max": 1000,
+        "verbose": 2
     },
     "max_chunk_size": {
         "min": 0,
@@ -242,12 +236,14 @@
         "optional": true,
         "enabled": true,
         "label": "Maximum chunk size",
-        "value": 128
+        "value": 128,
+        "verbose": 3
     },
     "chunk_by_rows": {
         "group": "Compute",
         "label": "Chunk by rows",
-        "value": true
+        "value": true,
+        "verbose": 3
     },
     "out_group": {
         "label": "Results group name",
@@ -262,12 +258,6 @@
     "monitoring_directory": "",
     "workspace_geoh5": "",
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": {
-        "value": false,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": true
-    },
     "conda_environment": "geoapps",
     "distributed_workers": "",
     "gradient_type": "total",
