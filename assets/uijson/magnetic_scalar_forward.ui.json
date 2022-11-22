@@ -285,6 +285,12 @@
         "label": "Results group name",
         "value": "MagneticScalarForward"
     },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
+    },
     "monitoring_directory": "",
     "workspace_geoh5": "",
     "run_command": "geoapps.inversion.driver",

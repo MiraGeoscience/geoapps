@@ -78,6 +78,12 @@
         "main": true,
         "value": 50.0
     },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
+    },
     "export_as": {
         "main": true,
         "label": "Name",

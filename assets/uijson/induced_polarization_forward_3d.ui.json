@@ -1,6 +1,6 @@
 {
     "title": "SimPEG Induced Polarization Forward",
-    "inversion_type": "induced polarization",
+    "inversion_type": "induced polarization 3d",
     "geoh5": "",
     "forward_only": true,
     "topography_object": {
@@ -198,6 +198,12 @@
     "out_group": {
         "label": "Results group name",
         "value": "InducedPolarizationForward"
+    },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
     },
     "monitoring_directory": "",
     "workspace_geoh5": "",

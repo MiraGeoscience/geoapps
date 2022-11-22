@@ -1,8 +1,8 @@
 {
-    "title": "SimPEG Direct Current Forward",
+    "title": "Direct Current 2d forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": "",
     "forward_only": true,
     "topography_object": {
@@ -186,6 +186,12 @@
     "out_group": {
         "label": "Results group name",
         "value": "DirectCurrentForward"
+    },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
     },
     "monitoring_directory": "",
     "workspace_geoh5": "",

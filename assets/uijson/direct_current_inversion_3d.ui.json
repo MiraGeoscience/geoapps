@@ -1,8 +1,8 @@
 {
-    "title": "Direct Current (DC) inversion",
+    "title": "Direct Current 3d inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": "",
     "forward_only": false,
     "topography_object": {
@@ -493,6 +493,12 @@
     "out_group": {
         "label": "Results group name",
         "value": "DirectCurrentInversion"
+    },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
     },
     "monitoring_directory": "",
     "workspace_geoh5": "",
