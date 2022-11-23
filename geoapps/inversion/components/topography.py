@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.drivers import BaseParams
+    from geoapps.driver_base.params import BaseParams
     from . import InversionMesh
     from typing import Any
 
@@ -106,6 +106,9 @@ class InversionTopography(InversionLocations):
         if self.params.inversion_type in forced_to_surface:
             active_cells = active_from_xyz(
                 mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
+            )
+            print(
+                "Adjusting active cells so that receivers are all within an active cell . . ."
             )
             active_cells[
                 mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
