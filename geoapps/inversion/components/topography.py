@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from . import InversionMesh
     from typing import Any
 
+import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -22,10 +23,10 @@ from geoh5py.objects import Curve
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
+from geoapps.inversion.components.data import InversionData
+from geoapps.inversion.components.locations import InversionLocations
 from geoapps.shared_utils.utils import filter_xy
-
-from .data import InversionData
-from .locations import InversionLocations
+from geoapps.utils.models import floating_active
 
 
 class InversionTopography(InversionLocations):
@@ -110,11 +111,18 @@ class InversionTopography(InversionLocations):
             print(
                 "Adjusting active cells so that receivers are all within an active cell . . ."
             )
+
             active_cells[
                 mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
                     data.locations
                 )
             ] = True
+
+            if floating_active(mesh.mesh, active_cells):
+                warnings.warn(
+                    "Active cell adjustment has created a patch of active cells in the air, likely due to a faulty survey location."
+                )
+
         else:
             mesh_object = (
                 mesh.entity if "2d" in self.params.inversion_type else mesh.mesh
