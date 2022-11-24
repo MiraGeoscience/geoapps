@@ -22,9 +22,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.152097,
-    "phi_d": 5.578,
-    "phi_m": 110.1,
+    "data_norm": 0.15015,
+    "phi_d": 4.782,
+    "phi_m": 87.92,
 }
 
 np.random.seed(0)
@@ -53,7 +53,7 @@ def test_dc_fwr_run(
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=topography.uid,
-        z_from_topo=True,
+        z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
         resolution=None,
@@ -95,7 +95,7 @@ def test_dc_run(
             z_norm=1.0,
             gradient_type="components",
             potential_channel_bool=True,
-            z_from_topo=True,
+            z_from_topo=False,
             potential_channel=potential.uid,
             potential_uncertainty=1e-3,
             max_global_iterations=max_iterations,
