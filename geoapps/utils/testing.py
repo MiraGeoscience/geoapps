@@ -87,7 +87,6 @@ def setup_inversion_workspace(
     n_lines=5,
     refinement=(4, 6),
     padding_distance=100,
-    drape_height=5.0,
     inversion_type="other",
     flatten=False,
 ):
@@ -122,7 +121,7 @@ def setup_inversion_workspace(
     if flatten:
         Z = np.zeros_like(X)
     else:
-        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
+        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0))
 
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
