@@ -100,9 +100,7 @@ class InversionTopography(InversionLocations):
         forced_to_surface = [
             "magnetotellurics",
             "direct current 3d",
-            "direct current 2d",
             "induced polarization 3d",
-            "induced polarization 2d",
         ]
         if self.params.inversion_type in forced_to_surface:
             active_cells = active_from_xyz(
