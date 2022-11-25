@@ -25,7 +25,6 @@ defaults = {
     "ga_group_name": "Octree_Mesh",
     "generate_sweep": False,
     "run_command": "geoapps.octree_creation.driver",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",

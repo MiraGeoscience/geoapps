@@ -14,7 +14,9 @@ from geoh5py.objects.surveys.direct_current import PotentialElectrode
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
-    "title": "SimPEG Induced Polarization inversion",
+    "title": "Induced Polarization 3D inversion",
+    "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -22,10 +24,8 @@ inversion_defaults = {
     "topography": None,
     "data_object": None,
     "resolution": None,
-    "z_from_topo": False,
+    "z_from_topo": True,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "chargeability_channel": None,
@@ -78,7 +78,7 @@ inversion_defaults = {
     "n_cpu": None,
     "tile_spatial": 1,
     "max_ram": None,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "InducedPolarizationInversion",
@@ -86,14 +86,15 @@ inversion_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "chargeability_channel_bool": True,
 }
 
 forward_defaults = {
-    "title": "SimPEG Induced Polarization Forward",
+    "title": "Induced Polarization 3D forward",
+    "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -101,10 +102,8 @@ forward_defaults = {
     "topography": None,
     "data_object": None,
     "resolution": None,
-    "z_from_topo": False,
+    "z_from_topo": True,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "chargeability_channel_bool": True,
@@ -127,7 +126,6 @@ forward_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
@@ -145,6 +143,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Mesh and Models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Chargeability (V/V)",
+        "property": None,
+        "value": 0.0,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -156,7 +165,9 @@ forward_ui_json = {
     "z_norm": 2.0,
 }
 default_ui_json = {
-    "title": "SimPEG Induced Polarization inversion",
+    "title": "Induced Polarization 3D inversion",
+    "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
     "data_object": {
         "main": True,
@@ -164,6 +175,13 @@ default_ui_json = {
         "label": "Object",
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": None,
+    },
+    "z_from_topo": {
+        "group": "Data",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
     },
     "chargeability_channel_bool": True,
     "chargeability_channel": {
@@ -252,6 +270,26 @@ default_ui_json = {
         "label": "Results group name",
         "value": "InducedPolarizationInversion",
     },
+    "receivers_offset_z": {
+        "group": "Data pre-processing",
+        "label": "Z static offset",
+        "optional": True,
+        "enabled": False,
+        "value": 0.0,
+        "visible": False,
+    },
+    "receivers_radar_drape": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Data pre-processing",
+        "label": "Z radar offset",
+        "tooltip": "Apply a non-homogeneous offset to survey object from radar channel.",
+        "optional": True,
+        "parent": "data_object",
+        "value": None,
+        "enabled": False,
+        "visible": False,
+    },
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -295,7 +333,5 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0.0,
-    "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
 }

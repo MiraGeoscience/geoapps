@@ -15,20 +15,19 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "SimPEG Induced Polarization inversion",
+    "title": "Induced Polarization 2D inversion",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
     "topography": None,
     "data_object": None,
+    "z_from_topo": True,
     "line_object": None,
     "line_id": 1,
     "resolution": None,
-    "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "chargeability_channel": None,
@@ -95,26 +94,24 @@ inversion_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "chargeability_channel_bool": True,
 }
 forward_defaults = {
-    "title": "SimPEG Induced Polarization Forward",
+    "title": "Induced Polarization 2D forward",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
     "topography": None,
     "data_object": None,
+    "resolution": None,
+    "z_from_topo": True,
     "line_object": None,
     "line_id": 1,
-    "resolution": None,
-    "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "chargeability_channel_bool": True,
@@ -143,7 +140,6 @@ forward_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
@@ -162,6 +158,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Mesh and Models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Chargeability (V/V)",
+        "property": None,
+        "value": 0.0,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -174,7 +181,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Induced Polarization inversion",
+    "title": "Induced Polarization 2D inversion",
+    "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "line_object": {
         "association": ["Cell", "Vertex"],
@@ -198,6 +206,13 @@ default_ui_json = {
         "label": "Object",
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": None,
+    },
+    "z_from_topo": {
+        "group": "Data",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
     },
     "chargeability_channel_bool": True,
     "chargeability_channel": {
@@ -247,7 +262,7 @@ default_ui_json = {
         "main": True,
         "isValue": False,
         "parent": "mesh",
-        "label": "Initial Chargeability (V/V)",
+        "label": "Initial chargeability (V/V)",
         "property": None,
         "value": 0.0,
     },
@@ -258,7 +273,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Chargeability (V/V)",
+        "label": "Reference chargeability (V/V)",
         "property": None,
         "value": 0.0,
     },
@@ -288,6 +303,26 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
+    "u_cell_size": {
+        "min": 0.0,
+        "group": "Mesh and Models",
+        "main": True,
+        "enabled": True,
+        "dependency": "mesh",
+        "dependencyType": "disabled",
+        "label": "Horizontal cell size (m)",
+        "value": 25.0,
+    },
+    "v_cell_size": {
+        "min": 0.0,
+        "group": "Mesh and Models",
+        "main": True,
+        "enabled": True,
+        "dependency": "mesh",
+        "dependencyType": "disabled",
+        "label": "Vertical cell size (m)",
+        "value": 25.0,
+    },
     "expansion_factor": {
         "main": True,
         "group": "Mesh and Models",
@@ -295,6 +330,10 @@ default_ui_json = {
         "dependency": "mesh",
         "dependencyType": "disabled",
         "value": 1.1,
+        "min": 1.0,
+        "max": 2.0,
+        "precision": 1,
+        "lineEdit": False,
     },
     "window_center_x": {
         "group": "Data window",
@@ -344,6 +383,26 @@ default_ui_json = {
         "label": "Results group name",
         "value": "InducedPolarizationInversion",
     },
+    "receivers_offset_z": {
+        "group": "Data pre-processing",
+        "label": "Z static offset",
+        "optional": True,
+        "enabled": False,
+        "value": 0.0,
+        "visible": False,
+    },
+    "receivers_radar_drape": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Data pre-processing",
+        "label": "Z radar offset",
+        "tooltip": "Apply a non-homogeneous offset to survey object from radar channel.",
+        "optional": True,
+        "parent": "data_object",
+        "value": None,
+        "enabled": False,
+        "visible": False,
+    },
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -386,7 +445,5 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0.0,
-    "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
 }
