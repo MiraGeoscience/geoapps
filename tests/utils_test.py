@@ -39,7 +39,10 @@ from geoapps.shared_utils.utils import (
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
 from geoapps.utils.models import (
-    RectangularBlock, get_drape_model, face_average, floating_active
+    RectangularBlock,
+    face_average,
+    floating_active,
+    get_drape_model,
 )
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
@@ -58,6 +61,7 @@ from geoapps.utils.workspace import sorted_children_dict
 geoh5 = Workspace("./FlinFlon.geoh5")
 dc_geoh5 = "./FlinFlon_dcip.geoh5"
 
+
 def test_face_average(tmp_path):
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     with geotest.make() as workspace:
@@ -73,6 +77,7 @@ def test_face_average(tmp_path):
         face_avs = face_average(mesh, active)
         # omesh.add_data({"active_cells": {"values": active[mesh._ubc_order]}})
         assert np.sum(face_avs == 6) == 1
+
 
 def test_floating_active(tmp_path):
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
