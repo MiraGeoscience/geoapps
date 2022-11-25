@@ -98,7 +98,7 @@ def test_ip_run(
             z_norm=0.0,
             gradient_type="components",
             chargeability_channel_bool=True,
-            z_from_topo=True,
+            z_from_topo=False,
             chargeability_channel=potential.uid,
             chargeability_uncertainty=2e-4,
             max_global_iterations=max_iterations,

@@ -157,19 +157,6 @@ class SurveyFactory(SimPEGFactory):
             else:
                 self._add_data(survey, data, local_index, channel)
 
-        if self.factory_type in [
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-        ]:
-            if (
-                (mesh is not None)
-                and (active_cells is not None)
-                and self.params.z_from_topo
-            ):
-                survey.drape_electrodes_on_topography(mesh, active_cells)
-
         survey.dummy = self.dummy
 
         return survey, self.local_index
