@@ -22,9 +22,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.15015,
-    "phi_d": 4.782,
-    "phi_m": 87.92,
+    "data_norm": 0.14152,
+    "phi_d": 11.93,
+    "phi_m": 340.8,
 }
 
 np.random.seed(0)
@@ -45,6 +45,7 @@ def test_dc_fwr_run(
         n_electrodes=n_electrodes,
         n_lines=n_lines,
         refinement=refinement,
+        drape_height=0.0,
         inversion_type="dcip",
         flatten=False,
     )
