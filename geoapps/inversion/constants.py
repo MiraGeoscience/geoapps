@@ -33,12 +33,11 @@ default_ui_json = {
         "main": True,
         "optional": True,
         "enabled": False,
-        "isValue": False,
-        "label": "Elevation adjustment",
-        "tooltip": "Adjust elevation given from topography object",
+        "label": "Elevation channel",
+        "tooltip": "Set elevation from channel",
         "parent": "topography_object",
-        "property": None,
-        "value": 0.0,
+        "value": "",
+        "verbose": 2,
     },
     "data_object": {
         "main": True,
@@ -74,6 +73,7 @@ default_ui_json = {
         "value": 1,
         "min": 1,
         "max": 1000,
+        "verbose": 2,
     },
     "output_tile_files": False,
     "z_from_topo": {
@@ -81,22 +81,7 @@ default_ui_json = {
         "label": "Take z from topography",
         "tooltip": "Sets survey elevation to topography before any offsets are applied.",
         "value": False,
-    },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
+        "verbose": 3,
     },
     "receivers_offset_z": {
         "group": "Data pre-processing",
@@ -104,6 +89,7 @@ default_ui_json = {
         "optional": True,
         "enabled": False,
         "value": 0.0,
+        "verbose": 3,
     },
     "receivers_radar_drape": {
         "association": ["Cell", "Vertex"],
@@ -115,6 +101,7 @@ default_ui_json = {
         "parent": "data_object",
         "value": None,
         "enabled": False,
+        "verbose": 3,
     },
     "gps_receivers_offset": None,
     "ignore_values": {
@@ -123,6 +110,7 @@ default_ui_json = {
         "enabled": False,
         "label": "Values to ignore",
         "value": None,
+        "verbose": 3,
     },
     "resolution": {
         "min": 0.0,
@@ -131,6 +119,7 @@ default_ui_json = {
         "enabled": False,
         "label": "Downsampling resolution",
         "value": 0.0,
+        "verbose": 3,
     },
     "detrend_order": {
         "min": 0,
@@ -140,6 +129,7 @@ default_ui_json = {
         "label": "Detrend order",
         "optional": True,
         "value": 0,
+        "verbose": 3,
     },
     "detrend_type": {
         "choiceList": ["all", "perimeter"],
@@ -150,6 +140,7 @@ default_ui_json = {
         "optional": True,
         "label": "Detrend type",
         "value": "all",
+        "verbose": 3,
     },
     "mesh": {
         "group": "Mesh and Models",
@@ -213,7 +204,7 @@ default_ui_json = {
         "enabled": True,
         "dependency": "mesh",
         "dependencyType": "disabled",
-        "label": "Depth of core refinement volume",
+        "label": "Depth of core (m)",
         "value": 500.0,
     },
     "max_distance": {
@@ -233,7 +224,7 @@ default_ui_json = {
         "enabled": True,
         "dependency": "mesh",
         "dependencyType": "disabled",
-        "label": "Horizontal padding",
+        "label": "Horizontal padding (m)",
         "value": 1000.0,
     },
     "vertical_padding": {
@@ -243,7 +234,7 @@ default_ui_json = {
         "enabled": True,
         "dependency": "mesh",
         "dependencyType": "disabled",
-        "label": "Vertical padding",
+        "label": "Vertical padding (m)",
         "value": 1000.0,
     },
     "window_center_x": {
@@ -252,12 +243,14 @@ default_ui_json = {
         "groupOptional": True,
         "label": "Window center easting",
         "value": 0.0,
+        "verbose": 3,
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": False,
         "label": "Window center northing",
         "value": 0.0,
+        "verbose": 3,
     },
     "window_width": {
         "min": 0.0,
@@ -265,6 +258,7 @@ default_ui_json = {
         "enabled": False,
         "label": "Window width",
         "value": 0.0,
+        "verbose": 3,
     },
     "window_height": {
         "min": 0.0,
@@ -272,6 +266,7 @@ default_ui_json = {
         "enabled": False,
         "label": "Window height",
         "value": 0.0,
+        "verbose": 3,
     },
     "window_azimuth": {
         "min": -180,
@@ -280,11 +275,14 @@ default_ui_json = {
         "enabled": False,
         "label": "Window azimuth",
         "value": 0.0,
+        "verbose": 3,
     },
     "inversion_style": "voxel",
     "chi_factor": {
-        "min": 0.0,
-        "max": 1.0,
+        "min": 0.1,
+        "max": 20.0,
+        "precision": 1,
+        "lineEdit": False,
         "group": "Optimization",
         "label": "Chi factor",
         "value": 1.0,
@@ -299,24 +297,28 @@ default_ui_json = {
         "min": 0.0,
         "precision": 1,
         "lineEdit": False,
+        "verbose": 2,
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
         "tooltip": "Update weights at every iteration",
         "label": "Every iteration",
         "value": False,
+        "verbose": 2,
     },
     "f_min_change": {
         "group": "Update IRLS directive",
         "label": "f min change",
         "value": 1e-4,
         "min": 1e-6,
+        "verbose": 3,
     },
     "beta_tol": {
         "group": "Update IRLS directive",
         "label": "Beta tolerance",
         "value": 0.5,
         "min": 0.0001,
+        "verbose": 3,
     },
     "prctile": {
         "group": "Update IRLS directive",
@@ -324,21 +326,25 @@ default_ui_json = {
         "value": 95,
         "max": 100,
         "min": 5,
+        "verbose": 3,
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
         "label": "Cool epsilon q",
         "value": True,
+        "verbose": 3,
     },
     "coolEpsFact": {
         "group": "Update IRLS directive",
         "label": "Cool epsilon fact",
         "value": 1.2,
+        "verbose": 3,
     },
     "beta_search": {
         "group": "Update IRLS directive",
         "label": "Perform beta search",
         "value": False,
+        "verbose": 3,
     },
     "starting_chi_factor": {
         "group": "Update IRLS directive",
@@ -348,6 +354,7 @@ default_ui_json = {
         "value": 1.0,
         "tooltip": "This chi factor will be used to determine the misfit"
         " threshold after which IRLS iterations begin.",
+        "verbose": 3,
     },
     "max_global_iterations": {
         "min": 1,
@@ -365,19 +372,28 @@ default_ui_json = {
         "tooltip": "Incomplete Re-weighted Least Squares iterations for non-L2 problems",
         "value": 25,
         "enabled": True,
+        "verbose": 2,
     },
     "coolingRate": {
         "group": "Optimization",
         "label": "Iterations per beta",
-        "value": 1,
+        "value": 2,
         "min": 1,
+        "LineEdit": False,
+        "max": 10,
+        "precision": 1,
+        "verbose": 2,
     },
     "coolingFactor": {
         "group": "Optimization",
         "label": "Beta cooling factor",
         "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
         "value": 2.0,
-        "min": 1.0,
+        "min": 1.1,
+        "max": 100,
+        "precision": 1,
+        "lineEdit": False,
+        "verbose": 2,
     },
     "max_line_search_iterations": {
         "group": "Optimization",
@@ -385,6 +401,7 @@ default_ui_json = {
         "value": 20,
         "min": 1,
         "enabled": True,
+        "verbose": 3,
     },
     "max_cg_iterations": {
         "min": 0,
@@ -392,6 +409,7 @@ default_ui_json = {
         "label": "Maximum CG iterations",
         "value": 30,
         "enabled": True,
+        "verbose": 2,
     },
     "initial_beta_ratio": {
         "min": 0.0,
@@ -401,6 +419,7 @@ default_ui_json = {
         "enabled": True,
         "label": "Initial beta ratio",
         "value": 100.0,
+        "verbose": 2,
     },
     "initial_beta": {
         "min": 0.0,
@@ -410,6 +429,7 @@ default_ui_json = {
         "dependencyType": "disabled",
         "label": "Initial beta",
         "value": 1.0,
+        "verbose": 2,
     },
     "tol_cg": {
         "min": 0,
@@ -417,6 +437,7 @@ default_ui_json = {
         "label": "Conjugate gradient tolerance",
         "value": 1e-4,
         "enabled": True,
+        "verbose": 3,
     },
     "alpha_s": {
         "min": 0.0,
@@ -506,6 +527,7 @@ default_ui_json = {
         "group": "Regularization",
         "label": "Gradient type",
         "value": "total",
+        "verbose": 3,
     },
     "lower_bound": {
         "association": ["Cell", "Vertex"],
@@ -545,14 +567,15 @@ default_ui_json = {
         "dependencyType": "enabled",
         "optional": True,
         "enabled": False,
-        "label": "Number of cpu",
+        "label": "Number of CPUs",
         "value": 1,
     },
     "store_sensitivities": {
         "choiceList": ["disk", "ram"],
         "group": "Compute",
         "label": "Storage device",
-        "value": "disk",
+        "tooltip": "Use disk on a fast local SSD, and RAM elsewhere",
+        "value": "ram",
     },
     "max_chunk_size": {
         "min": 0,
@@ -561,11 +584,13 @@ default_ui_json = {
         "enabled": True,
         "label": "Maximum chunk size",
         "value": 128,
+        "verbose": 3,
     },
     "chunk_by_rows": {
         "group": "Compute",
         "label": "Chunk by rows",
         "value": True,
+        "verbose": 3,
     },
     "generate_sweep": {
         "label": "Generate sweep file",
@@ -578,12 +603,6 @@ default_ui_json = {
     "workspace_geoh5": None,
     "geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": {
-        "value": False,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": True,
-    },
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }

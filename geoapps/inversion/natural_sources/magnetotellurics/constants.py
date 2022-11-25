@@ -17,7 +17,8 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Magnetotellurics inversion",
+    "title": "Magnetotellurics inversion",
+    "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -27,8 +28,6 @@ inversion_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "zxx_real_channel": None,
@@ -94,7 +93,7 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
@@ -103,7 +102,6 @@ inversion_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "zxx_real_channel_bool": False,
@@ -117,7 +115,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Magnetotellurics Forward",
+    "title": "Magnetotellurics forward",
+    "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -127,18 +126,16 @@ forward_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
-    "zxx_real_channel_bool": False,
-    "zxx_imag_channel_bool": False,
-    "zxy_real_channel_bool": False,
-    "zxy_imag_channel_bool": False,
-    "zyx_real_channel_bool": False,
-    "zyx_imag_channel_bool": False,
-    "zyy_real_channel_bool": False,
-    "zyy_imag_channel_bool": False,
+    "zxx_real_channel_bool": True,
+    "zxx_imag_channel_bool": True,
+    "zxy_real_channel_bool": True,
+    "zxy_imag_channel_bool": True,
+    "zyx_real_channel_bool": True,
+    "zyx_imag_channel_bool": True,
+    "zyy_real_channel_bool": True,
+    "zyy_imag_channel_bool": True,
     "mesh": None,
     "background_conductivity": 1e-3,
     "starting_model": 1e-3,
@@ -158,7 +155,6 @@ forward_defaults = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
@@ -181,6 +177,8 @@ inversion_ui_json = {
     "zyx_imag_channel_bool": False,
     "zyy_real_channel_bool": False,
     "zyy_imag_channel_bool": False,
+    "detrend_type": None,
+    "detrend_order": None,
 }
 
 forward_ui_json = {
@@ -196,7 +194,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Magnetotellurics inversion",
+    "title": "Magnetotellurics inversion",
+    "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "data_object": {
         "main": True,
@@ -452,7 +451,7 @@ default_ui_json = {
         "main": True,
         "isValue": False,
         "parent": "mesh",
-        "label": "Initial Conductivity (S/m)",
+        "label": "Initial conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
@@ -463,7 +462,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Conductivity (S/m)",
+        "label": "Reference conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
