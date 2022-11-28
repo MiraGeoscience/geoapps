@@ -781,7 +781,10 @@ class InversionBaseParams(BaseParams):
     @staticmethod
     def update_group_metadata(ga_group: SimPEGGroup, input_file: InputFile):
         """
-        Add metadata to the SimPEGGroup inversion.
+        Add metadata to the SimPEGGroup inversion using input file class.
+
+        :param ga_group: Inversion group
+        :param input_file: Input file object
         """
         metadata = {}
         data = getattr(input_file, "_demote")(input_file.data)
