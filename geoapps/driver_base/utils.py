@@ -142,7 +142,6 @@ def active_from_xyz(
         z_xyz[ind_nan] = xyz[ind, -1]
 
     # Create an active bool of all True
-
     n_cells = mesh.n_cells if isinstance(mesh, (DrapeModel, Octree)) else mesh.nC
     active = getattr(np, logical)(
         (locations[:, -1] < z_xyz).reshape((n_cells, -1), order="F"), axis=1
