@@ -13,7 +13,7 @@ from uuid import UUID
 import numpy as np
 from geoh5py.data import NumericData
 from geoh5py.groups import SimPEGGroup
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import InputFile, utils
 from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.params import BaseParams
@@ -764,6 +764,10 @@ class InversionBaseParams(BaseParams):
             self._ga_group = SimPEGGroup.create(self.geoh5, name=self.out_group)
         elif isinstance(self.out_group, SimPEGGroup):
             self._ga_group = self.out_group
+
+        if isinstance(self._ga_group, SimPEGGroup) and self._ga_group.metadata is None:
+            self.update_group_metadata(self._ga_group, self.input_file)
+
         return self._ga_group
 
     @property
@@ -773,3 +777,21 @@ class InversionBaseParams(BaseParams):
     @distributed_workers.setter
     def distributed_workers(self, val):
         self.setter_validator("distributed_workers", val)
+
+    @staticmethod
+    def update_group_metadata(ga_group: SimPEGGroup, input_file: InputFile):
+        """
+        Add metadata to the SimPEGGroup inversion.
+        """
+        metadata = {}
+        data = getattr(input_file, "_demote")(input_file.data)
+
+        for key, value in input_file.ui_json.items():
+            if utils.is_form(value) and "group" in value:
+
+                if value["group"] not in metadata:
+                    metadata[value["group"]] = {}
+
+                metadata[value["group"]].update({value["label"]: data[key]})
+
+        ga_group.metadata = {"SimPEG": metadata}
