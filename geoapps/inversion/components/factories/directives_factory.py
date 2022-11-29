@@ -55,7 +55,7 @@ class DirectivesFactory:
         sorting,
         global_misfit,
         regularizer,
-    ):
+    ) -> list[directives.InversionDirective]:
 
         self.vector_inversion_directive = directives.VectorInversion(
             [local.simulation for local in global_misfit.objfcts],

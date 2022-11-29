@@ -64,7 +64,7 @@ def test_susceptibility_fwr_run(
     assert params.ga_group.metadata is not None, "Error adding metadata on creation."
 
     fwr_driver.run()
-    return fwr_driver.starting_model
+    return fwr_driver.inversion_models.starting
 
 
 def test_susceptibility_run(

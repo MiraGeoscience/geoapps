@@ -98,21 +98,21 @@ class InversionData(InversionLocations):
         """
         super().__init__(workspace, params, window)
 
-        self.resolution: int = None
-        self.offset: list[float] = None
-        self.radar: np.ndarray = None
-        self.ignore_value: float = None
-        self.ignore_type: str = None
-        self.detrend_order: float = None
-        self.detrend_type: str = None
-        self.locations: np.ndarray = None
+        self.resolution: int | None = None
+        self.offset: list[float] | None = None
+        self.radar: np.ndarray | None = None
+        self.ignore_value: float | None = None
+        self.ignore_type: str | None = None
+        self.detrend_order: float | None = None
+        self.detrend_type: str | None = None
+        self.locations: np.ndarray | None = None
         self.has_pseudo: bool = False
-        self.mask: np.ndarray = None
-        self.global_map: np.ndarray = None
-        self.indices: np.ndarray = None
-        self.vector: bool = None
-        self.n_blocks: int = None
-        self.components: list[str] = None
+        self.mask: np.ndarray | None = None
+        self.global_map: np.ndarray | None = None
+        self.indices: np.ndarray | None = None
+        self.vector: bool | None = None
+        self.n_blocks: int | None = None
+        self.components: list[str] | None = None
         self.observed: dict[str, np.ndarray] = {}
         self.predicted: dict[str, np.ndarray] = {}
         self.uncertainties: dict[str, np.ndarray] = {}
@@ -159,7 +159,6 @@ class InversionData(InversionLocations):
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
-        self._survey, _ = self.survey()
         self.save_data(self.entity)
 
     def filter(self, a):
@@ -419,7 +418,15 @@ class InversionData(InversionLocations):
 
         return normalizations
 
-    def survey(
+    @property
+    def survey(self):
+        """Pointer to a SimPEG survey class."""
+        if getattr(self, "_survey", None) is None:
+            self._survey, _ = self.create_survey()
+
+        return self._survey
+
+    def create_survey(
         self,
         mesh: TreeMesh = None,
         local_index: np.ndarray = None,

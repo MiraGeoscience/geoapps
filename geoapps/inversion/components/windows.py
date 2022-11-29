@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
@@ -52,10 +52,14 @@ class InversionWindow:
         """
         self.workspace = workspace
         self.params = params
+        self.window: dict[str, Any] = None
         self._initialize()
 
     def _initialize(self) -> None:
         """Extract data from workspace using params data."""
+
+        self.window = self.params.window()
+
         if self.is_empty():
             data_object = self.params.data_object
             if isinstance(data_object, Grid2D):
@@ -96,4 +100,4 @@ class InversionWindow:
             return center_x_null & center_y_null & size_x_null & size_y_null
 
     def __call__(self):
-        return self.params.window()
+        return self.window
