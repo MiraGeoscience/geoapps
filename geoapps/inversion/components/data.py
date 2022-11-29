@@ -422,7 +422,6 @@ class InversionData(InversionLocations):
     def survey(
         self,
         mesh: TreeMesh = None,
-        active_cells: np.ndarray = None,
         local_index: np.ndarray = None,
         channel=None,
     ):
@@ -441,7 +440,6 @@ class InversionData(InversionLocations):
         survey = survey_factory.build(
             data=self,
             mesh=mesh,
-            active_cells=active_cells,
             local_index=local_index,
             channel=channel,
         )
@@ -478,7 +476,6 @@ class InversionData(InversionLocations):
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,
-                active_cells=active_cells,
                 mapping=mapping,
             )
 

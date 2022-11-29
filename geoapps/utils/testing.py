@@ -235,9 +235,7 @@ def setup_inversion_workspace(
             return_colocated_mesh=True,
             return_sorting=True,
         )
-        active = active_from_xyz(
-            entity, topography.vertices, grid_reference="cell_centers"
-        )
+        active = active_from_xyz(entity, topography.vertices, grid_reference="center")
 
     else:
         padDist = np.ones((3, 2)) * padding_distance
@@ -257,7 +255,7 @@ def setup_inversion_workspace(
             finalize=True,
         )
         entity = treemesh_2_octree(geoh5, mesh, name="mesh")
-        active = active_from_xyz(mesh, topography.vertices, grid_reference="top_nodes")
+        active = active_from_xyz(entity, topography.vertices, grid_reference="top")
         permutation = mesh._ubc_order  # pylint: disable=W0212
 
     # Model
