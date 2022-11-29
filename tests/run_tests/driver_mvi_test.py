@@ -69,7 +69,7 @@ def test_magnetic_vector_fwr_run(
     fwr_driver = MagneticVectorDriver(params)
 
     fwr_driver.run()
-    return fwr_driver.starting_model
+    return fwr_driver.inversion_models.starting
 
 
 def test_magnetic_vector_run(

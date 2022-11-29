@@ -66,7 +66,7 @@ def test_ip_2d_fwr_run(
     fwr_driver = InducedPolarization2DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.inversion_models.starting
 
 
 def test_ip_2d_run(
