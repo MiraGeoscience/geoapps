@@ -267,7 +267,7 @@ class InversionData(InversionLocations):
 
                 if "direct current" in self.params.inversion_type:
                     self.transformations[component] = 1 / (
-                        geometric_factor(self._survey) + 1e-10
+                        geometric_factor(self.survey) + 1e-10
                     )
 
                     apparent_property = data[component].copy()

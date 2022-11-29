@@ -7,10 +7,6 @@
 
 from __future__ import annotations
 
-from uuid import UUID
-
-from geoh5py.groups import SimPEGGroup
-
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 ################# defaults ##################
@@ -142,21 +138,24 @@ default_ui_json = {
         "main": True,
         "group": "Data",
         "label": "Simulation A",
-        "meshType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
+        "fileDescription": ["Input File"],
+        "fileType": ["ui.json"],
         "value": None,
     },
     "simulation_b": {
         "main": True,
         "group": "Data",
         "label": "Simulation B",
-        "meshType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
+        "fileDescription": ["Input File"],
+        "fileType": ["ui.json"],
         "value": None,
     },
     "simulation_c": {
         "main": True,
         "group": "Data",
         "label": "Simulation C",
-        "meshType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
+        "fileDescription": ["Input File"],
+        "fileType": ["ui.json"],
         "optional": True,
         "enabled": False,
         "value": None,
@@ -223,9 +222,9 @@ validations = {
         "required": True,
         "values": ["joint single property"],
     },
-    "simulation_a": {"required": True, "types": [str, UUID, SimPEGGroup]},
-    "simulation_b": {"required": True, "types": [str, UUID, SimPEGGroup]},
-    "simulation_c": {"types": [str, UUID, SimPEGGroup, type(None)]},
+    "simulation_a": {"required": True, "types": [str]},
+    "simulation_b": {"required": True, "types": [str]},
+    "simulation_c": {"types": [str, type(None)]},
 }
 
 app_initializer = {}

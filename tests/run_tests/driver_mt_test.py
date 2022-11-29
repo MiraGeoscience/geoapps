@@ -71,7 +71,7 @@ def test_magnetotellurics_fwr_run(
     fwr_driver = MagnetotelluricsDriver(params, warmstart=False)
     fwr_driver.run()
 
-    return fwr_driver.inversion_models.starting
+    return fwr_driver.models.starting
 
 
 def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):

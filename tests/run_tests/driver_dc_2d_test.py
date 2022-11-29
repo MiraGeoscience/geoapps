@@ -66,7 +66,7 @@ def test_dc_2d_fwr_run(
     fwr_driver = DirectCurrent2DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.inversion_models.starting
+    return fwr_driver.models.starting
 
 
 def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):

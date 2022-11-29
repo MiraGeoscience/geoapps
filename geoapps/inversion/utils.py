@@ -98,3 +98,19 @@ def calculate_2D_trend(
         f"Removed {order}th order polynomial trend with mean: {np.mean(data_trend):.6g}"
     )
     return data_trend, params
+
+
+def get_driver_from_file(filepath: str):
+    """Extract inversion parameters from SimPEGGroup metadata."""
+
+    import json
+
+    from geoapps.inversion import DRIVER_MAP
+
+    with open(filepath, encoding="utf-8") as file:
+        ifile = json.load(file)
+
+    inversion_type = ifile["inversion_type"]
+    inversion_driver = DRIVER_MAP.get(inversion_type, None)
+
+    return inversion_driver
