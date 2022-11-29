@@ -101,12 +101,13 @@ def test_dc_run(
             potential_uncertainty=1e-3,
             max_global_iterations=max_iterations,
             initial_beta=None,
-            initial_beta_ratio=1e0,
+            initial_beta_ratio=10.0,
             prctile=100,
             upper_bound=10,
             tile_spatial=n_lines,
             store_sensitivities="ram",
             coolingRate=1,
+            chi_factor=0.5,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 

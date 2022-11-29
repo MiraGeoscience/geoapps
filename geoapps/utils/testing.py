@@ -255,7 +255,7 @@ def setup_inversion_workspace(
             finalize=True,
         )
         entity = treemesh_2_octree(geoh5, mesh, name="mesh")
-        active = active_from_xyz(entity, topography.vertices, grid_reference="top")
+        active = active_from_xyz(entity, topography.vertices, grid_reference="center")
         permutation = mesh._ubc_order  # pylint: disable=W0212
 
     # Model
