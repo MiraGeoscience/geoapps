@@ -11,6 +11,7 @@ import numpy as np
 from geoh5py.data import Data
 from geoh5py.objects import DrapeModel
 from geoh5py.workspace import Workspace
+from SimPEG import maps
 from SimPEG.utils.mat_utils import (
     cartesian2amplitude_dip_azimuth,
     dip_azimuth2cartesian,
@@ -66,12 +67,33 @@ class InversionModelCollection:
         self.is_sigma = None
         self.is_vector = None
         self.n_blocks = None
+        self._active_cells = None
+        self._active_cells_map = None
         self._starting = None
         self._reference = None
         self._lower_bound = None
         self._upper_bound = None
         self._conductivity = None
         self._initialize()
+
+    @property
+    def active_cells(self):
+        return self._active_cells
+
+    @active_cells.setter
+    def active_cells(self, actives: np.ndarray):
+        self._active_cells = actives
+        self.edit_ndv_model(actives)
+        self.remove_air(actives)
+
+    @property
+    def active_cells_map(self):
+        if (
+            getattr(self, "_active_cells_map", None) is None
+            and self.active_cells is not None
+        ):
+            maps.InjectActiveCells(self.mesh, self.active_cells, np.nan)
+        return self._active_cells_map
 
     @property
     def starting(self):

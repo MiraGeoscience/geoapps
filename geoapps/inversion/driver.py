@@ -50,11 +50,11 @@ class InversionDriver(BaseDriver):
         self.warmstart = warmstart
         self.workspace = params.geoh5
         self.inversion_type = params.inversion_type
-        self.inversion_window = None
-        self.inversion_data = None
-        self.inversion_topography = None
-        self.inversion_mesh = None
-        self.inversion_models = None
+        self._window = None
+        self._inversion_data = None
+        self._inversion_topography = None
+        self._inversion_mesh = None
+        self._inversion_models = None
         self.inverse_problem = None
         self.survey = None
         self.active_cells = None
@@ -68,8 +68,59 @@ class InversionDriver(BaseDriver):
             self.initialize()
 
     @property
+    def inversion_data(self):
+        """Inversion data"""
+        if getattr(self, "_inversion_data", None) is None:
+            self._inversion_data = InversionData(
+                self.workspace, self.params, self.window()
+            )
+
+        return self._inversion_data
+
+    @property
     def window(self):
-        return self.inversion_window.window
+        """Inversion window"""
+        if getattr(self, "_window", None) is None:
+            self._window = InversionWindow(self.workspace, self.params)
+        return self._window
+
+    @property
+    def inversion_topography(self):
+        """Inversion topography"""
+        if getattr(self, "_inversion_topography", None) is None:
+            self._inversion_topography = InversionTopography(
+                self.workspace, self.params, self.inversion_data, self.window()
+            )
+        return self._inversion_topography
+
+    @property
+    def inversion_mesh(self):
+        """Inversion mesh"""
+        if getattr(self, "_inversion_mesh", None) is None:
+            self._inversion_mesh = InversionMesh(
+                self.workspace,
+                self.params,
+                self.inversion_data,
+                self.inversion_topography,
+            )
+        return self._inversion_mesh
+
+    @property
+    def inversion_models(self):
+        """Inversion models"""
+        if getattr(self, "_inversion_models", None) is None:
+            self._inversion_models = InversionModelCollection(
+                self.workspace, self.params, self.inversion_mesh
+            )
+            # Build active cells array and reduce models active set
+            if self.inversion_mesh is not None and self.inversion_data is not None:
+                self._inversion_models.active_cells = (
+                    self.inversion_topography.active_cells(
+                        self.inversion_mesh, self.inversion_data
+                    )
+                )
+
+        return self._inversion_models
 
     @property
     def locations(self):
@@ -81,41 +132,25 @@ class InversionDriver(BaseDriver):
 
     @property
     def starting_model(self):
-        return self.models.starting
+        return self.inversion_models.starting
 
     @property
     def reference_model(self):
-        return self.models.reference
+        return self.inversion_models.reference
 
     @property
     def lower_bound(self):
-        return self.models.lower_bound
+        return self.inversion_models.lower_bound
 
     @property
     def upper_bound(self):
-        return self.models.upper_bound
+        return self.inversion_models.upper_bound
 
     def initialize(self):
 
         ### Collect inversion components ###
 
         self.configure_dask()
-
-        self.inversion_window = InversionWindow(self.workspace, self.params)
-
-        self.inversion_data = InversionData(self.workspace, self.params, self.window)
-
-        self.inversion_topography = InversionTopography(
-            self.workspace, self.params, self.inversion_data, self.window
-        )
-
-        self.inversion_mesh = InversionMesh(
-            self.workspace, self.params, self.inversion_data, self.inversion_topography
-        )
-
-        self.models = InversionModelCollection(
-            self.workspace, self.params, self.inversion_mesh
-        )
 
         # TODO Need to setup/test workers with address
         if self.params.distributed_workers is not None:
@@ -125,22 +160,10 @@ class InversionDriver(BaseDriver):
                 cluster = LocalCluster(processes=False)
                 Client(cluster)
 
-        # Build active cells array and reduce models active set
-        self.active_cells = self.inversion_topography.active_cells(
-            self.inversion_mesh, self.inversion_data
-        )
-
-        self.models.edit_ndv_model(
-            self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
-        )
-        self.models.remove_air(self.active_cells)
-        self.active_cells_map = maps.InjectActiveCells(
-            self.mesh, self.active_cells, np.nan
-        )
-        self.n_cells = int(np.sum(self.active_cells))
-        self.is_vector = self.models.is_vector
-        self.n_blocks = 3 if self.is_vector else 1
-        self.is_rotated = False if self.inversion_mesh.rotation is None else True
+        # self.n_cells = int(np.sum(self.active_cells))
+        # self.is_vector = self.models.is_vector
+        # self.n_blocks = 3 if self.is_vector else 1
+        # self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
         # Create SimPEG Survey object
         self.survey = self.inversion_data._survey  # pylint: disable=protected-access
@@ -153,7 +176,7 @@ class InversionDriver(BaseDriver):
         # Build tiled misfits and combine to form global misfit
 
         self.global_misfit, self.sorting = MisfitFactory(
-            self.params, models=self.models
+            self.params, models=self.inversion_models
         ).build(self.tiles, self.inversion_data, self.mesh, self.active_cells)
         print("Done.")
 
@@ -243,11 +266,10 @@ class InversionDriver(BaseDriver):
         )
 
     def get_regularization(self):
+        n_cells = int(np.sum(self.active_cells))
 
         if self.inversion_type == "magnetic vector":
-            wires = maps.Wires(
-                ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)
-            )
+            wires = maps.Wires(("p", n_cells), ("s", n_cells), ("t", n_cells))
 
             reg_p = regularization.Sparse(
                 self.mesh,
@@ -296,7 +318,7 @@ class InversionDriver(BaseDriver):
             reg = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
-                mapping=maps.IdentityMap(nP=self.n_cells),
+                mapping=maps.IdentityMap(nP=n_cells),
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
                 alpha_x=self.params.alpha_x,
@@ -407,9 +429,12 @@ class InversionLogger:
 
 if __name__ == "__main__":
 
-    from . import DRIVER_MAP
+    from geoapps.inversion import DRIVER_MAP
 
-    filepath = sys.argv[1]
+    # filepath = sys.argv[1]
+    filepath = (
+        r"C:\Users\dominiquef\Documents\GIT\mira\Vale-RnD\assets\joint_single.ui.json"
+    )
     ifile = InputFile.read_ui_json(filepath)
     inversion_type = ifile.data["inversion_type"]
     inversion_driver = DRIVER_MAP.get(inversion_type, None)

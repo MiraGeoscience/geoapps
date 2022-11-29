@@ -157,6 +157,8 @@ default_ui_json = {
         "group": "Data",
         "label": "Simulation C",
         "meshType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
+        "optional": True,
+        "enabled": False,
         "value": None,
     },
     "starting_model": {
@@ -223,7 +225,7 @@ validations = {
     },
     "simulation_a": {"required": True, "types": [str, UUID, SimPEGGroup]},
     "simulation_b": {"required": True, "types": [str, UUID, SimPEGGroup]},
-    "simulation_c": {"required": True, "types": [str, UUID, SimPEGGroup]},
+    "simulation_c": {"types": [str, UUID, SimPEGGroup, type(None)]},
 }
 
 app_initializer = {}

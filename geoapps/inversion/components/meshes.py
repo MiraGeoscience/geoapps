@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 import numpy as np
 from geoh5py.objects import DrapeModel, Octree
 
-from geoapps.octree_creation.params import OctreeParams
 from geoapps.shared_utils.utils import drape_2_tensor, octree_2_treemesh
 from geoapps.utils.models import get_drape_model
 
@@ -20,6 +19,7 @@ if TYPE_CHECKING:
     from discretize import TreeMesh
     from geoh5py.workspace import Workspace
 
+    from .. import InversionBaseParams
     from . import InversionData, InversionTopography
 
 
@@ -43,25 +43,25 @@ class InversionMesh:
     def __init__(
         self,
         workspace: Workspace,
-        params: OctreeParams,
+        params: InversionBaseParams,
         inversion_data: InversionData,
         inversion_topography: InversionTopography,
     ) -> None:
         """
         :param workspace: Workspace object containing mesh data.
         :param params: Params object containing mesh parameters.
-        :param window: Center and size defining window for data, topography, etc.
-
+        :param inversion_data: Inversion data class
+        :param inversion_topography: Inversion topography class
         """
         self.workspace = workspace
         self.params = params
         self.inversion_data = inversion_data
         self.inversion_topography = inversion_topography
-        self.mesh: TreeMesh = None
-        self.n_cells: int = None
-        self.rotation: dict[str, float] = None
-        self.permutation: np.ndarray = None
-        self.entity: Octree = None
+        self.mesh: TreeMesh | None = None
+        self.n_cells: int | None = None
+        self.rotation: dict[str, float] | None = None
+        self.permutation: np.ndarray | None = None
+        self.entity: Octree | None = None
         self._initialize()
 
     def _initialize(self) -> None:
