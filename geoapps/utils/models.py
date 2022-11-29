@@ -42,7 +42,7 @@ def floating_active(mesh: TreeMesh, active: np.ndarray):
     :param mesh: Tree mesh object
     :param active: active cells array
     """
-    return True if 6 in face_average(mesh, active) else False
+    return True if any(face_average(mesh, active) >= 6) else False
 
 
 def get_drape_model(

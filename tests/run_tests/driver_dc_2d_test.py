@@ -56,7 +56,7 @@ def test_dc_2d_fwr_run(
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=topography.uid,
-        z_from_topo=True,
+        z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
         line_object=geoh5.get_entity("line_ids")[0].uid,
