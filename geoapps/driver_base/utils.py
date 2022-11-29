@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import numpy as np
-import scipy.interpolate
 from geoh5py.objects import DrapeModel, Octree
 from scipy.interpolate import LinearNDInterpolator, NearestNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
@@ -122,7 +121,7 @@ def active_from_xyz(
     if mesh_dim == 2:
         z_offset = cell_size_z(mesh) / 2.0
     else:
-        z_offset = mesh.octree_cells["NCells"] / (2.0 * mesh.w_cell_size)
+        z_offset = mesh.octree_cells["NCells"] * np.abs(mesh.w_cell_size) / 2
 
     # Shift cell center location to top or bottom of cell
     if grid_reference == "top":
