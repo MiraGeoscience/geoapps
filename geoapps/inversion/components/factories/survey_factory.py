@@ -90,9 +90,7 @@ class SurveyFactory(SimPEGFactory):
 
         return survey.Survey
 
-    def assemble_arguments(
-        self, data=None, mesh=None, active_cells=None, local_index=None, channel=None
-    ):
+    def assemble_arguments(self, data=None, mesh=None, local_index=None, channel=None):
         """Provides implementations to assemble arguments for receivers object."""
         receiver_entity = data.entity
 
@@ -120,7 +118,7 @@ class SurveyFactory(SimPEGFactory):
             return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
-                data=data, mesh=mesh, active_cells=active_cells, frequency=channel
+                data=data, mesh=mesh, frequency=channel
             )
         else:
             receivers = ReceiversFactory(self.params).build(
@@ -135,7 +133,6 @@ class SurveyFactory(SimPEGFactory):
         self,
         data=None,
         mesh=None,
-        active_cells=None,
         local_index=None,
         indices=None,
         channel=None,
@@ -146,7 +143,6 @@ class SurveyFactory(SimPEGFactory):
             data=data,
             local_index=local_index,
             mesh=mesh,
-            active_cells=active_cells,
             channel=channel,
         )
 
@@ -335,9 +331,7 @@ class SurveyFactory(SimPEGFactory):
 
         return [sources]
 
-    def _naturalsource_arguments(
-        self, data=None, mesh=None, active_cells=None, frequency=None
-    ):
+    def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
 
         receivers = []
         sources = []
@@ -348,7 +342,6 @@ class SurveyFactory(SimPEGFactory):
                     local_index=self.local_index,
                     data={k: v},
                     mesh=mesh,
-                    active_cells=active_cells,
                 )
             )
 
