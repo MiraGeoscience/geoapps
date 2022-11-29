@@ -100,15 +100,18 @@ class InversionTopography(InversionLocations):
         forced_to_surface = [
             "magnetotellurics",
             "direct current 3d",
+            "direct current 2d",
             "induced polarization 3d",
+            "induced polarization 2d",
         ]
         if self.params.inversion_type in forced_to_surface:
             active_cells = active_from_xyz(
-                mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
+                mesh.entity, self.locations, grid_reference="bottom"
             )
             print(
                 "Adjusting active cells so that receivers are all within an active cell . . ."
             )
+            active_cells = active_cells[np.argsort(mesh.permutation)]
 
             active_cells[
                 mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
@@ -122,12 +125,10 @@ class InversionTopography(InversionLocations):
                 )
 
         else:
-            mesh_object = (
-                mesh.entity if "2d" in self.params.inversion_type else mesh.mesh
-            )
             active_cells = active_from_xyz(
-                mesh_object, self.locations, grid_reference="cell_centers"
+                mesh.entity, self.locations, grid_reference="center"
             )
+            active_cells = active_cells[np.argsort(mesh.permutation)]
 
         if "2d" in self.params.inversion_type:
             ac_model = active_cells.astype("float64")
