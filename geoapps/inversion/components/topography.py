@@ -90,9 +90,6 @@ class InversionTopography(InversionLocations):
 
         self.entity = self.write_entity()
 
-
-
-
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
