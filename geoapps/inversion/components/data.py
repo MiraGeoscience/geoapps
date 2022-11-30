@@ -476,6 +476,7 @@ class InversionData(InversionLocations):
             sim = simulation_factory.build(
                 survey=survey,
                 global_mesh=mesh,
+                active_cells=active_cells,
                 mapping=mapping,
             )
 
