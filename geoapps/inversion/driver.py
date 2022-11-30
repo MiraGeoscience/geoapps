@@ -68,7 +68,7 @@ class InversionDriver(BaseDriver):
         self._regularization: None = None
         self._window = None
 
-        self.logger = InversionLogger("SimPEG.log", self)
+        self.logger = InversionLogger("simpeg.log", self)
         sys.stdout = self.logger
         self.logger.start()
 
@@ -85,6 +85,7 @@ class InversionDriver(BaseDriver):
 
     @property
     def data_misfit(self):
+        """Data misfit holding the simpeg objective function and data sorting for tiles."""
         if getattr(self, "_data_misfit", None) is None:
             self._data_misfit = DataMisfit(self)
 
@@ -92,6 +93,7 @@ class InversionDriver(BaseDriver):
 
     @property
     def directives(self):
+        """List of simpeg.directives for the inversion."""
         if getattr(self, "_directives", None) is None:
             self._directives = DirectivesFactory(self.params).build(
                 self.data,
@@ -105,7 +107,7 @@ class InversionDriver(BaseDriver):
         return self._directives
 
     def initialize(self):
-
+        """Setup the run."""
         self.configure_dask()
 
         # TODO Need to setup/test workers with address
@@ -145,7 +147,7 @@ class InversionDriver(BaseDriver):
 
     @property
     def inversion(self) -> inversion.BaseInversion:
-        """SimPEG inversion made up of an inverse_problem and list of directives."""
+        """Simpeg inversion made up of an inverse_problem and list of directives."""
         if getattr(self, "_inversion", None) is None:
             self._inversion = inversion.BaseInversion(
                 self.inverse_problem, directiveList=self.directives
@@ -154,7 +156,7 @@ class InversionDriver(BaseDriver):
 
     @property
     def mesh(self) -> InversionMesh:
-        """Inversion mesh holding the geoh5 and corresponding discretize mesh."""
+        """Inversion mesh holding the geoh5 and corresponding simpeg mesh."""
         if getattr(self, "_mesh", None) is None:
             self._mesh = InversionMesh(
                 self.workspace,
@@ -181,7 +183,7 @@ class InversionDriver(BaseDriver):
 
     @property
     def optimization(self) -> optimization.ProjectedGNCG:
-        """SimPEG optimization class."""
+        """Simpeg optimization class."""
         if getattr(self, "_optimization", None) is None:
             self._optimization = optimization.ProjectedGNCG(
                 maxIter=self.params.max_global_iterations,
@@ -197,7 +199,7 @@ class InversionDriver(BaseDriver):
 
     @property
     def regularization(self):
-        """SimPEG regularization."""
+        """Simpeg regularization."""
         if getattr(self, "_regularization", None) is None:
             self._regularization = self.get_regularization()
 
@@ -222,7 +224,7 @@ class InversionDriver(BaseDriver):
 
     def start_inversion_message(self):
         """Print start messages."""
-        # SimPEG reports half phi_d, so we scale to match
+        # simpeg reports half phi_d, so we scale to match
         has_chi_start = self.params.starting_chi_factor is not None
         chi_start = (
             self.params.starting_chi_factor if has_chi_start else self.params.chi_factor
@@ -386,7 +388,7 @@ class InversionLogger:
     def start(self):
         date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
         self.write(
-            f"SimPEG {self.driver.inversion_type} inversion started {date_time}\n"
+            f"simpeg {self.driver.inversion_type} inversion started {date_time}\n"
         )
 
     def end(self):
@@ -459,10 +461,10 @@ if __name__ == "__main__":
     from geoapps.inversion import DRIVER_MAP
     from geoapps.inversion.utils import get_driver_from_file
 
-    # filepath = sys.argv[1]
-    filepath = (
-        r"C:\Users\dominiquef\Documents\GIT\mira\Vale-RnD\assets\joint_single.ui.json"
-    )
+    filepath = sys.argv[1]
+    # filepath = (
+    #     r"C:\Users\dominiquef\Documents\GIT\mira\Vale-RnD\assets\joint_single.ui.json"
+    # )
     inversion_driver = get_driver_from_file(filepath)
     if inversion_driver is None:
         msg = f"Could not find a matching inversion driver for file {filepath}."
