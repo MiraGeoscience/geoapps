@@ -27,6 +27,7 @@ from geoapps.inversion.components.data import InversionData
 from geoapps.inversion.components.locations import InversionLocations
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.models import floating_active
+from geoapps.utils.surveys import get_containing_cells
 
 
 class InversionTopography(InversionLocations):
@@ -89,6 +90,9 @@ class InversionTopography(InversionLocations):
 
         self.entity = self.write_entity()
 
+
+
+
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
@@ -108,16 +112,11 @@ class InversionTopography(InversionLocations):
             active_cells = active_from_xyz(
                 mesh.entity, self.locations, grid_reference="bottom"
             )
+            active_cells = active_cells[np.argsort(mesh.permutation)]
             print(
                 "Adjusting active cells so that receivers are all within an active cell . . ."
             )
-            active_cells = active_cells[np.argsort(mesh.permutation)]
-
-            active_cells[
-                mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
-                    data.locations
-                )
-            ] = True
+            active_cells[get_containing_cells(mesh.mesh, data)] = True
 
             if floating_active(mesh.mesh, active_cells):
                 warnings.warn(

@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
+from discretize import TreeMesh, TensorMesh
 from geoh5py.data import FloatData
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
@@ -16,6 +17,33 @@ from scipy.spatial import cKDTree
 
 from geoapps.utils.statistics import is_outlier
 
+
+def get_containing_cells(mesh: TreeMesh | TensorMesh, data: InversionData) -> np.ndarray:
+    """
+    Find indices of cells that contain data locations
+
+    :param mesh: Computational mesh object
+    :param data: Inversion data object
+    """
+    if isinstance(mesh, TreeMesh):
+
+        inds = mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+            data.locations
+        )
+
+    elif isinstance(mesh, TensorMesh):
+
+        locations = data._survey.unique_locations
+        locations # pylint: disable=protected-access
+        xi = np.searchsorted(mesh.nodes_x, locations[:, 0])
+        yi = np.searchsorted(mesh.nodes_y, locations[:, -1])
+        inds = xi + yi * mesh.shape_cells[0]
+
+    else:
+
+        raise ValueError("Mesh must be 'TreeMesh' or 'TensorMesh'")
+
+    return inds
 
 def new_neighbors(distances: np.ndarray, neighbors: np.ndarray, nodes: list[int]):
     """

@@ -17,11 +17,11 @@ from geoapps.shared_utils.utils import drape_2_tensor, octree_2_treemesh
 from geoapps.utils.models import get_drape_model
 
 if TYPE_CHECKING:
-    from discretize import TreeMesh
     from geoh5py.workspace import Workspace
 
     from . import InversionData, InversionTopography
 
+from discretize import TreeMesh, TensorMesh
 
 class InversionMesh:
     """
@@ -57,7 +57,7 @@ class InversionMesh:
         self.params = params
         self.inversion_data = inversion_data
         self.inversion_topography = inversion_topography
-        self.mesh: TreeMesh = None
+        self.mesh: TreeMesh | TensorMesh= None
         self.n_cells: int = None
         self.rotation: dict[str, float] = None
         self.permutation: np.ndarray = None
