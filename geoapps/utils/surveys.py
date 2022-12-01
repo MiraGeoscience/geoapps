@@ -33,10 +33,9 @@ def get_containing_cells(mesh: TreeMesh | TensorMesh, data: InversionData) -> np
 
     elif isinstance(mesh, TensorMesh):
 
-        locations = data._survey.unique_locations
-        locations # pylint: disable=protected-access
-        xi = np.searchsorted(mesh.nodes_x, locations[:, 0])
-        yi = np.searchsorted(mesh.nodes_y, locations[:, -1])
+        locations = data.survey.unique_locations
+        xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
+        yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
         inds = xi + yi * mesh.shape_cells[0]
 
     else:
