@@ -143,7 +143,7 @@ class InversionDriver(BaseDriver):
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
         # Create SimPEG Survey object
-        self.survey = self.inversion_data._survey  # pylint: disable=protected-access
+        self.survey = self.inversion_data.survey
 
         # Tile locations
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#

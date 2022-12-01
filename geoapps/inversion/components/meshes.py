@@ -112,7 +112,7 @@ class InversionMesh:
             ) = get_drape_model(
                 self.workspace,
                 "Models",
-                self.inversion_data._survey.unique_locations,  # pylint: disable=W0212
+                self.inversion_data.locations,  # pylint: disable=W0212
                 [self.params.u_cell_size, self.params.v_cell_size],
                 self.params.depth_core,
                 [self.params.horizontal_padding] * 2
