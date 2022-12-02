@@ -88,7 +88,6 @@ class InversionTopography(InversionLocations):
         if self.is_rotated:
             self.locations = super().rotate(self.locations)
 
-
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
@@ -125,12 +124,8 @@ class InversionTopography(InversionLocations):
             )
             active_cells = active_cells[np.argsort(mesh.permutation)]
 
-        if "2d" in self.params.inversion_type:
-            ac_model = active_cells.astype("float64")
-            active_cells = active_cells[np.argsort(mesh.permutation)]
-        else:
-            ac_model = active_cells[mesh.permutation].astype("float64")
 
+        ac_model = active_cells[mesh.permutation].astype("float64")
         mesh.entity.add_data({"active_cells": {"values": ac_model}})
 
         return active_cells

@@ -134,9 +134,6 @@ class InversionDriver(BaseDriver):
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
         self.models.remove_air(self.active_cells)
-        self.active_cells_map = maps.InjectActiveCells(
-            self.mesh, self.active_cells, np.nan
-        )
         self.n_cells = int(np.sum(self.active_cells))
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
