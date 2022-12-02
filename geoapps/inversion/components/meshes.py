@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from . import InversionData, InversionTopography
 
-from discretize import TreeMesh, TensorMesh
+from discretize import TensorMesh, TreeMesh
 
 
 class InversionMesh:

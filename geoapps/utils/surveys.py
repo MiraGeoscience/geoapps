@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Callable
 
 import numpy as np
-from discretize import TreeMesh, TensorMesh
+from discretize import TensorMesh, TreeMesh
 from geoh5py.data import FloatData
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
