@@ -122,7 +122,9 @@ class InversionData(InversionLocations):
         self.data_entity = None
         self._observed_data_types = {}
         self._survey = None
-        self._initialize()
+
+        if self.params.data_object is not None:
+            self._initialize()
 
     def _initialize(self) -> None:
         """Extract data from the workspace using params data."""

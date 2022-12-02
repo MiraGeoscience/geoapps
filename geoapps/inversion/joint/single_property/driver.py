@@ -10,8 +10,9 @@ import json
 
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.data import FilenameData
+from SimPEG.objective_function import ComboObjectiveFunction
 
-from geoapps.inversion.driver import DataMisfit, InversionDriver
+from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.utils import get_driver_from_json
 
 from .constants import validations
@@ -38,10 +39,13 @@ class JointSinglePropertyDriver(InversionDriver):
                 cluster = LocalCluster(processes=False)
                 Client(cluster)
 
-        misfit = []
-
+        misfits = []
         for label in ["a", "b", "c"]:
             group = getattr(self.params, f"simulation_{label}", None)
+
+            if group is None:
+                continue
+
             input_file = [
                 child
                 for child in group.children
@@ -57,19 +61,37 @@ class JointSinglePropertyDriver(InversionDriver):
             ui_json["workspace_geoh5"] = self.workspace
             driver = get_driver_from_json(ui_json, warmstart=False)
 
-            misfit.append(driver.data_misfit)
+            misfits.append(driver.data_misfit)
 
-        if self.params.forward_only:
-            self._data_misfit = DataMisfit(self)
-            return
+        self._data_misfit = DataMisfit(misfits)
 
-        inversion_problem = self.inverse_problem
         if self.warmstart and not self.params.forward_only:
             print("Pre-computing sensitivities ...")
-            inversion_problem.dpred = (  # pylint: disable=assignment-from-no-return
-                self.data.simulate(
-                    self.models.starting,
-                    inversion_problem,
-                    self.data_misfit.sorting,
-                )
+            self.inverse_problem.dpred = getattr(
+                self.inverse_problem, "get_dpred"
+            )(  # pylint: disable=assignment-from-no-return
+                self.models.starting, compute_J=True
             )
+
+
+class DataMisfit:
+    """Class handling the data misfit function."""
+
+    def __init__(self, misfits: list):
+
+        objfcts = []
+        for misfit in misfits:
+            objfcts += misfit.objective_function.objfcts
+
+        self._objective_function = ComboObjectiveFunction(objfcts=objfcts)
+        self._sorting = [misfit.sorting for misfit in misfits]
+
+    @property
+    def objective_function(self):
+        """The Simpeg.data_misfit class"""
+        return self._objective_function
+
+    @property
+    def sorting(self):
+        """List of arrays for sorting of data from tiles."""
+        return self._sorting

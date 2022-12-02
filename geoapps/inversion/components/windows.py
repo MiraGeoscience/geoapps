@@ -53,7 +53,9 @@ class InversionWindow:
         self.workspace = workspace
         self.params = params
         self.window: dict[str, Any] = None
-        self._initialize()
+
+        if self.params.data_object is not None:
+            self._initialize()
 
     def _initialize(self) -> None:
         """Extract data from workspace using params data."""
