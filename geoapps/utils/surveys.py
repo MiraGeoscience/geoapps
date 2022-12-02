@@ -15,6 +15,7 @@ from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
+from geoapps.inversion.components.data import InversionData
 from geoapps.utils.statistics import is_outlier
 
 

@@ -19,7 +19,6 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-from geoh5py.objects import Curve
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
