@@ -6,6 +6,11 @@
 #  (see LICENSE file at the root of this source code package).
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from geoapps.inversion.components.data import InversionData
+
 from typing import Callable
 
 import numpy as np
@@ -15,7 +20,6 @@ from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
-from geoapps.inversion.components.data import InversionData
 from geoapps.utils.statistics import is_outlier
 
 
@@ -295,11 +299,15 @@ def extract_dcip_survey(
         name=f"{line_name} (currents)",
         vertices=current_locs,
         cells=np.array(current_cells, dtype=np.int32),
+        allow_delete=True,
     )
     currents.add_default_ab_cell_id()
 
     potentials = PotentialElectrode.create(
-        workspace, name=line_name, vertices=survey_locs
+        workspace,
+        name=line_name,
+        vertices=survey_locs,
+        allow_delete=True,
     )
     potentials.cells = np.array(survey_cells, dtype=np.int32)
 
