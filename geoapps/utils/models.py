@@ -118,14 +118,6 @@ def get_drape_model(
     layers[:, 2] = layers[:, 2][::-1]
     model.layers = layers
 
-    model.add_data(
-        {
-            "indices": {
-                "values": np.array(indices, dtype=np.int32),
-                "association": "CELL",
-            }
-        }
-    )
     val = [model]
     if return_colocated_mesh:
         val.append(mesh)
