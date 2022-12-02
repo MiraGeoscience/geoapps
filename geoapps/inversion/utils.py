@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import numpy as np
-from geoh5py.data import FilenameData
 from scipy.spatial import ConvexHull
 
 
@@ -101,17 +100,16 @@ def calculate_2D_trend(
     return data_trend, params
 
 
-def get_driver_from_file(filedata: FilenameData):
+def get_driver_from_json(ui_json: dict, warmstart=True):
     """Extract inversion parameters from SimPEGGroup metadata."""
 
+    from geoh5py.ui_json import InputFile
 
     from geoapps.inversion import DRIVER_MAP
 
-    # with open(filepath, encoding="utf-8") as file:
-    #     ifile = json.load(file)
-    ifile = filedata.values
-    inversion_type = ifile["inversion_type"]
+    inversion_type = ui_json["inversion_type"]
+    ifile = InputFile(ui_json=ui_json)
     driver_class = DRIVER_MAP.get(inversion_type, None)
     params = getattr(driver_class, "_params_class")(ifile)
-    driver = driver_class(params, warmstart=False)
-    return inversion_driver
+    driver = driver_class(params, warmstart=warmstart)
+    return driver

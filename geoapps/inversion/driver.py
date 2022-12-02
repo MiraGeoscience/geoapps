@@ -7,11 +7,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from geoapps.inversion import InversionBaseParams
-
+import json
 import multiprocessing
 import os
 import sys
@@ -22,6 +18,7 @@ from time import time
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
+from geoh5py.shared.utils import fetch_active_workspace
 from SimPEG import (
     directives,
     inverse_problem,
@@ -72,7 +69,7 @@ class InversionDriver(BaseDriver):
         sys.stdout = self.logger
         self.logger.start()
 
-        with self.workspace.open(mode="r+"):
+        with fetch_active_workspace(self.workspace, mode="r+"):
             self.initialize()
 
     @property
@@ -459,13 +456,16 @@ class DataMisfit:
 if __name__ == "__main__":
 
     from geoapps.inversion import DRIVER_MAP
-    from geoapps.inversion.utils import get_driver_from_file
+    from geoapps.inversion.utils import get_driver_from_json
 
-    filepath = sys.argv[1]
-    # filepath = (
-    #     r"C:\Users\dominiquef\Documents\GIT\mira\Vale-RnD\assets\joint_single.ui.json"
-    # )
-    inversion_driver = get_driver_from_file(filepath)
+    # filepath = sys.argv[1]
+    filepath = (
+        r"C:\Users\dominiquef\Documents\GIT\mira\Vale-RnD\assets\joint_single.ui.json"
+    )
+    with open(filepath, encoding="utf-8") as ifile:
+        ui_json = json.load(ifile)
+
+    inversion_driver = get_driver_from_json(ui_json)
     if inversion_driver is None:
         msg = f"Could not find a matching inversion driver for file {filepath}."
         msg += f" Valid inversion types are: {*list(DRIVER_MAP),}."

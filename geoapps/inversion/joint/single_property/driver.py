@@ -6,14 +6,13 @@
 #  (see LICENSE file at the root of this source code package).
 from __future__ import annotations
 
-from os.path import exists
+import json
 
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.data import FilenameData
-from geoh5py.ui_json import InputFile
 
 from geoapps.inversion.driver import DataMisfit, InversionDriver
-from geoapps.inversion.utils import get_driver_from_file
+from geoapps.inversion.utils import get_driver_from_json
 
 from .constants import validations
 from .params import JointSinglePropertyParams
@@ -25,7 +24,7 @@ class JointSinglePropertyDriver(InversionDriver):
     _validations = validations
 
     def __init__(self, params: JointSinglePropertyParams, warmstart=False):
-        super().__init__(params, warmstart)
+        super().__init__(params, warmstart=warmstart)
 
     def initialize(self):
 
@@ -40,22 +39,25 @@ class JointSinglePropertyDriver(InversionDriver):
                 Client(cluster)
 
         misfit = []
+
         for label in ["a", "b", "c"]:
             group = getattr(self.params, f"simulation_{label}", None)
             input_file = [
-                child for child in group.children if isinstance(child, FilenameData)
+                child
+                for child in group.children
+                if isinstance(child, FilenameData) and "ui.json" in child.name
             ]
 
             if not input_file:
                 raise AttributeError(
                     "Input SimPEGGroup must have a ui.json file attached."
                 )
+            ui_json = json.loads(input_file[0].values.decode())
+            ui_json["geoh5"] = self.workspace
+            ui_json["workspace_geoh5"] = self.workspace
+            driver = get_driver_from_json(ui_json, warmstart=False)
 
-            if exists(file_path):
-                driver = get_driver_from_file(input_file)
-
-                with driver.workspace.open(mode="r+"):
-                    misfit.append(driver.data_misfit)
+            misfit.append(driver.data_misfit)
 
         if self.params.forward_only:
             self._data_misfit = DataMisfit(self)
