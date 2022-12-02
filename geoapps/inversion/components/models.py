@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.objects import DrapeModel
 from geoh5py.workspace import Workspace
 from SimPEG.utils.mat_utils import (
     cartesian2amplitude_dip_azimuth,
@@ -19,7 +18,6 @@ from SimPEG.utils.mat_utils import (
 
 from geoapps.driver_base.params import BaseParams
 from geoapps.shared_utils.utils import rotate_xyz, weighted_average
-from geoapps.utils.models import fill_nan
 
 from . import InversionMesh
 
@@ -381,8 +379,6 @@ class InversionModel:
 
         return None
 
-
-
     def _get_value(self, model: float | Data):
         """
         Fills vector with model value to match size of inversion mesh.
@@ -412,7 +408,7 @@ class InversionModel:
 
         """
 
-        xyz_out = self.mesh.mesh.cell_centers
+        xyz_out = self.mesh.entity.centroids
 
         if hasattr(parent, "centroids"):
             xyz_in = parent.centroids
@@ -424,14 +420,9 @@ class InversionModel:
         else:
             xyz_in = parent.vertices
 
-        if (xyz_out.shape[1]) == 2 and isinstance(parent, DrapeModel):
-            resorted_obj = obj[np.argsort(self.mesh.permutation)]
-            nan_ind = np.isnan(resorted_obj)
-            if any(nan_ind):
+        full_vector = weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
 
-            self.mesh.mesh.cell_centers
-        else:
-            return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
+        return full_vector[np.argsort(self.mesh.permutation)]
 
     @property
     def model_type(self):
