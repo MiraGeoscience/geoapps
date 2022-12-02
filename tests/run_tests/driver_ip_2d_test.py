@@ -48,6 +48,7 @@ def test_ip_2d_fwr_run(
         refinement=refinement,
         inversion_type="dcip_2d",
         flatten=False,
+        drape_height=0.0,
     )
     _ = survey_lines(survey, [-100, -100], save="line_ids")
     params = InducedPolarization2DParams(

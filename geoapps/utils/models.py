@@ -19,30 +19,10 @@ from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, DrapeModel
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
-from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.driver import BlockModelDriver
 from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
-
-
-def fill_nan(locations: np.ndarray, model: np.ndarray, filler: np.ndarray = None):
-    """
-    Make sure there are no nan's in the incoming model
-
-    :param locations: xy locations array
-    :param model: model vector
-    :param filler: Optional nan replacement vector. If None replaces with the model
-
-    """
-
-    nan_ind = np.isnan(model)
-    if np.any(nan_ind):
-        tree = cKDTree(locations[~nan_ind])
-        _, nearest_ind = tree.query(locations[nan_ind])
-        model[nan_ind] = filler[nearest_ind] if filler else model[nearest_ind]
-
-    return model
 
 
 def face_average(mesh: TreeMesh, model: np.ndarray) -> np.ndarray:
