@@ -120,7 +120,7 @@ class InversionBaseParams(BaseParams):
                 ui_json=ui_json,
                 data=self.defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
 
         super().__init__(input_file=input_file, **kwargs)
@@ -787,7 +787,7 @@ class InversionBaseParams(BaseParams):
         :param input_file: Input file object
         """
         metadata = {}
-        data = getattr(input_file, "_demote")(input_file.data)
+        data = input_file.demote(input_file.data)
 
         for key, value in input_file.ui_json.items():
             if utils.is_form(value) and "group" in value:

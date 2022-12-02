@@ -66,7 +66,6 @@ class BaseParams:
         self.input_file = input_file
         self.validate = validate
         self.validation_options = validation_options
-
         self._initialize(**kwargs)
 
     def _initialize(self, **kwargs):
@@ -77,11 +76,11 @@ class BaseParams:
                 ui_json=self._default_ui_json,
                 data=self._defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
         self.update(self.input_file.data, validate=False)
         self.param_names = list(self.input_file.data.keys())
-        self.input_file.validation_options["disabled"] = False
+        self.input_file.validate = True
 
         # Apply user input
         if any(kwargs):
@@ -112,7 +111,7 @@ class BaseParams:
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
 
-        params_dict = self.input_file._promote(params_dict)  # pylint: disable=W0212
+        params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
 
         for key, value in params_dict.items():
             if key not in self.ui_json.keys() or key == "geoh5":
@@ -387,7 +386,7 @@ class BaseParams:
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
         if not validate:
-            self.input_file.validation_options["disabled"] = True
+            self.input_file.validate = False
 
         self.input_file.data = self.to_dict()
 

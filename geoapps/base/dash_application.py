@@ -74,7 +74,7 @@ class BaseDashApplication:
                 # Create ifile from ui.json
                 ifile = InputFile(ui_json=ui_json)
                 # Demote ifile data so it can be stored as a string
-                ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
+                ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
                 # Get new object value for dropdown from ui.json
                 object_value = ui_json_data["objects"]
             elif filename is not None and filename.endswith(".geoh5"):
@@ -95,10 +95,10 @@ class BaseDashApplication:
                 # Initialization of app from self.params.
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
-                    validation_options={"disabled": True},
+                    validate=False,
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
+                ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
                 object_value = ui_json_data["objects"]
 
             # Get new options for object dropdown

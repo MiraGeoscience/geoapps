@@ -210,7 +210,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
+                validate=False,
             )
             new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
             driver = EdgeDetectionDriver(new_params)
