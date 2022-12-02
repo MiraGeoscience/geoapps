@@ -48,6 +48,7 @@ def test_dc_2d_fwr_run(
         n_lines=n_lines,
         refinement=refinement,
         inversion_type="dcip_2d",
+        drape_height=0.0,
         flatten=False,
     )
     _ = survey_lines(survey, [-100, -100], save="line_ids")

@@ -79,7 +79,7 @@ def test_dc_run(
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         # Run the inverse
         np.random.seed(0)

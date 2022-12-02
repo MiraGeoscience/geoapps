@@ -18,7 +18,9 @@ from scipy.spatial import cKDTree
 from geoapps.utils.statistics import is_outlier
 
 
-def get_containing_cells(mesh: TreeMesh | TensorMesh, data: InversionData) -> np.ndarray:
+def get_containing_cells(
+    mesh: TreeMesh | TensorMesh, data: InversionData
+) -> np.ndarray:
     """
     Find indices of cells that contain data locations
 
@@ -43,6 +45,7 @@ def get_containing_cells(mesh: TreeMesh | TensorMesh, data: InversionData) -> np
         raise ValueError("Mesh must be 'TreeMesh' or 'TensorMesh'")
 
     return inds
+
 
 def new_neighbors(distances: np.ndarray, neighbors: np.ndarray, nodes: list[int]):
     """

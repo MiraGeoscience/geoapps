@@ -17,6 +17,8 @@ from SimPEG.utils.mat_utils import (
     mkvc,
 )
 
+from geoapps.utils.models import fill_nan
+
 from geoapps.driver_base.params import BaseParams
 from geoapps.shared_utils.utils import rotate_xyz, weighted_average
 
@@ -380,6 +382,8 @@ class InversionModel:
 
         return None
 
+
+
     def _get_value(self, model: float | Data):
         """
         Fills vector with model value to match size of inversion mesh.
@@ -422,7 +426,11 @@ class InversionModel:
             xyz_in = parent.vertices
 
         if (xyz_out.shape[1]) == 2 and isinstance(parent, DrapeModel):
-            return obj[np.argsort(self.mesh.permutation)]
+            resorted_obj = obj[np.argsort(self.mesh.permutation)]
+            nan_ind = np.isnan(resorted_obj)
+            if any(nan_ind):
+
+            self.mesh.mesh.cell_centers
         else:
             return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
 
