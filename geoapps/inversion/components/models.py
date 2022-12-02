@@ -17,10 +17,9 @@ from SimPEG.utils.mat_utils import (
     mkvc,
 )
 
-from geoapps.utils.models import fill_nan
-
 from geoapps.driver_base.params import BaseParams
 from geoapps.shared_utils.utils import rotate_xyz, weighted_average
+from geoapps.utils.models import fill_nan
 
 from . import InversionMesh
 
