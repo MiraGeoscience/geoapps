@@ -44,6 +44,7 @@ def fill_nan(locations: np.ndarray, model: np.ndarray, filler: np.ndarray = None
 
     return model
 
+
 def face_average(mesh: TreeMesh, model: np.ndarray) -> np.ndarray:
     """
     Compute the average face values of a model
