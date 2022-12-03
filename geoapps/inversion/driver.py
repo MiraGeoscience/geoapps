@@ -458,10 +458,8 @@ if __name__ == "__main__":
     from geoapps.inversion import DRIVER_MAP
     from geoapps.inversion.utils import get_driver_from_json
 
-    # filepath = sys.argv[1]
-    filepath = (
-        r"C:\Users\dominiquef\Documents\GIT\mira\Vale-RnD\assets\joint_single.ui.json"
-    )
+    filepath = sys.argv[1]
+
     with open(filepath, encoding="utf-8") as ifile:
         ui_json = json.load(ifile)
 
