@@ -120,7 +120,7 @@ class InversionDriver(BaseDriver):
             return
 
         if self.warmstart and not self.params.forward_only:
-            print("Pre-computing sensitivities ...")
+            print("Pre-computing sensitivities ... test message")
             self.inverse_problem.dpred = (  # pylint: disable=assignment-from-no-return
                 self.data.simulate(
                     self.models.starting,
