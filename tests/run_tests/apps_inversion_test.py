@@ -49,7 +49,7 @@ def test_mag_inversion(tmp_path):
                 0
             ].copy(parent=new_geoh5)
             topo_val = new_topo.add_data({"elev": {"values": new_topo.vertices[:, 2]}})
-            ws.get_entity(UUID("{385f341f-1027-4b8e-9a86-93be239aa3fb}"))[0].copy(
+            ws.get_entity(UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"))[0].copy(
                 parent=new_geoh5
             )
 
