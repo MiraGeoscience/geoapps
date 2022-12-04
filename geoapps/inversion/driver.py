@@ -120,7 +120,7 @@ class InversionDriver(BaseDriver):
             return
 
         if self.warmstart and not self.params.forward_only:
-            print("Pre-computing sensitivities ... test message")
+            print("Setting up the inverse problem ...")
             self.inverse_problem.dpred = (  # pylint: disable=assignment-from-no-return
                 self.data.simulate(
                     self.models.starting,
@@ -459,7 +459,7 @@ if __name__ == "__main__":
     from geoapps.inversion.utils import get_driver_from_json
 
     filepath = sys.argv[1]
-
+    # filepath = r"C:\Users\dominiquef\Desktop\Tootoo_small.ui.json"
     with open(filepath, encoding="utf-8") as ifile:
         ui_json = json.load(ifile)
 
