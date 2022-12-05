@@ -479,16 +479,10 @@ class InversionData(InversionLocations):
             effect of the data.
         """
         simulation_factory = SimulationFactory(self.params)
-
-        if tile_id is None or "2d" in self.params.inversion_type:
-            mapping = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
-            sim = simulation_factory.build(
-                survey=survey,
-                global_mesh=mesh,
-                mapping=mapping,
-            )
-
-        else:
+        mapping = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
+        kwargs = {"components": 3} if self.vector else {}
+        nested_mesh = None
+        if tile_id is not None:
             nested_mesh = create_nested_mesh(
                 survey.unique_locations,
                 mesh,
@@ -496,19 +490,18 @@ class InversionData(InversionLocations):
                 minimum_level=3,
                 padding_cells=padding_cells,
             )
-
-            kwargs = {"components": 3} if self.vector else {}
             mapping = maps.TileMap(
                 mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
             )
-            sim = simulation_factory.build(
-                survey=survey,
-                global_mesh=mesh,
-                local_mesh=nested_mesh,
-                active_cells=mapping.local_active,
-                mapping=mapping,
-                tile_id=tile_id,
-            )
+            active_cells = mapping.local_active
+
+        sim = simulation_factory.build(
+            survey=survey,
+            mesh=mesh if tile_id is None else nested_mesh,
+            active_cells=active_cells,
+            mapping=mapping,
+            tile_id=tile_id,
+        )
         return sim, mapping
 
     def simulate(self, model, inverse_problem, sorting):
