@@ -64,10 +64,9 @@ dc_geoh5 = "./FlinFlon_dcip.geoh5"
 
 def test_face_average(tmp_path):
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make() as workspace:
+    with geotest.make():
         mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
         mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
-        # omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
         centers = mesh.cell_centers
         active = np.zeros_like(centers[:, 2])
         active[centers[:, 2] < 75] = 1
@@ -75,13 +74,12 @@ def test_face_average(tmp_path):
         assert np.all(face_avs < 6)
         active[49] = 1
         face_avs = face_average(mesh, active)
-        # omesh.add_data({"active_cells": {"values": active[mesh._ubc_order]}})
         assert np.sum(face_avs == 6) == 1
 
 
 def test_floating_active(tmp_path):
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make() as workspace:
+    with geotest.make():
         mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
         mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
         centers = mesh.cell_centers
