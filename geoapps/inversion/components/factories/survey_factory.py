@@ -287,23 +287,24 @@ class SurveyFactory(SimPEGFactory):
             if "2d" in self.params.inversion_type:
                 receiver_locations = receiver_entity.vertices
                 source_locations = currents.vertices
-                locations = np.vstack([receiver_locations, source_locations])
-                locations = np.unique(locations, axis=0)
-                distances = compute_alongline_distance(locations)
-                xrange = locations[:, 0].max() - locations[:, 0].min()
-                yrange = locations[:, 1].max() - locations[:, 1].min()
-                use_x = xrange >= yrange
-                if use_x:
-                    to_distance = interp1d(locations[:, 0], distances[:, 0])
-                    rec_dist = to_distance(receiver_locations[:, 0])
-                    src_dist = to_distance(source_locations[:, 0])
-                else:
-                    to_distance = interp1d(locations[:, 1], distances[:, 0])
-                    rec_dist = to_distance(receiver_locations[:, 1])
-                    src_dist = to_distance(source_locations[:, 1])
+                if local_index is not None:
+                    locations = np.vstack([receiver_locations, source_locations])
+                    locations = np.unique(locations, axis=0)
+                    distances = compute_alongline_distance(locations)
+                    xrange = locations[:, 0].max() - locations[:, 0].min()
+                    yrange = locations[:, 1].max() - locations[:, 1].min()
+                    use_x = xrange >= yrange
+                    if use_x:
+                        to_distance = interp1d(locations[:, 0], distances[:, 0])
+                        rec_dist = to_distance(receiver_locations[:, 0])
+                        src_dist = to_distance(source_locations[:, 0])
+                    else:
+                        to_distance = interp1d(locations[:, 1], distances[:, 0])
+                        rec_dist = to_distance(receiver_locations[:, 1])
+                        src_dist = to_distance(source_locations[:, 1])
 
-                receiver_locations = np.c_[rec_dist, receiver_locations[:, 2]]
-                source_locations = np.c_[src_dist, source_locations[:, 2]]
+                    receiver_locations = np.c_[rec_dist, receiver_locations[:, 2]]
+                    source_locations = np.c_[src_dist, source_locations[:, 2]]
             else:
                 receiver_locations = data.locations
                 source_locations = currents.vertices

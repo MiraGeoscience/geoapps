@@ -98,7 +98,7 @@ class InversionMesh:
             self.mesh = octree_2_treemesh(self.entity)
             self.permutation = getattr(self.mesh, "_ubc_order")
 
-        if isinstance(self.entity, DrapeModel) and self.mesh is not None:
+        if isinstance(self.entity, DrapeModel) and self.mesh is None:
             self.mesh, self.permutation = drape_2_tensor(
                 self.entity, return_sorting=True
             )
@@ -106,6 +106,9 @@ class InversionMesh:
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
         if "2d" in self.params.inversion_type:
+
+            self.params.geoh5.get_entity("")
+
             (  # pylint: disable=W0632
                 self.entity,
                 self.mesh,
