@@ -666,7 +666,7 @@ app_initializer = {
     "resolution": 50.0,
     "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "tmi_uncertainty": 10.0,
-    "mesh": UUID("{385f341f-1027-4b8e-9a86-93be239aa3fb}"),
+    "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
     "inducing_field_strength": 60000.0,
     "inducing_field_inclination": 79.0,
     "inducing_field_declination": 11.0,
