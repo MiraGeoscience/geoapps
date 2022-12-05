@@ -86,28 +86,22 @@ class SimulationFactory(SimPEGFactory):
     def assemble_arguments(
         self,
         survey=None,
-        global_mesh=None,
-        local_mesh=None,
+        mesh=None,
         active_cells=None,
         mapping=None,
         tile_id=None,
     ):
-        mesh = global_mesh if tile_id is None else local_mesh
-        return [mesh]
+        return (mesh,)
 
     def assemble_keyword_arguments(
         self,
         survey=None,
-        global_mesh=None,
-        local_mesh=None,
+        mesh=None,
         active_cells=None,
         mapping=None,
         tile_id=None,
     ):
-
-        mesh = global_mesh if tile_id is None else local_mesh
         sensitivity_path = self._get_sensitivity_path(tile_id)
-
         kwargs = {}
         kwargs["survey"] = survey
         kwargs["sensitivity_path"] = sensitivity_path

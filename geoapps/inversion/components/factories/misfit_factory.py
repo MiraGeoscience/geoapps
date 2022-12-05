@@ -135,7 +135,7 @@ class MisfitFactory(SimPEGFactory):
                     mesh, local_index, channel=freq
                 )
                 lsim, lmap = inversion_data.simulation(
-                    mesh, active_cells, survey, tile_num
+                    mesh, active_cells, survey, tile_num if len(tiles) > 1 else None
                 )
 
                 # TODO Parse workers to simulations
