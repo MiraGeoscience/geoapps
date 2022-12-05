@@ -98,7 +98,7 @@ class InversionMesh:
             self.mesh = octree_2_treemesh(self.entity)
             self.permutation = getattr(self.mesh, "_ubc_order")
 
-        if isinstance(self.entity, DrapeModel):
+        if isinstance(self.entity, DrapeModel) and self.mesh is not None:
             self.mesh, self.permutation = drape_2_tensor(
                 self.entity, return_sorting=True
             )
@@ -113,7 +113,7 @@ class InversionMesh:
             ) = get_drape_model(
                 self.workspace,
                 "Models",
-                self.inversion_data.locations,  # pylint: disable=W0212
+                self.inversion_data.survey.unique_locations,  # pylint: disable=W0212
                 [self.params.u_cell_size, self.params.v_cell_size],
                 self.params.depth_core,
                 [self.params.horizontal_padding] * 2
