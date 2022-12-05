@@ -10,6 +10,7 @@ import json
 
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.data import FilenameData
+from SimPEG.maps import TileMap
 from SimPEG.objective_function import ComboObjectiveFunction
 
 from geoapps.inversion.driver import InversionDriver
@@ -61,7 +62,22 @@ class JointSinglePropertyDriver(InversionDriver):
             ui_json["workspace_geoh5"] = self.workspace
             driver = get_driver_from_json(ui_json, warmstart=False)
 
-            misfits.append(driver.data_misfit)
+            mesh_map: TileMap | None = None
+            if mesh_map is None or driver.mesh.mesh != mesh_map.global_mesh:
+                mesh_map = TileMap(
+                    self.mesh.mesh,
+                    self.models.active_cells,
+                    driver.mesh.mesh,
+                    enforce_active=True,
+                )
+
+            driver.models.active_cells = mesh_map.local_active
+            misfit = driver.data_misfit
+
+            for objfct in misfit.objective_function.objfcts:
+                objfct.model_map = objfct.model_map * mesh_map
+
+            misfits.append(misfit)
 
         self._data_misfit = DataMisfit(misfits)
 
