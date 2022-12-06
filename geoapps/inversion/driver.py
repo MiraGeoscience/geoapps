@@ -46,7 +46,7 @@ class InversionDriver(BaseDriver):
     _params_class = InversionBaseParams  # pylint: disable=E0601
     _validations = None
 
-    def __init__(self, params: InversionBaseParams, warmstart=False):
+    def __init__(self, params: InversionBaseParams, warmstart=True):
         super().__init__(params)
 
         self.params = params
@@ -168,13 +168,8 @@ class InversionDriver(BaseDriver):
         """Inversion models containing starting, reference, active and bound models."""
         if getattr(self, "_models", None) is None:
             self._models = InversionModelCollection(
-                self.workspace, self.params, self.mesh
+                self.workspace, self.params, self.data, self.topography, self.mesh
             )
-            # Build active cells array and reduce models active set
-            if self.mesh is not None and self.data is not None:
-                self._models.active_cells = self.topography.active_cells(
-                    self.mesh, self.data
-                )
 
         return self._models
 
@@ -459,15 +454,15 @@ if __name__ == "__main__":
     from geoapps.inversion.utils import get_driver_from_json
 
     filepath = sys.argv[1]
-    # filepath = r"C:\Users\dominiquef\Desktop\Tootoo_small.ui.json"
+    # filepath = r"C:\Users\dominiquef\Desktop\Inv_run.ui.json"
     with open(filepath, encoding="utf-8") as ifile:
         ui_json = json.load(ifile)
 
-    inversion_driver = get_driver_from_json(ui_json)
-    if inversion_driver is None:
+    driver_class, _ = get_driver_from_json(ui_json)
+    if driver_class is None:
         msg = f"Could not find a matching inversion driver for file {filepath}."
         msg += f" Valid inversion types are: {*list(DRIVER_MAP),}."
         raise NotImplementedError(msg)
 
-    inversion_driver.start(filepath)
+    driver_class.start(filepath)
     sys.stdout.close()

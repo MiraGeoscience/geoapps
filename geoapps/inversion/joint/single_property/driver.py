@@ -25,7 +25,7 @@ class JointSinglePropertyDriver(InversionDriver):
     _params_class = JointSinglePropertyParams
     _validations = validations
 
-    def __init__(self, params: JointSinglePropertyParams, warmstart=False):
+    def __init__(self, params: JointSinglePropertyParams, warmstart=True):
         super().__init__(params, warmstart=warmstart)
 
     def initialize(self):
@@ -60,19 +60,19 @@ class JointSinglePropertyDriver(InversionDriver):
             ui_json = json.loads(input_file[0].values.decode())
             ui_json["geoh5"] = self.workspace
             ui_json["workspace_geoh5"] = self.workspace
-            driver = get_driver_from_json(ui_json, warmstart=False)
-
+            driver_class, params = get_driver_from_json(ui_json)
+            sub_driver = driver_class(params, warmstart=False)
             mesh_map: TileMap | None = None
-            if mesh_map is None or driver.mesh.mesh != mesh_map.global_mesh:
+            if mesh_map is None or sub_driver.mesh.mesh != mesh_map.global_mesh:
                 mesh_map = TileMap(
                     self.mesh.mesh,
                     self.models.active_cells,
-                    driver.mesh.mesh,
+                    sub_driver.mesh.mesh,
                     enforce_active=True,
                 )
 
-            driver.models.active_cells = mesh_map.local_active
-            misfit = driver.data_misfit
+            sub_driver.models.active_cells = mesh_map.local_active
+            misfit = sub_driver.data_misfit
 
             for objfct in misfit.objective_function.objfcts:
                 objfct.model_map = objfct.model_map * mesh_map

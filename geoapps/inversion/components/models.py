@@ -46,7 +46,7 @@ class InversionModelCollection:
         "conductivity",
     ]
 
-    def __init__(self, workspace, params, mesh):
+    def __init__(self, workspace, params, data, topography, mesh):
         """
         :param: workspace: Geoh5py workspace object containing window data.
         :param: params: Params object containing window parameters.
@@ -64,6 +64,8 @@ class InversionModelCollection:
         self.workspace = workspace
         self.params = params
         self.mesh = mesh
+        self.data = data
+        self.topography = topography
         self.is_sigma = None
         self.is_vector = None
         self.n_blocks = None
@@ -78,10 +80,22 @@ class InversionModelCollection:
 
     @property
     def active_cells(self):
+        if (
+            getattr(self, "_active_cells", None) is None
+            and self.mesh is not None
+            and self.data is not None
+        ):
+            self.active_cells = self.topography.active_cells(self.mesh, self.data)
+
         return self._active_cells
 
     @active_cells.setter
     def active_cells(self, actives: np.ndarray):
+
+        if not isinstance(actives, np.ndarray) or actives.dtype != bool:
+            raise ValueError(
+                "Input `active_cells` value must be an numpy.ndarray of type bool."
+            )
         self._active_cells = actives
         self.edit_ndv_model(actives)
         self.remove_air(actives)
@@ -163,6 +177,7 @@ class InversionModelCollection:
         self._conductivity = InversionModel(
             self.workspace, self.params, self.mesh, "conductivity"
         )
+        self.active_cells
 
     def _model_method_wrapper(self, method, name=None, **kwargs):
         """wraps individual model's specific method and applies in loop over model types."""

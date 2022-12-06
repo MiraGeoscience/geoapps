@@ -111,5 +111,5 @@ def get_driver_from_json(ui_json: dict, warmstart=True):
     ifile = InputFile(ui_json=ui_json)
     driver_class = DRIVER_MAP.get(inversion_type, None)
     params = getattr(driver_class, "_params_class")(ifile)
-    driver = driver_class(params, warmstart=warmstart)
-    return driver
+
+    return driver_class, params
