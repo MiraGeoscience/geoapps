@@ -107,11 +107,10 @@ class BaseParams:
         self.validate = validate
 
         params_dict = self.input_file.numify(params_dict)
-        if "geoh5" in params_dict.keys():
-            if params_dict["geoh5"] is not None:
-                setattr(self, "geoh5", params_dict["geoh5"])
 
-        params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
+        if params_dict.get("geoh5", None) is not None:
+            setattr(self, "geoh5", params_dict["geoh5"])
+            params_dict["geoh5"].open(mode="r")
 
         for key, value in params_dict.items():
             if key not in self.ui_json.keys() or key == "geoh5":
