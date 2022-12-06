@@ -23,9 +23,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_mvi_run = {
-    "data_norm": 8.943476,
-    "phi_d": 0.00776,
-    "phi_m": 4.674e-6,
+    "data_norm": 8.0686,
+    "phi_d": 0.006295,
+    "phi_m": 3.798e-6,
 }
 
 
@@ -87,7 +87,7 @@ def test_magnetic_vector_run(
         tmi = geoh5.get_entity("Iteration_0_tmi")[0]
         orig_tmi = tmi.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
         inducing_field = (50000.0, 90.0, 0.0)
 
         # Run the inverse

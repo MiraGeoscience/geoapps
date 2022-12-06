@@ -21,9 +21,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 11.707134,
-    "phi_d": 1.598,
-    "phi_m": 8.824e-6,
+    "data_norm": 10.6647,
+    "phi_d": 1.328,
+    "phi_m": 7.302e-6,
 }
 
 
@@ -82,7 +82,7 @@ def test_susceptibility_run(
         tmi = geoh5.get_entity("Iteration_0_tmi")[0]
         orig_tmi = tmi.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
         inducing_field = (50000.0, 90.0, 0.0)
 
         # Run the inverse

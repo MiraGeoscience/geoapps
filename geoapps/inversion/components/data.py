@@ -483,6 +483,7 @@ class InversionData(InversionLocations):
         kwargs = {"components": 3} if self.vector else {}
         nested_mesh = None
         if tile_id is not None:
+
             nested_mesh = create_nested_mesh(
                 survey.unique_locations,
                 mesh,

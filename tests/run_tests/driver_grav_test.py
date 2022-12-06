@@ -19,9 +19,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.0071214,
-    "phi_d": 0.0002049,
-    "phi_m": 0.00936,
+    "data_norm": 0.00648,
+    "phi_d": 0.0001732,
+    "phi_m": 0.007933,
 }
 
 
@@ -70,7 +70,7 @@ def test_gravity_run(
         gz = geoh5.get_entity("Iteration_0_gz")[0]
         orig_gz = gz.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         # Turn some values to nan
         values = gz.values.copy()

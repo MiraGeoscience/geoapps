@@ -23,9 +23,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.008102,
-    "phi_d": 4.506,
-    "phi_m": 0.1116,
+    "data_norm": 0.008416,
+    "phi_d": 6.145,
+    "phi_m": 0.1307,
 }
 
 np.random.seed(0)
@@ -129,14 +129,14 @@ def test_ip_run(
 if __name__ == "__main__":
     # Full run
     mstart = test_ip_fwr_run(
-        "../",
+        "./",
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
     m_rec = test_ip_run(
-        "../",
+        "./",
         n_lines=5,
         max_iterations=15,
         pytest=False,

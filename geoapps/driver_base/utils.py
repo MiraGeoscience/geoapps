@@ -121,7 +121,7 @@ def active_from_xyz(
     if mesh_dim == 2:
         z_offset = cell_size_z(mesh) / 2.0
     else:
-        z_offset = mesh.octree_cells["NCells"] / (2.0 * mesh.w_cell_size)
+        z_offset = mesh.octree_cells["NCells"] * np.abs(mesh.w_cell_size) / 2
 
     # Shift cell center location to top or bottom of cell
     if grid_reference == "top":
@@ -133,7 +133,7 @@ def active_from_xyz(
     else:
         raise ValueError("'grid_reference' must be one of 'center', 'top', or 'bottom'")
 
-    z_locations = z_interpolate(locations[:, :-1])
+    z_locations = z_interpolate(locations[:, :2])
 
     # Apply nearest neighbour if in extrapolation
     ind_nan = np.isnan(z_locations)
@@ -141,6 +141,8 @@ def active_from_xyz(
         tree = cKDTree(topo)
         _, ind = tree.query(locations[ind_nan, :])
         z_locations[ind_nan] = topo[ind, -1]
+
+    # fill_nan(locations, z_locations, filler=topo[:, -1])
 
     # Return the active cell array
     return locations[:, -1] < z_locations

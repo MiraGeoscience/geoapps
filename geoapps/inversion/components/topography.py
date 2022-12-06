@@ -19,7 +19,6 @@ import warnings
 from copy import deepcopy
 
 import numpy as np
-from geoh5py.objects import Curve
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
@@ -27,6 +26,7 @@ from geoapps.inversion.components.data import InversionData
 from geoapps.inversion.components.locations import InversionLocations
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.models import floating_active
+from geoapps.utils.surveys import get_containing_cells
 
 
 class InversionTopography(InversionLocations):
@@ -87,8 +87,6 @@ class InversionTopography(InversionLocations):
         if self.is_rotated:
             self.locations = super().rotate(self.locations)
 
-        self.entity = self.write_entity()
-
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
@@ -108,16 +106,11 @@ class InversionTopography(InversionLocations):
             active_cells = active_from_xyz(
                 mesh.entity, self.locations, grid_reference="bottom"
             )
+            active_cells = active_cells[np.argsort(mesh.permutation)]
             print(
                 "Adjusting active cells so that receivers are all within an active cell . . ."
             )
-            active_cells = active_cells[np.argsort(mesh.permutation)]
-
-            active_cells[
-                mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
-                    data.locations
-                )
-            ] = True
+            active_cells[get_containing_cells(mesh.mesh, data)] = True
 
             if floating_active(mesh.mesh, active_cells):
                 warnings.warn(
@@ -130,12 +123,7 @@ class InversionTopography(InversionLocations):
             )
             active_cells = active_cells[np.argsort(mesh.permutation)]
 
-        if "2d" in self.params.inversion_type:
-            ac_model = active_cells.astype("float64")
-            active_cells = active_cells[np.argsort(mesh.permutation)]
-        else:
-            ac_model = active_cells[mesh.permutation].astype("float64")
-
+        ac_model = active_cells[mesh.permutation].astype("float64")
         mesh.entity.add_data({"active_cells": {"values": ac_model}})
 
         return active_cells
@@ -165,14 +153,3 @@ class InversionTopography(InversionLocations):
                 locs[:, 2] = elev
 
         return locs
-
-    def write_entity(self):
-        """Write out the survey to geoh5"""
-
-        if "2d" in self.params.inversion_type:
-            locs = self.inversion_data.survey.unique_locations  # pylint: disable=W0212
-            entity = super().create_entity("Topo", locs, Curve)
-        else:
-            entity = super().create_entity("Topo", self.locations)
-
-        return entity

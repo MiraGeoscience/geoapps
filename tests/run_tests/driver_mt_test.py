@@ -24,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.00665,
-    "phi_d": 0.495,
-    "phi_m": 40.85,
+    "data_norm": 0.008206,
+    "phi_d": 0.1967,
+    "phi_m": 78.56,
 }
 np.random.seed(0)
 
@@ -84,7 +84,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         data = {}
         uncertainties = {}

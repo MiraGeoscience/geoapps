@@ -19,9 +19,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.003829,
-    "phi_d": 0.02935,
-    "phi_m": 541.2,
+    "data_norm": 0.004808,
+    "phi_d": 0.03499,
+    "phi_m": 1237,
 }
 
 np.random.seed(0)
@@ -74,7 +74,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         data = {}
         uncertainties = {}

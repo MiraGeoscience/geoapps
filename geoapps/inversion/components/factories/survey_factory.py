@@ -260,7 +260,7 @@ class SurveyFactory(SimPEGFactory):
             return None
 
         receiver_entity = data.entity
-        if self.factory_type in ["direct current 2d", "induced polarization 2d"]:
+        if "2d" in self.factory_type:
             receiver_entity = extract_dcip_survey(
                 self.params.geoh5,
                 receiver_entity,
@@ -313,6 +313,7 @@ class SurveyFactory(SimPEGFactory):
                 locations=receiver_locations,
                 local_index=receiver_entity.cells[receiver_indices],
             )
+
             if receivers.nD == 0:
                 continue
 
@@ -328,6 +329,11 @@ class SurveyFactory(SimPEGFactory):
             self.local_index.append(receiver_indices)
 
         self.local_index = np.hstack(self.local_index)
+
+        if "2d" in self.factory_type:
+            current_entity = receiver_entity.current_electrodes
+            self.params.geoh5.remove_entity(receiver_entity)
+            self.params.geoh5.remove_entity(current_entity)
 
         return [sources]
 

@@ -22,9 +22,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.14152,
-    "phi_d": 11.93,
-    "phi_m": 340.8,
+    "data_norm": 0.13881,
+    "phi_d": 63.67,
+    "phi_m": 361.3,
 }
 
 np.random.seed(0)
@@ -79,7 +79,7 @@ def test_dc_run(
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         # Run the inverse
         np.random.seed(0)
@@ -101,12 +101,13 @@ def test_dc_run(
             potential_uncertainty=1e-3,
             max_global_iterations=max_iterations,
             initial_beta=None,
-            initial_beta_ratio=1e0,
+            initial_beta_ratio=10.0,
             prctile=100,
             upper_bound=10,
             tile_spatial=n_lines,
             store_sensitivities="ram",
             coolingRate=1,
+            chi_factor=0.5,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
