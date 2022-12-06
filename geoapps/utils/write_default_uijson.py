@@ -9,27 +9,22 @@ from __future__ import annotations
 
 import argparse
 
-from geoh5py.ui_json import InputFile
-
 import geoapps
 from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
-    DirectCurrentPseudo3DParams,
-)
-from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
-from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
+from geoapps.inversion.electricals.direct_current.two_dimensions import (
     DirectCurrent2DParams,
 )
-from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
 )
-from geoapps.inversion.electricals.induced_polarization.two_dimensions.params import (
+from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
     InducedPolarization2DParams,
 )
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
@@ -84,13 +79,6 @@ def write_default_uijson(path, use_initializers=False):
 
     dc_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     dc_2d_init = dc_2d_init if use_initializers else {}
-
-    from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
-        app_initializer as dc_p3d_init,
-    )
-
-    dc_p3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
-    dc_p3d_init = dc_p3d_init if use_initializers else {}
 
     from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
         app_initializer as ip_3d_init,
@@ -180,29 +168,23 @@ def write_default_uijson(path, use_initializers=False):
         "magnetic_vector_forward.ui.json": MagneticVectorParams(
             forward_only=True, validate=False
         ),
+        "direct_current_inversion_2d.ui.json": DirectCurrent2DParams(
+            validate=False, **dc_2d_init
+        ),
+        "direct_current_forward_2d.ui.json": DirectCurrent2DParams(
+            forward_only=True, validate=False
+        ),
         "direct_current_inversion_3d.ui.json": DirectCurrent3DParams(
             validate=False, **dc_3d_init
         ),
         "direct_current_forward_3d.ui.json": DirectCurrent3DParams(
             forward_only=True, validate=False
         ),
-        "direct_current_inversion_2d.ui.json": DirectCurrent2DParams(
-            validate=False, **dc_2d_init
-        ),
-        "direct_current_forward_2d.ui.json": DirectCurrent2DParams(
-            validate=False, forward_only=True
-        ),
-        "direct_current_inversion_pseudo_3d.ui.json": DirectCurrentPseudo3DParams(
-            validate=False, **dc_p3d_init
-        ),
-        "direct_current_forward_pseudo_3d.ui.json": DirectCurrentPseudo3DParams(
-            validate=False, forward=True
-        ),
         "induced_polarization_inversion_2d.ui.json": InducedPolarization2DParams(
             validate=False, **ip_2d_init
         ),
         "induced_polarization_forward_2d.ui.json": InducedPolarization2DParams(
-            validate=False, forward=True
+            forward_only=True, validate=False
         ),
         "induced_polarization_inversion_3d.ui.json": InducedPolarization3DParams(
             validate=False, **ip_3d_init
@@ -233,15 +215,6 @@ def write_default_uijson(path, use_initializers=False):
 
     for filename, params in filedict.items():
         params.write_input_file(name=filename, path=path, validate=False)
-
-    from geoapps.inversion.constants import default_octree_ui_json, octree_defaults
-
-    ifile = InputFile(
-        ui_json=default_octree_ui_json,
-        data=octree_defaults,
-        validation_options={"disabled": True},
-    )
-    ifile.write_ui_json(name="inversion_mesh.ui.json", path=".")
 
 
 if __name__ == "__main__":

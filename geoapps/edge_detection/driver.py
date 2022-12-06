@@ -16,19 +16,24 @@ import geoh5py.objects
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D
-from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
+from geoapps.driver_base.driver import BaseDriver
+from geoapps.edge_detection.constants import validations
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
 
 
-class EdgeDetectionDriver:
+class EdgeDetectionDriver(BaseDriver):
+
+    _params_class = EdgeDetectionParams
+    _validations = validations
+
     def __init__(self, params: EdgeDetectionParams):
-        self.params: EdgeDetectionParams = params
+        super().__init__(params)
 
     def run(self):
         """
@@ -36,27 +41,30 @@ class EdgeDetectionDriver:
         The application relies on the Canny and Hough transforms from the
         Scikit-Image library.
         """
-        vertices, cells = EdgeDetectionDriver.get_edges(*self.params.edge_args())
+        with self.params.geoh5.open(mode="r+"):
+            vertices, cells = EdgeDetectionDriver.get_edges(*self.params.edge_args())
 
-        if vertices is not None:
-            name = string_name(self.params.export_as)
+            if vertices is not None:
+                name = string_name(self.params.export_as)
 
-            out_entity = ContainerGroup.create(
-                workspace=self.params.geoh5,
-                name=self.params.ga_group_name,
-            )
-            Curve.create(
-                workspace=self.params.geoh5,
-                name=name,
-                vertices=vertices,
-                cells=cells,
-                parent=out_entity,
-            )
+                out_entity = ContainerGroup.create(
+                    workspace=self.params.geoh5,
+                    name=self.params.ga_group_name,
+                )
+                Curve.create(
+                    workspace=self.params.geoh5,
+                    name=name,
+                    vertices=vertices,
+                    cells=cells,
+                    parent=out_entity,
+                )
 
-            if self.params.monitoring_directory is not None and path.exists(
-                self.params.monitoring_directory
-            ):
-                monitored_directory_copy(self.params.monitoring_directory, out_entity)
+                if self.params.monitoring_directory is not None and path.exists(
+                    self.params.monitoring_directory
+                ):
+                    monitored_directory_copy(
+                        self.params.monitoring_directory, out_entity
+                    )
 
     @staticmethod
     def get_edges(
@@ -290,12 +298,5 @@ class EdgeDetectionDriver:
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    params_class = EdgeDetectionParams(ifile)
-    driver = EdgeDetectionDriver(params_class)
-    print("Loaded. Running edge detection . . .")
-    with params_class.geoh5.open(mode="r+"):
-        driver.run()
-    print("Saved to " + ifile.path)
+    EdgeDetectionDriver.start(file)

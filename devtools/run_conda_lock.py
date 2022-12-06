@@ -8,22 +8,24 @@
 #  (see LICENSE file at the root of this source code package).
 
 """
-Creates cross platform lock files for each python version and per-platform conda environment files.
+Creates cross-platform lock files for each python version and per-platform conda environment files.
 
-Cross platform lock files are created at the root of the project.
+Cross-platform lock files are created at the root of the project.
 Per-platform conda environment files with and without dev dependencies, are placed under the `environments` sub-folder.
-They include an environment file for Python 3.9 with fewer dependencies for simpeg.
 
-Usage: from a the conda base environment, at the root of the project:
+Usage: from the conda base environment, at the root of the project:
 > python devtools/run_conda_lock.py
 
 To prepare the conda base environment, see devtools/setup-conda-base.bat
 """
 
+from __future__ import annotations
+
 import os
 import re
 import subprocess
 import tempfile
+from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -38,7 +40,7 @@ _environments_folder = Path("environments")
 
 
 @contextmanager
-def print_execution_time(name: str = "") -> None:
+def print_execution_time(name: str = "") -> Generator:
     from datetime import datetime
 
     start = datetime.now()
@@ -63,13 +65,13 @@ def create_multi_platform_lock(py_ver: str, platform: str = None) -> None:
         )
 
 
-def per_platform_env(py_ver: str, full=True, dev=False, suffix="") -> None:
+def per_platform_env(py_ver: str, extras=[], dev=False, suffix="") -> None:
     print(
         f"# Creating per platform Conda env files for Python {py_ver} ({'WITH' if dev else 'NO'} dev dependencies) ... "
     )
     dev_dep_option = "--dev-dependencies" if dev else "--no-dev-dependencies"
     dev_suffix = "-dev" if dev else ""
-    extras_option = "--extras full" if full else ""
+    extras_option = " ".join(f"--extras {i}" for i in extras) if extras else ""
     subprocess.run(
         (
             f"conda-lock render {dev_dep_option} {extras_option} -k env"
@@ -84,29 +86,30 @@ def per_platform_env(py_ver: str, full=True, dev=False, suffix="") -> None:
     for lock_env_file in _environments_folder.glob(
         f"conda-py-{py_ver}-{platform_glob}{dev_suffix}{suffix}.lock.yml"
     ):
-        patch_none_md5(lock_env_file)
+        patch_none_hash(lock_env_file)
         with open(lock_env_file, "a") as f:
             f.write(env_file_variables_section_)
 
 
-def patch_none_md5(file: Path) -> None:
+def patch_none_hash(file: Path) -> None:
     """
-    Patch the given file to safely remove --hash=md5:None.
+    Patch the given file to remove --hash=md5:None and #sha25=None
 
-    pip does not want hash with md5 (but accepts sha256 or others).
+    - pip does not want hash with md5 (but accepts sha256 or others).
+    - #sha256=None will conflict with the actual sha256
     """
 
-    none_md5_re = re.compile(r"(.*)\s--hash=md5:None\b(.*)")
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    none_hash_re = re.compile(r"(.*)(?:\s--hash=md5:None|#sha256=None)\b(.*)")
+    with tempfile.TemporaryDirectory(dir=str(file.parent)) as tmpdirname:
         patched_file = Path(tmpdirname) / file.name
         with open(patched_file, "w") as patched:
             with open(file) as f:
                 for line in f:
-                    match = none_md5_re.match(line)
+                    match = none_hash_re.match(line)
                     if not match:
                         patched.write(line)
                     else:
-                        patched.write(f"{match.group(1)}{match.group(2)}\n")
+                        patched.write(f"{match[1]}{match[2]}\n")
         patched_file.replace(file)
 
 
@@ -135,8 +138,8 @@ if __name__ == "__main__":
     config_conda()
 
     patchPyprojectToml()
-    with print_execution_time(f"run_conda_lock"):
-        for py_ver in ["3.9", "3.8", "3.7"]:
+    with print_execution_time("run_conda_lock"):
+        for py_ver in ["3.10", "3.9"]:
             create_multi_platform_lock(py_ver)
-            per_platform_env(py_ver, dev=False)
-            per_platform_env(py_ver, dev=True)
+            per_platform_env(py_ver, ["full"], dev=False)
+            per_platform_env(py_ver, ["full"], dev=True)

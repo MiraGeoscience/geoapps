@@ -25,7 +25,6 @@ defaults = {
     "color_pickers": None,
     "plot_kmeans": None,
     "run_command": "geoapps.clustering.application",
-    "run_command_boolean": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,

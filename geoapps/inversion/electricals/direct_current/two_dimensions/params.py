@@ -40,7 +40,7 @@ class DirectCurrent2DParams(InversionBaseParams):
         self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
         self._inversion_ui_json = deepcopy(inversion_ui_json)
-        self._inversion_type = "direct current"
+        self._inversion_type = "direct current 2d"
         self._validations = validations
         self._potential_channel_bool = None
         self._potential_channel = None

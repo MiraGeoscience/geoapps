@@ -10,8 +10,8 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
 from geoapps.inversion.potential_fields import GravityParams
+from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -19,9 +19,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.0071214,
-    "phi_d": 0.0002049,
-    "phi_m": 0.00936,
+    "data_norm": 0.00648,
+    "phi_d": 0.0001732,
+    "phi_m": 0.007933,
 }
 
 
@@ -49,10 +49,9 @@ def test_gravity_fwr_run(
         resolution=0.0,
         z_from_topo=False,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
-    fwr_driver = InversionDriver(params)
+    fwr_driver = GravityDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -71,7 +70,7 @@ def test_gravity_run(
         gz = geoh5.get_entity("Iteration_0_gz")[0]
         orig_gz = gz.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         # Turn some values to nan
         values = gz.values.copy()
@@ -98,14 +97,14 @@ def test_gravity_run(
             gz_channel=gz.uid,
             gz_uncertainty=2e-3,
             lower_bound=0.0,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = GravityDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(

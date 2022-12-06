@@ -10,8 +10,10 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
 from geoapps.inversion.potential_fields import MagneticScalarParams
+from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
+    MagneticScalarDriver,
+)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -19,9 +21,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 11.707134,
-    "phi_d": 1.598,
-    "phi_m": 8.824e-6,
+    "data_norm": 10.6647,
+    "phi_d": 1.328,
+    "phi_m": 7.302e-6,
 }
 
 
@@ -53,12 +55,11 @@ def test_susceptibility_fwr_run(
         resolution=0.0,
         z_from_topo=False,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
     )
     params.workpath = tmp_path
 
-    fwr_driver = InversionDriver(params)
+    fwr_driver = MagneticScalarDriver(params)
 
     fwr_driver.run()
     return fwr_driver.starting_model
@@ -79,7 +80,7 @@ def test_susceptibility_run(
         tmi = geoh5.get_entity("Iteration_0_tmi")[0]
         orig_tmi = tmi.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
         inducing_field = (50000.0, 90.0, 0.0)
 
         # Run the inverse
@@ -105,12 +106,12 @@ def test_susceptibility_run(
             z_from_topo=False,
             tmi_channel=tmi.uid,
             tmi_uncertainty=4.0,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e0,
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = MagneticScalarDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(

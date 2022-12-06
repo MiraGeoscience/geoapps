@@ -8,11 +8,14 @@
 import os
 
 import numpy as np
+from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 from SimPEG import utils
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
 from geoapps.inversion.potential_fields import MagneticVectorParams
+from geoapps.inversion.potential_fields.magnetic_vector.driver import (
+    MagneticVectorDriver,
+)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -20,9 +23,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_mvi_run = {
-    "data_norm": 8.943476,
-    "phi_d": 0.00776,
-    "phi_m": 4.674e-6,
+    "data_norm": 8.0686,
+    "phi_d": 0.006295,
+    "phi_m": 3.798e-6,
 }
 
 
@@ -34,7 +37,7 @@ def test_magnetic_vector_fwr_run(
     np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
-    geoh5, _, model, survey, topography = setup_inversion_workspace(
+    geoh5, _, model, points, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.05,
@@ -42,6 +45,11 @@ def test_magnetic_vector_fwr_run(
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
     )
+
+    # Unitest dealing with Curve
+    survey = Curve.create(geoh5, name=points.name, vertices=points.vertices)
+    geoh5.remove_entity(points)
+
     params = MagneticVectorParams(
         forward_only=True,
         geoh5=geoh5,
@@ -58,7 +66,7 @@ def test_magnetic_vector_fwr_run(
         starting_inclination=45,
         starting_declination=270,
     )
-    fwr_driver = InversionDriver(params)
+    fwr_driver = MagneticVectorDriver(params)
 
     fwr_driver.run()
     return fwr_driver.starting_model
@@ -79,7 +87,7 @@ def test_magnetic_vector_run(
         tmi = geoh5.get_entity("Iteration_0_tmi")[0]
         orig_tmi = tmi.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
         inducing_field = (50000.0, 90.0, 0.0)
 
         # Run the inverse
@@ -93,6 +101,7 @@ def test_magnetic_vector_run(
             resolution=0.0,
             data_object=tmi.parent.uid,
             starting_model=1e-4,
+            reference_model=0.0,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -102,13 +111,13 @@ def test_magnetic_vector_run(
             z_from_topo=False,
             tmi_channel=tmi.uid,
             tmi_uncertainty=4.0,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e1,
             store_sensitivities="ram",
             prctile=100,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = MagneticVectorDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
 

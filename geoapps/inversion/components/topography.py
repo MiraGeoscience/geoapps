@@ -11,24 +11,22 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.drivers import BaseParams
+    from geoapps.driver_base.params import BaseParams
     from . import InversionMesh
     from typing import Any
 
+import warnings
 from copy import deepcopy
 
 import numpy as np
-from geoh5py.objects import Curve
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
-from geoapps.inversion.natural_sources.magnetotellurics.params import (
-    MagnetotelluricsParams,
-)
+from geoapps.inversion.components.data import InversionData
+from geoapps.inversion.components.locations import InversionLocations
 from geoapps.shared_utils.utils import filter_xy
-
-from .data import InversionData
-from .locations import InversionLocations
+from geoapps.utils.models import floating_active
+from geoapps.utils.surveys import get_containing_cells
 
 
 class InversionTopography(InversionLocations):
@@ -89,8 +87,6 @@ class InversionTopography(InversionLocations):
         if self.is_rotated:
             self.locations = super().rotate(self.locations)
 
-        self.entity = self.write_entity()
-
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
         Return mask that restricts models to set of earth cells.
@@ -99,29 +95,35 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        if isinstance(self.params, MagnetotelluricsParams):
+        forced_to_surface = [
+            "magnetotellurics",
+            "direct current 3d",
+            "direct current 2d",
+            "induced polarization 3d",
+            "induced polarization 2d",
+        ]
+        if self.params.inversion_type in forced_to_surface:
             active_cells = active_from_xyz(
-                mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
+                mesh.entity, self.locations, grid_reference="bottom"
             )
-            active_cells[
-                mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
-                    data.locations
-                )
-            ] = True
-        else:
-            mesh_object = (
-                mesh.entity if "2d" in self.params.inversion_type else mesh.mesh
-            )
-            active_cells = active_from_xyz(
-                mesh_object, self.locations, grid_reference="cell_centers"
-            )
-
-        if "2d" in self.params.inversion_type:
-            ac_model = active_cells.astype("float64")
             active_cells = active_cells[np.argsort(mesh.permutation)]
-        else:
-            ac_model = active_cells[mesh.permutation].astype("float64")
+            print(
+                "Adjusting active cells so that receivers are all within an active cell . . ."
+            )
+            active_cells[get_containing_cells(mesh.mesh, data)] = True
 
+            if floating_active(mesh.mesh, active_cells):
+                warnings.warn(
+                    "Active cell adjustment has created a patch of active cells in the air, likely due to a faulty survey location."
+                )
+
+        else:
+            active_cells = active_from_xyz(
+                mesh.entity, self.locations, grid_reference="center"
+            )
+            active_cells = active_cells[np.argsort(mesh.permutation)]
+
+        ac_model = active_cells[mesh.permutation].astype("float64")
         mesh.entity.add_data({"active_cells": {"values": ac_model}})
 
         return active_cells
@@ -151,14 +153,3 @@ class InversionTopography(InversionLocations):
                 locs[:, 2] = elev
 
         return locs
-
-    def write_entity(self):
-        """Write out the survey to geoh5"""
-
-        if "2d" in self.params.inversion_type:
-            locs = self.inversion_data._survey.unique_locations  # pylint: disable=W0212
-            entity = super().create_entity("Topo", locs, Curve)
-        else:
-            entity = super().create_entity("Topo", self.locations)
-
-        return entity
