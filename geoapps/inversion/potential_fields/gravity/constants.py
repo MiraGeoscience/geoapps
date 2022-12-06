@@ -636,7 +636,7 @@ app_initializer = {
     "gxz_uncertainty": 1.0,
     "gyz_channel": UUID("{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}"),
     "gyz_uncertainty": 1.0,
-    "mesh": UUID("{385f341f-1027-4b8e-9a86-93be239aa3fb}"),
+    "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
     "resolution": 50.0,
     "window_center_x": 314565.0,
     "window_center_y": 6072334.0,
