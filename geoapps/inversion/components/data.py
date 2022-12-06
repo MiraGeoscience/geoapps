@@ -520,6 +520,8 @@ class InversionData(InversionLocations):
             )
             save_directive.save_components(0, dpred)
 
+        inverse_problem.dpred = dpred
+
     @property
     def observed_data_types(self):
         """
