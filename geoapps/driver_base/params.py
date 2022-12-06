@@ -110,7 +110,9 @@ class BaseParams:
 
         if params_dict.get("geoh5", None) is not None:
             setattr(self, "geoh5", params_dict["geoh5"])
-            params_dict["geoh5"].open(mode="r")
+
+        if isinstance(self.geoh5, Workspace):
+            self.geoh5.open(mode="r")
 
         for key, value in params_dict.items():
             if key not in self.ui_json.keys() or key == "geoh5":
