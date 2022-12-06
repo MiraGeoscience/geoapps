@@ -13,14 +13,21 @@ from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase, Octree
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import monitored_directory_copy
 
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.driver_base.utils import treemesh_2_octree
+from geoapps.octree_creation.constants import validations
 from geoapps.octree_creation.params import OctreeParams
 
 
-class OctreeDriver:
+class OctreeDriver(BaseDriver):
+
+    _params_class = OctreeParams
+    _validations = validations
+
     def __init__(self, params: OctreeParams):
+        super().__init__(params)
         self.params: OctreeParams = params
 
     def run(self) -> Octree:
@@ -33,9 +40,6 @@ class OctreeDriver:
             self.params.monitoring_directory
         ):
             monitored_directory_copy(self.params.monitoring_directory, octree)
-
-        else:
-            print(f"Result exported to: {self.params.geoh5.h5file}")
 
         return octree
 
@@ -83,7 +87,7 @@ class OctreeDriver:
                 finalize=False,
             )
 
-        print("Finalizing...")
+        print("Finalizing . . .")
         treemesh.finalize()
 
         octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
@@ -93,8 +97,4 @@ class OctreeDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params_class = OctreeParams(InputFile.read_ui_json(file))
-
-    with params_class.geoh5.open(mode="r+"):
-        driver = OctreeDriver(params_class)
-        driver.run()
+    OctreeDriver.start(file)

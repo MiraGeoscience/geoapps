@@ -11,7 +11,9 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.natural_sources.magnetotellurics.driver import (
+    MagnetotelluricsDriver,
+)
 from geoapps.inversion.natural_sources.magnetotellurics.params import (
     MagnetotelluricsParams,
 )
@@ -22,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.00665,
-    "phi_d": 0.495,
-    "phi_m": 40.85,
+    "data_norm": 0.008206,
+    "phi_d": 0.1967,
+    "phi_m": 78.56,
 }
 np.random.seed(0)
 
@@ -54,7 +56,6 @@ def test_magnetotellurics_fwr_run(
         resolution=0.0,
         z_from_topo=False,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
         conductivity_model=1e-2,
         zxx_real_channel_bool=True,
@@ -67,8 +68,7 @@ def test_magnetotellurics_fwr_run(
         zyy_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params, warmstart=False)
-
+    fwr_driver = MagnetotelluricsDriver(params, warmstart=False)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -84,7 +84,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         data = {}
         uncertainties = {}
@@ -141,7 +141,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             resolution=0.0,
             data_object=survey.uid,
             starting_model=0.01,
-            reference_model=None,
+            reference_model=0.01,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -150,15 +150,14 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             z_from_topo=False,
             upper_bound=0.75,
             conductivity_model=1e-2,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
             store_sensitivities="ram",
             **data_kwargs,
         )
-        params.workpath = tmp_path
-        driver = InversionDriver(params)
-        driver.run()
+        params.write_input_file(path=tmp_path, name="Inv_run")
+        driver = MagnetotelluricsDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
@@ -183,12 +182,12 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
         data_object=survey.uid,
         starting_model=0.01,
         conductivity_model=1e-2,
-        max_iterations=0,
+        max_global_iterations=0,
         # store_sensitivities="ram",
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = MagnetotelluricsDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     return driver
 

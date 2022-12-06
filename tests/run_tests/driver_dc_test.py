@@ -9,9 +9,11 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.direct_current.three_dimensions.driver import (
+    DirectCurrent3DDriver,
 )
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
@@ -20,9 +22,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.152097,
-    "phi_d": 9.878,
-    "phi_m": 79.91,
+    "data_norm": 0.13881,
+    "phi_d": 63.67,
+    "phi_m": 361.3,
 }
 
 np.random.seed(0)
@@ -43,6 +45,7 @@ def test_dc_fwr_run(
         n_electrodes=n_electrodes,
         n_lines=n_lines,
         refinement=refinement,
+        drape_height=0.0,
         inversion_type="dcip",
         flatten=False,
     )
@@ -51,13 +54,13 @@ def test_dc_fwr_run(
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=topography.uid,
-        z_from_topo=True,
+        z_from_topo=False,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
+        resolution=None,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params)
+    fwr_driver = DirectCurrent3DDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -76,7 +79,7 @@ def test_dc_run(
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         # Run the inverse
         np.random.seed(0)
@@ -86,26 +89,29 @@ def test_dc_run(
             topography_object=topography.uid,
             data_object=potential.parent.uid,
             starting_model=1e-2,
+            reference_model=1e-2,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
             z_norm=1.0,
             gradient_type="components",
             potential_channel_bool=True,
-            z_from_topo=True,
+            z_from_topo=False,
             potential_channel=potential.uid,
             potential_uncertainty=1e-3,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta=None,
-            initial_beta_ratio=1e0,
+            initial_beta_ratio=10.0,
             prctile=100,
             upper_bound=10,
             tile_spatial=n_lines,
             store_sensitivities="ram",
+            coolingRate=1,
+            chi_factor=0.5,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = DirectCurrent3DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
@@ -138,4 +144,4 @@ if __name__ == "__main__":
     assert (
         residual < 20.0
     ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. You are so special!")
+    print("Conductivity model is within 20% of the answer. You are so special!")

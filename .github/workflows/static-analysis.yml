@@ -16,37 +16,37 @@ on:
       - feature/**
       - hotfix/**
 
+env:
+  source_dir: geoapps
+
 jobs:
   pylint:
     name: pylint
-    strategy:
-      fail-fast: false
-      matrix:
-        python_ver: [3.9]
     runs-on: windows-latest
     defaults:
       run:
         shell: bash -l {0}
     env:
       PYTHONUTF8: 1
-      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-win-64-dev.lock.yml
+      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-dev.lock.yml
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup conda env
         uses: mamba-org/provision-with-micromamba@main
         with:
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
-          environment-name: geoapps
+          environment-name: linter_env
           cache-downloads: true
-      - name: Run pylint on modified files
+      - name: capture modified files
         if: github.event_name == 'pull_request'
         run: >-
           git fetch --deepen=500 origin ${{github.base_ref}}
-          && pylint $(
-          git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... -- | grep -E '^(geoapps|tests)/.*\.py$'
-          || echo 'geoapps/__init__.py'
-          )
+          && echo "FILES_PARAM=$(
+          git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... -- | grep -E "^(${source_dir}|tests)/.*\.py$" | xargs
+          )" >> $GITHUB_ENV
+      - name: Run pylint on modified files
+        if: github.event_name == 'pull_request' && env.FILES_PARAM
+        run: pylint $FILES_PARAM
       - name: Run pylint on all files
         if: github.event_name == 'push'
-        run: |
-          pylint geoapps tests
+        run: pylint $source_dir tests

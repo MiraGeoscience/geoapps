@@ -10,7 +10,9 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
+from geoapps.inversion.electricals.direct_current.two_dimensions.driver import (
+    DirectCurrent2DDriver,
+)
 from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
     DirectCurrent2DParams,
 )
@@ -22,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.6624,
-    "phi_d": 875.7,
-    "phi_m": 2.502,
+    "data_norm": 0.6326,
+    "phi_d": 740,
+    "phi_m": 2.87,
 }
 
 np.random.seed(0)
@@ -46,6 +48,7 @@ def test_dc_2d_fwr_run(
         n_lines=n_lines,
         refinement=refinement,
         inversion_type="dcip_2d",
+        drape_height=0.0,
         flatten=False,
     )
     _ = survey_lines(survey, [-100, -100], save="line_ids")
@@ -54,15 +57,14 @@ def test_dc_2d_fwr_run(
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=topography.uid,
-        z_from_topo=True,
+        z_from_topo=False,
         data_object=survey.uid,
-        starting_model_object=model.parent.uid,
         starting_model=model.uid,
         line_object=geoh5.get_entity("line_ids")[0].uid,
         line_id=2,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params)
+    fwr_driver = DirectCurrent2DDriver(params)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -92,6 +94,7 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
             line_object=geoh5.get_entity("line_IDs")[0].uid,
             line_id=2,
             starting_model=1e-2,
+            reference_model=1e-2,
             s_norm=0.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -99,14 +102,16 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
             gradient_type="components",
             potential_channel_bool=True,
             z_from_topo=True,
-            max_iterations=max_iterations,
+            max_global_iterations=max_iterations,
             initial_beta=None,
             initial_beta_ratio=1e0,
             prctile=100,
             upper_bound=10,
+            coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+
+    driver = DirectCurrent2DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

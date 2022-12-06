@@ -33,16 +33,16 @@ def running_mean(
 
     # Forward averaging
     if method in ["centered", "forward"]:
-        padd = np.r_[np.zeros(width + 1), values]
-        cumsum = np.cumsum(padd)
+        padded = np.r_[np.zeros(width + 1), values]
+        cumsum = np.cumsum(padded)
         mean += (cumsum[(width + 1) :] - cumsum[: (-width - 1)]) / (
             sum_weights[(width + 1) :] - sum_weights[: (-width - 1)]
         )
 
     # Backward averaging
     if method in ["centered", "backward"]:
-        padd = np.r_[np.zeros(width + 1), values[::-1]]
-        cumsum = np.cumsum(padd)
+        padded = np.r_[np.zeros(width + 1), values[::-1]]
+        cumsum = np.cumsum(padded)
         mean += (
             (cumsum[(width + 1) :] - cumsum[: (-width - 1)])
             / (sum_weights[(width + 1) :] - sum_weights[: (-width - 1)])
@@ -80,72 +80,69 @@ def treemesh_2_octree(workspace, treemesh, **kwargs):
     return mesh_object
 
 
+def cell_size_z(drape_model: DrapeModel) -> np.ndarray:
+    """Compute z cell sizes of drape model."""
+    hz = []
+    for prism in drape_model.prisms:
+        top_z, top_layer, n_layers = prism[2:]
+        bottoms = drape_model.layers[
+            range(int(top_layer), int(top_layer + n_layers)), 2
+        ]
+        z = np.hstack([top_z, bottoms])
+        hz.append(z[:-1] - z[1:])
+    return np.hstack(hz)
+
+
 def active_from_xyz(
-    mesh, xyz, grid_reference="cell_centers", method="linear", logical="all"
+    mesh: DrapeModel | Octree,
+    topo: np.ndarray,
+    grid_reference="center",
+    method="linear",
 ):
     """Returns an active cell index array below a surface
 
-    **** ADAPTED FROM discretize.utils.mesh_utils.active_from_xyz ****
-
+    :param mesh: Mesh object
+    :param topo: Array of xyz locations
+    :param grid_reference: Cell reference. Must be "center", "top", or "bottom"
+    :param method: Interpolation method. Must be "linear", or "nearest"
     """
 
-    if isinstance(mesh, DrapeModel) and grid_reference != "cell_centers":
-        raise ValueError("Drape models must use cell_centers grid reference.")
+    mesh_dim = 2 if isinstance(mesh, DrapeModel) else 3
+    locations = mesh.centroids.copy()
 
     if method == "linear":
-        delaunay_2d = Delaunay(xyz[:, :2])
-        z_interpolate = LinearNDInterpolator(delaunay_2d, xyz[:, 2])
+        delaunay_2d = Delaunay(topo[:, :-1])
+        z_interpolate = LinearNDInterpolator(delaunay_2d, topo[:, -1])
+    elif method == "nearest":
+        z_interpolate = NearestNDInterpolator(topo[:, :-1], topo[:, -1])
     else:
-        z_interpolate = NearestNDInterpolator(xyz[:, :2], xyz[:, 2])
+        raise ValueError("Method must be 'linear', or 'nearest'")
 
-    if grid_reference == "cell_centers":
-        # this should work for all 4 mesh types...
-        locations = (
-            mesh.centroids if isinstance(mesh, (DrapeModel, Octree)) else mesh.gridCC
-        )
+    if mesh_dim == 2:
+        z_offset = cell_size_z(mesh) / 2.0
+    else:
+        z_offset = mesh.octree_cells["NCells"] * np.abs(mesh.w_cell_size) / 2
 
-    elif grid_reference == "top_nodes":
-        locations = np.vstack(
-            [
-                mesh.gridCC
-                + (np.c_[-1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                mesh.gridCC
-                + (np.c_[-1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                mesh.gridCC
-                + (np.c_[1, 1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                mesh.gridCC
-                + (np.c_[1, -1, 1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-            ]
-        )
-    elif grid_reference == "bottom_nodes":
-        locations = np.vstack(
-            [
-                mesh.gridCC
-                + (np.c_[-1, 1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                mesh.gridCC
-                + (np.c_[-1, -1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                mesh.gridCC
-                + (np.c_[1, 1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-                mesh.gridCC
-                + (np.c_[1, -1, -1][:, None] * mesh.h_gridded / 2.0).squeeze(),
-            ]
-        )
+    # Shift cell center location to top or bottom of cell
+    if grid_reference == "top":
+        locations[:, -1] += z_offset
+    elif grid_reference == "bottom":
+        locations[:, -1] -= z_offset
+    elif grid_reference == "center":
+        pass
+    else:
+        raise ValueError("'grid_reference' must be one of 'center', 'top', or 'bottom'")
 
-    # Interpolate z values on CC or N
-    z_xyz = z_interpolate(locations[:, :-1]).squeeze()
+    z_locations = z_interpolate(locations[:, :2])
 
     # Apply nearest neighbour if in extrapolation
-    ind_nan = np.isnan(z_xyz)
+    ind_nan = np.isnan(z_locations)
     if any(ind_nan):
-        tree = cKDTree(xyz)
+        tree = cKDTree(topo)
         _, ind = tree.query(locations[ind_nan, :])
-        z_xyz[ind_nan] = xyz[ind, -1]
+        z_locations[ind_nan] = topo[ind, -1]
 
-    # Create an active bool of all True
+    # fill_nan(locations, z_locations, filler=topo[:, -1])
 
-    n_cells = mesh.n_cells if isinstance(mesh, (DrapeModel, Octree)) else mesh.nC
-    active = getattr(np, logical)(
-        (locations[:, -1] < z_xyz).reshape((n_cells, -1), order="F"), axis=1
-    )
-
-    return active.ravel()
+    # Return the active cell array
+    return locations[:, -1] < z_locations

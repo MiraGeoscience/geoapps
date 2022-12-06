@@ -66,12 +66,12 @@ class DirectivesFactory:
         has_chi_start = self.params.starting_chi_factor is not None
         self.update_irls_directive = directives.Update_IRLS(
             f_min_change=self.params.f_min_change,
-            max_irls_iterations=self.params.max_iterations,
-            max_beta_iterations=self.params.max_iterations,
-            minGNiter=self.params.minGNiter,
+            max_irls_iterations=self.params.max_irls_iterations,
+            max_beta_iterations=self.params.max_global_iterations,
             beta_tol=self.params.beta_tol,
             prctile=self.params.prctile,
             coolingRate=self.params.coolingRate,
+            coolingFactor=self.params.coolingFactor,
             coolEps_q=self.params.coolEps_q,
             coolEpsFact=self.params.coolEpsFact,
             beta_search=self.params.beta_search,
@@ -199,9 +199,9 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 )
 
             elif self.factory_type in [
-                "direct current",
+                "direct current 3d",
                 "direct current 2d",
-                "induced polarization",
+                "induced polarization 3d",
                 "induced polarization 2d",
             ]:
 
@@ -254,7 +254,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 ]
 
             if self.factory_type in [
-                "direct current",
+                "direct current 3d",
                 "direct current 2d",
                 "magnetotellurics",
                 "tipper",

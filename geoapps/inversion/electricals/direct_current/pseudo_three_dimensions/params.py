@@ -10,8 +10,7 @@ from __future__ import annotations
 from copy import deepcopy
 
 from geoapps.inversion import InversionBaseParams
-
-from .constants import (
+from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
     default_ui_json,
     forward_defaults,
     forward_ui_json,

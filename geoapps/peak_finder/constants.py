@@ -41,7 +41,6 @@ defaults = {
     "center": None,
     "width": None,
     "run_command": "geoapps.peak_finder.driver",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
@@ -84,7 +83,7 @@ default_ui_json.update(
         },
         "line_field": {
             "association": "Vertex",
-            "dataType": "Float",
+            "dataType": "Referenced",
             "group": "Data",
             "main": True,
             "label": "Line Field",
