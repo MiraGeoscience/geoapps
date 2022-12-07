@@ -260,12 +260,8 @@ def setup_inversion_workspace(
     # Model
     if flatten:
 
-        if "2d" in inversion_type:
-            p0 = np.r_[80, -30]
-            p1 = np.r_[120, -70]
-        else:
-            p0 = np.r_[-20, -20, -30]
-            p1 = np.r_[20, 20, -70]
+        p0 = np.r_[-20, -20, -30]
+        p1 = np.r_[20, 20, -70]
 
         model = utils.model_builder.addBlock(
             mesh.gridCC,
@@ -276,12 +272,8 @@ def setup_inversion_workspace(
         )
     else:
 
-        if "2d" in inversion_type:
-            p0 = np.r_[80, -20]
-            p1 = np.r_[120, 25]
-        else:
-            p0 = np.r_[-20, -20, -20]
-            p1 = np.r_[20, 20, 25]
+        p0 = np.r_[-20, -20, -20]
+        p1 = np.r_[20, 20, 25]
 
         model = utils.model_builder.addBlock(
             entity.centroids,
