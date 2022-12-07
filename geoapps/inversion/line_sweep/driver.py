@@ -57,8 +57,8 @@ class LineSweepDriver(SweepDriver, BaseDriver):
         with open(os.path.join(path, "lookup.json"), encoding="utf8") as f:
             files = list(json.load(f))
             for file in files:
-                os.remove(f"{file}.ui.json")
-                os.remove(f"{file}.ui.geoh5")
+                os.remove(f"{os.path.join(path, file)}.ui.json")
+                os.remove(f"{os.path.join(path, file)}.ui.geoh5")
 
         os.remove(os.path.join(path, "lookup.json"))
         os.remove(os.path.join(path, "SimPEG.log"))
@@ -85,7 +85,7 @@ class LineSweepDriver(SweepDriver, BaseDriver):
 
         data = {}
         for line in lines:
-            ws = Workspace(f"{files[line]}.ui.geoh5")
+            ws = Workspace(f"{os.path.join(path, files[line])}.ui.geoh5")
             survey = ws.get_entity("Data")[0]
             data = self.collect_line_data(survey, data)
             mesh = ws.get_entity("Models")[0]
