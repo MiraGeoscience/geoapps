@@ -762,8 +762,8 @@ class InversionBaseParams(BaseParams):
             and isinstance(self.out_group, str)
         ):
 
-            options = InputFile.stringify(
-                InputFile.demote(self.to_dict(ui_json_format=True))
+            options = self.input_file.stringify(
+                self.input_file.demote(self.to_dict(ui_json_format=True))
             )
 
             self._ga_group = SimPEGGroup.create(
