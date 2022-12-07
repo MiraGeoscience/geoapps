@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.objects import DrapeModel
 from geoh5py.workspace import Workspace
 from SimPEG.utils.mat_utils import (
     cartesian2amplitude_dip_azimuth,
@@ -119,7 +118,7 @@ class InversionModelCollection:
         self.is_sigma = (
             True
             if self.params.inversion_type
-            in ["direct current", "direct current 2d", "magnetotellurics", "tipper"]
+            in ["direct current 3d", "direct current 2d", "magnetotellurics", "tipper"]
             else False
         )
         self.is_vector = (
@@ -409,7 +408,7 @@ class InversionModel:
 
         """
 
-        xyz_out = self.mesh.mesh.cell_centers
+        xyz_out = self.mesh.entity.centroids
 
         if hasattr(parent, "centroids"):
             xyz_in = parent.centroids
@@ -421,10 +420,9 @@ class InversionModel:
         else:
             xyz_in = parent.vertices
 
-        if (xyz_out.shape[1]) == 2 and isinstance(parent, DrapeModel):
-            return obj[np.argsort(self.mesh.permutation)]
-        else:
-            return weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
+        full_vector = weighted_average(xyz_in, xyz_out, [obj], n=1)[0]
+
+        return full_vector[np.argsort(self.mesh.permutation)]
 
     @property
     def model_type(self):
