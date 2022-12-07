@@ -105,7 +105,7 @@ class InversionBaseParams(BaseParams):
         self._documentation: str = None
         self._icon: str = None
         self._defaults = (
-            self.forward_defaults if self.forward_only else self.inversion_defaults
+            self._forward_defaults if self.forward_only else self._inversion_defaults
         )
 
         if input_file is None:

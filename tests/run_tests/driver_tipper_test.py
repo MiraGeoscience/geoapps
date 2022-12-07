@@ -10,8 +10,8 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.driver import InversionDriver, start_inversion
 from geoapps.inversion.natural_sources import TipperParams
+from geoapps.inversion.natural_sources.tipper.driver import TipperDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -19,9 +19,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.003829,
-    "phi_d": 0.02935,
-    "phi_m": 541.2,
+    "data_norm": 0.00877,
+    "phi_d": 2.396,
+    "phi_m": 0.3094,
 }
 
 np.random.seed(0)
@@ -42,7 +42,7 @@ def test_tipper_fwr_run(
         refinement=refinement,
         inversion_type="tipper",
         drape_height=15.0,
-        flatten=True,
+        flatten=False,
     )
     params = TipperParams(
         forward_only=True,
@@ -60,7 +60,7 @@ def test_tipper_fwr_run(
         tyz_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = InversionDriver(params, warmstart=False)
+    fwr_driver = TipperDriver(params, warmstart=False)
     fwr_driver.run()
 
     return fwr_driver.starting_model
@@ -74,7 +74,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         data = {}
         uncertainties = {}
@@ -89,20 +89,20 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
             for freq in survey.channels:
-                d = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[0].copy(
-                    parent=survey
-                )
-                data[cname].append(d)
+                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[
+                    0
+                ].copy(parent=survey)
+                data[cname].append(data_entity)
 
-                u = survey.add_data(
+                uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_{freq:.2e}": {
-                            "values": np.ones_like(d.values)
-                            * np.percentile(np.abs(d.values), 20)
+                            "values": np.ones_like(data_entity.values)
+                            * np.percentile(np.abs(data_entity.values), 10)
                         }
                     }
                 )
-                uncertainties[f"{cname} uncertainties"].append(u)
+                uncertainties[f"{cname} uncertainties"].append(uncert)
                 # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
 
         survey.add_components_data(data)
@@ -135,14 +135,14 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             z_from_topo=False,
             upper_bound=0.75,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e0,
+            initial_beta_ratio=1e4,
             sens_wts_threshold=60.0,
             prctile=100,
             store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = start_inversion(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = TipperDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(

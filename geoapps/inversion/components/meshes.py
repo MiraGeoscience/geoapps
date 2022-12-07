@@ -17,10 +17,11 @@ from geoapps.shared_utils.utils import drape_2_tensor, octree_2_treemesh
 from geoapps.utils.models import get_drape_model
 
 if TYPE_CHECKING:
-    from discretize import TreeMesh
     from geoh5py.workspace import Workspace
 
     from . import InversionData, InversionTopography
+
+from discretize import TensorMesh, TreeMesh
 
 
 class InversionMesh:
@@ -57,7 +58,7 @@ class InversionMesh:
         self.params = params
         self.inversion_data = inversion_data
         self.inversion_topography = inversion_topography
-        self.mesh: TreeMesh = None
+        self.mesh: TreeMesh | TensorMesh = None
         self.n_cells: int = None
         self.rotation: dict[str, float] = None
         self.permutation: np.ndarray = None
@@ -97,7 +98,7 @@ class InversionMesh:
             self.mesh = octree_2_treemesh(self.entity)
             self.permutation = getattr(self.mesh, "_ubc_order")
 
-        if isinstance(self.entity, DrapeModel):
+        if isinstance(self.entity, DrapeModel) and self.mesh is None:
             self.mesh, self.permutation = drape_2_tensor(
                 self.entity, return_sorting=True
             )
@@ -105,6 +106,9 @@ class InversionMesh:
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
         if "2d" in self.params.inversion_type:
+
+            self.params.geoh5.get_entity("")
+
             (  # pylint: disable=W0632
                 self.entity,
                 self.mesh,
@@ -112,7 +116,7 @@ class InversionMesh:
             ) = get_drape_model(
                 self.workspace,
                 "Models",
-                self.inversion_data._survey.unique_locations,  # pylint: disable=W0212
+                self.inversion_data.survey.unique_locations,  # pylint: disable=W0212
                 [self.params.u_cell_size, self.params.v_cell_size],
                 self.params.depth_core,
                 [self.params.horizontal_padding] * 2

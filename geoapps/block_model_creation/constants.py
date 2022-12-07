@@ -20,11 +20,11 @@ defaults = {
     "depth_core": None,
     "expansion_fact": None,
     "new_grid": None,
+    "generate_sweep": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
     "run_command": "geoapps.block_model_creation.driver",
-    "run_command_boolean": False,
     "monitoring_directory": None,
 }
 
@@ -34,12 +34,6 @@ default_ui_json.update(
         "title": "Block Model Creation",
         "geoh5": "",
         "run_command": "geoapps.block_model_creation.driver",
-        "run_command_boolean": {
-            "value": False,
-            "label": "Run python module ",
-            "tooltip": "Warning: launches process to run python model on save",
-            "main": True,
-        },
         "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
@@ -101,6 +95,12 @@ default_ui_json.update(
             "main": True,
             "label": "Expansion factor",
             "value": 0.0,
+        },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
         },
     }
 )
