@@ -19,9 +19,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.004808,
-    "phi_d": 0.03499,
-    "phi_m": 1237,
+    "data_norm": 0.00877,
+    "phi_d": 2.396,
+    "phi_m": 0.3094,
 }
 
 np.random.seed(0)
@@ -42,7 +42,7 @@ def test_tipper_fwr_run(
         refinement=refinement,
         inversion_type="tipper",
         drape_height=15.0,
-        flatten=True,
+        flatten=False,
     )
     params = TipperParams(
         forward_only=True,
@@ -89,20 +89,20 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
             for freq in survey.channels:
-                d = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[0].copy(
-                    parent=survey
-                )
-                data[cname].append(d)
+                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[
+                    0
+                ].copy(parent=survey)
+                data[cname].append(data_entity)
 
-                u = survey.add_data(
+                uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_{freq:.2e}": {
-                            "values": np.ones_like(d.values)
-                            * np.percentile(np.abs(d.values), 20)
+                            "values": np.ones_like(data_entity.values)
+                            * np.percentile(np.abs(data_entity.values), 10)
                         }
                     }
                 )
-                uncertainties[f"{cname} uncertainties"].append(u)
+                uncertainties[f"{cname} uncertainties"].append(uncert)
                 # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
 
         survey.add_components_data(data)
@@ -135,7 +135,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             z_from_topo=False,
             upper_bound=0.75,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e0,
+            initial_beta_ratio=1e4,
             sens_wts_threshold=60.0,
             prctile=100,
             store_sensitivities="ram",

@@ -223,7 +223,7 @@ def setup_inversion_workspace(
         locs = np.unique(np.vstack([ab_vertices, mn_vertices]), axis=0)
         lines = survey_lines(locs, [-100, -100])
 
-        entity, mesh, permutation = get_drape_model(  # pylint: disable=W0632
+        entity, mesh, _ = get_drape_model(  # pylint: disable=W0632
             geoh5,
             "Models",
             locs[lines == 2],
@@ -235,7 +235,7 @@ def setup_inversion_workspace(
             return_colocated_mesh=True,
             return_sorting=True,
         )
-        active = active_from_xyz(entity, topography.vertices, grid_reference="center")
+        active = active_from_xyz(entity, topography.vertices, grid_reference="top")
 
     else:
         padDist = np.ones((3, 2)) * padding_distance
@@ -255,18 +255,13 @@ def setup_inversion_workspace(
             finalize=True,
         )
         entity = treemesh_2_octree(geoh5, mesh, name="mesh")
-        active = active_from_xyz(entity, topography.vertices, grid_reference="center")
-        permutation = mesh._ubc_order  # pylint: disable=W0212
+        active = active_from_xyz(entity, topography.vertices, grid_reference="top")
 
     # Model
     if flatten:
 
-        if "2d" in inversion_type:
-            p0 = np.r_[80, -30]
-            p1 = np.r_[120, -70]
-        else:
-            p0 = np.r_[-20, -20, -30]
-            p1 = np.r_[20, 20, -70]
+        p0 = np.r_[-20, -20, -30]
+        p1 = np.r_[20, 20, -70]
 
         model = utils.model_builder.addBlock(
             mesh.gridCC,
@@ -277,25 +272,19 @@ def setup_inversion_workspace(
         )
     else:
 
-        if "2d" in inversion_type:
-            p0 = np.r_[80, -20]
-            p1 = np.r_[120, 25]
-        else:
-            p0 = np.r_[-20, -20, -20]
-            p1 = np.r_[20, 20, 25]
+        p0 = np.r_[-20, -20, -20]
+        p1 = np.r_[20, 20, 25]
 
         model = utils.model_builder.addBlock(
-            mesh.gridCC,
+            entity.centroids,
             background * np.ones(mesh.nC),
             p0,
             p1,
             anomaly,
         )
 
-    model[
-        ~(active[np.argsort(permutation)] if "2d" in inversion_type else active)
-    ] = np.nan
-    model = entity.add_data({"model": {"values": model[permutation]}})
+    model[~active] = np.nan
+    model = entity.add_data({"model": {"values": model}})
     return geoh5, entity, model, survey, topography
 
 
