@@ -52,8 +52,8 @@ class BaseDriver(ABC):
             )
         else:
             params = cls._params_class(ifile)
-            if hasattr(params, "inversion_type"):
-                params.inversion_type = params.inversion_type.replace("pseudo 3d", "2d")
+            # if hasattr(params, "inversion_type"):
+            #     params.inversion_type = params.inversion_type.replace("pseudo 3d", "2d")
             print("Initializing application . . .")
             driver = cls(params)
             with params.geoh5.open("r+"):
