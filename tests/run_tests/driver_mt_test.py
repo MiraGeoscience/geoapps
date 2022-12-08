@@ -24,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.008206,
-    "phi_d": 0.1967,
-    "phi_m": 78.56,
+    "data_norm": 0.01577,
+    "phi_d": 12.04,
+    "phi_m": 0.2547,
 }
 np.random.seed(0)
 
@@ -46,7 +46,7 @@ def test_magnetotellurics_fwr_run(
         refinement=refinement,
         drape_height=0.0,
         inversion_type="magnetotellurics",
-        flatten=True,
+        flatten=False,
     )
     params = MagnetotelluricsParams(
         forward_only=True,
@@ -112,15 +112,14 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_{freq:.2e}": {
-                            "values": np.abs(0.05 * data_envity.values)
-                            + data_envity.values.std()
+                            "values": np.ones_like(data_envity.values)
+                            * np.percentile(np.abs(data_envity.values), 10)
                         }
                     }
                 )
                 uncertainties[f"{cname} uncertainties"].append(
                     uncert.copy(parent=survey)
                 )
-                # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
 
         survey.add_components_data(data)
         survey.add_components_data(uncertainties)
@@ -142,7 +141,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             data_object=survey.uid,
             starting_model=0.01,
             reference_model=0.01,
-            s_norm=0.0,
+            s_norm=1.0,
             x_norm=1.0,
             y_norm=1.0,
             z_norm=1.0,
@@ -151,7 +150,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             upper_bound=0.75,
             conductivity_model=1e-2,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e-2,
+            initial_beta_ratio=1e2,
             prctile=100,
             store_sensitivities="ram",
             **data_kwargs,
