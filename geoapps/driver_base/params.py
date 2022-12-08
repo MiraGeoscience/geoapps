@@ -12,7 +12,7 @@ from copy import deepcopy
 from typing import Any
 from uuid import UUID
 
-from geoh5py.shared.utils import str2uuid, uuid2entity
+from geoh5py.shared.utils import fetch_active_workspace, str2uuid, uuid2entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.workspace import Workspace
 
@@ -78,13 +78,15 @@ class BaseParams:
                 validations=self.validations,
                 validate=False,
             )
-        self.update(self.input_file.data, validate=False)
-        self.param_names = list(self.input_file.data.keys())
-        self.input_file.validate = True
 
-        # Apply user input
-        if any(kwargs):
-            self.update(kwargs)
+        with fetch_active_workspace(self.geoh5, mode="r"):
+            self.update(self.input_file.data, validate=False)
+            self.param_names = list(self.input_file.data.keys())
+            self.input_file.validate = True
+
+            # Apply user input
+            if any(kwargs):
+                self.update(kwargs)
 
     @property
     def defaults(self):
@@ -107,12 +109,6 @@ class BaseParams:
         self.validate = validate
 
         params_dict = self.input_file.numify(params_dict)
-
-        if params_dict.get("geoh5", None) is not None:
-            setattr(self, "geoh5", params_dict["geoh5"])
-
-        if isinstance(self.geoh5, Workspace):
-            self.geoh5.open(mode="r")
 
         for key, value in params_dict.items():
             if key not in self.ui_json.keys() or key == "geoh5":
@@ -269,9 +265,9 @@ class BaseParams:
         if val is None:
             self._geoh5 = val
             return
-        self.setter_validator(
-            "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
-        )
+
+        self._geoh5 = Workspace(val) if isinstance(val, str) else val
+
         if self.input_file.workspace != self.geoh5:
             self.input_file.workspace = self.geoh5
 
@@ -339,11 +335,14 @@ class BaseParams:
                 f"Provided {ifile} of type{type(ifile)}"
             )
 
+        self._input_file = ifile
+
         if ifile is not None:
             self.validator = ifile.validators
             self.validations = ifile.validations
 
-        self._input_file = ifile
+            if ifile.workspace is not None:
+                self.geoh5 = ifile.workspace
 
     def _uuid_promoter(self, uid):
         if self.geoh5 is None:
