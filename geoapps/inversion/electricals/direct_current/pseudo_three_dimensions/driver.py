@@ -18,3 +18,5 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
 
     def __init__(self, params: DirectCurrentPseudo3DParams):  # pylint: disable=W0235
         super().__init__(params)
+        lookup = self.get_lookup()
+        self.write_files(lookup)
