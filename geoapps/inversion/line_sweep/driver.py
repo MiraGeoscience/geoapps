@@ -26,8 +26,8 @@ class LineSweepDriver(SweepDriver, BaseDriver):
         sweep_params = self.setup_params()
         super().__init__(sweep_params)
 
-    def run(self, files_only=False):
-        super().run(files_only)
+    def run(self):
+        super().run()
         with self.workspace.open(mode="r+"):
             self.collect_results()
         if self.cleanup:

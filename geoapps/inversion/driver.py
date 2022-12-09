@@ -406,7 +406,7 @@ if __name__ == "__main__":
 
     from . import DRIVER_MAP
 
-    filepath = sys.argv[1]
+    filepath = os.path.abspath(sys.argv[1])
     ifile = InputFile.read_ui_json(filepath)
     inversion_type = ifile.data["inversion_type"]
     inversion_driver = DRIVER_MAP.get(inversion_type, None)
