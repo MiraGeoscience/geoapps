@@ -84,6 +84,8 @@ class BaseParams:
             self.param_names = list(self.input_file.data.keys())
             self.input_file.validate = True
 
+            self.geoh5 = kwargs.pop("geoh5", self.input_file.workspace)
+
             # Apply user input
             if any(kwargs):
                 self.update(kwargs)
