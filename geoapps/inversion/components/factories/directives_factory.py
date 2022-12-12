@@ -88,13 +88,12 @@ class DirectivesFactory:
 
         if self.params.initial_beta is None:
             self.beta_estimate_by_eigenvalues_directive = directives.BetaEstimate_ByEig(
-                beta0_ratio=self.params.initial_beta_ratio, method="ratio"
+                beta0_ratio=self.params.initial_beta_ratio, method="power_iteration"
             )
 
         self.update_preconditioner_directive = directives.UpdatePreconditioner()
 
         if self.params.geoh5 is not None:
-
             self.save_iteration_model_directive = SaveIterationGeoh5Factory(
                 self.params
             ).build(
