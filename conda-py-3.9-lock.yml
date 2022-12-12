@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 60c93a10a6ba78be592cceabbd561e0dcdc4312ae76f03d09eddc76fe0b40cfb
-    osx-64: 53ed8067b2c22f954ffe6d73cf49a7a94e03aaa79b696bf78a239946a0dc26b3
-    win-64: 6b38302df6e17a19f7f819c9399a3c1b16b299a727c242eedba04eacf3e61d31
+    linux-64: b149c390f3d0c644145dec8be819f35a9c1f26d6dbebf3a219eb00af132a0239
+    osx-64: 9ada577c2bdf9846a081f3b6f038f77c2765c3ba9467321181d492df9c9182a9
+    win-64: 1997df3a9393c5b11d7786e1bd752ac665e8de255c8f10c97c26fe6f0ad4eec8
   platforms:
   - win-64
   - osx-64
@@ -4650,15 +4650,13 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: b1343e81535c83051201ae5aefef4d301effe04e5786bd19e3ce15ffb69471c7
   manager: pip
   name: mira-simpeg
   optional: false
   platform: linux-64
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
+  source: null
+  url: https://files.pythonhosted.org/packages/0f/00/ac96a8523e2327727bc14577ec06507d76fd9e258cf4689dc06334eb0e1f/Mira_SimPEG-0.15.1.dev6-py2.py3-none-any.whl
   version: 0.15.1.dev6
 - category: main
   dependencies:
@@ -8942,15 +8940,13 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: b1343e81535c83051201ae5aefef4d301effe04e5786bd19e3ce15ffb69471c7
   manager: pip
   name: mira-simpeg
   optional: false
   platform: osx-64
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
+  source: null
+  url: https://files.pythonhosted.org/packages/0f/00/ac96a8523e2327727bc14577ec06507d76fd9e258cf4689dc06334eb0e1f/Mira_SimPEG-0.15.1.dev6-py2.py3-none-any.whl
   version: 0.15.1.dev6
 - category: main
   dependencies:
@@ -13418,15 +13414,13 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: b1343e81535c83051201ae5aefef4d301effe04e5786bd19e3ce15ffb69471c7
   manager: pip
   name: mira-simpeg
   optional: false
   platform: win-64
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
+  source: null
+  url: https://files.pythonhosted.org/packages/0f/00/ac96a8523e2327727bc14577ec06507d76fd9e258cf4689dc06334eb0e1f/Mira_SimPEG-0.15.1.dev6-py2.py3-none-any.whl
   version: 0.15.1.dev6
 - category: main
   dependencies:
