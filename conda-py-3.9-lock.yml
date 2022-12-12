@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: b43460c1f2d25c8f5442dbb8e7549a174d2d4e4c7fd25ab4aed299778aa667cc
-    osx-64: 4d38639bd8e5480d02682c44574b511bbaa6af7c2c0dddc47c776543109b380e
-    win-64: 0c8adc350c318dd4792de2368de6b91a12df09f0123ffd018510258737a025a5
+    linux-64: 60c93a10a6ba78be592cceabbd561e0dcdc4312ae76f03d09eddc76fe0b40cfb
+    osx-64: 53ed8067b2c22f954ffe6d73cf49a7a94e03aaa79b696bf78a239946a0dc26b3
+    win-64: 6b38302df6e17a19f7f819c9399a3c1b16b299a727c242eedba04eacf3e61d31
   platforms:
   - win-64
   - osx-64
@@ -4657,8 +4657,8 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev6+geoapps.0.9.0.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev6+geoapps.0.9.0.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
   version: 0.15.1.dev6
 - category: main
   dependencies:
@@ -8949,8 +8949,8 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev6+geoapps.0.9.0.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev6+geoapps.0.9.0.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
   version: 0.15.1.dev6
 - category: main
   dependencies:
@@ -13425,8 +13425,8 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev6+geoapps.0.9.0.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev6+geoapps.0.9.0.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
   version: 0.15.1.dev6
 - category: main
   dependencies:
