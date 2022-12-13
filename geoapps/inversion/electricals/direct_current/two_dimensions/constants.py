@@ -246,7 +246,7 @@ default_ui_json = {
         "label": "Mesh",
         "meshType": "{C94968EA-CF7D-11EB-B8BC-0242AC130003}",
         "value": None,
-        "visible": False,
+        "visible": True,
     },
     "u_cell_size": {
         "min": 0.0,

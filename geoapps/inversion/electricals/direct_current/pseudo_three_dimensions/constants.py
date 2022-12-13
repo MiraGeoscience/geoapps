@@ -91,6 +91,7 @@ inversion_defaults = {
     "chunk_by_rows": True,
     "out_group": "DirectCurrentInversion",
     "generate_sweep": False,
+    "files_only": False,
     "cleanup": True,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -139,6 +140,8 @@ forward_defaults = {
     "chunk_by_rows": True,
     "out_group": "DirectCurrentForward",
     "generate_sweep": False,
+    "files_only": False,
+    "cleanup": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
@@ -221,7 +224,7 @@ default_ui_json = {
         "label": "Mesh",
         "meshType": "{4EA87376-3ECE-438B-BF12-3479733DED46}",
         "value": None,
-        "visible": False,
+        "visible": True,
     },
     "starting_model": {
         "association": "Cell",
@@ -282,7 +285,18 @@ default_ui_json = {
     "detrend_type": None,
     "tile_spatial": 1,
     "out_group": {"label": "Results group name", "value": "direct_current"},
-    "cleanup": {"label": "Clean directory", "value": True},
+    "files_only": {
+        "label": "Generate files only",
+        "group": "Python run preferences",
+        "main": True,
+        "value": False,
+    },
+    "cleanup": {
+        "main": True,
+        "group": "Python run preferences",
+        "label": "Clean directory",
+        "value": True,
+    },
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)

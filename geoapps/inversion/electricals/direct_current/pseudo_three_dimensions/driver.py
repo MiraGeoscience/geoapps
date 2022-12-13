@@ -5,10 +5,15 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from geoapps.inversion.line_sweep.driver import LineSweepDriver
+import sys
 
-from .constants import validations
-from .params import DirectCurrentPseudo3DParams
+from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
+    validations,
+)
+from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
+    DirectCurrentPseudo3DParams,
+)
+from geoapps.inversion.line_sweep.driver import LineSweepDriver
 
 
 class DirectCurrentPseudo3DDriver(LineSweepDriver):
@@ -20,3 +25,5 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
         super().__init__(params)
         lookup = self.get_lookup()
         self.write_files(lookup)
+        if params.files_only:
+            sys.exit("Files written")
