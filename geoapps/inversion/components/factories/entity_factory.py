@@ -44,9 +44,9 @@ class EntityFactory(AbstractFactory):
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
         ]:
 
@@ -66,9 +66,9 @@ class EntityFactory(AbstractFactory):
         """Constructs geoh5py object for provided inversion type."""
 
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
         ]:
             return self._build_dcip(inversion_data)
@@ -121,7 +121,10 @@ class EntityFactory(AbstractFactory):
         )
 
         if np.any(~inversion_data.mask):
-            entity.remove_vertices(~inversion_data.mask)
+            entity.remove_vertices(np.where(~inversion_data.mask))
+
+        if getattr(self.params.data_object, "parts", None) is not None:
+            entity.parts = self.params.data_object.parts[inversion_data.mask]
 
         if getattr(self.params.data_object, "base_stations", None) is not None:
             entity.base_stations = type(self.params.data_object.base_stations).create(

@@ -90,17 +90,15 @@ class SurveyFactory(SimPEGFactory):
 
         return survey.Survey
 
-    def assemble_arguments(
-        self, data=None, mesh=None, active_cells=None, local_index=None, channel=None
-    ):
+    def assemble_arguments(self, data=None, mesh=None, local_index=None, channel=None):
         """Provides implementations to assemble arguments for receivers object."""
         receiver_entity = data.entity
 
         if local_index is None:
             if self.factory_type in [
-                "direct current",
+                "direct current 3d",
                 "direct current 2d",
-                "induced polarization",
+                "induced polarization 3d",
                 "induced polarization 2d",
             ]:
                 n_data = receiver_entity.n_cells
@@ -112,15 +110,15 @@ class SurveyFactory(SimPEGFactory):
             self.local_index = local_index
 
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
         ]:
             return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
-                data=data, mesh=mesh, active_cells=active_cells, frequency=channel
+                data=data, mesh=mesh, frequency=channel
             )
         else:
             receivers = ReceiversFactory(self.params).build(
@@ -135,7 +133,6 @@ class SurveyFactory(SimPEGFactory):
         self,
         data=None,
         mesh=None,
-        active_cells=None,
         local_index=None,
         indices=None,
         channel=None,
@@ -146,7 +143,6 @@ class SurveyFactory(SimPEGFactory):
             data=data,
             local_index=local_index,
             mesh=mesh,
-            active_cells=active_cells,
             channel=channel,
         )
 
@@ -156,19 +152,6 @@ class SurveyFactory(SimPEGFactory):
                 self._add_data(survey, data, self.local_index, channel)
             else:
                 self._add_data(survey, data, local_index, channel)
-
-        if self.factory_type in [
-            "direct current",
-            "direct current 2d",
-            "induced polarization",
-            "induced polarization 2d",
-        ]:
-            if (
-                (mesh is not None)
-                and (active_cells is not None)
-                and self.params.z_from_topo
-            ):
-                survey.drape_electrodes_on_topography(mesh, active_cells)
 
         survey.dummy = self.dummy
 
@@ -277,7 +260,7 @@ class SurveyFactory(SimPEGFactory):
             return None
 
         receiver_entity = data.entity
-        if self.factory_type in ["direct current 2d", "induced polarization 2d"]:
+        if "2d" in self.factory_type:
             receiver_entity = extract_dcip_survey(
                 self.params.geoh5,
                 receiver_entity,
@@ -330,6 +313,7 @@ class SurveyFactory(SimPEGFactory):
                 locations=receiver_locations,
                 local_index=receiver_entity.cells[receiver_indices],
             )
+
             if receivers.nD == 0:
                 continue
 
@@ -346,11 +330,14 @@ class SurveyFactory(SimPEGFactory):
 
         self.local_index = np.hstack(self.local_index)
 
+        if "2d" in self.factory_type:
+            current_entity = receiver_entity.current_electrodes
+            self.params.geoh5.remove_entity(receiver_entity)
+            self.params.geoh5.remove_entity(current_entity)
+
         return [sources]
 
-    def _naturalsource_arguments(
-        self, data=None, mesh=None, active_cells=None, frequency=None
-    ):
+    def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
 
         receivers = []
         sources = []
@@ -361,7 +348,6 @@ class SurveyFactory(SimPEGFactory):
                     local_index=self.local_index,
                     data={k: v},
                     mesh=mesh,
-                    active_cells=active_cells,
                 )
             )
 

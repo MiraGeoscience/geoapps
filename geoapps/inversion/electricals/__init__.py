@@ -7,8 +7,5 @@
 
 from __future__ import annotations
 
-from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
-    InducedPolarization3DParams,
-)
-
 from .direct_current.three_dimensions import DirectCurrent3DParams
+from .induced_polarization.three_dimensions.params import InducedPolarization3DParams

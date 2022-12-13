@@ -25,8 +25,8 @@ defaults = {
     "no_data_value": None,
     "out_object": None,
     "ga_group_name": None,
+    "generate_sweep": False,
     "run_command": "geoapps.interpolation.driver",
-    "run_command_boolean": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -38,12 +38,6 @@ default_ui_json.update(
         "title": "Data Transfer",
         "geoh5": "",
         "run_command": "geoapps.interpolation.driver",
-        "run_command_boolean": {
-            "value": False,
-            "label": "Run python module ",
-            "tooltip": "Warning: launches process to run python model on save",
-            "main": True,
-        },
         "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
@@ -187,6 +181,12 @@ default_ui_json.update(
             "label": "Output Label",
             "value": "_Interp",
             "group": "Python run preferences",
+        },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
         },
     }
 )

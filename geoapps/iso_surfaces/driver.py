@@ -14,18 +14,24 @@ import sys
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, ObjectBase, Surface
-from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 
+from geoapps.driver_base.driver import BaseDriver
+from geoapps.iso_surfaces.constants import validations
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.shared_utils.utils import get_contours, rotate_xyz, weighted_average
 from geoapps.utils.formatters import string_name
 
 
-class IsoSurfacesDriver:
+class IsoSurfacesDriver(BaseDriver):
+
+    _params_class = IsoSurfacesParams
+    _validations = validations
+
     def __init__(self, params: IsoSurfacesParams):
+        super().__init__(params)
         self.params: IsoSurfacesParams = params
 
     def run(self):
@@ -195,12 +201,5 @@ class IsoSurfacesDriver:
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    params_class = IsoSurfacesParams(InputFile.read_ui_json(file))
-    driver = IsoSurfacesDriver(params_class)
-
-    print("Loaded. Running iso surface creation . . .")
-    with params_class.geoh5.open(mode="r+"):
-        driver.run()
-    print("Done.")
+    IsoSurfacesDriver.start(file)

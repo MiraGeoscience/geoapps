@@ -16,7 +16,8 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Tipper inversion",
+    "title": "Tipper inversion",
+    "icon": "surveyztem",
     "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -86,14 +87,14 @@ inversion_defaults = {
     "n_cpu": None,
     "tile_spatial": 1,
     "max_ram": None,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "TipperInversion",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "txz_real_channel_bool": False,
@@ -103,7 +104,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Tipper Forward",
+    "title": "Tipper forward",
+    "icon": "surveyztem",
     "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -117,10 +119,10 @@ forward_defaults = {
     "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
-    "txz_real_channel_bool": False,
-    "txz_imag_channel_bool": False,
-    "tyz_real_channel_bool": False,
-    "tyz_imag_channel_bool": False,
+    "txz_real_channel_bool": True,
+    "txz_imag_channel_bool": True,
+    "tyz_real_channel_bool": True,
+    "tyz_imag_channel_bool": True,
     "mesh": None,
     "background_conductivity": 1e-3,
     "starting_model": 1e-3,
@@ -136,10 +138,10 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "TipperForward",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
@@ -158,6 +160,8 @@ inversion_ui_json = {
     "txz_imag_channel_bool": False,
     "tyz_real_channel_bool": False,
     "tyz_imag_channel_bool": False,
+    "detrend_type": None,
+    "detrend_order": None,
 }
 
 forward_ui_json = {
@@ -173,7 +177,8 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Tipper inversion",
+    "title": "Tipper inversion",
+    "icon": "surveyztem",
     "inversion_type": "tipper",
     "data_object": {
         "main": True,
@@ -309,7 +314,7 @@ default_ui_json = {
         "main": True,
         "isValue": False,
         "parent": "mesh",
-        "label": "Initial Conductivity (S/m)",
+        "label": "Initial conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
@@ -320,7 +325,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Conductivity (S/m)",
+        "label": "Reference conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },
@@ -331,7 +336,7 @@ default_ui_json = {
         "main": True,
         "isValue": True,
         "parent": "mesh",
-        "label": "Background Conductivity (S/m)",
+        "label": "Background conductivity (S/m)",
         "property": None,
         "value": 1e-3,
     },

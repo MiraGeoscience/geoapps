@@ -66,7 +66,7 @@ class ReceiversFactory(SimPEGFactory):
             return receivers.Point3DTipper
 
     def assemble_arguments(
-        self, locations=None, data=None, local_index=None, mesh=None, active_cells=None
+        self, locations=None, data=None, local_index=None, mesh=None
     ):
         """Provides implementations to assemble arguments for receivers object."""
 
@@ -80,9 +80,9 @@ class ReceiversFactory(SimPEGFactory):
             )
 
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
         ]:
             args += self._dcip_arguments(
@@ -95,7 +95,6 @@ class ReceiversFactory(SimPEGFactory):
                 locations=locations,
                 local_index=local_index,
                 mesh=mesh,
-                active_cells=active_cells,
             )
 
         else:
@@ -104,7 +103,7 @@ class ReceiversFactory(SimPEGFactory):
         return args
 
     def assemble_keyword_arguments(
-        self, locations=None, data=None, local_index=None, mesh=None, active_cells=None
+        self, locations=None, data=None, local_index=None, mesh=None
     ):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
@@ -118,15 +117,12 @@ class ReceiversFactory(SimPEGFactory):
 
         return kwargs
 
-    def build(
-        self, locations=None, data=None, local_index=None, mesh=None, active_cells=None
-    ):
+    def build(self, locations=None, data=None, local_index=None, mesh=None):
         receivers = super().build(
             locations=locations,
             data=data,
             local_index=local_index,
             mesh=mesh,
-            active_cells=active_cells,
         )
 
         if (
@@ -135,10 +131,17 @@ class ReceiversFactory(SimPEGFactory):
         ):
             stations = self.params.data_object.base_stations.vertices
             if stations is not None:
+                if getattr(self.params.mesh, "rotation", None):
+                    rotate_xyz(
+                        stations,
+                        self.params.mesh.origin.tolist(),
+                        -1 * self.params.mesh.rotation[0],
+                    )
+
                 if stations.shape[0] == 1:
                     stations = np.tile(stations.T, self.params.data_object.n_vertices).T
 
-                receivers.reference_locations = stations
+                receivers.reference_locations = stations[local_index, :]
 
         return receivers
 
@@ -163,9 +166,7 @@ class ReceiversFactory(SimPEGFactory):
 
         return args
 
-    def _magnetotellurics_arguments(
-        self, locations=None, local_index=None, mesh=None, active_cells=None
-    ):
+    def _magnetotellurics_arguments(self, locations=None, local_index=None, mesh=None):
 
         args = []
         locs = locations[local_index]

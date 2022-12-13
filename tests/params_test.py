@@ -346,8 +346,6 @@ def test_validate_topography():
     mvi_params.topography_object = UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     newval = UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     param_test_generator(param, newval)
-    newval = 1234.0
-    param_test_generator(param, newval)
     newval = UUID("{79b719bc-d996-4f52-9af0-10aa9c7bb941}")
     catch_invalid_generator(param, newval, "association")
     newval = "abc"
@@ -793,6 +791,13 @@ def test_validate_out_group():
     newval = "test_"
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
+
+
+def test_validate_distributed_workers():
+    param = "distributed_workers"
+    newval = ["one", "two"]
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, (), "type")
 
 
 def test_gravity_inversion_type():
@@ -1769,7 +1774,7 @@ def test_bz_uncertainty():
 
 def test_direct_current_inversion_type():
     params = DirectCurrent3DParams()
-    params.inversion_type = "direct current"
+    params.inversion_type = "direct current 3d"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
 
@@ -1851,7 +1856,7 @@ def test_potential_uncertainty():
 
 def test_induced_polarization_inversion_type():
     params = InducedPolarization3DParams()
-    params.inversion_type = "induced polarization"
+    params.inversion_type = "induced polarization 3d"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
 

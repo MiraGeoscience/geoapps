@@ -22,13 +22,20 @@ from geoh5py.ui_json import monitored_directory_copy
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
+from geoapps.clustering.constants import validations
 from geoapps.clustering.params import ClusteringParams
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.utils import colors, hex_to_rgb
 from geoapps.utils.statistics import random_sampling
 
 
-class ClusteringDriver:
+class ClusteringDriver(BaseDriver):
+
+    _params_class = ClusteringParams
+    _validations = validations
+
     def __init__(self, params: ClusteringParams):
+        super().__init__(params)
         self.params: ClusteringParams = params
 
     @staticmethod

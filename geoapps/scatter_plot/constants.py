@@ -46,7 +46,6 @@ defaults = {
     "size_thresh": None,
     "size_markers": None,
     "run_command": "geoapps.scatter_plot.application",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",

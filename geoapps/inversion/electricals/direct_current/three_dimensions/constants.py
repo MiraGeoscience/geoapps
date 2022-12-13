@@ -11,21 +11,21 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
-from geoapps.inversion import default_ui_json as base_default_ui_json
+from geoapps.inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current (DC) inversion",
+    "title": "Direct Current 3d inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
     "topography": None,
     "data_object": None,
     "resolution": None,
-    "z_from_topo": False,
+    "z_from_topo": True,
     "receivers_offset_x": None,
     "receivers_offset_y": None,
     "receivers_offset_z": None,
@@ -79,31 +79,31 @@ inversion_defaults = {
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
-    "store_sensitivities": "disk",
+    "store_sensitivities": "ram",
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentInversion",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "SimPEG Direct Current Forward",
+    "title": "Direct Current 3d forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
     "topography": None,
     "data_object": None,
     "resolution": None,
-    "z_from_topo": False,
+    "z_from_topo": True,
     "receivers_offset_x": None,
     "receivers_offset_y": None,
     "receivers_offset_z": None,
@@ -124,10 +124,10 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "DirectCurrentForward",
+    "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
@@ -146,6 +146,17 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and Models`",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Conductivity (S/m)",
+        "property": None,
+        "value": 0.0,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -161,13 +172,20 @@ default_ui_json = {
     "title": "SimPEG Direct Current inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
-    "inversion_type": "direct current",
+    "inversion_type": "direct current 3d",
     "data_object": {
         "main": True,
         "group": "Data",
         "label": "Object",
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": None,
+    },
+    "z_from_topo": {
+        "group": "Data",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
     },
     "potential_channel_bool": True,
     "potential_channel": {
@@ -197,9 +215,9 @@ default_ui_json = {
         "main": True,
         "isValue": False,
         "parent": "mesh",
-        "label": "Initial Conductivity (S/m)",
+        "label": "Initial conductivity (S/m)",
         "property": None,
-        "value": 0.0,
+        "value": 1e-1,
     },
     "reference_model": {
         "association": ["Cell", "Vertex"],
@@ -208,7 +226,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Conductivity (S/m)",
+        "label": "Reference conductivity (S/m)",
         "property": None,
         "value": 0.0,
     },
@@ -238,6 +256,26 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
+    "receivers_offset_z": {
+        "group": "Data pre-processing",
+        "label": "Z static offset",
+        "optional": True,
+        "enabled": False,
+        "value": 0.0,
+        "visible": False,
+    },
+    "receivers_radar_drape": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Data pre-processing",
+        "label": "Z radar offset",
+        "tooltip": "Apply a non-homogeneous offset to survey object from radar channel.",
+        "optional": True,
+        "parent": "data_object",
+        "value": None,
+        "enabled": False,
+        "visible": False,
+    },
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
@@ -252,7 +290,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["direct current"],
+        "values": ["direct current 3d"],
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
