@@ -35,7 +35,7 @@ def setup_params(path):
     geotest.set_param("window_width", 1000.0)
     geotest.set_param("window_height", 1000.0)
     geotest.set_param("out_group", "MVIInversion")
-    geotest.set_param("mesh", "{385f341f-1027-4b8e-9a86-93be239aa3fb}")
+    geotest.set_param("mesh", "{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     geotest.set_param("starting_model", 1e-04)

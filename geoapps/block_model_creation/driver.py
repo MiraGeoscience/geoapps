@@ -14,20 +14,26 @@ from os import path
 import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.ui_json import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
+from geoapps.block_model_creation.constants import validations
 from geoapps.block_model_creation.params import BlockModelParams
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.utils import get_locations
 
 
-class BlockModelDriver:
+class BlockModelDriver(BaseDriver):
     """
     Create BlockModel from BlockModelParams.
     """
 
+    _params_class = BlockModelParams
+    _validations = validations
+
     def __init__(self, params: BlockModelParams):
+        super().__init__(params)
         self.params: BlockModelParams = params
 
     @staticmethod
@@ -40,11 +46,11 @@ class BlockModelDriver:
 
         :return locs: locs with depths truncated.
         """
-        zmax = locs[:, 2].max()  # top of locs
-        below_core_ind = (zmax - locs[:, 2]) > depth_core
+        zmax = locs[:, -1].max()  # top of locs
+        below_core_ind = (zmax - locs[:, -1]) > depth_core
         core_bottom_elev = zmax - depth_core
         locs[
-            below_core_ind, 2
+            below_core_ind, -1
         ] = core_bottom_elev  # sets locations below core to core bottom
         return locs
 
@@ -61,7 +67,7 @@ class BlockModelDriver:
 
         :return depth_core: Minimum depth core.
         """
-        zrange = locs[:, 2].max() - locs[:, 2].min()  # locs z range
+        zrange = locs[:, -1].max() - locs[:, -1].min()  # locs z range
         if depth_core >= zrange:
             return depth_core - zrange + core_z_cell_size
         else:
@@ -162,6 +168,7 @@ class BlockModelDriver:
             0.0,
         ]
 
+        print("Creating block model . . .")
         object_out = BlockModelDriver.get_block_model(
             self.params.geoh5,
             self.params.new_grid,
@@ -190,13 +197,5 @@ class BlockModelDriver:
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    params_class = BlockModelParams(ifile)
-
-    driver = BlockModelDriver(params_class)
-    print("Loaded. Creating block model . . .")
-    with params_class.geoh5.open("r+"):
-        driver.run()
-    print("Saved to " + params_class.geoh5.h5file)
+    BlockModelDriver.start(file)

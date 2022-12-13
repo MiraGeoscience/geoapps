@@ -33,9 +33,9 @@ class SimulationFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
 
         if self.factory_type in [
-            "direct current",
+            "direct current 3d",
             "direct current 2d",
-            "induced polarization",
+            "induced polarization 3d",
             "induced polarization 2d",
             "magnetotellurics",
             "tipper",
@@ -56,7 +56,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DIntegral
 
-        if self.factory_type == "direct current":
+        if self.factory_type == "direct current 3d":
             from SimPEG.electromagnetics.static.resistivity import simulation
 
             return simulation.Simulation3DNodal
@@ -66,7 +66,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation_2d.Simulation2DNodal
 
-        if self.factory_type == "induced polarization":
+        if self.factory_type == "induced polarization 3d":
             from SimPEG.electromagnetics.static.induced_polarization import simulation
 
             return simulation.Simulation3DNodal
@@ -112,6 +112,7 @@ class SimulationFactory(SimPEGFactory):
         kwargs["survey"] = survey
         kwargs["sensitivity_path"] = sensitivity_path
         kwargs["max_chunk_size"] = self.params.max_chunk_size
+        # kwargs["n_cpu"] = self.params.n_cpu
         kwargs["store_sensitivities"] = (
             "forward_only"
             if self.params.forward_only
