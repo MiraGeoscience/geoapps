@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: 60c93a10a6ba78be592cceabbd561e0dcdc4312ae76f03d09eddc76fe0b40cfb
-    osx-64: 53ed8067b2c22f954ffe6d73cf49a7a94e03aaa79b696bf78a239946a0dc26b3
-    win-64: 6b38302df6e17a19f7f819c9399a3c1b16b299a727c242eedba04eacf3e61d31
+    linux-64: daa1fce94ec304f011441ccd301c2475f70934db04381131a31923b2cea3797c
+    osx-64: 284495ae2c649446f0d8169218135f9f4f54592b15d46f3f5f18a7af461bd262
+    win-64: 7df0bb660333db67935439fc7324739253b154a7c620f848fbe0f3361ba130ff
   platforms:
   - win-64
   - osx-64
@@ -2400,14 +2400,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: 202405f939ee9271e641922de27e2c5a
-    sha256: ad1b029878c74cadd8d85c3635f6d483f680d8e0ed291bf1516ac4598efa835f
+    md5: 96a8c913bcd01dd9ab7360290aeb4c42
+    sha256: db45ac7c39fbc710ae0c178ac43eee642811f408be7778d1d5c4156618310cbe
   manager: conda
   name: traitlets
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.7.0-pyhd8ed1ab_0.conda
-  version: 5.7.0
+  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.7.1-pyhd8ed1ab_0.conda
+  version: 5.7.1
 - category: dev
   dependencies:
     python: '>=3'
@@ -4647,15 +4647,13 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: 35ba6d0f6ff81770caf1ea7599ba62f3b13b23c14091fec35e9d751c0aca793e
   manager: pip
   name: mira-simpeg
   optional: false
   platform: linux-64
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
+  source: null
+  url: https://files.pythonhosted.org/packages/f0/6e/d27a5faf1fc1bda17a119bb3f021f8d91597f0fbd1f85630bf9e6dfd63a4/Mira_SimPEG-0.15.1.dev7-py2.py3-none-any.whl
   version: 0.15.1.dev7
 - category: main
   dependencies:
@@ -6790,14 +6788,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: 202405f939ee9271e641922de27e2c5a
-    sha256: ad1b029878c74cadd8d85c3635f6d483f680d8e0ed291bf1516ac4598efa835f
+    md5: 96a8c913bcd01dd9ab7360290aeb4c42
+    sha256: db45ac7c39fbc710ae0c178ac43eee642811f408be7778d1d5c4156618310cbe
   manager: conda
   name: traitlets
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.7.0-pyhd8ed1ab_0.conda
-  version: 5.7.0
+  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.7.1-pyhd8ed1ab_0.conda
+  version: 5.7.1
 - category: dev
   dependencies:
     python: '>=3'
@@ -8937,15 +8935,13 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: 35ba6d0f6ff81770caf1ea7599ba62f3b13b23c14091fec35e9d751c0aca793e
   manager: pip
   name: mira-simpeg
   optional: false
   platform: osx-64
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
+  source: null
+  url: https://files.pythonhosted.org/packages/f0/6e/d27a5faf1fc1bda17a119bb3f021f8d91597f0fbd1f85630bf9e6dfd63a4/Mira_SimPEG-0.15.1.dev7-py2.py3-none-any.whl
   version: 0.15.1.dev7
 - category: main
   dependencies:
@@ -11044,14 +11040,14 @@ package:
   dependencies:
     python: '>=3.7'
   hash:
-    md5: 202405f939ee9271e641922de27e2c5a
-    sha256: ad1b029878c74cadd8d85c3635f6d483f680d8e0ed291bf1516ac4598efa835f
+    md5: 96a8c913bcd01dd9ab7360290aeb4c42
+    sha256: db45ac7c39fbc710ae0c178ac43eee642811f408be7778d1d5c4156618310cbe
   manager: conda
   name: traitlets
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.7.0-pyhd8ed1ab_0.conda
-  version: 5.7.0
+  url: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.7.1-pyhd8ed1ab_0.conda
+  version: 5.7.1
 - category: dev
   dependencies:
     python: '>=3'
@@ -13427,15 +13423,13 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: 35ba6d0f6ff81770caf1ea7599ba62f3b13b23c14091fec35e9d751c0aca793e
   manager: pip
   name: mira-simpeg
   optional: false
   platform: win-64
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip#sha256=None
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev7+geoapps.0.9.1.zip
+  source: null
+  url: https://files.pythonhosted.org/packages/f0/6e/d27a5faf1fc1bda17a119bb3f021f8d91597f0fbd1f85630bf9e6dfd63a4/Mira_SimPEG-0.15.1.dev7-py2.py3-none-any.whl
   version: 0.15.1.dev7
 - category: main
   dependencies:
