@@ -24,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.6624,
-    "phi_d": 875.7,
-    "phi_m": 2.502,
+    "data_norm": 0.6326,
+    "phi_d": 740,
+    "phi_m": 2.87,
 }
 
 np.random.seed(0)
@@ -48,6 +48,7 @@ def test_dc_2d_fwr_run(
         n_lines=n_lines,
         refinement=refinement,
         inversion_type="dcip_2d",
+        drape_height=0.0,
         flatten=False,
     )
     _ = survey_lines(survey, [-100, -100], save="line_ids")
@@ -56,7 +57,7 @@ def test_dc_2d_fwr_run(
         geoh5=geoh5,
         mesh=model.parent.uid,
         topography_object=topography.uid,
-        z_from_topo=True,
+        z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
         line_object=geoh5.get_entity("line_ids")[0].uid,

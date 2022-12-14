@@ -134,16 +134,13 @@ class InversionDriver(BaseDriver):
             self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
         )
         self.models.remove_air(self.active_cells)
-        self.active_cells_map = maps.InjectActiveCells(
-            self.mesh, self.active_cells, np.nan
-        )
         self.n_cells = int(np.sum(self.active_cells))
         self.is_vector = self.models.is_vector
         self.n_blocks = 3 if self.is_vector else 1
         self.is_rotated = False if self.inversion_mesh.rotation is None else True
 
         # Create SimPEG Survey object
-        self.survey = self.inversion_data._survey  # pylint: disable=protected-access
+        self.survey = self.inversion_data.survey
 
         # Tile locations
         self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
