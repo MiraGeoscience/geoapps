@@ -779,6 +779,13 @@ def test_validate_out_group():
     catch_invalid_generator(param, {}, "type")
 
 
+def test_validate_distributed_workers():
+    param = "distributed_workers"
+    newval = ["one", "two"]
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, (), "type")
+
+
 def test_gravity_inversion_type():
     with pytest.raises(ValueValidationError) as excinfo:
         grav_params.inversion_type = "alskdj"

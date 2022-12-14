@@ -100,6 +100,7 @@ version = "0.10.0"
 release = "0.10.0-alpha.1"
 
 
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 exclude_patterns = ["_build", "AUTHORS.rst", "table_*", "**.ipynb_checkpoints"]

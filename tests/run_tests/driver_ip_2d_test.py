@@ -25,8 +25,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.076613,
-    "phi_d": 4522,
-    "phi_m": 0.0375,
+    "phi_d": 3565,
+    "phi_m": 0.04174,
 }
 
 np.random.seed(0)
@@ -48,6 +48,7 @@ def test_ip_2d_fwr_run(
         refinement=refinement,
         inversion_type="dcip_2d",
         flatten=False,
+        drape_height=0.0,
     )
     _ = survey_lines(survey, [-100, -100], save="line_ids")
     params = InducedPolarization2DParams(
