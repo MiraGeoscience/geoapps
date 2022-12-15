@@ -17,7 +17,7 @@ import random
 import geoh5py.objects
 import numpy as np
 import pytest
-from discretize import TensorMesh, TreeMesh
+from discretize import CylindricalMesh, TreeMesh
 from geoh5py.objects import Grid2D
 from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
@@ -78,8 +78,10 @@ def test_face_average(tmp_path):
 
 
 def test_floating_active():
-    mesh = TensorMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
-    with pytest.raises(TypeError, match="Input mesh must be of type TreeMesh."):
+    mesh = CylindricalMesh([[10] * 16, [np.pi] * 2], [0, 0])
+    with pytest.raises(
+        TypeError, match="Input mesh must be of type TreeMesh or TensorMesh."
+    ):
         floating_active(mesh, np.zeros(mesh.n_cells))
 
     # Test 3D case
