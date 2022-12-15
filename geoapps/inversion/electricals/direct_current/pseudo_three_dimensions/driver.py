@@ -38,7 +38,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
 
     def __init__(self, params: DirectCurrentPseudo3DParams):  # pylint: disable=W0235
         super().__init__(params)
-        lookup = self.get_lookup()
+        lookup = self.get_lookup()  # pylint: disable=E1101
         self.write_files(lookup)
         if params.files_only:
             sys.exit("Files written")
@@ -69,7 +69,10 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
 
                 status = trial.pop("status")
                 if status == "pending":
-                    filepath = os.path.join(self.working_directory, f"{uuid}.ui.geoh5")
+                    filepath = os.path.join(
+                        self.working_directory,
+                        f"{uuid}.ui.geoh5",  # pylint: disable=E1101
+                    )
                     with Workspace(filepath) as iter_workspace:
 
                         receiver_entity = extract_dcip_survey(
@@ -140,7 +143,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                         )
 
                     ifile.name = f"{uuid}.ui.json"
-                    ifile.path = self.working_directory
+                    ifile.path = self.working_directory  # pylint: disable=E1101
                     ifile.write_ui_json()
                     lookup[uuid]["status"] = "written"
                 else:
@@ -149,4 +152,4 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
             self.workspace.remove_entity(
                 [k for k in self.workspace.groups if isinstance(k, SimPEGGroup)][0]
             )
-        _ = self.update_lookup(lookup)
+        _ = self.update_lookup(lookup)  # pylint: disable=E1101
