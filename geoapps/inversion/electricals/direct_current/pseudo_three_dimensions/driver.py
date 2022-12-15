@@ -13,6 +13,8 @@ import numpy as np
 from geoh5py.data import Data
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components.data import InversionData
+from geoapps.inversion.components.windows import InversionWindow
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
     validations,
 )
@@ -46,7 +48,10 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
         forward_only = self.pseudo3d_params.forward_only
         ifile = DirectCurrent2DParams(forward_only=forward_only).input_file
 
-        with self.workspace.open(mode="r"):
+        with self.workspace.open(mode="r+"):
+
+            window = InversionWindow(self.workspace, self.pseudo3d_params)
+            data = InversionData(self.workspace, self.pseudo3d_params, window.window)
 
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
             models = {"starting_model": self.pseudo3d_params.starting_model}
@@ -68,7 +73,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
 
                         receiver_entity = extract_dcip_survey(
                             iter_workspace,
-                            self.inversion_data.entity,
+                            data.entity,
                             self.pseudo3d_params.line_object.values,
                             trial["line_id"],
                         )
@@ -87,8 +92,10 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                             self.pseudo3d_params.expansion_factor,
                         )[0]
 
-                        xyz_out = mesh.centroids
+                        iter_workspace.remove_entity(receiver_entity.current_electrodes)
+                        iter_workspace.remove_entity(receiver_entity)
 
+                        xyz_out = mesh.centroids
                         model_uids = deepcopy(models)
                         for name, model in models.items():
                             if model is None:
@@ -125,14 +132,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                                     ].replace("pseudo 3d", "2d"),
                                     "geoh5": iter_workspace,
                                     "mesh": mesh,
-                                    # "data_object": receiver_entity,
                                     "line_id": trial["line_id"],
-                                    "u_cell_size": None,
-                                    "v_cell_size": None,
-                                    "depth_core": None,
-                                    "horizontal_padding": None,
-                                    "vertical_padding": None,
-                                    "expansion_factor": None,
                                 },
                                 **model_uids,
                             )
@@ -145,4 +145,5 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                 else:
                     lookup[uuid]["status"] = status
 
+            self.workspace.remove_entity(self.workspace.get_entity("DCInversion")[0])
         _ = self.update_lookup(lookup)

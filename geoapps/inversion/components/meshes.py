@@ -14,7 +14,6 @@ from geoh5py.objects import DrapeModel, Octree
 
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.shared_utils.utils import drape_2_tensor, octree_2_treemesh
-from geoapps.utils.models import get_drape_model
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
@@ -75,7 +74,7 @@ class InversionMesh:
         """
 
         if self.params.mesh is None:
-            self.build_from_params()
+            raise ValueError("Must pass pre-constructed mesh.")
         else:
             self.entity = self.params.mesh.copy(
                 parent=self.params.ga_group, copy_children=False
@@ -102,29 +101,3 @@ class InversionMesh:
             self.mesh, self.permutation = drape_2_tensor(
                 self.entity, return_sorting=True
             )
-
-    def build_from_params(self) -> Octree:
-        """Runs geoapps.create.OctreeMesh to create mesh from params."""
-        if "2d" in self.params.inversion_type:
-
-            self.params.geoh5.get_entity("")
-
-            (  # pylint: disable=W0632
-                self.entity,
-                self.mesh,
-                self.permutation,
-            ) = get_drape_model(
-                self.workspace,
-                "Models",
-                self.inversion_data.survey.unique_locations,  # pylint: disable=W0212
-                [self.params.u_cell_size, self.params.v_cell_size],
-                self.params.depth_core,
-                [self.params.horizontal_padding] * 2
-                + [self.params.vertical_padding, 1],
-                self.params.expansion_factor,
-                parent=self.params.ga_group,
-                return_colocated_mesh=True,
-                return_sorting=True,
-            )
-        else:
-            raise NotImplementedError("Must pass a pre-constructed mesh.")
