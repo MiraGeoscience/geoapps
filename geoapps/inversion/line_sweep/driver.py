@@ -26,7 +26,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         self.cleanup = params.cleanup
         super().__init__(self.setup_params())
 
-    def run(self):
+    def run(self):  # pylint disable=W0221
         super().run()
         with self.workspace.open(mode="r+"):
             self.collect_results()
