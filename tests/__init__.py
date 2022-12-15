@@ -11,7 +11,9 @@ import requests
 
 PROJECT = "FlinFlon.geoh5"
 
-URL = "https://github.com/MiraGeoscience/geoapps/raw/GEOPY-690/assets/FlinFlon.geoh5"
+URL = (
+    "https://github.com/MiraGeoscience/geoapps/raw/release/0.9.1/assets/FlinFlon.geoh5"
+)
 # Todo - change this back to release branch
 if not os.path.isfile("FlinFlon.geoh5"):
     r = requests.get(URL, timeout=5)
