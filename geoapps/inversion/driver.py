@@ -404,7 +404,7 @@ class InversionLogger:
 
 if __name__ == "__main__":
 
-    from . import DRIVER_MAP
+    from geoapps.inversion import DRIVER_MAP
 
     filepath = os.path.abspath(sys.argv[1])
     ifile = InputFile.read_ui_json(filepath)

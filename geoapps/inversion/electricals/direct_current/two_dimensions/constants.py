@@ -15,7 +15,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current 2d inversion",
+    "title": "Direct Current 2D inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -28,8 +28,6 @@ inversion_defaults = {
     "line_id": 1,
     "resolution": None,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "potential_channel": None,
@@ -94,7 +92,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current 2d forward",
+    "title": "Direct Current 2D forward",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -107,8 +105,6 @@ forward_defaults = {
     "line_id": 1,
     "resolution": None,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "potential_channel_bool": True,
@@ -171,7 +167,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Direct Current 2d inversion",
+    "title": "Direct Current 2D inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "line_object": {
@@ -284,22 +280,6 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-    },
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",
@@ -408,8 +388,6 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0.0,
-    "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
     "out_group": "DCInversion",
 }

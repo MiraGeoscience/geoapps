@@ -419,22 +419,8 @@ def test_validate_receivers_radar_drape():
     catch_invalid_generator(param, {}, "type")
 
 
-def test_validate_receivers_offset_x():
-    param = "receivers_offset_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "test", "type")
-
-
-def test_validate_receivers_offset_y():
-    param = "receivers_offset_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "test", "type")
-
-
 def test_validate_receivers_offset_z():
-    param = "receivers_offset_x"
+    param = "receivers_offset_z"
     newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
@@ -791,6 +777,13 @@ def test_validate_out_group():
     newval = "test_"
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
+
+
+def test_validate_distributed_workers():
+    param = "distributed_workers"
+    newval = ["one", "two"]
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, (), "type")
 
 
 def test_gravity_inversion_type():
