@@ -9,25 +9,22 @@ import json
 import os
 
 import numpy as np
-from geoh5py.data import Data
 from geoh5py.groups import ContainerGroup, SimPEGGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
 from param_sweeps.generate import generate
 
-from geoapps.driver_base.driver import BaseDriver
-from geoapps.utils.models import get_drape_model
-from geoapps.utils.surveys import extract_dcip_survey
+from geoapps.inversion.driver import InversionDriver
 
 
-class LineSweepDriver(SweepDriver, BaseDriver):
+class LineSweepDriver(SweepDriver, InversionDriver):
     def __init__(self, params):
+        InversionDriver.__init__(self, params)
         self.workspace = params.geoh5
+        self.pseudo3d_params = params
         self.cleanup = params.cleanup
-        self.worker_params = params
-        sweep_params = self.setup_params()
-        super().__init__(sweep_params)
+        super().__init__(self.setup_params())
 
     def run(self):
         super().run()
@@ -36,68 +33,8 @@ class LineSweepDriver(SweepDriver, BaseDriver):
         if self.cleanup:
             self.file_cleanup()
 
-    def write_files(self, lookup):
-        """Write ui.geoh5 and ui.json files for sweep trials."""
-
-        ifile = InputFile.read_ui_json(self.params.worker_uijson)
-        with ifile.data["geoh5"].open(mode="r+") as workspace:
-
-            for name, trial in lookup.items():
-
-                status = trial.pop("status")
-                if status == "pending":
-                    filepath = os.path.join(
-                        os.path.dirname(workspace.h5file), f"{name}.ui.geoh5"
-                    )
-                    with Workspace(filepath) as iter_workspace:
-
-                        receiver_entity = extract_dcip_survey(
-                            workspace,
-                            ifile.data["data_object"],
-                            ifile.data["line_object"].values,
-                            ifile.data["line_id"],
-                        )
-
-                        mesh_entity, _, _ = get_drape_model(
-                            workspace,
-                            "Models",
-                            receiver_entity.vertices,  # pylint: disable=W0212
-                            [ifile.data["u_cell_size"], ifile.data["v_cell_size"]],
-                            ifile.data["depth_core"],
-                            [ifile.data["horizontal_padding"]] * 2
-                            + [ifile.data["vertical_padding"], 1],
-                            ifile.data["expansion_factor"],
-                            return_colocated_mesh=True,
-                            return_sorting=True,
-                        )
-                        ifile.data.update(
-                            dict(
-                                lookup[name],
-                                **{"geoh5": iter_workspace, "mesh": mesh_entity},
-                            )
-                        )
-
-                        objects = [v for v in ifile.data.values() if hasattr(v, "uid")]
-                        for obj in objects:
-                            if not isinstance(obj, Data):
-                                obj.copy(parent=iter_workspace, copy_children=True)
-
-                    ifile.name = f"{name}.ui.json"
-                    ifile.path = os.path.dirname(workspace.h5file)
-                    ifile.write_ui_json()
-                    lookup[name]["status"] = "written"
-                else:
-                    lookup[name]["status"] = status
-
-        _ = self.update_lookup(lookup)
-
     def setup_params(self):
         path = self.workspace.h5file.replace(".geoh5", ".json")
-        # worker = InputFile.read_ui_json(path)
-        # worker.data["inversion_type"] = worker.data["inversion_type"].replace(
-        #     "pseudo 3d", "2d"
-        # )
-        # worker.write_ui_json(path)
         generate(
             path, parameters=["line_id"], update_values={"conda_environment": "geoapps"}
         )
@@ -105,11 +42,13 @@ class LineSweepDriver(SweepDriver, BaseDriver):
             os.path.join(path.replace(".ui.json", "_sweep.ui.json"))
         )
         with self.workspace.open(mode="r"):
-            lines = self.worker_params.line_object.values
+            lines = self.pseudo3d_params.line_object.values
         ifile.data["line_id_start"] = int(lines.min())
         ifile.data["line_id_end"] = int(lines.max())
         ifile.data["line_id_n"] = len(np.unique(lines))
-        return SweepParams.from_input_file(ifile)
+        sweep_params = SweepParams.from_input_file(ifile)
+        sweep_params.geoh5 = self.workspace
+        return sweep_params
 
     def file_cleanup(self):
         """Remove files associated with the parameter sweep."""
@@ -138,10 +77,10 @@ class LineSweepDriver(SweepDriver, BaseDriver):
     def collect_results(self):
         path = os.path.join(os.path.dirname(self.workspace.h5file))
         files = LineSweepDriver.line_files(path)
-        lines = np.unique(self.worker_params.line_object.values)
+        lines = np.unique(self.pseudo3d_params.line_object.values)
         results_group = SimPEGGroup.create(self.workspace, name="Pseudo3DInversion")
         models_group = ContainerGroup.create(self.workspace, name="Models")
-        data_result = self.worker_params.data_object.copy(parent=results_group)
+        data_result = self.pseudo3d_params.data_object.copy(parent=results_group)
 
         data = {}
         for line in lines:

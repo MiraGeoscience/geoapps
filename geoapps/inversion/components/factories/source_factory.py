@@ -75,6 +75,7 @@ class SourcesFactory(SimPEGFactory):
             )
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",

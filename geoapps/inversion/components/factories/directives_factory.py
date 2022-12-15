@@ -199,6 +199,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 )
 
             elif self.factory_type in [
+                "direct current pseudo 3d",
                 "direct current 3d",
                 "direct current 2d",
                 "induced polarization 3d",
@@ -254,6 +255,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 ]
 
             if self.factory_type in [
+                "direct current pseudo 3d",
                 "direct current 3d",
                 "direct current 2d",
                 "magnetotellurics",
