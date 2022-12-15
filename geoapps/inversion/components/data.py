@@ -121,7 +121,7 @@ class InversionData(InversionLocations):
         self.entity = None
         self.data_entity = None
         self._observed_data_types = {}
-        self._survey = None
+        self.survey = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -159,7 +159,7 @@ class InversionData(InversionLocations):
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
-        self._survey, _ = self.survey()
+        self.survey, _ = self.create_survey()
         self.save_data(self.entity)
 
     def filter(self, a):
@@ -268,7 +268,7 @@ class InversionData(InversionLocations):
 
                 if "direct current" in self.params.inversion_type:
                     self.transformations[component] = 1 / (
-                        geometric_factor(self._survey) + 1e-10
+                        geometric_factor(self.survey) + 1e-10
                     )
 
                     apparent_property = data[component].copy()
@@ -419,10 +419,9 @@ class InversionData(InversionLocations):
 
         return normalizations
 
-    def survey(
+    def create_survey(
         self,
         mesh: TreeMesh = None,
-        active_cells: np.ndarray = None,
         local_index: np.ndarray = None,
         channel=None,
     ):
@@ -441,7 +440,6 @@ class InversionData(InversionLocations):
         survey = survey_factory.build(
             data=self,
             mesh=mesh,
-            active_cells=active_cells,
             local_index=local_index,
             channel=channel,
         )
@@ -516,6 +514,8 @@ class InversionData(InversionLocations):
                 sorting=np.argsort(np.hstack(sorting)),
             )
             save_directive.save_components(0, dpred)
+
+        inverse_problem.dpred = dpred
 
     @property
     def observed_data_types(self):

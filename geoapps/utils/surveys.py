@@ -6,15 +6,50 @@
 #  (see LICENSE file at the root of this source code package).
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from geoapps.inversion.components.data import InversionData
+
 from typing import Callable
 
 import numpy as np
+from discretize import TensorMesh, TreeMesh
 from geoh5py.data import FloatData
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
 from geoapps.utils.statistics import is_outlier
+
+
+def get_containing_cells(
+    mesh: TreeMesh | TensorMesh, data: InversionData
+) -> np.ndarray:
+    """
+    Find indices of cells that contain data locations
+
+    :param mesh: Computational mesh object
+    :param data: Inversion data object
+    """
+    if isinstance(mesh, TreeMesh):
+
+        inds = mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+            data.locations
+        )
+
+    elif isinstance(mesh, TensorMesh):
+
+        locations = compute_alongline_distance(data.survey.unique_locations)
+        xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
+        yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
+        inds = xi + yi * mesh.shape_cells[0]
+
+    else:
+
+        raise ValueError("Mesh must be 'TreeMesh' or 'TensorMesh'")
+
+    return inds
 
 
 def new_neighbors(distances: np.ndarray, neighbors: np.ndarray, nodes: list[int]):
@@ -264,11 +299,15 @@ def extract_dcip_survey(
         name=f"{line_name} (currents)",
         vertices=current_locs,
         cells=np.array(current_cells, dtype=np.int32),
+        allow_delete=True,
     )
     currents.add_default_ab_cell_id()
 
     potentials = PotentialElectrode.create(
-        workspace, name=line_name, vertices=survey_locs
+        workspace,
+        name=line_name,
+        vertices=survey_locs,
+        allow_delete=True,
     )
     potentials.cells = np.array(survey_cells, dtype=np.int32)
 
