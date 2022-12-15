@@ -20,7 +20,7 @@ from geoapps.inversion.driver import InversionDriver
 
 class LineSweepDriver(SweepDriver, InversionDriver):
     def __init__(self, params):
-        InversionDriver.__init__(self, params)
+        # InversionDriver.__init__(self, params)
         self.workspace = params.geoh5
         self.pseudo3d_params = params
         self.cleanup = params.cleanup

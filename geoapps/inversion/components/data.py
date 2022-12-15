@@ -167,6 +167,7 @@ class InversionData(InversionLocations):
         if (
             self.params.inversion_type
             in [
+                "direct current pseudo 3d",
                 "direct current 3d",
                 "direct current 2d",
                 "induced polarization 3d",

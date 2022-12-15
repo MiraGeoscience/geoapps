@@ -321,6 +321,7 @@ app_initializer = {
     "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
     "line_object": UUID("{d400e8f1-8460-4609-b852-b3b93f945770}"),
     "line_id": 1,
+    "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
     "starting_model": 1e-1,
     "reference_model": 1e-1,
     "resolution": None,
