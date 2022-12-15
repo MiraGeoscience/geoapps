@@ -70,8 +70,8 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                 status = trial.pop("status")
                 if status == "pending":
                     filepath = os.path.join(
-                        self.working_directory,
-                        f"{uuid}.ui.geoh5",  # pylint: disable=E1101
+                        self.working_directory,  # pylint: disable=E1101
+                        f"{uuid}.ui.geoh5",
                     )
                     with Workspace(filepath) as iter_workspace:
 
