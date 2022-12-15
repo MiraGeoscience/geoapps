@@ -81,7 +81,9 @@ class MisfitFactory(SimPEGFactory):
 
         tile_num = 0
         for local_index in tiles:
-            survey, local_index = inversion_data.survey(mesh, active_cells, local_index)
+            survey, local_index = inversion_data.create_survey(
+                mesh=mesh, local_index=local_index
+            )
 
             lsim, lmap = inversion_data.simulation(mesh, active_cells, survey, tile_num)
 
@@ -129,8 +131,8 @@ class MisfitFactory(SimPEGFactory):
             self.sorting.append(local_index)
             for freq in frequencies:
 
-                survey, local_index = inversion_data.survey(
-                    mesh, active_cells, local_index, channel=freq
+                survey, local_index = inversion_data.create_survey(
+                    mesh, local_index, channel=freq
                 )
                 lsim, lmap = inversion_data.simulation(
                     mesh, active_cells, survey, tile_num

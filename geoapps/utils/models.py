@@ -8,6 +8,11 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from discretize import TreeMesh
+
 import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
@@ -18,6 +23,26 @@ from scipy.interpolate import interp1d
 from geoapps.block_model_creation.driver import BlockModelDriver
 from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
+
+
+def face_average(mesh: TreeMesh, model: np.ndarray) -> np.ndarray:
+    """
+    Compute the average face values of a model
+
+    :param mesh: Tree mesh object
+    :param model: A vector of cell centered property values
+    """
+    return mesh.stencil_cell_gradient.T * (mesh.stencil_cell_gradient * model)
+
+
+def floating_active(mesh: TreeMesh, active: np.ndarray):
+    """
+    True if there are any active cells in the air
+
+    :param mesh: Tree mesh object
+    :param active: active cells array
+    """
+    return True if any(face_average(mesh, active) >= 6) else False
 
 
 def get_drape_model(
