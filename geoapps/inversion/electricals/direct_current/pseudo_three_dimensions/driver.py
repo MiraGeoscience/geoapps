@@ -11,6 +11,7 @@ from copy import deepcopy
 
 import numpy as np
 from geoh5py.data import Data
+from geoh5py.groups.simpeg_group import SimPEGGroup
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components.data import InversionData
@@ -145,5 +146,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                 else:
                     lookup[uuid]["status"] = status
 
-            self.workspace.remove_entity(self.workspace.get_entity("DCInversion")[0])
+            self.workspace.remove_entity(
+                [k for k in self.workspace.groups if isinstance(k, SimPEGGroup)][0]
+            )
         _ = self.update_lookup(lookup)
