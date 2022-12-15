@@ -14,7 +14,7 @@ from geoh5py.objects.surveys.direct_current import PotentialElectrode
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
-    "title": "SimPEG Induced Polarization 3d inversion",
+    "title": "Induced Polarization 3D inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -26,8 +26,6 @@ inversion_defaults = {
     "resolution": None,
     "z_from_topo": True,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "chargeability_channel": None,
@@ -94,7 +92,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "SimPEG Induced Polarization 3d Forward",
+    "title": "Induced Polarization 3D forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -106,8 +104,6 @@ forward_defaults = {
     "resolution": None,
     "z_from_topo": True,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "chargeability_channel_bool": True,
@@ -148,7 +144,7 @@ inversion_ui_json = {
 
 forward_ui_json = {
     "starting_model": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models",
         "main": True,
@@ -169,7 +165,7 @@ forward_ui_json = {
     "z_norm": 2.0,
 }
 default_ui_json = {
-    "title": "SimPEG Induced Polarization 3d inversion",
+    "title": "Induced Polarization 3D inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -274,22 +270,6 @@ default_ui_json = {
         "label": "Results group name",
         "value": "InducedPolarizationInversion",
     },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-    },
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",
@@ -353,7 +333,5 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0.0,
-    "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
 }

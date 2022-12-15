@@ -31,8 +31,6 @@ inversion_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": False,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -144,8 +142,6 @@ forward_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": False,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -207,7 +203,7 @@ inversion_ui_json = {
 
 forward_ui_json = {
     "starting_model": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models",
         "main": True,

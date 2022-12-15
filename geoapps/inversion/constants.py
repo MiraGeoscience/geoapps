@@ -83,24 +83,6 @@ default_ui_json = {
         "value": False,
         "verbose": 3,
     },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-        "verbose": 3,
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-        "verbose": 3,
-    },
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",
@@ -622,5 +604,5 @@ validations = {
     "norm_x": {"types": [int, float]},
     "norm_y": {"types": [int, float]},
     "norm_z": {"types": [int, float]},
-    "distributed_workers": {"types": [tuple, type(None)]},
+    "distributed_workers": {"types": [list, type(None)]},
 }

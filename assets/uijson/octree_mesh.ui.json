@@ -75,6 +75,12 @@
         "label": "Name:",
         "value": "Octree_Mesh"
     },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
+    },
     "workspace_geoh5": "",
     "Refinement A object": {
         "groupOptional": true,

@@ -132,10 +132,17 @@ class ReceiversFactory(SimPEGFactory):
         ):
             stations = self.params.data_object.base_stations.vertices
             if stations is not None:
+                if getattr(self.params.mesh, "rotation", None):
+                    rotate_xyz(
+                        stations,
+                        self.params.mesh.origin.tolist(),
+                        -1 * self.params.mesh.rotation[0],
+                    )
+
                 if stations.shape[0] == 1:
                     stations = np.tile(stations.T, self.params.data_object.n_vertices).T
 
-                receivers.reference_locations = stations
+                receivers.reference_locations = stations[local_index, :]
 
         return receivers
 
