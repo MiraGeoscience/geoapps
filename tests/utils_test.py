@@ -17,7 +17,7 @@ import random
 import geoh5py.objects
 import numpy as np
 import pytest
-from discretize import TreeMesh
+from discretize import TensorMesh, TreeMesh
 from geoh5py.objects import Grid2D
 from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
@@ -77,17 +77,33 @@ def test_face_average(tmp_path):
         assert np.sum(face_avs == 6) == 1
 
 
-def test_floating_active(tmp_path):
-    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make():
-        mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
-        mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
-        centers = mesh.cell_centers
-        active = np.zeros_like(centers[:, 2])
-        active[centers[:, 2] < 75] = 1
-        assert not floating_active(mesh, active)
-        active[49] = 1
-        assert floating_active(mesh, active)
+def test_floating_active():
+    mesh = TensorMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
+    with pytest.raises(TypeError, match="Input mesh must be of type TreeMesh."):
+        floating_active(mesh, np.zeros(mesh.n_cells))
+
+    # Test 3D case
+    mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
+    mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
+    centers = mesh.cell_centers
+    active = np.zeros(mesh.n_cells)
+    active[centers[:, 2] < 75] = 1
+    assert not floating_active(mesh, active)
+    active[49] = 1
+    assert floating_active(mesh, active)
+
+    # Test 2D case
+    mesh = TreeMesh([[10] * 16, [10] * 16], [0, 0])
+    mesh.insert_cells([100, 100], mesh.max_level, finalize=True)
+    centers = mesh.cell_centers
+    active = np.zeros(mesh.n_cells)
+    active[centers[:, 1] < 75] = 1
+    assert not floating_active(mesh, active)
+    active[21] = 1  # Small cells
+    assert floating_active(mesh, active)
+    active[21] = 0
+    active[23] = 1  # Large cell with hanging faces
+    assert floating_active(mesh, active)
 
 
 def test_get_drape_model(tmp_path):
