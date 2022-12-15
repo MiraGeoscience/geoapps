@@ -8,12 +8,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from discretize import TreeMesh
-
 import numpy as np
+from discretize import TreeMesh
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, DrapeModel
@@ -42,7 +38,13 @@ def floating_active(mesh: TreeMesh, active: np.ndarray):
     :param mesh: Tree mesh object
     :param active: active cells array
     """
-    return True if any(face_average(mesh, active) >= 6) else False
+    if not isinstance(mesh, TreeMesh):
+        raise TypeError("Input mesh must be of type TreeMesh.")
+
+    if mesh.dim == 2:
+        return any(face_average(mesh, active) >= 4)
+
+    return any(face_average(mesh, active) >= 6)
 
 
 def get_drape_model(
