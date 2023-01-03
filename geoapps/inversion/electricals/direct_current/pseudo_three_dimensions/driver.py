@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,7 +11,6 @@ from copy import deepcopy
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.groups.simpeg_group import SimPEGGroup
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components.data import InversionData
@@ -51,8 +50,12 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
 
         with self.workspace.open(mode="r+"):
 
-            window = InversionWindow(self.workspace, self.pseudo3d_params)
-            data = InversionData(self.workspace, self.pseudo3d_params, window.window)
+            self.inversion_window = InversionWindow(
+                self.workspace, self.pseudo3d_params
+            )
+            self.inversion_data = InversionData(
+                self.workspace, self.pseudo3d_params, self.inversion_window.window
+            )
 
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
             models = {"starting_model": self.pseudo3d_params.starting_model}
@@ -67,89 +70,80 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
 
             for uuid, trial in lookup.items():
 
-                status = trial.pop("status")
-                if status == "pending":
-                    filepath = os.path.join(
-                        self.working_directory,  # pylint: disable=E1101
-                        f"{uuid}.ui.geoh5",
+                if trial["status"] != "pending":
+                    continue
+
+                filepath = os.path.join(
+                    self.working_directory,  # pylint: disable=E1101
+                    f"{uuid}.ui.geoh5",
+                )
+                with Workspace(filepath) as iter_workspace:
+
+                    receiver_entity = extract_dcip_survey(
+                        iter_workspace,
+                        self.inversion_data.entity,
+                        self.pseudo3d_params.line_object.values,
+                        trial["line_id"],
                     )
-                    with Workspace(filepath) as iter_workspace:
 
-                        receiver_entity = extract_dcip_survey(
-                            iter_workspace,
-                            data.entity,
-                            self.pseudo3d_params.line_object.values,
-                            trial["line_id"],
-                        )
+                    mesh = get_drape_model(
+                        iter_workspace,
+                        "Models",
+                        receiver_entity.vertices,
+                        [
+                            self.pseudo3d_params.u_cell_size,
+                            self.pseudo3d_params.v_cell_size,
+                        ],
+                        self.pseudo3d_params.depth_core,
+                        [self.pseudo3d_params.horizontal_padding] * 2
+                        + [self.pseudo3d_params.vertical_padding, 1],
+                        self.pseudo3d_params.expansion_factor,
+                    )[0]
 
-                        mesh = get_drape_model(
-                            iter_workspace,
-                            "Models",
-                            receiver_entity.vertices,
-                            [
-                                self.pseudo3d_params.u_cell_size,
-                                self.pseudo3d_params.v_cell_size,
-                            ],
-                            self.pseudo3d_params.depth_core,
-                            [self.pseudo3d_params.horizontal_padding] * 2
-                            + [self.pseudo3d_params.vertical_padding, 1],
-                            self.pseudo3d_params.expansion_factor,
-                        )[0]
+                    iter_workspace.remove_entity(receiver_entity.current_electrodes)
+                    iter_workspace.remove_entity(receiver_entity)
 
-                        iter_workspace.remove_entity(receiver_entity.current_electrodes)
-                        iter_workspace.remove_entity(receiver_entity)
+                    xyz_out = mesh.centroids
+                    model_uids = deepcopy(models)
+                    for name, model in models.items():
+                        if model is None:
+                            continue
+                        elif isinstance(model, Data):
+                            model_values = weighted_average(
+                                xyz_in, xyz_out, [model.values], n=1
+                            )[0]
+                        else:
+                            model_values = model * np.ones(len(xyz_out))
 
-                        xyz_out = mesh.centroids
-                        model_uids = deepcopy(models)
-                        for name, model in models.items():
-                            if model is None:
-                                continue
-                            elif isinstance(model, Data):
-                                model_values = weighted_average(
-                                    xyz_in, xyz_out, [model.values], n=1
-                                )[0]
-                            else:
-                                model_values = model * np.ones(len(xyz_out))
+                        model_object = mesh.add_data({name: {"values": model_values}})
+                        model_uids[name] = model_object.uid
 
-                            model_object = mesh.add_data(
-                                {name: {"values": model_values}}
-                            )
-                            model_uids[name] = model_object.uid
-
-                        for key in ifile.data:
-                            param = getattr(self.pseudo3d_params, key, None)
-                            if hasattr(param, "uid"):
-                                if not isinstance(param, Data):
-                                    param.copy(
-                                        parent=iter_workspace, copy_children=True
-                                    )
-
+                    for key in ifile.data:
+                        param = getattr(self.pseudo3d_params, key, None)
+                        if key not in ["title", "inversion_type"]:
                             ifile.data[key] = param
 
-                        ifile.data.update(
-                            dict(
-                                lookup[uuid],
-                                **{
-                                    "title": ifile.data["title"].replace("batch ", ""),
-                                    "inversion_type": ifile.data[
-                                        "inversion_type"
-                                    ].replace("pseudo 3d", "2d"),
-                                    "geoh5": iter_workspace,
-                                    "mesh": mesh,
-                                    "line_id": trial["line_id"],
-                                },
-                                **model_uids,
-                            )
+                    self.pseudo3d_params.topography_object.copy(
+                        parent=iter_workspace, copy_children=True
+                    )
+                    self.pseudo3d_params.data_object.copy(
+                        parent=iter_workspace, copy_children=True
+                    )
+
+                    ifile.data.update(
+                        dict(
+                            **{
+                                "geoh5": iter_workspace,
+                                "mesh": mesh,
+                                "line_id": trial["line_id"],
+                            },
+                            **model_uids,
                         )
+                    )
 
-                    ifile.name = f"{uuid}.ui.json"
-                    ifile.path = self.working_directory  # pylint: disable=E1101
-                    ifile.write_ui_json()
-                    lookup[uuid]["status"] = "written"
-                else:
-                    lookup[uuid]["status"] = status
+                ifile.name = f"{uuid}.ui.json"
+                ifile.path = self.working_directory  # pylint: disable=E1101
+                ifile.write_ui_json()
+                lookup[uuid]["status"] = "written"
 
-            self.workspace.remove_entity(
-                [k for k in self.workspace.groups if isinstance(k, SimPEGGroup)][0]
-            )
         _ = self.update_lookup(lookup)  # pylint: disable=E1101

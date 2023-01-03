@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -87,7 +87,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentInversion",
+    "out_group": "DirectCurrentPseudo3DInversion",
     "generate_sweep": False,
     "files_only": False,
     "cleanup": True,
@@ -134,7 +134,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentForward",
+    "out_group": "DirectCurrentPseudo3DForward",
     "generate_sweep": False,
     "files_only": False,
     "cleanup": False,
@@ -222,6 +222,52 @@ default_ui_json = {
         "value": None,
         "visible": True,
     },
+    "u_cell_size": {
+        "min": 0.0,
+        "group": "Mesh and Models",
+        "main": True,
+        "enabled": True,
+        "label": "Easting core cell size (m)",
+        "value": 25.0,
+    },
+    "v_cell_size": {
+        "min": 0.0,
+        "group": "Mesh and Models",
+        "main": True,
+        "enabled": True,
+        "label": "Northing core cell size (m)",
+        "value": 25.0,
+    },
+    "depth_core": {
+        "min": 0.0,
+        "group": "Mesh and Models",
+        "main": True,
+        "enabled": True,
+        "label": "Depth of core (m)",
+        "value": 500.0,
+    },
+    "horizontal_padding": {
+        "min": 0.0,
+        "group": "Mesh and Models",
+        "main": True,
+        "enabled": True,
+        "label": "Horizontal padding (m)",
+        "value": 1000.0,
+    },
+    "vertical_padding": {
+        "min": 0.0,
+        "group": "Mesh and Models",
+        "main": True,
+        "dependencyType": "disabled",
+        "label": "Vertical padding (m)",
+        "value": 1000.0,
+    },
+    "expansion_factor": {
+        "main": True,
+        "group": "Mesh and Models",
+        "label": "Expansion factor",
+        "value": 1.1,
+    },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
@@ -270,17 +316,14 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
-    "expansion_factor": {
-        "main": True,
-        "group": "Mesh and Models",
-        "label": "Expansion factor",
-        "value": 1.1,
-    },
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
     "tile_spatial": 1,
-    "out_group": {"label": "Results group name", "value": "direct_current"},
+    "out_group": {
+        "label": "Results group name",
+        "value": "DirectCurrentPseudo3DInversion",
+    },
     "files_only": {
         "label": "Generate files only",
         "group": "Python run preferences",
@@ -337,6 +380,6 @@ app_initializer = {
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "receivers_offset_z": 0.0,
-    "out_group": "DCInversion",
+    "out_group": "DirectCurrentPseudo3DInversion",
     "cleanup": True,
 }
