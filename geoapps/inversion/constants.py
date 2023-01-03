@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -148,76 +148,6 @@ default_ui_json = {
         "label": "Mesh",
         "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
         "value": None,
-    },
-    "u_cell_size": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "Easting core cell size (m)",
-        "value": 25.0,
-    },
-    "v_cell_size": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "Northing core cell size (m)",
-        "value": 25.0,
-    },
-    "w_cell_size": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "Vertical core cell size (m)",
-        "value": 25.0,
-    },
-    "octree_levels_topo": {
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "octree levels topography",
-        "value": [0, 0, 4, 4],
-    },
-    "octree_levels_obs": {
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "octree levels observations",
-        "value": [4, 4, 4, 4],
-    },
-    "depth_core": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "Depth of core (m)",
-        "value": 500.0,
-    },
-    "max_distance": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "Maximum padding distance",
-        "value": 5000.0,
-    },
-    "horizontal_padding": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": True,
-        "enabled": True,
-        "label": "Horizontal padding (m)",
-        "value": 1000.0,
-    },
-    "vertical_padding": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": True,
-        "dependencyType": "disabled",
-        "label": "Vertical padding (m)",
-        "value": 1000.0,
     },
     "window_center_x": {
         "group": "Data window",

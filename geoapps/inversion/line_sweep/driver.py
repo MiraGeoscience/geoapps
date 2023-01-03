@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,7 +9,7 @@ import json
 import os
 
 import numpy as np
-from geoh5py.groups import ContainerGroup, SimPEGGroup
+from geoh5py.groups import ContainerGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
@@ -25,8 +25,8 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         self.cleanup = params.cleanup
         super().__init__(self.setup_params())
 
-    def run(self):  # pylint disable=W0221
-        super().run()
+    def run(self):
+        super().run()  # pylint: disable=W0221
         with self.workspace.open(mode="r+"):
             self.collect_results()
         if self.cleanup:
@@ -77,9 +77,10 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         path = os.path.join(os.path.dirname(self.workspace.h5file))
         files = LineSweepDriver.line_files(path)
         lines = np.unique(self.pseudo3d_params.line_object.values)
-        results_group = SimPEGGroup.create(self.workspace, name="Pseudo3DInversion")
         models_group = ContainerGroup.create(self.workspace, name="Models")
-        data_result = self.pseudo3d_params.data_object.copy(parent=results_group)
+        data_result = self.pseudo3d_params.data_object.copy(
+            parent=self.pseudo3d_params.ga_group
+        )
 
         data = {}
         for line in lines:
@@ -91,7 +92,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             mesh.name = f"Line {line}"
 
         data_result.add_data(data)
-        models_group.parent = results_group
+        models_group.parent = self.pseudo3d_params.ga_group
 
     def collect_line_data(self, survey, data):
 
