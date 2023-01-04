@@ -15,12 +15,13 @@ from ipywidgets import Widget
 
 from geoapps.peak_finder.application import PeakFinder
 
+from .. import PROJECT
+
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
 def test_peak_finder_app(tmp_path):
-    project = "./FlinFlon.geoh5"
-    app = PeakFinder(geoh5=project, plot_result=False)
+    app = PeakFinder(geoh5=PROJECT, plot_result=False)
 
     h5file_path = Path(tmp_path) / r"testPeakFinder.geoh5"
 

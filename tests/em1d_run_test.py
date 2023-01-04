@@ -12,13 +12,12 @@ from geoh5py.workspace import Workspace
 from geoapps.inversion.airborne_electromagnetics.application import InversionApp
 from geoapps.inversion.airborne_electromagnetics.driver import inversion
 
-project = "FlinFlon.geoh5"
-geoh5 = Workspace(project)
+from . import PROJECT
 
 
 def test_em1d_inversion(tmp_path):
     app = InversionApp(
-        geoh5=project,
+        geoh5=PROJECT,
         plot_result=False,
         inversion_parameters={
             "max_iterations": 1,
