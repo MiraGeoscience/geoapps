@@ -58,8 +58,9 @@ from geoapps.utils.surveys import (
 from geoapps.utils.testing import Geoh5Tester
 from geoapps.utils.workspace import sorted_children_dict
 
-geoh5 = Workspace("./FlinFlon.geoh5")
-dc_geoh5 = "./FlinFlon_dcip.geoh5"
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def test_face_average(tmp_path):
