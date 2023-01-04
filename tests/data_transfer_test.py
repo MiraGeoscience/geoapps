@@ -9,6 +9,8 @@ from geoh5py.workspace import Workspace
 
 from geoapps.block_model_creation.driver import BlockModelDriver
 
+from . import PROJECT
+
 
 def test_truncate_locs_depths():
 
@@ -77,7 +79,7 @@ def test_find_top_padding():
     height = 300
     width = 1000
     n = 100
-    ws = Workspace("./FlinFlon.geoh5")
+    ws = Workspace(PROJECT)
 
     X, Y = np.meshgrid(np.arange(0, width, n), np.arange(0, height, n))
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
@@ -106,7 +108,7 @@ def test_get_block_model():
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [100, 150, 200, 300, 0, 0]
-    ws = Workspace("./FlinFlon.geoh5")
+    ws = Workspace(PROJECT)
     obj = BlockModelDriver.get_block_model(
         ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1
     )

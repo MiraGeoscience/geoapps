@@ -28,19 +28,15 @@ from geoapps.inversion.potential_fields.application import (
     InversionApp as MagInversionApp,
 )
 
+from .. import PROJECT, PROJECT_DCIP
+
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
-
-project = "./FlinFlon.geoh5"
-
-geoh5 = Workspace(project)
-
-project_dcip = "./FlinFlon_dcip.geoh5"
 
 
 def test_mag_inversion(tmp_path):
     """Tests the jupyter application for mag-mvi"""
-    with Workspace(project) as ws:
+    with Workspace(PROJECT) as ws:
         with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
             new_topo = ws.get_entity(UUID("ab3c2083-6ea8-4d31-9230-7aad3ec09525"))[
                 0
@@ -146,7 +142,7 @@ def test_mag_inversion(tmp_path):
 
 def test_dc_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
-    with Workspace(project_dcip) as ws:
+    with Workspace(PROJECT_DCIP) as ws:
         with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
             new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
                 0
@@ -164,7 +160,7 @@ def test_dc_inversion(tmp_path):
         "starting_model": 0.01,
     }
     side_effects = {}
-    app = DCInversionApp(geoh5=project_dcip, plot_result=False)
+    app = DCInversionApp(geoh5=PROJECT_DCIP, plot_result=False)
     app.geoh5 = path.join(tmp_path, "invtest.geoh5")
 
     for param, value in changes.items():
@@ -216,7 +212,7 @@ def test_dc_inversion(tmp_path):
 
 def test_ip_inversion(tmp_path):
     """Tests the jupyter application for dc inversion"""
-    with Workspace(project_dcip) as ws:
+    with Workspace(PROJECT_DCIP) as ws:
         with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
             new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
                 0
@@ -240,7 +236,7 @@ def test_ip_inversion(tmp_path):
         "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
     }
     side_effects = {"starting_model": 1e-4}
-    app = DCInversionApp(geoh5=project_dcip, plot_result=False)
+    app = DCInversionApp(geoh5=PROJECT_DCIP, plot_result=False)
     app.mesh.value = None
     with new_geoh5.open(mode="r"):
         app.geoh5 = new_geoh5
@@ -292,7 +288,7 @@ def test_ip_inversion(tmp_path):
 
 def test_em1d_inversion(tmp_path):
     """Tests the jupyter application for em1d inversion."""
-    with Workspace(project) as ws:
+    with Workspace(PROJECT) as ws:
         with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
             new_obj = ws.get_entity(UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"))[
                 0
@@ -305,7 +301,7 @@ def test_em1d_inversion(tmp_path):
         "data": prop_group_uid,
     }
     side_effects = {"system": "VTEM (2007)"}
-    app = InversionApp(geoh5=project, plot_result=False)
+    app = InversionApp(geoh5=PROJECT, plot_result=False)
     app.workspace = new_geoh5
 
     for param, value in changes.items():
