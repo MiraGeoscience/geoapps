@@ -92,7 +92,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "geoapps"
+project = "geoapps v0.9.2"
 
 # The short X.Y version.
 version = "0.9.2"
