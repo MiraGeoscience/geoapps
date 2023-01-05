@@ -11,7 +11,7 @@
 # This lock contains optional dependency categories full. Include them in the installed environment with:
 #     conda-lock install -e full -n YOURENV --file conda-py-3.10-lock.yml
 # To update a single package to the latest version compatible with the version constraints in the source:
-#     conda-lock lock  --lockfile conda-py-3.10-lock.yml --update PACKAGE
+#     conda-lock lock --lockfile conda-py-3.10-lock.yml --update PACKAGE
 # To re-solve the entire environment, e.g. after changing a version constraint in the source file:
 #     conda-lock -f pyproject.toml -f environments/env-python-3.10.yml --lockfile conda-py-3.10-lock.yml
 metadata:
@@ -21,9 +21,9 @@ metadata:
   - url: defaults
     used_env_vars: []
   content_hash:
-    linux-64: d0b8aa244932351ebb186bce3bb29aaf8e81fc9c50f4f5cac1a9113a2b6d558e
-    osx-64: 51d41c8d16be3a9bc38cbf6ff2fbc99870c117954224610b394e6dd3cbb8119b
-    win-64: 3225cbedb6dc8678bcbce1e9061c4f8c79fdb63dccbece303ada23f1a57a87d6
+    linux-64: 44bb00c3828f3262d891deed2a8d1a3727c34734151400978f7ef352b2b8f9ea
+    osx-64: 24f6a0137beb68bb50692d8c6416184b0ae749388e81c54aa89add2707aa76d2
+    win-64: 3bfee0ae36178811415f578eaf14b33e3e65c73c7b2f93465647fd36763eedd1
   platforms:
   - win-64
   - osx-64
@@ -1486,6 +1486,19 @@ package:
   version: 2.1.1
 - category: main
   dependencies:
+    __unix: ''
+    python: '>=3.8'
+  hash:
+    md5: 20e4087407c7cb04a40817114b333dbf
+    sha256: 23676470b591b100393bb0f6c46fe10624dcbefc696a6a9f42932ed8816ef0ea
+  manager: conda
+  name: click
+  optional: false
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.3-unix_pyhd8ed1ab_2.tar.bz2
+  version: 8.1.3
+- category: main
+  dependencies:
     python: '>=3.6'
   hash:
     md5: a6cf47b09786423200d7982d1faa19eb
@@ -2093,7 +2106,7 @@ package:
   version: 0.2.2
 - category: main
   dependencies:
-    python: ==2.7.*|>=3.4
+    python: 2.7.*|>=3.4
   hash:
     md5: 076becd9e05608f8dc72757d5f3a91ff
     sha256: 74c63fd03f1f1ea2b54e8bc529fd1a600aaafb24027b738d0db87909ee3a33dc
@@ -2129,6 +2142,19 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/linux-64/pyrsistent-0.19.3-py310h1fa729e_0.conda
   version: 0.19.3
+- category: main
+  dependencies:
+    __unix: ''
+    python: '>=3.8'
+  hash:
+    md5: 2a7de29fb590ca14b5243c4c812c8025
+    sha256: a42f826e958a8d22e65b3394f437af7332610e43ee313393d1cf143f0a2d274b
+  manager: conda
+  name: pysocks
+  optional: false
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
+  version: 1.7.1
 - category: full
   dependencies:
     python: '>=3.3'
@@ -2455,19 +2481,6 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.38.4-pyhd8ed1ab_0.tar.bz2
   version: 0.38.4
-- category: main
-  dependencies:
-    __win: ''
-    python: '>=3.6'
-  hash:
-    md5: 30878ecc4bd36e8deeea1e3c151b2e0b
-    sha256: a11ae693a0645bf6c7b8a47bac030be9c0967d0b1924537b9ff7458e832c0511
-  manager: conda
-  name: win_inet_pton
-  optional: false
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/win_inet_pton-1.1.0-pyhd8ed1ab_6.tar.bz2
-  version: 1.1.0
 - category: dev
   dependencies:
     libgcc-ng: '>=12'
@@ -2710,20 +2723,32 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/linux-64/cfitsio-4.2.0-hd9d235c_0.conda
   version: 4.2.0
-- category: main
+- category: full
   dependencies:
-    __win: ''
-    colorama: ''
-    python: '>=3.8'
+    click: '>=3.0'
+    python: ''
   hash:
-    md5: 6b58680207b526c42dcff68b543803dd
-    sha256: 84e80a33e9a8e5398d3e97209366b57f635462a5b894f8076ec8c95e56672c44
+    md5: 4fd2c6b53934bd7d96d1f3fdaf99b79f
+    sha256: ddef6e559dde6673ee504b0e29dd814d36e22b6b9b1f519fa856ee268905bf92
   manager: conda
-  name: click
-  optional: false
+  name: click-plugins
+  optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.3-win_pyhd8ed1ab_2.tar.bz2
-  version: 8.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/click-plugins-1.1.1-py_0.tar.bz2
+  version: 1.1.1
+- category: full
+  dependencies:
+    click: '>=4.0'
+    python: <4.0
+  hash:
+    md5: a29b7c141d6b2de4bb67788a5f107734
+    sha256: 97bd58f0cfcff56a0bcda101e26f7d936625599325beba3e3a1fa512dd7fc174
+  manager: conda
+  name: cligj
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/cligj-0.7.2-pyhd8ed1ab_1.tar.bz2
+  version: 0.7.2
 - category: full
   dependencies:
     python: '>=3.6'
@@ -2953,6 +2978,19 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/partd-1.3.0-pyhd8ed1ab_0.tar.bz2
   version: 1.3.0
+- category: full
+  dependencies:
+    ptyprocess: '>=0.5'
+    python: ''
+  hash:
+    md5: 330448ce4403cc74990ac07c555942a1
+    sha256: 07706c0417ead94f359ca7278f65452d3c396448777aba1da6a11fc351bdca9a
+  manager: conda
+  name: pexpect
+  optional: true
+  platform: linux-64
+  url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh1a96a4e_2.tar.bz2
+  version: 4.8.0
 - category: main
   dependencies:
     freetype: '>=2.12.1,<3.0a0'
@@ -3054,20 +3092,6 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/pygments-2.14.0-pyhd8ed1ab_0.conda
   version: 2.14.0
-- category: main
-  dependencies:
-    __win: ''
-    python: '>=3.8'
-    win_inet_pton: ''
-  hash:
-    md5: 56cd9fe388baac0e90c7149cfac95b60
-    sha256: b3a612bc887f3dd0fb7c4199ad8e342bd148cf69a9b74fd9468a18cf2bef07b7
-  manager: conda
-  name: pysocks
-  optional: false
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyh0701188_6.tar.bz2
-  version: 1.7.1
 - category: dev
   dependencies:
     attrs: '>=19.2.0'
@@ -3251,32 +3275,6 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/linux-64/brotlipy-0.7.0-py310h5764c6d_1005.tar.bz2
   version: 0.7.0
-- category: full
-  dependencies:
-    click: '>=3.0'
-    python: ''
-  hash:
-    md5: 4fd2c6b53934bd7d96d1f3fdaf99b79f
-    sha256: ddef6e559dde6673ee504b0e29dd814d36e22b6b9b1f519fa856ee268905bf92
-  manager: conda
-  name: click-plugins
-  optional: true
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/click-plugins-1.1.1-py_0.tar.bz2
-  version: 1.1.1
-- category: full
-  dependencies:
-    click: '>=4.0'
-    python: <4.0
-  hash:
-    md5: a29b7c141d6b2de4bb67788a5f107734
-    sha256: 97bd58f0cfcff56a0bcda101e26f7d936625599325beba3e3a1fa512dd7fc174
-  manager: conda
-  name: cligj
-  optional: true
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/cligj-0.7.2-pyhd8ed1ab_1.tar.bz2
-  version: 0.7.2
 - category: main
   dependencies:
     cffi: '>=1.12'
@@ -3738,12 +3736,12 @@ package:
   version: 2.7.1
 - category: full
   dependencies:
-    __win: ''
+    __linux: ''
     backcall: ''
-    colorama: ''
     decorator: ''
     jedi: '>=0.16'
     matplotlib-inline: ''
+    pexpect: '>4.3'
     pickleshare: ''
     prompt-toolkit: '>=3.0.11,<3.1.0'
     pygments: '>=2.4.0'
@@ -3751,13 +3749,13 @@ package:
     stack_data: ''
     traitlets: '>=5'
   hash:
-    md5: 00944c2f3ff64758ec2cb62fef1e0021
-    sha256: 1c65af32c478be32bd75715f3598a8b2121abdd5a6e18c535fe751208cca7d74
+    md5: 788c234d910ad9f37174d1845c1a52c7
+    sha256: 437eaaf8a724a2bd298d16cc0daf46808dc7dc1098ec29135b7862c3355913c2
   manager: conda
   name: ipython
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.8.0-pyh08f2357_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.8.0-pyh41d4057_0.conda
   version: 8.8.0
 - category: full
   dependencies:
@@ -3984,7 +3982,7 @@ package:
   version: 2.23.0
 - category: full
   dependencies:
-    __win: ''
+    __linux: ''
     comm: '>=0.1'
     debugpy: '>=1.0'
     ipython: '>=7.23.1'
@@ -3998,13 +3996,13 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: 92eef8a79941c12cc4cc5971a2f0b517
-    sha256: a3b01c381ea7d26b30366225218512faec9d4eba1b98d91a7ec407a7883ca3c0
+    md5: 65372b6dd819e2c36345cf91eeb4ff06
+    sha256: 205fe1fc6ab81f2f18b389cc829fd826f9917fdde50104800d6127ab19dbb819
   manager: conda
   name: ipykernel
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.19.4-pyh025b116_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.19.4-pyh210e3f2_0.conda
   version: 6.19.4
 - category: full
   dependencies:
@@ -4629,6 +4627,7 @@ package:
   name: geoh5py
   optional: false
   platform: linux-64
+  source: null
   url: https://files.pythonhosted.org/packages/79/40/402865634e5615f85fdbfc74c8bda4758414d20b892673c5581f50682ce6/geoh5py-0.5.0-py3-none-any.whl
   version: 0.5.0
 - category: main
@@ -4644,6 +4643,7 @@ package:
   name: simpeg-archive
   optional: false
   platform: linux-64
+  source: null
   url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
   version: 0.9.1.dev5
 - category: main
@@ -4665,6 +4665,7 @@ package:
   name: mira-simpeg
   optional: false
   platform: linux-64
+  source: null
   url: https://files.pythonhosted.org/packages/f0/6e/d27a5faf1fc1bda17a119bb3f021f8d91597f0fbd1f85630bf9e6dfd63a4/Mira_SimPEG-0.15.1.dev7-py2.py3-none-any.whl
   version: 0.15.1.dev7
 - category: main
@@ -4677,6 +4678,7 @@ package:
   name: param-sweeps
   optional: false
   platform: linux-64
+  source: null
   url: https://files.pythonhosted.org/packages/86/9a/cf12141da920feeb4b80833bd54f01d11c7b58b3f7f7c5ec19d2a45127f8/param_sweeps-0.1.3-py3-none-any.whl
   version: 0.1.3
 - category: main
@@ -5764,6 +5766,18 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/appdirs-1.4.4-pyh9f0ad1d_0.tar.bz2
   version: 1.4.4
+- category: full
+  dependencies:
+    python: '>=2.7'
+  hash:
+    md5: 54ac328d703bff191256ffa1183126d1
+    sha256: b209a68ac55eb9ecad7042f0d4eedef5da924699f6cdf54ac1826869cfdae742
+  manager: conda
+  name: appnope
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/appnope-0.1.3-pyhd8ed1ab_0.tar.bz2
+  version: 0.1.3
 - category: main
   dependencies:
     python: ''
@@ -5876,6 +5890,19 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-2.1.1-pyhd8ed1ab_0.tar.bz2
   version: 2.1.1
+- category: main
+  dependencies:
+    __unix: ''
+    python: '>=3.8'
+  hash:
+    md5: 20e4087407c7cb04a40817114b333dbf
+    sha256: 23676470b591b100393bb0f6c46fe10624dcbefc696a6a9f42932ed8816ef0ea
+  manager: conda
+  name: click
+  optional: false
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.3-unix_pyhd8ed1ab_2.tar.bz2
+  version: 8.1.3
 - category: main
   dependencies:
     python: '>=3.6'
@@ -6498,7 +6525,7 @@ package:
   version: 0.2.2
 - category: main
   dependencies:
-    python: ==2.7.*|>=3.4
+    python: 2.7.*|>=3.4
   hash:
     md5: 076becd9e05608f8dc72757d5f3a91ff
     sha256: 74c63fd03f1f1ea2b54e8bc529fd1a600aaafb24027b738d0db87909ee3a33dc
@@ -6533,6 +6560,19 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/osx-64/pyrsistent-0.19.3-py310h90acd4f_0.conda
   version: 0.19.3
+- category: main
+  dependencies:
+    __unix: ''
+    python: '>=3.8'
+  hash:
+    md5: 2a7de29fb590ca14b5243c4c812c8025
+    sha256: a42f826e958a8d22e65b3394f437af7332610e43ee313393d1cf143f0a2d274b
+  manager: conda
+  name: pysocks
+  optional: false
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyha2e5f31_6.tar.bz2
+  version: 1.7.1
 - category: full
   dependencies:
     python: '>=3.3'
@@ -6841,19 +6881,6 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.38.4-pyhd8ed1ab_0.tar.bz2
   version: 0.38.4
-- category: main
-  dependencies:
-    __win: ''
-    python: '>=3.6'
-  hash:
-    md5: 30878ecc4bd36e8deeea1e3c151b2e0b
-    sha256: a11ae693a0645bf6c7b8a47bac030be9c0967d0b1924537b9ff7458e832c0511
-  manager: conda
-  name: win_inet_pton
-  optional: false
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/win_inet_pton-1.1.0-pyhd8ed1ab_6.tar.bz2
-  version: 1.1.0
 - category: dev
   dependencies:
     python: '>=3.10,<3.11.0a0'
@@ -7057,20 +7084,32 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/osx-64/cfitsio-4.2.0-hd56cc12_0.conda
   version: 4.2.0
-- category: main
+- category: full
   dependencies:
-    __win: ''
-    colorama: ''
-    python: '>=3.8'
+    click: '>=3.0'
+    python: ''
   hash:
-    md5: 6b58680207b526c42dcff68b543803dd
-    sha256: 84e80a33e9a8e5398d3e97209366b57f635462a5b894f8076ec8c95e56672c44
+    md5: 4fd2c6b53934bd7d96d1f3fdaf99b79f
+    sha256: ddef6e559dde6673ee504b0e29dd814d36e22b6b9b1f519fa856ee268905bf92
   manager: conda
-  name: click
-  optional: false
+  name: click-plugins
+  optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.3-win_pyhd8ed1ab_2.tar.bz2
-  version: 8.1.3
+  url: https://conda.anaconda.org/conda-forge/noarch/click-plugins-1.1.1-py_0.tar.bz2
+  version: 1.1.1
+- category: full
+  dependencies:
+    click: '>=4.0'
+    python: <4.0
+  hash:
+    md5: a29b7c141d6b2de4bb67788a5f107734
+    sha256: 97bd58f0cfcff56a0bcda101e26f7d936625599325beba3e3a1fa512dd7fc174
+  manager: conda
+  name: cligj
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/cligj-0.7.2-pyhd8ed1ab_1.tar.bz2
+  version: 0.7.2
 - category: full
   dependencies:
     python: '>=3.6'
@@ -7305,6 +7344,19 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/partd-1.3.0-pyhd8ed1ab_0.tar.bz2
   version: 1.3.0
+- category: full
+  dependencies:
+    ptyprocess: '>=0.5'
+    python: ''
+  hash:
+    md5: 330448ce4403cc74990ac07c555942a1
+    sha256: 07706c0417ead94f359ca7278f65452d3c396448777aba1da6a11fc351bdca9a
+  manager: conda
+  name: pexpect
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/noarch/pexpect-4.8.0-pyh1a96a4e_2.tar.bz2
+  version: 4.8.0
 - category: main
   dependencies:
     freetype: '>=2.12.1,<3.0a0'
@@ -7403,20 +7455,6 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/pygments-2.14.0-pyhd8ed1ab_0.conda
   version: 2.14.0
-- category: main
-  dependencies:
-    __win: ''
-    python: '>=3.8'
-    win_inet_pton: ''
-  hash:
-    md5: 56cd9fe388baac0e90c7149cfac95b60
-    sha256: b3a612bc887f3dd0fb7c4199ad8e342bd148cf69a9b74fd9468a18cf2bef07b7
-  manager: conda
-  name: pysocks
-  optional: false
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pysocks-1.7.1-pyh0701188_6.tar.bz2
-  version: 1.7.1
 - category: dev
   dependencies:
     attrs: '>=19.2.0'
@@ -7596,32 +7634,6 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/osx-64/brotlipy-0.7.0-py310h90acd4f_1005.tar.bz2
   version: 0.7.0
-- category: full
-  dependencies:
-    click: '>=3.0'
-    python: ''
-  hash:
-    md5: 4fd2c6b53934bd7d96d1f3fdaf99b79f
-    sha256: ddef6e559dde6673ee504b0e29dd814d36e22b6b9b1f519fa856ee268905bf92
-  manager: conda
-  name: click-plugins
-  optional: true
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/click-plugins-1.1.1-py_0.tar.bz2
-  version: 1.1.1
-- category: full
-  dependencies:
-    click: '>=4.0'
-    python: <4.0
-  hash:
-    md5: a29b7c141d6b2de4bb67788a5f107734
-    sha256: 97bd58f0cfcff56a0bcda101e26f7d936625599325beba3e3a1fa512dd7fc174
-  manager: conda
-  name: cligj
-  optional: true
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/cligj-0.7.2-pyhd8ed1ab_1.tar.bz2
-  version: 0.7.2
 - category: main
   dependencies:
     cffi: '>=1.12'
@@ -8255,12 +8267,13 @@ package:
   version: 3.6.2
 - category: full
   dependencies:
-    __win: ''
+    __osx: ''
+    appnope: ''
     backcall: ''
-    colorama: ''
     decorator: ''
     jedi: '>=0.16'
     matplotlib-inline: ''
+    pexpect: '>4.3'
     pickleshare: ''
     prompt-toolkit: '>=3.0.11,<3.1.0'
     pygments: '>=2.4.0'
@@ -8268,13 +8281,13 @@ package:
     stack_data: ''
     traitlets: '>=5'
   hash:
-    md5: 00944c2f3ff64758ec2cb62fef1e0021
-    sha256: 1c65af32c478be32bd75715f3598a8b2121abdd5a6e18c535fe751208cca7d74
+    md5: 92012d3aee304230e25f564e7746e8dd
+    sha256: 3c4c90f3dd7057bac2057f604934feb9bd84e7096430bdfb59d0068629157478
   manager: conda
   name: ipython
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.8.0-pyh08f2357_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.8.0-pyhd1c38e8_0.conda
   version: 8.8.0
 - category: full
   dependencies:
@@ -8469,7 +8482,8 @@ package:
   version: 1.8.22
 - category: full
   dependencies:
-    __win: ''
+    __osx: ''
+    appnope: ''
     comm: '>=0.1'
     debugpy: '>=1.0'
     ipython: '>=7.23.1'
@@ -8483,13 +8497,13 @@ package:
     tornado: '>=6.1'
     traitlets: '>=5.1.0'
   hash:
-    md5: 92eef8a79941c12cc4cc5971a2f0b517
-    sha256: a3b01c381ea7d26b30366225218512faec9d4eba1b98d91a7ec407a7883ca3c0
+    md5: dbd888b31f82ca9b335ec30d26811d5e
+    sha256: 2844b6ac6a858bb289f650db9097dd0de24f66cabe8ff29170b1911742a992ed
   manager: conda
   name: ipykernel
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.19.4-pyh025b116_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipykernel-6.19.4-pyh736e0ef_0.conda
   version: 6.19.4
 - category: full
   dependencies:
@@ -8914,6 +8928,7 @@ package:
   name: geoh5py
   optional: false
   platform: osx-64
+  source: null
   url: https://files.pythonhosted.org/packages/79/40/402865634e5615f85fdbfc74c8bda4758414d20b892673c5581f50682ce6/geoh5py-0.5.0-py3-none-any.whl
   version: 0.5.0
 - category: main
@@ -8929,6 +8944,7 @@ package:
   name: simpeg-archive
   optional: false
   platform: osx-64
+  source: null
   url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
   version: 0.9.1.dev5
 - category: main
@@ -8950,6 +8966,7 @@ package:
   name: mira-simpeg
   optional: false
   platform: osx-64
+  source: null
   url: https://files.pythonhosted.org/packages/f0/6e/d27a5faf1fc1bda17a119bb3f021f8d91597f0fbd1f85630bf9e6dfd63a4/Mira_SimPEG-0.15.1.dev7-py2.py3-none-any.whl
   version: 0.15.1.dev7
 - category: main
@@ -8962,6 +8979,7 @@ package:
   name: param-sweeps
   optional: false
   platform: osx-64
+  source: null
   url: https://files.pythonhosted.org/packages/86/9a/cf12141da920feeb4b80833bd54f01d11c7b58b3f7f7c5ec19d2a45127f8/param_sweeps-0.1.3-py3-none-any.whl
   version: 0.1.3
 - category: main
@@ -9649,7 +9667,7 @@ package:
   version: 2.0.6
 - category: full
   dependencies:
-    libiconv: '>=1.17,<1.18.0a0'
+    libiconv: '>=1.17,<2.0.0a0'
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
@@ -9850,7 +9868,6 @@ package:
     libsqlite: '>=3.40.0,<4.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.0.7,<4.0a0'
-    pip: ''
     tk: '>=8.6.12,<8.7.0a0'
     tzdata: ''
     vc: '>=14.1,<15'
@@ -10449,7 +10466,7 @@ package:
   version: 2.74.1
 - category: main
   dependencies:
-    libxml2: '>=2.9.14,<2.10.0a0'
+    libxml2: '>=2.9.14,<2.11.0a0'
     pthreads-win32: ''
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
@@ -10746,7 +10763,7 @@ package:
   version: 0.2.2
 - category: main
   dependencies:
-    python: ==2.7.*|>=3.4
+    python: 2.7.*|>=3.4
   hash:
     md5: 076becd9e05608f8dc72757d5f3a91ff
     sha256: 74c63fd03f1f1ea2b54e8bc529fd1a600aaafb24027b738d0db87909ee3a33dc
@@ -13419,6 +13436,7 @@ package:
   name: geoh5py
   optional: false
   platform: win-64
+  source: null
   url: https://files.pythonhosted.org/packages/79/40/402865634e5615f85fdbfc74c8bda4758414d20b892673c5581f50682ce6/geoh5py-0.5.0-py3-none-any.whl
   version: 0.5.0
 - category: main
@@ -13434,6 +13452,7 @@ package:
   name: simpeg-archive
   optional: false
   platform: win-64
+  source: null
   url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
   version: 0.9.1.dev5
 - category: main
@@ -13455,6 +13474,7 @@ package:
   name: mira-simpeg
   optional: false
   platform: win-64
+  source: null
   url: https://files.pythonhosted.org/packages/f0/6e/d27a5faf1fc1bda17a119bb3f021f8d91597f0fbd1f85630bf9e6dfd63a4/Mira_SimPEG-0.15.1.dev7-py2.py3-none-any.whl
   version: 0.15.1.dev7
 - category: main
@@ -13467,6 +13487,7 @@ package:
   name: param-sweeps
   optional: false
   platform: win-64
+  source: null
   url: https://files.pythonhosted.org/packages/86/9a/cf12141da920feeb4b80833bd54f01d11c7b58b3f7f7c5ec19d2a45127f8/param_sweeps-0.1.3-py3-none-any.whl
   version: 0.1.3
 version: 1
