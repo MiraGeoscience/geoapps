@@ -33,7 +33,15 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             self.file_cleanup()
 
     def setup_params(self):
-        path = self.workspace.h5file.replace(".geoh5", ".json")
+        with self.workspace.open():
+
+            path = os.path.abspath(self.workspace.h5file)
+            path = ".".join([path.split(".")[0], "ui.json"])
+            if not os.path.exists(path):
+                self.pseudo3d_params.write_input_file(
+                    name=os.path.basename(path),
+                    path=os.path.dirname(path),
+                )
         generate(
             path, parameters=["line_id"], update_values={"conda_environment": "geoapps"}
         )
@@ -51,21 +59,17 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
     def file_cleanup(self):
         """Remove files associated with the parameter sweep."""
-        path = os.path.join(os.path.dirname(self.workspace.h5file))
+        path = os.path.dirname(self.workspace.h5file)
         with open(os.path.join(path, "lookup.json"), encoding="utf8") as f:
             files = list(json.load(f))
-            for file in files:
-                os.remove(f"{os.path.join(path, file)}.ui.json")
-                os.remove(f"{os.path.join(path, file)}.ui.geoh5")
 
-        os.remove(os.path.join(path, "lookup.json"))
-        os.remove(os.path.join(path, "SimPEG.log"))
-        os.remove(os.path.join(path, "SimPEG.out"))
-        os.remove(
-            os.path.join(
-                path, self.workspace.h5file.replace(".ui.geoh5", "_sweep.ui.json")
-            )
-        )
+        files = [f"{f}.ui.json" for f in files] + [f"{f}.ui.geoh5" for f in files]
+        files += ["lookup.json", "SimPEG.log", "SimPEG.out"]
+        files += [f for f in os.listdir(path) if "_sweep.ui.json" in f]
+        for file in files:
+            filepath = os.path.join(path, file)
+            if os.path.exists(filepath):
+                os.remove(filepath)
 
     @staticmethod
     def line_files(path):
