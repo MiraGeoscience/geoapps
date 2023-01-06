@@ -160,7 +160,7 @@ def test_dc_inversion(tmp_path):
         "starting_model": 0.01,
     }
     side_effects = {}
-    app = DCInversionApp(geoh5=PROJECT_DCIP, plot_result=False)
+    app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
     app.geoh5 = path.join(tmp_path, "invtest.geoh5")
 
     for param, value in changes.items():
@@ -236,7 +236,7 @@ def test_ip_inversion(tmp_path):
         "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
     }
     side_effects = {"starting_model": 1e-4}
-    app = DCInversionApp(geoh5=PROJECT_DCIP, plot_result=False)
+    app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
     app.mesh.value = None
     with new_geoh5.open(mode="r"):
         app.geoh5 = new_geoh5
