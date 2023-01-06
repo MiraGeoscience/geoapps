@@ -1,19 +1,19 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-
-
+import os
 from pathlib import Path
 
 import numpy as np
 from geoh5py.objects import Curve
+from geoh5py.shared.utils import compare_entities
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
-from geoapps.peak_finder.application import PeakFinder
+from geoapps.peak_finder.application import PeakFinder, PeakFinderDriver
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
@@ -79,3 +79,17 @@ def test_peak_finder_app(tmp_path):
         5,
         3,
     ], "Grouping different than expected"
+
+
+def test_peak_finder_driver(tmp_path):
+
+    uijson_path = Path(tmp_path) / r"../test_peak_finder_app0/Temp"
+    for file in os.listdir(uijson_path):
+        if file.endswith(".json"):
+            json_file = file
+
+    driver = PeakFinderDriver.start(os.path.join(uijson_path, json_file))
+
+    with driver.params.geoh5.open(mode="r"):
+        results = driver.params.geoh5.get_entity("PointMarkers")
+        compare_entities(results[0], results[1], ignore=["_uid"])
