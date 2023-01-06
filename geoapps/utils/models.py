@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -21,16 +21,6 @@ from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
 
 
-def face_average(mesh: TensorMesh | TreeMesh, model: np.ndarray) -> np.ndarray:
-    """
-    Compute the average face values of a model
-
-    :param mesh: Tree mesh object
-    :param model: A vector of cell centered property values
-    """
-    return mesh.stencil_cell_gradient.T * (mesh.stencil_cell_gradient * model)
-
-
 def floating_active(mesh: TensorMesh | TreeMesh, active: np.ndarray):
     """
     True if there are any active cells in the air
@@ -42,9 +32,11 @@ def floating_active(mesh: TensorMesh | TreeMesh, active: np.ndarray):
         raise TypeError("Input mesh must be of type TreeMesh or TensorMesh.")
 
     if mesh.dim == 2:
-        return any(face_average(mesh, active) >= 4)
+        gradient = mesh.stencil_cell_gradient_y
+    else:
+        gradient = mesh.stencil_cell_gradient_z
 
-    return any(face_average(mesh, active) >= 6)
+    return any(gradient * active > 0)
 
 
 def get_drape_model(

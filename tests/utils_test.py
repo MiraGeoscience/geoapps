@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -38,12 +38,7 @@ from geoapps.shared_utils.utils import (
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
-from geoapps.utils.models import (
-    RectangularBlock,
-    face_average,
-    floating_active,
-    get_drape_model,
-)
+from geoapps.utils.models import RectangularBlock, floating_active, get_drape_model
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
@@ -60,21 +55,6 @@ from geoapps.utils.workspace import sorted_children_dict
 
 geoh5 = Workspace("./FlinFlon.geoh5")
 dc_geoh5 = "./FlinFlon_dcip.geoh5"
-
-
-def test_face_average(tmp_path):
-    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make():
-        mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
-        mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
-        centers = mesh.cell_centers
-        active = np.zeros_like(centers[:, 2])
-        active[centers[:, 2] < 75] = 1
-        face_avs = face_average(mesh, active)
-        assert np.all(face_avs < 6)
-        active[49] = 1
-        face_avs = face_average(mesh, active)
-        assert np.sum(face_avs == 6) == 1
 
 
 def test_floating_active():
@@ -105,6 +85,9 @@ def test_floating_active():
     assert floating_active(mesh, active)
     active[21] = 0
     active[23] = 1  # Large cell with hanging faces
+    assert floating_active(mesh, active)
+    active[21] = 0
+    active[27] = 1  # Corner cell
     assert floating_active(mesh, active)
 
 
