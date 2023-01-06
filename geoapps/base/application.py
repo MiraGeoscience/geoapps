@@ -11,6 +11,7 @@ import time
 import types
 import uuid
 from os import makedirs, mkdir, path
+from pathlib import Path
 from shutil import copyfile
 
 from geoh5py.groups import Group
@@ -45,7 +46,6 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
-    _geoh5 = None
     _h5file = None
     _main = None
     _workspace = None
@@ -281,20 +281,22 @@ class BaseApplication:
         return self._ga_group_name
 
     @property
-    def geoh5(self):
+    def geoh5(self) -> [Workspace | str]:
         """
         Alias for workspace or h5file property
         """
-        return self._geoh5
+        return self.workspace or self.h5file
 
     @geoh5.setter
-    def geoh5(self, value):
+    def geoh5(self, value: Workspace | Path | str):
         if isinstance(value, Workspace):
             self.workspace = value
         elif isinstance(value, str):
             self.h5file = value
+        elif isinstance(value, Path):
+            self.h5file = str(value)
         else:
-            raise ValueError
+            raise TypeError
 
     @staticmethod
     def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
