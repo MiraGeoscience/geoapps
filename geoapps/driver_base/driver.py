@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -57,7 +57,7 @@ class BaseDriver(ABC):
             print("Initializing application . . .")
             driver = cls(params)
 
-            with params.geoh5:
+            with params.geoh5.open(mode="r+"):
                 print("Running application . . .")
                 driver.run()
                 print(f"Results saved to {params.geoh5.h5file}")
