@@ -59,6 +59,11 @@ def test_dc_fwr_run(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
+        u_cell_size=5.0,
+        v_cell_size=5.0,
+        depth_core=100.0,
+        expansion_factor=1.1,
+        padding_distance=100.0,
         topography_object=topography.uid,
         z_from_topo=False,
         data_object=survey.uid,
@@ -100,6 +105,11 @@ def test_dc_run(
         params = DirectCurrentPseudo3DParams(
             geoh5=geoh5,
             mesh=mesh.uid,
+            u_cell_size=5.0,
+            v_cell_size=5.0,
+            depth_core=100.0,
+            expansion_factor=1.1,
+            padding_distance=100.0,
             topography_object=topography.uid,
             data_object=potential.parent.uid,
             potential_channel=potential.uid,
@@ -159,17 +169,16 @@ def test_dc_run(
 
 if __name__ == "__main__":
     # Full run
-
     m_start = test_dc_fwr_run(
         "./",
         n_electrodes=20,
-        n_lines=5,
+        n_lines=3,
         refinement=(4, 8),
     )
 
     m_rec = test_dc_run(
         "./",
-        max_iterations=15,
+        max_iterations=20,
         pytest=False,
     )
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
