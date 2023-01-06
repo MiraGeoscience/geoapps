@@ -47,7 +47,7 @@ def get_containing_cells(
 
     else:
 
-        raise ValueError("Mesh must be 'TreeMesh' or 'TensorMesh'")
+        raise TypeError("Mesh must be 'TreeMesh' or 'TensorMesh'")
 
     return inds
 

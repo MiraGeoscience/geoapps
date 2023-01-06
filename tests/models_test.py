@@ -22,7 +22,9 @@ from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def setup_params(path):
