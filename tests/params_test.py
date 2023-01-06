@@ -68,7 +68,7 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-mvi_init["geoh5"] = PROJECT
+mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
 
 
@@ -101,7 +101,7 @@ def param_test_generator(param, value):
 
 def test_write_input_file_validation(tmp_path):
 
-    grav_init["geoh5"] = PROJECT
+    grav_init["geoh5"] = str(PROJECT)
     params = GravityParams(validate=False, **grav_init)
     params.validate = True
     with pytest.raises(OptionalValidationError) as excinfo:
