@@ -285,7 +285,7 @@ class BaseApplication:
         """
         Alias for workspace or h5file property
         """
-        return self.workspace or self.h5file
+        return self.workspace if self.workspace is not None else self.h5file
 
     @geoh5.setter
     def geoh5(self, value: Workspace | Path | str):
