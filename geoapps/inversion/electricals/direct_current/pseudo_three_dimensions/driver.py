@@ -85,11 +85,15 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                         self.pseudo3d_params.line_object.values,
                         trial["line_id"],
                     )
+                    current_entity = receiver_entity.current_electrodes
+                    receiver_locs = np.vstack(
+                        [receiver_entity.vertices, current_entity.vertices]
+                    )
 
                     mesh = get_drape_model(
                         iter_workspace,
                         "Models",
-                        receiver_entity.vertices,
+                        receiver_locs,
                         [
                             self.pseudo3d_params.u_cell_size,
                             self.pseudo3d_params.v_cell_size,
