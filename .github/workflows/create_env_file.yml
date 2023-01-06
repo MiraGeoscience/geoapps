@@ -27,8 +27,6 @@ jobs:
       artifact: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
     steps:
       - uses: actions/checkout@v3
-        with:
-          lfs: true
       - name: git info
         id: git-info
         run: |

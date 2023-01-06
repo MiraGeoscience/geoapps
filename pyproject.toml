@@ -78,7 +78,6 @@ param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/re
 pylint = "^2.14.4"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
-requests = "^2.27.1" # for tests only
 toml = "*" # for tests only
 
 [tool.poetry.extras]
@@ -108,7 +107,7 @@ force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
 # auto-updated by seed-isort-config
-known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "param_sweeps", "plotly", "pymatsolver", "pytest", "requests", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "toml", "tqdm", "traitlets", "urllib2"]
+known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "param_sweeps", "plotly", "pymatsolver", "pytest", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "toml", "tqdm", "traitlets", "urllib2"]
 
 [tool.black]
 # defaults are just fine
