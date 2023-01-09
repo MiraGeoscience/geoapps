@@ -131,6 +131,6 @@ Need help? Contact us at support@mirageoscience.com
     :align: center
     :width: 0
 
-.. figure:: applications/images/scatter_thumbnail.png
+.. figure:: applications/images/scatter/scatter_thumbnail.png
     :align: center
     :width: 0
