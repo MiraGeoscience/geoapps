@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -47,7 +47,7 @@ def get_containing_cells(
 
     else:
 
-        raise ValueError("Mesh must be 'TreeMesh' or 'TensorMesh'")
+        raise TypeError("Mesh must be 'TreeMesh' or 'TensorMesh'")
 
     return inds
 

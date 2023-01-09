@@ -70,7 +70,7 @@ zarr = "^2.8.1" # from simpgeg using Dask
 geoh5py = { version = "0.5.0", source = "pypi" }
 simpeg_archive = {version = "0.9.1.dev5", source = "pypi"}
 #mira-simpeg = {version = "0.15.1dev7", source = "pypi"}
-mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-715.zip#sha256=None"}
+mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=None"}
 param-sweeps = {version = "0.1.3", source = "pypi"}
 
 
@@ -78,7 +78,6 @@ param-sweeps = {version = "0.1.3", source = "pypi"}
 pylint = "^2.14.4"
 pytest = "^7.1.2"
 pytest-cov = "^3.0.0"
-requests = "^2.27.1" # for tests only
 toml = "*" # for tests only
 
 [tool.poetry.extras]
@@ -108,7 +107,7 @@ force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
 # auto-updated by seed-isort-config
-known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "param_sweeps", "plotly", "pymatsolver", "pytest", "requests", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "toml", "tqdm", "traitlets", "urllib2"]
+known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "param_sweeps", "plotly", "pymatsolver", "pytest", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "toml", "tqdm", "traitlets", "urllib2"]
 
 [tool.black]
 # defaults are just fine
