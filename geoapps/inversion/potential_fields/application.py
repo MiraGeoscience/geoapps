@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -1298,7 +1298,7 @@ class InversionApp(PlotSelection2D):
         if not isinstance(
             params, (MagneticVectorParams, MagneticScalarParams, GravityParams)
         ):
-            raise ValueError(
+            raise TypeError(
                 "Parameter 'inversion_type' must be one of "
                 "'magnetic vector', 'magnetic scalar' or 'gravity'"
             )

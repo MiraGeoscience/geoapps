@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -334,7 +334,7 @@ class BaseParams:
     @input_file.setter
     def input_file(self, ifile: InputFile | None):
         if not isinstance(ifile, (type(None), InputFile)):
-            raise ValueError(
+            raise TypeError(
                 f"Value for 'input_file' must be {InputFile} or None. "
                 f"Provided {ifile} of type{type(ifile)}"
             )
