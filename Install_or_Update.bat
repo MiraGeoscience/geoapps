@@ -6,7 +6,7 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-set PY_VER=3.9
+set PY_VER=3.10
 
 set MY_CONDA=!MY_CONDA_EXE:"=!
 cd %~dp0
