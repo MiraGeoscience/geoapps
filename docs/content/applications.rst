@@ -130,3 +130,7 @@ Need help? Contact us at support@mirageoscience.com
 .. figure:: applications/images/base_thumbnail.png
     :align: center
     :width: 0
+
+.. figure:: applications/images/scatter_thumbnail.png
+    :align: center
+    :width: 0
