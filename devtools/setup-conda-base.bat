@@ -16,7 +16,7 @@ if !errorlevel! neq 0 (
 
 call !MY_CONDA_EXE! install -n base -c conda-forge mamba -y
 call !MY_CONDA_EXE! activate base
-call pip install conda-lock[pip_support]
+pip install conda-lock[pip_support]
 
 pause
 cmd /k
