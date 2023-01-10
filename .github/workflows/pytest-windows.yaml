@@ -44,18 +44,17 @@ jobs:
           environment-name: test_env
           cache-downloads: true
       - name: pytest
-        continue-on-error: true
         run: |
           pytest --cov=${source_dir} --cov-report=xml --cov-branch
-      - name: Codecov
-        if: ${{ success() && matrix.python_ver == '3.9' }}
-        uses: codecov/codecov-action@v3
-        with:
-          name: GitHub
       - name: Upload Artifact
-        if: steps.pytest.outcome == 'failure'
+        if: failure() && steps.pytest.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
           name: test-directory
           path: '**/pytest-of-runneradmin/**'
           retention-days: 1
+      - name: Codecov
+        if: ${{ success() && matrix.python_ver == '3.9' }}
+        uses: codecov/codecov-action@v3
+        with:
+          name: GitHub
