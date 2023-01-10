@@ -31,7 +31,7 @@ target_run = {
 np.random.seed(0)
 
 
-def test_ip_fwr_run(
+def test_ip_3d_fwr_run(
     tmp_path,
     n_electrodes=4,
     n_lines=3,
@@ -66,7 +66,7 @@ def test_ip_fwr_run(
     return fwr_driver.starting_model
 
 
-def test_ip_run(
+def test_ip_3d_run(
     tmp_path,
     max_iterations=1,
     pytest=True,
@@ -74,7 +74,7 @@ def test_ip_run(
 ):
     workpath = os.path.join(tmp_path, "inversion_test.geoh5")
     if pytest:
-        workpath = str(tmp_path / "../test_ip_fwr_run0/inversion_test.geoh5")
+        workpath = str(tmp_path / "../test_ip_3d_fwr_run0/inversion_test.geoh5")
 
     with Workspace(workpath) as geoh5:
 
@@ -128,14 +128,14 @@ def test_ip_run(
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_ip_fwr_run(
+    mstart = test_ip_3d_fwr_run(
         "./",
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
-    m_rec = test_ip_run(
+    m_rec = test_ip_3d_run(
         "./",
         n_lines=5,
         max_iterations=15,
