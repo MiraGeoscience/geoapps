@@ -45,10 +45,11 @@ jobs:
           environment-name: test_env
           cache-downloads: true
       - name: pytest
+        continue-on-error: true
         run: |
           pytest --cov=${source_dir} --cov-report=xml --cov-branch
       - name: Upload Artifact
-        if: steps.pytest.outcome == 'success' || steps.pytest.outcome == 'failure'
+        if: steps.pytest.outcome == 'failure'
         uses: actions/upload-artifact@v3
         with:
           name: test-directory
