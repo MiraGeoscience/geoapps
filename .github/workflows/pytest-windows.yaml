@@ -47,7 +47,7 @@ jobs:
         run: |
           pytest --cov=${source_dir} --cov-report=xml --cov-branch
       - name: Upload Artifact
-        if: failure() && steps.pytest.outcome == 'failure'
+        if: always()
         uses: actions/upload-artifact@v3
         with:
           name: test-directory
