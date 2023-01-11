@@ -54,5 +54,3 @@ jobs:
           name: test-directory
           path: C:\Users\runneradmin\AppData\Local\Temp\pytest-of-runneradmin\
           retention-days: 1
-      - name: print directory
-        run: chdir && echo ${GITHUB_WORKSPACE}
