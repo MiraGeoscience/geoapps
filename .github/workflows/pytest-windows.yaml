@@ -46,28 +46,6 @@ jobs:
       - name: pytest
         run: |
           pytest --cov=${source_dir} --cov-report=xml --cov-branch
-      - name: Upload Artifact
-        if: always()
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-directory
-          path: C:\Users\runneradmin\AppData\Local\Temp\pytest-of-runneradmin\
-          retention-days: 1
-      - name: print directory
-        if: always()
-        run: chdir
-      - name: print directory 2
-        if: always()
-        run: echo ${GITHUB_WORKSPACE}
-      - name: print directory 3
-        if: always()
-        run: echo ${source_dir}
-      - name: print directory 4
-        if: always()
-        run: cd
-      - name: print directory 5
-        if: always()
-        run: echo ${HOME}
       - name: Codecov
         if: ${{ success() && matrix.python_ver == '3.9' }}
         uses: codecov/codecov-action@v3
