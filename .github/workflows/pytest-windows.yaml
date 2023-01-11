@@ -51,7 +51,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-directory
-          path: '**/pytest-of-runneradmin/**'
+          path: C:\Users\runneradmin\AppData\Local\Temp\pytest-of-runneradmin\
           retention-days: 1
       - name: Codecov
         if: ${{ success() && matrix.python_ver == '3.9' }}
