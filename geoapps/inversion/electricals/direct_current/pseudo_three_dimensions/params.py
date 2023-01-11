@@ -45,6 +45,7 @@ class DirectCurrentPseudo3DParams(InversionBaseParams):
         self._potential_channel = None
         self._potential_uncertainty = None
         self._line_object = None
+        self._files_only = None
         self._cleanup = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
@@ -96,6 +97,14 @@ class DirectCurrentPseudo3DParams(InversionBaseParams):
     @potential_uncertainty.setter
     def potential_uncertainty(self, val):
         self.setter_validator("potential_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def files_only(self):
+        return self._files_only
+
+    @files_only.setter
+    def files_only(self, val):
+        self.setter_validator("files_only", val)
 
     @property
     def cleanup(self):
