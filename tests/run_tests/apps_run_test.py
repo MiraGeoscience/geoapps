@@ -302,4 +302,6 @@ def test_iso_surface(tmp_path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("Isosurface")[0]
-        assert len(group.children) == 5
+        assert len(group.children) == 4
+
+    app.trigger_click(None)
