@@ -8,6 +8,7 @@ import base64
 import uuid
 from os import listdir, path
 
+import pytest
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
@@ -304,4 +305,7 @@ def test_iso_surface(tmp_path):
         group = workspace.get_entity("Isosurface")[0]
         assert len(group.children) == 4
 
-    app.trigger_click(None)
+    app.fixed_contours.value = "1000."
+
+    with pytest.warns(UserWarning, match="The following levels were"):
+        app.trigger_click(None)
