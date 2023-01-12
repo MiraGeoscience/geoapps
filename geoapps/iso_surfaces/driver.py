@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import sys
+import warnings
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -163,9 +164,11 @@ class IsoSurfacesDriver(BaseDriver):
         lower, upper = np.nanmin(values), np.nanmax(values)
         surfaces = []
         print("Running marching cubes on levels.")
+        skip = []
         for level in tqdm(levels):
             try:
                 if level < lower or level > upper:
+                    skip += [level]
                     continue
                 verts, faces, _, _ = marching_cubes(values, level=level)
 
@@ -203,6 +206,8 @@ class IsoSurfacesDriver(BaseDriver):
 
             surfaces += [[vertices, faces]]
 
+        if any(skip):
+            warnings.warn(f"The following levels were out of bound and ignored: {skip}")
         return surfaces
 
 
