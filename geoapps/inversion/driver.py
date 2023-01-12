@@ -211,6 +211,8 @@ class InversionDriver(BaseDriver):
                 self.starting_model, self.inverse_problem, self.sorting
             )
             self.logger.end()
+            sys.stdout = self.logger.terminal
+            self.logger.log.close()
             return
 
         # Run the inversion
@@ -218,6 +220,8 @@ class InversionDriver(BaseDriver):
         self.running = True
         self.inversion.run(self.starting_model)
         self.logger.end()
+        sys.stdout = self.logger.terminal
+        self.logger.log.close()
 
     def start_inversion_message(self):
 
