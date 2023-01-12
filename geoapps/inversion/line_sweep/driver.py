@@ -89,8 +89,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         data = {}
         for line in lines:
             ws = Workspace(f"{os.path.join(path, files[line])}.ui.geoh5")
-            print(ws.h5file)
-            print(ws.list_entities_name)
             survey = ws.get_entity("Data")[0]
             data = self.collect_line_data(survey, data)
             mesh = ws.get_entity("Models")[0]
