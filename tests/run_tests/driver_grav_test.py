@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -70,7 +70,7 @@ def test_gravity_run(
         gz = geoh5.get_entity("Iteration_0_gz")[0]
         orig_gz = gz.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
-        topography = geoh5.get_entity("Topo")[0]
+        topography = geoh5.get_entity("topography")[0]
 
         # Turn some values to nan
         values = gz.values.copy()

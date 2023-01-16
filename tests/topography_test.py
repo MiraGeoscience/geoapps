@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -17,12 +17,14 @@ from geoapps.inversion.components import (
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def setup_params(tmp):
     geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", MagneticVectorParams)
-    geotest.set_param("mesh", "{385f341f-1027-4b8e-9a86-93be239aa3fb}")
+    geotest.set_param("mesh", "{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}")
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
     geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")

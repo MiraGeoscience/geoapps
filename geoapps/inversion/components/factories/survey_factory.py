@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -90,9 +90,7 @@ class SurveyFactory(SimPEGFactory):
 
         return survey.Survey
 
-    def assemble_arguments(
-        self, data=None, mesh=None, active_cells=None, local_index=None, channel=None
-    ):
+    def assemble_arguments(self, data=None, mesh=None, local_index=None, channel=None):
         """Provides implementations to assemble arguments for receivers object."""
         receiver_entity = data.entity
 
@@ -120,7 +118,7 @@ class SurveyFactory(SimPEGFactory):
             return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
-                data=data, mesh=mesh, active_cells=active_cells, frequency=channel
+                data=data, mesh=mesh, frequency=channel
             )
         else:
             receivers = ReceiversFactory(self.params).build(
@@ -135,7 +133,6 @@ class SurveyFactory(SimPEGFactory):
         self,
         data=None,
         mesh=None,
-        active_cells=None,
         local_index=None,
         indices=None,
         channel=None,
@@ -146,7 +143,6 @@ class SurveyFactory(SimPEGFactory):
             data=data,
             local_index=local_index,
             mesh=mesh,
-            active_cells=active_cells,
             channel=channel,
         )
 
@@ -264,7 +260,7 @@ class SurveyFactory(SimPEGFactory):
             return None
 
         receiver_entity = data.entity
-        if self.factory_type in ["direct current 2d", "induced polarization 2d"]:
+        if "2d" in self.factory_type:
             receiver_entity = extract_dcip_survey(
                 self.params.geoh5,
                 receiver_entity,
@@ -317,6 +313,7 @@ class SurveyFactory(SimPEGFactory):
                 locations=receiver_locations,
                 local_index=receiver_entity.cells[receiver_indices],
             )
+
             if receivers.nD == 0:
                 continue
 
@@ -333,11 +330,14 @@ class SurveyFactory(SimPEGFactory):
 
         self.local_index = np.hstack(self.local_index)
 
+        if "2d" in self.factory_type:
+            current_entity = receiver_entity.current_electrodes
+            self.params.geoh5.remove_entity(receiver_entity)
+            self.params.geoh5.remove_entity(current_entity)
+
         return [sources]
 
-    def _naturalsource_arguments(
-        self, data=None, mesh=None, active_cells=None, frequency=None
-    ):
+    def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
 
         receivers = []
         sources = []
@@ -348,7 +348,6 @@ class SurveyFactory(SimPEGFactory):
                     local_index=self.local_index,
                     data={k: v},
                     mesh=mesh,
-                    active_cells=active_cells,
                 )
             )
 

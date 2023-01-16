@@ -1,5 +1,5 @@
 {
-    "title": "Gravity Forward",
+    "title": "Gravity forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -28,12 +28,11 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "isValue": true,
-        "label": "Elevation adjustment",
-        "tooltip": "Adjust elevation given from topography object",
+        "label": "Elevation channel",
+        "tooltip": "Set elevation from channel",
         "parent": "topography_object",
-        "property": "",
-        "value": 0.0
+        "value": "",
+        "verbose": 2
     },
     "data_object": {
         "main": true,
@@ -49,19 +48,21 @@
         ],
         "value": ""
     },
+    "z_from_topo": {
+        "group": "Data pre-processing",
+        "label": "Take z from topography",
+        "tooltip": "Sets survey elevation to topography before any offsets are applied.",
+        "value": false,
+        "verbose": 3
+    },
     "resolution": {
         "min": 0.0,
         "group": "Data pre-processing",
         "optional": true,
         "enabled": false,
         "label": "Downsampling resolution",
-        "value": 0.0
-    },
-    "z_from_topo": {
-        "group": "Data pre-processing",
-        "label": "Take z from topography",
-        "tooltip": "Sets survey elevation to topography before any offsets are applied.",
-        "value": false
+        "value": 0.0,
+        "verbose": 3
     },
     "receivers_radar_drape": {
         "association": [
@@ -75,37 +76,23 @@
         "optional": true,
         "parent": "data_object",
         "value": "",
-        "enabled": false
-    },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": true,
         "enabled": false,
-        "value": 0.0,
-        "visible": false
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": true,
-        "enabled": false,
-        "value": 0.0,
-        "visible": false
+        "verbose": 3
     },
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",
         "optional": true,
         "enabled": false,
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "gps_receivers_offset": "",
     "gz_channel_bool": {
         "group": "Data",
         "main": true,
         "label": "Gz (mGal)",
-        "value": false
+        "value": true
     },
     "gx_channel_bool": {
         "group": "Data",
@@ -169,16 +156,13 @@
         "value": ""
     },
     "starting_model": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models",
         "main": true,
         "isValue": true,
         "parent": "mesh",
-        "label": "Initial Density (g/cc)",
+        "label": "Density contrast (g/cc)",
         "property": "",
         "value": 0.001
     },
@@ -188,27 +172,31 @@
         "enabled": false,
         "groupOptional": true,
         "label": "Window center easting",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": false,
         "label": "Window center northing",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_width": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window width",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_height": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window height",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_azimuth": {
         "min": -180,
@@ -216,7 +204,8 @@
         "group": "Data window",
         "enabled": false,
         "label": "Window azimuth",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "parallelized": {
         "group": "Compute",
@@ -230,7 +219,7 @@
         "dependencyType": "enabled",
         "optional": true,
         "enabled": false,
-        "label": "Number of cpu",
+        "label": "Number of CPUs",
         "value": 1
     },
     "tile_spatial": {
@@ -241,7 +230,8 @@
         "property": "",
         "value": 1,
         "min": 1,
-        "max": 1000
+        "max": 1000,
+        "verbose": 2
     },
     "max_chunk_size": {
         "min": 0,
@@ -249,26 +239,28 @@
         "optional": true,
         "enabled": true,
         "label": "Maximum chunk size",
-        "value": 128
+        "value": 128,
+        "verbose": 3
     },
     "chunk_by_rows": {
         "group": "Compute",
         "label": "Chunk by rows",
-        "value": true
+        "value": true,
+        "verbose": 3
     },
     "out_group": {
         "label": "Results group name",
         "value": "GravityForward"
     },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
+    },
     "monitoring_directory": "",
     "workspace_geoh5": "",
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": {
-        "value": false,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": true
-    },
     "conda_environment": "geoapps",
     "distributed_workers": "",
     "gradient_type": "total",

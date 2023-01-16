@@ -7,6 +7,9 @@
     "forward_only": false,
     "inducing_field_strength": {
         "min": 0.0,
+        "max": 100000.0,
+        "precision": 2,
+        "lineEdit": false,
         "main": true,
         "group": "Inducing Field",
         "label": "Strength (nT)",
@@ -15,17 +18,21 @@
     "inducing_field_inclination": {
         "min": -90.0,
         "max": 90.0,
+        "precision": 2,
+        "lineEdit": false,
         "main": true,
         "group": "Inducing Field",
-        "label": "Inclination (degrees from North)",
+        "label": "Inclination (deg)",
         "value": 90.0
     },
     "inducing_field_declination": {
         "min": -180,
         "max": 180,
+        "precision": 2,
+        "lineEdit": false,
         "main": true,
         "group": "Inducing Field",
-        "label": "Declination (degrees from horizontal)",
+        "label": "Declination (deg)",
         "value": 0.0
     },
     "topography_object": {
@@ -51,12 +58,11 @@
         "main": true,
         "optional": true,
         "enabled": false,
-        "isValue": true,
-        "label": "Elevation adjustment",
-        "tooltip": "Adjust elevation given from topography object",
+        "label": "Elevation channel",
+        "tooltip": "Set elevation from channel",
         "parent": "topography_object",
-        "property": "",
-        "value": 0.0
+        "value": "",
+        "verbose": 2
     },
     "data_object": {
         "main": true,
@@ -78,36 +84,23 @@
         "optional": true,
         "enabled": false,
         "label": "Downsampling resolution",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "z_from_topo": {
         "group": "Data pre-processing",
         "label": "Take z from topography",
         "tooltip": "Sets survey elevation to topography before any offsets are applied.",
-        "value": false
-    },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": true,
-        "enabled": false,
-        "value": 0.0,
-        "visible": false
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": true,
-        "enabled": false,
-        "value": 0.0,
-        "visible": false
+        "value": false,
+        "verbose": 3
     },
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",
         "optional": true,
         "enabled": false,
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "receivers_radar_drape": {
         "association": [
@@ -121,7 +114,8 @@
         "optional": true,
         "parent": "data_object",
         "value": "",
-        "enabled": false
+        "enabled": false,
+        "verbose": 3
     },
     "gps_receivers_offset": "",
     "tmi_channel": {
@@ -441,7 +435,7 @@
         "main": true,
         "isValue": true,
         "parent": "mesh",
-        "label": "Initial Susceptibility (SI)",
+        "label": "Initial susceptibility (SI)",
         "property": "",
         "value": 0.0001
     },
@@ -455,7 +449,7 @@
         "group": "Mesh and Models",
         "isValue": true,
         "parent": "mesh",
-        "label": "Reference Susceptibility (SI)",
+        "label": "Reference susceptibility (SI)",
         "property": "",
         "value": 0.0
     },
@@ -503,7 +497,7 @@
         "optional": true,
         "enabled": false,
         "parent": "mesh",
-        "label": "Initial Inclination (degrees)",
+        "label": "Initial inclination (deg)",
         "property": "",
         "value": 0.0
     },
@@ -519,7 +513,7 @@
         "optional": true,
         "enabled": false,
         "parent": "mesh",
-        "label": "Initial Declination (degrees)",
+        "label": "Initial declination (deg)",
         "property": "",
         "value": 0.0
     },
@@ -534,7 +528,7 @@
         "isValue": true,
         "optional": true,
         "enabled": false,
-        "label": "Reference Inclination (degrees)",
+        "label": "Reference inclination (deg)",
         "parent": "mesh",
         "property": "",
         "value": 0.0
@@ -550,7 +544,7 @@
         "isValue": true,
         "optional": true,
         "enabled": false,
-        "label": "Reference Declination (degrees)",
+        "label": "Reference declination (deg)",
         "parent": "mesh",
         "property": "",
         "value": 0.0
@@ -561,7 +555,8 @@
         "optional": true,
         "enabled": false,
         "label": "Values to ignore",
-        "value": ""
+        "value": "",
+        "verbose": 3
     },
     "detrend_order": {
         "min": 0,
@@ -570,7 +565,8 @@
         "dependencyType": "enabled",
         "label": "Detrend order",
         "optional": true,
-        "value": 0
+        "value": 0,
+        "verbose": 3
     },
     "detrend_type": {
         "choiceList": [
@@ -583,34 +579,39 @@
         "enabled": false,
         "optional": true,
         "label": "Detrend type",
-        "value": "all"
+        "value": "all",
+        "verbose": 3
     },
     "window_center_x": {
         "group": "Data window",
         "enabled": false,
         "groupOptional": true,
         "label": "Window center easting",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_center_y": {
         "group": "Data window",
         "enabled": false,
         "label": "Window center northing",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_width": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window width",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_height": {
         "min": 0.0,
         "group": "Data window",
         "enabled": false,
         "label": "Window height",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "window_azimuth": {
         "min": -180,
@@ -618,12 +619,15 @@
         "group": "Data window",
         "enabled": false,
         "label": "Window azimuth",
-        "value": 0.0
+        "value": 0.0,
+        "verbose": 3
     },
     "inversion_style": "voxel",
     "chi_factor": {
-        "min": 0.0,
-        "max": 1.0,
+        "min": 0.1,
+        "max": 20.0,
+        "precision": 1,
+        "lineEdit": false,
         "group": "Optimization",
         "label": "Chi factor",
         "value": 1.0,
@@ -636,7 +640,8 @@
         "optional": true,
         "enabled": true,
         "label": "Initial beta ratio",
-        "value": 10.0
+        "value": 10.0,
+        "verbose": 2
     },
     "initial_beta": {
         "min": 0.0,
@@ -645,20 +650,29 @@
         "dependency": "initial_beta_ratio",
         "dependencyType": "disabled",
         "label": "Initial beta",
-        "value": 1.0
+        "value": 1.0,
+        "verbose": 2
     },
     "coolingRate": {
         "group": "Optimization",
         "label": "Iterations per beta",
         "value": 1,
-        "min": 1
+        "min": 1,
+        "LineEdit": false,
+        "max": 10,
+        "precision": 1,
+        "verbose": 2
     },
     "coolingFactor": {
         "group": "Optimization",
         "label": "Beta cooling factor",
         "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
         "value": 2.0,
-        "min": 1.0
+        "min": 1.1,
+        "max": 100,
+        "precision": 1,
+        "lineEdit": false,
+        "verbose": 2
     },
     "max_global_iterations": {
         "min": 1,
@@ -674,21 +688,24 @@
         "label": "Maximum number of line searches",
         "value": 20,
         "min": 1,
-        "enabled": true
+        "enabled": true,
+        "verbose": 3
     },
     "max_cg_iterations": {
         "min": 0,
         "group": "Optimization",
         "label": "Maximum CG iterations",
         "value": 30,
-        "enabled": true
+        "enabled": true,
+        "verbose": 2
     },
     "tol_cg": {
         "min": 0,
         "group": "Optimization",
         "label": "Conjugate gradient tolerance",
         "value": 0.0001,
-        "enabled": true
+        "enabled": true,
+        "verbose": 3
     },
     "alpha_s": {
         "min": 0.0,
@@ -769,7 +786,8 @@
         ],
         "group": "Regularization",
         "label": "Gradient type",
-        "value": "total"
+        "value": "total",
+        "verbose": 3
     },
     "max_irls_iterations": {
         "min": 0,
@@ -777,7 +795,8 @@
         "label": "Maximum number of IRLS iterations",
         "tooltip": "Incomplete Re-weighted Least Squares iterations for non-L2 problems",
         "value": 25,
-        "enabled": true
+        "enabled": true,
+        "verbose": 2
     },
     "starting_chi_factor": {
         "group": "Update IRLS directive",
@@ -785,41 +804,48 @@
         "optional": true,
         "enabled": false,
         "value": 1.0,
-        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin."
+        "tooltip": "This chi factor will be used to determine the misfit threshold after which IRLS iterations begin.",
+        "verbose": 3
     },
     "f_min_change": {
         "group": "Update IRLS directive",
         "label": "f min change",
         "value": 0.0001,
-        "min": 1e-06
+        "min": 1e-06,
+        "verbose": 3
     },
     "beta_tol": {
         "group": "Update IRLS directive",
         "label": "Beta tolerance",
         "value": 0.5,
-        "min": 0.0001
+        "min": 0.0001,
+        "verbose": 3
     },
     "prctile": {
         "group": "Update IRLS directive",
         "label": "Percentile",
         "value": 95,
         "max": 100,
-        "min": 5
+        "min": 5,
+        "verbose": 3
     },
     "coolEps_q": {
         "group": "Update IRLS directive",
         "label": "Cool epsilon q",
-        "value": true
+        "value": true,
+        "verbose": 3
     },
     "coolEpsFact": {
         "group": "Update IRLS directive",
         "label": "Cool epsilon fact",
-        "value": 1.2
+        "value": 1.2,
+        "verbose": 3
     },
     "beta_search": {
         "group": "Update IRLS directive",
         "label": "Perform beta search",
-        "value": false
+        "value": false,
+        "verbose": 3
     },
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
@@ -829,13 +855,15 @@
         "max": 99.9,
         "min": 0.0,
         "precision": 1,
-        "lineEdit": false
+        "lineEdit": false,
+        "verbose": 2
     },
     "every_iteration_bool": {
         "group": "Update sensitivity weights directive",
         "tooltip": "Update weights at every iteration",
         "label": "Every iteration",
-        "value": false
+        "value": false,
+        "verbose": 2
     },
     "parallelized": {
         "group": "Compute",
@@ -849,7 +877,7 @@
         "dependencyType": "enabled",
         "optional": true,
         "enabled": false,
-        "label": "Number of cpu",
+        "label": "Number of CPUs",
         "value": 1
     },
     "tile_spatial": {
@@ -860,7 +888,8 @@
         "property": "",
         "value": 1,
         "min": 1,
-        "max": 1000
+        "max": 1000,
+        "verbose": 2
     },
     "store_sensitivities": {
         "choiceList": [
@@ -869,7 +898,8 @@
         ],
         "group": "Compute",
         "label": "Storage device",
-        "value": "disk"
+        "tooltip": "Use disk on a fast local SSD, and RAM elsewhere",
+        "value": "ram"
     },
     "max_ram": "",
     "max_chunk_size": {
@@ -878,26 +908,28 @@
         "optional": true,
         "enabled": true,
         "label": "Maximum chunk size",
-        "value": 128
+        "value": 128,
+        "verbose": 3
     },
     "chunk_by_rows": {
         "group": "Compute",
         "label": "Chunk by rows",
-        "value": true
+        "value": true,
+        "verbose": 3
     },
     "out_group": {
         "label": "Results group name",
         "value": "MagneticVectorInversion"
     },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
+    },
     "monitoring_directory": "",
     "workspace_geoh5": "",
     "run_command": "geoapps.inversion.driver",
-    "run_command_boolean": {
-        "value": false,
-        "label": "Run python module ",
-        "tooltip": "Warning: launches process to run python model on save",
-        "main": true
-    },
     "conda_environment": "geoapps",
     "distributed_workers": "",
     "tmi_channel_bool": false,
