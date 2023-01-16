@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -121,7 +121,10 @@ class EntityFactory(AbstractFactory):
         )
 
         if np.any(~inversion_data.mask):
-            entity.remove_vertices(~inversion_data.mask)
+            entity.remove_vertices(np.where(~inversion_data.mask))
+
+        if getattr(self.params.data_object, "parts", None) is not None:
+            entity.parts = self.params.data_object.parts[inversion_data.mask]
 
         if getattr(self.params.data_object, "base_stations", None) is not None:
             entity.base_stations = type(self.params.data_object.base_stations).create(

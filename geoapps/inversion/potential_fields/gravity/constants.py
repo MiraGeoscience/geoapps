@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -28,8 +28,6 @@ inversion_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": False,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -134,8 +132,6 @@ forward_defaults = {
     "z_from_topo": False,
     "resolution": None,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "gz_channel_bool": True,
@@ -194,7 +190,7 @@ inversion_ui_json = {
 
 forward_ui_json = {
     "starting_model": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models",
         "main": True,
@@ -636,7 +632,7 @@ app_initializer = {
     "gxz_uncertainty": 1.0,
     "gyz_channel": UUID("{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}"),
     "gyz_uncertainty": 1.0,
-    "mesh": UUID("{385f341f-1027-4b8e-9a86-93be239aa3fb}"),
+    "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
     "resolution": 50.0,
     "window_center_x": 314565.0,
     "window_center_y": 6072334.0,

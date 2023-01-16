@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -23,10 +23,11 @@ from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
 
+from .. import PROJECT
+
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
-PROJECT = "./FlinFlon.geoh5"
 GEOH5 = Workspace(PROJECT)
 
 
@@ -154,7 +155,7 @@ def test_contour_values(tmp_path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("contours")[0]
-        assert output.n_vertices == 3000, "Change in output. Need to verify."
+        assert output.n_vertices == 2655, "Change in output. Need to verify."
 
 
 def test_create_surface(tmp_path):

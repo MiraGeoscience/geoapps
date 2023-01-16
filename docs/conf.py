@@ -95,9 +95,10 @@ master_doc = "index"
 project = "geoapps"
 
 # The short X.Y version.
-version = "0.9.1"
+version = "0.10.0"
 # The full version, including alpha/beta/rc tags.
-release = "0.9.1-alpha.1"
+release = "0.10.0-alpha.1"
+
 
 
 # List of patterns, relative to source directory, that match files and
