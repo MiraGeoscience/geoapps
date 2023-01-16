@@ -360,6 +360,22 @@ class InversionDriver(BaseDriver):
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
+    @classmethod
+    def start(cls, filepath, driver_class=None):
+        _ = driver_class
+        from geoapps.inversion import DRIVER_MAP
+
+        ifile = InputFile.read_ui_json(filepath)
+        inversion_type = ifile.data["inversion_type"]
+        inversion_driver = DRIVER_MAP.get(inversion_type, None)
+        if inversion_driver is None:
+            msg = f"Inversion type {inversion_type} is not supported."
+            msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
+            raise NotImplementedError(msg)
+
+        driver = BaseDriver.start(filepath, driver_class=inversion_driver)
+        return driver
+
 
 class InversionLogger:
     def __init__(self, logfile, driver):
@@ -401,23 +417,13 @@ class InversionLogger:
     def flush(self):
         pass
 
-    def get_path(self, file):
+    def get_path(self, filepath):
         root_directory = os.path.dirname(self.driver.workspace.h5file)
-        return os.path.join(root_directory, file)
+        return os.path.join(root_directory, filepath)
 
 
 if __name__ == "__main__":
 
-    from geoapps.inversion import DRIVER_MAP
-
-    filepath = os.path.abspath(sys.argv[1])
-    ifile = InputFile.read_ui_json(filepath)
-    inversion_type = ifile.data["inversion_type"]
-    inversion_driver = DRIVER_MAP.get(inversion_type, None)
-    if inversion_driver is None:
-        msg = f"Inversion type {inversion_type} is not supported."
-        msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
-        raise NotImplementedError(msg)
-
-    inversion_driver.start(filepath)
+    file = os.path.abspath(sys.argv[1])
+    InversionDriver.start(file)
     sys.stdout.close()
