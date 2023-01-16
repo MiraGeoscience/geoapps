@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -27,8 +27,6 @@ inversion_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "txz_real_channel": None,
@@ -115,8 +113,6 @@ forward_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "txz_real_channel_bool": True,

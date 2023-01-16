@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -1126,7 +1126,7 @@ class InversionApp(PlotSelection2D):
     def run(params):
 
         if not isinstance(params, (DirectCurrent3DParams, InducedPolarization3DParams)):
-            raise ValueError(
+            raise TypeError(
                 "Parameter 'inversion_type' must be one of "
                 "'direct current 3d' or 'induced polarization 3d'"
             )

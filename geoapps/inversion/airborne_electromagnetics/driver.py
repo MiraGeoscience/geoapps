@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -306,7 +306,7 @@ def inversion(input_file):
                             uuid.UUID(input_param["topography"]["GA_object"]["data"])
                         )[0]
                         topo[:, 2] = data.values
-                    except (ValueError, IndexError):
+                    except (ValueError, TypeError, IndexError):
                         pass
 
                 if window is not None:

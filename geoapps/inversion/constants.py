@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -81,24 +81,6 @@ default_ui_json = {
         "label": "Take z from topography",
         "tooltip": "Sets survey elevation to topography before any offsets are applied.",
         "value": False,
-        "verbose": 3,
-    },
-    "receivers_offset_x": {
-        "group": "Data pre-processing",
-        "label": "Receiver X offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
-        "verbose": 3,
-    },
-    "receivers_offset_y": {
-        "group": "Data pre-processing",
-        "label": "Receiver Y offset (m)",
-        "optional": True,
-        "enabled": False,
-        "value": 0.0,
-        "visible": False,
         "verbose": 3,
     },
     "receivers_offset_z": {
@@ -639,5 +621,5 @@ validations = {
     "norm_x": {"types": [int, float]},
     "norm_y": {"types": [int, float]},
     "norm_z": {"types": [int, float]},
-    "distributed_workers": {"types": [tuple, type(None)]},
+    "distributed_workers": {"types": [list, type(None)]},
 }
