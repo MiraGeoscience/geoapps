@@ -138,7 +138,6 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                                 "geoh5": iter_workspace,
                                 "mesh": mesh,
                                 "line_id": trial["line_id"],
-                                "run_command": "geoapps.inversion.electricals.direct_current.two_dimensions.driver",
                             },
                             **model_uids,
                         )
