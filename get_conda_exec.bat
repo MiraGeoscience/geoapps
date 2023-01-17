@@ -25,6 +25,8 @@ if exist !custom_script! (
 call (exit /B 0)
 
 set usual_conda_paths=^
+  "%LOCALAPPDATA%\anaconda3";^
+  "%LOCALAPPDATA%\miniconda3";^
   "%USERPROFILE%\anaconda3";^
   "%USERPROFILE%\miniconda3";^
   "%LOCALAPPDATA%\Continuum\anaconda3";^
