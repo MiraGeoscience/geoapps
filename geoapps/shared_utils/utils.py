@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -493,6 +493,8 @@ def get_contours(
         if type(fixed_contours) is str:
             fixed_contours = re.split(",", fixed_contours.replace(" ", ""))
             fixed_contours = [float(c) for c in fixed_contours]
+        elif type(fixed_contours) is float:
+            fixed_contours = [fixed_contours]
     else:
         fixed_contours = []
 

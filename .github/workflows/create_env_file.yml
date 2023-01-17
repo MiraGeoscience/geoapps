@@ -84,7 +84,7 @@ jobs:
 
   release-env:
     needs: [create-env-file, draft-release]
-    if: ${{ needs.create-env-file.outputs.releaseFullEnv }}
+    if: ${{ needs.create-env-file.outputs.releaseFullEnv == true }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
