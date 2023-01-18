@@ -12,13 +12,32 @@ import numpy as np
 from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
-from geoh5py.objects import BlockModel, DrapeModel
+from geoh5py.objects import BlockModel, DrapeModel, Octree
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
+from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.driver import BlockModelDriver
 from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
+
+
+def drape_to_octree(octree: Octree, drape_model: DrapeModel | list[DrapeModel]):
+
+    if isinstance(drape_model, DrapeModel):
+        drape_model = [drape_model]
+
+    drape_locs = np.vstack([d.centroids for d in drape_model])
+    tree = cKDTree(drape_locs)
+    _, ind = tree.query(octree.centroids)
+
+    common_children = {k.name for k in sum([d.children for d in drape_model], [])}
+    models = {}
+    for child in common_children:
+        models[child] = np.hstack([d.get_data(child)[0].values for d in drape_model])
+
+    for model, values in models.items():
+        octree.add_data({model: {"values": values[ind]}})
 
 
 def floating_active(mesh: TensorMesh | TreeMesh, active: np.ndarray):
