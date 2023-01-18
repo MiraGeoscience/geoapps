@@ -24,6 +24,9 @@ from geoapps.inversion.electricals.direct_current.three_dimensions import (
 from geoapps.inversion.electricals.direct_current.two_dimensions import (
     DirectCurrent2DParams,
 )
+from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.params import (
+    InducedPolarizationPseudo3DParams,
+)
 from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
 )
@@ -103,6 +106,13 @@ def write_default_uijson(path, use_initializers=False):
 
     ip_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_2d_init = ip_2d_init if use_initializers else {}
+
+    from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.constants import (
+        app_initializer as ip_p3d_init,
+    )
+
+    ip_p3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_p3d_init = ip_p3d_init if use_initializers else {}
 
     from geoapps.inversion.natural_sources.magnetotellurics.constants import (
         app_initializer as mt_init,
@@ -206,6 +216,12 @@ def write_default_uijson(path, use_initializers=False):
             validate=False, **ip_3d_init
         ),
         "induced_polarization_forward_3d.ui.json": InducedPolarization3DParams(
+            forward_only=True, validate=False
+        ),
+        "induced_polarization_inversion_pseudo3d.ui.json": InducedPolarizationPseudo3DParams(
+            validate=False, **ip_p3d_init
+        ),
+        "induced_polarization_forward_pseudo3d.ui.json": InducedPolarizationPseudo3DParams(
             forward_only=True, validate=False
         ),
         "magnetotellurics_inversion.ui.json": MagnetotelluricsParams(
