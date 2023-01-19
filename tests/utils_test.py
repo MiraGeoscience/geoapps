@@ -118,7 +118,9 @@ def test_drape_to_octree(tmp_path):
         finalize=True,
     )
     octree = treemesh_2_octree(ws, tree)
-    drape_to_octree(octree, [drape_1, drape_2])
+    octree = drape_to_octree(octree, [drape_1, drape_2])
+    data = octree.get_data("model")
+    assert np.allclose(np.array([10, 100]), np.unique(data[0].values))
 
 
 def test_floating_active():
