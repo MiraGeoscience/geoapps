@@ -215,8 +215,6 @@ default_ui_json = {
     "mesh": {
         "group": "Mesh and Models",
         "main": True,
-        "optional": True,
-        "enabled": False,
         "label": "Mesh",
         "meshType": "{4EA87376-3ECE-438B-BF12-3479733DED46}",
         "value": None,

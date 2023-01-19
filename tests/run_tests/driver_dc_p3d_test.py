@@ -96,7 +96,8 @@ def test_dc_p3d_run(
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
-        mesh = geoh5.get_entity("Models")[0]
+        models = geoh5.get_entity("Models")[0]
+        mesh = models.get_entity("mesh")[0] # Finds the octree mesh
         topography = geoh5.get_entity("topography")[0]
         _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
 
