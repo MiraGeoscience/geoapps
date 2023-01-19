@@ -39,6 +39,8 @@ def drape_to_octree(octree: Octree, drape_model: DrapeModel | list[DrapeModel]):
     for model, values in models.items():
         octree.add_data({model: {"values": values[ind]}})
 
+    return octree
+
 
 def floating_active(mesh: TensorMesh | TreeMesh, active: np.ndarray):
     """
