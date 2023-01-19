@@ -16,7 +16,7 @@ from param_sweeps.driver import SweepDriver, SweepParams
 from param_sweeps.generate import generate
 
 from geoapps.inversion.driver import InversionDriver
-
+from geoapps.utils.models import drape_to_octree
 
 class LineSweepDriver(SweepDriver, InversionDriver):
     def __init__(self, params):
@@ -87,15 +87,19 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         )
 
         data = {}
+        drape_models = []
         for line in lines:
-            ws = Workspace(f"{os.path.join(path, files[line])}.ui.geoh5")
-            survey = ws.get_entity("Data")[0]
-            data = self.collect_line_data(survey, data)
-            mesh = ws.get_entity("Models")[0]
-            mesh = mesh.copy(parent=models_group)
-            mesh.name = f"Line {line}"
+            with Workspace(f"{os.path.join(path, files[line])}.ui.geoh5") as ws:
+                survey = ws.get_entity("Data")[0]
+                data = self.collect_line_data(survey, data)
+                mesh = ws.get_entity("Models")[0]
+                mesh = mesh.copy(parent=models_group)
+                mesh.name = f"Line {line}"
+                drape_models.append(mesh)
 
         data_result.add_data(data)
+        octree_model = drape_to_octree(self.pseudo3d_params.mesh, drape_models)
+        octree_model.copy(parent=models_group)
         models_group.parent = self.pseudo3d_params.ga_group
 
     def collect_line_data(self, survey, data):

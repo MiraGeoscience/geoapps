@@ -117,6 +117,7 @@ def test_drape_to_octree(tmp_path):
         octree_levels_padding=[2, 2],
         finalize=True,
     )
+    # interp and save common models into the octree
     octree = treemesh_2_octree(ws, tree)
     octree = drape_to_octree(octree, [drape_1, drape_2])
     data = octree.get_data("model")
