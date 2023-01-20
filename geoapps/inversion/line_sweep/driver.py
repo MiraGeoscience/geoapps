@@ -7,6 +7,7 @@
 
 import json
 import os
+import re
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -15,8 +16,10 @@ from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
 from param_sweeps.generate import generate
 
+from geoapps.driver_base.utils import active_from_xyz
 from geoapps.inversion.driver import InversionDriver
 from geoapps.utils.models import drape_to_octree
+
 
 class LineSweepDriver(SweepDriver, InversionDriver):
     def __init__(self, params):
@@ -98,7 +101,42 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 drape_models.append(mesh)
 
         data_result.add_data(data)
-        octree_model = drape_to_octree(self.pseudo3d_params.mesh, drape_models)
+
+        # interpolate drape model children common to all drape models into octree
+        active = active_from_xyz(
+            self.pseudo3d_params.mesh, self.inversion_topography.locations
+        )
+        common_children = set.intersection(
+            *[{c.name for c in d.children} for d in drape_models]
+        )
+        octree_model = drape_to_octree(
+            self.pseudo3d_params.mesh,
+            drape_models,
+            {n: [n] * len(drape_models) for n in common_children},
+            active,
+        )
+
+        # interpolate last iterations for each drape model into octree
+        iter_children = [
+            [c.name for c in m.children if "iteration" in c.name.lower()]
+            for m in drape_models
+        ]
+        if any(iter_children):
+            iter_numbers = [
+                [int(re.findall(r"\d+", n)[0]) for n in k] for k in iter_children
+            ]
+            last_iterations = [np.where(k == np.max(k))[0][0] for k in iter_numbers]
+            octree_model = drape_to_octree(
+                self.pseudo3d_params.mesh,
+                drape_models,
+                {
+                    "last_iteration": [
+                        c[last_iterations[i]] for i, c in enumerate(iter_children)
+                    ]
+                },
+                active,
+            )
+
         octree_model.copy(parent=models_group)
         models_group.parent = self.pseudo3d_params.ga_group
 
