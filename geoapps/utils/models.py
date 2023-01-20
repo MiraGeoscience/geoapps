@@ -22,22 +22,48 @@ from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
 
 
-def drape_to_octree(octree: Octree, drape_model: DrapeModel | list[DrapeModel]):
+def drape_to_octree(
+    octree: Octree,
+    drape_model: DrapeModel | list[DrapeModel],
+    children: dict[str, list[str]],
+    active: np.ndarray,
+):
+    """
+    Interpolate drape model(s) into octree mesh.
 
+    """
+
+    # make sure input is iterable
     if isinstance(drape_model, DrapeModel):
         drape_model = [drape_model]
 
+    # create tree to search nearest neighbors in stacked drape model
     drape_locs = np.vstack([d.centroids for d in drape_model])
     tree = cKDTree(drape_locs)
-    _, ind = tree.query(octree.centroids)
+    _, nearest_ind = tree.query(octree.centroids)
 
-    common_children = {k.name for k in sum([d.children for d in drape_model], [])}
-    models = {}
-    for child in common_children:
-        models[child] = np.hstack([d.get_data(child)[0].values for d in drape_model])
+    # stack values of filtered children
+    for label, names in children.items():
 
-    for model, values in models.items():
-        octree.add_data({model: {"values": values[ind]}})
+        if len(names) != len(drape_model):
+            raise ValueError(
+                f"Number of names and drape models must match.  "
+                f"Provided {len(names)} names and {len(drape_model)} models."
+            )
+
+        data = []
+        for ind, model in enumerate(drape_model):
+            datum = [k for k in model.children if k.name == names[ind]]
+            if len(datum) > 1:
+                raise ValueError(
+                    f"Found more than one data set with name {names[ind]} in"
+                    f"model {model.name}."
+                )
+            data.append(datum[0].values)
+
+        stacked_model = np.hstack(data)[nearest_ind]  # nearest neighbor lookup
+        stacked_model[~active] = np.nan  # apply active cells
+        octree.add_data({label: {"values": stacked_model}})
 
     return octree
 
