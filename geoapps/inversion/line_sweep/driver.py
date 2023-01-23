@@ -110,13 +110,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             *[{c.name for c in d.children} for d in drape_models]
         )
         children = {n: [n] * len(drape_models) for n in common_children}
-        # octree_model = drape_to_octree(
-        #     self.pseudo3d_params.mesh,
-        #     drape_models,
-        #     children,
-        #     active,
-        #     method="lookup"
-        # )
         octree_model = drape_to_octree(
             self.pseudo3d_params.mesh, drape_models, children, active, method="nearest"
         )
@@ -137,13 +130,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             children = {
                 label: [c[last_iterations[i]] for i, c in enumerate(iter_children)]
             }
-            # octree_model = drape_to_octree(
-            #     self.pseudo3d_params.mesh,
-            #     drape_models,
-            #     children,
-            #     active,
-            #     method="lookup"
-            # )
             octree_model = drape_to_octree(
                 self.pseudo3d_params.mesh,
                 drape_models,
