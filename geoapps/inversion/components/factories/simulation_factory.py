@@ -38,6 +38,7 @@ class SimulationFactory(SimPEGFactory):
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
             "magnetotellurics",
             "tipper",
         ]:
@@ -67,7 +68,10 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation_2d.Simulation2DNodal
 
-        if self.factory_type == "induced polarization 3d":
+        if self.factory_type in [
+            "induced polarization 3d",
+            "induced polarization pseudo 3d",
+        ]:
             from SimPEG.electromagnetics.static.induced_polarization import simulation
 
             return simulation.Simulation3DNodal

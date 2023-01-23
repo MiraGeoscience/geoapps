@@ -109,11 +109,16 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         common_children = set.intersection(
             *[{c.name for c in d.children} for d in drape_models]
         )
+        children = {n: [n] * len(drape_models) for n in common_children}
+        # octree_model = drape_to_octree(
+        #     self.pseudo3d_params.mesh,
+        #     drape_models,
+        #     children,
+        #     active,
+        #     method="lookup"
+        # )
         octree_model = drape_to_octree(
-            self.pseudo3d_params.mesh,
-            drape_models,
-            {n: [n] * len(drape_models) for n in common_children},
-            active,
+            self.pseudo3d_params.mesh, drape_models, children, active, method="nearest"
         )
 
         # interpolate last iterations for each drape model into octree
@@ -126,15 +131,25 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 [int(re.findall(r"\d+", n)[0]) for n in k] for k in iter_children
             ]
             last_iterations = [np.where(k == np.max(k))[0][0] for k in iter_numbers]
+            label = iter_children[0][0].replace(
+                re.findall(r"\d+", iter_children[0][0])[0], "final"
+            )
+            children = {
+                label: [c[last_iterations[i]] for i, c in enumerate(iter_children)]
+            }
+            # octree_model = drape_to_octree(
+            #     self.pseudo3d_params.mesh,
+            #     drape_models,
+            #     children,
+            #     active,
+            #     method="lookup"
+            # )
             octree_model = drape_to_octree(
                 self.pseudo3d_params.mesh,
                 drape_models,
-                {
-                    "last_iteration": [
-                        c[last_iterations[i]] for i, c in enumerate(iter_children)
-                    ]
-                },
+                children,
                 active,
+                method="nearest",
             )
 
         octree_model.copy(parent=models_group)

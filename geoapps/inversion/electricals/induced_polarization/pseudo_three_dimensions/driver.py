@@ -14,6 +14,7 @@ from geoh5py.data import Data
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components.data import InversionData
+from geoapps.inversion.components.topography import InversionTopography
 from geoapps.inversion.components.windows import InversionWindow
 from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.constants import (
     validations,
@@ -55,6 +56,10 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
             )
             self.inversion_data = InversionData(
                 self.workspace, self.pseudo3d_params, self.inversion_window.window
+            )
+
+            self.inversion_topography = InversionTopography(
+                self.workspace, self.pseudo3d_params, self.inversion_data, self.window
             )
 
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
