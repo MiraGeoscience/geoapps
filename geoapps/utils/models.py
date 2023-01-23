@@ -18,8 +18,37 @@ from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.driver import BlockModelDriver
-from geoapps.shared_utils.utils import rotate_xyz
+from geoapps.shared_utils.utils import octree_2_treemesh, rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
+
+# def sparse_drape_to_octree(
+#         octree: Octree,
+#         drape_model: list[DrapeModel],
+#         children: dict[str, list[str]],
+#         active: np.ndarray
+# ):
+#
+#     # Get Treemesh from Octree
+#     mesh = octree_2_treemesh(octree)
+#
+#     # embed drape model data into octree model with nan outside data locations
+#     for label, names in children.items():
+#         octree_model = np.array([np.nan] * octree.n_cells)
+#         for ind, model in enumerate(drape_model):
+#             lookup_inds = mesh._get_containing_cell_indexes(model.centroids)
+#             datum = [k for k in model.children if k.name == names[ind]]
+#             if len(datum) > 1:
+#                 raise ValueError(
+#                     f"Found more than one data set with name {names[ind]} in"
+#                     f"model {model.name}."
+#                 )
+#             octree_model[lookup_inds] = datum[0].values
+#
+#         octree_model = octree_model[mesh._ubc_order]
+#         octree_model[~active] = np.nan
+#         octree.add_data({label: {"values": octree_model}})
+#
+#     return octree
 
 
 def drape_to_octree(
@@ -27,31 +56,37 @@ def drape_to_octree(
     drape_model: DrapeModel | list[DrapeModel],
     children: dict[str, list[str]],
     active: np.ndarray,
+    method: str = "lookup",
 ):
     """
     Interpolate drape model(s) into octree mesh.
 
     """
+    if method not in ["nearest", "lookup"]:
+        raise ValueError(f"Method must be 'nearest' or 'lookup'.  Provided {method}.")
 
-    # make sure input is iterable
     if isinstance(drape_model, DrapeModel):
         drape_model = [drape_model]
 
-    # create tree to search nearest neighbors in stacked drape model
-    drape_locs = np.vstack([d.centroids for d in drape_model])
-    tree = cKDTree(drape_locs)
-    _, nearest_ind = tree.query(octree.centroids)
+    if any(len(v) != len(drape_model) for v in children.values()):
+        raise ValueError(
+            f"Number of names and drape models must match.  "
+            f"Provided {len(children)} names and {len(drape_model)} models."
+        )
 
-    # stack values of filtered children
+    if method == "nearest":
+        # create tree to search nearest neighbors in stacked drape model
+        tree = cKDTree(np.vstack([d.centroids for d in drape_model]))
+        _, lookup_inds = tree.query(octree.centroids)
+    else:
+        mesh = octree_2_treemesh(octree)
+
+    # perform interpolation using nearest neighbor or lookup method
     for label, names in children.items():
 
-        if len(names) != len(drape_model):
-            raise ValueError(
-                f"Number of names and drape models must match.  "
-                f"Provided {len(names)} names and {len(drape_model)} models."
-            )
-
-        data = []
+        octree_model = (
+            [] if method == "nearest" else np.array([np.nan] * octree.n_cells)
+        )
         for ind, model in enumerate(drape_model):
             datum = [k for k in model.children if k.name == names[ind]]
             if len(datum) > 1:
@@ -59,11 +94,23 @@ def drape_to_octree(
                     f"Found more than one data set with name {names[ind]} in"
                     f"model {model.name}."
                 )
-            data.append(datum[0].values)
+            if method == "nearest":
+                octree_model.append(datum[0].values)
+            else:
+                lookup_inds = (
+                    mesh._get_containing_cell_indexes(  # pylint: disable=W0212
+                        model.centroids
+                    )
+                )
+                octree_model[lookup_inds] = datum[0].values
 
-        stacked_model = np.hstack(data)[nearest_ind]  # nearest neighbor lookup
-        stacked_model[~active] = np.nan  # apply active cells
-        octree.add_data({label: {"values": stacked_model}})
+        if method == "nearest":
+            octree_model = np.hstack(octree_model)[lookup_inds]
+        else:
+            octree_model = octree_model[mesh._ubc_order]  # pylint: disable=W0212
+
+        octree_model[~active] = np.nan  # apply active cells
+        octree.add_data({label: {"values": octree_model}})
 
     return octree
 

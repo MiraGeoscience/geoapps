@@ -49,6 +49,7 @@ class EntityFactory(AbstractFactory):
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
 
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
@@ -72,6 +73,7 @@ class EntityFactory(AbstractFactory):
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             return self._build_dcip(inversion_data)
         else:
