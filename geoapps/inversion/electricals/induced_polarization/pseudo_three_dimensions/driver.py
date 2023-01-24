@@ -43,8 +43,13 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
         if params.files_only:
             sys.exit("Files written")
 
-    def write_files(self, lookup):
-        """Write ui.geoh5 and ui.json files for sweep trials."""
+    def write_files(self, lookup: dict) -> None:
+        """
+        Write ui.geoh5 and ui.json files for sweep trials.
+
+        :param lookup: dictionary of trial hashes and trial
+            parameter values and status data.
+        """
 
         forward_only = self.pseudo3d_params.forward_only
         ifile = InducedPolarization2DParams(forward_only=forward_only).input_file
