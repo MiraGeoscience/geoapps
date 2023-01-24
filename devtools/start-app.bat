@@ -4,6 +4,7 @@ setlocal EnableDelayedExpansion
 set project_dir=%~dp0..
 call %project_dir%\get_conda_exec.bat
 if !errorlevel! neq 0 (
+  pause
   exit /B !errorlevel!
 )
 

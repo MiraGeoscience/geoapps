@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import os
 import sys
+import warnings
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -17,6 +18,7 @@ from geoh5py.objects import BlockModel, ObjectBase, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
+from tqdm import tqdm
 
 from geoapps.driver_base.driver import BaseDriver
 from geoapps.iso_surfaces.constants import validations
@@ -137,6 +139,7 @@ class IsoSurfacesDriver(BaseDriver):
                 grid.append(cell_delimiters[:-1] + dx / 2)
 
         else:
+            print("Interpolating the model onto a regular grid...")
             grid = []
             for i in range(3):
                 grid += [
@@ -158,9 +161,15 @@ class IsoSurfacesDriver(BaseDriver):
             )
             values = values[0].reshape(x.shape)
 
+        lower, upper = np.nanmin(values), np.nanmax(values)
         surfaces = []
-        for level in levels:
+        print("Running marching cubes on levels.")
+        skip = []
+        for level in tqdm(levels):
             try:
+                if level < lower or level > upper:
+                    skip += [level]
+                    continue
                 verts, faces, _, _ = marching_cubes(values, level=level)
 
                 # Remove all vertices and cells with nan
@@ -197,6 +206,8 @@ class IsoSurfacesDriver(BaseDriver):
 
             surfaces += [[vertices, faces]]
 
+        if any(skip):
+            warnings.warn(f"The following levels were out of bound and ignored: {skip}")
         return surfaces
 
 

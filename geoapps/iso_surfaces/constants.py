@@ -20,7 +20,7 @@ defaults = {
     "interval_min": 0.005,
     "interval_max": 0.02,
     "interval_spacing": 0.005,
-    "fixed_contours": "0.0025",
+    "fixed_contours": None,
     "max_distance": 500.0,
     "resolution": 50.0,
     "generate_sweep": False,
@@ -84,9 +84,9 @@ default_ui_json.update(
         "fixed_contours": {
             "main": True,
             "label": "Fixed Contours",
-            "value": "0",
+            "value": 0.0,
             "optional": True,
-            "enabled": True,
+            "enabled": False,
         },
         "max_distance": {
             "enabled": True,
@@ -121,6 +121,5 @@ app_initializer = {
     "interval_min": 0.005,
     "interval_max": 0.02,
     "interval_spacing": 0.005,
-    "fixed_contours": "0.0025",
     "export_as": "Iso_Iteration_7_model",
 }

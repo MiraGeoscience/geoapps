@@ -157,7 +157,8 @@ class InversionApp(PlotSelection2D):
         self._chi_factor = FloatText(
             value=1, description="Target misfit", disabled=False
         )
-        self._mesh_octree = MeshOctreeOptions(**self.defaults)
+        self._mesh_octree = MeshOctreeOptions(workspace=self.defaults.get("geoh5"))
+        self.mesh = self._mesh_octree.mesh
         self._lower_bound_group = ModelOptions(
             "lower_bound",
             add_xyz=False,

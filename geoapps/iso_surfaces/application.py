@@ -8,10 +8,10 @@
 from __future__ import annotations
 
 import os
-import uuid
 from time import time
 
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import uuid2entity
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
@@ -64,19 +64,17 @@ class IsoSurface(ObjectDataSelection):
             description="Contour spacing:",
         )
         self._fixed_contours = Text(
-            value="",
+            value=None,
             description="Fixed contours:",
             disabled=False,
             continuous_update=False,
         )
         self._export_as = Text("Iso_", description="Surface:")
-
         self.ga_group_name.value = "ISO"
         self.data.observe(self.data_change, names="value")
         self.data.description = "Value fields: "
         self.trigger.on_click(self.trigger_click)
 
-        self.defaults["fixed_contours"] = str(self.defaults["fixed_contours"])[1:-1]
         super().__init__(**self.defaults)
 
         self.contours = VBox(
@@ -91,31 +89,27 @@ class IsoSurface(ObjectDataSelection):
 
     def trigger_click(self, _) -> str:
 
-        param_dict = {}
-        for key in self.__dict__:
-            try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
-                    value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
-
-                    if (
-                        isinstance(value, uuid.UUID)
-                        and self.workspace.get_entity(value)[0] is not None
-                    ):
-                        value = self.workspace.get_entity(value)[0]
-
-                    param_dict[key] = value
-
-            except AttributeError:
-                continue
-
         temp_geoh5 = f"Isosurface_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
-            with self.workspace.open(mode="r"):
+            with self.workspace.open(mode="r") as input_ws:
+
+                param_dict = {}
+                for key in self.__dict__:
+                    try:
+                        if isinstance(getattr(self, key), Widget) and hasattr(
+                            self.params, key
+                        ):
+                            value = getattr(self, key).value
+                            if key[0] == "_":
+                                key = key[1:]
+                            param_dict[key] = uuid2entity(value, input_ws)
+
+                    except AttributeError:
+                        continue
+
                 param_dict["objects"] = param_dict["objects"].copy(
                     parent=new_workspace, copy_children=False
                 )
