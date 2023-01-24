@@ -22,7 +22,7 @@ from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.
 
 class InducedPolarizationPseudo3DParams(InversionBaseParams):
     """
-    Parameter class for electrical->conductivity inversion.
+    Parameter class for electrical->chargeability inversion.
     """
 
     _directive_list = [

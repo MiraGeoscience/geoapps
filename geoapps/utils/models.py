@@ -21,35 +21,6 @@ from geoapps.block_model_creation.driver import BlockModelDriver
 from geoapps.shared_utils.utils import octree_2_treemesh, rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
 
-# def sparse_drape_to_octree(
-#         octree: Octree,
-#         drape_model: list[DrapeModel],
-#         children: dict[str, list[str]],
-#         active: np.ndarray
-# ):
-#
-#     # Get Treemesh from Octree
-#     mesh = octree_2_treemesh(octree)
-#
-#     # embed drape model data into octree model with nan outside data locations
-#     for label, names in children.items():
-#         octree_model = np.array([np.nan] * octree.n_cells)
-#         for ind, model in enumerate(drape_model):
-#             lookup_inds = mesh._get_containing_cell_indexes(model.centroids)
-#             datum = [k for k in model.children if k.name == names[ind]]
-#             if len(datum) > 1:
-#                 raise ValueError(
-#                     f"Found more than one data set with name {names[ind]} in"
-#                     f"model {model.name}."
-#                 )
-#             octree_model[lookup_inds] = datum[0].values
-#
-#         octree_model = octree_model[mesh._ubc_order]
-#         octree_model[~active] = np.nan
-#         octree.add_data({label: {"values": octree_model}})
-#
-#     return octree
-
 
 def drape_to_octree(
     octree: Octree,
@@ -57,9 +28,21 @@ def drape_to_octree(
     children: dict[str, list[str]],
     active: np.ndarray,
     method: str = "lookup",
-):
+) -> Octree:
     """
     Interpolate drape model(s) into octree mesh.
+
+    :param octree: Octree mesh to transfer values into
+    :param drape_model: Drape model(s) whose values will be transferred
+        into 'octree'.
+    :param children: Dictionary containing a label and the associated
+        names of the children in 'drape_model' to transfer into 'octree'.
+    :param active: Active cell array for 'octree' model.
+    :param method: Use 'lookup' to for a containing cell lookup method, or
+        'nearest' for a nearest neighbor search method to transfer values
+
+    :returns octree: Input octree mesh augmented with 'children' data from
+        'drape_model' transferred onto cells using the prescribed 'method'.
 
     """
     if method not in ["nearest", "lookup"]:
