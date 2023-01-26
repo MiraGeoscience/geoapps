@@ -68,7 +68,10 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
             )
 
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
-            models = {"starting_model": self.pseudo3d_params.starting_model}
+            models = {
+                "starting_model": self.pseudo3d_params.starting_model,
+                "conductivity_model": self.pseudo3d_params.conductivity_model,
+            }
             if not forward_only:
                 models.update(
                     {
