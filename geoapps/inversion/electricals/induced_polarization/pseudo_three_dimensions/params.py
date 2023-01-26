@@ -39,7 +39,7 @@ class InducedPolarizationPseudo3DParams(InversionBaseParams):
         self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
         self._inversion_ui_json = deepcopy(inversion_ui_json)
-        self._inversion_type = "induced polarization 3d"
+        self._inversion_type = "induced polarization pseudo 3d"
         self._validations = validations
         self._potential_channel_bool = None
         self._potential_channel = None
