@@ -23,7 +23,7 @@ from geoh5py.objects import Grid2D
 from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 
-from geoapps.driver_base.utils import running_mean, treemesh_2_octree
+from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
 from geoapps.shared_utils.utils import (
     cell_centers_to_faces,
@@ -119,9 +119,16 @@ def test_drape_to_octree(tmp_path):
     )
     # interp and save common models into the octree
     octree = treemesh_2_octree(ws, tree)
-    octree = drape_to_octree(octree, [drape_1, drape_2])
-    data = octree.get_data("model")
-    assert np.allclose(np.array([10, 100]), np.unique(data[0].values))
+    active = active_from_xyz(octree, topo)
+    octree = drape_to_octree(
+        octree,
+        [drape_1, drape_2],
+        children={"model_interp": ["model", "model"]},
+        active=active,
+        method="lookup",
+    )
+    data = octree.get_data("model_interp")[0].values
+    assert np.allclose(np.array([10, 100]), np.unique(data[~np.isnan(data)]))
 
 
 def test_floating_active():
