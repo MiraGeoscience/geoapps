@@ -33,6 +33,7 @@ class SimulationFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
@@ -56,7 +57,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DIntegral
 
-        if self.factory_type == "direct current 3d":
+        if self.factory_type in ["direct current 3d", "direct current pseudo 3d"]:
             from SimPEG.electromagnetics.static.resistivity import simulation
 
             return simulation.Simulation3DNodal
