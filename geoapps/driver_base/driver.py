@@ -30,16 +30,21 @@ class BaseDriver(ABC):
         raise NotImplementedError
 
     @classmethod
-    def start(cls, filepath: str):
+    def start(cls, filepath: str, driver_class=None):
         """
         Run application specified by 'filepath' ui.json file.
 
         :param filepath: Path to valid ui.json file for the application driver.
         """
 
+        if driver_class is None:
+            driver_class = cls
+
         print("Loading input file . . .")
         filepath = os.path.abspath(filepath)
-        ifile = InputFile.read_ui_json(filepath, validations=cls._validations)
+        ifile = InputFile.read_ui_json(
+            filepath, validations=driver_class._validations  # pylint: disable=W0212
+        )
 
         generate_sweep = ifile.data.get("generate_sweep", None)
         if generate_sweep:
@@ -51,11 +56,9 @@ class BaseDriver(ABC):
                 filepath, update_values={"conda_environment": "geoapps"}
             )
         else:
-            params = cls._params_class(ifile)
-            if hasattr(params, "inversion_type"):
-                params.inversion_type = params.inversion_type.replace("pseudo 3d", "2d")
+            params = driver_class._params_class(ifile)  # pylint: disable=W0212
             print("Initializing application . . .")
-            driver = cls(params)
+            driver = driver_class(params)
 
             with params.geoh5.open(mode="r+"):
                 print("Running application . . .")

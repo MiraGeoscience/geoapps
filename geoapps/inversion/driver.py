@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
-import json
 import multiprocessing
 import os
 import sys
@@ -23,6 +22,7 @@ from time import time
 import numpy as np
 from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
+from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
 
 from geoapps.driver_base.driver import BaseDriver
@@ -211,6 +211,8 @@ class InversionDriver(BaseDriver):
                 self.starting_model, self.inverse_problem, self.sorting
             )
             self.logger.end()
+            sys.stdout = self.logger.terminal
+            self.logger.log.close()
             return
 
         # Run the inversion
@@ -218,6 +220,8 @@ class InversionDriver(BaseDriver):
         self.running = True
         self.inversion.run(self.starting_model)
         self.logger.end()
+        sys.stdout = self.logger.terminal
+        self.logger.log.close()
 
     def start_inversion_message(self):
 
@@ -356,6 +360,22 @@ class InversionDriver(BaseDriver):
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
+    @classmethod
+    def start(cls, filepath, driver_class=None):
+        _ = driver_class
+        from geoapps.inversion import DRIVER_MAP
+
+        ifile = InputFile.read_ui_json(filepath)
+        inversion_type = ifile.data["inversion_type"]
+        inversion_driver = DRIVER_MAP.get(inversion_type, None)
+        if inversion_driver is None:
+            msg = f"Inversion type {inversion_type} is not supported."
+            msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
+            raise NotImplementedError(msg)
+
+        driver = BaseDriver.start(filepath, driver_class=inversion_driver)
+        return driver
+
 
 class InversionLogger:
     def __init__(self, logfile, driver):
@@ -397,25 +417,13 @@ class InversionLogger:
     def flush(self):
         pass
 
-    def get_path(self, file):
+    def get_path(self, filepath):
         root_directory = os.path.dirname(self.driver.workspace.h5file)
-        return os.path.join(root_directory, file)
+        return os.path.join(root_directory, filepath)
 
 
 if __name__ == "__main__":
 
-    from geoapps.inversion import DRIVER_MAP
-
-    filepath = sys.argv[1]
-
-    with open(filepath, encoding="utf-8") as ifile:
-        inversion_type = json.load(ifile)["inversion_type"]
-
-    inversion_driver = DRIVER_MAP.get(inversion_type, None)
-    if inversion_driver is None:
-        msg = f"Inversion type {inversion_type} is not supported."
-        msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
-        raise NotImplementedError(msg)
-
-    inversion_driver.start(filepath)
+    file = os.path.abspath(sys.argv[1])
+    InversionDriver.start(file)
     sys.stdout.close()

@@ -96,6 +96,7 @@ class SurveyFactory(SimPEGFactory):
 
         if local_index is None:
             if self.factory_type in [
+                "direct current pseudo 3d",
                 "direct current 3d",
                 "direct current 2d",
                 "induced polarization 3d",
@@ -110,6 +111,7 @@ class SurveyFactory(SimPEGFactory):
             self.local_index = local_index
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",

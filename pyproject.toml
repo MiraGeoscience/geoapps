@@ -66,12 +66,12 @@ zarr = "^2.8.1" # from simpgeg using Dask
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=None" }
 # Note - conda-lock does not support the syntax: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
-geoh5py = { version = "0.5.0", source = "pypi" }
+geoh5py = { version = "0.6.0", source = "pypi" }
+#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=None"}
 simpeg_archive = {version = "0.9.1.dev5", source = "pypi"}
-#mira-simpeg = {version = "0.15.1dev7", source = "pypi"}
-mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=None"}
-param-sweeps = {version = "0.1.3", source = "pypi"}
-
+mira-simpeg = {version = "0.15.1dev7", source = "pypi"}
+param-sweeps = {version = "0.1.4", source = "pypi"}
+#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=None"}
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.14.4"

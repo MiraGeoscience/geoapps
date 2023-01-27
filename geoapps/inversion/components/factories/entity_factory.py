@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.drivers import InversionData
+    from geoapps.inversion.components.data import InversionData
 
 import numpy as np
 from geoh5py.objects import Curve, Grid2D
@@ -44,6 +44,7 @@ class EntityFactory(AbstractFactory):
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
@@ -66,6 +67,7 @@ class EntityFactory(AbstractFactory):
         """Constructs geoh5py object for provided inversion type."""
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
