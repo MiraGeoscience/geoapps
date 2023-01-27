@@ -36,6 +36,7 @@ Installation
 .. note:: The assumption is made that Conda has been installed in one
    of the default directories:
 
+    - %LOCALAPPDATA%\\ana[min]conda3\\
     - %USERPROFILE%\\ana[mini]conda3\\
     - %LOCALAPPDATA%\\Continuum\\ana[mini]conda3\\
     - C:\\ProgramData\\ana[mini]conda3\\

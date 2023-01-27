@@ -12,14 +12,14 @@ jobs:
 
     steps:
     - name: JIRA Login
-      uses: atlassian/gajira-login@v2.0.0
+      uses: atlassian/gajira-login@v3.0.1
       env:
         JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
         JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
         JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
     - name: Jira Create issue
       id: create_jira_issue
-      uses: atlassian/gajira-create@v2.0.1
+      uses: atlassian/gajira-create@v3.0.1
       with:
         project: GEOPY
         issuetype: Story
