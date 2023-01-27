@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.drivers import BaseParams
+    from geoapps.driver_base.params import BaseParams
 
 from copy import deepcopy
 
@@ -167,6 +167,7 @@ class InversionData(InversionLocations):
         if (
             self.params.inversion_type
             in [
+                "direct current pseudo 3d",
                 "direct current 3d",
                 "direct current 2d",
                 "induced polarization 3d",
