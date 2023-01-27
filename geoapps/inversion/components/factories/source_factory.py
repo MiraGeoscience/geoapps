@@ -80,6 +80,7 @@ class SourcesFactory(SimPEGFactory):
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             args += self._dcip_arguments(
                 receivers=receivers,

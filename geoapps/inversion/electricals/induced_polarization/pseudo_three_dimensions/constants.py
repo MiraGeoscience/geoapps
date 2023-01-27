@@ -15,8 +15,9 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current 2d batch inversion",
-    "inversion_type": "direct current pseudo 3d",
+    "title": "Induced Polarization 2d batch inversion",
+    "icon": "PotentialElectrode",
+    "inversion_type": "induced polarization pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -29,8 +30,8 @@ inversion_defaults = {
     "receivers_radar_drape": None,
     "receivers_offset_z": 0.0,
     "gps_receivers_offset": None,
-    "potential_channel": None,
-    "potential_uncertainty": 1.0,
+    "chargeability_channel": None,
+    "chargeability_uncertainty": 1.0,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "depth_core": 500.0,
@@ -38,6 +39,7 @@ inversion_defaults = {
     "vertical_padding": 1000.0,
     "expansion_factor": 1.1,
     "mesh": None,
+    "conductivity_model": 1e-3,
     "starting_model": 1e-3,
     "reference_model": 1e-3,
     "lower_bound": None,
@@ -87,7 +89,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentPseudo3DInversion",
+    "out_group": "InducedPolarizationPseudo3DInversion",
     "generate_sweep": False,
     "files_only": False,
     "cleanup": True,
@@ -97,11 +99,12 @@ inversion_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "potential_channel_bool": True,
+    "chargeability_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current 2d batch forward",
-    "inversion_type": "direct current pseudo 3d",
+    "title": "Induced Polarization 2d batch forward",
+    "icon": "PotentialElectrode",
+    "inversion_type": "induced polarization pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -114,7 +117,7 @@ forward_defaults = {
     "receivers_radar_drape": None,
     "receivers_offset_z": 0.0,
     "gps_receivers_offset": None,
-    "potential_channel_bool": True,
+    "chargeability_channel_bool": True,
     "u_cell_size": 25.0,
     "v_cell_size": 25.0,
     "depth_core": 500.0,
@@ -122,6 +125,7 @@ forward_defaults = {
     "vertical_padding": 1000.0,
     "expansion_factor": 1.1,
     "mesh": None,
+    "conductivity_model": 1e-3,
     "starting_model": 1e-3,
     "output_tile_files": False,
     "window_center_x": None,
@@ -134,7 +138,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentPseudo3DForward",
+    "out_group": "InducedPolarizationPseudo3DForward",
     "generate_sweep": False,
     "files_only": False,
     "cleanup": False,
@@ -156,7 +160,7 @@ forward_defaults = {
 }
 
 inversion_ui_json = {
-    "potential_channel_bool": True,
+    "chargeability_channel_bool": True,
 }
 
 forward_ui_json = {
@@ -172,8 +176,9 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Direct Current inversion",
-    "inversion_type": "direct current pseudo 3d",
+    "title": "Induced Polarization inversion",
+    "icon": "PotentialElectrode",
+    "inversion_type": "induced polarization pseudo 3d",
     "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
@@ -191,17 +196,17 @@ default_ui_json = {
         "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
         "value": None,
     },
-    "potential_channel_bool": True,
-    "potential_channel": {
+    "chargeability_channel_bool": True,
+    "chargeability_channel": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "group": "Data",
         "main": True,
-        "label": "Potential (V/I)",
+        "label": "Chargeability (V/V)",
         "parent": "data_object",
         "value": None,
     },
-    "potential_uncertainty": {
+    "chargeability_uncertainty": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "group": "Data",
@@ -215,10 +220,23 @@ default_ui_json = {
     "mesh": {
         "group": "Mesh and Models",
         "main": True,
+        "optional": True,
+        "enabled": False,
         "label": "Mesh",
         "meshType": "{4EA87376-3ECE-438B-BF12-3479733DED46}",
         "value": None,
         "visible": True,
+    },
+    "conductivity_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Mesh and Models",
+        "main": True,
+        "isValue": True,
+        "parent": "mesh",
+        "label": "Conductivity (S/m)",
+        "property": None,
+        "value": 1e-3,
     },
     "u_cell_size": {
         "min": 0.0,
@@ -273,7 +291,7 @@ default_ui_json = {
         "main": True,
         "isValue": False,
         "parent": "mesh",
-        "label": "Initial Conductivity (S/m)",
+        "label": "Initial chargeability (V/V)",
         "property": None,
         "value": 1e-3,
     },
@@ -284,7 +302,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Reference Conductivity (S/m)",
+        "label": "Reference chargeability (V/V)",
         "property": None,
         "value": 1e-3,
     },
@@ -295,7 +313,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Lower bound (S/m)",
+        "label": "Lower bound (V/V)",
         "property": None,
         "optional": True,
         "value": 1e-8,
@@ -308,7 +326,7 @@ default_ui_json = {
         "group": "Mesh and Models",
         "isValue": True,
         "parent": "mesh",
-        "label": "Upper bound (S/m)",
+        "label": "Upper bound (V/V)",
         "property": None,
         "optional": True,
         "value": 100.0,
@@ -320,7 +338,7 @@ default_ui_json = {
     "tile_spatial": 1,
     "out_group": {
         "label": "Results group name",
-        "value": "DirectCurrentPseudo3DInversion",
+        "value": "InducedPolarizationPseudo3DInversion",
     },
     "files_only": {
         "label": "Generate files only",
@@ -344,7 +362,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["direct current pseudo 3d", "direct current 2d"],
+        "values": ["induced polarization pseudo 3d", "induced polarization 2d"],
     },
     "data_object": {"required": True, "types": [UUID, PotentialElectrode]},
 }
@@ -354,13 +372,13 @@ validations = dict(base_validations, **validations)
 app_initializer = {
     "geoh5": "../../../assets/FlinFlon_dcip.geoh5",
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
-    "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
-    "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
+    "chargeability_channel": UUID("{162320e6-2b80-4877-9ec1-a8f5b6a13673}"),
+    "chargeability_uncertainty": 0.001,
     "line_object": UUID("{d400e8f1-8460-4609-b852-b3b93f945770}"),
     "line_id": 1,
     "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
-    "starting_model": 1e-1,
-    "reference_model": 1e-1,
+    "starting_model": 1e-4,
+    "conductivity_model": 0.1,
     "resolution": None,
     "window_center_x": None,
     "window_center_y": None,
@@ -378,6 +396,6 @@ app_initializer = {
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "receivers_offset_z": 0.0,
-    "out_group": "DirectCurrentPseudo3DInversion",
+    "out_group": "InducedPolarizationPseudo3DInversion",
     "cleanup": True,
 }
