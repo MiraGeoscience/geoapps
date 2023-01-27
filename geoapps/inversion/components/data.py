@@ -172,6 +172,7 @@ class InversionData(InversionLocations):
                 "direct current 2d",
                 "induced polarization 3d",
                 "induced polarization 2d",
+                "induced polarization pseudo 3d",
             ]
             and self.indices is None
         ):

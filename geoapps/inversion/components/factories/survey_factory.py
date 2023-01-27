@@ -101,6 +101,7 @@ class SurveyFactory(SimPEGFactory):
                 "direct current 2d",
                 "induced polarization 3d",
                 "induced polarization 2d",
+                "induced polarization pseudo 3d",
             ]:
                 n_data = receiver_entity.n_cells
             else:
@@ -116,6 +117,7 @@ class SurveyFactory(SimPEGFactory):
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:

@@ -25,6 +25,9 @@ from geoapps.inversion.electricals.induced_polarization.three_dimensions.driver 
 from geoapps.inversion.electricals.induced_polarization.two_dimensions.driver import (
     InducedPolarization2DDriver,
 )
+from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver import (
+    InducedPolarizationPseudo3DDriver,
+)
 from geoapps.inversion.natural_sources.magnetotellurics.driver import (
     MagnetotelluricsDriver,
 )
@@ -47,7 +50,7 @@ DRIVER_MAP = {
     "direct current pseudo 3d": DirectCurrentPseudo3DDriver,
     "induced polarization 3d": InducedPolarization3DDriver,
     "induced polarization 2d": InducedPolarization2DDriver,
-    "induced polarization pseudo 3d": None,  # InducedPolarizationPseudo3DDriver,
+    "induced polarization pseudo 3d": InducedPolarizationPseudo3DDriver,
     "magnetotellurics": MagnetotelluricsDriver,
     "tipper": TipperDriver,
 }

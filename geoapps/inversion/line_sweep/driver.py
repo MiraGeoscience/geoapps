@@ -7,6 +7,7 @@
 
 import json
 import os
+import re
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -15,7 +16,9 @@ from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
 from param_sweeps.generate import generate
 
+from geoapps.driver_base.utils import active_from_xyz
 from geoapps.inversion.driver import InversionDriver
+from geoapps.utils.models import drape_to_octree
 
 
 class LineSweepDriver(SweepDriver, InversionDriver):
@@ -87,15 +90,55 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         )
 
         data = {}
+        drape_models = []
         for line in lines:
-            ws = Workspace(f"{os.path.join(path, files[line])}.ui.geoh5")
-            survey = ws.get_entity("Data")[0]
-            data = self.collect_line_data(survey, data)
-            mesh = ws.get_entity("Models")[0]
-            mesh = mesh.copy(parent=models_group)
-            mesh.name = f"Line {line}"
+            with Workspace(f"{os.path.join(path, files[line])}.ui.geoh5") as ws:
+                survey = ws.get_entity("Data")[0]
+                data = self.collect_line_data(survey, data)
+                mesh = ws.get_entity("Models")[0]
+                mesh = mesh.copy(parent=models_group)
+                mesh.name = f"Line {line}"
+                drape_models.append(mesh)
 
         data_result.add_data(data)
+
+        # interpolate drape model children common to all drape models into octree
+        active = active_from_xyz(
+            self.pseudo3d_params.mesh, self.inversion_topography.locations
+        )
+        common_children = set.intersection(
+            *[{c.name for c in d.children} for d in drape_models]
+        )
+        children = {n: [n] * len(drape_models) for n in common_children}
+        octree_model = drape_to_octree(
+            self.pseudo3d_params.mesh, drape_models, children, active, method="nearest"
+        )
+
+        # interpolate last iterations for each drape model into octree
+        iter_children = [
+            [c.name for c in m.children if "iteration" in c.name.lower()]
+            for m in drape_models
+        ]
+        if any(iter_children):
+            iter_numbers = [
+                [int(re.findall(r"\d+", n)[0]) for n in k] for k in iter_children
+            ]
+            last_iterations = [np.where(k == np.max(k))[0][0] for k in iter_numbers]
+            label = iter_children[0][0].replace(
+                re.findall(r"\d+", iter_children[0][0])[0], "final"
+            )
+            children = {
+                label: [c[last_iterations[i]] for i, c in enumerate(iter_children)]
+            }
+            octree_model = drape_to_octree(
+                self.pseudo3d_params.mesh,
+                drape_models,
+                children,
+                active,
+                method="nearest",
+            )
+
+        octree_model.copy(parent=models_group)
         models_group.parent = self.pseudo3d_params.ga_group
 
     def collect_line_data(self, survey, data):

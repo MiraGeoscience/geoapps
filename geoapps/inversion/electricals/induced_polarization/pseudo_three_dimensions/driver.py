@@ -16,14 +16,14 @@ from geoh5py.workspace import Workspace
 from geoapps.inversion.components.data import InversionData
 from geoapps.inversion.components.topography import InversionTopography
 from geoapps.inversion.components.windows import InversionWindow
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
+from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.constants import (
     validations,
 )
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
-    DirectCurrentPseudo3DParams,
+from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.params import (
+    InducedPolarizationPseudo3DParams,
 )
-from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
-    DirectCurrent2DParams,
+from geoapps.inversion.electricals.induced_polarization.two_dimensions.params import (
+    InducedPolarization2DParams,
 )
 from geoapps.inversion.line_sweep.driver import LineSweepDriver
 from geoapps.shared_utils.utils import get_locations, weighted_average
@@ -31,21 +31,28 @@ from geoapps.utils.models import get_drape_model
 from geoapps.utils.surveys import extract_dcip_survey
 
 
-class DirectCurrentPseudo3DDriver(LineSweepDriver):
+class InducedPolarizationPseudo3DDriver(LineSweepDriver):
 
-    _params_class = DirectCurrentPseudo3DParams
+    _params_class = InducedPolarizationPseudo3DParams
     _validations = validations
 
-    def __init__(self, params: DirectCurrentPseudo3DParams):  # pylint: disable=W0235
+    def __init__(
+        self, params: InducedPolarizationPseudo3DParams
+    ):  # pylint: disable=W0235
         super().__init__(params)
         if params.files_only:
             sys.exit("Files written")
 
-    def write_files(self, lookup):
-        """Write ui.geoh5 and ui.json files for sweep trials."""
+    def write_files(self, lookup: dict) -> None:
+        """
+        Write ui.geoh5 and ui.json files for sweep trials.
+
+        :param lookup: dictionary of trial hashes and trial
+            parameter values and status data.
+        """
 
         forward_only = self.pseudo3d_params.forward_only
-        ifile = DirectCurrent2DParams(forward_only=forward_only).input_file
+        ifile = InducedPolarization2DParams(forward_only=forward_only).input_file
 
         with self.workspace.open(mode="r+"):
 
@@ -53,7 +60,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                 self.workspace, self.pseudo3d_params
             )
             self.inversion_data = InversionData(
-                self.workspace, self.pseudo3d_params, self.window
+                self.workspace, self.pseudo3d_params, self.inversion_window.window
             )
 
             self.inversion_topography = InversionTopography(
@@ -61,7 +68,10 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
             )
 
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
-            models = {"starting_model": self.pseudo3d_params.starting_model}
+            models = {
+                "starting_model": self.pseudo3d_params.starting_model,
+                "conductivity_model": self.pseudo3d_params.conductivity_model,
+            }
             if not forward_only:
                 models.update(
                     {
