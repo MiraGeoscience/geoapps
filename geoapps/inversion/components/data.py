@@ -22,9 +22,8 @@ import numpy as np
 from discretize import TreeMesh
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
-from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.inversion.utils import calculate_2D_trend, create_nested_mesh
 from geoapps.shared_utils.utils import filter_xy
 
 from .factories import (
