@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+import warnings
 from copy import copy
+from os import path
 
 import numpy as np
 from geoh5py.data import Data
@@ -540,8 +542,19 @@ def check_data_type(data):
     return data
 
 
-def plot_convergence_curve(outfile):
-    """"""
+def plot_convergence_curve(outfile: str) -> widgets.interactive | None:
+    """
+    Plot the convergence curve from a SimPEG *.out file.
+
+    :param outfile: Full path to the SimPEG *.out file
+
+    :return fig: widgets.interactive figure.
+    """
+
+    if not path.exists(outfile):
+        warnings.warn(f"File {outfile} does not exist.")
+        return
+
     with open(outfile, encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -552,28 +565,24 @@ def plot_convergence_curve(outfile):
 
     data = np.vstack(data)
     result = dict(zip(names, data.T))
-
     curve_a = widgets.Dropdown(
         options=names,
         value=names[2],
         description="inversion Group:",
         style={"description_width": "initial"},
     )
-
     curve_b = widgets.Dropdown(
         options=names,
         value=names[3],
         description="inversion Group:",
         style={"description_width": "initial"},
     )
-
     x_axis = widgets.Dropdown(
         options=names,
         value=names[0],
         description="inversion Group:",
         style={"description_width": "initial"},
     )
-
     log_y = widgets.ToggleButton(
         value=False,
         description="Log",
