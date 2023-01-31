@@ -11,12 +11,11 @@ from copy import copy
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
-from geoh5py.workspace import Workspace
 
-from geoapps.shared_utils.utils import filter_xy, get_inversion_output
+from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils import warn_module_not_found
+from geoapps.utils.string import string_to_numeric
 
 with warn_module_not_found():
     from matplotlib import colors
@@ -541,38 +540,66 @@ def check_data_type(data):
     return data
 
 
-def plot_convergence_curve(h5file):
+def plot_convergence_curve(outfile):
     """"""
-    workspace = Workspace(h5file)
-    names = [group.name for group in workspace.groups if isinstance(group, SimPEGGroup)]
-    objects = widgets.Dropdown(
+    with open(outfile, encoding="utf-8") as f:
+        lines = f.readlines()
+
+    names = lines[0].split(" ")[:-1]
+    data = []
+    for line in lines[1:]:
+        data += [[string_to_numeric(k) for k in line.split(" ")[:-1]]]
+
+    data = np.vstack(data)
+    result = dict(zip(names, data.T))
+
+    curve_a = widgets.Dropdown(
+        options=names,
+        value=names[2],
+        description="inversion Group:",
+        style={"description_width": "initial"},
+    )
+
+    curve_b = widgets.Dropdown(
+        options=names,
+        value=names[3],
+        description="inversion Group:",
+        style={"description_width": "initial"},
+    )
+
+    x_axis = widgets.Dropdown(
         options=names,
         value=names[0],
         description="inversion Group:",
         style={"description_width": "initial"},
     )
 
-    def plot_curve(objects):
+    log_y = widgets.ToggleButton(
+        value=False,
+        description="Log",
+    )
 
-        inversion = workspace.get_entity(objects)[0]
-        result = None
-        child_names = [k.name for k in inversion.children]
-        if "SimPEG.out" in child_names:
-            result = get_inversion_output(workspace.h5file, objects)
-            iterations = result["iteration"]
-            phi_d = result["phi_d"]
-            phi_m = result["phi_m"]
+    def plot_curve(x_axis, curve_a, curve_b, log_y):
+        iterations = result[x_axis]
+        phi_d = result[curve_a]
+        phi_m = result[curve_b]
 
-            ax1 = plt.subplot()
-            ax2 = ax1.twinx()
-            ax1.plot(iterations, phi_d, linewidth=3, c="k")
-            ax1.set_xlabel("Iterations")
-            ax1.set_ylabel(r"$\phi_d$", size=16)
-            ax2.plot(iterations, phi_m, linewidth=3, c="r")
-            ax2.set_ylabel(r"$\phi_m$", size=16)
+        ax1 = plt.subplot()
+        ax2 = ax1.twinx()
+        ax1.plot(iterations, phi_d, linewidth=3, c="k")
+        ax1.set_xlabel("Iterations")
+        ax1.set_ylabel(r"$\phi_d$", size=16)
+        ax2.plot(iterations, phi_m, linewidth=3, c="r")
+        ax2.set_ylabel(r"$\phi_m$", size=16)
+
+        if log_y:
+            ax1.set_yscale("log")
+            ax2.set_yscale("log")
 
         return result
 
-    interactive_plot = widgets.interactive(plot_curve, objects=objects)
+    interactive_plot = widgets.interactive(
+        plot_curve, x_axis=x_axis, curve_a=curve_a, curve_b=curve_b, log_y=log_y
+    )
 
     return interactive_plot
