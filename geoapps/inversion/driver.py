@@ -37,6 +37,47 @@ from geoapps.inversion.components import (
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 
+DRIVER_MAP = {
+    "direct current 3d": (
+        "geoapps.inversion.electricals.direct_current.three_dimensions.driver",
+        "DirectCurrent3DDriver",
+    ),
+    "direct current 2d": (
+        "geoapps.inversion.electricals.direct_current.two_dimensions.driver",
+        "DirectCurrent2DDriver",
+    ),
+    "direct current pseudo 3d": (
+        "geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver",
+        "DirectCurrentPseudo3DDriver",
+    ),
+    "induced polarization 3d": (
+        "geoapps.inversion.electricals.induced_polarization.three_dimensions.driver",
+        "InducedPolarization3DDriver",
+    ),
+    "induced polarization 2d": (
+        "geoapps.inversion.electricals.induced_polarization.two_dimensions.driver",
+        "InducedPolarization2DDriver",
+    ),
+    "induced polarization pseudo 3d": (
+        "geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver",
+        "InducedPolarizationPseudo3DDriver",
+    ),
+    "magnetotellurics": (
+        "geoapps.inversion.natural_sources.magnetotellurics.driver",
+        "MagnetotelluricsDriver",
+    ),
+    "tipper": ("geoapps.inversion.natural_sources.tipper.driver", "TipperDriver"),
+    "gravity": ("geoapps.inversion.potential_fields.gravity.driver", "GravityDriver"),
+    "magnetic scalar": (
+        "geoapps.inversion.potential_fields.magnetic_scalar.driver",
+        "MagneticScalarDriver",
+    ),
+    "magnetic vector": (
+        "geoapps.inversion.potential_fields.magnetic_vector.driver",
+        "MagneticVectorDriver",
+    ),
+}
+
 
 class InversionDriver(BaseDriver):
 
@@ -363,16 +404,17 @@ class InversionDriver(BaseDriver):
     @classmethod
     def start(cls, filepath, driver_class=None):
         _ = driver_class
-        from geoapps.inversion import DRIVER_MAP
 
         ifile = InputFile.read_ui_json(filepath)
         inversion_type = ifile.data["inversion_type"]
-        inversion_driver = DRIVER_MAP.get(inversion_type, None)
-        if inversion_driver is None:
+        if inversion_type not in DRIVER_MAP:
             msg = f"Inversion type {inversion_type} is not supported."
             msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
             raise NotImplementedError(msg)
 
+        mod_name, class_name = DRIVER_MAP.get(inversion_type)
+        module = __import__(mod_name, fromlist=[class_name])
+        inversion_driver = getattr(module, class_name)
         driver = BaseDriver.start(filepath, driver_class=inversion_driver)
         return driver
 
