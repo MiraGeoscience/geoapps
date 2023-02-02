@@ -17,7 +17,6 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils import warn_module_not_found
-from geoapps.utils.string import string_to_numeric
 
 with warn_module_not_found():
     from matplotlib import colors
@@ -550,37 +549,34 @@ def plot_convergence_curve(outfile: str) -> widgets.interactive | None:
 
     :return fig: widgets.interactive figure.
     """
-
+    label_map = {
+        "Iterations": "iteration",
+        r"$\beta$": "beta",
+        r"$\phi_d$": "phi_d",
+        r"$\phi_m$": "phi_m",
+    }
     if not path.exists(outfile):
         warnings.warn(f"File {outfile} does not exist.")
         return
 
-    with open(outfile, encoding="utf-8") as f:
-        lines = f.readlines()
-
-    names = lines[0].split(" ")[:-1]
-    data = []
-    for line in lines[1:]:
-        data += [[string_to_numeric(k) for k in line.split(" ")[:-1]]]
-
-    data = np.vstack(data)
-    result = dict(zip(names, data.T))
-    curve_a = widgets.Dropdown(
+    data = np.genfromtxt(outfile, names=True)
+    names = list(label_map.keys())
+    y_axis_a = widgets.Dropdown(
         options=names,
         value=names[2],
-        description="inversion Group:",
+        description="Y-axis (left)",
         style={"description_width": "initial"},
     )
-    curve_b = widgets.Dropdown(
+    y_axis_b = widgets.Dropdown(
         options=names,
         value=names[3],
-        description="inversion Group:",
+        description="Y-axis (right)",
         style={"description_width": "initial"},
     )
     x_axis = widgets.Dropdown(
         options=names,
         value=names[0],
-        description="inversion Group:",
+        description="X-axis",
         style={"description_width": "initial"},
     )
     log_y = widgets.ToggleButton(
@@ -588,27 +584,23 @@ def plot_convergence_curve(outfile: str) -> widgets.interactive | None:
         description="Log",
     )
 
-    def plot_curve(x_axis, curve_a, curve_b, log_y):
-        iterations = result[x_axis]
-        phi_d = result[curve_a]
-        phi_m = result[curve_b]
-
+    def plot_curve(x_axis, y_axis_a, y_axis_b, log_y):
         ax1 = plt.subplot()
         ax2 = ax1.twinx()
-        ax1.plot(iterations, phi_d, linewidth=3, c="k")
-        ax1.set_xlabel("Iterations")
-        ax1.set_ylabel(r"$\phi_d$", size=16)
-        ax2.plot(iterations, phi_m, linewidth=3, c="r")
-        ax2.set_ylabel(r"$\phi_m$", size=16)
+        ax1.plot(data[label_map[x_axis]], data[label_map[y_axis_a]], linewidth=3, c="k")
+        ax1.set_xlabel(x_axis, size=16)
+        ax1.set_ylabel(y_axis_a, size=16)
+        ax2.plot(data[label_map[x_axis]], data[label_map[y_axis_b]], linewidth=3, c="r")
+        ax2.set_ylabel(y_axis_b, size=16)
 
         if log_y:
             ax1.set_yscale("log")
             ax2.set_yscale("log")
 
-        return result
+        return data
 
     interactive_plot = widgets.interactive(
-        plot_curve, x_axis=x_axis, curve_a=curve_a, curve_b=curve_b, log_y=log_y
+        plot_curve, x_axis=x_axis, y_axis_a=y_axis_a, y_axis_b=y_axis_b, log_y=log_y
     )
 
     return interactive_plot
