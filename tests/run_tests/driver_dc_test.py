@@ -36,7 +36,6 @@ def test_dc_3d_fwr_run(
     n_lines=3,
     refinement=(4, 6),
 ):
-
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,

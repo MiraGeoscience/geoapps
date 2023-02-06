@@ -32,7 +32,6 @@ from geoapps.utils.surveys import extract_dcip_survey
 
 
 class InducedPolarizationPseudo3DDriver(LineSweepDriver):
-
     _params_class = InducedPolarizationPseudo3DParams
     _validations = validations
 
@@ -55,7 +54,6 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
         ifile = InducedPolarization2DParams(forward_only=forward_only).input_file
 
         with self.workspace.open(mode="r+"):
-
             self.inversion_window = InversionWindow(
                 self.workspace, self.pseudo3d_params
             )
@@ -82,7 +80,6 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
                 )
 
             for uuid, trial in lookup.items():
-
                 if trial["status"] != "pending":
                     continue
 
@@ -91,7 +88,6 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
                     f"{uuid}.ui.geoh5",
                 )
                 with Workspace(filepath) as iter_workspace:
-
                     receiver_entity = extract_dcip_survey(
                         iter_workspace,
                         self.inversion_data.entity,

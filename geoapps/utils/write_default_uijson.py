@@ -50,7 +50,6 @@ path_to_flinflon = lambda file: "\\".join(
 
 
 def write_default_uijson(path, use_initializers=False):
-
     from geoapps.inversion.potential_fields.gravity.constants import (
         app_initializer as grav_init,
     )
@@ -250,7 +249,6 @@ def write_default_uijson(path, use_initializers=False):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Write defaulted ui.json files.")
     parser.add_argument(
         "path", help="Path to folder where default ui.json files will be written."

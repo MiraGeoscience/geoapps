@@ -19,7 +19,6 @@ from geoapps.utils.statistics import random_sampling
 
 
 class ScatterPlotDriver(BaseDriver):
-
     _params_class = ScatterPlotParams
     _validations = validations
 
@@ -34,7 +33,6 @@ class ScatterPlotDriver(BaseDriver):
         figure = go.Figure()
 
         if (self.params.x is not None) & (self.params.y is not None):
-
             if self.params.downsampling is None:
                 self.params.downsampling = 100
             indices = self.get_indices()

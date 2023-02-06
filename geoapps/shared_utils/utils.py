@@ -179,7 +179,6 @@ def window_xy(
 def downsample_xy(
     x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-
     """
     Downsample locations to approximate a grid with defined spacing.
 
@@ -302,17 +301,14 @@ def filter_xy(
         yr = xy_locs[:, 1].reshape(y.shape)
 
     if window is not None:
-
         if is_rotated:
             mask, _, _ = window_xy(xr, yr, window, mask=mask)
         else:
             mask, _, _ = window_xy(x, y, window, mask=mask)
 
     if distance not in [None, 0]:
-
         is_grid = False
         if x.ndim > 1:
-
             if is_rotated:
                 u_diff = np.unique(np.round(np.diff(xr, axis=1), 8))
                 v_diff = np.unique(np.round(np.diff(yr, axis=0), 8))

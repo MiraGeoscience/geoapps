@@ -34,7 +34,6 @@ class ReceiversFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
 
     def concrete_object(self):
-
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import receivers
 
@@ -148,7 +147,6 @@ class ReceiversFactory(SimPEGFactory):
         return receivers
 
     def _dcip_arguments(self, locations=None, local_index=None):
-
         args = []
         local_index = np.vstack(local_index)
         locations_m = locations[local_index[:, 0], :]
@@ -169,7 +167,6 @@ class ReceiversFactory(SimPEGFactory):
         return args
 
     def _magnetotellurics_arguments(self, locations=None, local_index=None, mesh=None):
-
         args = []
         locs = locations[local_index]
 
