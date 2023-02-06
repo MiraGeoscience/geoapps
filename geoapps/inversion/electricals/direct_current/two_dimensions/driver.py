@@ -13,7 +13,6 @@ from .params import DirectCurrent2DParams
 
 
 class DirectCurrent2DDriver(InversionDriver):
-
     _params_class = DirectCurrent2DParams
     _validations = validations
 

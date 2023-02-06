@@ -12,7 +12,6 @@ from .params import MagnetotelluricsParams
 
 
 class MagnetotelluricsDriver(InversionDriver):
-
     _params_class = MagnetotelluricsParams
     _validations = validations
 
