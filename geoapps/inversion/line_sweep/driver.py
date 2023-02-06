@@ -37,7 +37,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
     def setup_params(self):
         with self.workspace.open():
-
             path = os.path.abspath(self.workspace.h5file)
             path = ".".join([path.split(".")[0], "ui.json"])
             if not os.path.exists(path):
@@ -142,7 +141,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         models_group.parent = self.pseudo3d_params.ga_group
 
     def collect_line_data(self, survey, data):
-
         for child in survey.children:  # initialize data values dictionary
             if "Iteration" in child.name and child.name not in data:
                 data[child.name] = {"values": np.zeros(survey.n_cells)}

@@ -40,7 +40,6 @@ def test_ip_p3d_fwr_run(
     n_lines=3,
     refinement=(4, 6),
 ):
-
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -96,7 +95,6 @@ def test_ip_p3d_run(
         )
 
     with Workspace(workpath) as geoh5:
-
         chargeability = geoh5.get_entity("Iteration_0_ip")[0]
         models = geoh5.get_entity("Models")[0]
         mesh = models.get_entity("mesh")[0]  # Finds the octree mesh
