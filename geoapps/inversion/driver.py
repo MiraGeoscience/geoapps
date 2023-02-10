@@ -37,9 +37,49 @@ from geoapps.inversion.components import (
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 
+DRIVER_MAP = {
+    "direct current 3d": (
+        "geoapps.inversion.electricals.direct_current.three_dimensions.driver",
+        "DirectCurrent3DDriver",
+    ),
+    "direct current 2d": (
+        "geoapps.inversion.electricals.direct_current.two_dimensions.driver",
+        "DirectCurrent2DDriver",
+    ),
+    "direct current pseudo 3d": (
+        "geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver",
+        "DirectCurrentPseudo3DDriver",
+    ),
+    "induced polarization 3d": (
+        "geoapps.inversion.electricals.induced_polarization.three_dimensions.driver",
+        "InducedPolarization3DDriver",
+    ),
+    "induced polarization 2d": (
+        "geoapps.inversion.electricals.induced_polarization.two_dimensions.driver",
+        "InducedPolarization2DDriver",
+    ),
+    "induced polarization pseudo 3d": (
+        "geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver",
+        "InducedPolarizationPseudo3DDriver",
+    ),
+    "magnetotellurics": (
+        "geoapps.inversion.natural_sources.magnetotellurics.driver",
+        "MagnetotelluricsDriver",
+    ),
+    "tipper": ("geoapps.inversion.natural_sources.tipper.driver", "TipperDriver"),
+    "gravity": ("geoapps.inversion.potential_fields.gravity.driver", "GravityDriver"),
+    "magnetic scalar": (
+        "geoapps.inversion.potential_fields.magnetic_scalar.driver",
+        "MagneticScalarDriver",
+    ),
+    "magnetic vector": (
+        "geoapps.inversion.potential_fields.magnetic_vector.driver",
+        "MagneticVectorDriver",
+    ),
+}
+
 
 class InversionDriver(BaseDriver):
-
     _params_class = InversionBaseParams  # pylint: disable=E0601
     _validations = None
 
@@ -96,7 +136,6 @@ class InversionDriver(BaseDriver):
         return self.models.upper_bound
 
     def initialize(self):
-
         ### Collect inversion components ###
 
         self.configure_dask()
@@ -211,6 +250,8 @@ class InversionDriver(BaseDriver):
                 self.starting_model, self.inverse_problem, self.sorting
             )
             self.logger.end()
+            sys.stdout = self.logger.terminal
+            self.logger.log.close()
             return
 
         # Run the inversion
@@ -218,9 +259,10 @@ class InversionDriver(BaseDriver):
         self.running = True
         self.inversion.run(self.starting_model)
         self.logger.end()
+        sys.stdout = self.logger.terminal
+        self.logger.log.close()
 
     def start_inversion_message(self):
-
         # SimPEG reports half phi_d, so we scale to match
         has_chi_start = self.params.starting_chi_factor is not None
         chi_start = (
@@ -240,7 +282,6 @@ class InversionDriver(BaseDriver):
         )
 
     def get_regularization(self):
-
         if self.inversion_type == "magnetic vector":
             wires = maps.Wires(
                 ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)
@@ -289,7 +330,6 @@ class InversionDriver(BaseDriver):
             reg.mref = self.reference_model
 
         else:
-
             reg = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
@@ -306,7 +346,6 @@ class InversionDriver(BaseDriver):
         return reg
 
     def get_tiles(self):
-
         if self.params.inversion_type in [
             "direct current 3d",
             "induced polarization 3d",
@@ -356,6 +395,23 @@ class InversionDriver(BaseDriver):
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
+    @classmethod
+    def start(cls, filepath, driver_class=None):
+        _ = driver_class
+
+        ifile = InputFile.read_ui_json(filepath)
+        inversion_type = ifile.data["inversion_type"]
+        if inversion_type not in DRIVER_MAP:
+            msg = f"Inversion type {inversion_type} is not supported."
+            msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
+            raise NotImplementedError(msg)
+
+        mod_name, class_name = DRIVER_MAP.get(inversion_type)
+        module = __import__(mod_name, fromlist=[class_name])
+        inversion_driver = getattr(module, class_name)
+        driver = BaseDriver.start(filepath, driver_class=inversion_driver)
+        return driver
+
 
 class InversionLogger:
     def __init__(self, logfile, driver):
@@ -397,23 +453,12 @@ class InversionLogger:
     def flush(self):
         pass
 
-    def get_path(self, file):
+    def get_path(self, filepath):
         root_directory = os.path.dirname(self.driver.workspace.h5file)
-        return os.path.join(root_directory, file)
+        return os.path.join(root_directory, filepath)
 
 
 if __name__ == "__main__":
-
-    from . import DRIVER_MAP
-
-    filepath = sys.argv[1]
-    ifile = InputFile.read_ui_json(filepath)
-    inversion_type = ifile.data["inversion_type"]
-    inversion_driver = DRIVER_MAP.get(inversion_type, None)
-    if inversion_driver is None:
-        msg = f"Inversion type {inversion_type} is not supported."
-        msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
-        raise NotImplementedError(msg)
-
-    inversion_driver.start(filepath)
+    file = os.path.abspath(sys.argv[1])
+    InversionDriver.start(file)
     sys.stdout.close()

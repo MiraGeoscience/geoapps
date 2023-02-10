@@ -15,12 +15,13 @@ from ipywidgets import Widget
 
 from geoapps.peak_finder.application import PeakFinder, PeakFinderDriver
 
+from .. import PROJECT
+
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
 def test_peak_finder_app(tmp_path):
-    project = "./FlinFlon.geoh5"
-    app = PeakFinder(geoh5=project, plot_result=False)
+    app = PeakFinder(geoh5=str(PROJECT), plot_result=False)
 
     h5file_path = Path(tmp_path) / r"testPeakFinder.geoh5"
 
@@ -82,7 +83,6 @@ def test_peak_finder_app(tmp_path):
 
 
 def test_peak_finder_driver(tmp_path):
-
     uijson_path = Path(tmp_path) / r"../test_peak_finder_app0/Temp"
     for file in os.listdir(uijson_path):
         if file.endswith(".json"):

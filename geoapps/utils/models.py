@@ -8,41 +8,111 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from discretize import TreeMesh
-
 import numpy as np
+from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
-from geoh5py.objects import BlockModel, DrapeModel
+from geoh5py.objects import BlockModel, DrapeModel, Octree
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
+from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.driver import BlockModelDriver
-from geoapps.shared_utils.utils import rotate_xyz
+from geoapps.shared_utils.utils import octree_2_treemesh, rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance
 
 
-def face_average(mesh: TreeMesh, model: np.ndarray) -> np.ndarray:
+def drape_to_octree(
+    octree: Octree,
+    drape_model: DrapeModel | list[DrapeModel],
+    children: dict[str, list[str]],
+    active: np.ndarray,
+    method: str = "lookup",
+) -> Octree:
     """
-    Compute the average face values of a model
+    Interpolate drape model(s) into octree mesh.
 
-    :param mesh: Tree mesh object
-    :param model: A vector of cell centered property values
+    :param octree: Octree mesh to transfer values into
+    :param drape_model: Drape model(s) whose values will be transferred
+        into 'octree'.
+    :param children: Dictionary containing a label and the associated
+        names of the children in 'drape_model' to transfer into 'octree'.
+    :param active: Active cell array for 'octree' model.
+    :param method: Use 'lookup' to for a containing cell lookup method, or
+        'nearest' for a nearest neighbor search method to transfer values
+
+    :returns octree: Input octree mesh augmented with 'children' data from
+        'drape_model' transferred onto cells using the prescribed 'method'.
+
     """
-    return mesh.stencil_cell_gradient.T * (mesh.stencil_cell_gradient * model)
+    if method not in ["nearest", "lookup"]:
+        raise ValueError(f"Method must be 'nearest' or 'lookup'.  Provided {method}.")
+
+    if isinstance(drape_model, DrapeModel):
+        drape_model = [drape_model]
+
+    if any(len(v) != len(drape_model) for v in children.values()):
+        raise ValueError(
+            f"Number of names and drape models must match.  "
+            f"Provided {len(children)} names and {len(drape_model)} models."
+        )
+
+    if method == "nearest":
+        # create tree to search nearest neighbors in stacked drape model
+        tree = cKDTree(np.vstack([d.centroids for d in drape_model]))
+        _, lookup_inds = tree.query(octree.centroids)
+    else:
+        mesh = octree_2_treemesh(octree)
+
+    # perform interpolation using nearest neighbor or lookup method
+    for label, names in children.items():
+        octree_model = (
+            [] if method == "nearest" else np.array([np.nan] * octree.n_cells)
+        )
+        for ind, model in enumerate(drape_model):
+            datum = [k for k in model.children if k.name == names[ind]]
+            if len(datum) > 1:
+                raise ValueError(
+                    f"Found more than one data set with name {names[ind]} in"
+                    f"model {model.name}."
+                )
+            if method == "nearest":
+                octree_model.append(datum[0].values)
+            else:
+                lookup_inds = (
+                    mesh._get_containing_cell_indexes(  # pylint: disable=W0212
+                        model.centroids
+                    )
+                )
+                octree_model[lookup_inds] = datum[0].values
+
+        if method == "nearest":
+            octree_model = np.hstack(octree_model)[lookup_inds]
+        else:
+            octree_model = octree_model[mesh._ubc_order]  # pylint: disable=W0212
+
+        octree_model[~active] = np.nan  # apply active cells
+        octree.add_data({label: {"values": octree_model}})
+
+    return octree
 
 
-def floating_active(mesh: TreeMesh, active: np.ndarray):
+def floating_active(mesh: TensorMesh | TreeMesh, active: np.ndarray):
     """
     True if there are any active cells in the air
 
     :param mesh: Tree mesh object
     :param active: active cells array
     """
-    return True if any(face_average(mesh, active) >= 6) else False
+    if not isinstance(mesh, (TreeMesh, TensorMesh)):
+        raise TypeError("Input mesh must be of type TreeMesh or TensorMesh.")
+
+    if mesh.dim == 2:
+        gradient = mesh.stencil_cell_gradient_y
+    else:
+        gradient = mesh.stencil_cell_gradient_z
+
+    return any(gradient * active > 0)
 
 
 def get_drape_model(

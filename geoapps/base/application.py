@@ -11,6 +11,7 @@ import time
 import types
 import uuid
 from os import makedirs, mkdir, path
+from pathlib import Path
 from shutil import copyfile
 
 from geoh5py.groups import Group
@@ -45,7 +46,6 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
-    _geoh5 = None
     _h5file = None
     _main = None
     _workspace = None
@@ -119,7 +119,6 @@ class BaseApplication:
             if key[0] == "_":
                 key = key[1:]
             if hasattr(self, "_" + key) or hasattr(self, key):
-
                 if isinstance(value, list):
                     value = [dict_mapper(val, mappers) for val in value]
                 else:
@@ -206,7 +205,6 @@ class BaseApplication:
         Enable the monitoring folder
         """
         if self.live_link.value:
-
             if (self.h5file is not None) and (self.monitoring_directory is None):
                 live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
                 self.monitoring_directory = live_path
@@ -240,7 +238,6 @@ class BaseApplication:
 
     @monitoring_directory.setter
     def monitoring_directory(self, live_path: str):
-
         if not path.exists(live_path):
             mkdir(live_path)
 
@@ -281,20 +278,22 @@ class BaseApplication:
         return self._ga_group_name
 
     @property
-    def geoh5(self):
+    def geoh5(self) -> [Workspace | str]:
         """
         Alias for workspace or h5file property
         """
-        return self._geoh5
+        return self.workspace if self.workspace is not None else self.h5file
 
     @geoh5.setter
-    def geoh5(self, value):
+    def geoh5(self, value: Workspace | Path | str):
         if isinstance(value, Workspace):
             self.workspace = value
         elif isinstance(value, str):
             self.h5file = value
+        elif isinstance(value, Path):
+            self.h5file = str(value)
         else:
-            raise ValueError
+            raise TypeError
 
     @staticmethod
     def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
@@ -333,7 +332,6 @@ class BaseApplication:
         :obj:`str`: Target geoh5 project file.
         """
         if getattr(self, "_h5file", None) is None:
-
             if self._workspace is not None:
                 self.h5file = self._workspace.h5file
 

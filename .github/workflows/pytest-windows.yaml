@@ -16,6 +16,10 @@ on:
       - feature/**
       - hotfix/**
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   source_dir: geoapps
 
@@ -35,6 +39,8 @@ jobs:
       CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-win-64-dev.lock.yml
     steps:
       - uses: actions/checkout@v3
+        with:
+          lfs: true
       - name: Setup conda env
         uses: mamba-org/provision-with-micromamba@main
         with:
