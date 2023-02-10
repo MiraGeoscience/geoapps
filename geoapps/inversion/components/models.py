@@ -114,7 +114,6 @@ class InversionModelCollection:
         return mstart
 
     def _initialize(self):
-
         self.is_sigma = (
             True
             if self.params.inversion_type
@@ -252,11 +251,9 @@ class InversionModel:
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
 
         if self.model_type in ["starting", "reference", "conductivity"]:
-
             model = self._get(self.model_type + "_model")
 
             if self.is_vector:
-
                 inclination = self._get(self.model_type + "_inclination")
                 declination = self._get(self.model_type + "_declination")
 
@@ -287,7 +284,6 @@ class InversionModel:
                     model = (field_vecs.T * model).T
 
         else:
-
             model = self._get(self.model_type)
 
             if model is None:

@@ -266,7 +266,6 @@ def test_is_outlier():
 
 
 def test_new_neighbors():
-
     nodes = [2, 3, 4, 5, 6]
     dist = np.array([25, 50, 0])
     neighbors = np.array([1, 2, 3])
@@ -696,7 +695,6 @@ def test_running_mean():
 
 
 def test_weigted_average():
-
     # in loc == out loc -> in val == out val
     xyz_out = np.array([[0, 0, 0]])
     xyz_in = np.array([[0, 0, 0]])
@@ -771,7 +769,6 @@ def test_weigted_average():
 
 
 def test_treemesh_2_octree(tmp_path):
-
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     with geotest.make() as workspace:
         mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
@@ -827,7 +824,6 @@ def test_drape_2_tensormesh(tmp_path):
 
 
 def test_octree_2_treemesh(tmp_path):
-
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     with geotest.make() as workspace:
         mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
@@ -883,7 +879,6 @@ def test_downsample_xy():
 
 
 def test_downsample_grid():
-
     # Test a simple grid equal spacing in x, y
     x_grid, y_grid = np.meshgrid(np.arange(11), np.arange(11))
     _, x_down, y_down = downsample_grid(x_grid, y_grid, 2)
@@ -997,7 +992,6 @@ def test_detrend_xy():
 
 
 def test_get_locations(tmp_path):
-
     with Workspace(os.path.join(tmp_path, "test.geoh5")) as workspace:
         n_x, n_y = 10, 15
         grid = Grid2D.create(

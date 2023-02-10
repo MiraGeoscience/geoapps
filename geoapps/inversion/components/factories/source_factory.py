@@ -31,7 +31,6 @@ class SourcesFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
 
     def concrete_object(self):
-
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import sources
 
@@ -119,7 +118,6 @@ class SourcesFactory(SimPEGFactory):
         )
 
     def _dcip_arguments(self, receivers=None, locations=None):
-
         args = []
 
         locations_a = locations[0]

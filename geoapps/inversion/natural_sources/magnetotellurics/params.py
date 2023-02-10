@@ -80,7 +80,6 @@ class MagnetotelluricsParams(InversionBaseParams):
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def property_group_data(self, property_group: UUID):
-
         data = {}
         frequencies = self.data_object.channels
         if self.forward_only:
