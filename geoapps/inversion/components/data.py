@@ -302,7 +302,6 @@ class InversionData(InversionLocations):
                 if ignore_type in ["<", ">"]:
                     ignore_value = float(ignore_values.split(ignore_type)[1])
                 else:
-
                     try:
                         ignore_value = float(ignore_values)
                     except ValueError:
@@ -534,7 +533,6 @@ class InversionData(InversionLocations):
 
     @staticmethod
     def check_tensor(channels):
-
         tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
         has_tensor = lambda c: any(k in c for k in tensor_components)
         return any(has_tensor(c) for c in channels)

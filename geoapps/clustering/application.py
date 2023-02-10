@@ -880,7 +880,6 @@ class Clustering(ScatterPlots):
             crossplot = go.Figure(self.scatter_driver.run())
             return crossplot
         else:
-
             return go.Figure()
 
     @staticmethod

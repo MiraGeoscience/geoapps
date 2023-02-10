@@ -88,14 +88,12 @@ class IsoSurface(ObjectDataSelection):
         self.output_panel = VBox([self.export_as, self.output_panel])
 
     def trigger_click(self, _) -> str:
-
         temp_geoh5 = f"Isosurface_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
             with self.workspace.open(mode="r") as input_ws:
-
                 param_dict = {}
                 for key in self.__dict__:
                     try:
@@ -133,7 +131,6 @@ class IsoSurface(ObjectDataSelection):
         return new_workspace.h5file
 
     def data_change(self, _):
-
         if self.data.value:
             self.export_as.value = "Iso_" + self.data.uid_name_map[self.data.value]
 

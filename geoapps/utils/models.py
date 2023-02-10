@@ -66,7 +66,6 @@ def drape_to_octree(
 
     # perform interpolation using nearest neighbor or lookup method
     for label, names in children.items():
-
         octree_model = (
             [] if method == "nearest" else np.array([np.nan] * octree.n_cells)
         )
