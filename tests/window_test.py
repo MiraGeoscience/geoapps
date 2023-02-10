@@ -20,7 +20,6 @@ geoh5 = Workspace(PROJECT)
 
 
 def test_initialize(tmp_path):
-
     # Test initialize from params
     tester = Geoh5Tester(
         geoh5,

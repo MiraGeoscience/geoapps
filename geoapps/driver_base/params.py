@@ -356,7 +356,6 @@ class BaseParams:
         return uid
 
     def setter_validator(self, key: str, value, fun=lambda x: x):
-
         if value is None:
             setattr(self, f"_{key}", value)
             return
