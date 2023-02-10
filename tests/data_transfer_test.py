@@ -11,7 +11,6 @@ from geoapps.block_model_creation.driver import BlockModelDriver
 
 
 def test_truncate_locs_depths():
-
     # If z range of locations is larger than depth_core then locations are truncated
     # to the depth_core and the depth_core is reduced to w_cell_size
     top = 500
@@ -70,14 +69,13 @@ def test_truncate_locs_depths():
     assert zrange + depth_core_new == depth_core + z
 
 
-def test_find_top_padding():
-
+def test_find_top_padding(tmp_path):
     top = 500
     depth_core = 300.0
     height = 300
     width = 1000
     n = 100
-    ws = Workspace("./FlinFlon.geoh5")
+    ws = Workspace(tmp_path / "data_transfer.geoh5")
 
     X, Y = np.meshgrid(np.arange(0, width, n), np.arange(0, height, n))
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
@@ -92,8 +90,7 @@ def test_find_top_padding():
     assert top_padding >= pads[-1]
 
 
-def test_get_block_model():
-
+def test_get_block_model(tmp_path):
     # padding in the W/E/N/S directions should make create locs at least as
     # far as the core hull plus the padding distances
     top = 500
@@ -106,7 +103,7 @@ def test_get_block_model():
     Z = np.around((top / 2) * np.sin(X) + (top / 2), -1)
     locs = np.c_[X.ravel(), Y.ravel(), Z.ravel()]
     pads = [100, 150, 200, 300, 0, 0]
-    ws = Workspace("./FlinFlon.geoh5")
+    ws = Workspace(tmp_path / "data_transfer.geoh5")
     obj = BlockModelDriver.get_block_model(
         ws, "test", locs, [50, 50, 50], depth_core, pads, 1.1
     )

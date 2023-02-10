@@ -97,7 +97,6 @@ def inversion(input_file):
         ]
 
     if "max_iterations" in list(input_param):
-
         max_iterations = input_param["max_iterations"]
         assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
     else:
@@ -136,7 +135,6 @@ def inversion(input_file):
         window = None
 
     if "max_irls_iterations" in list(input_param):
-
         max_irls_iterations = input_param["max_irls_iterations"]
         assert max_irls_iterations >= 0, "Max IRLS iterations must be >= 0"
     else:
@@ -306,7 +304,7 @@ def inversion(input_file):
                             uuid.UUID(input_param["topography"]["GA_object"]["data"])
                         )[0]
                         topo[:, 2] = data.values
-                    except (ValueError, IndexError):
+                    except (ValueError, TypeError, IndexError):
                         pass
 
                 if window is not None:
@@ -329,12 +327,10 @@ def inversion(input_file):
         return topo
 
     def offset_receivers_xy(locations, offsets):
-
         for key, values in selection.items():
             line_data = workspace.get_entity(uuid.UUID(key))[0]
 
             for line in values[0]:
-
                 line_ind = np.where(line_data.values == float(line))[0]
 
                 if len(line_ind) < 2:
@@ -357,7 +353,6 @@ def inversion(input_file):
 
     # Get data locations
     if "receivers_offset" in list(input_param):
-
         if "constant" in list(input_param["receivers_offset"]):
             bird_offset = np.asarray(
                 input_param["receivers_offset"]["constant"]
@@ -410,7 +405,6 @@ def inversion(input_file):
     F = LinearNDInterpolator(dem[:, :2], dem[:, 2])
     z_topo = F(locations[:, :2])
     if np.any(np.isnan(z_topo)):
-
         tree = cKDTree(dem[:, :2])
         _, ind = tree.query(locations[np.isnan(z_topo), :2])
         z_topo[np.isnan(z_topo)] = dem[ind, 2]
@@ -480,7 +474,6 @@ def inversion(input_file):
     pred_vertices = []
     pred_cells = []
     for key, values in selection.items():
-
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
 
         for line in values[0]:
@@ -512,7 +505,6 @@ def inversion(input_file):
             # Remove triangles beyond surface edges
             indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
             for i in range(3):
-
                 x = tri2D.points[tri2D.simplices[:, i], 0]
                 z = tri2D.points[tri2D.simplices[:, i], 1]
 
@@ -582,7 +574,6 @@ def inversion(input_file):
     reference = "BFHS"
     if "reference_model" in list(input_param):
         if "model" in list(input_param["reference_model"]):
-
             input_model = input_param["reference_model"]["model"]
             print(f"Interpolating reference model {input_model}")
             con_object = workspace.get_entity(uuid.UUID(list(input_model)[0]))[0]
@@ -602,7 +593,6 @@ def inversion(input_file):
             reference = np.log(ref[np.argsort(model_ordering)])
 
         elif "value" in list(input_param["reference_model"]):
-
             reference = np.ones(np.vstack(model_vertices).shape[0]) * np.log(
                 input_param["reference_model"]["value"]
             )
@@ -610,7 +600,6 @@ def inversion(input_file):
     starting = np.log(1e-3)
     if "starting_model" in list(input_param):
         if "model" in list(input_param["starting_model"]):
-
             input_model = input_param["starting_model"]["model"]
 
             print(f"Interpolating starting model {input_model}")
@@ -637,7 +626,6 @@ def inversion(input_file):
 
     if "susceptibility_model" in list(input_param):
         if "model" in list(input_param["susceptibility_model"]):
-
             input_model = input_param["susceptibility_model"]["model"]
             print(f"Interpolating susceptibility model {input_model}")
             sus_object = workspace.get_entity(uuid.UUID(list(input_model)[0]))[0]
@@ -657,7 +645,6 @@ def inversion(input_file):
             susceptibility = sus[np.argsort(model_ordering)]
 
         elif "value" in list(input_param["susceptibility_model"]):
-
             susceptibility = (
                 np.ones(np.vstack(model_vertices).shape[0])
                 * input_param["susceptibility_model"]["value"]
@@ -735,7 +722,6 @@ def inversion(input_file):
         tx_offsets = np.c_[offset_x, offset_y, offset_z]
 
     if em_specs["type"] == "frequency":
-
         offsets = offsets[:nF]
         survey = GlobalEM1DSurveyFD(
             rx_locations=xyz,
@@ -954,9 +940,7 @@ def inversion(input_file):
     uncert_orig = uncert.copy()
     # Write uncertainties to objects
     for ind, channel in enumerate(channels):
-
         if channel in list(input_param["data"]["channels"]):
-
             pc_floor = np.asarray(
                 input_param["data"]["channels"][channel]["uncertainties"]
             ).astype(float)

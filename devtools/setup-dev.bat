@@ -18,7 +18,7 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-set PY_VER=3.9
+set PY_VER=3.10
 
 set env_path=%project_dir%\.conda-env
 call !MY_CONDA_EXE! activate

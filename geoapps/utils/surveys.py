@@ -33,21 +33,18 @@ def get_containing_cells(
     :param data: Inversion data object
     """
     if isinstance(mesh, TreeMesh):
-
         inds = mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
             data.locations
         )
 
     elif isinstance(mesh, TensorMesh):
-
         locations = compute_alongline_distance(data.survey.unique_locations)
         xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
         yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
         inds = xi + yi * mesh.shape_cells[0]
 
     else:
-
-        raise ValueError("Mesh must be 'TreeMesh' or 'TensorMesh'")
+        raise TypeError("Mesh must be 'TreeMesh' or 'TensorMesh'")
 
     return inds
 
@@ -177,7 +174,6 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
     lines = []
     distances = []
     while nodes:
-
         lines.append(line_id)
         dist, next_id = next_neighbor(tree, loc, nodes)
 
@@ -230,7 +226,6 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     """
 
     if isinstance(slicer, np.ndarray):
-
         if slicer.dtype == bool:
             sliced_object = obj[slicer]
             g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj))))
@@ -239,7 +234,6 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
             g2l = dict(zip(slicer, np.arange(len(slicer))))
 
     elif callable(slicer):
-
         slicer = np.array([slicer(k) for k in obj])
         sliced_object = obj[slicer]
         g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj))))

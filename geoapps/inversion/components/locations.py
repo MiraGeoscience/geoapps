@@ -165,13 +165,11 @@ class InversionLocations:
         mask = self.mask if mask is None else mask
 
         if isinstance(a, dict):
-
             if self._none_dict(a):
                 return a
             else:
                 return self._filter(a, mask)
         else:
-
             if a is None:
                 return None
             else:

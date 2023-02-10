@@ -22,7 +22,9 @@ from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def setup_params(path):
@@ -82,7 +84,6 @@ def test_collection(tmp_path):
 
 
 def test_initialize(tmp_path):
-
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
@@ -123,7 +124,6 @@ def test_model_from_object(tmp_path):
 
 
 def test_permute_2_octree(tmp_path):
-
     ws, params = setup_params(tmp_path)
     params.lower_bound = 0.0
     inversion_window = InversionWindow(ws, params)
@@ -163,7 +163,6 @@ def test_permute_2_octree(tmp_path):
 
 
 def test_permute_2_treemesh(tmp_path):
-
     ws, params = setup_params(tmp_path)
     cc = params.mesh.centroids
     center = np.mean(cc, axis=0)

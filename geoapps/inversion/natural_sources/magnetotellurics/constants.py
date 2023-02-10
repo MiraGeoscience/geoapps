@@ -17,7 +17,7 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetotellurics (MT) inversion",
+    "title": "Magnetotellurics inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -28,8 +28,6 @@ inversion_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "zxx_real_channel": None,
@@ -117,7 +115,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Magnetotellurics (MT) forward",
+    "title": "Magnetotellurics forward",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -128,8 +126,6 @@ forward_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "zxx_real_channel_bool": True,
@@ -198,7 +194,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Magnetotellurics (MT) inversion",
+    "title": "Magnetotellurics inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "data_object": {
