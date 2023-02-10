@@ -23,7 +23,6 @@ from geoapps.shared_utils.utils import get_locations, weighted_average
 
 
 class DataInterpolationDriver(BaseDriver):
-
     _params_class = DataInterpolationParams
     _validations = validations
 
@@ -64,7 +63,6 @@ class DataInterpolationDriver(BaseDriver):
         values_interp = {}
         rad, ind = tree.query(xyz_out)
         if self.params.method == "Nearest":
-
             print("Computing nearest neighbor interpolation")
             # Find nearest cells
             for key, value in values.items():

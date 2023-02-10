@@ -29,7 +29,6 @@ from geoapps.utils.formatters import string_name
 
 
 class PeakFinderDriver(BaseDriver):
-
     _params_class = PeakFinderParams
     _validations = validations
 
@@ -38,7 +37,6 @@ class PeakFinderDriver(BaseDriver):
         self.params: PeakFinderParams = params
 
     def run(self):
-
         survey = self.params.objects
         prop_group = [
             pg for pg in survey.property_groups if pg.uid == self.params.data.uid
@@ -209,7 +207,6 @@ class PeakFinderDriver(BaseDriver):
 
             # Add structural markers
             if self.params.structural_markers:
-
                 if self.params.tem_checkbox:
                     markers = []
 

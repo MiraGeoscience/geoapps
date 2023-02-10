@@ -112,7 +112,6 @@ class Surface2D(ObjectDataSelection):
 
         if self.z_option.value == "depth":
             if self.topography.options.value == "Object":
-
                 topo_obj = self.workspace.get_entity(self.topography.objects.value)[0]
 
                 if hasattr(topo_obj, "centroids"):
@@ -154,7 +153,6 @@ class Surface2D(ObjectDataSelection):
             self.models = []
             line_ids = []
             for line in lines:
-
                 line_ind = np.where(lines_id == line)[0]
 
                 n_sounding = len(line_ind)
@@ -273,7 +271,6 @@ class Surface2D(ObjectDataSelection):
             self.models = list(np.vstack(self.models).T)
 
         else:
-
             if elevations:  # Assumes non-property_group selection
                 z_values = elevations[0].values
                 ind = np.isnan(z_values) == False
@@ -376,7 +373,6 @@ class Surface2D(ObjectDataSelection):
         self.elevations.update_data_list(None)
 
     def data_change(self, _):
-
         if self.data.value:
             self.export_as.value = (
                 self.data.uid_name_map[self.data.value[0]] + "_surface"
