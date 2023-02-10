@@ -233,7 +233,6 @@ class OctreeMesh(ObjectDataSelection):
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
-
             param_dict["geoh5"] = new_workspace
 
             for key, value in param_dict.items():

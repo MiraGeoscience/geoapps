@@ -272,7 +272,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
         kwargs["highlight_selection"], dict
     ):
         for key, values in kwargs["highlight_selection"].items():
-
             if not np.any(entity.workspace.get_entity(key)):
                 continue
 
@@ -302,7 +301,6 @@ def plot_profile_data_selection(
     ax=None,
     color=(0, 0, 0),
 ):
-
     locations = entity.vertices
 
     if ax is None:
@@ -316,9 +314,7 @@ def plot_profile_data_selection(
         return ax, threshold
 
     for key, values in selection.items():
-
         for line in values:
-
             if entity.workspace.get_entity(key):
                 ind = np.where(entity.workspace.get_entity(key)[0].values == line)[0]
             else:

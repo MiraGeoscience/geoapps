@@ -120,7 +120,6 @@ def test_magnetic_vector_run(
         driver = MagneticVectorDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
-
         # Re-open the workspace and get iterations
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.ga_group.uid
