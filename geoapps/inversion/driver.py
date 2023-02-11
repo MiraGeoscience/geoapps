@@ -17,7 +17,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
-from time import time
+from time import time, strftime
 
 import numpy as np
 from dask import config as dconf
@@ -61,7 +61,7 @@ class InversionDriver(BaseDriver):
         self.running = False
 
         #to make the log file more clearer esp. in batch jobs
-        self.timestr = time.strftime("%Y%m%d-%H%M%S")
+        self.timestr = strftime("%Y%m%d-%H%M%S")
         self.logfname = r'SimPEG' + self.inversion_type + self.timestr + r'.log'
         self.logger = InversionLogger(self.logfname, self)
         sys.stdout = self.logger
