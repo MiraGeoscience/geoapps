@@ -60,7 +60,10 @@ class InversionDriver(BaseDriver):
         self.active_cells = None
         self.running = False
 
-        self.logger = InversionLogger("SimPEG.log", self)
+        #to make the log file more clearer esp. in batch jobs
+        self.timestr = time.strftime("%Y%m%d-%H%M%S")
+        self.logfname = r'SimPEG' + self.inversion_type + self.timestr + r'.log'
+        self.logger = InversionLogger(self.logfname, self)
         sys.stdout = self.logger
         self.logger.start()
 
