@@ -184,7 +184,6 @@ class Export(ObjectDataSelection):
 
         data_values = {}
         if self.data.value:
-
             for key in self.data.value:
                 if self.workspace.get_entity(key):
                     data_values[key] = self.workspace.get_entity(key)[0].values.copy()
@@ -236,7 +235,6 @@ class Export(ObjectDataSelection):
             print(f"Object saved to {filename}")
 
     def _export_geotiff(self, entity):
-
         for key in self.data.value:
             name = (
                 path.join(self.export_directory.selected_path, self.export_as.value)
@@ -306,7 +304,6 @@ class Export(ObjectDataSelection):
             print(f"Models saved to {list(models)}")
 
         else:
-
             mesh = discretize.TensorMesh(
                 [
                     np.abs(entity.u_cells),
@@ -330,7 +327,6 @@ class Export(ObjectDataSelection):
 
             if any(data_values):
                 for key, item in data_values.items():
-
                     if mesh.x0[2] == entity.origin["z"]:
                         values = item.copy()
                         values = values.reshape(

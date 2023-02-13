@@ -54,7 +54,6 @@ def object_2_dataframe(entity, fields=None, inplace=False, vertices=True, index=
 def parse_lines(curve, values):
     polylines, polyvalues = [], []
     for line_id in curve.unique_parts:
-
         ind_line = np.where(curve.parts == line_id)[0]
         polylines += [curve.vertices[ind_line, :2]]
 
@@ -102,10 +101,8 @@ def export_curve_2_shapefile(
         schema=schema,
         crs_wkt=wkt_code,
     ) as shapefile:
-
         # If there are multiple geometries, put the "for" loop here
         for i, poly in enumerate(polylines):
-
             if len(poly) > 1:
                 poly = LineString(list(tuple(map(tuple, poly))))
 

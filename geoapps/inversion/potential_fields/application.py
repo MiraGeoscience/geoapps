@@ -971,7 +971,6 @@ class InversionApp(PlotSelection2D):
                 )
 
         for key in data_type_list:
-
             if hasattr(self, f"{key}_group"):
                 data_channel_options[key] = getattr(self, f"{key}_group", None)
             else:
@@ -1151,7 +1150,6 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
     def write_trigger(self, _):
-
         # Widgets values populate params dictionary
         param_dict = {}
         for key in self.__dict__:
@@ -1178,7 +1176,6 @@ class InversionApp(PlotSelection2D):
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
-
             param_dict["geoh5"] = new_workspace
 
             for elem in [
@@ -1321,7 +1318,6 @@ class InversionApp(PlotSelection2D):
                 self.geoh5.close()
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
-
                 # Read the inversion type first...
                 with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)
@@ -1452,7 +1448,6 @@ class ModelOptions(ObjectDataSelection):
         )
 
     def update_panel(self, _):
-
         if self._options.value == "Model":
             self._main.children[1].children = [self._options, self.selection_widget]
             self._main.children[1].children[1].layout.visibility = "visible"
