@@ -83,7 +83,6 @@ def test_peak_finder_app(tmp_path):
 
 
 def test_peak_finder_driver(tmp_path):
-
     uijson_path = Path(tmp_path) / r"../test_peak_finder_app0/Temp"
     for file in os.listdir(uijson_path):
         if file.endswith(".json"):

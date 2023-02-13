@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.drivers import InversionData
+    from geoapps.inversion.components.data import InversionData
 
 import numpy as np
 from geoh5py.objects import Curve, Grid2D
@@ -44,12 +44,13 @@ class EntityFactory(AbstractFactory):
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
-
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
             return (PotentialElectrode, CurrentElectrode)
@@ -66,17 +67,18 @@ class EntityFactory(AbstractFactory):
         """Constructs geoh5py object for provided inversion type."""
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             return self._build_dcip(inversion_data)
         else:
             return self._build(inversion_data)
 
     def _build_dcip(self, inversion_data: InversionData):
-
         PotentialElectrode, CurrentElectrode = self.concrete_object
         workspace = inversion_data.workspace
 
@@ -115,7 +117,6 @@ class EntityFactory(AbstractFactory):
         return entity
 
     def _build(self, inversion_data: InversionData):
-
         entity = inversion_data.create_entity(
             "Data", inversion_data.locations, geoh5_object=self.concrete_object
         )

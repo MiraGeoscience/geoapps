@@ -44,7 +44,7 @@ def create_standalone_lock(git_url: str, extras=[], suffix=""):
     print(
         f"# Creating lock file for stand-alone environment (extras={','.join(extras)})..."
     )
-    py_ver = "3.9"
+    py_ver = "3.10"
     platform = "win-64"
     base_filename = f"conda-py-{py_ver}-{platform}{suffix}"
     initial_lock_file = Path(f"environments/{base_filename}-tmp.lock.yml")

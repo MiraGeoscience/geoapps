@@ -27,7 +27,6 @@ from geoapps.utils.plotting import plot_plan_data_selection
 
 
 class ContoursDriver(BaseDriver):
-
     _params_class = ContoursParams
     _validations = validations
 
