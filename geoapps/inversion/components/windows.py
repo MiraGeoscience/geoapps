@@ -83,7 +83,7 @@ class InversionWindow:
             size[size == 0] = np.mean(size)
 
             self.window = {
-                "center": np.mean([max_corner, min_corner], axis=1),
+                "center": np.mean([max_corner, min_corner], axis=0),
                 "size": size,
             }
 
