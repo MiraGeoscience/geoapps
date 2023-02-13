@@ -27,6 +27,9 @@ call conda activate %env_path%
 if exist %project_dir%\..\geoh5py\ (
   pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py --no-deps
 )
+if exist %project_dir%\..\param-sweeps\ (
+  pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps --no-deps
+)
 
 pause
 cmd /k
