@@ -15,6 +15,9 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
+from geoapps.inversion.airborne_electromagnetics.time_domain import (
+    TimeDomainElectromagneticsParams,
+)
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
     DirectCurrentPseudo3DParams,
 )
@@ -113,6 +116,9 @@ def write_default_uijson(path, use_initializers=False):
     ip_p3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
     ip_p3d_init = ip_p3d_init if use_initializers else {}
 
+    from geoapps.inversion.airborne_electromagnetics.time_domain.constants import (
+        app_initializer as tdem_init,
+    )
     from geoapps.inversion.natural_sources.magnetotellurics.constants import (
         app_initializer as mt_init,
     )
@@ -221,6 +227,12 @@ def write_default_uijson(path, use_initializers=False):
             validate=False, **ip_p3d_init
         ),
         "induced_polarization_forward_pseudo3d.ui.json": InducedPolarizationPseudo3DParams(
+            forward_only=True, validate=False
+        ),
+        "tdem_inversion.ui.json": TimeDomainElectromagneticsParams(
+            forward_only=False, validate=False, **tdem_init
+        ),
+        "tdem_forward.ui.json": TimeDomainElectromagneticsParams(
             forward_only=True, validate=False
         ),
         "magnetotellurics_inversion.ui.json": MagnetotelluricsParams(

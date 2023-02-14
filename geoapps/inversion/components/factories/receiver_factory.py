@@ -64,6 +64,11 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Point3DTipper
 
+        elif self.factory_type == "tdem":
+            from SimPEG.electromagnetics.time_domain import receivers
+
+            return receivers.PointMagneticFluxTimeDerivative
+
     def assemble_arguments(
         self, locations=None, data=None, local_index=None, mesh=None
     ):
@@ -98,6 +103,14 @@ class ReceiversFactory(SimPEGFactory):
                 mesh=mesh,
             )
 
+        elif self.factory_type in ["tdem"]:
+            args += self._tdem_arguments(
+                data=data,
+                locations=locations,
+                local_index=local_index,
+                mesh=mesh,
+            )
+
         else:
             args.append(locations[local_index])
 
@@ -115,6 +128,8 @@ class ReceiversFactory(SimPEGFactory):
             kwargs["component"] = list(data.keys())[0].split("_")[1]
         if self.factory_type in ["tipper"]:
             kwargs["orientation"] = kwargs["orientation"][::-1]
+        if self.factory_type in ["tdem"]:
+            kwargs["orientation"] = "z"
 
         return kwargs
 
