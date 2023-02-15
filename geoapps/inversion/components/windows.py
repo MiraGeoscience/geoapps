@@ -76,14 +76,15 @@ class InversionWindow:
                 msg = f"Object {data_object} is not Grid2D object and doesn't contain vertices."
                 raise (ValueError(msg))
 
-            xmin = np.min(locs[:, 0])
-            xmax = np.max(locs[:, 0])
-            ymin = np.min(locs[:, 1])
-            ymax = np.max(locs[:, 1])
+            min_corner = np.min(locs[:, :2], axis=0)
+            max_corner = np.max(locs[:, :2], axis=0)
+
+            size = max_corner - min_corner
+            size[size == 0] = np.mean(size)
 
             self.window = {
-                "center": [np.mean([xmin, xmax]), np.mean([ymin, ymax])],
-                "size": [xmax - xmin, ymax - ymin],
+                "center": np.mean([max_corner, min_corner], axis=0),
+                "size": size,
             }
 
     def is_empty(self) -> bool:
