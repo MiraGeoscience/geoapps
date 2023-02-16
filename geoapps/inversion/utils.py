@@ -272,7 +272,6 @@ def tile_locations(
         nTx = 1
         nTy = 1
         for ii in range(int(n_tiles + 1)):
-
             nTx += 1
             nTy += 1
 
@@ -303,7 +302,6 @@ def tile_locations(
         binCount = np.zeros_like(X1)
         labels = np.zeros_like(locations[:, 0])
         for ii in range(X1.shape[0]):
-
             mask = (
                 (locations[:, 0] >= X1[ii])
                 * (locations[:, 0] <= X2[ii])
@@ -313,7 +311,6 @@ def tile_locations(
 
             # Re-adjust the window size for tight fit
             if minimize:
-
                 if mask.sum():
                     X1[ii], X2[ii] = (
                         locations[:, 0][mask].min(),
