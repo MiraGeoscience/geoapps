@@ -94,7 +94,7 @@ full = [
 
 [tool.conda-lock]
 platforms = ['win-64', 'osx-64', 'linux-64']
-channels = ['conda-forge', 'defaults']
+channels = ['conda-forge']
 
 [tool.conda-lock.dependencies]
 libblas = "*=*mkl"

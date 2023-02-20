@@ -15,7 +15,7 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-call !MY_CONDA_EXE! install -n base -c conda-forge mamba -y
+call !MY_CONDA_EXE! install -n base --override-channels -c conda-forge mamba -y
 call !MY_CONDA_EXE! activate base
 pip install conda-lock[pip_support]
 
