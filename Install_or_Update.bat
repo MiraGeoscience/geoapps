@@ -14,9 +14,23 @@ set MY_CONDA=!MY_CONDA_EXE:"=!
 cd %~dp0
 set PYTHONUTF8=1
 call "!MY_CONDA!" activate
-call conda remove --name %ENV_NAME% --all --yes
-call conda env create -f environments\conda-py-%PY_VER%-win-64.lock.yml -n %ENV_NAME%
-call conda activate %ENV_NAME% && pip install -e . --no-deps
+
+IF "%MY_CONDA:mamba.bat=%mamba.bat"=="%MY_CONDA%" (
+  set pkg_mgr_exe=mamba
+  echo "use mamba"
+) ELSE (
+  set pkg_mgr_exe=conda
+  echo "use conda"
+)
+
+call !pkg_mgr_exe! env create --force -n %ENV_NAME% --file environments\conda-py-%PY_VER%-win-64.lock.yml ^
+  && call !pkg_mgr_exe! run -n %ENV_NAME% pip install -e . --no-deps
+
+if !errorlevel! neq 0 (
+  echo "** ERROR: Installation failed **"
+  pause
+  exit /B !errorlevel!
+)
 
 pause
-cmd /k
+cmd /k "!pkg_mgr_exe! activate %ENV_NAME%"

@@ -22,8 +22,8 @@ set PY_VER=3.10
 
 set env_path=%project_dir%\.conda-env
 call !MY_CONDA_EXE! activate
-call mamba env update -p %env_path% -f %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml
-call conda activate %env_path%
+call mamba env update -p %env_path% --file %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml ^
+  && call mamba activate %env_path%
 
 if !errorlevel! neq 0 (
   pause
@@ -35,6 +35,11 @@ if exist %project_dir%\..\geoh5py\ (
 )
 if exist %project_dir%\..\param-sweeps\ (
   pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps --no-deps
+)
+
+if !errorlevel! neq 0 (
+  pause
+  exit /B !errorlevel!
 )
 
 pause

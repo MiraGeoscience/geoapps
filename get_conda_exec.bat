@@ -24,24 +24,36 @@ if exist !custom_script! (
 :: reset error level
 call (exit /B 0)
 
-set usual_conda_paths=^
-  "%LOCALAPPDATA%\anaconda3";^
-  "%LOCALAPPDATA%\miniconda3";^
-  "%USERPROFILE%\anaconda3";^
-  "%USERPROFILE%\miniconda3";^
-  "%LOCALAPPDATA%\Continuum\anaconda3";^
-  "%LOCALAPPDATA%\Continuum\miniconda3";^
-  "%ProgramData%\anaconda3";^
-  "%ProgramData%\miniconda3";
+set usual_conda_install_locations=^
+  "%LOCALAPPDATA%";^
+  "%USERPROFILE%";^
+  "%ProgramData%";
+
+set conda_distributions=^
+    "mambaforge";^
+    "miniforge3";^
+    "miniconda3";^
+    "anaconda3";^
+    "Continuum\miniconda3";^
+    "Continuum\anaconda3";^
+
 
 set conda_bat_subpath=Library\bin\conda.bat
+set mamba_bat_subpath=Library\bin\mamba.bat
 
-for %%p in (%usual_conda_paths%) do (
-  set base_path=%%p
-  set conda_path="!base_path:"=!\%conda_bat_subpath%"
-  if exist !conda_path! (
-    set MY_CONDA_EXE=!conda_path!
-    goto success
+for %%p in (%usual_conda_install_locations%) do (
+  for %%d in (%conda_distributions%) do (
+    set base_path=%%p\%%d
+    set mamba_path="!base_path:"=!\%mamba_bat_subpath%"
+    if exist !mamba_path! (
+      set MY_CONDA_EXE=!mamba_path!
+      goto success
+    )
+    set conda_path="!base_path:"=!\%conda_bat_subpath%"
+    if exist !conda_path! (
+      set MY_CONDA_EXE=!conda_path!
+      goto success
+    )
   )
 )
 echo Error: Failed to find conda.bat 1>&2
@@ -49,6 +61,6 @@ echo You can define a custom Conda location with in !custom_script!
 exit /B 1
 
 :success
-  echo Using Conda: !MY_CONDA_EXE!
+  echo Package manager: !MY_CONDA_EXE!
   endlocal & set MY_CONDA_EXE=%MY_CONDA_EXE%
   exit /B 0
