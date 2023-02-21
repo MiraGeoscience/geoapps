@@ -116,6 +116,7 @@ dependencies:
   - cached_property=1.5.2=pyha770c72_1
   - certifi=2022.12.7=pyhd8ed1ab_0
   - charset-normalizer=2.1.1=pyhd8ed1ab_0
+  - click=8.1.3=unix_pyhd8ed1ab_2
   - cloudpickle=2.2.1=pyhd8ed1ab_0
   - colorama=0.4.6=pyhd8ed1ab_0
   - cycler=0.11.0=pyhd8ed1ab_0
@@ -198,7 +199,8 @@ dependencies:
   - cairo=1.16.0=ha61ee94_1014
   - cffi=1.15.1=py39he91dace_3
   - cfitsio=4.2.0=hd9d235c_0
-  - click=8.1.3=win_pyhd8ed1ab_2
+  - click-plugins=1.1.1=py_0
+  - cligj=0.7.2=pyhd8ed1ab_1
   - comm=0.1.2=pyhd8ed1ab_0
   - curl=7.88.1=hdc1c0ab_0
   - cytoolz=0.12.0=py39hb9d737c_1
@@ -213,6 +215,7 @@ dependencies:
   - mkl=2022.2.1=h84fe81f_16997
   - munch=2.5.0=py_0
   - partd=1.3.0=pyhd8ed1ab_0
+  - pexpect=4.8.0=pyh1a96a4e_2
   - pillow=9.4.0=py39h2320bf1_1
   - pip=23.0.1=pyhd8ed1ab_0
   - plotly=5.13.0=pyhd8ed1ab_0
@@ -229,8 +232,6 @@ dependencies:
   - zict=2.2.0=pyhd8ed1ab_0
   - argon2-cffi-bindings=21.2.0=py39hb9d737c_3
   - brotlipy=0.7.0=py39hb9d737c_1005
-  - click-plugins=1.1.1=py_0
-  - cligj=0.7.2=pyhd8ed1ab_1
   - cryptography=39.0.1=py39h079d5ae_0
   - dask-core=2022.10.0=pyhd8ed1ab_2
   - flask=2.2.3=pyhd8ed1ab_0
@@ -255,7 +256,7 @@ dependencies:
   - prompt-toolkit=3.0.36=pyha770c72_0
   - pyopenssl=23.0.0=pyhd8ed1ab_0
   - dash=2.8.1=pyhd8ed1ab_0
-  - ipython=8.10.0=pyh08f2357_0
+  - ipython=8.10.0=pyh41d4057_0
   - jupyter_client=7.3.4=pyhd8ed1ab_0
   - nbformat=5.7.3=pyhd8ed1ab_0
   - numpy=1.23.5=py39h3d75532_0
@@ -267,7 +268,7 @@ dependencies:
   - h5py=3.8.0=mpi_mpich_py39hadaddcd_0
   - imagecodecs=2023.1.23=py39hd061359_0
   - imageio=2.25.1=pyh24c5eb1_0
-  - ipykernel=6.21.2=pyh025b116_0
+  - ipykernel=6.21.2=pyh210e3f2_0
   - nbclient=0.7.2=pyhd8ed1ab_0
   - numba=0.56.4=py39h61ddf18_0
   - numcodecs=0.11.0=py39h227be39_1

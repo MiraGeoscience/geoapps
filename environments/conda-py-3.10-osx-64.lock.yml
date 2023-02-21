@@ -93,6 +93,7 @@ dependencies:
   - python=3.10.9=he7542f4_0_cpython
   - sqlite=3.40.0=h9ae0607_0
   - appdirs=1.4.4=pyh9f0ad1d_0
+  - appnope=0.1.3=pyhd8ed1ab_0
   - asciitree=0.3.3=py_2
   - backcall=0.2.0=pyh9f0ad1d_0
   - backports=1.0=pyhd8ed1ab_3
@@ -101,6 +102,7 @@ dependencies:
   - cached_property=1.5.2=pyha770c72_1
   - certifi=2022.12.7=pyhd8ed1ab_0
   - charset-normalizer=2.1.1=pyhd8ed1ab_0
+  - click=8.1.3=unix_pyhd8ed1ab_2
   - cloudpickle=2.2.1=pyhd8ed1ab_0
   - colorama=0.4.6=pyhd8ed1ab_0
   - cycler=0.11.0=pyhd8ed1ab_0
@@ -180,7 +182,8 @@ dependencies:
   - cairo=1.16.0=h904041c_1014
   - cffi=1.15.1=py310ha78151a_3
   - cfitsio=4.2.0=hd56cc12_0
-  - click=8.1.3=win_pyhd8ed1ab_2
+  - click-plugins=1.1.1=py_0
+  - cligj=0.7.2=pyhd8ed1ab_1
   - comm=0.1.2=pyhd8ed1ab_0
   - curl=7.88.1=h6df9250_0
   - cytoolz=0.12.0=py310h90acd4f_1
@@ -196,6 +199,7 @@ dependencies:
   - matplotlib-inline=0.1.6=pyhd8ed1ab_0
   - munch=2.5.0=py_0
   - partd=1.3.0=pyhd8ed1ab_0
+  - pexpect=4.8.0=pyh1a96a4e_2
   - pillow=9.4.0=py310h306a057_1
   - pip=23.0.1=pyhd8ed1ab_0
   - plotly=5.13.0=pyhd8ed1ab_0
@@ -212,8 +216,6 @@ dependencies:
   - zict=2.2.0=pyhd8ed1ab_0
   - argon2-cffi-bindings=21.2.0=py310h90acd4f_3
   - brotlipy=0.7.0=py310h90acd4f_1005
-  - click-plugins=1.1.1=py_0
-  - cligj=0.7.2=pyhd8ed1ab_1
   - cryptography=39.0.1=py310hdd0c95c_0
   - dask-core=2022.10.0=pyhd8ed1ab_2
   - flask=2.2.3=pyhd8ed1ab_0
@@ -246,7 +248,7 @@ dependencies:
   - vectormath=0.2.2=py_0
   - dash=2.8.1=pyhd8ed1ab_0
   - gdal=3.6.2=py310h5abc6fc_7
-  - ipython=8.10.0=pyh08f2357_0
+  - ipython=8.10.0=pyhd1c38e8_0
   - jupyter_client=7.3.4=pyhd8ed1ab_0
   - matplotlib-base=3.7.0=py310he725631_0
   - nbformat=5.7.3=pyhd8ed1ab_0
@@ -257,7 +259,7 @@ dependencies:
   - dash-daq=0.5.0=pyh9f0ad1d_1
   - distributed=2022.10.0=pyhd8ed1ab_2
   - fiona=1.9.1=py310h3963e5c_0
-  - ipykernel=6.21.2=pyh025b116_0
+  - ipykernel=6.21.2=pyh736e0ef_0
   - nbclient=0.7.2=pyhd8ed1ab_0
   - requests=2.28.2=pyhd8ed1ab_0
   - jupyter-dash=0.4.2=pyhd8ed1ab_1
