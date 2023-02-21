@@ -21,9 +21,8 @@ if !errorlevel! neq 0 (
 set PY_VER=3.10
 
 set env_path=%project_dir%\.conda-env
-call !MY_CONDA_EXE! activate
-call mamba env update -p %env_path% --file %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml ^
-  && call mamba activate %env_path%
+call !MY_CONDA_EXE! activate base ^
+  && call conda env update --solver=libmamba -p %env_path% --file %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml
 
 if !errorlevel! neq 0 (
   pause
@@ -31,10 +30,10 @@ if !errorlevel! neq 0 (
 )
 
 if exist %project_dir%\..\geoh5py\ (
-  pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py --no-deps
+  call conda run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py --no-deps
 )
 if exist %project_dir%\..\param-sweeps\ (
-  pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps --no-deps
+  call conda run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps --no-deps
 )
 
 if !errorlevel! neq 0 (
@@ -43,4 +42,4 @@ if !errorlevel! neq 0 (
 )
 
 pause
-cmd /k
+cmd /k "conda activate %env_path%"
