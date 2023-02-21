@@ -7,34 +7,33 @@ Whether you are developer or an end-user, this page will help you get started wi
 Installation
 ------------
 
-1- Install Conda for Python 3.7 or higher
+1- Install Conda for Python 3.9 or higher
 
-Three recommended options:
+You can use any of the following distributions of Conda:
 
 - `Miniforge <https://github.com/conda-forge/miniforge#download>`_: ~140 MB of disk space
 - `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~400 MB of disk space
 - `Anaconda <https://www.anaconda.com/download/>`_: ~3 GB of disk space
 
-Both miniconda and anaconda installation are using the Anaconda package repository by default,
-which has some restrictions on commercial use. See `Anaconda Terms of Service <https://www.anaconda.com/terms-of-service>`_ for details.
-The installation of **geoapps** forces the usage of the conda-forge repository, and is thus not affected by the Anaconda Terms of Service.
+We recommend installing **Miniforge**: beyond being smaller,
+it also installs packages from the conda-forge repository by default,
+which has no restriction for commercial use. Follow this link to download its Windows installer:
+`Miniforge Windows x86_64 <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe>`_
 
-We recommend installing **Miniforge** with support for **Mamba** as:
-
-- Miniforge installation is smaller
-- Mamba is faster than conda to resolve package dependencies
-- Miniforge installs package by default from the conda-forge repository which has no restriction for commercial use,
-  contrary to the Anaconda repository.
-
-Direct download link for Windows: `Mambaforge Windows x86_64 <https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Windows-x86_64.exe>`_
-
-.. figure:: ../images/Mambaforge_Setup-1.png
+.. figure:: ../images/Miniforge3_Setup-1.png
     :align: center
     :width: 200
 
-.. figure:: ../images/Mambaforge_Setup-2.png
+.. figure:: ../images/Miniforge3_Setup-3.png
     :align: center
     :width: 200
+
+Registering the Conda distribution as the default Python 3.10 interpreter is totally optional.
+Preferably uncheck that box if you already have Python 3 installed on your system.
+
+.. note:: Both Miniconda and Anaconda distributions use the Anaconda repository by default: see `Anaconda Terms of Service <https://www.anaconda.com/terms-of-service>`_ for details.
+    In any case, the installation of **geoapps** forces the usage of the conda-forge repository,
+    and is thus not affected by the Anaconda Terms of Service.
 
 2- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
 
@@ -55,14 +54,13 @@ A conda environment named ``geoapps`` will be created to prevent conflicts with 
     :width: 50%
 
 .. note:: The assumption is made that Conda has been installed in one
-   of the default directories:
+   of the default directories, depending on the distribution
+   (miniforge3, mambaforge, miniconda3, anaconda3):
 
-- %LOCALAPPDATA%\\mamba[mini]forge\\
-- %USERPROFILE%\\mamba[mini]forge\\
-- %LOCALAPPDATA%\\ana[mini]conda3\\
-- %USERPROFILE%\\ana[mini]conda3\\
-- %LOCALAPPDATA%\\Continuum\\ana[mini]conda3\\
-- C:\\ProgramData\\ana[mini]conda3\\
+   - %LOCALAPPDATA%\\
+   - %USERPROFILE%\\
+   - %LOCALAPPDATA%\\Continuum\\
+   - %PROGRAMDATA%\\
 
 If Conda gets installed in a different directory, users will need to add/edit a
 ``get_custom_conda.bat`` file to add their custom path to the ``conda.bat`` file:
@@ -110,6 +108,6 @@ To work with **geoapps** source code in development, install from GitHub::
 
 .. note:: The Jupyter-Notebook applications can be `downloaded from source <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ :
 
-.. figure:: ../images/download.png
-    :align: center
-    :width: 200
+    .. figure:: ../images/download.png
+        :align: center
+        :width: 200
