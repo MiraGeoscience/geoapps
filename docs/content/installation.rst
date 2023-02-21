@@ -4,12 +4,18 @@ Getting Started
 
 Whether you are developer or an end-user, this page will help you get started with the **geoapps**.
 
+.. contents::
+
+.. sectnum::
+    :depth: 2
+
 Installation
 ------------
 
-1- Install Conda for Python 3.9 or higher
+Install Conda
+~~~~~~~~~~~~~
 
-You can use any of the following distributions of Conda:
+Install Conda for Python 3.9 or higher. You can use any of the following distributions of Conda:
 
 - `Miniforge <https://github.com/conda-forge/miniforge#download>`_: ~140 MB of disk space
 - `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~400 MB of disk space
@@ -35,18 +41,25 @@ Preferably uncheck that box if you already have Python 3 installed on your syste
     In any case, the installation of **geoapps** forces the usage of the conda-forge repository,
     and is thus not affected by the Anaconda Terms of Service.
 
-2- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
+Download the latest geoapps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-3- Extract the package to your drive (SSD if available).
+Follow this link to `download from the GitHub repository <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_.
+
+Extract the package to your drive (SSD if available)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Extract the package to your drive, preferably an SSD if available.
 
 .. figure:: ../images/extract.png
     :align: center
     :width: 50%
 
 
-4- Run ``Install_Update.bat`` **(see notes below)**.
+Run ``Install_or_Update.bat``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The same batch file can be used to update the package dependencies.
+The same batch file can be used to install or update **geoapps**.
 A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
 
 .. figure:: ../images/run_install.png
@@ -68,6 +81,7 @@ If Conda gets installed in a different directory, users will need to add/edit a
 .. figure:: ../images/Install_start_bat.png
     :align: center
     :width: 75%
+
 
 Running the applications
 ------------------------
