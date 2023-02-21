@@ -57,7 +57,7 @@ def create_multi_platform_lock(py_ver: str, platform: str = None) -> None:
     platform_option = f"-p {platform}" if platform else ""
     with print_execution_time(f"conda-lock for {py_ver}"):
         subprocess.run(
-            f"conda-lock lock --mamba --no-micromamba -f pyproject.toml -f {_environments_folder}/env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
+            f"conda-lock lock --micromamba -f pyproject.toml -f {_environments_folder}/env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
             env=dict(os.environ, PYTHONUTF8="1"),
             shell=True,
             check=True,
