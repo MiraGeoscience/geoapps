@@ -132,9 +132,7 @@ class SurveyFactory(SimPEGFactory):
             return self._dcip_arguments(data=data, local_index=local_index)
 
         elif self.factory_type in ["tdem"]:
-            return self._tdem_arguments(
-                data=data, mesh=mesh, local_index=local_index
-            )
+            return self._tdem_arguments(data=data, mesh=mesh, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
                 data=data, mesh=mesh, frequency=channel
@@ -201,9 +199,7 @@ class SurveyFactory(SimPEGFactory):
         return local_data, local_uncertainties
 
     def _add_data(self, survey, data, local_index, channel):
-
         if self.factory_type in ["tdem"]:
-
             dobs = []
             uncerts = []
 
@@ -366,8 +362,6 @@ class SurveyFactory(SimPEGFactory):
         return [sources]
 
     def _tdem_arguments(self, data=None, local_index=None, mesh=None):
-
-
         receivers = data.entity
         transmitters = receivers.transmitters
         rx_list = []
@@ -384,7 +378,9 @@ class SurveyFactory(SimPEGFactory):
             tx_locs_lookup = {}
             for k in np.unique(tx_ids)[self.local_index]:
                 tx_ind = tx_ids == k
-                loop_cells = transmitters.cells[np.all(tx_ind[transmitters.cells], axis=1), :]
+                loop_cells = transmitters.cells[
+                    np.all(tx_ind[transmitters.cells], axis=1), :
+                ]
                 loop_ind = np.r_[loop_cells[:, 0], loop_cells[-1, 1]]
                 tx_locs = transmitters.vertices[loop_ind, :]
                 # TODO - determine whether drapTopotoLoc is needed here now that we adjust
@@ -403,11 +399,13 @@ class SurveyFactory(SimPEGFactory):
                 "Microseconds (us)": 1e-6,
             }
             wave_function = interp1d(
-                (receivers.waveform[:, 0] - receivers.timing_mark) * conversion[receivers.unit],
+                (receivers.waveform[:, 0] - receivers.timing_mark)
+                * conversion[receivers.unit],
                 receivers.waveform[:, 1],
                 fill_value="extrapolate",
             )
             import SimPEG.electromagnetics.time_domain as tdem
+
             waveform = tdem.sources.RawWaveform(waveFct=wave_function, offTime=0.0)
 
         self.ordering = []
@@ -419,12 +417,12 @@ class SurveyFactory(SimPEGFactory):
             locs = receivers.vertices[rx_ids, :]
             for component_id, component in enumerate(data.components):
                 rx_obj = rx_factory.build(
-                        locations=locs,
-                        local_index=self.local_index,
-                        data=data,
-                        mesh=mesh,
-                        component=component
-                    )
+                    locations=locs,
+                    local_index=self.local_index,
+                    data=data,
+                    mesh=mesh,
+                    component=component,
+                )
                 rx_list.append(rx_obj)
 
                 for time_id, time in enumerate(receivers.channels):
@@ -432,7 +430,9 @@ class SurveyFactory(SimPEGFactory):
                         self.ordering.append([tx_id, rx_id, time_id, component_id])
 
             tx_list.append(
-                tx_factory.build(rx_list, locations=tx_locs_lookup[tx_id], waveform=waveform)
+                tx_factory.build(
+                    rx_list, locations=tx_locs_lookup[tx_id], waveform=waveform
+                )
             )
 
             return [tx_list]
@@ -455,12 +455,8 @@ class SurveyFactory(SimPEGFactory):
         if frequency is None:
             frequencies = np.unique([list(v.keys()) for v in data.observed.values()])
             for frequency in frequencies:
-                sources.append(
-                    tx_factory.build(receivers, frequency=frequency)
-                )
+                sources.append(tx_factory.build(receivers, frequency=frequency))
         else:
-            sources.append(
-                tx_factory.build(receivers, frequency=frequency)
-            )
+            sources.append(tx_factory.build(receivers, frequency=frequency))
 
         return [sources]
