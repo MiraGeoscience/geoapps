@@ -71,6 +71,7 @@ class SurveyFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
         self.local_index = None
         self.survey = None
+        self.ordering = None
 
     def concrete_object(self):
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
@@ -429,7 +430,6 @@ class SurveyFactory(SimPEGFactory):
                 for time_id, time in enumerate(receivers.channels):
                     for rx_id in rx_ids:
                         self.ordering.append([tx_id, rx_id, time_id, component_id])
-                    # self.ordering.append([[tch, cid, rxid] for rxid in rx_ids])
 
             tx_list.append(
                 tx_factory.build(rx_list, locations=tx_locs_lookup[tx_id], waveform=waveform)
