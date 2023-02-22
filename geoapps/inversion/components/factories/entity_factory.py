@@ -137,6 +137,12 @@ class EntityFactory(AbstractFactory):
         if getattr(self.params.data_object, "channels", None) is not None:
             entity.channels = [float(val) for val in self.params.data_object.channels]
 
+        if getattr(self.params.data_object, "transmitters", None) is not None:
+            entity.transmitters = self.params.data_object.transmitters
+
+        if getattr(self.params.data_object, "waveform", None) is not None:
+            entity.waveform = self.params.data_object.waveform
+
         return entity
 
     @staticmethod

@@ -62,6 +62,10 @@ DRIVER_MAP = {
         "geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver",
         "InducedPolarizationPseudo3DDriver",
     ),
+    "tdem": (
+        "geoapps.inversion.airborne_electromagnetics.time_domain.driver",
+        "TimeDomainElectromagneticsDriver",
+    ),
     "magnetotellurics": (
         "geoapps.inversion.natural_sources.magnetotellurics.driver",
         "MagnetotelluricsDriver",
@@ -376,6 +380,18 @@ class InversionDriver(BaseDriver):
 
         elif "2d" in self.params.inversion_type:
             tiles = [self.inversion_data.indices]
+
+        elif self.params.inversion_type in ["tdem"]:
+            transmitters = self.inversion_data.entity.transmitters
+            transmitter_id = transmitters.get_data("Transmitter ID")
+            if transmitter_id:
+                tiles = [np.array(k) for k in np.unique(transmitter_id[0].values)]
+            else:
+                tiles = tile_locations(
+                    transmitters.vertices,
+                    self.params.tile_spatial,
+                    method="kmeans",
+                )
         else:
             tiles = tile_locations(
                 self.locations,
