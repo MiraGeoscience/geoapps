@@ -66,20 +66,18 @@ class TimeDomainElectromagneticsParams(InversionBaseParams):
 
     def property_group_data(self, property_group: UUID):
         data = {}
-        frequencies = self.data_object.channels
+        channels = self.data_object.channels
         if self.forward_only:
-            return {k: None for k in frequencies}
+            return {k: None for k in channels}
         else:
-            group = [
-                k
-                for k in self.data_object.property_groups
-                if k.uid == property_group.uid
-            ][0]
+            group = self.data_object.find_or_create_property_group(
+                name=property_group.name
+            )
             property_names = [
                 self.geoh5.get_entity(p)[0].name for p in group.properties
             ]
             properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
-            for i, f in enumerate(frequencies):
+            for i, f in enumerate(channels):
                 try:
                     f_ind = property_names.index(
                         [k for k in property_names if f"{f:.2e}" in k][0]
