@@ -84,7 +84,7 @@ class MisfitFactory(SimPEGFactory):
 
         tile_num = 0
         for local_index in tiles:
-            survey, local_index = inversion_data.create_survey(
+            survey, local_index, sorting = inversion_data.create_survey(
                 mesh=mesh, local_index=local_index
             )
 

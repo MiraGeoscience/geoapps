@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
+from geoh5py.objects.surveys.electromagnetics.airborne_tem import AirborneTEMReceivers
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
@@ -331,7 +331,7 @@ validations = {
         "required": True,
         "values": ["tdem"],
     },
-    "data_object": {"types": [str, UUID, MTReceivers]},
+    "data_object": {"types": [str, UUID, AirborneTEMReceivers]},
     "z_channel": {"one_of": "data_channel"},
     "z_uncertainty": {"one_of": "uncertainty_channel"},
     "x_channel": {"one_of": "data_channel"},

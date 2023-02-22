@@ -159,7 +159,7 @@ class InversionData(InversionLocations):
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
-        self.survey, _ = self.create_survey()
+        self.survey, _, _ = self.create_survey()
         self.save_data(self.entity)
 
     def filter(self, a):
@@ -224,7 +224,7 @@ class InversionData(InversionLocations):
         self._observed_data_types = {c: {} for c in data.keys()}
         data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type in ["magnetotellurics", "tipper"]:
+        if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = self.normalizations[component] * values
@@ -417,6 +417,9 @@ class InversionData(InversionLocations):
             elif self.params.inversion_type in ["tipper"]:
                 if "imag" in comp:
                     normalizations[comp] = -1.0
+            elif self.params.inversion_type in ["tdem"]:
+                if comp in ["x"]:
+                    normalizations[comp] = -1.0
 
         return normalizations
 
@@ -444,6 +447,7 @@ class InversionData(InversionLocations):
             local_index=local_index,
             channel=channel,
         )
+
         return survey
 
     def simulation(

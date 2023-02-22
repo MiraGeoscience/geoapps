@@ -54,6 +54,11 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Dipole
 
+        elif "tdem" in self.factory_type:
+            from SimPEG.electromagnetics.time_domain import receivers
+
+            return receivers.PointMagneticFluxTimeDerivative
+
         elif self.factory_type == "magnetotellurics":
             from SimPEG.electromagnetics.natural_source import receivers
 
@@ -70,7 +75,7 @@ class ReceiversFactory(SimPEGFactory):
             return receivers.PointMagneticFluxTimeDerivative
 
     def assemble_arguments(
-        self, locations=None, data=None, local_index=None, mesh=None
+        self, locations=None, data=None, local_index=None, mesh=None, component=None
     ):
         """Provides implementations to assemble arguments for receivers object."""
 
@@ -117,7 +122,7 @@ class ReceiversFactory(SimPEGFactory):
         return args
 
     def assemble_keyword_arguments(
-        self, locations=None, data=None, local_index=None, mesh=None
+        self, locations=None, data=None, local_index=None, mesh=None, component=None
     ):
         """Provides implementations to assemble keyword arguments for receivers object."""
         kwargs = {}
@@ -129,16 +134,18 @@ class ReceiversFactory(SimPEGFactory):
         if self.factory_type in ["tipper"]:
             kwargs["orientation"] = kwargs["orientation"][::-1]
         if self.factory_type in ["tdem"]:
-            kwargs["orientation"] = "z"
+            kwargs["orientation"] = component
+            kwargs["storeProjections"] = True
 
         return kwargs
 
-    def build(self, locations=None, data=None, local_index=None, mesh=None):
+    def build(self, locations=None, data=None, local_index=None, mesh=None, component=None):
         receivers = super().build(
             locations=locations,
             data=data,
             local_index=local_index,
             mesh=mesh,
+            component=component
         )
 
         if (
@@ -180,6 +187,10 @@ class ReceiversFactory(SimPEGFactory):
             args.append(locations_n)
 
         return args
+
+    def _tdem_arguments(self, data=None, locations=None, local_index=None, mesh=None):
+
+        return [locations, data.entity.channels]
 
     def _magnetotellurics_arguments(self, locations=None, local_index=None, mesh=None):
         args = []
