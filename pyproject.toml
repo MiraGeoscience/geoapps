@@ -6,7 +6,7 @@ authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
 repository = "https://github.com/MiraGeoscience/geoapps"
 documentation = "https://geoapps.readthedocs.io/en/latest/"
 homepage = "https://mirageoscience.com"
-readme = "README.md"
+readme = "README.rst"
 keywords = ["geology", "geophysics", "earth sciences"]
 classifiers = [
     "Development Status :: 4 - Beta",
