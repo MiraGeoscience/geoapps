@@ -23,7 +23,7 @@ if __name__ == "__main__":
             has_dated_copyright = False
             for line in file:
                 count += 1
-                if count >= max_lines:
+                if count >= max_lines and not f.endswith("README.rst"):
                     break
                 if re.search(copyright_re, line):
                     has_dated_copyright = True
