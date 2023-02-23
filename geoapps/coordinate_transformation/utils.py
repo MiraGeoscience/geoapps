@@ -19,9 +19,9 @@ from osgeo import gdal
 def geotiff_2_grid(
     workspace: Workspace,
     file_name: str,
-    grid: Grid2D = None,
-    grid_name: str = None,
-    parent: Group = None,
+    grid: Grid2D | None = None,
+    grid_name: str | None = None,
+    parent: Group | None = None,
 ) -> Grid2D | None:
     """
     Load a geotiff from file.

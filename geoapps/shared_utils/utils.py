@@ -122,7 +122,10 @@ def weighted_average(
 
 
 def window_xy(
-    x: np.ndarray, y: np.ndarray, window: dict[str, float], mask: np.array = None
+    x: np.ndarray,
+    y: np.ndarray,
+    window: dict[str, float],
+    mask: np.array | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Window x, y coordinates with window limits built from center and size.
@@ -177,7 +180,7 @@ def window_xy(
 
 
 def downsample_xy(
-    x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
+    x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Downsample locations to approximate a grid with defined spacing.
@@ -214,7 +217,7 @@ def downsample_xy(
 
 
 def downsample_grid(
-    xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray = None
+    xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Downsample grid locations to approximate spacing provided by 'distance'.
@@ -256,10 +259,10 @@ def downsample_grid(
 def filter_xy(
     x: np.array,
     y: np.array,
-    distance: float = None,
-    window: dict = None,
-    angle: float = None,
-    mask: np.ndarray = None,
+    distance: float | None = None,
+    window: dict | None = None,
+    angle: float | None = None,
+    mask: np.ndarray | None = None,
 ) -> np.array:
     """
     Window and down-sample locations based on distance and window parameters.

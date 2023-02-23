@@ -13,6 +13,7 @@ import socket
 import uuid
 import webbrowser
 from os import environ
+from typing import Optional
 
 import numpy as np
 from dash import callback_context, no_update
@@ -42,7 +43,7 @@ class BaseDashApplication:
         self.app = None
 
     def update_object_options(
-        self, filename: str, contents: str, trigger: str = None
+        self, filename: str, contents: str, trigger: Optional[str] = None
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
@@ -184,7 +185,10 @@ class BaseDashApplication:
         return output_dict
 
     def update_remainder_from_ui_json(
-        self, ui_json_data: dict, output_ids: list = None, trigger: str = None
+        self,
+        ui_json_data: dict,
+        output_ids: Optional[list] = None,
+        trigger: Optional[str] = None,
     ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
