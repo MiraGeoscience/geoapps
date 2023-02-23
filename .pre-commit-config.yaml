@@ -56,8 +56,8 @@ repos:
         name: Check copyright
         entry: python devtools/check-copyright.py
         language: python
-        types: [python]
-        exclude: (^setup.py$|(docs|assets)/)
+        types_or: [text,python]
+        exclude: (^setup.py$|^\.|(docs|assets)/)
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
     hooks:
