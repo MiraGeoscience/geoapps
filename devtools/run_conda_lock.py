@@ -57,12 +57,17 @@ def create_multi_platform_lock(py_ver: str, platform: str = None) -> None:
     platform_option = f"-p {platform}" if platform else ""
     with print_execution_time(f"conda-lock for {py_ver}"):
         subprocess.run(
-            f"conda-lock lock --no-mamba --micromamba -f pyproject.toml -f {_environments_folder}/env-python-{py_ver}.yml {platform_option} --lockfile conda-py-{py_ver}-lock.yml",
+            (
+                "conda-lock lock --no-mamba --micromamba -f pyproject.toml"
+                f" -f {_environments_folder}/env-python-{py_ver}.yml {platform_option}"
+                f" --lockfile conda-py-{py_ver}-lock.yml"
+            ),
             env=dict(os.environ, PYTHONUTF8="1"),
             shell=True,
             check=True,
             stderr=subprocess.STDOUT,
         )
+        patch_absolute_path(Path(f"conda-py-{py_ver}-lock.yml"))
 
 
 def per_platform_env(py_ver: str, extras=[], dev=False, suffix="") -> None:
@@ -89,6 +94,28 @@ def per_platform_env(py_ver: str, extras=[], dev=False, suffix="") -> None:
         patch_none_hash(lock_env_file)
         with open(lock_env_file, "a") as f:
             f.write(env_file_variables_section_)
+
+
+def patch_absolute_path(file: Path) -> None:
+    """
+    Patch the given file to remove reference with absolute file path.
+    """
+
+    abs_path_base = str(_environments_folder.absolute().parent) + os.sep
+    assert abs_path_base.endswith(os.sep)
+
+    with tempfile.TemporaryDirectory(dir=str(file.parent)) as tmpdirname:
+        patched_file = Path(tmpdirname) / file.name
+        with open(patched_file, "w") as patched:
+            with open(file) as f:
+                for line in f:
+                    patched.write(
+                        line.replace(abs_path_base, "").replace(
+                            _environments_folder.name + os.sep,
+                            _environments_folder.name + "/",
+                        )
+                    )
+        os.replace(patched_file, file)
 
 
 def patch_none_hash(file: Path) -> None:
