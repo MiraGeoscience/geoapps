@@ -192,7 +192,7 @@ class InversionDriver(BaseDriver):
         print(f"Setting up {self.n_tiles} tile(s) . . .")
         # Build tiled misfits and combine to form global misfit
 
-        self.global_misfit, self.sorting = MisfitFactory(
+        self.global_misfit, self.sorting, self.ordering = MisfitFactory(
             self.params, models=self.models
         ).build(self.tiles, self.inversion_data, self.mesh, self.active_cells)
         print("Done.")
@@ -236,6 +236,7 @@ class InversionDriver(BaseDriver):
             self.inversion_mesh,
             self.active_cells,
             np.argsort(np.hstack(self.sorting)),
+            self.ordering,
             self.global_misfit,
             self.regularization,
         )

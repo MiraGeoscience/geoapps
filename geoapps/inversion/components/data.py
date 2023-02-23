@@ -500,6 +500,7 @@ class InversionData(InversionLocations):
             )
             sim = simulation_factory.build(
                 survey=survey,
+                receivers=self.entity,
                 global_mesh=mesh,
                 local_mesh=nested_mesh,
                 active_cells=mapping.local_active,

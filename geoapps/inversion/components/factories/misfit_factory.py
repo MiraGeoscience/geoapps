@@ -30,6 +30,7 @@ class MisfitFactory(SimPEGFactory):
         self.factory_type = self.params.inversion_type
         self.models = models
         self.sorting = None
+        self.ordering = None
 
     def concrete_object(self):
         return objective_function.ComboObjectiveFunction
@@ -43,7 +44,7 @@ class MisfitFactory(SimPEGFactory):
             mesh=mesh,
             active_cells=active_cells,
         )
-        return global_misfit, self.sorting
+        return global_misfit, self.sorting, self.ordering
 
     def assemble_arguments(  # pylint: disable=arguments-differ
         self,
@@ -74,17 +75,12 @@ class MisfitFactory(SimPEGFactory):
         mesh=None,
         active_cells=None,
     ):
-        (
-            local_misfits,
-            self.sorting,
-        ) = (
-            [],
-            [],
-        )
-
+        local_misfits = []
+        self.sorting = []
+        self.ordering = []
         tile_num = 0
         for local_index in tiles:
-            survey, local_index, sorting = inversion_data.create_survey(
+            survey, local_index, ordering = inversion_data.create_survey(
                 mesh=mesh, local_index=local_index
             )
 
@@ -111,6 +107,7 @@ class MisfitFactory(SimPEGFactory):
 
             local_misfits.append(lmisfit)
             self.sorting.append(local_index)
+            self.ordering.append(ordering)
             tile_num += 1
 
         return [local_misfits]

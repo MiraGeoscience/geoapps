@@ -45,6 +45,7 @@ class DirectivesFactory:
         self.save_iteration_data_directive = None
         self.save_iteration_residual_directive = None
         self.save_iteration_apparent_resistivity_directive = None
+        self.ordering = None
 
     def build(
         self,
@@ -52,6 +53,7 @@ class DirectivesFactory:
         inversion_mesh,
         active_cells,
         sorting,
+        ordering,
         global_misfit,
         regularizer,
     ):
@@ -117,6 +119,7 @@ class DirectivesFactory:
                 inversion_object=inversion_data,
                 active_cells=active_cells,
                 sorting=sorting,
+                ordering=ordering,
                 save_objective_function=True,
                 global_misfit=global_misfit,
                 name="Data",
@@ -127,6 +130,7 @@ class DirectivesFactory:
                 inversion_object=inversion_data,
                 active_cells=active_cells,
                 sorting=sorting,
+                ordering=ordering,
                 name="Residual",
             )
 
@@ -163,6 +167,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         inversion_object=None,
         active_cells=None,
         sorting=None,
+        ordering=None,
         transform=None,
         save_objective_function=False,
         global_misfit=None,
@@ -175,6 +180,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         inversion_object=None,
         active_cells=None,
         sorting=None,
+        ordering=None,
         transform=None,
         save_objective_function=False,
         global_misfit=None,
@@ -192,6 +198,18 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     save_objective_function=save_objective_function,
                     global_misfit=global_misfit,
                     name=name,
+                )
+
+            elif self.factory_type in ["tdem"]:
+                kwargs = self.assemble_data_keywords_tdem(
+                    inversion_object=inversion_object,
+                    active_cells=active_cells,
+                    sorting=sorting,
+                    ordering=ordering,
+                    transform=transform,
+                    save_objective_function=save_objective_function,
+                    global_misfit=global_misfit,
+                    name=name
                 )
 
             elif self.factory_type in [
@@ -436,3 +454,44 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             kwargs["transforms"].append(natsource_transform)
 
         return kwargs
+
+    def assemble_data_keywords_tdem(
+        self,
+        inversion_object=None,
+        active_cells=None,
+        sorting=None,
+        ordering=None,
+        transform=None,
+        save_objective_function=False,
+        global_misfit=None,
+        name=None,
+    ):
+
+        conversion = {
+            "Seconds (s)": 1.0,
+            "Milliseconds (ms)": 1e-3,
+            "Microseconds (us)": 1e-6,
+        }
+        receivers = inversion_object.entity
+        time_channels = np.r_[receivers.channels] * conversion[receivers.unit]
+        components = list(inversion_object.observed)
+        ordering = np.vstack(ordering)
+        tx_ids = ordering[:, 0]
+        rx_ids = ordering[:, 1]
+        time_ids = ordering[:, 2]
+        component_ids = ordering[:, 3]
+        def reshape(values):
+            data = np.zeros((len(time_channels), len(components), receivers.n_vertices))
+            data[time_ids, component_ids, rx_ids] = values
+            return data
+
+        kwargs = {
+            "attribute_type": "predicted",
+            "label": name,
+            "association": "VERTEX",
+            "channels": [f"{val:.2e}" for val in time_channels],
+            "components": components,
+            "sorting": np.argsort(np.r_[rx_ids]),
+            "_reshape": reshape
+        }
+
