@@ -64,7 +64,7 @@ Current sponsors
 - `Mira Geoscience <https://mirageoscience.com/>`_
 - `Rio Tinto <https://www.riotinto.com/en>`_
 - `Teck <https://www.teck.com/>`_
-- `Vale <http://www.vale.com/canada/EN/Pages/default.aspx>`_
+- `Vale <https://www.vale.com/canada>`_
 
 
 License
