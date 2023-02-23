@@ -18,12 +18,13 @@ import hashlib
 import re
 import tempfile
 from pathlib import Path
+from typing import Optional
 from urllib import request
 
 _url_filename_re = re.compile(".*/([^/]*)")
 
 
-def computeSha256(url: str, base_name: str = None) -> str:
+def computeSha256(url: str, base_name: Optional[str] = None) -> str:
     filename_match = _url_filename_re.match(url)
     assert filename_match
 
