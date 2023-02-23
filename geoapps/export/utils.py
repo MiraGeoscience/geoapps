@@ -64,7 +64,10 @@ def parse_lines(curve, values):
 
 
 def export_curve_2_shapefile(
-    curve, attribute: geoh5py.data.Data = None, wkt_code: str = None, file_name=None
+    curve,
+    attribute: geoh5py.data.Data | None = None,
+    wkt_code: str | None = None,
+    file_name=None,
 ):
     """
     Export a Curve object to *.shp

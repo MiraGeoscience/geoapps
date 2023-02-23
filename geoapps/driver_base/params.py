@@ -380,8 +380,8 @@ class BaseParams:
 
     def write_input_file(
         self,
-        name: str = None,
-        path: str = None,
+        name: str | None = None,
+        path: str | None = None,
         validate: bool = True,
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
