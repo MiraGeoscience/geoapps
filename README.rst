@@ -29,9 +29,9 @@
 Welcome to **geoapps** - Open-source applications in geosciences
 ================================================================
 
-.. image:: https://github.com/MiraGeoscience/geoapps/raw/main/docs/images/index_page.png
-    :align: right
-    :width: 50%
+.. raw:: html
+
+    <img align="right" width="50%" src="docs/images/index_page.png">
 
 
 In short
