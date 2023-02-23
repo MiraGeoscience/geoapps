@@ -58,7 +58,7 @@ repos:
         language: python
         files: (^LICENSE|README.rst|\.py|\.pyi)$
         types: [text]
-        exclude: (^setup.py$|^\.|(docs|assets)/)
+        exclude: (^setup.py$|^\.|\b(docs|assets)/)
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
     hooks:
