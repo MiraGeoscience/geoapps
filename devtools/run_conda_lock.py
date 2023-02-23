@@ -102,7 +102,6 @@ def patch_absolute_path(file: Path) -> None:
     """
 
     abs_path_base = str(_environments_folder.absolute().parent) + os.sep
-    assert abs_path_base.endswith(os.sep)
 
     with tempfile.TemporaryDirectory(dir=str(file.parent)) as tmpdirname:
         patched_file = Path(tmpdirname) / file.name
