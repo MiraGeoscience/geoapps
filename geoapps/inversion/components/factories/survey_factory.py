@@ -203,15 +203,15 @@ class SurveyFactory(SimPEGFactory):
             dobs = []
             uncerts = []
 
-            data_stack = [np.vstack(k.values()) for k in data.observed.values()]
-            uncert_stack = [np.vstack(k.values()) for k in data.uncertainties.values()]
+            data_stack = [np.vstack(list(k.values())) for k in data.observed.values()]
+            uncert_stack = [np.vstack(list(k.values())) for k in data.uncertainties.values()]
             for order in self.ordering:
                 tx_id, rx_id, time_id, component_id = order
                 dobs.append(data_stack[component_id][time_id, rx_id])
                 uncerts.append(uncert_stack[component_id][time_id, rx_id])
 
-            survey.dobs = np.vstack([dobs])
-            survey.std = np.vstack([uncerts])
+            survey.dobs = np.vstack([dobs]).flatten()
+            survey.std = np.vstack([uncerts]).flatten()
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             local_data = {}
@@ -435,7 +435,7 @@ class SurveyFactory(SimPEGFactory):
                 )
             )
 
-            return [tx_list]
+        return [tx_list]
 
     def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
         receivers = []

@@ -41,6 +41,7 @@ class SimulationFactory(SimPEGFactory):
             "induced polarization pseudo 3d",
             "magnetotellurics",
             "tipper",
+            "tdem",
         ]:
             import pymatsolver.direct as solver_module
 
@@ -87,9 +88,15 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DPrimarySecondary
 
+        if self.factory_type in ["tdem"]:
+            from SimPEG.electromagnetics.time_domain import simulation
+
+            return simulation.Simulation3DMagneticFluxDensity
+
     def assemble_arguments(
         self,
         survey=None,
+        receivers=None,
         global_mesh=None,
         local_mesh=None,
         active_cells=None,
@@ -102,6 +109,7 @@ class SimulationFactory(SimPEGFactory):
     def assemble_keyword_arguments(
         self,
         survey=None,
+        receivers=None,
         global_mesh=None,
         local_mesh=None,
         active_cells=None,
@@ -139,6 +147,8 @@ class SimulationFactory(SimPEGFactory):
             )
         if self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_keywords(kwargs, mesh, active_cells=active_cells)
+        if self.factory_type in ["tdem"]:
+            return self._tdem_keywords(kwargs, receivers, mesh, active_cells=active_cells)
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
         kwargs["actInd"] = active_cells
@@ -187,6 +197,41 @@ class SimulationFactory(SimPEGFactory):
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
+
+        return kwargs
+
+    def _tdem_keywords(self, kwargs, receivers, mesh, active_cells=None):
+        actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
+        kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
+        kwargs["solver"] = self.solver
+
+        # time_steps = []
+        # for label in ["ontime", "ramp_off", "earlytimes", "midtimes", "latetimes"]:
+        #     if label == "ontime":
+        #         dt = receivers.waveform_parameters["ontime_dt"]
+        #         n_spacing = int(
+        #             (
+        #                 receivers.waveform_parameters["pulse_width"] +
+        #                 receivers.waveform_parameters["turn_on"]
+        #             ) / dt
+        #         )
+        #     elif label == "ramp_off":
+        #         dt = receivers.waveform_parameters["ramp_off_dt"]
+        #         n_spacing = int(receivers.waveform_parameters["ramp_off"] / dt)
+        #     else:
+        #         dt = receivers.waveform_parameters[f"{label}_dt"]
+        #         n_spacing = receivers.waveform_parameters[f"{label}_n"]
+        #
+        #     time_steps.append(
+        #         (dt * 1e-3, n_spacing)
+        #     )
+        conversion = {
+            "Seconds (s)": 1.0,
+            "Milliseconds (ms)": 1e-3,
+            "Microseconds (us)": 1e-6,
+        }
+        kwargs["t0"] = -receivers.timing_mark * conversion[receivers.unit]
+        kwargs["time_steps"] = receivers.waveform[:, 0]
 
         return kwargs
 
