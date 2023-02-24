@@ -33,13 +33,13 @@ class LineDataDerivatives:
 
     def __init__(
         self,
-        locations: np.ndarray = None,
-        values: np.array = None,
-        epsilon: float = None,
+        locations: np.ndarray | None = None,
+        values: np.array | None = None,
+        epsilon: float | None = None,
         interpolation: str = "gaussian",
         smoothing: int = 0,
         residual: bool = False,
-        sampling: float = None,
+        sampling: float | None = None,
         **kwargs,
     ):
         self._locations_resampled = None

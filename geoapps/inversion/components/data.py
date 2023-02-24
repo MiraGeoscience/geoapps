@@ -422,8 +422,8 @@ class InversionData(InversionLocations):
 
     def create_survey(
         self,
-        mesh: TreeMesh = None,
-        local_index: np.ndarray = None,
+        mesh: TreeMesh | None = None,
+        local_index: np.ndarray | None = None,
         channel=None,
     ):
         """
@@ -451,7 +451,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh,
         active_cells: np.ndarray,
         survey,
-        tile_id: int = None,
+        tile_id: int | None = None,
         padding_cells: int = 6,
     ):
         """
