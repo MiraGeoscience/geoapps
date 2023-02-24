@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import base64
 import io
 import json
@@ -13,7 +15,6 @@ import socket
 import uuid
 import webbrowser
 from os import environ
-from typing import Optional
 
 import numpy as np
 from dash import callback_context, no_update
@@ -43,7 +44,7 @@ class BaseDashApplication:
         self.app = None
 
     def update_object_options(
-        self, filename: str, contents: str, trigger: Optional[str] = None
+        self, filename: str, contents: str, trigger: str | None = None
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
@@ -187,8 +188,8 @@ class BaseDashApplication:
     def update_remainder_from_ui_json(
         self,
         ui_json_data: dict,
-        output_ids: Optional[list] = None,
-        trigger: Optional[str] = None,
+        output_ids: list | None = None,
+        trigger: str | None = None,
     ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
