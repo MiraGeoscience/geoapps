@@ -107,7 +107,7 @@ class BlockModelCreation(BaseDashApplication):
         expansion_fact: float,
         live_link: list,
         monitoring_directory: str,
-        trigger: str = None,
+        trigger: str | None = None,
     ) -> list:
         """
         When the export button is pressed, run block model driver to export block model.
