@@ -24,12 +24,13 @@ import subprocess
 import warnings
 from pathlib import Path
 
-from add_url_tag_sha256 import computeSha256
-from run_conda_lock import per_platform_env
+from add_url_tag_sha256 import compute_sha256
+from run_conda_lock import LockFilePatcher, per_platform_env
 
-_archive_ext = ".tar.gz"
+_FORCE_NO_PIP_HASH = True
+_ARCHIVE_EXT = ".tar.gz"
 
-app_name = "geoapps"
+APP_NAME = "geoapps"
 
 
 def create_standalone_geoapps_lock(git_url: str):
@@ -48,44 +49,27 @@ def create_standalone_lock(git_url: str, extras=[], suffix=""):
     platform = "win-64"
     base_filename = f"conda-py-{py_ver}-{platform}{suffix}"
     initial_lock_file = Path(f"environments/{base_filename}-tmp.lock.yml")
+    tmp_suffix = f"{suffix}-tmp"
     try:
-        per_platform_env(py_ver, extras, suffix=f"{suffix}-tmp")
-        final_lock_file = Path(f"{base_filename}.lock.yml")
+        per_platform_env(py_ver, extras, suffix=tmp_suffix)
         assert initial_lock_file.exists()
-        add_application(git_url, initial_lock_file, final_lock_file)
+        add_application(git_url, initial_lock_file)
+        LockFilePatcher(initial_lock_file).patch(force_no_pip_hash=_FORCE_NO_PIP_HASH)
+        final_lock_file = Path(f"{base_filename}.lock.yml")
+        final_lock_file.unlink(missing_ok=True)
+        initial_lock_file.rename(final_lock_file)
     finally:
         print("# Cleaning up intermediate files ...")
-        initial_lock_file.unlink()
+        initial_lock_file.unlink(missing_ok=True)
         for f in Path("environments").glob("conda-py-*-tmp.lock.yml"):
             f.unlink()
 
 
-def add_application(git_url: str, lock_file: Path, output_file: Path):
+def add_application(git_url: str, lock_file: Path):
     print(f"# Patching {lock_file} for standalone environment ...")
-    pip_dependency_re = re.compile(
-        r"^\s*- (geoh5py|mira-simpeg|simpeg-archive|param-sweeps)\s"
-    )
-    sha_re = re.compile(r"(.*)\s--hash=\S*")
-    pip_dependency_lines = []
-    with open(lock_file) as input_file:
-        for line in input_file:
-            if pip_dependency_re.match(line):
-                patched_line = sha_re.sub(r"\1", line)
-                assert len(patched_line)
-                pip_dependency_lines.append(patched_line)
-
-    pip_section_re = re.compile(r"^\s*- pip:\s*$")
-    application_pip = f"    - {app_name} @ {git_url}\n"
-    print(f"# Patched file: {output_file}")
-    with open(output_file, "w") as patched:
-        with open(lock_file) as input_file:
-            for line in input_file:
-                if not pip_dependency_re.match(line):
-                    patched.write(line)
-                if pip_section_re.match(line):
-                    for pip_line in pip_dependency_lines:
-                        patched.write(pip_line)
-                    patched.write(application_pip)
+    application_pip = f"    - {APP_NAME} @ {git_url}\n"
+    with open(lock_file, "a") as file:
+        file.write(application_pip)
 
 
 def git_url_with_ref(args) -> tuple[str, str]:
@@ -102,7 +86,7 @@ def git_url_with_ref(args) -> tuple[str, str]:
 
 
 def build_git_url(repo_url: str, ref: str) -> str:
-    return f"{repo_url}/archive/{ref}{_archive_ext}"
+    return f"{repo_url}/archive/{ref}{_ARCHIVE_EXT}"
 
 
 def get_git_url():
@@ -144,11 +128,14 @@ def main():
     assert basename_match
     basename = basename_match[1]
     git_download_url = build_git_url(repo_url, ref_path)
-    checksum = computeSha256(git_download_url, basename)
-    checked_git_url = f"{git_download_url}#sha256={checksum}"
+    if _FORCE_NO_PIP_HASH:
+        dependency_url = git_download_url
+    else:
+        checksum = compute_sha256(git_download_url, basename)
+        dependency_url = f"{git_download_url}#sha256={checksum}"
 
-    create_standalone_geoapps_lock(checked_git_url)
-    create_standalone_simpeg_lock(checked_git_url)
+    create_standalone_geoapps_lock(dependency_url)
+    create_standalone_simpeg_lock(dependency_url)
 
 
 if __name__ == "__main__":
