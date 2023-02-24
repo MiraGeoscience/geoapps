@@ -206,9 +206,9 @@ class SurveyFactory(SimPEGFactory):
             data_stack = [np.vstack(list(k.values())) for k in data.observed.values()]
             uncert_stack = [np.vstack(list(k.values())) for k in data.uncertainties.values()]
             for order in self.ordering:
-                tx_id, rx_id, time_id, component_id = order
-                dobs.append(data_stack[component_id][time_id, rx_id])
-                uncerts.append(uncert_stack[component_id][time_id, rx_id])
+                time_id, component_id, tx_id, rx_ids = order
+                dobs.append(data_stack[component_id][time_id, rx_ids])
+                uncerts.append(uncert_stack[component_id][time_id, rx_ids])
 
             survey.dobs = np.vstack([dobs]).flatten()
             survey.std = np.vstack([uncerts]).flatten()
@@ -364,7 +364,6 @@ class SurveyFactory(SimPEGFactory):
     def _tdem_arguments(self, data=None, local_index=None, mesh=None):
         receivers = data.entity
         transmitters = receivers.transmitters
-        rx_list = []
         tx_list = []
 
         transmitter_id = receivers.get_data("Transmitter ID")
@@ -414,7 +413,10 @@ class SurveyFactory(SimPEGFactory):
         rx_factory = ReceiversFactory(self.params)
         tx_factory = SourcesFactory(self.params)
         for tx_id, rx_ids in rx_lookup.items():
+
             locs = receivers.vertices[rx_ids, :]
+
+            rx_list = []
             for component_id, component in enumerate(data.components):
                 rx_obj = rx_factory.build(
                     locations=locs,
@@ -426,8 +428,7 @@ class SurveyFactory(SimPEGFactory):
                 rx_list.append(rx_obj)
 
                 for time_id, time in enumerate(receivers.channels):
-                    for rx_id in rx_ids:
-                        self.ordering.append([tx_id, rx_id, time_id, component_id])
+                    self.ordering.append([time_id, component_id, tx_id, rx_ids])
 
             tx_list.append(
                 tx_factory.build(

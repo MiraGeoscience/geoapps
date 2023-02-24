@@ -495,3 +495,5 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "_reshape": reshape
         }
 
+        return kwargs
+
