@@ -15,10 +15,6 @@ repos:
     rev: 23.1.0
     hooks:
     -   id: black
--   repo: https://github.com/asottile/seed-isort-config
-    rev: v2.2.0
-    hooks:
-        -   id: seed-isort-config
 -   repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
@@ -58,7 +54,7 @@ repos:
         language: python
         files: (^LICENSE|README.rst|\.py|\.pyi)$
         types: [text]
-        exclude: (^setup.py$|^\.|(docs|assets)/)
+        exclude: (^setup.py$|^\.|\b(docs|assets)/)
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
     hooks:
