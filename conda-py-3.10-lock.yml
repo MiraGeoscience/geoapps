@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: 02e0f822d3b385e03f5533e2db32c6328e37fca2c7f61808211a4f45a0b95792
-    osx-64: fea5c5cabb97406a792c16bc69eeb7affee75933214f1d0cb6781a7ff536aedf
-    win-64: b3629c7344970ad90c6c4730fe32e887c542dac6edf46b3d18398847def9cab3
+    linux-64: 5d7b4a980d0568fdc63e952be561a4a680e7e7b77eb4a04528c417b828b3b239
+    osx-64: 02949cb8acb72fe200e31fe607f29f731ff252f7e5b4adb7c0f2ee7d7134833d
+    win-64: 842a3a34b29f293175c60de2f6859ecd01af8f081f8596d8a9455a04081e1c4b
   platforms:
   - win-64
   - osx-64
@@ -3482,17 +3482,16 @@ package:
     coverage: '>=5.2.1'
     pytest: '>=4.6'
     python: '>=3.6'
-    setuptools: ''
     toml: ''
   hash:
-    md5: 0f7cac11bb696b62d378bde725bfc3eb
-    sha256: c5feac67a828f10bfa7d5e80b12e0a7c8e3b7b4886ad682aa783bc63f62477ba
+    md5: c9e3f8bfdb9bfc34aa1836a6ed4b25d7
+    sha256: 2e00bbdb00b2514faba50ddcb6ecf1d6e4f2d5af346f9cd1240aacb1b61dccb6
   manager: conda
   name: pytest-cov
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-3.0.0-pyhd8ed1ab_0.tar.bz2
-  version: 3.0.0
+  url: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-4.0.0-pyhd8ed1ab_0.tar.bz2
+  version: 4.0.0
 - category: full
   dependencies:
     asttokens: ''
@@ -7831,17 +7830,16 @@ package:
     coverage: '>=5.2.1'
     pytest: '>=4.6'
     python: '>=3.6'
-    setuptools: ''
     toml: ''
   hash:
-    md5: 0f7cac11bb696b62d378bde725bfc3eb
-    sha256: c5feac67a828f10bfa7d5e80b12e0a7c8e3b7b4886ad682aa783bc63f62477ba
+    md5: c9e3f8bfdb9bfc34aa1836a6ed4b25d7
+    sha256: 2e00bbdb00b2514faba50ddcb6ecf1d6e4f2d5af346f9cd1240aacb1b61dccb6
   manager: conda
   name: pytest-cov
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-3.0.0-pyhd8ed1ab_0.tar.bz2
-  version: 3.0.0
+  url: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-4.0.0-pyhd8ed1ab_0.tar.bz2
+  version: 4.0.0
 - category: full
   dependencies:
     asttokens: ''
@@ -12217,17 +12215,16 @@ package:
     coverage: '>=5.2.1'
     pytest: '>=4.6'
     python: '>=3.6'
-    setuptools: ''
     toml: ''
   hash:
-    md5: 0f7cac11bb696b62d378bde725bfc3eb
-    sha256: c5feac67a828f10bfa7d5e80b12e0a7c8e3b7b4886ad682aa783bc63f62477ba
+    md5: c9e3f8bfdb9bfc34aa1836a6ed4b25d7
+    sha256: 2e00bbdb00b2514faba50ddcb6ecf1d6e4f2d5af346f9cd1240aacb1b61dccb6
   manager: conda
   name: pytest-cov
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-3.0.0-pyhd8ed1ab_0.tar.bz2
-  version: 3.0.0
+  url: https://conda.anaconda.org/conda-forge/noarch/pytest-cov-4.0.0-pyhd8ed1ab_0.tar.bz2
+  version: 4.0.0
 - category: full
   dependencies:
     asttokens: ''
