@@ -46,6 +46,7 @@ with warn_module_not_found():
         Widget,
     )
 
+
 from .gravity.params import GravityParams
 from .magnetic_scalar.params import MagneticScalarParams
 from .magnetic_vector.params import MagneticVectorParams
@@ -1423,7 +1424,7 @@ class ModelOptions(ObjectDataSelection):
     Widgets for the selection of model options
     """
 
-    def __init__(self, identifier: str = None, **kwargs):
+    def __init__(self, identifier: str | None = None, **kwargs):
         self._units = "Units"
         self._identifier = identifier
         self._object_types = (Octree,)
