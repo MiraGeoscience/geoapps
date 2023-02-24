@@ -19,13 +19,14 @@ from __future__ import annotations
 import hashlib
 import re
 import tempfile
+import warnings
 from pathlib import Path
 from urllib import request
 
 _url_filename_re = re.compile(".*/([^/]*)")
 
 
-def computeSha256(url: str, base_name: str | None = None) -> str:
+def compute_sha256(url: str, base_name: str | None = None) -> str:
     filename_match = _url_filename_re.match(url)
     assert filename_match
 
@@ -42,9 +43,15 @@ def computeSha256(url: str, base_name: str | None = None) -> str:
             return sha256.hexdigest()
 
 
-def patchPyprojectToml():
+def patch_pyproject_toml() -> None:
     pyproject = Path("pyproject.toml")
     assert pyproject.is_file()
+
+    if has_git_branches(pyproject):
+        warnings.warn(
+            f"{pyproject} contains git branches: not computing the sha256 for any git dependency."
+        )
+        return
 
     tag_url_re = re.compile(
         r"""^(\s*\S*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/tags/.*)#sha256=\w*"(.*}.*)"""
@@ -61,12 +68,24 @@ def patchPyprojectToml():
                     package_name = line_start.strip()
                     url = match[2]
                     line_end = match[3]
-                    sha = computeSha256(url, package_name)
+                    sha = compute_sha256(url, package_name)
                     patched_line = f"""{line_start}"{url}#sha256={sha}"{line_end}\n"""
                     patched.write(patched_line)
 
     pyproject_sha.replace(pyproject)
 
 
+def has_git_branches(pyproject: Path) -> bool:
+    branch_url_re = re.compile(
+        r"""^(\s*\S*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/heads/.*)\S*"(.*}.*)"""
+    )
+    with open(pyproject) as input:
+        for line in input:
+            match = branch_url_re.match(line)
+            if match:
+                return True
+    return False
+
+
 if __name__ == "__main__":
-    patchPyprojectToml()
+    patch_pyproject_toml()

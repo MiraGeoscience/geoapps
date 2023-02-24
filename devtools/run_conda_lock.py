@@ -29,7 +29,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-from add_url_tag_sha256 import patchPyprojectToml
+from add_url_tag_sha256 import patch_pyproject_toml
 
 env_file_variables_section_ = """
 variables:
@@ -87,13 +87,15 @@ def per_platform_env(py_ver: str, extras=[], dev=False, suffix="") -> None:
         check=True,
         stderr=subprocess.STDOUT,
     )
+
+
+def finalize_per_platform_envs(py_ver: str, dev=False, suffix="") -> None:
+    dev_suffix = "-dev" if dev else ""
     platform_glob = "*-64"
     for lock_env_file in _environments_folder.glob(
         f"conda-py-{py_ver}-{platform_glob}{dev_suffix}{suffix}.lock.yml"
     ):
-        patch_none_hash(lock_env_file)
-        with open(lock_env_file, "a") as f:
-            f.write(env_file_variables_section_)
+        LockFilePatcher(lock_env_file).patch()
 
 
 def patch_absolute_path(file: Path) -> None:
@@ -117,26 +119,83 @@ def patch_absolute_path(file: Path) -> None:
         os.replace(patched_file, file)
 
 
-def patch_none_hash(file: Path) -> None:
+class LockFilePatcher:
     """
-    Patch the given file to remove --hash=md5:None and #sha25=None
+    Patch the given file to remove hash information on pip dependency if any hash is missing.
 
-    - pip does not want hash with md5 (but accepts sha256 or others).
-    - #sha256=None will conflict with the actual sha256
+    As soon as one hash is specified, pip requires all hashes to be specified.
     """
 
-    none_hash_re = re.compile(r"(.*)(?:\s--hash=md5:None|#sha256=None)\b(.*)")
-    with tempfile.TemporaryDirectory(dir=str(file.parent)) as tmpdirname:
-        patched_file = Path(tmpdirname) / file.name
-        with open(patched_file, "w") as patched:
-            with open(file) as f:
+    def __init__(self, lock_file: Path) -> None:
+        self.lock_file = lock_file
+        self.pip_section_re = re.compile(r"^\s*- pip:\s*$")
+        self.sha_re = re.compile(r"(.*)(\s--hash|#sha256)=\S*")
+
+    def add_variables_section(self):
+        """
+        Add the variables section to the lock file.
+        """
+
+        with open(self.lock_file, "a") as f:
+            f.write(env_file_variables_section_)
+
+    def patch_none_hash(self) -> None:
+        """
+        Patch the lock file to remove --hash=md5:None and #sha25=None
+
+        - pip does not want hash with md5 (but accepts sha256 or others).
+        - #sha256=None will conflict with the actual sha256
+        """
+
+        none_hash_re = re.compile(r"(.*)(?:\s--hash=md5:None|#sha256=None)\b(.*)")
+        with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
+            patched_file = Path(tmpdirname) / self.lock_file.name
+            with open(patched_file, "w") as patched, open(self.lock_file) as f:
                 for line in f:
                     match = none_hash_re.match(line)
                     if not match:
                         patched.write(line)
                     else:
                         patched.write(f"{match[1]}{match[2]}\n")
-        patched_file.replace(file)
+            patched_file.replace(self.lock_file)
+
+    def is_missing_pip_hash(self) -> bool:
+        """
+        Check if the lock file contains pip dependencies with missing hash.
+        """
+
+        pip_dependency_re = re.compile(r"^\s*- (\S+) (@|===) .*")
+        with open(self.lock_file) as file:
+            while not self.pip_section_re.match(file.readline()):
+                pass
+
+            for line in file:
+                if pip_dependency_re.match(line) and not self.sha_re.match(line):
+                    return True
+        return False
+
+    def remove_pip_hashes(self) -> None:
+        """
+        Remove all hashes from the pip dependencies.
+        """
+
+        with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
+            patched_file = Path(tmpdirname) / self.lock_file.name
+            with open(patched_file, "w") as patched, open(self.lock_file) as f:
+                for line in f:
+                    patched_line = self.sha_re.sub(r"\1", line)
+                    patched.write(patched_line)
+            patched_file.replace(self.lock_file)
+
+    def patch(self, force_no_pip_hash=False) -> None:
+        """
+        Apply all patches to the lock file.
+        """
+
+        self.patch_none_hash()
+        if force_no_pip_hash or self.is_missing_pip_hash():
+            self.remove_pip_hashes()
+        self.add_variables_section()
 
 
 def config_conda() -> None:
@@ -163,9 +222,11 @@ if __name__ == "__main__":
 
     config_conda()
 
-    patchPyprojectToml()
+    patch_pyproject_toml()
     with print_execution_time("run_conda_lock"):
         for py_ver in ["3.10", "3.9"]:
             create_multi_platform_lock(py_ver)
             per_platform_env(py_ver, ["full"], dev=False)
+            finalize_per_platform_envs(py_ver, dev=False)
             per_platform_env(py_ver, ["full"], dev=True)
+            finalize_per_platform_envs(py_ver, dev=True)
