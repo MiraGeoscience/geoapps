@@ -14,6 +14,8 @@ Usage: at the root of the project:
 > python devtools/add_url_tag_sha256.py
 """
 
+from __future__ import annotations
+
 import hashlib
 import re
 import tempfile
@@ -23,7 +25,7 @@ from urllib import request
 _url_filename_re = re.compile(".*/([^/]*)")
 
 
-def computeSha256(url: str, base_name: str = None) -> str:
+def computeSha256(url: str, base_name: str | None = None) -> str:
     filename_match = _url_filename_re.match(url)
     assert filename_match
 

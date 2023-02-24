@@ -17,7 +17,7 @@ from geoapps.utils.list import sorted_alphanumeric_list
 
 
 def sorted_children_dict(
-    entity: UUID | Entity, workspace: Workspace = None
+    entity: UUID | Entity, workspace: Workspace | None = None
 ) -> dict[str, UUID]:
     """
     Uses natural sorting algorithm to order the keys of a dictionary containing

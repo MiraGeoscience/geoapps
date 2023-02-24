@@ -52,7 +52,7 @@ def print_execution_time(name: str = "") -> Generator:
         print(f"--{message_prefix} execution time: {duration}")
 
 
-def create_multi_platform_lock(py_ver: str, platform: str = None) -> None:
+def create_multi_platform_lock(py_ver: str, platform: str | None = None) -> None:
     print(f"# Creating multi-platform lock file for Python {py_ver} ...")
     platform_option = f"-p {platform}" if platform else ""
     with print_execution_time(f"conda-lock for {py_ver}"):
