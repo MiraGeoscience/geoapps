@@ -24,7 +24,6 @@ from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
-from SimPEG.utils import tile_locations
 
 from geoapps.driver_base.driver import BaseDriver
 from geoapps.inversion.components import (
@@ -36,6 +35,7 @@ from geoapps.inversion.components import (
 )
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
+from geoapps.inversion.utils import tile_locations
 
 DRIVER_MAP = {
     "direct current 3d": (
