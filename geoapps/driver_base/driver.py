@@ -17,7 +17,6 @@ from geoapps.driver_base.params import BaseParams
 
 
 class BaseDriver(ABC):
-
     _params_class = BaseParams
     _validations = None
 

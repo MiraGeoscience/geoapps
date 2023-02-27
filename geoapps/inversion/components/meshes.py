@@ -88,7 +88,6 @@ class InversionMesh:
         self.n_cells = self.entity.n_cells
 
         if isinstance(self.entity, Octree):
-
             if self.entity.rotation:
                 origin = self.entity.origin.tolist()
                 angle = self.entity.rotation[0]

@@ -12,7 +12,6 @@ from .params import TipperParams
 
 
 class TipperDriver(InversionDriver):
-
     _params_class = TipperParams
     _validations = validations
 

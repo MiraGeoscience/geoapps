@@ -18,7 +18,6 @@ from .simpeg_factory import SimPEGFactory
 
 
 class DirectivesFactory:
-
     _directive_2_attr = {
         "VectorInversion": ["vector_inversion_directive"],
         "Update_IRLS": ["update_irls_directive"],
@@ -56,7 +55,6 @@ class DirectivesFactory:
         global_misfit,
         regularizer,
     ):
-
         self.vector_inversion_directive = directives.VectorInversion(
             [local.simulation for local in global_misfit.objfcts],
             regularizer,
@@ -94,7 +92,6 @@ class DirectivesFactory:
         self.update_preconditioner_directive = directives.UpdatePreconditioner()
 
         if self.params.geoh5 is not None:
-
             self.save_iteration_model_directive = SaveIterationGeoh5Factory(
                 self.params
             ).build(
@@ -183,7 +180,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-
         object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
 
         if object_type == "data":
@@ -204,7 +200,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "induced polarization 3d",
                 "induced polarization 2d",
             ]:
-
                 kwargs = self.assemble_data_keywords_dcip(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
@@ -401,7 +396,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-
         components = list(inversion_object.observed)
         channels = np.unique([list(v) for k, v in inversion_object.observed.items()])
         kwargs = {

@@ -28,7 +28,6 @@ from geoapps.utils.formatters import string_name
 
 
 class IsoSurfacesDriver(BaseDriver):
-
     _params_class = IsoSurfacesParams
     _validations = validations
 
@@ -48,7 +47,6 @@ class IsoSurfacesDriver(BaseDriver):
         )
 
         if len(levels) < 1:
-
             return
 
         print("Starting the isosurface creation.")

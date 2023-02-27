@@ -880,7 +880,6 @@ class Clustering(ScatterPlots):
             crossplot = go.Figure(self.scatter_driver.run())
             return crossplot
         else:
-
             return go.Figure()
 
     @staticmethod
@@ -1204,7 +1203,7 @@ class Clustering(ScatterPlots):
         size_markers: int,
         channel: str,
         ga_group_name: str,
-        trigger: str = None,
+        trigger: str | None = None,
     ) -> list:
         """
         Write cluster groups to the target geoh5 object. Inputs are all params that are written to ui.json.

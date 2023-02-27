@@ -119,7 +119,6 @@ class BaseApplication:
             if key[0] == "_":
                 key = key[1:]
             if hasattr(self, "_" + key) or hasattr(self, key):
-
                 if isinstance(value, list):
                     value = [dict_mapper(val, mappers) for val in value]
                 else:
@@ -206,7 +205,6 @@ class BaseApplication:
         Enable the monitoring folder
         """
         if self.live_link.value:
-
             if (self.h5file is not None) and (self.monitoring_directory is None):
                 live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
                 self.monitoring_directory = live_path
@@ -240,7 +238,6 @@ class BaseApplication:
 
     @monitoring_directory.setter
     def monitoring_directory(self, live_path: str):
-
         if not path.exists(live_path):
             mkdir(live_path)
 
@@ -335,7 +332,6 @@ class BaseApplication:
         :obj:`str`: Target geoh5 project file.
         """
         if getattr(self, "_h5file", None) is None:
-
             if self._workspace is not None:
                 self.h5file = self._workspace.h5file
 

@@ -80,11 +80,10 @@ def test_ip_2d_run(
         workpath = str(tmp_path / "../test_ip_2d_fwr_run0/inversion_test.geoh5")
 
     with Workspace(workpath) as geoh5:
-
-        potential = geoh5.get_entity("Iteration_0_ip")[0]
+        chargeability = geoh5.get_entity("Iteration_0_ip")[0]
         mesh = geoh5.get_entity("Models")[0]
         topography = geoh5.get_entity("topography")[0]
-        _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
+        _ = survey_lines(chargeability.parent, [-100, 100], save="line_IDs")
 
         # Run the inverse
         np.random.seed(0)
@@ -92,8 +91,8 @@ def test_ip_2d_run(
             geoh5=geoh5,
             mesh=mesh.uid,
             topography_object=topography.uid,
-            data_object=potential.parent.uid,
-            chargeability_channel=potential.uid,
+            data_object=chargeability.parent.uid,
+            chargeability_channel=chargeability.uid,
             chargeability_uncertainty=2e-4,
             line_object=geoh5.get_entity("line_IDs")[0].uid,
             line_id=2,
@@ -116,6 +115,7 @@ def test_ip_2d_run(
             coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+
     driver = InducedPolarization2DDriver.start(
         os.path.join(tmp_path, "Inv_run.ui.json")
     )
@@ -124,7 +124,7 @@ def test_ip_2d_run(
         driver.params.geoh5.h5file, driver.params.ga_group.uid
     )
     if geoh5.open():
-        output["data"] = potential.values[np.isfinite(potential.values)]
+        output["data"] = chargeability.values[np.isfinite(chargeability.values)]
     if pytest:
         check_target(output, target_run)
     else:

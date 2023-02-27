@@ -171,6 +171,7 @@ class InversionData(InversionLocations):
                 "direct current 2d",
                 "induced polarization 3d",
                 "induced polarization 2d",
+                "induced polarization pseudo 3d",
             ]
             and self.indices is None
         ):
@@ -300,7 +301,6 @@ class InversionData(InversionLocations):
                 if ignore_type in ["<", ">"]:
                     ignore_value = float(ignore_values.split(ignore_type)[1])
                 else:
-
                     try:
                         ignore_value = float(ignore_values)
                     except ValueError:
@@ -421,8 +421,8 @@ class InversionData(InversionLocations):
 
     def create_survey(
         self,
-        mesh: TreeMesh = None,
-        local_index: np.ndarray = None,
+        mesh: TreeMesh | None = None,
+        local_index: np.ndarray | None = None,
         channel=None,
     ):
         """
@@ -450,7 +450,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh,
         active_cells: np.ndarray,
         survey,
-        tile_id: int = None,
+        tile_id: int | None = None,
         padding_cells: int = 6,
     ):
         """
@@ -532,7 +532,6 @@ class InversionData(InversionLocations):
 
     @staticmethod
     def check_tensor(channels):
-
         tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
         has_tensor = lambda c: any(k in c for k in tensor_components)
         return any(has_tensor(c) for c in channels)

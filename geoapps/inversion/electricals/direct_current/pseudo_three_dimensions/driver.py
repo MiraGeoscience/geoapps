@@ -14,6 +14,7 @@ from geoh5py.data import Data
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components.data import InversionData
+from geoapps.inversion.components.topography import InversionTopography
 from geoapps.inversion.components.windows import InversionWindow
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
     validations,
@@ -31,7 +32,6 @@ from geoapps.utils.surveys import extract_dcip_survey
 
 
 class DirectCurrentPseudo3DDriver(LineSweepDriver):
-
     _params_class = DirectCurrentPseudo3DParams
     _validations = validations
 
@@ -47,12 +47,15 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
         ifile = DirectCurrent2DParams(forward_only=forward_only).input_file
 
         with self.workspace.open(mode="r+"):
-
             self.inversion_window = InversionWindow(
                 self.workspace, self.pseudo3d_params
             )
             self.inversion_data = InversionData(
-                self.workspace, self.pseudo3d_params, self.inversion_window.window
+                self.workspace, self.pseudo3d_params, self.window
+            )
+
+            self.inversion_topography = InversionTopography(
+                self.workspace, self.pseudo3d_params, self.inversion_data, self.window
             )
 
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
@@ -67,7 +70,6 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                 )
 
             for uuid, trial in lookup.items():
-
                 if trial["status"] != "pending":
                     continue
 
@@ -76,7 +78,6 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                     f"{uuid}.ui.geoh5",
                 )
                 with Workspace(filepath) as iter_workspace:
-
                     receiver_entity = extract_dcip_survey(
                         iter_workspace,
                         self.inversion_data.entity,

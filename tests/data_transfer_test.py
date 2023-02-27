@@ -11,7 +11,6 @@ from geoapps.block_model_creation.driver import BlockModelDriver
 
 
 def test_truncate_locs_depths():
-
     # If z range of locations is larger than depth_core then locations are truncated
     # to the depth_core and the depth_core is reduced to w_cell_size
     top = 500
@@ -71,7 +70,6 @@ def test_truncate_locs_depths():
 
 
 def test_find_top_padding(tmp_path):
-
     top = 500
     depth_core = 300.0
     height = 300
@@ -93,7 +91,6 @@ def test_find_top_padding(tmp_path):
 
 
 def test_get_block_model(tmp_path):
-
     # padding in the W/E/N/S directions should make create locs at least as
     # far as the core hull plus the padding distances
     top = 500

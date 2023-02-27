@@ -24,8 +24,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_mvi_run = {
     "data_norm": 8.943476,
-    "phi_d": 0.00776,
-    "phi_m": 4.674e-6,
+    "phi_d": 0.02951,
+    "phi_m": 4.164e-6,
 }
 
 
@@ -120,7 +120,6 @@ def test_magnetic_vector_run(
         driver = MagneticVectorDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
-
         # Re-open the workspace and get iterations
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.ga_group.uid

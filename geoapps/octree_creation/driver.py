@@ -22,7 +22,6 @@ from geoapps.octree_creation.params import OctreeParams
 
 
 class OctreeDriver(BaseDriver):
-
     _params_class = OctreeParams
     _validations = validations
 

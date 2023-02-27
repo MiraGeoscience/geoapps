@@ -976,7 +976,6 @@ class InversionApp(PlotSelection2D):
                 and data_list is not None
                 and data_widget.children[1].value is None
             ):
-
                 options = [[data.name, data.uid] for data in data_list]
                 data_widget.children[1].value = find_value(
                     options, [self.data_channel_choices.value]
@@ -991,7 +990,6 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
     def write_trigger(self, _):
-
         if (
             "induced polarization 3d" in self.inversion_type.value
             and self._conductivity_model_group.data.value is None
@@ -1027,7 +1025,6 @@ class InversionApp(PlotSelection2D):
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
-
             param_dict["geoh5"] = new_workspace
 
             for elem in [
@@ -1123,7 +1120,6 @@ class InversionApp(PlotSelection2D):
 
     @staticmethod
     def run(params):
-
         if not isinstance(params, (DirectCurrent3DParams, InducedPolarization3DParams)):
             raise TypeError(
                 "Parameter 'inversion_type' must be one of "
@@ -1147,7 +1143,6 @@ class InversionApp(PlotSelection2D):
                 self.geoh5.close()
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
-
                 # Read the inversion type first...
                 with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)

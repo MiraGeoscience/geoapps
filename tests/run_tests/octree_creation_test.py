@@ -122,7 +122,6 @@ def test_create_octree_app(tmp_path):
 
 
 def test_create_octree_driver(tmp_path):
-
     uijson_path = Path(tmp_path) / r"../test_create_octree_app0/Temp"
     for file in os.listdir(uijson_path):
         if file.endswith(".json"):

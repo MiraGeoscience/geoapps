@@ -94,7 +94,6 @@ class CoordinateTransformation(ObjectDataSelection):
         import matplotlib.pyplot as plt
 
         if self.wkt_in.value != "" and self.wkt_out.value != "":
-
             if self.plot_result:
                 self._figure = plt.figure(figsize=(12, 8))
                 ax1 = plt.subplot(1, 2, 1)
@@ -110,7 +109,6 @@ class CoordinateTransformation(ObjectDataSelection):
                 )
 
                 for uid in self.objects.value:
-
                     obj = self.workspace.get_entity(uid)[0]
 
                     if isinstance(obj, Grid2D):
@@ -123,7 +121,6 @@ class CoordinateTransformation(ObjectDataSelection):
                             temp_file_out = child.name + ".tif"
 
                             if isinstance(child, FloatData):
-
                                 export_grid_2_geotiff(
                                     child,
                                     temp_file,

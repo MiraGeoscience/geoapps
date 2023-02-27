@@ -270,7 +270,9 @@ class ScatterPlots(BaseDashApplication):
             size_value,
         )
 
-    def get_channel_bounds(self, channel: str, kmeans: list = None) -> (float, float):
+    def get_channel_bounds(
+        self, channel: str, kmeans: list | None = None
+    ) -> (float, float):
         """
         Set the min and max values for the given axis channel.
 
@@ -304,7 +306,7 @@ class ScatterPlots(BaseDashApplication):
         z: str,
         color: str,
         size: str,
-        kmeans: list = None,
+        kmeans: list | None = None,
     ):
         """
         Update min and max for all channels, either from uploaded ui.json or from change of data.
@@ -481,7 +483,10 @@ class ScatterPlots(BaseDashApplication):
         return figure
 
     def trigger_click(
-        self, n_clicks: int, monitoring_directory: str, figure: go.Figure = None
+        self,
+        n_clicks: int,
+        monitoring_directory: str,
+        figure: go.Figure | None = None,
     ):
         """
         Save the plot as html, write out ui.json.

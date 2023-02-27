@@ -40,7 +40,6 @@ class Geoh5Tester:
     """Create temp workspace, copy entities, and setup params class."""
 
     def __init__(self, geoh5, path, name, params_class=None):
-
         self.geoh5 = geoh5
         self.tmp_path = os.path.join(path, name)
 
@@ -91,7 +90,6 @@ def setup_inversion_workspace(
     inversion_type="other",
     flatten=False,
 ):
-
     project = os.path.join(work_dir, "inversion_test.geoh5")
     geoh5 = Workspace(project)
     # Topography
@@ -127,7 +125,6 @@ def setup_inversion_workspace(
     vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
 
     if inversion_type in ["dcip", "dcip_2d"]:
-
         ab_vertices = np.c_[
             X[:, :-2].flatten(), Y[:, :-2].flatten(), Z[:, :-2].flatten()
         ]
@@ -221,7 +218,6 @@ def setup_inversion_workspace(
     # Create a mesh
 
     if "2d" in inversion_type:
-
         locs = np.unique(np.vstack([ab_vertices, mn_vertices]), axis=0)
         lines = survey_lines(locs, [-100, -100])
 
@@ -261,7 +257,6 @@ def setup_inversion_workspace(
 
     # Model
     if flatten:
-
         p0 = np.r_[-20, -20, -30]
         p1 = np.r_[20, 20, -70]
 
@@ -273,7 +268,6 @@ def setup_inversion_workspace(
             anomaly,
         )
     else:
-
         p0 = np.r_[-20, -20, -20]
         p1 = np.r_[20, 20, 25]
 
