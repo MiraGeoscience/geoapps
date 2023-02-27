@@ -36,7 +36,6 @@ def test_dc_3d_fwr_run(
     n_lines=3,
     refinement=(4, 6),
 ):
-
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -122,6 +121,39 @@ def test_dc_3d_run(
         check_target(output, target_run)
     else:
         return driver.inverse_problem.model
+
+
+def test_dc_single_line_fwr_run(
+    tmp_path,
+    n_electrodes=4,
+    n_lines=1,
+    refinement=(4, 6),
+):
+    # Run the forward
+    geoh5, _, model, survey, topography = setup_inversion_workspace(
+        tmp_path,
+        background=0.01,
+        anomaly=10,
+        n_electrodes=n_electrodes,
+        n_lines=n_lines,
+        refinement=refinement,
+        drape_height=0.0,
+        inversion_type="dcip",
+        flatten=False,
+    )
+    params = DirectCurrent3DParams(
+        forward_only=True,
+        geoh5=geoh5,
+        mesh=model.parent.uid,
+        topography_object=topography.uid,
+        z_from_topo=False,
+        data_object=survey.uid,
+        starting_model=model.uid,
+        resolution=None,
+    )
+    params.workpath = tmp_path
+    fwr_driver = DirectCurrent3DDriver(params)
+    assert np.all(fwr_driver.window["size"] > 0)
 
 
 if __name__ == "__main__":

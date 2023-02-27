@@ -72,7 +72,6 @@ class SurveyFactory(SimPEGFactory):
         self.local_index = None
 
     def concrete_object(self):
-
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import survey
 
@@ -101,6 +100,7 @@ class SurveyFactory(SimPEGFactory):
                 "direct current 2d",
                 "induced polarization 3d",
                 "induced polarization 2d",
+                "induced polarization pseudo 3d",
             ]:
                 n_data = receiver_entity.n_cells
             else:
@@ -116,6 +116,7 @@ class SurveyFactory(SimPEGFactory):
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             return self._dcip_arguments(data=data, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
@@ -149,7 +150,6 @@ class SurveyFactory(SimPEGFactory):
         )
 
         if not self.params.forward_only:
-
             if local_index is None or "2d" in self.factory_type:
                 self._add_data(survey, data, self.local_index, channel)
             else:
@@ -160,7 +160,6 @@ class SurveyFactory(SimPEGFactory):
         return survey, self.local_index
 
     def _get_local_data(self, data, channel, local_index):
-
         local_data = {}
         local_uncertainties = {}
 
@@ -186,14 +185,11 @@ class SurveyFactory(SimPEGFactory):
         return local_data, local_uncertainties
 
     def _add_data(self, survey, data, local_index, channel):
-
         if self.factory_type in ["magnetotellurics", "tipper"]:
-
             local_data = {}
             local_uncertainties = {}
 
             if channel is None:
-
                 channels = np.unique([list(v.keys()) for v in data.observed.values()])
                 for chan in channels:
                     dat, unc = self._get_local_data(data, chan, local_index)
@@ -201,7 +197,6 @@ class SurveyFactory(SimPEGFactory):
                     local_uncertainties.update(unc)
 
             else:
-
                 dat, unc = self._get_local_data(data, channel, local_index)
                 local_data.update(dat)
                 local_uncertainties.update(unc)
@@ -283,7 +278,6 @@ class SurveyFactory(SimPEGFactory):
         sources = []
         self.local_index = []
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
-
             receiver_indices = receiver_group(source_id, receiver_entity)
 
             if "2d" in self.params.inversion_type:
@@ -340,7 +334,6 @@ class SurveyFactory(SimPEGFactory):
         return [sources]
 
     def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
-
         receivers = []
         sources = []
         for k, v in data.observed.items():

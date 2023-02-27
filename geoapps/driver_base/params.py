@@ -356,7 +356,6 @@ class BaseParams:
         return uid
 
     def setter_validator(self, key: str, value, fun=lambda x: x):
-
         if value is None:
             setattr(self, f"_{key}", value)
             return
@@ -381,8 +380,8 @@ class BaseParams:
 
     def write_input_file(
         self,
-        name: str = None,
-        path: str = None,
+        name: str | None = None,
+        path: str | None = None,
         validate: bool = True,
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
