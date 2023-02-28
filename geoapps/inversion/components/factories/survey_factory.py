@@ -204,11 +204,13 @@ class SurveyFactory(SimPEGFactory):
             uncerts = []
 
             data_stack = [np.vstack(list(k.values())) for k in data.observed.values()]
-            uncert_stack = [np.vstack(list(k.values())) for k in data.uncertainties.values()]
+            uncert_stack = [
+                np.vstack(list(k.values())) for k in data.uncertainties.values()
+            ]
             for order in self.ordering:
-                time_id, component_id, tx_id, rx_ids = order
-                dobs.append(data_stack[component_id][time_id, rx_ids])
-                uncerts.append(uncert_stack[component_id][time_id, rx_ids])
+                time_id, component_id, _, rx_id = order
+                dobs.append(data_stack[component_id][time_id, rx_id])
+                uncerts.append(uncert_stack[component_id][time_id, rx_id])
 
             survey.dobs = np.vstack([dobs]).flatten()
             survey.std = np.vstack([uncerts]).flatten()
@@ -349,6 +351,7 @@ class SurveyFactory(SimPEGFactory):
                 receivers=receivers,
                 locations=source_locations[currents.cells[cell_ind]],
             )
+
             sources.append(source)
             self.local_index.append(receiver_indices)
 
@@ -408,12 +411,9 @@ class SurveyFactory(SimPEGFactory):
             waveform = tdem.sources.RawWaveform(waveFct=wave_function, offTime=0.0)
 
         self.ordering = []
-        observed = []
-        uncertainties = []
         rx_factory = ReceiversFactory(self.params)
         tx_factory = SourcesFactory(self.params)
         for tx_id, rx_ids in rx_lookup.items():
-
             locs = receivers.vertices[rx_ids, :]
 
             rx_list = []
@@ -427,8 +427,9 @@ class SurveyFactory(SimPEGFactory):
                 )
                 rx_list.append(rx_obj)
 
-                for time_id, time in enumerate(receivers.channels):
-                    self.ordering.append([time_id, component_id, tx_id, rx_ids])
+                for time_id in range(len(receivers.channels)):
+                    for rx_id in rx_ids:
+                        self.ordering.append([time_id, component_id, tx_id, rx_id])
 
             tx_list.append(
                 tx_factory.build(
