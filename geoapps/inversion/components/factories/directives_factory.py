@@ -209,7 +209,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     transform=transform,
                     save_objective_function=save_objective_function,
                     global_misfit=global_misfit,
-                    name=name
+                    name=name,
                 )
 
             elif self.factory_type in [
@@ -466,7 +466,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-
         conversion = {
             "Seconds (s)": 1.0,
             "Milliseconds (ms)": 1e-3,
@@ -474,12 +473,13 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         }
         receivers = inversion_object.entity
         time_channels = np.r_[receivers.channels] * conversion[receivers.unit]
+
         components = list(inversion_object.observed)
         ordering = np.vstack(ordering)
-        tx_ids = ordering[:, 0]
-        rx_ids = ordering[:, 1]
-        time_ids = ordering[:, 2]
-        component_ids = ordering[:, 3]
+        time_ids = ordering[:, 0]
+        component_ids = ordering[:, 1]
+        rx_ids = ordering[:, 3]
+
         def reshape(values):
             data = np.zeros((len(time_channels), len(components), receivers.n_vertices))
             data[time_ids, component_ids, rx_ids] = values
@@ -492,8 +492,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "channels": [f"{val:.2e}" for val in time_channels],
             "components": components,
             "sorting": np.argsort(np.r_[rx_ids]),
-            "_reshape": reshape
+            "_reshape": reshape,
         }
 
         return kwargs
-
