@@ -509,7 +509,7 @@ class InversionData(InversionLocations):
             )
         return sim, mapping
 
-    def simulate(self, model, inverse_problem, sorting):
+    def simulate(self, model, inverse_problem, sorting, ordering):
         """Simulate fields for a particular model."""
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
@@ -518,6 +518,7 @@ class InversionData(InversionLocations):
             save_directive = SaveIterationGeoh5Factory(self.params).build(
                 inversion_object=self,
                 sorting=np.argsort(np.hstack(sorting)),
+                ordering=ordering,
             )
             save_directive.save_components(0, dpred)
 

@@ -117,31 +117,22 @@ class EntityFactory(AbstractFactory):
         return entity
 
     def _build(self, inversion_data: InversionData):
-        entity = inversion_data.create_entity(
-            "Data", inversion_data.locations, geoh5_object=self.concrete_object
-        )
+        if isinstance(self.params.data_object, Grid2D):
+            entity = inversion_data.create_entity(
+                "Data", inversion_data.locations, geoh5_object=self.concrete_object
+            )
+
+        else:
+            entity = self.params.data_object.copy(
+                parent=self.params.ga_group,
+                copy_children=False,
+            )
 
         if np.any(~inversion_data.mask):
             entity.remove_vertices(np.where(~inversion_data.mask))
 
-        if getattr(self.params.data_object, "parts", None) is not None:
-            entity.parts = self.params.data_object.parts[inversion_data.mask]
-
-        if getattr(self.params.data_object, "base_stations", None) is not None:
-            entity.base_stations = type(self.params.data_object.base_stations).create(
-                entity.workspace,
-                parent=entity.parent,
-                vertices=self.params.data_object.base_stations.vertices,
-            )
-
-        if getattr(self.params.data_object, "channels", None) is not None:
-            entity.channels = [float(val) for val in self.params.data_object.channels]
-
-        if getattr(self.params.data_object, "transmitters", None) is not None:
-            entity.transmitters = self.params.data_object.transmitters
-
-        if getattr(self.params.data_object, "waveform", None) is not None:
-            entity.waveform = self.params.data_object.waveform
+            if getattr(entity, "transmitters", None) is not None:
+                entity.transmitters.remove_vertices(np.where(~inversion_data.mask))
 
         return entity
 

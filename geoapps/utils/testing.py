@@ -19,6 +19,8 @@ from uuid import UUID
 import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import (
+    AirborneTEMReceivers,
+    AirborneTEMTransmitters,
     CurrentElectrode,
     MTReceivers,
     Points,
@@ -207,6 +209,27 @@ def setup_inversion_workspace(
         )
         # survey.cells = survey.cells[dist < 100.0, :]
         survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
+    elif inversion_type == "airborne_tem":
+        survey = AirborneTEMReceivers.create(
+            geoh5, vertices=vertices, name="Airborne_rx"
+        )
+        transmitters = AirborneTEMTransmitters.create(
+            geoh5, vertices=vertices, name="Airborne_tx"
+        )
+        survey.transmitters = transmitters
+        survey.channels = np.r_[2e-4, 5e-4, 1e-3]
+        waveform = np.c_[
+            np.r_[
+                np.linspace(-0.002, -0.0001, 5),
+                np.linspace(-0.0001 + 2.5e-5, 0.0, 4),
+                np.linspace(2.5e-5, 0.011, 12),
+            ]
+            + 2e-3,
+            np.r_[np.linspace(0, 1, 5), np.linspace(1, 0.0, 4), np.zeros(12)],
+        ]
+        survey.waveform = waveform
+        survey.timing_mark = 2e-3
+        survey.unit = "Seconds (s)"
 
     else:
         survey = Points.create(
@@ -250,8 +273,19 @@ def setup_inversion_workspace(
             method="surface",
             octree_levels=refinement,
             octree_levels_padding=refinement,
-            finalize=True,
+            finalize=False,
         )
+
+        if inversion_type == "airborne_tem":
+            mesh = refine_tree_xyz(
+                mesh,
+                vertices,
+                method="radial",
+                octree_levels=[4],
+                finalize=False,
+            )
+
+        mesh.finalize()
         entity = treemesh_2_octree(geoh5, mesh, name="mesh")
         active = active_from_xyz(entity, topography.vertices, grid_reference="top")
 
