@@ -487,11 +487,11 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         kwargs = {
             "attribute_type": "predicted",
-            "label": name,
+            # "label": name,
             "association": "VERTEX",
             "channels": [f"{val:.2e}" for val in time_channels],
             "components": components,
-            "sorting": np.argsort(np.r_[rx_ids]),
+            "sorting": sorting,
             "_reshape": reshape,
         }
 
