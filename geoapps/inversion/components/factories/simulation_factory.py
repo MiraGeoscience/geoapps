@@ -148,7 +148,9 @@ class SimulationFactory(SimPEGFactory):
         if self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_keywords(kwargs, mesh, active_cells=active_cells)
         if self.factory_type in ["tdem"]:
-            return self._tdem_keywords(kwargs, receivers, mesh, active_cells=active_cells)
+            return self._tdem_keywords(
+                kwargs, receivers, mesh, active_cells=active_cells
+            )
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
         kwargs["actInd"] = active_cells
@@ -231,7 +233,9 @@ class SimulationFactory(SimPEGFactory):
             "Microseconds (us)": 1e-6,
         }
         kwargs["t0"] = -receivers.timing_mark * conversion[receivers.unit]
-        kwargs["time_steps"] = receivers.waveform[:, 0]
+        kwargs["time_steps"] = np.exp(
+            np.round(np.log(np.diff(receivers.waveform[:, 0])), decimals=3)
+        )
 
         return kwargs
 

@@ -103,6 +103,7 @@ class InversionDriver(BaseDriver):
         self.survey = None
         self.active_cells = None
         self.running = False
+        self.ordering = None
 
         self.logger = InversionLogger("SimPEG.log", self)
         sys.stdout = self.logger
@@ -223,7 +224,7 @@ class InversionDriver(BaseDriver):
         if self.warmstart and not self.params.forward_only:
             print("Pre-computing sensitivities . . .")
             self.inverse_problem.dpred = self.inversion_data.simulate(  # pylint: disable=assignment-from-no-return
-                self.starting_model, self.inverse_problem, self.sorting
+                self.starting_model, self.inverse_problem, self.sorting, self.ordering
             )
 
         # If forward only option enabled, stop here
@@ -252,7 +253,7 @@ class InversionDriver(BaseDriver):
         if self.params.forward_only:
             print("Running the forward simulation ...")
             self.inversion_data.simulate(
-                self.starting_model, self.inverse_problem, self.sorting
+                self.starting_model, self.inverse_problem, self.sorting, self.ordering
             )
             self.logger.end()
             sys.stdout = self.logger.terminal
