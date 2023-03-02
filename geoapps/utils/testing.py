@@ -230,6 +230,12 @@ def setup_inversion_workspace(
         survey.waveform = waveform
         survey.timing_mark = 2e-3
         survey.unit = "Seconds (s)"
+        dist = np.linalg.norm(
+            survey.vertices[survey.cells[:, 0], :]
+            - survey.vertices[survey.cells[:, 1], :],
+            axis=1,
+        )
+        survey.remove_cells(np.where(dist > 200)[0])
 
     else:
         survey = Points.create(
