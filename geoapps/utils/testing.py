@@ -209,7 +209,10 @@ def setup_inversion_workspace(
         )
         # survey.cells = survey.cells[dist < 100.0, :]
         survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
+
+
     elif inversion_type == "airborne_tem":
+
         survey = AirborneTEMReceivers.create(
             geoh5, vertices=vertices, name="Airborne_rx"
         )
@@ -217,7 +220,30 @@ def setup_inversion_workspace(
             geoh5, vertices=vertices, name="Airborne_tx"
         )
         survey.transmitters = transmitters
-        survey.channels = np.r_[2e-4, 5e-4, 1e-3]
+
+        # ds = 2
+        # timing_mark = 2e-3
+        # off_times = np.logspace(np.log10(1e-6), np.log10(1e-3), 12)
+        # waveform = np.c_[
+        #     np.r_[
+        #         np.linspace(-timing_mark, -1e-4, 5),
+        #         np.linspace(-1e-4 + 2.5e-5, 0.0, 4),
+        #         off_times,
+        #     ] + timing_mark,
+        #
+        #     np.r_[np.linspace(0, 1, 5), np.linspace(1, 0.0, 4), np.zeros(12)],
+        # ]
+        #
+        # channels = off_times[:-1] + (np.diff(off_times) / 2)
+        # channels = channels[::ds]
+        # survey.channels = channels
+        # survey.waveform = waveform
+        # survey.timing_mark = timing_mark
+        # survey.unit = "Seconds (s)"
+
+
+        survey.channels = np.r_[5.23863636e-04, 2.51931818e-03, 7.50795455e-03]
+
         waveform = np.c_[
             np.r_[
                 np.linspace(-0.002, -0.0001, 5),
@@ -230,12 +256,13 @@ def setup_inversion_workspace(
         survey.waveform = waveform
         survey.timing_mark = 2e-3
         survey.unit = "Seconds (s)"
+
         dist = np.linalg.norm(
             survey.vertices[survey.cells[:, 0], :]
             - survey.vertices[survey.cells[:, 1], :],
             axis=1,
         )
-        survey.remove_cells(np.where(dist > 200)[0])
+        survey.remove_cells(np.where(dist > 200.0)[0])
 
     else:
         survey = Points.create(
@@ -301,7 +328,7 @@ def setup_inversion_workspace(
         p1 = np.r_[20, 20, -70]
 
         model = utils.model_builder.addBlock(
-            mesh.gridCC,
+            entity.centroids,
             background * np.ones(mesh.nC),
             p0,
             p1,
