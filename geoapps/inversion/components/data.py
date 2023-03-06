@@ -418,7 +418,7 @@ class InversionData(InversionLocations):
                 if "imag" in comp:
                     normalizations[comp] = -1.0
             elif self.params.inversion_type in ["tdem"]:
-                if comp in ["x"]:
+                if comp in ["x", "z"]:
                     normalizations[comp] = -1.0
 
         return normalizations
