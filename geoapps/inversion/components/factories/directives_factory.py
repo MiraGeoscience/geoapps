@@ -485,14 +485,26 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             data[time_ids, component_ids, rx_ids] = values
             return data
 
+        channels = [f"{val:.2e}" for val in time_channels]
         kwargs = {
             "attribute_type": "predicted",
             # "label": name,
             "association": "VERTEX",
-            "channels": [f"{val:.2e}" for val in time_channels],
+            "transforms": [
+                np.tile(
+                    np.repeat(
+                        [inversion_object.normalizations[c] for c in components],
+                        inversion_object.locations.shape[0],
+                    ),
+                    len(channels),
+                )
+            ],
+            "channels": channels,
             "components": components,
             "sorting": sorting,
             "_reshape": reshape,
         }
+
+
 
         return kwargs
