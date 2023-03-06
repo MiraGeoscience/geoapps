@@ -10,6 +10,8 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from scipy.interpolate import interp1d
+
 from geoapps.inversion.airborne_electromagnetics.time_domain import (
     TimeDomainElectromagneticsParams,
 )
@@ -46,7 +48,7 @@ def test_airborne_tem_fwr_run(
         refinement=refinement,
         inversion_type="airborne_tem",
         drape_height=15.0,
-        flatten=False,
+        flatten=True,
     )
     params = TimeDomainElectromagneticsParams(
         forward_only=True,
@@ -84,11 +86,16 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
         components = {
             "z": "dBzdt",
         }
+        # floors = [3e-8, 2e-8, 1e-8, 9e-9, 8e-9, 7e-9, 6e-9, 2e-9, 8e-10, 4e-10, 9e-10]
+        # floors = np.logspace(np.log10(8.25e-10), np.log10(4.2e-12), len(survey.channels))
+        # interp_floor = interp1d(range(len(floors)), floors)
+
+        median_uncertainties = [2.06881468e-6, 5.86278769e-10, 2.35717522e-12]
 
         for comp, cname in components.items():
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
-            for time in survey.channels:
+            for tt, time in enumerate(survey.channels):
                 data_entity = geoh5.get_entity(f"Iteration_0_{comp}_{time:.2e}")[
                     0
                 ].copy(parent=survey)
@@ -102,12 +109,22 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
                 #         }
                 #     }
                 # )
+                # uncert = survey.add_data(
+                #     {
+                #         f"uncertainty_{comp}_{time:.2e}": {
+                #             "values": 1*np.abs(data_entity.values)/20
+                #         }
+                #     }
+                # )
+
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_{time:.2e}": {
-                            "values": 3*np.abs(data_entity.values)/20
+                            # "values": np.abs(data_entity.values * 0.05) + interp_floor(tt)
+                            "values": np.abs(data_entity.values * 0.01) + (median_uncertainties[tt]/2)
                         }
                     }
+
                 )
                 uncertainties[f"{cname} uncertainties"].append(uncert)
                 # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
@@ -120,7 +137,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
             data_kwargs[f"{comp}_channel"] = survey.property_groups[i].uid
             data_kwargs[f"{comp}_uncertainty"] = survey.property_groups[4 + i].uid
 
-        orig_dBzdt = geoh5.get_entity("Iteration_0_z_1.00e-03")[0].values
+        # orig_dBzdt = geoh5.get_entity("Iteration_0_z_1.00e-05")[0].values
 
         # Run the inverse
         np.random.seed(0)
@@ -130,19 +147,23 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
             topography_object=topography.uid,
             resolution=0.0,
             data_object=survey.uid,
-            starting_model=1e-4,
-            reference_model=1e-4,
-            s_norm=1.0,
-            x_norm=1.0,
-            y_norm=1.0,
-            z_norm=1.0,
-            alpha_s=1.0,
-            gradient_type="components",
+            starting_model=1e-5,
+            reference_model=1e-5,
+            chi_factor=0.1,
+            s_norm=2.0,
+            x_norm=2.0,
+            y_norm=2.0,
+            z_norm=2.0,
+            alpha_s=0.0,
+            gradient_type="total",
             z_from_topo=False,
+            lower_bound=2e-6,
+            upper_bound=1e2,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e4,
-            sens_wts_threshold=60.0,
-            prctile=100,
+            initial_beta_ratio=1e0,
+            cooling_rate=3,
+            sens_wts_threshold=1.0,
+            prctile=90,
             store_sensitivities="ram",
             **data_kwargs,
         )
@@ -155,7 +176,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.ga_group.uid
         )
-        output["data"] = orig_dBzdt
+        # output["data"] = orig_dBzdt
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
