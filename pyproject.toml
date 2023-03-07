@@ -6,7 +6,7 @@ authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
 repository = "https://github.com/MiraGeoscience/geoapps"
 documentation = "https://geoapps.readthedocs.io/en/latest/"
 homepage = "https://mirageoscience.com"
-readme = "README.md"
+readme = "README.rst"
 keywords = ["geology", "geophysics", "earth sciences"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -75,9 +75,9 @@ param-sweeps = {version = "0.1.4", source = "pypi"}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=None"}
 
 [tool.poetry.dev-dependencies]
-pylint = "^2.14.4"
-pytest = "^7.1.2"
-pytest-cov = "^3.0.0"
+pylint = "*"
+pytest = "*"
+pytest-cov = "*"
 toml = "*" # for tests only
 
 [tool.poetry.extras]
@@ -94,7 +94,7 @@ full = [
 
 [tool.conda-lock]
 platforms = ['win-64', 'osx-64', 'linux-64']
-channels = ['conda-forge', 'defaults']
+channels = ['conda-forge']
 
 [tool.conda-lock.dependencies]
 libblas = "*=*mkl"
@@ -106,8 +106,6 @@ include_trailing_comma = true
 force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
-# auto-updated by seed-isort-config
-known_third_party = ["Add2Build", "SimPEG", "StringIO", "add_url_tag_sha256", "autodoc", "dash", "dash_daq", "dask", "discretize", "edit_on_github", "environmentSetup", "flask", "geoh5py", "ipywidgets", "jupyter_dash", "matplotlib", "numpy", "osgeo", "pandas", "param_sweeps", "plotly", "pymatsolver", "pytest", "run_conda_lock", "scipy", "simpeg_archive", "skimage", "sklearn", "toml", "tqdm", "traitlets", "urllib2"]
 
 [tool.black]
 # defaults are just fine
