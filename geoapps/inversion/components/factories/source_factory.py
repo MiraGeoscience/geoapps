@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
-from scipy.interpolate import interp1d
 
 from geoapps.shared_utils.utils import rotate_xyz
 
@@ -71,6 +70,7 @@ class SourcesFactory(SimPEGFactory):
     ):  # pylint: disable=arguments-differ
         """Provides implementations to assemble arguments for sources object."""
 
+        _ = waveform
         args = []
 
         if locations is not None and getattr(self.params.mesh, "rotation", None):
@@ -128,7 +128,7 @@ class SourcesFactory(SimPEGFactory):
             receivers=receivers,
             locations=locations,
             frequency=frequency,
-            waveform=waveform
+            waveform=waveform,
         )
 
     def _dcip_arguments(self, receivers=None, locations=None):
