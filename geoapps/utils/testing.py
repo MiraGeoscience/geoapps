@@ -218,27 +218,6 @@ def setup_inversion_workspace(
             geoh5, vertices=vertices, name="Airborne_tx"
         )
         survey.transmitters = transmitters
-
-        # ds = 2
-        # timing_mark = 2e-3
-        # off_times = np.logspace(np.log10(1e-6), np.log10(1e-3), 12)
-        # waveform = np.c_[
-        #     np.r_[
-        #         np.linspace(-timing_mark, -1e-4, 5),
-        #         np.linspace(-1e-4 + 2.5e-5, 0.0, 4),
-        #         off_times,
-        #     ] + timing_mark,
-        #
-        #     np.r_[np.linspace(0, 1, 5), np.linspace(1, 0.0, 4), np.zeros(12)],
-        # ]
-        #
-        # channels = off_times[:-1] + (np.diff(off_times) / 2)
-        # channels = channels[::ds]
-        # survey.channels = channels
-        # survey.waveform = waveform
-        # survey.timing_mark = timing_mark
-        # survey.unit = "Seconds (s)"
-
         survey.channels = np.r_[5.23863636e-04, 2.51931818e-03, 7.50795455e-03]
 
         waveform = np.c_[

@@ -385,11 +385,6 @@ class SurveyFactory(SimPEGFactory):
                 ]
                 loop_ind = np.r_[loop_cells[:, 0], loop_cells[-1, 1]]
                 tx_locs = transmitters.vertices[loop_ind, :]
-                # TODO - determine whether drapTopotoLoc is needed here now that we adjust
-                #    active cells to contain data locations
-
-                # TODO - Can this be replaced with tx_locs = transmitters.vertices[np.where(tx_ind)[0], :]
-                #   ... with a step in between that repeats the last index to form the closed loop
                 tx_locs_lookup[k] = tx_locs
         else:
             rx_lookup = {k: [k] for k in self.local_index}

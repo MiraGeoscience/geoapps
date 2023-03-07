@@ -207,27 +207,6 @@ class SimulationFactory(SimPEGFactory):
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
 
-        # time_steps = []
-        # for label in ["ontime", "ramp_off", "earlytimes", "midtimes", "latetimes"]:
-        #     if label == "ontime":
-        #         dt = receivers.waveform_parameters["ontime_dt"]
-        #         n_spacing = int(
-        #             (
-        #                 receivers.waveform_parameters["pulse_width"] +
-        #                 receivers.waveform_parameters["turn_on"]
-        #             ) / dt
-        #         )
-        #     elif label == "ramp_off":
-        #         dt = receivers.waveform_parameters["ramp_off_dt"]
-        #         n_spacing = int(receivers.waveform_parameters["ramp_off"] / dt)
-        #     else:
-        #         dt = receivers.waveform_parameters[f"{label}_dt"]
-        #         n_spacing = receivers.waveform_parameters[f"{label}_n"]
-        #
-        #     time_steps.append(
-        #         (dt * 1e-3, n_spacing)
-        #     )
-
         conversion = {
             "Seconds (s)": 1.0,
             "Milliseconds (ms)": 1e-3,

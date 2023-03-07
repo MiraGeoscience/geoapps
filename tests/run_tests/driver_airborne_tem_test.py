@@ -9,7 +9,6 @@ import os
 
 import numpy as np
 from geoh5py.workspace import Workspace
-from scipy.interpolate import interp1d
 
 from geoapps.inversion.airborne_electromagnetics.time_domain import (
     TimeDomainElectromagneticsParams,
@@ -89,7 +88,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
         for comp, cname in components.items():
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
-            for tt, time in enumerate(survey.channels):
+            for time in survey.channels:
                 data_entity = geoh5.get_entity(f"Iteration_0_{comp}_{time:.2e}")[
                     0
                 ].copy(parent=survey)
@@ -104,13 +103,12 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
                     }
                 )
                 uncertainties[f"{cname} uncertainties"].append(uncert)
-                # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
 
         survey.add_components_data(data)
         survey.add_components_data(uncertainties)
 
         data_kwargs = {}
-        for i, comp in enumerate(components):
+        for comp in components:
             data_kwargs[f"{comp}_channel"] = survey.find_or_create_property_group(
                 name=f"Iteration_0_{comp}"
             )
@@ -118,7 +116,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
                 name=f"dB{comp}dt uncertainties"
             )
 
-        # orig_dBzdt = geoh5.get_entity("Iteration_0_z_1.00e-05")[0].values
+        orig_dBzdt = geoh5.get_entity("Iteration_0_z_5.24e-04")[0].values
 
         # Run the inverse
         np.random.seed(0)
@@ -157,7 +155,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.ga_group.uid
         )
-        # output["data"] = orig_dBzdt
+        output["data"] = orig_dBzdt
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)

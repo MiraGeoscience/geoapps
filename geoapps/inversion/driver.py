@@ -390,11 +390,6 @@ class InversionDriver(BaseDriver):
                 tiles = [np.array([k]) for k in np.unique(transmitter_id[0].values)]
             else:
                 tiles = [np.array([k]) for k in range(transmitters.n_vertices)]
-                # tiles = tile_locations(
-                #     transmitters.vertices,
-                #     self.params.tile_spatial,
-                #     method="kmeans",
-                # )
         else:
             tiles = tile_locations(
                 self.locations,
