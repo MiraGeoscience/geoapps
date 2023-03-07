@@ -210,9 +210,7 @@ def setup_inversion_workspace(
         # survey.cells = survey.cells[dist < 100.0, :]
         survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
 
-
     elif inversion_type == "airborne_tem":
-
         survey = AirborneTEMReceivers.create(
             geoh5, vertices=vertices, name="Airborne_rx"
         )
@@ -240,7 +238,6 @@ def setup_inversion_workspace(
         # survey.waveform = waveform
         # survey.timing_mark = timing_mark
         # survey.unit = "Seconds (s)"
-
 
         survey.channels = np.r_[5.23863636e-04, 2.51931818e-03, 7.50795455e-03]
 
