@@ -41,7 +41,7 @@ def test_airborne_tem_fwr_run(
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
-        background=0.0001,
+        background=0.001,
         anomaly=1.0,
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
@@ -86,11 +86,6 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
         components = {
             "z": "dBzdt",
         }
-        # floors = [3e-8, 2e-8, 1e-8, 9e-9, 8e-9, 7e-9, 6e-9, 2e-9, 8e-10, 4e-10, 9e-10]
-        # floors = np.logspace(np.log10(8.25e-10), np.log10(4.2e-12), len(survey.channels))
-        # interp_floor = interp1d(range(len(floors)), floors)
-
-        median_uncertainties = [2.06881468e-6, 5.86278769e-10, 2.35717522e-12]
 
         for comp, cname in components.items():
             data[cname] = []
@@ -101,27 +96,11 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
                 ].copy(parent=survey)
                 data[cname].append(data_entity)
 
-                # uncert = survey.add_data(
-                #     {
-                #         f"uncertainty_{comp}_{time:.2e}": {
-                #             "values": np.ones_like(data_entity.values)
-                #             * np.percentile(np.abs(data_entity.values), 10)
-                #         }
-                #     }
-                # )
-                # uncert = survey.add_data(
-                #     {
-                #         f"uncertainty_{comp}_{time:.2e}": {
-                #             "values": 1*np.abs(data_entity.values)/20
-                #         }
-                #     }
-                # )
 
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_{time:.2e}": {
-                            # "values": np.abs(data_entity.values * 0.05) + interp_floor(tt)
-                            "values": np.abs(data_entity.values * 0.01) + (median_uncertainties[tt]/2)
+                            "values": np.ones_like(data_entity.values) * (np.median(np.abs(data_entity.values)))
                         }
                     }
 
@@ -134,8 +113,8 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
 
         data_kwargs = {}
         for i, comp in enumerate(components):
-            data_kwargs[f"{comp}_channel"] = survey.property_groups[i].uid
-            data_kwargs[f"{comp}_uncertainty"] = survey.property_groups[4 + i].uid
+            data_kwargs[f"{comp}_channel"] = survey.find_or_create_property_group(name=f"Iteration_0_{comp}")
+            data_kwargs[f"{comp}_uncertainty"] = survey.find_or_create_property_group(name=f"dB{comp}dt uncertainties")
 
         # orig_dBzdt = geoh5.get_entity("Iteration_0_z_1.00e-05")[0].values
 
@@ -147,9 +126,9 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
             topography_object=topography.uid,
             resolution=0.0,
             data_object=survey.uid,
-            starting_model=1e-5,
-            reference_model=1e-5,
-            chi_factor=0.1,
+            starting_model=1e-3,
+            reference_model=1e-3,
+            chi_factor=0.001,
             s_norm=2.0,
             x_norm=2.0,
             y_norm=2.0,
@@ -160,7 +139,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
             lower_bound=2e-6,
             upper_bound=1e2,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e0,
+            initial_beta_ratio=1e2,
             cooling_rate=3,
             sens_wts_threshold=1.0,
             prctile=90,
