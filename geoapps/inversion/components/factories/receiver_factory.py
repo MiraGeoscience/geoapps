@@ -139,13 +139,15 @@ class ReceiversFactory(SimPEGFactory):
 
         return kwargs
 
-    def build(self, locations=None, data=None, local_index=None, mesh=None, component=None):
+    def build(
+        self, locations=None, data=None, local_index=None, mesh=None, component=None
+    ):
         receivers = super().build(
             locations=locations,
             data=data,
             local_index=local_index,
             mesh=mesh,
-            component=component
+            component=component,
         )
 
         if (
@@ -189,7 +191,6 @@ class ReceiversFactory(SimPEGFactory):
         return args
 
     def _tdem_arguments(self, data=None, locations=None, local_index=None, mesh=None):
-
         return [locations, data.entity.channels]
 
     def _magnetotellurics_arguments(self, locations=None, local_index=None, mesh=None):

@@ -9,7 +9,6 @@ import os
 
 import numpy as np
 from geoh5py.workspace import Workspace
-
 from scipy.interpolate import interp1d
 
 from geoapps.inversion.airborne_electromagnetics.time_domain import (
@@ -96,14 +95,13 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
                 ].copy(parent=survey)
                 data[cname].append(data_entity)
 
-
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_{time:.2e}": {
-                            "values": np.ones_like(data_entity.values) * (np.median(np.abs(data_entity.values)))
+                            "values": np.ones_like(data_entity.values)
+                            * (np.median(np.abs(data_entity.values)))
                         }
                     }
-
                 )
                 uncertainties[f"{cname} uncertainties"].append(uncert)
                 # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
@@ -113,8 +111,12 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
 
         data_kwargs = {}
         for i, comp in enumerate(components):
-            data_kwargs[f"{comp}_channel"] = survey.find_or_create_property_group(name=f"Iteration_0_{comp}")
-            data_kwargs[f"{comp}_uncertainty"] = survey.find_or_create_property_group(name=f"dB{comp}dt uncertainties")
+            data_kwargs[f"{comp}_channel"] = survey.find_or_create_property_group(
+                name=f"Iteration_0_{comp}"
+            )
+            data_kwargs[f"{comp}_uncertainty"] = survey.find_or_create_property_group(
+                name=f"dB{comp}dt uncertainties"
+            )
 
         # orig_dBzdt = geoh5.get_entity("Iteration_0_z_1.00e-05")[0].values
 
