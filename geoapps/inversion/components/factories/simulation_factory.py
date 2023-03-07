@@ -227,6 +227,7 @@ class SimulationFactory(SimPEGFactory):
         #     time_steps.append(
         #         (dt * 1e-3, n_spacing)
         #     )
+
         conversion = {
             "Seconds (s)": 1.0,
             "Milliseconds (ms)": 1e-3,
