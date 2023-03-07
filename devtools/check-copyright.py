@@ -7,6 +7,8 @@
 # geoapps is distributed under the terms and conditions of the MIT License
 # (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import re
 import sys
 from datetime import date
@@ -23,7 +25,7 @@ if __name__ == "__main__":
             has_dated_copyright = False
             for line in file:
                 count += 1
-                if count >= max_lines:
+                if count >= max_lines and not f.endswith("README.rst"):
                     break
                 if re.search(copyright_re, line):
                     has_dated_copyright = True

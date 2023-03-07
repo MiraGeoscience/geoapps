@@ -22,9 +22,8 @@ import numpy as np
 from discretize import TreeMesh
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
-from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.inversion.utils import calculate_2D_trend, create_nested_mesh
 from geoapps.shared_utils.utils import filter_xy
 
 from .factories import (
@@ -425,8 +424,8 @@ class InversionData(InversionLocations):
 
     def create_survey(
         self,
-        mesh: TreeMesh = None,
-        local_index: np.ndarray = None,
+        mesh: TreeMesh | None = None,
+        local_index: np.ndarray | None = None,
         channel=None,
     ):
         """
@@ -455,7 +454,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh,
         active_cells: np.ndarray,
         survey,
-        tile_id: int = None,
+        tile_id: int | None = None,
         padding_cells: int = 6,
     ):
         """

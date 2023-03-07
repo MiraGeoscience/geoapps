@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 from SimPEG import directives, maps
-from SimPEG.utils import cartesian2amplitude_dip_azimuth
+from SimPEG.utils.mat_utils import cartesian2amplitude_dip_azimuth
 
 from .simpeg_factory import SimPEGFactory
 
