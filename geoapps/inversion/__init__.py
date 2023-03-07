@@ -8,5 +8,8 @@
 # isort: skip_file
 
 from __future__ import annotations
+
+from SimPEG import dask
+
 from geoapps.inversion.params import InversionBaseParams  # isort: skip
 from geoapps.inversion.constants import default_ui_json

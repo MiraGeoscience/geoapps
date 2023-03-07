@@ -123,7 +123,7 @@ def get_drape_model(
     depth_core: float,
     pads: list,
     expansion_factor: float,
-    parent: Group = None,
+    parent: Group | None = None,
     return_colocated_mesh: bool = False,
     return_sorting: bool = False,
 ) -> tuple:

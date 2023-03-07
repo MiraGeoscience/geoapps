@@ -15,10 +15,6 @@ repos:
     rev: 23.1.0
     hooks:
     -   id: black
--   repo: https://github.com/asottile/seed-isort-config
-    rev: v2.2.0
-    hooks:
-        -   id: seed-isort-config
 -   repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
@@ -56,8 +52,9 @@ repos:
         name: Check copyright
         entry: python devtools/check-copyright.py
         language: python
-        types: [python]
-        exclude: (^setup.py$|(docs|assets)/)
+        files: (^LICENSE|README.rst|\.py|\.pyi)$
+        types: [text]
+        exclude: (^setup.py$|^\.|\b(docs|assets)/)
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
     hooks:
