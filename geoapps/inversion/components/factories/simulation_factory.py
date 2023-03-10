@@ -213,9 +213,7 @@ class SimulationFactory(SimPEGFactory):
             "Microseconds (us)": 1e-6,
         }
         kwargs["t0"] = -receivers.timing_mark * conversion[receivers.unit]
-        kwargs["time_steps"] = np.exp(
-            np.round(np.log(np.diff(receivers.waveform[:, 0])), decimals=3)
-        )
+        kwargs["time_steps"] = np.round((np.diff(receivers.waveform[:, 0])), decimals=6)
 
         return kwargs
 
