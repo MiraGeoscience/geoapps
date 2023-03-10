@@ -117,7 +117,13 @@ class InversionModelCollection:
         self.is_sigma = (
             True
             if self.params.inversion_type
-            in ["direct current 3d", "direct current 2d", "magnetotellurics", "tipper"]
+            in [
+                "direct current 3d",
+                "direct current 2d",
+                "magnetotellurics",
+                "tipper",
+                "tdem",
+            ]
             else False
         )
         self.is_vector = (

@@ -24,7 +24,7 @@ from .constants import (
 
 class TimeDomainElectromagneticsParams(InversionBaseParams):
     """
-    Parameter class for magnetotelluric->conductivity inversion.
+    Parameter class for Time-domain Electromagnetic (TEM) -> conductivity inversion.
     """
 
     _directive_list = [

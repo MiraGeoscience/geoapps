@@ -383,13 +383,13 @@ class InversionDriver(BaseDriver):
         elif "2d" in self.params.inversion_type:
             tiles = [self.inversion_data.indices]
 
-        elif self.params.inversion_type in ["tdem"]:
-            transmitters = self.inversion_data.entity.transmitters
-            transmitter_id = transmitters.get_data("Transmitter ID")
-            if transmitter_id:
-                tiles = [np.array([k]) for k in np.unique(transmitter_id[0].values)]
-            else:
-                tiles = [np.array([k]) for k in range(transmitters.n_vertices)]
+        # elif self.params.inversion_type in ["tdem"]:
+        #     transmitters = self.inversion_data.entity.transmitters
+        #     transmitter_id = transmitters.get_data("Transmitter ID")
+        #     if transmitter_id:
+        #         tiles = [np.array([k]) for k in np.unique(transmitter_id[0].values)]
+        #     else:
+        #         tiles = [np.array([k]) for k in range(transmitters.n_vertices)]
         else:
             tiles = tile_locations(
                 self.locations,

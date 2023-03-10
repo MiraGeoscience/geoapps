@@ -430,7 +430,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     len(channels),
                 )
             ],
-            "channels": channels,
+            "channels": [f"[{ind}]" for ind in range(len(channels))],
             "components": components,
             "reshape": lambda x: x.reshape((len(channels), len(components), -1)),
         }
@@ -499,7 +499,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     len(channels),
                 )
             ],
-            "channels": channels,
+            "channels": [f"[{ind}]" for ind in range(len(channels))],
             "components": components,
             "sorting": sorting,
             "_reshape": reshape,
