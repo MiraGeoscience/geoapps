@@ -59,9 +59,8 @@ class BaseDriver(ABC):
             print("Initializing application . . .")
             driver = driver_class(params)
 
-            with params.geoh5.open(mode="r+"):
-                print("Running application . . .")
-                driver.run()
-                print(f"Results saved to {params.geoh5.h5file}")
+            print("Running application . . .")
+            driver.run()
+            print(f"Results saved to {params.geoh5.h5file}")
 
             return driver

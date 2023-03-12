@@ -23,9 +23,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.00877,
-    "phi_d": 2.396,
-    "phi_m": 0.3094,
+    "data_norm": 3.058433e-11,
+    "phi_d": 0.06777,
+    "phi_m": 3.382,
 }
 
 np.random.seed(0)
@@ -33,7 +33,7 @@ np.random.seed(0)
 
 def test_airborne_tem_fwr_run(
     tmp_path,
-    n_grid_points=5,
+    n_grid_points=2,
     refinement=(2,),
 ):
     # Run the forward
@@ -45,7 +45,8 @@ def test_airborne_tem_fwr_run(
         n_lines=n_grid_points,
         refinement=refinement,
         inversion_type="airborne_tem",
-        drape_height=15.0,
+        drape_height=10.0,
+        padding_distance=400.0,
         flatten=True,
     )
     params = TimeDomainElectromagneticsParams(
@@ -57,7 +58,6 @@ def test_airborne_tem_fwr_run(
         z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
-        conductivity_model=1e-2,
         x_channel_bool=True,
         y_channel_bool=True,
         z_channel_bool=True,
@@ -88,15 +88,15 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
         for comp, cname in components.items():
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
-            for time in survey.channels:
-                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_{time:.2e}")[
-                    0
-                ].copy(parent=survey)
+            for ii, _ in enumerate(survey.channels):
+                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_[{ii}]")[0].copy(
+                    parent=survey
+                )
                 data[cname].append(data_entity)
 
                 uncert = survey.add_data(
                     {
-                        f"uncertainty_{comp}_{time:.2e}": {
+                        f"uncertainty_{comp}_[{ii}]": {
                             "values": np.ones_like(data_entity.values)
                             * (np.median(np.abs(data_entity.values)))
                         }
@@ -116,7 +116,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
                 name=f"dB{comp}dt uncertainties"
             )
 
-        orig_dBzdt = geoh5.get_entity("Iteration_0_z_5.24e-04")[0].values
+        orig_dBzdt = geoh5.get_entity("Iteration_0_z_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
@@ -128,28 +128,30 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
             data_object=survey.uid,
             starting_model=1e-3,
             reference_model=1e-3,
-            chi_factor=0.001,
+            chi_factor=1.0,
             s_norm=2.0,
             x_norm=2.0,
             y_norm=2.0,
             z_norm=2.0,
-            alpha_s=0.0,
+            alpha_s=1e-4,
             gradient_type="total",
             z_from_topo=False,
             lower_bound=2e-6,
             upper_bound=1e2,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e2,
-            cooling_rate=3,
+            coolingRate=4,
+            max_cg_iterations=200,
             sens_wts_threshold=1.0,
-            prctile=90,
+            prctile=5,
             store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = TimeDomainElectromagneticsDriver.start(
-            os.path.join(tmp_path, "Inv_run.ui.json")
-        )
+
+    driver = TimeDomainElectromagneticsDriver.start(
+        os.path.join(tmp_path, "Inv_run.ui.json")
+    )
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
@@ -167,7 +169,7 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_airborne_tem_fwr_run("./", n_grid_points=8, refinement=(4, 8))
+    mstart = test_airborne_tem_fwr_run("./", n_grid_points=5, refinement=(0, 0, 4))
 
     m_rec = test_airborne_tem_run(
         "./",

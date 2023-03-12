@@ -86,6 +86,9 @@ class DirectivesFactory:
             threshold=self.params.sens_wts_threshold,
         )
 
+        if self.params.inversion_type in ["tdem"]:
+            self.update_sensitivity_weights_directive.method = "percent_amplitude"
+
         if self.params.initial_beta is None:
             self.beta_estimate_by_eigenvalues_directive = directives.BetaEstimate_ByEig(
                 beta0_ratio=self.params.initial_beta_ratio, method="ratio"
@@ -271,6 +274,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "direct current 2d",
                 "magnetotellurics",
                 "tipper",
+                "tdem",
             ]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
@@ -488,7 +492,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         channels = [f"{val:.2e}" for val in time_channels]
         kwargs = {
             "attribute_type": "predicted",
-            # "label": name,
+            "save_objective_function": save_objective_function,
             "association": "VERTEX",
             "transforms": [
                 np.tile(

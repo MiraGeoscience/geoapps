@@ -120,7 +120,7 @@ def setup_inversion_workspace(
     yr = np.linspace(-100.0, 100.0, n_lines)
     X, Y = np.meshgrid(xr, yr)
     if flatten:
-        Z = np.zeros_like(X)
+        Z = np.ones_like(X) * drape_height
     else:
         Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
 
@@ -218,16 +218,15 @@ def setup_inversion_workspace(
             geoh5, vertices=vertices, name="Airborne_tx"
         )
         survey.transmitters = transmitters
-        survey.channels = np.r_[5.23863636e-04, 2.51931818e-03, 7.50795455e-03]
-
+        survey.channels = np.r_[3e-04, 6e-04, 1.2e-03]
         waveform = np.c_[
             np.r_[
-                np.linspace(-0.002, -0.0001, 5),
-                np.linspace(-0.0001 + 2.5e-5, 0.0, 4),
-                np.linspace(2.5e-5, 0.011, 12),
+                np.arange(-0.002, -0.0001, 5e-4),
+                np.arange(-0.0004, 0.0, 1e-4),
+                np.arange(0.0, 0.002, 5e-4),
             ]
             + 2e-3,
-            np.r_[np.linspace(0, 1, 5), np.linspace(1, 0.0, 4), np.zeros(12)],
+            np.r_[np.linspace(0, 1, 4), np.linspace(0.9, 0.0, 4), np.zeros(4)],
         ]
         survey.waveform = waveform
         survey.timing_mark = 2e-3
@@ -239,6 +238,7 @@ def setup_inversion_workspace(
             axis=1,
         )
         survey.remove_cells(np.where(dist > 200.0)[0])
+        transmitters.remove_cells(np.where(dist > 200.0)[0])
 
     else:
         survey = Points.create(
@@ -290,7 +290,7 @@ def setup_inversion_workspace(
                 mesh,
                 vertices,
                 method="radial",
-                octree_levels=[4],
+                octree_levels=[2],
                 finalize=False,
             )
 
