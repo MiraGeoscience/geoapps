@@ -80,7 +80,7 @@ inversion_defaults = {
     "beta_search": False,
     "gradient_type": "total",
     "sens_wts_threshold": 60.0,
-    "every_iteration_bool": False,
+    "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
