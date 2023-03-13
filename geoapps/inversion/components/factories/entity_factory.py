@@ -126,10 +126,16 @@ class EntityFactory(AbstractFactory):
             entity = self.params.data_object.copy(
                 parent=self.params.ga_group,
                 copy_children=False,
+                vertices=inversion_data.locations,
+            )
+
+        if getattr(entity, "transmitters", None) is not None:
+            entity.transmitters.vertices = inversion_data.apply_transformations(
+                entity.transmitters.vertices
             )
 
         if np.any(~inversion_data.mask):
-            entity.remove_vertices(np.where(~inversion_data.mask))
+            entity.remove_vertices(np.where(~inversion_data.mask)[0])
 
             if getattr(entity, "transmitters", None) is not None:
                 entity.transmitters.remove_vertices(np.where(~inversion_data.mask))

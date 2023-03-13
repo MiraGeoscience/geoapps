@@ -55,8 +55,8 @@ def test_get_locations(tmp_path):
     grid_object = Grid2D.create(
         ws,
         origin=[0, 0, 0],
-        u_cell_size=1,
-        v_cell_size=1,
+        u_cell_size=1.0,
+        v_cell_size=1.0,
         u_count=5,
         v_count=5,
         rotation=0.0,
