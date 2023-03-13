@@ -88,22 +88,21 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
         for comp, cname in components.items():
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
-            for freq in survey.channels:
-                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[
-                    0
-                ].copy(parent=survey)
+            for ind in range(len(survey.channels)):
+                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
+                    parent=survey
+                )
                 data[cname].append(data_entity)
 
                 uncert = survey.add_data(
                     {
-                        f"uncertainty_{comp}_{freq:.2e}": {
+                        f"uncertainty_{comp}_[{ind}]": {
                             "values": np.ones_like(data_entity.values)
                             * np.percentile(np.abs(data_entity.values), 10)
                         }
                     }
                 )
                 uncertainties[f"{cname} uncertainties"].append(uncert)
-                # uncertainties[f"{cname} uncertainties"][freq] = {"values": u.copy(parent=survey)}
 
         survey.add_components_data(data)
         survey.add_components_data(uncertainties)
@@ -113,7 +112,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             data_kwargs[f"{comp}_channel"] = survey.property_groups[i].uid
             data_kwargs[f"{comp}_uncertainty"] = survey.property_groups[4 + i].uid
 
-        orig_tyz_real_1 = geoh5.get_entity("Iteration_0_tyz_real_1.00e+01")[0].values
+        orig_tyz_real_1 = geoh5.get_entity("Iteration_0_tyz_real_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
