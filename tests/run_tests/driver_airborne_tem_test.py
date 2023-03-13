@@ -23,9 +23,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 3.058433e-11,
-    "phi_d": 0.06777,
-    "phi_m": 3.382,
+    "data_norm": 3.6444e-11,
+    "phi_d": 0.007553,
+    "phi_m": 0.2285,
 }
 
 np.random.seed(0)
@@ -47,7 +47,7 @@ def test_airborne_tem_fwr_run(
         inversion_type="airborne_tem",
         drape_height=10.0,
         padding_distance=400.0,
-        flatten=True,
+        flatten=False,
     )
     params = TimeDomainElectromagneticsParams(
         forward_only=True,
