@@ -104,13 +104,15 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
                 )
                 uncertainties[f"{cname} uncertainties"].append(uncert)
 
-        survey.add_components_data(data)
-        survey.add_components_data(uncertainties)
+        data_groups = survey.add_components_data(data)
+        uncert_groups = survey.add_components_data(uncertainties)
 
         data_kwargs = {}
-        for i, comp in enumerate(components):
-            data_kwargs[f"{comp}_channel"] = survey.property_groups[i].uid
-            data_kwargs[f"{comp}_uncertainty"] = survey.property_groups[4 + i].uid
+        for comp, data_group, uncert_group in zip(
+            components, data_groups, uncert_groups
+        ):
+            data_kwargs[f"{comp}_channel"] = data_group.uid
+            data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
 
         orig_tyz_real_1 = geoh5.get_entity("Iteration_0_tyz_real_[0]")[0].values
 
