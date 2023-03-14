@@ -297,5 +297,5 @@ def test_get_survey(tmp_path):
     locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
-    survey, _ = data.create_survey()
-    assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)
+    survey = data.create_survey()
+    assert isinstance(survey[0], SimPEG.potential_fields.magnetics.Survey)
