@@ -53,6 +53,7 @@ class MisfitFactory(SimPEGFactory):
         mesh,
         active_cells,
     ):
+        # Base slice over frequencies
         if self.factory_type in ["magnetotellurics", "tipper"]:
             channels = np.unique([list(v) for v in inversion_data.observed.values()])
         else:
@@ -63,11 +64,13 @@ class MisfitFactory(SimPEGFactory):
         self.ordering = []
         tile_num = 0
         for local_index in tiles:
-            self.sorting.append(local_index)
-            for channel in channels:
+            for count, channel in enumerate(channels):
                 survey, local_index, ordering = inversion_data.create_survey(
                     mesh=mesh, local_index=local_index, channel=channel
                 )
+
+                if count == 0:
+                    self.sorting.append(local_index)
 
                 lsim, lmap = inversion_data.simulation(
                     mesh, active_cells, survey, tile_num
