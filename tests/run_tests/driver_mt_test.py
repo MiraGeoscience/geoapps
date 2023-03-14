@@ -103,15 +103,15 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             data[cname] = []
             # uncertainties[f"{cname} uncertainties"] = {}
             uncertainties[f"{cname} uncertainties"] = []
-            for freq in survey.channels:
-                data_envity = geoh5.get_entity(f"Iteration_0_{comp}_{freq:.2e}")[
-                    0
-                ].copy(parent=survey)
+            for ind in range(len(survey.channels)):
+                data_envity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
+                    parent=survey
+                )
                 data[cname].append(data_envity)
 
                 uncert = survey.add_data(
                     {
-                        f"uncertainty_{comp}_{freq:.2e}": {
+                        f"uncertainty_{comp}_[{ind}]": {
                             "values": np.ones_like(data_envity.values)
                             * np.percentile(np.abs(data_envity.values), 10)
                         }
@@ -121,15 +121,17 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
                     uncert.copy(parent=survey)
                 )
 
-        survey.add_components_data(data)
-        survey.add_components_data(uncertainties)
+        data_groups = survey.add_components_data(data)
+        uncert_groups = survey.add_components_data(uncertainties)
 
         data_kwargs = {}
-        for i, comp in enumerate(components):
-            data_kwargs[f"{comp}_channel"] = survey.property_groups[i].uid
-            data_kwargs[f"{comp}_uncertainty"] = survey.property_groups[8 + i].uid
+        for comp, data_group, uncert_group in zip(
+            components, data_groups, uncert_groups
+        ):
+            data_kwargs[f"{comp}_channel"] = data_group.uid
+            data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
 
-        orig_zyy_real_1 = geoh5.get_entity("Iteration_0_zyy_real_1.00e+01")[0].values
+        orig_zyy_real_1 = geoh5.get_entity("Iteration_0_zyy_real_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
