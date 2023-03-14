@@ -19,6 +19,8 @@ from uuid import UUID
 import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import (
+    AirborneTEMReceivers,
+    AirborneTEMTransmitters,
     CurrentElectrode,
     MTReceivers,
     Points,
@@ -118,7 +120,7 @@ def setup_inversion_workspace(
     yr = np.linspace(-100.0, 100.0, n_lines)
     X, Y = np.meshgrid(xr, yr)
     if flatten:
-        Z = np.zeros_like(X)
+        Z = np.ones_like(X) * drape_height
     else:
         Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
 
@@ -208,6 +210,36 @@ def setup_inversion_workspace(
         # survey.cells = survey.cells[dist < 100.0, :]
         survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
 
+    elif inversion_type == "airborne_tem":
+        survey = AirborneTEMReceivers.create(
+            geoh5, vertices=vertices, name="Airborne_rx"
+        )
+        transmitters = AirborneTEMTransmitters.create(
+            geoh5, vertices=vertices, name="Airborne_tx"
+        )
+        survey.transmitters = transmitters
+        survey.channels = np.r_[3e-04, 6e-04, 1.2e-03]
+        waveform = np.c_[
+            np.r_[
+                np.arange(-0.002, -0.0001, 5e-4),
+                np.arange(-0.0004, 0.0, 1e-4),
+                np.arange(0.0, 0.002, 5e-4),
+            ]
+            + 2e-3,
+            np.r_[np.linspace(0, 1, 4), np.linspace(0.9, 0.0, 4), np.zeros(4)],
+        ]
+        survey.waveform = waveform
+        survey.timing_mark = 2e-3
+        survey.unit = "Seconds (s)"
+
+        dist = np.linalg.norm(
+            survey.vertices[survey.cells[:, 0], :]
+            - survey.vertices[survey.cells[:, 1], :],
+            axis=1,
+        )
+        survey.remove_cells(np.where(dist > 200.0)[0])
+        transmitters.remove_cells(np.where(dist > 200.0)[0])
+
     else:
         survey = Points.create(
             geoh5,
@@ -250,8 +282,19 @@ def setup_inversion_workspace(
             method="surface",
             octree_levels=refinement,
             octree_levels_padding=refinement,
-            finalize=True,
+            finalize=False,
         )
+
+        if inversion_type == "airborne_tem":
+            mesh = refine_tree_xyz(
+                mesh,
+                vertices,
+                method="radial",
+                octree_levels=[2],
+                finalize=False,
+            )
+
+        mesh.finalize()
         entity = treemesh_2_octree(geoh5, mesh, name="mesh")
         active = active_from_xyz(entity, topography.vertices, grid_reference="top")
 
@@ -261,7 +304,7 @@ def setup_inversion_workspace(
         p1 = np.r_[20, 20, -70]
 
         model = utils.model_builder.addBlock(
-            mesh.gridCC,
+            entity.centroids,
             background * np.ones(mesh.nC),
             p0,
             p1,
