@@ -143,6 +143,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             data_object=survey.uid,
             starting_model=0.01,
             reference_model=0.01,
+            alpha_s=1.0,
             s_norm=1.0,
             x_norm=1.0,
             y_norm=1.0,
