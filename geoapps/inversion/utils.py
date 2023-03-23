@@ -235,9 +235,7 @@ def tile_locations(
             warnings.simplefilter("ignore", category=UserWarning)
             from sklearn.cluster import KMeans
 
-            cluster = KMeans(
-                n_clusters=n_tiles,
-            )
+            cluster = KMeans(n_clusters=n_tiles, n_init="auto")
             cluster.fit_predict(locations[:, :2])
 
         labels = cluster.labels_
