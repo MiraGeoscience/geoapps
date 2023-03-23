@@ -226,7 +226,7 @@ if __name__ == "__main__":
     with print_execution_time("run_conda_lock"):
         for py_ver in ["3.10", "3.9"]:
             create_multi_platform_lock(py_ver)
-            per_platform_env(py_ver, ["full"], dev=False)
+            per_platform_env(py_ver, ["core", "apps"], dev=False)
             finalize_per_platform_envs(py_ver, dev=False)
-            per_platform_env(py_ver, ["full"], dev=True)
+            per_platform_env(py_ver, ["core", "apps"], dev=True)
             finalize_per_platform_envs(py_ver, dev=True)
