@@ -33,17 +33,21 @@ _ARCHIVE_EXT = ".tar.gz"
 APP_NAME = "geoapps"
 
 
-def create_standalone_geoapps_lock(git_url: str):
-    create_standalone_lock(git_url, ["full"], suffix="-geoapps")
+def create_distrib_noapps_lock():
+    create_distrib_lock("", [], suffix="-noapps")
 
 
-def create_standalone_simpeg_lock(git_url: str):
-    create_standalone_lock(git_url, suffix="-geoapps-simpeg")
+def create_distrib_core_lock(git_url: str):
+    create_distrib_lock(git_url, ["core"], suffix="-geoapps-core")
 
 
-def create_standalone_lock(git_url: str, extras=[], suffix=""):
+def create_distrib_full_lock(git_url: str):
+    create_distrib_lock(git_url, ["core", "apps"], suffix="-geoapps-ui")
+
+
+def create_distrib_lock(git_url: str, extras=[], suffix=""):
     print(
-        f"# Creating lock file for stand-alone environment (extras={','.join(extras)})..."
+        f"# Creating lock file for distributing a stand-alone environment (extras={','.join(extras)})..."
     )
     py_ver = "3.10"
     platform = "win-64"
@@ -53,7 +57,8 @@ def create_standalone_lock(git_url: str, extras=[], suffix=""):
     try:
         per_platform_env(py_ver, extras, suffix=tmp_suffix)
         assert initial_lock_file.exists()
-        add_application(git_url, initial_lock_file)
+        if git_url:
+            add_application(git_url, initial_lock_file)
         LockFilePatcher(initial_lock_file).patch(force_no_pip_hash=_FORCE_NO_PIP_HASH)
         final_lock_file = Path(f"{base_filename}.lock.yml")
         final_lock_file.unlink(missing_ok=True)
@@ -134,8 +139,9 @@ def main():
         checksum = compute_sha256(git_download_url, basename)
         dependency_url = f"{git_download_url}#sha256={checksum}"
 
-    create_standalone_geoapps_lock(dependency_url)
-    create_standalone_simpeg_lock(dependency_url)
+    create_distrib_noapps_lock()
+    create_distrib_core_lock(dependency_url)
+    create_distrib_full_lock(dependency_url)
 
 
 if __name__ == "__main__":
