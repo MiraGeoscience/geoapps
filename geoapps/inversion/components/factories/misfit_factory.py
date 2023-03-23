@@ -63,6 +63,7 @@ class MisfitFactory(SimPEGFactory):
         self.sorting = []
         self.ordering = []
         tile_num = 0
+        data_count = 0
         for local_index in tiles:
             for count, channel in enumerate(channels):
                 survey, local_index, ordering = inversion_data.create_survey(
@@ -70,7 +71,17 @@ class MisfitFactory(SimPEGFactory):
                 )
 
                 if count == 0:
-                    self.sorting.append(local_index)
+                    if self.factory_type in ["tdem"]:
+                        self.sorting.append(
+                            np.arange(
+                                data_count,
+                                data_count + len(local_index),
+                                dtype=int,
+                            )
+                        )
+                        data_count += len(local_index)
+                    else:
+                        self.sorting.append(local_index)
 
                 lsim, lmap = inversion_data.simulation(
                     mesh, active_cells, survey, tile_num
