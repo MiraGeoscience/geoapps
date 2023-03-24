@@ -36,9 +36,9 @@ numpy = "!=1.19.4, ^1.21.5" # also geoh5py, simpeg and geoana
 #geoh5py = { version = "0.7.0", source = "pypi" }
 geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256="}
 #mira-omf = { version = "3.0.0", source = "pypi" }
-mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256="}
+mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip#sha256="}
 #param-sweeps = {version = "0.1.5", source = "pypi"}
-param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256="}
+param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip#sha256="}
 
 ## dependencies for core algorithms
 dask = {version = "2022.10.0", extras = ["distributed"], optional = true}
