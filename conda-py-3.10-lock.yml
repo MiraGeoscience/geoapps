@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: 2e8f2df58940bf08333dade29410cf27541ff250c1039a4eb9659f1f790a6a83
-    osx-64: 901434764df2b7653dcf776c3d79beccf13fc2f5adb30f81cd2fb98d8467a8e4
-    win-64: 1f3887bd23c073d775cf179fd5531379ddeede08e6aee8cdb11ebf1580ebfa4c
+    linux-64: e826e5ae602992aec416cc037bf7c205b2e36755c7876c6ce60df4c5a8577b62
+    osx-64: 4199a8b57f2e63248a12063b93e1a4b6de20b5c764b09c9c46bedec52f3a89eb
+    win-64: de690dda8c6c75daa2951ec23e5d1761ac90a44d30de8bf2007aed2a1d6ec3fe
   platforms:
   - win-64
   - osx-64
@@ -154,14 +154,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 51fc4fcfb19f5d95ffc8c339db5068e8
-    sha256: 0bfae0b9962bc0dbf79048f9175b913ed4f53c4310d06708dc7acbb290ad82f6
+    md5: 6c80c63151d7f493dab457a0ba6c2523
+    sha256: a94fd398c02f567d851cdeb44ec7600de21accfd6061d50e8fdad909da324780
   manager: conda
   name: tzdata
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/tzdata-2022g-h191b570_0.conda
-  version: 2022g
+  url: https://conda.anaconda.org/conda-forge/noarch/tzdata-2023b-h71feb2d_0.conda
+  version: 2023b
 - category: apps
   dependencies:
     font-ttf-dejavu-sans-mono: ''
@@ -664,14 +664,14 @@ package:
     __glibc: '>=2.17,<3.0.a0'
     libgcc-ng: '>=12'
   hash:
-    md5: 7f6142a49c719eb190c883d6a6bf8521
-    sha256: 021c5bc168755570f4eb9dee6d22f452fc92eb0f8bdb340739acc251b4995aed
+    md5: 54e266a59d6da0d119461e830a41f1db
+    sha256: 537d10cf7c307e5724a51f4af4a336a469ff8d1ec49700de14a02b254547e8d0
   manager: conda
   name: tzcode
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/tzcode-2023a-h0b41bf4_0.conda
-  version: 2023a
+  url: https://conda.anaconda.org/conda-forge/linux-64/tzcode-2023b-h0b41bf4_0.conda
+  version: 2023b
 - category: apps
   dependencies:
     libgcc-ng: '>=9.3.0'
@@ -3698,17 +3698,17 @@ package:
   version: 2.17.1
 - category: core
   dependencies:
-    cryptography: '>=38.0.0,<40'
+    cryptography: '>=38.0.0,<41'
     python: '>=3.6'
   hash:
-    md5: d41957700e83bbb925928764cb7f8878
-    sha256: adbf8951f22bfa950b9e24394df1ef1d2b2d7dfb194d91c7f42bc11900695785
+    md5: 3a5b9d88c369e7960e3dde3229066908
+    sha256: 1d5c779e0647491b650c74f20dc650737ae1d862e4d9b121b1b73c019e0e7bf7
   manager: conda
   name: pyopenssl
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pyopenssl-23.0.0-pyhd8ed1ab_0.conda
-  version: 23.0.0
+  url: https://conda.anaconda.org/conda-forge/noarch/pyopenssl-23.1.0-pyhd8ed1ab_0.conda
+  version: 23.1.0
 - category: apps
   dependencies:
     flask: '>=1.0.4'
@@ -3952,14 +3952,14 @@ package:
     pillow: '>=8.3.2'
     python: '>=3'
   hash:
-    md5: 7158487eb6dbc42fbb5d20f0c5796c48
-    sha256: 40133eb115da376d6e16f25f8eca3f43c216061b0c69bc28d2f833f7833cebb2
+    md5: e49e6fd8dab2dbe31b82157e2fc9760f
+    sha256: d71be2ac834f2a5d38ac466f92d3b0f8b601d331feb0f9a8f1bb8f7f86cb3768
   manager: conda
   name: imageio
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.26.0-pyh24c5eb1_0.conda
-  version: 2.26.0
+  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.26.1-pyh24c5eb1_0.conda
+  version: 2.26.1
 - category: apps
   dependencies:
     __linux: ''
@@ -4487,7 +4487,6 @@ package:
 - category: core
   dependencies:
     joblib: '>=1.1.1'
-    libcblas: '>=3.9.0,<4.0a0'
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     numpy: '>=1.21.6,<2.0a0'
@@ -4496,13 +4495,13 @@ package:
     scipy: ''
     threadpoolctl: '>=2.0.0'
   hash:
-    md5: 5e8a2628fb16f6bd4c7be00a132de051
-    sha256: a586ca499bb4ae5545d5c7f84eca4290e410f6c2946bc8cb903a1970950f7d2d
+    md5: 7d06046647be68f5cbf331532d020a71
+    sha256: 3514c45a29f44aa8c298af1c27a19764cd5ccf67033c65a7eca295ffcb50f86c
   manager: conda
   name: scikit-learn
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.2.2-py310h209a8ca_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.2.2-py310h41b6a48_1.conda
   version: 1.2.2
 - category: apps
   dependencies:
@@ -4652,7 +4651,7 @@ package:
   version: 0.9.1.dev5
 - category: main
   dependencies:
-    geoh5py: '>=0.5.0'
+    geoh5py: '*'
     numpy: '>=1.7,<2.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
@@ -4666,9 +4665,9 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
-  version: 3.0.0-rc.1
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip
+  version: 3.0.0-rc.2
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -4695,7 +4694,7 @@ package:
   version: 0.15.1.dev7
 - category: main
   dependencies:
-    geoh5py: '>=0.6.0'
+    geoh5py: '*'
     numpy: '>=1.21.5,<2.0.0'
   hash:
     sha256: ''
@@ -4705,9 +4704,9 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
-  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
-  version: 0.1.5
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip#sha256=
+  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip
+  version: 0.1.5-rc.1
 - category: main
   dependencies: {}
   hash:
@@ -5019,25 +5018,25 @@ package:
 - category: apps
   dependencies: {}
   hash:
-    md5: c63c3fcaa478a04348b8e0427c672029
-    sha256: f6c64173d6e66b7817171f7c213b3167cfe27187e47bdb664a3ffe0b233651c4
+    md5: 09f3f3b89c6d7d01de40772cc58fe5bf
+    sha256: 05bcf8b495da2f48566cb9111339a54a095f5b1df6afc6be535026158797f3e0
   manager: conda
   name: tzcode
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/tzcode-2023a-hb7f2c08_0.conda
-  version: 2023a
+  url: https://conda.anaconda.org/conda-forge/osx-64/tzcode-2023b-hb7f2c08_0.conda
+  version: 2023b
 - category: main
   dependencies: {}
   hash:
-    md5: 51fc4fcfb19f5d95ffc8c339db5068e8
-    sha256: 0bfae0b9962bc0dbf79048f9175b913ed4f53c4310d06708dc7acbb290ad82f6
+    md5: 6c80c63151d7f493dab457a0ba6c2523
+    sha256: a94fd398c02f567d851cdeb44ec7600de21accfd6061d50e8fdad909da324780
   manager: conda
   name: tzdata
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/tzdata-2022g-h191b570_0.conda
-  version: 2022g
+  url: https://conda.anaconda.org/conda-forge/noarch/tzdata-2023b-h71feb2d_0.conda
+  version: 2023b
 - category: main
   dependencies: {}
   hash:
@@ -8036,14 +8035,14 @@ package:
     pillow: '>=8.3.2'
     python: '>=3'
   hash:
-    md5: 7158487eb6dbc42fbb5d20f0c5796c48
-    sha256: 40133eb115da376d6e16f25f8eca3f43c216061b0c69bc28d2f833f7833cebb2
+    md5: e49e6fd8dab2dbe31b82157e2fc9760f
+    sha256: d71be2ac834f2a5d38ac466f92d3b0f8b601d331feb0f9a8f1bb8f7f86cb3768
   manager: conda
   name: imageio
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.26.0-pyh24c5eb1_0.conda
-  version: 2.26.0
+  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.26.1-pyh24c5eb1_0.conda
+  version: 2.26.1
 - category: apps
   dependencies:
     platformdirs: '>=2.5'
@@ -8197,17 +8196,17 @@ package:
   version: 2.17.1
 - category: core
   dependencies:
-    cryptography: '>=38.0.0,<40'
+    cryptography: '>=38.0.0,<41'
     python: '>=3.6'
   hash:
-    md5: d41957700e83bbb925928764cb7f8878
-    sha256: adbf8951f22bfa950b9e24394df1ef1d2b2d7dfb194d91c7f42bc11900695785
+    md5: 3a5b9d88c369e7960e3dde3229066908
+    sha256: 1d5c779e0647491b650c74f20dc650737ae1d862e4d9b121b1b73c019e0e7bf7
   manager: conda
   name: pyopenssl
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pyopenssl-23.0.0-pyhd8ed1ab_0.conda
-  version: 23.0.0
+  url: https://conda.anaconda.org/conda-forge/noarch/pyopenssl-23.1.0-pyhd8ed1ab_0.conda
+  version: 23.1.0
 - category: apps
   dependencies:
     numpy: '>=1.21.6,<2.0a0'
@@ -8816,7 +8815,6 @@ package:
 - category: core
   dependencies:
     joblib: '>=1.1.1'
-    libcblas: '>=3.9.0,<4.0a0'
     libcxx: '>=14.0.6'
     llvm-openmp: '>=14.0.6'
     numpy: '>=1.21.6,<2.0a0'
@@ -8825,13 +8823,13 @@ package:
     scipy: ''
     threadpoolctl: '>=2.0.0'
   hash:
-    md5: 74824eaacbccf8845bed98b524f03c7a
-    sha256: 14c84cd65cab58927eb21dde0bd7cb2b58ff4c7f65254286397fcaf3e5586ad7
+    md5: dd07ee9559f056614d7f7d65b4fa1d7c
+    sha256: 60e61dda5ad741b6ad88946d865784e4ae9f7acbe1b036771310df98d530ea52
   manager: conda
   name: scikit-learn
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/scikit-learn-1.2.2-py310hcebe997_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/scikit-learn-1.2.2-py310h311060b_1.conda
   version: 1.2.2
 - category: apps
   dependencies:
@@ -8981,7 +8979,7 @@ package:
   version: 0.9.1.dev5
 - category: main
   dependencies:
-    geoh5py: '>=0.5.0'
+    geoh5py: '*'
     numpy: '>=1.7,<2.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
@@ -8995,9 +8993,9 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
-  version: 3.0.0-rc.1
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip
+  version: 3.0.0-rc.2
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -9024,7 +9022,7 @@ package:
   version: 0.15.1.dev7
 - category: main
   dependencies:
-    geoh5py: '>=0.6.0'
+    geoh5py: '*'
     numpy: '>=1.21.5,<2.0.0'
   hash:
     sha256: ''
@@ -9034,9 +9032,9 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
-  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
-  version: 0.1.5
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip#sha256=
+  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip
+  version: 0.1.5-rc.1
 - category: main
   dependencies: {}
   hash:
@@ -9150,14 +9148,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 51fc4fcfb19f5d95ffc8c339db5068e8
-    sha256: 0bfae0b9962bc0dbf79048f9175b913ed4f53c4310d06708dc7acbb290ad82f6
+    md5: 6c80c63151d7f493dab457a0ba6c2523
+    sha256: a94fd398c02f567d851cdeb44ec7600de21accfd6061d50e8fdad909da324780
   manager: conda
   name: tzdata
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/tzdata-2022g-h191b570_0.conda
-  version: 2022g
+  url: https://conda.anaconda.org/conda-forge/noarch/tzdata-2023b-h71feb2d_0.conda
+  version: 2023b
 - category: main
   dependencies: {}
   hash:
@@ -12477,17 +12475,17 @@ package:
   version: 2.17.1
 - category: core
   dependencies:
-    cryptography: '>=38.0.0,<40'
+    cryptography: '>=38.0.0,<41'
     python: '>=3.6'
   hash:
-    md5: d41957700e83bbb925928764cb7f8878
-    sha256: adbf8951f22bfa950b9e24394df1ef1d2b2d7dfb194d91c7f42bc11900695785
+    md5: 3a5b9d88c369e7960e3dde3229066908
+    sha256: 1d5c779e0647491b650c74f20dc650737ae1d862e4d9b121b1b73c019e0e7bf7
   manager: conda
   name: pyopenssl
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/pyopenssl-23.0.0-pyhd8ed1ab_0.conda
-  version: 23.0.0
+  url: https://conda.anaconda.org/conda-forge/noarch/pyopenssl-23.1.0-pyhd8ed1ab_0.conda
+  version: 23.1.0
 - category: apps
   dependencies:
     flask: '>=1.0.4'
@@ -12865,14 +12863,14 @@ package:
     pillow: '>=8.3.2'
     python: '>=3'
   hash:
-    md5: 7158487eb6dbc42fbb5d20f0c5796c48
-    sha256: 40133eb115da376d6e16f25f8eca3f43c216061b0c69bc28d2f833f7833cebb2
+    md5: e49e6fd8dab2dbe31b82157e2fc9760f
+    sha256: d71be2ac834f2a5d38ac466f92d3b0f8b601d331feb0f9a8f1bb8f7f86cb3768
   manager: conda
   name: imageio
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.26.0-pyh24c5eb1_0.conda
-  version: 2.26.0
+  url: https://conda.anaconda.org/conda-forge/noarch/imageio-2.26.1-pyh24c5eb1_0.conda
+  version: 2.26.1
 - category: apps
   dependencies:
     __win: ''
@@ -13356,7 +13354,6 @@ package:
 - category: core
   dependencies:
     joblib: '>=1.1.1'
-    libcblas: '>=3.9.0,<4.0a0'
     numpy: '>=1.21.6,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
@@ -13366,13 +13363,13 @@ package:
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: 73c8cf67c45fe90748dacf4d15a849ac
-    sha256: 0e4af8e22e8b0292362911a6d896b69d138d3311dfd4e1b156174c84fa665044
+    md5: 58ec4d53193a74a09d8a862f98a730e5
+    sha256: adad8a51b90ff4ff1aa7de37f1d06b3e3ac1b0ab70f3335114892fac4f62c328
   manager: conda
   name: scikit-learn
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/scikit-learn-1.2.2-py310had3394f_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/scikit-learn-1.2.2-py310hd266714_1.conda
   version: 1.2.2
 - category: apps
   dependencies:
@@ -13522,7 +13519,7 @@ package:
   version: 0.9.1.dev5
 - category: main
   dependencies:
-    geoh5py: '>=0.5.0'
+    geoh5py: '*'
     numpy: '>=1.7,<2.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
@@ -13536,9 +13533,9 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
-  version: 3.0.0-rc.1
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip
+  version: 3.0.0-rc.2
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -13565,7 +13562,7 @@ package:
   version: 0.15.1.dev7
 - category: main
   dependencies:
-    geoh5py: '>=0.6.0'
+    geoh5py: '*'
     numpy: '>=1.21.5,<2.0.0'
   hash:
     sha256: ''
@@ -13575,7 +13572,7 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
-  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
-  version: 0.1.5
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip#sha256=
+  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip
+  version: 0.1.5-rc.1
 version: 1
