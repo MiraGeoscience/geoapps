@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: 56b362c73f94aed0660d44e3b7f15c966a6dd1f42b218826f69d2c8314ffe00c
-    osx-64: 443f6e0ed79e5dbf45667d90c65bbfa0db23e8ad1ba9129ab8849da7d274f3f5
-    win-64: df310081a57bbf0c50ae3ffbf5c4fe1771f7bb7176f219ef84b2913c36723332
+    linux-64: bd606bce44702af0b717a9936c7df170fd1b5600d657b5e99de3f005534f1c65
+    osx-64: fd76a8586557d29c13ba2d17b2a5a1a4f27209d288440bfd962a2c3d321b958d
+    win-64: c0a2fb4d1ce8092e55d60bbf9a8009ce67f745cd32dd2e21762526875c6c5beb
   platforms:
   - win-64
   - osx-64
@@ -4639,14 +4639,14 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=None
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip
   version: 0.7.0-rc.2
 - category: core
@@ -4673,14 +4673,14 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: mira-omf
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=None
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
   url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
   version: 3.0.0-rc.1
 - category: core
@@ -4697,14 +4697,14 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: mira-simpeg
   optional: true
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=None
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip
   version: 0.15.1.dev7
 - category: main
@@ -4712,14 +4712,14 @@ package:
     geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: param-sweeps
   optional: false
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=None
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
   url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
   version: 0.1.5
 - category: main
@@ -8982,14 +8982,14 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=None
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip
   version: 0.7.0-rc.2
 - category: core
@@ -9016,14 +9016,14 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: mira-omf
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=None
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
   url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
   version: 3.0.0-rc.1
 - category: core
@@ -9040,14 +9040,14 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: mira-simpeg
   optional: true
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=None
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip
   version: 0.15.1.dev7
 - category: main
@@ -9055,14 +9055,14 @@ package:
     geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: param-sweeps
   optional: false
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=None
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
   url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
   version: 0.1.5
 - category: main
@@ -13537,14 +13537,14 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=None
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip
   version: 0.7.0-rc.2
 - category: core
@@ -13571,14 +13571,14 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: mira-omf
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=None
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
   url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
   version: 3.0.0-rc.1
 - category: core
@@ -13595,14 +13595,14 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: mira-simpeg
   optional: true
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=None
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip#sha256=
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev8+geoapps.0.10.0.zip
   version: 0.15.1.dev7
 - category: main
@@ -13610,14 +13610,14 @@ package:
     geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
-    sha256: None
+    sha256: ''
   manager: pip
   name: param-sweeps
   optional: false
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=None
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
   url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
   version: 0.1.5
 version: 1
