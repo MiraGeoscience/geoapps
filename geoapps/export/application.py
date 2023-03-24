@@ -14,6 +14,7 @@ import discretize
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
 
+from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.shared_utils.utils import octree_2_treemesh
 from geoapps.utils import warn_module_not_found
@@ -33,7 +34,7 @@ with warn_module_not_found():
 from .utils import export_curve_2_shapefile, object_2_dataframe
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "data": [
         "{44822654-b6ae-45b0-8886-2d845f80f422}",
