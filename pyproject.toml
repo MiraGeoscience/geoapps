@@ -7,6 +7,10 @@ repository = "https://github.com/MiraGeoscience/geoapps"
 documentation = "https://geoapps.readthedocs.io/en/latest/"
 homepage = "https://mirageoscience.com"
 readme = "README.rst"
+packages = [
+    { include = "geoapps" },
+    { include = "geoapps-assets" },
+]
 keywords = ["geology", "geophysics", "earth sciences"]
 classifiers = [
     "Development Status :: 4 - Beta",
