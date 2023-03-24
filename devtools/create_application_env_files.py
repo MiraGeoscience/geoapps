@@ -108,9 +108,9 @@ def get_git_url():
         if match:
             segment = match[1][:-4] if match[1].endswith(".git") else match[1]
             return f"https://github.com/{segment}"
-        warnings.warn(
-            "Could not detect the remote MiraGeoscience github repository for this application."
-        )
+    warnings.warn(
+        "Could not detect the remote MiraGeoscience github repository for this application."
+    )
 
 
 def main():
