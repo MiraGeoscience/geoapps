@@ -33,6 +33,9 @@ classifiers = [
     "Natural Language :: English",
 ]
 
+[tool.poetry.scripts]
+start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["apps"] }
+
 [tool.poetry.dependencies]
 python = "^3.9, < 3.11"
 
