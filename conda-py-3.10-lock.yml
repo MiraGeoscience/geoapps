@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: 31a15cc8e5d3973ea8b0574d00beeeaac00e66b00464b94856d5f16eafc53257
-    osx-64: f9caf4208cb8b286710cda381530bbb413e33cb3aa4444ac830dbe5778abd8f9
-    win-64: e18b466a26d90c4ab16b85e745ca2e01d794ce7452c60eb71fee8a214d29e6f3
+    linux-64: 2de0604e748e31de581e29caacb25527865c89c68c2e63af8c1bc7923d07b183
+    osx-64: c2f7729ea439e32bcca9ff532ffaaa407d353c0ffc031b19cbccdcc88e0ee754
+    win-64: ee583f76894dee323efdc03e5fdd0cdb4ff0e1263327f30fb41539777dd1062f
   platforms:
   - win-64
   - osx-64
@@ -4624,13 +4624,16 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: f43b54a43dbc8f82b7346cfc70e32a6ac1b0b779be13c9c6e8bcd315e8034c14
+    sha256: ''
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/a4/1f/21495aab3cb97f66cc25207107567305c893e91adb8d7a53cf69d231a40b/geoh5py-0.7.0rc3-py3-none-any.whl
-  version: 0.7.0rc3
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip
+  version: 0.7.0-rc.3
 - category: core
   dependencies:
     discretize: '*'
@@ -4676,13 +4679,16 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: 6e40e77b1463cf1b302089367cd435a6104c6086fa4b90a91dd313312a7862e9
+    sha256: ''
   manager: pip
   name: mira-simpeg
   optional: true
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/4d/5c/e7ac2e2cc4cd4a413842d581df5ff9606a6ddefa2f339b4c5960333b16fc/Mira_SimPEG-0.15.1.dev8-py2.py3-none-any.whl
-  version: 0.15.1.dev8
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip
+  version: 0.15.1.dev7
 - category: main
   dependencies:
     geoh5py: '>=0.6.0'
@@ -8940,13 +8946,16 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: f43b54a43dbc8f82b7346cfc70e32a6ac1b0b779be13c9c6e8bcd315e8034c14
+    sha256: ''
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/a4/1f/21495aab3cb97f66cc25207107567305c893e91adb8d7a53cf69d231a40b/geoh5py-0.7.0rc3-py3-none-any.whl
-  version: 0.7.0rc3
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip
+  version: 0.7.0-rc.3
 - category: core
   dependencies:
     discretize: '*'
@@ -8992,13 +9001,16 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: 6e40e77b1463cf1b302089367cd435a6104c6086fa4b90a91dd313312a7862e9
+    sha256: ''
   manager: pip
   name: mira-simpeg
   optional: true
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/4d/5c/e7ac2e2cc4cd4a413842d581df5ff9606a6ddefa2f339b4c5960333b16fc/Mira_SimPEG-0.15.1.dev8-py2.py3-none-any.whl
-  version: 0.15.1.dev8
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip
+  version: 0.15.1.dev7
 - category: main
   dependencies:
     geoh5py: '>=0.6.0'
@@ -13468,13 +13480,16 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: f43b54a43dbc8f82b7346cfc70e32a6ac1b0b779be13c9c6e8bcd315e8034c14
+    sha256: ''
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/a4/1f/21495aab3cb97f66cc25207107567305c893e91adb8d7a53cf69d231a40b/geoh5py-0.7.0rc3-py3-none-any.whl
-  version: 0.7.0rc3
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip
+  version: 0.7.0-rc.3
 - category: core
   dependencies:
     discretize: '*'
@@ -13520,13 +13535,16 @@ package:
     utm: '*'
     vectormath: '>=0.2.0'
   hash:
-    sha256: 6e40e77b1463cf1b302089367cd435a6104c6086fa4b90a91dd313312a7862e9
+    sha256: ''
   manager: pip
   name: mira-simpeg
   optional: true
   platform: win-64
-  url: https://files.pythonhosted.org/packages/4d/5c/e7ac2e2cc4cd4a413842d581df5ff9606a6ddefa2f339b4c5960333b16fc/Mira_SimPEG-0.15.1.dev8-py2.py3-none-any.whl
-  version: 0.15.1.dev8
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip
+  version: 0.15.1.dev7
 - category: main
   dependencies:
     geoh5py: '>=0.6.0'
