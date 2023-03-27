@@ -147,7 +147,9 @@ class LockFilePatcher:
         - #sha256=None will conflict with the actual sha256
         """
 
-        none_hash_re = re.compile(r"(.*)(?:\s--hash=(?:md5:|sha256:)|#sha256=)(?:None|)\s*$")
+        none_hash_re = re.compile(
+            r"(.*)(?:\s--hash=(?:md5:|sha256:)|#sha256=)(?:None|)\s*$"
+        )
         with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
             patched_file = Path(tmpdirname) / self.lock_file.name
             with open(patched_file, "w") as patched, open(self.lock_file) as f:
