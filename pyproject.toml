@@ -13,6 +13,7 @@ packages = [
     { include = "geoapps-assets" },
 ]
 exclude = [
+    "geoapps-assets/**/*.geoh5",
     "geoapps-assets/uijson/**",
 ]
 
