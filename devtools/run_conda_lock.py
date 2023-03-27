@@ -147,7 +147,7 @@ class LockFilePatcher:
         - #sha256=None will conflict with the actual sha256
         """
 
-        none_hash_re = re.compile(r"(.*)(?:\s--hash=md5:None|#sha256=None)\b(.*)")
+        none_hash_re = re.compile(r"(.*)(?:\s--hash=(?:md5:|sha256:)|#sha256=)(?:None|)\s*$")
         with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
             patched_file = Path(tmpdirname) / self.lock_file.name
             with open(patched_file, "w") as patched, open(self.lock_file) as f:
@@ -156,7 +156,7 @@ class LockFilePatcher:
                     if not match:
                         patched.write(line)
                     else:
-                        patched.write(f"{match[1]}{match[2]}\n")
+                        patched.write(f"{match[1]}\n")
             patched_file.replace(self.lock_file)
 
     def is_missing_pip_hash(self) -> bool:
