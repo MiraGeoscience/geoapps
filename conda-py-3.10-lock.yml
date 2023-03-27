@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: e826e5ae602992aec416cc037bf7c205b2e36755c7876c6ce60df4c5a8577b62
-    osx-64: 4199a8b57f2e63248a12063b93e1a4b6de20b5c764b09c9c46bedec52f3a89eb
-    win-64: de690dda8c6c75daa2951ec23e5d1761ac90a44d30de8bf2007aed2a1d6ec3fe
+    linux-64: 59d97a87b15f62b2c5dd264face2330375c8ca12a70c0cbaeb463ebc9b94f9ab
+    osx-64: 3e90485e19c50fd5df8d2a86e6d28e0adb9c9ee6a67c951aece339d54130d4c7
+    win-64: cf2ba0577c540df1fc6c1471862c63bb247dcaf2e6dbd96e84e4464bcba38518
   platforms:
   - win-64
   - osx-64
@@ -4631,8 +4631,8 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip
   version: 0.7.0-rc.2
 - category: core
   dependencies:
@@ -4651,7 +4651,7 @@ package:
   version: 0.9.1.dev5
 - category: main
   dependencies:
-    geoh5py: '*'
+    geoh5py: '>=0.5.0'
     numpy: '>=1.7,<2.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
@@ -4665,8 +4665,8 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
   version: 3.0.0-rc.2
 - category: core
   dependencies:
@@ -4694,7 +4694,7 @@ package:
   version: 0.15.1.dev7
 - category: main
   dependencies:
-    geoh5py: '*'
+    geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
     sha256: ''
@@ -4704,8 +4704,8 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip#sha256=
-  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
+  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
   version: 0.1.5-rc.1
 - category: main
   dependencies: {}
@@ -8959,8 +8959,8 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip
   version: 0.7.0-rc.2
 - category: core
   dependencies:
@@ -8979,7 +8979,7 @@ package:
   version: 0.9.1.dev5
 - category: main
   dependencies:
-    geoh5py: '*'
+    geoh5py: '>=0.5.0'
     numpy: '>=1.7,<2.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
@@ -8993,8 +8993,8 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
   version: 3.0.0-rc.2
 - category: core
   dependencies:
@@ -9022,7 +9022,7 @@ package:
   version: 0.15.1.dev7
 - category: main
   dependencies:
-    geoh5py: '*'
+    geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
     sha256: ''
@@ -9032,8 +9032,8 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip#sha256=
-  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
+  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
   version: 0.1.5-rc.1
 - category: main
   dependencies: {}
@@ -13499,8 +13499,8 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip#sha256=
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.7.0-rc.2.zip
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip
   version: 0.7.0-rc.2
 - category: core
   dependencies:
@@ -13519,7 +13519,7 @@ package:
   version: 0.9.1.dev5
 - category: main
   dependencies:
-    geoh5py: '*'
+    geoh5py: '>=0.5.0'
     numpy: '>=1.7,<2.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
@@ -13533,8 +13533,8 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/prerelease_build/3.0.0.zip
+    url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip
   version: 3.0.0-rc.2
 - category: core
   dependencies:
@@ -13562,7 +13562,7 @@ package:
   version: 0.15.1.dev7
 - category: main
   dependencies:
-    geoh5py: '*'
+    geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
     sha256: ''
@@ -13572,7 +13572,7 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip#sha256=
-  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/prerelease_build/0.1.5.zip
+    url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip#sha256=
+  url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.5.zip
   version: 0.1.5-rc.1
 version: 1
