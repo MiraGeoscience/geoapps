@@ -126,28 +126,9 @@ core = [
     "zarr",
 ]
 
-# all of core + extra for apps user interface
+# extras for apps user interface
 apps = [
-    # from "core"
-    "dask",
-    "discretize",
-    "distributed",
-    "empymod",
-    "fsspec",
-    "geoana",
-    "matplotlib",
-    "mira-simpeg",
-    "mkl",
-    "pandas",
-    "pydiso",
-    "pymatsolver",
-    "scikit-learn",
-    "scipy",
-    "simpeg_archive",
-    "tqdm",
-    "zarr",
-
-    # extras for apps user interface
+    # should include "core", but need non-overlapping extra lists for conda-lock
     "dash-daq",
     "fiona",
     "gdal",

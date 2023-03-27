@@ -42,7 +42,7 @@ def create_distrib_core_lock(git_url: str):
 
 
 def create_distrib_full_lock(git_url: str):
-    create_distrib_lock(git_url, ["apps"], suffix="-geoapps-ui")
+    create_distrib_lock(git_url, ["core", "apps"], suffix="-geoapps-ui")
 
 
 def create_distrib_lock(git_url: str, extras=[], suffix=""):

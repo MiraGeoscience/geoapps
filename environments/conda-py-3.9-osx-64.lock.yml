@@ -19,7 +19,7 @@ dependencies:
   - jxrlib=1.1=h35c211d_2
   - libbrotlicommon=1.0.9=hb7f2c08_8
   - libcxx=15.0.7=h71dddab_0
-  - libdeflate=1.17=hac1461d_0
+  - libdeflate=1.18=hac1461d_0
   - libev=4.33=haf1e3a3_1
   - libffi=3.4.2=h0d85af4_5
   - libiconv=1.17=hac89ed1_0
@@ -75,7 +75,7 @@ dependencies:
   - blosc=1.21.2=hebb52c4_0
   - boost-cpp=1.78.0=h8b082ac_1
   - brotli-bin=1.0.9=hb7f2c08_8
-  - c-blosc2=2.7.1=had5f71b_0
+  - c-blosc2=2.8.0=had5f71b_0
   - fonts-conda-ecosystem=1=0
   - freetype=2.12.1=h3f81eb7_1
   - krb5=1.20.1=h049b76e_0
@@ -85,7 +85,7 @@ dependencies:
   - libnghttp2=1.52.0=he2ab024_0
   - librttopo=1.1.0=h5c328d2_13
   - libssh2=1.10.0=h47af595_3
-  - libtiff=4.5.0=hd920806_5
+  - libtiff=4.5.0=hedf67fa_6
   - libxml2=2.10.3=h201ad9d_4
   - libzip=1.9.2=h6db710c_1
   - mkl=2022.2.1=h44ed08c_16952
@@ -149,7 +149,7 @@ dependencies:
   - pyrsistent=0.19.3=py39ha30fb19_0
   - pysocks=1.7.1=pyha2e5f31_6
   - python-fastjsonschema=2.16.3=pyhd8ed1ab_0
-  - pytz=2022.7.1=pyhd8ed1ab_0
+  - pytz=2023.2=pyhd8ed1ab_0
   - pyyaml=6.0=py39ha30fb19_5
   - pyzmq=25.0.2=py39hed8f129_0
   - send2trash=1.8.0=pyhd8ed1ab_0
@@ -216,7 +216,7 @@ dependencies:
   - zict=2.2.0=pyhd8ed1ab_0
   - argon2-cffi-bindings=21.2.0=py39ha30fb19_3
   - brotlipy=0.7.0=py39ha30fb19_1005
-  - cryptography=39.0.2=py39hbeae22c_0
+  - cryptography=40.0.1=py39hbeae22c_0
   - dask-core=2022.10.0=pyhd8ed1ab_2
   - flask=2.2.3=pyhd8ed1ab_0
   - geotiff=1.7.1=h75a88c4_8
@@ -227,7 +227,7 @@ dependencies:
   - libnetcdf=4.9.2=nompi_hb6dca1b_102
   - libspatialite=5.0.1=h18f0d27_25
   - numpy=1.23.5=py39hdfa1d0c_0
-  - platformdirs=3.1.1=pyhd8ed1ab_0
+  - platformdirs=3.2.0=pyhd8ed1ab_0
   - poppler=23.03.0=hc777cac_1
   - stack_data=0.6.2=pyhd8ed1ab_0
   - tiledb=2.13.2=h8b9cbf0_0
@@ -236,10 +236,10 @@ dependencies:
   - contourpy=1.0.7=py39h92daf61_0
   - flask-compress=1.13=pyhd8ed1ab_0
   - h5py=3.8.0=nompi_py39h03e16b4_101
-  - imagecodecs=2023.1.23=py39h2a70a10_1
-  - imageio=2.26.1=pyh24c5eb1_0
+  - imagecodecs=2023.1.23=py39hd51fd57_2
+  - imageio=2.27.0=pyh24c5eb1_0
   - jupyter_core=5.3.0=py39h6e9494a_0
-  - libgdal=3.6.3=h786149d_5
+  - libgdal=3.6.3=h32fa94e_6
   - numba=0.56.4=py39hf6b9d82_0
   - numcodecs=0.11.0=py39h7a8716b_1
   - pandas=1.5.3=py39hecff1ad_0
@@ -249,7 +249,7 @@ dependencies:
   - shapely=2.0.1=py39h1518777_1
   - vectormath=0.2.2=py_0
   - dash=2.9.1=pyhd8ed1ab_0
-  - gdal=3.6.3=py39h0d39264_5
+  - gdal=3.6.3=py39h0d39264_6
   - jupyter_client=7.3.4=pyhd8ed1ab_0
   - matplotlib-base=3.7.1=py39hb2f573b_0
   - nbformat=5.8.0=pyhd8ed1ab_0
