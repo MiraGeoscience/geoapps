@@ -286,11 +286,11 @@ dependencies:
   - ipywidgets=7.7.4=pyhd8ed1ab_0
   - ipyfilechooser=0.6.0=pyhd8ed1ab_0
   - pip:
-    - geoh5py @ https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256=
-    - simpeg-archive === 0.9.1.dev5 --hash=sha256:44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
-    - mira-omf === 3.0.0rc2 --hash=sha256:841d38edc28fbaf5376cc394b4103f4ffd441a4722c6d8a891f3a2db5367ef23
-    - mira-simpeg @ https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip#sha256=
-    - param-sweeps === 0.1.5rc1 --hash=sha256:fd40348f6685dbea6d8d61e92bbee12ab6f84df90bc18032d66486f474fe748d
+    - geoh5py @ https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip
+    - simpeg-archive === 0.9.1.dev5
+    - mira-omf === 3.0.0rc2
+    - mira-simpeg @ https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip
+    - param-sweeps === 0.1.5rc1
 
 variables:
   KMP_WARNINGS: 0
