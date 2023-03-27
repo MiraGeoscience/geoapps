@@ -7,10 +7,12 @@
 
 from __future__ import annotations
 
+import pytest
 
+
+@pytest.mark.skip(reason="conda-lock do not see extra 'core' if included in 'apps'")
 def test_pyproject_extra_apps_include_core(pyproject: dict[str]):
-    """Test that the list of extra packages for "apps" include the list for "core"
-    """
+    """Test that the list of extra packages for "apps" include the list for "core" """
 
     extras = pyproject["tool"]["poetry"]["extras"]
     core_extras = extras["core"]
