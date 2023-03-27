@@ -6,9 +6,11 @@
 #  (see LICENSE file at the root of this source code package).
 
 from __future__ import annotations
-import tomli as toml
+
 from pathlib import Path
+
 import pytest
+import tomli as toml
 
 
 @pytest.fixture
@@ -18,4 +20,3 @@ def pyproject() -> dict[str]:
     pyproject_path = Path(__file__).resolve().parents[1] / "pyproject.toml"
     with open(pyproject_path, "rb") as pyproject_file:
         return toml.load(pyproject_file)
-
