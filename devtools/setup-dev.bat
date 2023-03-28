@@ -22,7 +22,7 @@ set PY_VER=3.10
 
 set env_path=%project_dir%\.conda-env
 call !MY_CONDA_EXE! activate base ^
-  && call !MY_CONDA_EXE! env update --solver=libmamba -p %env_path% --file %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml
+  && call !MY_CONDA_EXE! env update -p %env_path% --file %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml
 
 if !errorlevel! neq 0 (
   pause
