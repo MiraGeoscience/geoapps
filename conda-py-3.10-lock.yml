@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: 21ca2851cbbca0bef25fda8c56d2fb07ad653b30ccc67cb402d5d047605d145c
-    osx-64: 739e52efb0b21cc477065fea7b1da64ef9048303b7bb944cf28196640bada8f7
-    win-64: e6b14d5f42f2d5113f6962941c0a295e4c843fe92117c75745af163294ce4c52
+    linux-64: 5187cd7d973a6871db12077f5d0e7cf6d00382240bd84549552e480bcc3f97a1
+    osx-64: c24a210f00a121dee2f8fdeae5eff86ea0665adec6e253f91e6b09936231088e
+    win-64: ddda38527aa625ef85678f00455f13d50d9502661d4ce6d9aba10eae6d9336f7
   platforms:
   - win-64
   - osx-64
@@ -2793,14 +2793,14 @@ package:
     python_abi: 3.10.* *_cp310
     unicodedata2: '>=14.0.0'
   hash:
-    md5: 3b354798e12b65fa8ebe1d189de6a507
-    sha256: 20b42570005cd3f6d961efa3ac1e389ef763a94224406a6f33121824390f5b71
+    md5: 4f39f656d6ff2761d698e69af952be82
+    sha256: 9c3765958a18d9bfc33e42d78a554aff00041d3da474db3045d6ce95ef6a4643
   manager: conda
   name: fonttools
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.39.2-py310h1fa729e_0.conda
-  version: 4.39.2
+  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.39.3-py310h1fa729e_0.conda
+  version: 4.39.3
 - category: main
   dependencies:
     libaec: '>=1.0.6,<2.0a0'
@@ -4655,13 +4655,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 841d38edc28fbaf5376cc394b4103f4ffd441a4722c6d8a891f3a2db5367ef23
+    sha256: 42f4fa2cd29c11d0abef74809dfcb587fb96a048a3c619ff78683c82c6264df4
   manager: pip
   name: mira-omf
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/91/48/77cca96b5311f568e5acb821a319a3ae99b7faa6fe3666e035371335baf1/mira_omf-3.0.0rc2-py3-none-any.whl
-  version: 3.0.0rc2
+  url: https://files.pythonhosted.org/packages/d4/9d/2e7a1d1972cd1aa156b319565b118c79b9141a1b772c63310d3551371929/mira_omf-3.0.0rc3-py3-none-any.whl
+  version: 3.0.0rc3
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -7165,14 +7165,14 @@ package:
     python_abi: 3.10.* *_cp310
     unicodedata2: '>=14.0.0'
   hash:
-    md5: 2643992c2bb27b3c2a92ecf56adee2ca
-    sha256: e3e5a490ab2945783bdb9ee5c639048cf69fc59bc67f7515d6045905178ef803
+    md5: bd5352a044be0a2ac87981439307dd1c
+    sha256: 917517093fcd4695f7e563d79753801a2ea3f145b84b3401e4e9b63a3cca0268
   manager: conda
   name: fonttools
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.39.2-py310h90acd4f_0.conda
-  version: 4.39.2
+  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.39.3-py310h90acd4f_0.conda
+  version: 4.39.3
 - category: main
   dependencies:
     libaec: '>=1.0.6,<2.0a0'
@@ -8971,13 +8971,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 841d38edc28fbaf5376cc394b4103f4ffd441a4722c6d8a891f3a2db5367ef23
+    sha256: 42f4fa2cd29c11d0abef74809dfcb587fb96a048a3c619ff78683c82c6264df4
   manager: pip
   name: mira-omf
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/91/48/77cca96b5311f568e5acb821a319a3ae99b7faa6fe3666e035371335baf1/mira_omf-3.0.0rc2-py3-none-any.whl
-  version: 3.0.0rc2
+  url: https://files.pythonhosted.org/packages/d4/9d/2e7a1d1972cd1aa156b319565b118c79b9141a1b772c63310d3551371929/mira_omf-3.0.0rc3-py3-none-any.whl
+  version: 3.0.0rc3
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -12095,14 +12095,14 @@ package:
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: a62195ea396a2fb13edc53c252428c40
-    sha256: 7f7aeacdd6cfd28cef34f1813c02d2af9cf68552603dc58d3f22a49b70756439
+    md5: 18c2d73815d91ee511ef9bd47839f6bf
+    sha256: c450a3f0bf6f54ddf7ca6737973f5784452f8cb70c0ac5ff746ead255638d0c2
   manager: conda
   name: fonttools
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.39.2-py310h8d17308_0.conda
-  version: 4.39.2
+  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.39.3-py310h8d17308_0.conda
+  version: 4.39.3
 - category: apps
   dependencies:
     libjpeg-turbo: '>=2.1.5.1,<3.0a0'
@@ -13499,13 +13499,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 841d38edc28fbaf5376cc394b4103f4ffd441a4722c6d8a891f3a2db5367ef23
+    sha256: 42f4fa2cd29c11d0abef74809dfcb587fb96a048a3c619ff78683c82c6264df4
   manager: pip
   name: mira-omf
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/91/48/77cca96b5311f568e5acb821a319a3ae99b7faa6fe3666e035371335baf1/mira_omf-3.0.0rc2-py3-none-any.whl
-  version: 3.0.0rc2
+  url: https://files.pythonhosted.org/packages/d4/9d/2e7a1d1972cd1aa156b319565b118c79b9141a1b772c63310d3551371929/mira_omf-3.0.0rc3-py3-none-any.whl
+  version: 3.0.0rc3
 - category: core
   dependencies:
     discretize: '>=0.7.0'
