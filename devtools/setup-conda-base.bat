@@ -24,4 +24,4 @@ if !errorlevel! neq 0 (
 )
 
 pause
-cmd /k "!MY_CONDA_EXE! activate base"
+cmd /k !MY_CONDA_EXE! activate base
