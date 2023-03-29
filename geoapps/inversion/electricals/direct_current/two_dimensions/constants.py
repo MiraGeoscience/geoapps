@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
@@ -363,7 +364,7 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon_dcip.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon_dcip.geoh5"),
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
     "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
     "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
