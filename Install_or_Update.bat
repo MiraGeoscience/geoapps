@@ -14,7 +14,7 @@ set MY_CONDA=!MY_CONDA_EXE:"=!
 cd %~dp0
 set PYTHONUTF8=1
 
-set MY_CONDA_ENV_FILE=environments\conda-py-%PY_VER%-win-65.lock.yml
+set MY_CONDA_ENV_FILE=environments\conda-py-%PY_VER%-win-64.lock.yml
 if not exist %MY_CONDA_ENV_FILE% (
   echo "** ERROR: Could not find the conda environment specification file '%MY_CONDA_ENV_FILE%' **"
   pause
