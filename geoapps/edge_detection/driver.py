@@ -28,7 +28,6 @@ from geoapps.utils.formatters import string_name
 
 
 class EdgeDetectionDriver(BaseDriver):
-
     _params_class = EdgeDetectionParams
     _validations = validations
 
@@ -158,7 +157,6 @@ class EdgeDetectionDriver(BaseDriver):
             coords = []
             for cx in cnt_x:
                 for cy in cnt_y:
-
                     i_min, i_max = int(cy - half_y), int(cy + half_y)
                     j_min, j_max = int(cx - half_x), int(cx + half_x)
                     lines = probabilistic_hough_line(

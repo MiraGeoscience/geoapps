@@ -953,7 +953,6 @@ class PeakFinder(ObjectDataSelection):
         dwn_markers_x, dwn_markers_y = [], []
 
         for cc, channel in enumerate(self.active_channels.values()):
-
             if "values" not in channel:
                 continue
 
@@ -1127,7 +1126,6 @@ class PeakFinder(ObjectDataSelection):
             and hasattr(self.lines, "profile")
             and self.tem_checkbox.value
         ):
-
             if self.decay_figure is None:
                 self.decay_figure = plt.figure(figsize=(8, 8))
 
@@ -1303,7 +1301,6 @@ class PeakFinder(ObjectDataSelection):
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
-
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
                     if new_workspace.get_entity(value.uid)[0] is None:

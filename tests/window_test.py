@@ -20,7 +20,6 @@ geoh5 = Workspace(PROJECT)
 
 
 def test_initialize(tmp_path):
-
     # Test initialize from params
     tester = Geoh5Tester(
         geoh5,
@@ -57,5 +56,5 @@ def test_initialize(tmp_path):
     params.window_height = None
 
     win = InversionWindow(ws, params)
-    assert win.window["center"] == [50.0, 50.0]
-    assert win.window["size"] == [100.0, 100.0]
+    assert np.allclose(win.window["center"], np.r_[50.0, 50.0])
+    assert np.allclose(win.window["size"], np.r_[100.0, 100.0])

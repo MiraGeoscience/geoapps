@@ -12,7 +12,6 @@ from .params import GravityParams
 
 
 class GravityDriver(InversionDriver):
-
     _params_class = GravityParams
     _validations = validations
 

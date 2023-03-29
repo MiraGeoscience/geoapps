@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.drivers import BaseParams
+    from geoapps.driver_base.params import BaseParams
 
 from copy import deepcopy
 
@@ -22,9 +22,8 @@ import numpy as np
 from discretize import TreeMesh
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
-from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.inversion.utils import calculate_2D_trend, create_nested_mesh
 from geoapps.shared_utils.utils import filter_xy
 
 from .factories import (
@@ -98,21 +97,21 @@ class InversionData(InversionLocations):
         """
         super().__init__(workspace, params, window)
 
-        self.resolution: int = None
-        self.offset: list[float] = None
-        self.radar: np.ndarray = None
-        self.ignore_value: float = None
-        self.ignore_type: str = None
-        self.detrend_order: float = None
-        self.detrend_type: str = None
-        self.locations: np.ndarray = None
+        self.resolution: int | None = None
+        self.offset: list[float] | None = None
+        self.radar: np.ndarray | None = None
+        self.ignore_value: float | None = None
+        self.ignore_type: str | None = None
+        self.detrend_order: float | None = None
+        self.detrend_type: str | None = None
+        self.locations: np.ndarray | None = None
         self.has_pseudo: bool = False
-        self.mask: np.ndarray = None
-        self.global_map: np.ndarray = None
-        self.indices: np.ndarray = None
-        self.vector: bool = None
-        self.n_blocks: int = None
-        self.components: list[str] = None
+        self.mask: np.ndarray | None = None
+        self.global_map: np.ndarray | None = None
+        self.indices: np.ndarray | None = None
+        self.vector: bool | None = None
+        self.n_blocks: int | None = None
+        self.components: list[str] | None = None
         self.observed: dict[str, np.ndarray] = {}
         self.predicted: dict[str, np.ndarray] = {}
         self.uncertainties: dict[str, np.ndarray] = {}
@@ -159,7 +158,7 @@ class InversionData(InversionLocations):
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
-        self.survey, _ = self.create_survey()
+        self.survey, _, _ = self.create_survey()
         self.save_data(self.entity)
 
     def filter(self, a):
@@ -167,10 +166,12 @@ class InversionData(InversionLocations):
         if (
             self.params.inversion_type
             in [
+                "direct current pseudo 3d",
                 "direct current 3d",
                 "direct current 2d",
                 "induced polarization 3d",
                 "induced polarization 2d",
+                "induced polarization pseudo 3d",
             ]
             and self.indices is None
         ):
@@ -186,7 +187,7 @@ class InversionData(InversionLocations):
 
         return a
 
-    def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
+    def get_data(self) -> tuple[list, dict, dict]:
         """
         Get all data and uncertainty components and possibly set infinite uncertainties.
 
@@ -222,7 +223,7 @@ class InversionData(InversionLocations):
         self._observed_data_types = {c: {} for c in data.keys()}
         data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type in ["magnetotellurics", "tipper"]:
+        if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = self.normalizations[component] * values
@@ -300,7 +301,6 @@ class InversionData(InversionLocations):
                 if ignore_type in ["<", ">"]:
                     ignore_value = float(ignore_values.split(ignore_type)[1])
                 else:
-
                     try:
                         ignore_value = float(ignore_values)
                     except ValueError:
@@ -416,13 +416,16 @@ class InversionData(InversionLocations):
             elif self.params.inversion_type in ["tipper"]:
                 if "imag" in comp:
                     normalizations[comp] = -1.0
+            elif self.params.inversion_type in ["tdem"]:
+                if comp in ["x", "z"]:
+                    normalizations[comp] = -1.0
 
         return normalizations
 
     def create_survey(
         self,
-        mesh: TreeMesh = None,
-        local_index: np.ndarray = None,
+        mesh: TreeMesh | None = None,
+        local_index: np.ndarray | None = None,
         channel=None,
     ):
         """
@@ -443,6 +446,7 @@ class InversionData(InversionLocations):
             local_index=local_index,
             channel=channel,
         )
+
         return survey
 
     def simulation(
@@ -450,7 +454,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh,
         active_cells: np.ndarray,
         survey,
-        tile_id: int = None,
+        tile_id: int | None = None,
         padding_cells: int = 6,
     ):
         """
@@ -495,6 +499,7 @@ class InversionData(InversionLocations):
             )
             sim = simulation_factory.build(
                 survey=survey,
+                receivers=self.entity,
                 global_mesh=mesh,
                 local_mesh=nested_mesh,
                 active_cells=mapping.local_active,
@@ -503,7 +508,7 @@ class InversionData(InversionLocations):
             )
         return sim, mapping
 
-    def simulate(self, model, inverse_problem, sorting):
+    def simulate(self, model, inverse_problem, sorting, ordering):
         """Simulate fields for a particular model."""
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
@@ -512,6 +517,7 @@ class InversionData(InversionLocations):
             save_directive = SaveIterationGeoh5Factory(self.params).build(
                 inversion_object=self,
                 sorting=np.argsort(np.hstack(sorting)),
+                ordering=ordering,
             )
             save_directive.save_components(0, dpred)
 
@@ -532,7 +538,6 @@ class InversionData(InversionLocations):
 
     @staticmethod
     def check_tensor(channels):
-
         tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
         has_tensor = lambda c: any(k in c for k in tensor_components)
         return any(has_tensor(c) for c in channels)

@@ -56,7 +56,6 @@ class ChannelOptions:
     """
 
     def __init__(self, key, description, **kwargs):
-
         self._active = Checkbox(
             value=False,
             indent=True,
@@ -161,7 +160,6 @@ class SensorOptions(ObjectDataSelection):
 
     @property
     def options(self):
-
         if getattr(self, "_options", None) is None:
             self._options = widgets.RadioButtons(
                 options=[
@@ -361,7 +359,6 @@ class ModelOptions(ObjectDataSelection):
         )
 
     def update_panel(self, _):
-
         if self._options.value == "Model":
             self._main.children[1].children = [self._options, self.selection_widget]
             self._main.children[1].children[1].layout.visibility = "visible"
@@ -658,7 +655,6 @@ def plot_convergence_curve(h5file):
     )
 
     def plot_curve(objects):
-
         inversion = workspace.get_entity(objects)[0]
         result = None
         if getattr(inversion, "comments", None) is not None:
@@ -724,7 +720,6 @@ app_initializer = {
 
 
 class InversionApp(PlotSelection2D):
-
     _select_multiple = False
     _add_groups = "only"
     _sensor = None
@@ -901,7 +896,6 @@ class InversionApp(PlotSelection2D):
     @property
     def topography(self):
         if getattr(self, "_topography", None) is None:
-
             self._topography = TopographyOptions(
                 workspace=self._workspace, **self.defaults["topography"]
             )
@@ -1001,7 +995,6 @@ class InversionApp(PlotSelection2D):
         )
 
         def channel_setter(caller):
-
             channel = caller["owner"]
             data_widget = self.data_channel_choices.data_channel_options[channel.header]
 
@@ -1098,7 +1091,6 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
     def object_observer(self, _):
-
         self.resolution.indices = None
         entity = self._workspace.get_entity(self.objects.value)[0]
         if entity is None:
@@ -1135,7 +1127,6 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
     def update_component_panel(self, _):
-
         obj, data_list = self.get_selected_entities()
 
         if obj is None:
@@ -1369,7 +1360,6 @@ class InversionApp(PlotSelection2D):
                 self.ga_group_name.value + ".geoh5",
             )
         ) as new_workspace:
-
             obj, _ = self.get_selected_entities()
             new_obj = obj.copy(parent=new_workspace, copy_children=False)
 
@@ -1387,7 +1377,6 @@ class InversionApp(PlotSelection2D):
                 input_dict["data"]["channels"] = str(new_group.uid)
 
             if self._uncertainties.value is not None:
-
                 prop_group = obj.find_or_create_property_group(
                     name=self.data.uid_name_map[self._uncertainties.value]
                 )
@@ -1423,7 +1412,6 @@ class InversionApp(PlotSelection2D):
                 obj, data = elem.get_selected_entities()
 
                 if obj is not None:
-
                     new_obj = new_workspace.get_entity(obj.uid)[0]
                     if new_obj is None:
                         new_obj = obj.copy(parent=new_workspace, copy_children=False)

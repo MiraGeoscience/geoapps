@@ -10,7 +10,6 @@ from geoapps.utils.formatters import string_name
 
 
 def test_string_name():
-
     chars = "!@#$%^&*().,"
     value = "H!e(l@l#o.W$o%r^l&d*"
     assert (

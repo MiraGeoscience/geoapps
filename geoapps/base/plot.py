@@ -47,7 +47,6 @@ class PlotSelection2D(ObjectDataSelection):
     plot_result = True
 
     def __init__(self, **kwargs):
-
         self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.axis = None

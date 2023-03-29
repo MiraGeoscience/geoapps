@@ -38,7 +38,6 @@ def test_dc_2d_fwr_run(
     n_lines=3,
     refinement=(4, 6),
 ):
-
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -71,7 +70,6 @@ def test_dc_2d_fwr_run(
 
 
 def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
-
     workpath = os.path.join(tmp_path, "inversion_test.geoh5")
     if pytest:
         workpath = str(tmp_path / "../test_dc_2d_fwr_run0/inversion_test.geoh5")

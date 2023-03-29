@@ -42,10 +42,13 @@ class SimPEGFactory:
         "gravity",
         "magnetic scalar",
         "magnetic vector",
+        "direct current pseudo 3d",
         "direct current 3d",
         "direct current 2d",
         "induced polarization 3d",
         "induced polarization 2d",
+        "induced polarization pseudo 3d",
+        "tdem",
         "magnetotellurics",
         "tipper",
     ]

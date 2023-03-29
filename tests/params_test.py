@@ -100,7 +100,6 @@ def param_test_generator(param, value):
 
 
 def test_write_input_file_validation(tmp_path):
-
     grav_init["geoh5"] = str(PROJECT)
     params = GravityParams(validate=False, **grav_init)
     params.validate = True
@@ -142,7 +141,6 @@ def test_params_initialize():
 
 
 def test_input_file_construction(tmp_path):
-
     params_classes = [
         GravityParams,
         MagneticScalarParams,
@@ -179,7 +177,6 @@ def test_input_file_construction(tmp_path):
 
 
 def test_default_input_file(tmp_path):
-
     for params_class in [
         MagneticScalarParams,
         MagneticVectorParams,
@@ -842,7 +839,6 @@ def test_gz_uncertainty():
 
 
 def test_guv_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.guv_channel_bool = "alskdj"
 
@@ -888,7 +884,6 @@ def test_guv_uncertainty():
 
 
 def test_gxy_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gxy_channel_bool = "alskdj"
 
@@ -934,7 +929,6 @@ def test_gxy_uncertainty():
 
 
 def test_gxx_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gxx_channel_bool = "alskdj"
 
@@ -980,7 +974,6 @@ def test_gxx_uncertainty():
 
 
 def test_gyy_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gyy_channel_bool = "alskdj"
 
@@ -1026,7 +1019,6 @@ def test_gyy_uncertainty():
 
 
 def test_gzz_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gzz_channel_bool = "alskdj"
 
@@ -1072,7 +1064,6 @@ def test_gzz_uncertainty():
 
 
 def test_gxz_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gxz_channel_bool = "alskdj"
 
@@ -1118,7 +1109,6 @@ def test_gxz_uncertainty():
 
 
 def test_gyz_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gyz_channel_bool = "alskdj"
 
@@ -1164,7 +1154,6 @@ def test_gyz_uncertainty():
 
 
 def test_gx_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gx_channel_bool = "alskdj"
 

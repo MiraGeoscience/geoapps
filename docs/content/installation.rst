@@ -4,64 +4,100 @@ Getting Started
 
 Whether you are developer or an end-user, this page will help you get started with the **geoapps**.
 
+.. contents::
+
+.. sectnum::
+    :depth: 2
+
 Installation
 ------------
 
-1- Install Conda for Python 3.7 or higher. Two recommended options:
-    - `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~400 MB of disk space
-    - `Anaconda <https://www.anaconda.com/download/>`_: ~3 GB of disk space
+Install Conda
+~~~~~~~~~~~~~
 
-	.. figure:: ../images/Anaconda_Install.png
-	    :align: center
-	    :width: 200
+Install Conda for Python 3.9 or higher. You can use any of the following distributions of Conda:
 
-2- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_ **geoapps** directory.
+- `Miniforge <https://github.com/conda-forge/miniforge#download>`_: ~140 MB of disk space
+- `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~400 MB of disk space
+- `Anaconda <https://www.anaconda.com/download/>`_: ~3 GB of disk space
 
-3- Extract the package to your drive (SSD if available).
+We recommend installing **Miniforge**: beyond being smaller,
+it also installs packages from the conda-forge repository by default,
+which has no restriction for commercial use. Follow this link to download its Windows installer:
+`Miniforge Windows x86_64 <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe>`_
 
-	.. figure:: ../images/extract.png
-	    :align: center
-	    :width: 50%
+.. figure:: ../images/Miniforge3_Setup-1.png
+    :align: center
+    :width: 200
+
+.. figure:: ../images/Miniforge3_Setup-3.png
+    :align: center
+    :width: 200
+
+Registering the Conda distribution as the default Python 3.10 interpreter is totally optional.
+Preferably uncheck that box if you already have Python 3 installed on your system.
+
+.. note:: Both Miniconda and Anaconda distributions use the Anaconda repository by default: see `Anaconda Terms of Service <https://www.anaconda.com/terms-of-service>`_ for details.
+    In any case, the installation of **geoapps** forces the usage of the conda-forge repository,
+    and is thus not affected by the Anaconda Terms of Service.
+
+Download the latest geoapps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Follow this link to `download from the GitHub repository <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_.
+
+Extract the package to your drive (SSD if available)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Extract the package to your drive, preferably an SSD if available.
+
+.. figure:: ../images/extract.png
+    :align: center
+    :width: 50%
 
 
-4- Run ``Install_Update.bat`` **(see notes below)**.
+Run ``Install_or_Update.bat``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  The same batch file can be used to update the package dependencies.
-  A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
+The same batch file can be used to install or update **geoapps**.
+A conda environment named ``geoapps`` will be created to prevent conflicts with other software that may rely on Python.
 
-	.. figure:: ../images/run_install.png
-	    :align: center
-	    :width: 50%
+.. figure:: ../images/run_install.png
+    :align: center
+    :width: 50%
 
 .. note:: The assumption is made that Conda has been installed in one
-   of the default directories:
+   of the default directories, depending on the distribution
+   (miniforge3, mambaforge, miniconda3, anaconda3):
 
-    - %USERPROFILE%\\ana[mini]conda3\\
-    - %LOCALAPPDATA%\\Continuum\\ana[mini]conda3\\
-    - C:\\ProgramData\\ana[mini]conda3\\
+   - %LOCALAPPDATA%\\
+   - %USERPROFILE%\\
+   - %LOCALAPPDATA%\\Continuum\\
+   - %PROGRAMDATA%\\
 
-   If Conda gets installed in a different directory, users will need to add/edit a
-   ``get_custom_conda.bat`` file to add their custom path to the ``conda.bat`` file:
+If Conda gets installed in a different directory, users will need to add/edit a
+``get_custom_conda.bat`` file to add their custom path to the ``conda.bat`` file:
 
-        .. figure:: ../images/Install_start_bat.png
-            :align: center
-            :width: 75%
+.. figure:: ../images/Install_start_bat.png
+    :align: center
+    :width: 75%
+
 
 Running the applications
 ------------------------
 At this point, you will have all required packages to run the applications:
 
-- Run ``Start_Applications.bat``
+Run ``Start_Applications.bat``
 
-	.. figure:: ../images/run_applications.png
-	    :align: center
-	    :width: 50%
+.. figure:: ../images/run_applications.png
+    :align: center
+    :width: 50%
 
 You should see the index page displayed in your default browser.
 
-	.. figure:: ../images/index_page.png
-	    :align: center
-	    :width: 100%
+.. figure:: ../images/index_page.png
+    :align: center
+    :width: 100%
 
 .. note:: Applications run best with either Chrome or Firefox.
 
@@ -86,6 +122,6 @@ To work with **geoapps** source code in development, install from GitHub::
 
 .. note:: The Jupyter-Notebook applications can be `downloaded from source <https://github.com/MiraGeoscience/geoapps/archive/develop.zip>`_ :
 
-	.. figure:: ../images/download.png
-	    :align: center
-	    :width: 200
+    .. figure:: ../images/download.png
+        :align: center
+        :width: 200

@@ -13,6 +13,7 @@ from os import path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase, Octree
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import monitored_directory_copy
 
 from geoapps.driver_base.driver import BaseDriver
@@ -22,7 +23,6 @@ from geoapps.octree_creation.params import OctreeParams
 
 
 class OctreeDriver(BaseDriver):
-
     _params_class = OctreeParams
     _validations = validations
 
@@ -34,12 +34,13 @@ class OctreeDriver(BaseDriver):
         """
         Create an octree mesh from input values
         """
-        octree = self.octree_from_params(self.params)
+        with fetch_active_workspace(self.params.geoh5, mode="r+"):
+            octree = self.octree_from_params(self.params)
 
-        if self.params.monitoring_directory is not None and path.exists(
-            self.params.monitoring_directory
-        ):
-            monitored_directory_copy(self.params.monitoring_directory, octree)
+            if self.params.monitoring_directory is not None and path.exists(
+                self.params.monitoring_directory
+            ):
+                monitored_directory_copy(self.params.monitoring_directory, octree)
 
         return octree
 
