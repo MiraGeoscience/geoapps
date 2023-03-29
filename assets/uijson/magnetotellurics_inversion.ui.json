@@ -486,7 +486,7 @@
     "coolingRate": {
         "group": "Optimization",
         "label": "Iterations per beta",
-        "value": 2,
+        "value": 4,
         "min": 1,
         "LineEdit": false,
         "max": 10,
@@ -525,7 +525,7 @@
         "min": 0,
         "group": "Optimization",
         "label": "Maximum CG iterations",
-        "value": 30,
+        "value": 50,
         "enabled": true,
         "verbose": 2
     },
@@ -541,7 +541,7 @@
         "min": 0.0,
         "group": "Regularization",
         "label": "Smallness weight",
-        "value": 1.0,
+        "value": 0.0,
         "tooltip": "Constant ratio compared to other weights. Larger values result in models that remain close to the reference model",
         "enabled": true
     },
@@ -692,7 +692,7 @@
         "group": "Update sensitivity weights directive",
         "tooltip": "Update weights at every iteration",
         "label": "Every iteration",
-        "value": false,
+        "value": true,
         "verbose": 2
     },
     "parallelized": {

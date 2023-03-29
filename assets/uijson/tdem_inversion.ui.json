@@ -1,7 +1,6 @@
 {
-    "title": "Tipper inversion",
-    "icon": "surveyztem",
-    "inversion_type": "tipper",
+    "title": "Time domain electromagnetic inversion",
+    "inversion_type": "tdem",
     "geoh5": "",
     "forward_only": false,
     "topography_object": {
@@ -37,7 +36,10 @@
         "main": true,
         "group": "Data",
         "label": "Object",
-        "meshType": "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+        "meshType": [
+            "{19730589-fd28-4649-9de0-ad47249d9aba}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}"
+        ],
         "value": ""
     },
     "resolution": {
@@ -80,7 +82,7 @@
         "verbose": 3
     },
     "gps_receivers_offset": "",
-    "txz_real_channel": {
+    "z_channel": {
         "association": [
             "Cell",
             "Vertex"
@@ -89,13 +91,13 @@
         "group": "Data",
         "dataGroupType": "Multi-element",
         "main": true,
-        "label": "Txz real",
+        "label": "z-component",
         "parent": "data_object",
         "optional": true,
         "enabled": false,
         "value": ""
     },
-    "txz_real_uncertainty": {
+    "z_uncertainty": {
         "association": [
             "Cell",
             "Vertex"
@@ -106,11 +108,11 @@
         "main": true,
         "label": "Uncertainty",
         "parent": "data_object",
-        "dependency": "txz_real_channel",
+        "dependency": "z_channel",
         "dependencyType": "enabled",
         "value": ""
     },
-    "txz_imag_channel": {
+    "x_channel": {
         "association": [
             "Cell",
             "Vertex"
@@ -119,13 +121,13 @@
         "group": "Data",
         "dataGroupType": "Multi-element",
         "main": true,
-        "label": "Txz imaginary",
+        "label": "x-component",
         "parent": "data_object",
         "optional": true,
         "enabled": false,
         "value": ""
     },
-    "txz_imag_uncertainty": {
+    "x_uncertainty": {
         "association": [
             "Cell",
             "Vertex"
@@ -136,11 +138,11 @@
         "main": true,
         "label": "Uncertainty",
         "parent": "data_object",
-        "dependency": "txz_imag_channel",
+        "dependency": "x_channel",
         "dependencyType": "enabled",
         "value": ""
     },
-    "tyz_real_channel": {
+    "y_channel": {
         "association": [
             "Cell",
             "Vertex"
@@ -149,13 +151,13 @@
         "group": "Data",
         "dataGroupType": "Multi-element",
         "main": true,
-        "label": "Tyz real",
+        "label": "y-component",
         "parent": "data_object",
         "optional": true,
         "enabled": false,
         "value": ""
     },
-    "tyz_real_uncertainty": {
+    "y_uncertainty": {
         "association": [
             "Cell",
             "Vertex"
@@ -166,37 +168,7 @@
         "main": true,
         "label": "Uncertainty",
         "parent": "data_object",
-        "dependency": "tyz_real_channel",
-        "dependencyType": "enabled",
-        "value": ""
-    },
-    "tyz_imag_channel": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "dataGroupType": "Multi-element",
-        "main": true,
-        "label": "Tyz imaginary",
-        "parent": "data_object",
-        "optional": true,
-        "enabled": false,
-        "value": ""
-    },
-    "tyz_imag_uncertainty": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Data",
-        "dataGroupType": "Multi-element",
-        "main": true,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "tyz_imag_channel",
+        "dependency": "y_channel",
         "dependencyType": "enabled",
         "value": ""
     },
@@ -206,20 +178,6 @@
         "label": "Mesh",
         "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
         "value": ""
-    },
-    "background_conductivity": {
-        "association": [
-            "Cell",
-            "Vertex"
-        ],
-        "dataType": "Float",
-        "group": "Mesh and Models",
-        "main": true,
-        "isValue": true,
-        "parent": "mesh",
-        "label": "Background conductivity (S/m)",
-        "property": "",
-        "value": 0.001
     },
     "starting_model": {
         "association": [
@@ -405,7 +363,7 @@
         "min": 0,
         "group": "Optimization",
         "label": "Maximum CG iterations",
-        "value": 30,
+        "value": 50,
         "enabled": true,
         "verbose": 2
     },
@@ -489,6 +447,16 @@
         "lineEdit": false,
         "enabled": true
     },
+    "gradient_type": {
+        "choiceList": [
+            "total",
+            "components"
+        ],
+        "group": "Regularization",
+        "label": "Gradient type",
+        "value": "total",
+        "verbose": 3
+    },
     "max_irls_iterations": {
         "min": 0,
         "group": "Update IRLS directive",
@@ -547,21 +515,11 @@
         "value": false,
         "verbose": 3
     },
-    "gradient_type": {
-        "choiceList": [
-            "total",
-            "components"
-        ],
-        "group": "Regularization",
-        "label": "Gradient type",
-        "value": "total",
-        "verbose": 3
-    },
     "sens_wts_threshold": {
         "group": "Update sensitivity weights directive",
         "tooltip": "Update sensitivity weight threshold",
         "label": "Threshold (%)",
-        "value": 60.0,
+        "value": 5.0,
         "max": 99.9,
         "min": 0.0,
         "precision": 1,
@@ -601,7 +559,6 @@
         "max": 1000,
         "verbose": 2
     },
-    "max_ram": "",
     "store_sensitivities": {
         "choiceList": [
             "disk",
@@ -612,6 +569,7 @@
         "tooltip": "Use disk on a fast local SSD, and RAM elsewhere",
         "value": "ram"
     },
+    "max_ram": "",
     "max_chunk_size": {
         "min": 0,
         "group": "Compute",
@@ -629,7 +587,7 @@
     },
     "out_group": {
         "label": "Results group name",
-        "value": "TipperInversion"
+        "value": "TimeDomainElectromagneticInversion"
     },
     "generate_sweep": {
         "label": "Generate sweep file",
@@ -642,8 +600,7 @@
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": "",
-    "txz_real_channel_bool": false,
-    "txz_imag_channel_bool": false,
-    "tyz_real_channel_bool": false,
-    "tyz_imag_channel_bool": false
+    "z_channel_bool": false,
+    "x_channel_bool": false,
+    "y_channel_bool": false
 }

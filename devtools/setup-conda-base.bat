@@ -1,4 +1,4 @@
-:: Setup the conda base environment with mamba, conda-lock and conda-pack
+:: Setup the conda base environment with conda-lock
 ::
 :: The script has no parameters, and can be executed by double-clicking
 :: the .bat file from Windows Explorer.
@@ -15,9 +15,13 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-call !MY_CONDA_EXE! install -n base -c conda-forge mamba -y
-call !MY_CONDA_EXE! activate base
-pip install conda-lock[pip_support]
+call !MY_CONDA_EXE! run -n base pip install conda-lock[pip_support]
+
+if !errorlevel! neq 0 (
+  echo "** ERROR: Installation failed **"
+  pause
+  exit /B !errorlevel!
+)
 
 pause
-cmd /k
+cmd /k !MY_CONDA_EXE! activate base
