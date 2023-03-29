@@ -70,6 +70,8 @@ class SurveyFactory(SimPEGFactory):
         super().__init__(params)
         self.simpeg_object = self.concrete_object()
         self.local_index = None
+        self.survey = None
+        self.ordering = None
 
     def concrete_object(self):
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
@@ -83,6 +85,9 @@ class SurveyFactory(SimPEGFactory):
 
         elif "induced polarization" in self.factory_type:
             from SimPEG.electromagnetics.static.induced_polarization import survey
+
+        elif "tdem" in self.factory_type:
+            from SimPEG.electromagnetics.time_domain import survey
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import survey
@@ -103,6 +108,12 @@ class SurveyFactory(SimPEGFactory):
                 "induced polarization pseudo 3d",
             ]:
                 n_data = receiver_entity.n_cells
+            elif self.factory_type in ["tdem"]:
+                transmitter_id = data.entity.get_data("Transmitter ID")
+                if transmitter_id:
+                    n_data = len(np.unique(transmitter_id[0].values))
+                else:
+                    n_data = receiver_entity.transmitters.n_vertices
             else:
                 n_data = receiver_entity.n_vertices
 
@@ -119,6 +130,9 @@ class SurveyFactory(SimPEGFactory):
             "induced polarization pseudo 3d",
         ]:
             return self._dcip_arguments(data=data, local_index=local_index)
+
+        elif self.factory_type in ["tdem"]:
+            return self._tdem_arguments(data=data, mesh=mesh, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_arguments(
                 data=data, mesh=mesh, frequency=channel
@@ -157,7 +171,7 @@ class SurveyFactory(SimPEGFactory):
 
         survey.dummy = self.dummy
 
-        return survey, self.local_index
+        return survey, self.local_index, self.ordering
 
     def _get_local_data(self, data, channel, local_index):
         local_data = {}
@@ -185,7 +199,23 @@ class SurveyFactory(SimPEGFactory):
         return local_data, local_uncertainties
 
     def _add_data(self, survey, data, local_index, channel):
-        if self.factory_type in ["magnetotellurics", "tipper"]:
+        if self.factory_type in ["tdem"]:
+            dobs = []
+            uncerts = []
+
+            data_stack = [np.vstack(list(k.values())) for k in data.observed.values()]
+            uncert_stack = [
+                np.vstack(list(k.values())) for k in data.uncertainties.values()
+            ]
+            for order in self.ordering:
+                time_id, component_id, _, rx_id = order
+                dobs.append(data_stack[component_id][time_id, rx_id])
+                uncerts.append(uncert_stack[component_id][time_id, rx_id])
+
+            survey.dobs = np.vstack([dobs]).flatten()
+            survey.std = np.vstack([uncerts]).flatten()
+
+        elif self.factory_type in ["magnetotellurics", "tipper"]:
             local_data = {}
             local_uncertainties = {}
 
@@ -321,6 +351,7 @@ class SurveyFactory(SimPEGFactory):
                 receivers=receivers,
                 locations=source_locations[currents.cells[cell_ind]],
             )
+
             sources.append(source)
             self.local_index.append(receiver_indices)
 
@@ -333,12 +364,84 @@ class SurveyFactory(SimPEGFactory):
 
         return [sources]
 
+    def _tdem_arguments(self, data=None, local_index=None, mesh=None):
+        receivers = data.entity
+        transmitters = receivers.transmitters
+        tx_list = []
+
+        transmitter_id = receivers.get_data("Transmitter ID")
+        if transmitter_id:
+            tx_rx = transmitter_id[0].values
+            tx_ids = transmitters.get_data("Transmitter ID")[0].values
+            rx_lookup = {
+                k: np.where(tx_rx == k)[0] for k in np.unique(tx_ids)[self.local_index]
+            }
+
+            tx_locs_lookup = {}
+            for k in np.unique(tx_ids)[self.local_index]:
+                tx_ind = tx_ids == k
+                loop_cells = transmitters.cells[
+                    np.all(tx_ind[transmitters.cells], axis=1), :
+                ]
+                loop_ind = np.r_[loop_cells[:, 0], loop_cells[-1, 1]]
+                tx_locs = transmitters.vertices[loop_ind, :]
+                tx_locs_lookup[k] = tx_locs
+        else:
+            rx_lookup = {k: [k] for k in self.local_index}
+            tx_locs_lookup = {k: transmitters.vertices[k, :] for k in self.local_index}
+
+            conversion = {
+                "Seconds (s)": 1.0,
+                "Milliseconds (ms)": 1e-3,
+                "Microseconds (us)": 1e-6,
+            }
+            wave_function = interp1d(
+                (receivers.waveform[:, 0] - receivers.timing_mark)
+                * conversion[receivers.unit],
+                receivers.waveform[:, 1],
+                fill_value="extrapolate",
+            )
+            import SimPEG.electromagnetics.time_domain as tdem
+
+            waveform = tdem.sources.RawWaveform(waveFct=wave_function, offTime=0.0)
+
+        self.ordering = []
+        rx_factory = ReceiversFactory(self.params)
+        tx_factory = SourcesFactory(self.params)
+        for tx_id, rx_ids in rx_lookup.items():
+            locs = receivers.vertices[rx_ids, :]
+
+            rx_list = []
+            for component_id, component in enumerate(data.components):
+                rx_obj = rx_factory.build(
+                    locations=locs,
+                    local_index=self.local_index,
+                    data=data,
+                    mesh=mesh,
+                    component=component,
+                )
+                rx_list.append(rx_obj)
+
+                for time_id in range(len(receivers.channels)):
+                    for rx_id in rx_ids:
+                        self.ordering.append([time_id, component_id, tx_id, rx_id])
+
+            tx_list.append(
+                tx_factory.build(
+                    rx_list, locations=tx_locs_lookup[tx_id], waveform=waveform
+                )
+            )
+
+        return [tx_list]
+
     def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
         receivers = []
         sources = []
+        rx_factory = ReceiversFactory(self.params)
+        tx_factory = SourcesFactory(self.params)
         for k, v in data.observed.items():
             receivers.append(
-                ReceiversFactory(self.params).build(
+                rx_factory.build(
                     locations=data.locations,
                     local_index=self.local_index,
                     data={k: v},
@@ -349,12 +452,8 @@ class SurveyFactory(SimPEGFactory):
         if frequency is None:
             frequencies = np.unique([list(v.keys()) for v in data.observed.values()])
             for frequency in frequencies:
-                sources.append(
-                    SourcesFactory(self.params).build(receivers, frequency=frequency)
-                )
+                sources.append(tx_factory.build(receivers, frequency=frequency))
         else:
-            sources.append(
-                SourcesFactory(self.params).build(receivers, frequency=frequency)
-            )
+            sources.append(tx_factory.build(receivers, frequency=frequency))
 
         return [sources]

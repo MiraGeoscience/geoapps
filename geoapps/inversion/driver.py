@@ -24,7 +24,6 @@ from dask import config as dconf
 from dask.distributed import Client, LocalCluster, get_client
 from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, inversion, maps, optimization, regularization
-from SimPEG.utils import tile_locations
 
 from geoapps.driver_base.driver import BaseDriver
 from geoapps.inversion.components import (
@@ -36,6 +35,7 @@ from geoapps.inversion.components import (
 )
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
+from geoapps.inversion.utils import tile_locations
 
 DRIVER_MAP = {
     "direct current 3d": (
@@ -61,6 +61,10 @@ DRIVER_MAP = {
     "induced polarization pseudo 3d": (
         "geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver",
         "InducedPolarizationPseudo3DDriver",
+    ),
+    "tdem": (
+        "geoapps.inversion.airborne_electromagnetics.time_domain.driver",
+        "TimeDomainElectromagneticsDriver",
     ),
     "magnetotellurics": (
         "geoapps.inversion.natural_sources.magnetotellurics.driver",
@@ -99,6 +103,7 @@ class InversionDriver(BaseDriver):
         self.survey = None
         self.active_cells = None
         self.running = False
+        self.ordering = None
 
         self.logger = InversionLogger("SimPEG.log", self)
         sys.stdout = self.logger
@@ -188,7 +193,7 @@ class InversionDriver(BaseDriver):
         print(f"Setting up {self.n_tiles} tile(s) . . .")
         # Build tiled misfits and combine to form global misfit
 
-        self.global_misfit, self.sorting = MisfitFactory(
+        self.global_misfit, self.sorting, self.ordering = MisfitFactory(
             self.params, models=self.models
         ).build(self.tiles, self.inversion_data, self.mesh, self.active_cells)
         print("Done.")
@@ -219,7 +224,7 @@ class InversionDriver(BaseDriver):
         if self.warmstart and not self.params.forward_only:
             print("Pre-computing sensitivities . . .")
             self.inverse_problem.dpred = self.inversion_data.simulate(  # pylint: disable=assignment-from-no-return
-                self.starting_model, self.inverse_problem, self.sorting
+                self.starting_model, self.inverse_problem, self.sorting, self.ordering
             )
 
         # If forward only option enabled, stop here
@@ -232,6 +237,7 @@ class InversionDriver(BaseDriver):
             self.inversion_mesh,
             self.active_cells,
             np.argsort(np.hstack(self.sorting)),
+            self.ordering,
             self.global_misfit,
             self.regularization,
         )
@@ -247,7 +253,7 @@ class InversionDriver(BaseDriver):
         if self.params.forward_only:
             print("Running the forward simulation ...")
             self.inversion_data.simulate(
-                self.starting_model, self.inverse_problem, self.sorting
+                self.starting_model, self.inverse_problem, self.sorting, self.ordering
             )
             self.logger.end()
             sys.stdout = self.logger.terminal
@@ -376,6 +382,14 @@ class InversionDriver(BaseDriver):
 
         elif "2d" in self.params.inversion_type:
             tiles = [self.inversion_data.indices]
+
+        # elif self.params.inversion_type in ["tdem"]:
+        #     transmitters = self.inversion_data.entity.transmitters
+        #     transmitter_id = transmitters.get_data("Transmitter ID")
+        #     if transmitter_id:
+        #         tiles = [np.array([k]) for k in np.unique(transmitter_id[0].values)]
+        #     else:
+        #         tiles = [np.array([k]) for k in range(transmitters.n_vertices)]
         else:
             tiles = tile_locations(
                 self.locations,

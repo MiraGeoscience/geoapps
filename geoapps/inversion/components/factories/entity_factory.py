@@ -117,25 +117,28 @@ class EntityFactory(AbstractFactory):
         return entity
 
     def _build(self, inversion_data: InversionData):
-        entity = inversion_data.create_entity(
-            "Data", inversion_data.locations, geoh5_object=self.concrete_object
-        )
-
-        if np.any(~inversion_data.mask):
-            entity.remove_vertices(np.where(~inversion_data.mask))
-
-        if getattr(self.params.data_object, "parts", None) is not None:
-            entity.parts = self.params.data_object.parts[inversion_data.mask]
-
-        if getattr(self.params.data_object, "base_stations", None) is not None:
-            entity.base_stations = type(self.params.data_object.base_stations).create(
-                entity.workspace,
-                parent=entity.parent,
-                vertices=self.params.data_object.base_stations.vertices,
+        if isinstance(self.params.data_object, Grid2D):
+            entity = inversion_data.create_entity(
+                "Data", inversion_data.locations, geoh5_object=self.concrete_object
             )
 
-        if getattr(self.params.data_object, "channels", None) is not None:
-            entity.channels = [float(val) for val in self.params.data_object.channels]
+        else:
+            entity = self.params.data_object.copy(
+                parent=self.params.ga_group,
+                copy_children=False,
+                vertices=inversion_data.locations,
+            )
+
+        if getattr(entity, "transmitters", None) is not None:
+            entity.transmitters.vertices = inversion_data.apply_transformations(
+                entity.transmitters.vertices
+            )
+
+        if np.any(~inversion_data.mask):
+            entity.remove_vertices(np.where(~inversion_data.mask)[0])
+
+            if getattr(entity, "transmitters", None) is not None:
+                entity.transmitters.remove_vertices(np.where(~inversion_data.mask))
 
         return entity
 
