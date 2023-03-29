@@ -33,19 +33,21 @@ class SimulationFactory(SimPEGFactory):
         self.simpeg_object = self.concrete_object()
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
             "magnetotellurics",
             "tipper",
+            "tdem",
         ]:
             import pymatsolver.direct as solver_module
 
             self.solver = solver_module.Pardiso
 
     def concrete_object(self):
-
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             from SimPEG.potential_fields.magnetics import simulation
 
@@ -56,7 +58,7 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DIntegral
 
-        if self.factory_type == "direct current 3d":
+        if self.factory_type in ["direct current 3d", "direct current pseudo 3d"]:
             from SimPEG.electromagnetics.static.resistivity import simulation
 
             return simulation.Simulation3DNodal
@@ -66,7 +68,10 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation_2d.Simulation2DNodal
 
-        if self.factory_type == "induced polarization 3d":
+        if self.factory_type in [
+            "induced polarization 3d",
+            "induced polarization pseudo 3d",
+        ]:
             from SimPEG.electromagnetics.static.induced_polarization import simulation
 
             return simulation.Simulation3DNodal
@@ -83,9 +88,15 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DPrimarySecondary
 
+        if self.factory_type in ["tdem"]:
+            from SimPEG.electromagnetics.time_domain import simulation
+
+            return simulation.Simulation3DMagneticFluxDensity
+
     def assemble_arguments(
         self,
         survey=None,
+        receivers=None,
         global_mesh=None,
         local_mesh=None,
         active_cells=None,
@@ -98,13 +109,13 @@ class SimulationFactory(SimPEGFactory):
     def assemble_keyword_arguments(
         self,
         survey=None,
+        receivers=None,
         global_mesh=None,
         local_mesh=None,
         active_cells=None,
         mapping=None,
         tile_id=None,
     ):
-
         mesh = global_mesh if tile_id is None else local_mesh
         sensitivity_path = self._get_sensitivity_path(tile_id)
 
@@ -136,6 +147,10 @@ class SimulationFactory(SimPEGFactory):
             )
         if self.factory_type in ["magnetotellurics", "tipper"]:
             return self._naturalsource_keywords(kwargs, mesh, active_cells=active_cells)
+        if self.factory_type in ["tdem"]:
+            return self._tdem_keywords(
+                kwargs, receivers, mesh, active_cells=active_cells
+            )
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
         kwargs["actInd"] = active_cells
@@ -184,6 +199,21 @@ class SimulationFactory(SimPEGFactory):
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
+
+        return kwargs
+
+    def _tdem_keywords(self, kwargs, receivers, mesh, active_cells=None):
+        actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
+        kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
+        kwargs["solver"] = self.solver
+
+        conversion = {
+            "Seconds (s)": 1.0,
+            "Milliseconds (ms)": 1e-3,
+            "Microseconds (us)": 1e-6,
+        }
+        kwargs["t0"] = -receivers.timing_mark * conversion[receivers.unit]
+        kwargs["time_steps"] = np.round((np.diff(receivers.waveform[:, 0])), decimals=6)
 
         return kwargs
 

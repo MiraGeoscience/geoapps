@@ -55,7 +55,6 @@ def running_mean(
 
 
 def treemesh_2_octree(workspace, treemesh, **kwargs):
-
     index_array, levels = getattr(treemesh, "_ubc_indArr")
     ubc_order = getattr(treemesh, "_ubc_order")
 

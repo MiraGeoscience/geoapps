@@ -36,7 +36,6 @@ def setup_params(tmp):
 
 
 def test_initialize(tmp_path):
-
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)

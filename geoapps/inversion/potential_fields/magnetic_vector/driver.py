@@ -12,7 +12,6 @@ from .params import MagneticVectorParams
 
 
 class MagneticVectorDriver(InversionDriver):
-
     _params_class = MagneticVectorParams
     _validations = validations
 
