@@ -773,7 +773,6 @@ class InversionBaseParams(BaseParams):
 
         for key, value in input_file.ui_json.items():
             if utils.is_form(value) and "group" in value:
-
                 if value["group"] not in metadata:
                     metadata[value["group"]] = {}
 
