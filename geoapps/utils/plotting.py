@@ -7,15 +7,15 @@
 
 from __future__ import annotations
 
+import warnings
 from copy import copy
+from os import path
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
-from geoh5py.workspace import Workspace
 
-from geoapps.shared_utils.utils import filter_xy, get_inversion_output
+from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
@@ -272,7 +272,6 @@ def plot_plan_data_selection(entity, data, **kwargs):
         kwargs["highlight_selection"], dict
     ):
         for key, values in kwargs["highlight_selection"].items():
-
             if not np.any(entity.workspace.get_entity(key)):
                 continue
 
@@ -302,7 +301,6 @@ def plot_profile_data_selection(
     ax=None,
     color=(0, 0, 0),
 ):
-
     locations = entity.vertices
 
     if ax is None:
@@ -316,9 +314,7 @@ def plot_profile_data_selection(
         return ax, threshold
 
     for key, values in selection.items():
-
         for line in values:
-
             if entity.workspace.get_entity(key):
                 ind = np.where(entity.workspace.get_entity(key)[0].values == line)[0]
             else:
@@ -541,38 +537,66 @@ def check_data_type(data):
     return data
 
 
-def plot_convergence_curve(h5file):
-    """"""
-    workspace = Workspace(h5file)
-    names = [group.name for group in workspace.groups if isinstance(group, SimPEGGroup)]
-    objects = widgets.Dropdown(
+def plot_convergence_curve(outfile: str) -> widgets.interactive | None:
+    """
+    Plot the convergence curve from a SimPEG *.out file.
+
+    :param outfile: Full path to the SimPEG *.out file
+
+    :return fig: widgets.interactive figure.
+    """
+    label_map = {
+        "Iterations": "iteration",
+        r"$\beta$": "beta",
+        r"$\phi_d$": "phi_d",
+        r"$\phi_m$": "phi_m",
+    }
+    if not path.exists(outfile):
+        warnings.warn(f"File {outfile} does not exist.")
+        return
+
+    data = np.genfromtxt(outfile, names=True)
+    names = list(label_map.keys())
+    y_axis_a = widgets.Dropdown(
         options=names,
-        value=names[0],
-        description="inversion Group:",
+        value=names[2],
+        description="Y-axis (left)",
         style={"description_width": "initial"},
     )
+    y_axis_b = widgets.Dropdown(
+        options=names,
+        value=names[3],
+        description="Y-axis (right)",
+        style={"description_width": "initial"},
+    )
+    x_axis = widgets.Dropdown(
+        options=names,
+        value=names[0],
+        description="X-axis",
+        style={"description_width": "initial"},
+    )
+    log_y = widgets.ToggleButton(
+        value=False,
+        description="Log",
+    )
 
-    def plot_curve(objects):
+    def plot_curve(x_axis, y_axis_a, y_axis_b, log_y):
+        ax1 = plt.subplot()
+        ax2 = ax1.twinx()
+        ax1.plot(data[label_map[x_axis]], data[label_map[y_axis_a]], linewidth=3, c="k")
+        ax1.set_xlabel(x_axis, size=16)
+        ax1.set_ylabel(y_axis_a, size=16)
+        ax2.plot(data[label_map[x_axis]], data[label_map[y_axis_b]], linewidth=3, c="r")
+        ax2.set_ylabel(y_axis_b, size=16)
 
-        inversion = workspace.get_entity(objects)[0]
-        result = None
-        child_names = [k.name for k in inversion.children]
-        if "SimPEG.out" in child_names:
-            result = get_inversion_output(workspace.h5file, objects)
-            iterations = result["iteration"]
-            phi_d = result["phi_d"]
-            phi_m = result["phi_m"]
+        if log_y:
+            ax1.set_yscale("log")
+            ax2.set_yscale("log")
 
-            ax1 = plt.subplot()
-            ax2 = ax1.twinx()
-            ax1.plot(iterations, phi_d, linewidth=3, c="k")
-            ax1.set_xlabel("Iterations")
-            ax1.set_ylabel(r"$\phi_d$", size=16)
-            ax2.plot(iterations, phi_m, linewidth=3, c="r")
-            ax2.set_ylabel(r"$\phi_m$", size=16)
+        return data
 
-        return result
-
-    interactive_plot = widgets.interactive(plot_curve, objects=objects)
+    interactive_plot = widgets.interactive(
+        plot_curve, x_axis=x_axis, y_axis_a=y_axis_a, y_axis_b=y_axis_b, log_y=log_y
+    )
 
     return interactive_plot
