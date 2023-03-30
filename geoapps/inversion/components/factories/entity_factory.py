@@ -135,10 +135,10 @@ class EntityFactory(AbstractFactory):
             )
 
         if np.any(~inversion_data.mask):
-            entity.remove_vertices(np.where(~inversion_data.mask)[0])
+            entity.remove_vertices(~inversion_data.mask)
 
             if getattr(entity, "transmitters", None) is not None:
-                entity.transmitters.remove_vertices(np.where(~inversion_data.mask))
+                entity.transmitters.remove_vertices(~inversion_data.mask)
 
         return entity
 

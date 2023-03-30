@@ -17,6 +17,7 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+from geoapps import assets_path
 from geoapps.utils.geophysical_systems import parameters
 
 defaults = {
@@ -188,7 +189,7 @@ validations = {
 }
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"),
     "data": UUID("{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"),
     "line_field": UUID("{90b1d710-8a0f-4f69-bd38-6c06c7a977ed}"),

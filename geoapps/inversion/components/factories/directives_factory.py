@@ -127,15 +127,16 @@ class DirectivesFactory:
                 global_misfit=global_misfit,
                 name="Data",
             )
-            self.save_iteration_residual_directive = SaveIterationGeoh5Factory(
-                self.params
-            ).build(
-                inversion_object=inversion_data,
-                active_cells=active_cells,
-                sorting=sorting,
-                ordering=ordering,
-                name="Residual",
-            )
+            if self.factory_type not in ["tdem"]:
+                self.save_iteration_residual_directive = SaveIterationGeoh5Factory(
+                    self.params
+                ).build(
+                    inversion_object=inversion_data,
+                    active_cells=active_cells,
+                    sorting=sorting,
+                    ordering=ordering,
+                    name="Residual",
+                )
 
             if "direct current" in self.factory_type:
                 self.save_iteration_apparent_resistivity_directive = (

@@ -17,8 +17,7 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-call !MY_CONDA_EXE! activate
-python devtools\run_conda_lock.py
+call !MY_CONDA_EXE! activate && python devtools\run_conda_lock.py
 
 pause
 cmd /k
