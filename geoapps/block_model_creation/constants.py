@@ -4,10 +4,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-import os
 from copy import deepcopy
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
+
+from geoapps import assets_path
 
 defaults = {
     "title": "Block Model Creation",
@@ -107,8 +108,8 @@ default_ui_json.update(
 
 validations = {}
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
-    "monitoring_directory": os.path.abspath("../../assets"),
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str(assets_path().absolute()),
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "cell_size_x": 50.0,
     "cell_size_y": 50.0,
