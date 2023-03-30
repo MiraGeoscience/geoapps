@@ -769,6 +769,11 @@ class InversionBaseParams(BaseParams):
         :param input_file: Input file object
         """
         data = input_file.ui_json.copy()
-        data["geoh5"] = ""
+        if isinstance(data["geoh5"], Workspace):
+            data["geoh5"] = data["geoh5"].h5file
+
+        if isinstance(data["workspace_geoh5"], Workspace):
+            data["workspace_geoh5"] = data["workspace_geoh5"].h5file
+
         ga_group.options = data
         ga_group.metadata = None
