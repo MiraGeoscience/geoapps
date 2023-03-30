@@ -24,6 +24,7 @@ from geoh5py.objects import (
 )
 from geoh5py.workspace import Workspace
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
@@ -698,7 +699,7 @@ def inversion_defaults():
 
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
     "data": "{2d165431-63bd-4e07-9db8-5b44acf8c9bf}",
     "resolution": 50,

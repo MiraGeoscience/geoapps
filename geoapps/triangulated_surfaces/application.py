@@ -19,6 +19,7 @@ from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils import warn_module_not_found
@@ -506,7 +507,7 @@ class Surface2D(ObjectDataSelection):
 
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}"),
     "data": [UUID("{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}")],
     "max_distance": 250,
