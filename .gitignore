@@ -142,13 +142,13 @@ get_custom_conda.bat
 
 # cleanup after tests
 *.lock
-/assets/EM1DInversion_.json
-/assets/Inversion_.json
-/assets/SimPEG_PFInversion/
-/assets/Temp/
-/assets/dask-worker-space/
-/assets/sensitivity/
-/assets/test_*
+/geoapps-assets/EM1DInversion_.json
+/geoapps-assets/Inversion_.json
+/geoapps-assets/SimPEG_PFInversion/
+/geoapps-assets/Temp/
+/geoapps-assets/dask-worker-space/
+/geoapps-assets/sensitivity/
+/geoapps-assets/test_*
 /tests/**/*ui.json
 /tests/GEOSCIENCEtemp
 /tests/Gravity*
