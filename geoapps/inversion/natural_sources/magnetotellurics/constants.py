@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
+from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
@@ -537,7 +538,7 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon_natural_sources.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon_natural_sources.geoh5"),
     "topography_object": UUID("{cfabb8dd-d1ad-4c4e-a87c-7b3dd224c3f5}"),
     "data_object": UUID("{9664afc1-cbda-4955-b936-526ca771f517}"),
     "zxx_real_channel": UUID("{a73159fc-8c1b-411a-b435-12a5dac4a209}"),

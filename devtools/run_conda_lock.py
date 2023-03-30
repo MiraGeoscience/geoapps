@@ -147,7 +147,9 @@ class LockFilePatcher:
         - #sha256=None will conflict with the actual sha256
         """
 
-        none_hash_re = re.compile(r"(.*)(?:\s--hash=md5:None|#sha256=None)\b(.*)")
+        none_hash_re = re.compile(
+            r"(.*)(?:\s--hash=(?:md5:|sha256:)|#sha256=)(?:None|)\s*$"
+        )
         with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
             patched_file = Path(tmpdirname) / self.lock_file.name
             with open(patched_file, "w") as patched, open(self.lock_file) as f:
@@ -156,7 +158,7 @@ class LockFilePatcher:
                     if not match:
                         patched.write(line)
                     else:
-                        patched.write(f"{match[1]}{match[2]}\n")
+                        patched.write(f"{match[1]}\n")
             patched_file.replace(self.lock_file)
 
     def is_missing_pip_hash(self) -> bool:
@@ -226,7 +228,7 @@ if __name__ == "__main__":
     with print_execution_time("run_conda_lock"):
         for py_ver in ["3.10", "3.9"]:
             create_multi_platform_lock(py_ver)
-            per_platform_env(py_ver, ["full"], dev=False)
+            per_platform_env(py_ver, ["core", "apps"], dev=False)
             finalize_per_platform_envs(py_ver, dev=False)
-            per_platform_env(py_ver, ["full"], dev=True)
+            per_platform_env(py_ver, ["core", "apps"], dev=True)
             finalize_per_platform_envs(py_ver, dev=True)
