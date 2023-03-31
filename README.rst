@@ -29,10 +29,9 @@
 Welcome to **geoapps** - Open-source applications in geosciences
 ================================================================
 
-.. raw:: html
-
-    <img align="right" width="50%" src="docs/images/index_page.png">
-
+.. image:: docs/images/index_page.png
+    :align: right
+    :width: 50%
 
 In short
 ^^^^^^^^
