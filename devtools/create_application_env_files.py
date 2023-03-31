@@ -58,7 +58,7 @@ def create_distrib_lock(git_url: str, extras=[], suffix=""):
         per_platform_env(py_ver, extras, suffix=tmp_suffix)
         assert initial_lock_file.exists()
         if git_url:
-            add_application(git_url, initial_lock_file)
+            add_application(git_url, initial_lock_file, extras)
         LockFilePatcher(initial_lock_file).patch(force_no_pip_hash=_FORCE_NO_PIP_HASH)
         final_lock_file = Path(f"{base_filename}.lock.yml")
         final_lock_file.unlink(missing_ok=True)
@@ -70,9 +70,10 @@ def create_distrib_lock(git_url: str, extras=[], suffix=""):
             f.unlink()
 
 
-def add_application(git_url: str, lock_file: Path):
+def add_application(git_url: str, lock_file: Path, extras=[]):
     print(f"# Patching {lock_file} for standalone environment ...")
-    application_pip = f"    - {APP_NAME} @ {git_url}\n"
+    extras_string = f"[{','.join(extras)}]" if len(extras) else ""
+    application_pip = f"    - {APP_NAME}{extras_string} @ {git_url}\n"
     with open(lock_file, "a") as file:
         file.write(application_pip)
 
