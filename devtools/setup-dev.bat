@@ -18,6 +18,8 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
+set PYTHONUTF8=1
+
 :: all dependencies are installed from conda
 set PIP_NO_DEPS=1
 
