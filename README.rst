@@ -61,7 +61,7 @@ Current sponsors
 - `BHP <https://www.bhp.com/>`_
 - `Cameco <https://www.cameco.com/>`_
 - `Glencore <https://www.glencore.com/>`_
-- `Mira Geoscience <https://mirageoscience.com/>`_
+- `Mira Geoscience`_
 - `Rio Tinto <https://www.riotinto.com/en>`_
 - `Teck <https://www.teck.com/>`_
 - `Vale <https://www.vale.com/canada>`_
