@@ -14,6 +14,9 @@ set MY_CONDA=!MY_CONDA_EXE:"=!
 cd %~dp0
 set PYTHONUTF8=1
 
+:: all dependencies are installed from conda
+set PIP_NO_DEPS=1
+
 set MY_CONDA_ENV_FILE=environments\conda-py-%PY_VER%-win-64.lock.yml
 if not exist %MY_CONDA_ENV_FILE% (
   echo "** ERROR: Could not find the conda environment specification file '%MY_CONDA_ENV_FILE%' **"
@@ -23,7 +26,7 @@ if not exist %MY_CONDA_ENV_FILE% (
 
 call "!MY_CONDA!" activate base ^
   && call "!MY_CONDA!" env create --force -n %ENV_NAME% --file %MY_CONDA_ENV_FILE% ^
-  && call "!MY_CONDA!" run -n %ENV_NAME% pip install -e . --no-deps
+  && call "!MY_CONDA!" run -n %ENV_NAME% pip install -e .[core,apps]
 
 if !errorlevel! neq 0 (
   echo "** ERROR: Installation failed **"
