@@ -18,6 +18,9 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
+:: all dependencies are installed from conda
+set PIP_NO_DEPS=1
+
 set PY_VER=3.10
 
 set env_path=%project_dir%\.conda-env
@@ -30,10 +33,10 @@ if !errorlevel! neq 0 (
 )
 
 if exist %project_dir%\..\geoh5py\ (
-  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py --no-deps
+  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py
 )
 if exist %project_dir%\..\param-sweeps\ (
-  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps --no-deps
+  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps
 )
 
 if !errorlevel! neq 0 (
