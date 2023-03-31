@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+import json
 from copy import deepcopy
+from os import path
 from uuid import UUID
 
 import numpy as np
@@ -748,7 +750,7 @@ class InversionBaseParams(BaseParams):
             self._ga_group = self.out_group
 
         if isinstance(self._ga_group, SimPEGGroup) and not self._ga_group.options:
-            self.update_group_options(self._ga_group, self.input_file)
+            self.update_group_options(self._ga_group)
 
         return self._ga_group
 
@@ -760,20 +762,19 @@ class InversionBaseParams(BaseParams):
     def distributed_workers(self, val):
         self.setter_validator("distributed_workers", val)
 
-    @staticmethod
-    def update_group_options(ga_group: SimPEGGroup, input_file: InputFile):
+    def update_group_options(self, ga_group: SimPEGGroup):
         """
         Add options to the SimPEGGroup inversion using input file class.
 
         :param ga_group: Inversion group
-        :param input_file: Input file object
         """
-        data = input_file.ui_json.copy()
-        if isinstance(data["geoh5"], Workspace):
-            data["geoh5"] = data["geoh5"].h5file
+        if self.input_file is not None:
+            if not path.exists(self.input_file.path_name):
+                self.write_input_file(self.input_file.name, self.input_file.path)
 
-        if isinstance(data["workspace_geoh5"], Workspace):
-            data["workspace_geoh5"] = data["workspace_geoh5"].h5file
+            with open(self.input_file.path_name, encoding="utf-8") as file:
+                ui_json = json.load(file)
 
-        ga_group.options = data
+            ga_group.options = ui_json
+
         ga_group.metadata = None
