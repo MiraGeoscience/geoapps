@@ -99,3 +99,6 @@ class InversionWindow:
             size_x_null = True if self.window["size"][0] is None else False
             size_y_null = True if self.window["size"][1] is None else False
             return center_x_null & center_y_null & size_x_null & size_y_null
+
+    def __call__(self):
+        return self.window

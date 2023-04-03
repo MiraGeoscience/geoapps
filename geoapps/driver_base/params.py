@@ -112,7 +112,7 @@ class BaseParams:
             if params_dict["geoh5"] is not None:
                 setattr(self, "geoh5", params_dict["geoh5"])
 
-        params_dict = self.input_file._promote(params_dict)  # pylint: disable=W0212
+        params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
 
         for key, value in params_dict.items():
             if key not in self.ui_json.keys() or key == "geoh5":
