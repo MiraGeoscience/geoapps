@@ -177,14 +177,19 @@ def test_has_tensor():
 
 def test_get_uncertainty_component(tmp_path):
     ws, params = setup_params(tmp_path)
+    vals = params.tmi_channel.values.copy()
+    vals[10] = np.nan
+    params.tmi_channel.values = vals
     locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     params.tmi_uncertainty = 1.0
     data = InversionData(ws, params, window)
     unc = data.get_data()[2]["tmi"]
-    assert len(np.unique(unc)) == 1
+    assert unc[10] == np.inf
+    assert len(np.unique(unc)) == 2
     assert np.unique(unc)[0] == 1
     assert len(unc) == len(data.mask)
+
 
 
 def test_parse_ignore_values(tmp_path):

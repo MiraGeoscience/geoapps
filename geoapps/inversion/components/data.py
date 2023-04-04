@@ -204,8 +204,11 @@ class InversionData(InversionLocations):
         data = {}
         uncertainties = {}
         for comp in components:
-            data.update({comp: self.params.data(comp)})
-            uncertainties.update({comp: self.params.uncertainty(comp)})
+            component_data = self.params.data(comp)
+            component_unc = self.params.uncertainty(comp)
+            component_unc[np.isnan(component_data)] = np.inf
+            data[comp] = component_data
+            uncertainties[comp] = component_unc
 
         return list(data.keys()), data, uncertainties
 
