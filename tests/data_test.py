@@ -191,7 +191,6 @@ def test_get_uncertainty_component(tmp_path):
     assert len(unc) == len(data.mask)
 
 
-
 def test_parse_ignore_values(tmp_path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
