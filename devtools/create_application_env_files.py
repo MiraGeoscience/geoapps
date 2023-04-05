@@ -29,7 +29,7 @@ from pathlib import Path
 from add_url_tag_sha256 import compute_sha256
 from run_conda_lock import LockFilePatcher, per_platform_env
 
-_FORCE_NO_PIP_HASH = True
+_FORCE_NO_PIP_HASH = False
 _ARCHIVE_EXT = ".tar.gz"
 
 APP_NAME = "geoapps"
