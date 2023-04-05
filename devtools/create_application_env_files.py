@@ -41,18 +41,17 @@ def create_distrib_noapps_lock():
 
 def create_distrib_core_lock(git_url: str):
     create_distrib_lock(git_url, ["core"], suffix="-geoapps-core")
+    create_distrib_lock(git_url, ["core"], suffix="-geoapps-core", platform="linux-64")
 
 
 def create_distrib_full_lock(git_url: str):
     create_distrib_lock(git_url, ["core", "apps"], suffix="-geoapps-ui")
 
 
-def create_distrib_lock(version_spec: str, extras=[], suffix=""):
+def create_distrib_lock(version_spec: str, extras=[], suffix="", py_ver="3.10", platform="win-64"):
     print(
         f"# Creating lock file for distributing a stand-alone environment (extras={','.join(extras)})..."
     )
-    py_ver = "3.10"
-    platform = "win-64"
     base_filename = f"conda-py-{py_ver}-{platform}{suffix}"
     initial_lock_file = Path(f"environments/{base_filename}-tmp.lock.yml")
     tmp_suffix = f"{suffix}-tmp"
@@ -118,6 +117,14 @@ def get_git_url():
     )
 
 
+def hash_from_pypi(package: str, version: str) -> str:
+    pypi_api_url = f"https://pypi.org/pypi/{package}/{version}/json"
+    # read the hash value from the pypi API
+    with urllib.request.urlopen(pypi_api_url) as answer:
+        data = json.loads(answer.read().decode())
+        return data["urls"][0]["digests"]["sha256"]
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Creates locked environment files for Conda to install application within the environment."
@@ -154,14 +161,6 @@ def main():
     create_distrib_noapps_lock()
     create_distrib_core_lock(dependency_version_spec)
     create_distrib_full_lock(dependency_version_spec)
-
-
-def hash_from_pypi(package: str, version: str) -> str:
-    pypi_api_url = f"https://pypi.org/pypi/{package}/{version}/json"
-    # read the hash value from the pypi API
-    with urllib.request.urlopen(pypi_api_url) as answer:
-        data = json.loads(answer.read().decode())
-        return data["urls"][0]["digests"]["sha256"]
 
 
 if __name__ == "__main__":
