@@ -37,9 +37,12 @@ def compute_sha256(url: str, base_name: str | None = None) -> str:
         copy = Path(tmpdirname) / filename
         print(f"# Fetching {url} ...")
         request.urlretrieve(url, str(copy))
-        return subprocess.check_output(
-            ["pip", "hash", "--algorithm", "sha256", copy]
-        ).decode("utf-8").splitlines()[1].split(":")[1]
+        return (
+            subprocess.check_output(["pip", "hash", "--algorithm", "sha256", copy])
+            .decode("utf-8")
+            .splitlines()[1]
+            .split(":")[1]
+        )
 
 
 def patch_pyproject_toml() -> None:
