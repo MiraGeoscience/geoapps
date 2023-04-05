@@ -48,7 +48,9 @@ def create_distrib_full_lock(git_url: str):
     create_distrib_lock(git_url, ["core", "apps"], suffix="-geoapps-ui")
 
 
-def create_distrib_lock(version_spec: str, extras=[], suffix="", py_ver="3.10", platform="win-64"):
+def create_distrib_lock(
+    version_spec: str, extras=[], suffix="", py_ver="3.10", platform="win-64"
+):
     print(
         f"# Creating lock file for distributing a stand-alone environment (extras={','.join(extras)})..."
     )
