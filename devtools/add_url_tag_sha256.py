@@ -16,8 +16,8 @@ Usage: at the root of the project:
 
 from __future__ import annotations
 
-import hashlib
 import re
+import subprocess
 import tempfile
 import warnings
 from pathlib import Path
@@ -37,10 +37,9 @@ def compute_sha256(url: str, base_name: str | None = None) -> str:
         copy = Path(tmpdirname) / filename
         print(f"# Fetching {url} ...")
         request.urlretrieve(url, str(copy))
-        with open(copy, "rb") as f:
-            f_byte = f.read()
-            sha256 = hashlib.sha256(f_byte)
-            return sha256.hexdigest()
+        return subprocess.check_output(
+            ["pip", "hash", "--algorithm", "sha256", copy]
+        ).decode("utf-8").splitlines()[1].split(":")[1]
 
 
 def patch_pyproject_toml() -> None:
