@@ -1,0 +1,78 @@
+name: packing
+
+on:
+  pull_request:
+    types: [labeled]
+  push:
+    tags:
+      - "v[0-9]+.**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  conda-pack:
+    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:env"]'), github.event.label.name) }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python_ver: ['3.10']
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      PYTHONUTF8: 1
+      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-win-64.lock.yml
+      CONDA_ENV_NAME: geoapps
+      ARTIFACT_NAME: geoapps.conda-pack-win64
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: git info
+        id: git-info
+        run: |
+          REF_NAME=$(echo $GITHUB_REF_NAME | sed s=/=_=g)
+          SHORT_SHA=${GITHUB_SHA:0:8}
+          echo "git_ref_suffix=${REF_NAME}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+      - name: Setup application conda env
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
+          environment-name: geoapps
+          cache-downloads: true
+      - name: Get application conda prefix
+        id: get-app-conda-prefix
+        run: |
+          echo "prefix=$CONDA_PREFIX" >> $GITHUB_OUTPUT
+      - name: Cache tools conda env
+        uses: actions/cache@v3
+        env:
+          # Increase this value to reset cache if environment.yml has not changed
+          CACHE_NUMBER: 1
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_LOCK_ENV_FILE) }}
+      - name: Setup tools conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          auto-update-conda: true
+          miniforge-version: latest
+          python-version: ${{ matrix.python_ver }}
+      - name: Install conda-pack
+        run: conda install conda-pack
+      - name: Run conda-pack
+        id: conda-pack
+        run: |
+          mkdir -p build
+          conda-pack -j -1 -p ${{ steps.get-app-conda-prefix.outputs.prefix }} -o build/${{ env.CONDA_ENV_NAME }}-win64-pack.tar.gz
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
+          path: build/*
+          retention-days: 1
+          if-no-files-found: error
