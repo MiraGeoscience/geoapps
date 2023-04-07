@@ -43,10 +43,11 @@ jobs:
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
           environment-name: geoapps
           cache-downloads: true
-      - name: Get application conda prefix
-        id: get-app-conda-prefix
+      - name: Install application
+        id: install-app
         run: |
-          echo "prefix=$CONDA_PREFIX" >> $GITHUB_OUTPUT
+          pip install .[core,apps] --no-deps
+          echo "conda-prefix=$( printf %q $CONDA_PREFIX )" >> $GITHUB_OUTPUT
       - name: Cache tools conda env
         uses: actions/cache@v3
         env:
@@ -69,7 +70,7 @@ jobs:
         id: conda-pack
         run: |
           mkdir -p build
-          conda-pack -j -1 -p ${{ steps.get-app-conda-prefix.outputs.prefix }} -o build/${{ env.CONDA_ENV_NAME }}-win64-pack.tar.gz
+          conda-pack -j -1 -p ${{ steps.install-app.outputs.conda-prefix }} -o build/${{ env.CONDA_ENV_NAME }}-win64-pack.tar.gz
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
