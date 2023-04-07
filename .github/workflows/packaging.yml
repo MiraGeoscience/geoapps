@@ -14,19 +14,18 @@ concurrency:
 jobs:
   conda-pack:
     if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:env"]'), github.event.label.name) }}
-    runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
         python_ver: ['3.10']
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash -l {0}
     env:
       PYTHONUTF8: 1
-      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-win-64.lock.yml
       CONDA_ENV_NAME: geoapps
-      ARTIFACT_NAME: geoapps.conda-pack-win64
     steps:
       - uses: actions/checkout@v3
         with:
@@ -37,6 +36,12 @@ jobs:
           REF_NAME=$(echo $GITHUB_REF_NAME | sed s=/=_=g)
           SHORT_SHA=${GITHUB_SHA:0:8}
           echo "git_ref_suffix=${REF_NAME}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+      - name: Get platform suffix
+        id: platform-suffix
+        run: |
+          platform_suffix=${{ fromJson('{"windows-latest": "win-64", "ubuntu-latest": "linux-64"}')[matrix.os] }}
+          echo "suffix=$platform_suffix" >> $GITHUB_OUTPUT
+          echo "CONDA_LOCK_ENV_FILE=environments/conda-py-${{ matrix.python_ver }}-${platform_suffix}.lock.yml" >> $GITHUB_ENV
       - name: Setup application conda env
         uses: mamba-org/provision-with-micromamba@main
         with:
@@ -70,10 +75,10 @@ jobs:
         id: conda-pack
         run: |
           mkdir -p build
-          conda-pack -j -1 -p ${{ steps.install-app.outputs.conda-prefix }} -o build/${{ env.CONDA_ENV_NAME }}-win64-pack.tar.gz
+          conda-pack -j -1 -p ${{ steps.install-app.outputs.conda-prefix }} -o build/${{ env.CONDA_ENV_NAME }}-${{ matrix.os }}-pack.tar.gz
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
+          name: geoapps.conda-pack-${{ steps.platform-suffix.outputs.suffix }}.${{ steps.git-info.outputs.git_ref_suffix }}
           path: build/*
           retention-days: 1
           if-no-files-found: error
