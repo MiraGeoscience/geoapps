@@ -206,7 +206,6 @@ class InversionData(InversionLocations):
         for comp in components:
             component_data = self.params.data(comp)
             component_unc = self.params.uncertainty(comp)
-            component_unc[np.isnan(component_data)] = np.inf
             data[comp] = component_data
             uncertainties[comp] = component_unc
 
