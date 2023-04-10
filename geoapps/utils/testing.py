@@ -91,9 +91,11 @@ def setup_inversion_workspace(
     drape_height=5.0,
     inversion_type="other",
     flatten=False,
+    geoh5=None,
 ):
-    project = os.path.join(work_dir, "inversion_test.geoh5")
-    geoh5 = Workspace(project)
+    if geoh5 is None:
+        project = os.path.join(work_dir, "inversion_test.geoh5")
+        geoh5 = Workspace(project)
     # Topography
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
     b = 100
