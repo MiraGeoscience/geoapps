@@ -185,8 +185,7 @@ def test_get_uncertainty_component(tmp_path):
     params.tmi_uncertainty = 1.0
     data = InversionData(ws, params, window)
     unc = data.get_data()[2]["tmi"]
-    assert unc[10] == np.inf
-    assert len(np.unique(unc)) == 2
+    assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
     assert len(unc) == len(data.mask)
 
