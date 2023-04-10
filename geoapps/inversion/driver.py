@@ -68,6 +68,10 @@ DRIVER_MAP = {
         "geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver",
         "InducedPolarizationPseudo3DDriver",
     ),
+    "joint single property": (
+        "geoapps.inversion.joint.single_property.driver",
+        "JointSingleDriver",
+    ),
     "tdem": (
         "geoapps.inversion.airborne_electromagnetics.time_domain.driver",
         "TimeDomainElectromagneticsDriver",
