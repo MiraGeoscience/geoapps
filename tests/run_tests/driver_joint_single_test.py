@@ -90,7 +90,7 @@ def test_gravity_fwr_run(
     fwr_driver = JointSingleDriver(joint_params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_gravity_run(

@@ -44,7 +44,7 @@ class InversionMesh:
         self,
         workspace: Workspace,
         params: OctreeParams,
-        inversion_data: InversionData,
+        inversion_data: InversionData | None,
         inversion_topography: InversionTopography,
     ) -> None:
         """
@@ -80,7 +80,11 @@ class InversionMesh:
                 parent=self.params.ga_group, copy_children=False
             )
 
-        if getattr(self.entity, "rotation", None) and self.inversion_data.has_tensor:
+        if (
+            getattr(self.entity, "rotation", None)
+            and self.inversion_data is not None
+            and self.inversion_data.has_tensor
+        ):
             msg = "Cannot use tensor components with rotated mesh."
             raise NotImplementedError(msg)
 

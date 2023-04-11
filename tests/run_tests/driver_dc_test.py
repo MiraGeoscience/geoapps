@@ -62,7 +62,7 @@ def test_dc_3d_fwr_run(
     fwr_driver = DirectCurrent3DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_dc_3d_run(

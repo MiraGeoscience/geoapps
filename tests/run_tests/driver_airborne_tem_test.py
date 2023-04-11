@@ -66,7 +66,7 @@ def test_airborne_tem_fwr_run(
     fwr_driver = TimeDomainElectromagneticsDriver(params, warmstart=False)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):

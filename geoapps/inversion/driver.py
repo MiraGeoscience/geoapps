@@ -21,17 +21,20 @@ from time import time
 
 import numpy as np
 from dask import config as dconf
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from SimPEG import (
     directives,
     inverse_problem,
     inversion,
     maps,
+    objective_function,
     optimization,
     regularization,
 )
 
 from geoapps.driver_base.driver import BaseDriver
+from geoapps.inversion import DRIVER_MAP
 from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
@@ -39,58 +42,13 @@ from geoapps.inversion.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory, SaveIterationGeoh5Factory
+from geoapps.inversion.components.factories import (
+    DirectivesFactory,
+    MisfitFactory,
+    SaveIterationGeoh5Factory,
+)
 from geoapps.inversion.params import InversionBaseParams
 from geoapps.inversion.utils import tile_locations
-
-DRIVER_MAP = {
-    "direct current 3d": (
-        "geoapps.inversion.electricals.direct_current.three_dimensions.driver",
-        "DirectCurrent3DDriver",
-    ),
-    "direct current 2d": (
-        "geoapps.inversion.electricals.direct_current.two_dimensions.driver",
-        "DirectCurrent2DDriver",
-    ),
-    "direct current pseudo 3d": (
-        "geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver",
-        "DirectCurrentPseudo3DDriver",
-    ),
-    "induced polarization 3d": (
-        "geoapps.inversion.electricals.induced_polarization.three_dimensions.driver",
-        "InducedPolarization3DDriver",
-    ),
-    "induced polarization 2d": (
-        "geoapps.inversion.electricals.induced_polarization.two_dimensions.driver",
-        "InducedPolarization2DDriver",
-    ),
-    "induced polarization pseudo 3d": (
-        "geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.driver",
-        "InducedPolarizationPseudo3DDriver",
-    ),
-    "joint single property": (
-        "geoapps.inversion.joint.single_property.driver",
-        "JointSingleDriver",
-    ),
-    "tdem": (
-        "geoapps.inversion.airborne_electromagnetics.time_domain.driver",
-        "TimeDomainElectromagneticsDriver",
-    ),
-    "magnetotellurics": (
-        "geoapps.inversion.natural_sources.magnetotellurics.driver",
-        "MagnetotelluricsDriver",
-    ),
-    "tipper": ("geoapps.inversion.natural_sources.tipper.driver", "TipperDriver"),
-    "gravity": ("geoapps.inversion.potential_fields.gravity.driver", "GravityDriver"),
-    "magnetic scalar": (
-        "geoapps.inversion.potential_fields.magnetic_scalar.driver",
-        "MagneticScalarDriver",
-    ),
-    "magnetic vector": (
-        "geoapps.inversion.potential_fields.magnetic_vector.driver",
-        "MagneticVectorDriver",
-    ),
-}
 
 
 class InversionDriver(BaseDriver):
@@ -104,16 +62,18 @@ class InversionDriver(BaseDriver):
         self.warmstart = warmstart
         self.workspace = params.geoh5
         self.inversion_type = params.inversion_type
-        self._data_misfit: DataMisfit | None = None
+        self._data_misfit: objective_function.ComboObjectiveFunction | None = None
         self._directives: list[directives.InversionDirective] | None = None
         self._inverse_problem: inverse_problem.BaseInvProblem | None = None
         self._inversion: inversion.BaseInversion | None = None
         self._inversion_data: InversionData | None = None
-        self._inversion_models: InversionModelCollection | None = None
+        self._models: InversionModelCollection | None = None
         self._inversion_mesh: InversionMesh | None = None
         self._inversion_topography: InversionTopography | None = None
         self._optimization: optimization.ProjectedGNCG | None = None
         self._regularization: None = None
+        self._sorting: list[np.ndarray] | None = None
+        self._ordering: list[np.ndarray] | None = None
         self._window = None
 
         self.logger = InversionLogger("SimPEG.log", self)
@@ -123,21 +83,35 @@ class InversionDriver(BaseDriver):
 
     @property
     def data_misfit(self):
+        """The Simpeg.data_misfit class"""
         if getattr(self, "_data_misfit", None) is None:
-            self._data_misfit = DataMisfit(self)
+            # Tile locations
+            tiles = self.get_tiles()
+
+            print(f"Setting up {len(tiles)} tile(s) . . .")
+            # Build tiled misfits and combine to form global misfit
+            self._data_misfit, self._sorting, self._ordering = MisfitFactory(
+                self.params, models=self.models
+            ).build(
+                tiles,
+                self.inversion_data,
+                self.inversion_mesh.mesh,
+                self.models.active_cells,
+            )
+            print("Done.")
 
         return self._data_misfit
 
     @property
     def directives(self):
-        if getattr(self, "_directives", None) is None:
+        if getattr(self, "_directives", None) is None and not self.params.forward_only:
             self._directives = DirectivesFactory(self.params).build(
                 self.inversion_data,
                 self.inversion_mesh,
-                self.inversion_models.active_cells,
-                np.argsort(np.hstack(self.data_misfit.sorting)),
-                self.data_misfit.ordering,
-                self.data_misfit.objective_function,
+                self.models.active_cells,
+                self.data_misfit,
+                np.argsort(np.hstack(self.sorting)),
+                self.ordering,
                 self.regularization,
             )
         return self._directives
@@ -153,6 +127,18 @@ class InversionDriver(BaseDriver):
         return self._inversion_data
 
     @property
+    def inverse_problem(self):
+        if getattr(self, "_inverse_problem", None) is None:
+            self._inverse_problem = inverse_problem.BaseInvProblem(
+                self.data_misfit,
+                self.regularization,
+                self.optimization,
+                beta=self.params.initial_beta,
+            )
+
+        return self._inverse_problem
+
+    @property
     def inversion_topography(self):
         """Inversion topography"""
         if getattr(self, "_inversion_topography", None) is None:
@@ -160,18 +146,6 @@ class InversionDriver(BaseDriver):
                 self.workspace, self.params, self.inversion_data, self.window()
             )
         return self._inversion_topography
-
-    @property
-    def inverse_problem(self):
-        if getattr(self, "_inverse_problem", None) is None:
-            self._inverse_problem = inverse_problem.BaseInvProblem(
-                self.data_misfit.objective_function,
-                self.regularization,
-                self.optimization,
-                beta=self.params.initial_beta,
-            )
-
-        return self._inverse_problem
 
     @property
     def inversion(self):
@@ -194,29 +168,27 @@ class InversionDriver(BaseDriver):
         return self._inversion_mesh
 
     @property
-    def inversion_models(self):
+    def models(self):
         """Inversion models"""
-        if getattr(self, "_inversion_models", None) is None:
-            self._inversion_models = InversionModelCollection(
+        if getattr(self, "_models", None) is None:
+            self._models = InversionModelCollection(
                 self.workspace, self.params, self.inversion_mesh
             )
             # Build active cells array and reduce models active set
             if self.inversion_mesh is not None and self.inversion_data is not None:
-                self._inversion_models.active_cells = (
-                    self.inversion_topography.active_cells(
-                        self.inversion_mesh, self.inversion_data
-                    )
+                self._models.active_cells = self.inversion_topography.active_cells(
+                    self.inversion_mesh, self.inversion_data
                 )
 
-        return self._inversion_models
+        return self._models
 
     @property
     def optimization(self):
         if getattr(self, "_optimization", None) is None:
             self._optimization = optimization.ProjectedGNCG(
                 maxIter=self.params.max_global_iterations,
-                lower=self.inversion_models.lower_bound,
-                upper=self.inversion_models.upper_bound,
+                lower=self.models.lower_bound,
+                upper=self.models.upper_bound,
                 maxIterLS=self.params.max_line_search_iterations,
                 maxIterCG=self.params.max_cg_iterations,
                 tolCG=self.params.tol_cg,
@@ -226,11 +198,21 @@ class InversionDriver(BaseDriver):
         return self._optimization
 
     @property
+    def ordering(self):
+        """List of ordering of the data."""
+        return self._ordering
+
+    @property
     def regularization(self):
         if getattr(self, "_regularization", None) is None:
             self._regularization = self.get_regularization()
 
         return self._regularization
+
+    @property
+    def sorting(self):
+        """List of arrays for sorting of data from tiles."""
+        return self._sorting
 
     @property
     def window(self):
@@ -242,27 +224,22 @@ class InversionDriver(BaseDriver):
     def run(self):
         """Run inversion from params"""
 
+        with fetch_active_workspace(self.workspace, mode="r+"):
+            simpeg_inversion = self.inversion
+
         if self.params.forward_only:
             print("Running the forward simulation ...")
-            dpred = inverse_problem.get_dpred(
-                self.inversion_models.starting, compute_J=False
-            )
-
-            save_directive = SaveIterationGeoh5Factory(self.params).build(
+            dpred = simpeg_inversion.invProb.get_dpred(self.models.starting, compute_J=False)
+            SaveIterationGeoh5Factory(self.params).build(
                 inversion_object=self.inversion_data,
-                sorting=np.argsort(np.hstack(self.data_misfit.sorting)),
-                ordering=self.data_misfit.ordering,
-            )
-            save_directive.save_components(0, dpred)
+                sorting=np.argsort(np.hstack(self.sorting)),
+                ordering=self.ordering,
+            ).save_components(0, dpred)
+        else:
+            # Run the inversion
+            self.start_inversion_message()
+            simpeg_inversion.run(self.models.starting)
 
-            self.logger.end()
-            sys.stdout = self.logger.terminal
-            self.logger.log.close()
-            return
-
-        # Run the inversion
-        self.start_inversion_message()
-        self.inversion.run(self.inversion_models.starting)
         self.logger.end()
         sys.stdout = self.logger.terminal
         self.logger.log.close()
@@ -289,14 +266,14 @@ class InversionDriver(BaseDriver):
         )
 
     def get_regularization(self):
-        n_cells = int(np.sum(self.inversion_models.active_cells))
+        n_cells = int(np.sum(self.models.active_cells))
 
         if self.inversion_type == "magnetic vector":
             wires = maps.Wires(("p", n_cells), ("s", n_cells), ("t", n_cells))
 
             reg_p = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.inversion_models.active_cells,
+                indActive=self.models.active_cells,
                 mapping=wires.p,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
@@ -304,11 +281,11 @@ class InversionDriver(BaseDriver):
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.inversion_models.reference,
+                mref=self.models.reference,
             )
             reg_s = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.inversion_models.active_cells,
+                indActive=self.models.active_cells,
                 mapping=wires.s,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
@@ -316,12 +293,12 @@ class InversionDriver(BaseDriver):
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.inversion_models.reference,
+                mref=self.models.reference,
             )
 
             reg_t = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.inversion_models.active_cells,
+                indActive=self.models.active_cells,
                 mapping=wires.t,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
@@ -329,17 +306,17 @@ class InversionDriver(BaseDriver):
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.inversion_models.reference,
+                mref=self.models.reference,
             )
 
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
-            reg.mref = self.inversion_models.reference
+            reg.mref = self.models.reference
 
         else:
             reg = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.inversion_models.active_cells,
+                indActive=self.models.active_cells,
                 mapping=maps.IdentityMap(nP=n_cells),
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
@@ -347,7 +324,7 @@ class InversionDriver(BaseDriver):
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.inversion_models.reference,
+                mref=self.models.reference,
             )
 
         return reg
@@ -472,43 +449,6 @@ class InversionLogger:
     def get_path(self, filepath):
         root_directory = os.path.dirname(self.driver.workspace.h5file)
         return os.path.join(root_directory, filepath)
-
-
-class DataMisfit:
-    """Class handling the data misfit function."""
-
-    def __init__(self, driver: InversionDriver):
-        # Tile locations
-        tiles = (
-            driver.get_tiles()
-        )  # [np.arange(len(self.inversion_data.survey.source_list))]#
-        print(f"Setting up {len(tiles)} tile(s) . . .")
-        # Build tiled misfits and combine to form global misfit
-
-        self._objective_function, self._sorting, self._ordering = MisfitFactory(
-            driver.params, models=driver.inversion_models
-        ).build(
-            tiles,
-            driver.inversion_data,
-            driver.inversion_mesh.mesh,
-            driver.inversion_models.active_cells,
-        )
-        print("Done.")
-
-    @property
-    def objective_function(self):
-        """The Simpeg.data_misfit class"""
-        return self._objective_function
-
-    @property
-    def sorting(self):
-        """List of arrays for sorting of data from tiles."""
-        return self._sorting
-
-    @property
-    def ordering(self):
-        """List of ordering of the data."""
-        return self._ordering
 
 
 if __name__ == "__main__":

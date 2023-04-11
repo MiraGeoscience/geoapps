@@ -62,6 +62,7 @@ class InversionModelCollection:
         self.workspace = workspace
         self.params = params
         self.mesh = mesh
+        self._active_cells = None
         self.is_sigma = None
         self.is_vector = None
         self.n_blocks = None
@@ -71,6 +72,24 @@ class InversionModelCollection:
         self._upper_bound = None
         self._conductivity = None
         self._initialize()
+
+    @property
+    def active_cells(self):
+        """Active cells vector."""
+        return self._active_cells
+
+    @active_cells.setter
+    def active_cells(self, active_cells):
+        if self._active_cells is not None:
+            raise ValueError("'active_cells' can only be set once.")
+
+        if not isinstance(active_cells, np.ndarray) or active_cells.dtype != bool:
+            raise ValueError("active_cells must be a boolean numpy array.")
+
+        self.edit_ndv_model(active_cells)
+        self.remove_air(active_cells)
+
+        self._active_cells = active_cells
 
     @property
     def starting(self):

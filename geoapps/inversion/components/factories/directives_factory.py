@@ -52,9 +52,9 @@ class DirectivesFactory:
         inversion_data,
         inversion_mesh,
         active_cells,
+        global_misfit,
         sorting,
         ordering,
-        global_misfit,
         regularizer,
     ):
         self.vector_inversion_directive = directives.VectorInversion(
