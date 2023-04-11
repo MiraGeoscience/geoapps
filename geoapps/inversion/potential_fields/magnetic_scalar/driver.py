@@ -14,6 +14,7 @@ from .params import MagneticScalarParams
 class MagneticScalarDriver(InversionDriver):
     _params_class = MagneticScalarParams
     _validations = validations
+    PHYSICAL_PROPERTY = "susceptibility"
 
     def __init__(self, params: MagneticScalarParams, warmstart=True):
         super().__init__(params, warmstart)

@@ -14,6 +14,7 @@ from .params import TimeDomainElectromagneticsParams
 class TimeDomainElectromagneticsDriver(InversionDriver):
     _params_class = TimeDomainElectromagneticsParams
     _validations = validations
+    PHYSICAL_PROPERTY = "conductivity"
 
     def __init__(self, params: TimeDomainElectromagneticsParams, warmstart=True):
         super().__init__(params, warmstart)

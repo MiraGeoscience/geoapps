@@ -15,6 +15,7 @@ from .params import DirectCurrent2DParams
 class DirectCurrent2DDriver(InversionDriver):
     _params_class = DirectCurrent2DParams
     _validations = validations
+    PHYSICAL_PROPERTY = "conductivity"
 
     def __init__(self, params: DirectCurrent2DParams, warmstart=True):
         super().__init__(params, warmstart)

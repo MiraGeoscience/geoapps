@@ -14,6 +14,7 @@ from .params import TipperParams
 class TipperDriver(InversionDriver):
     _params_class = TipperParams
     _validations = validations
+    PHYSICAL_PROPERTY = "conductivity"
 
     def __init__(self, params: TipperParams, warmstart=True):
         super().__init__(params, warmstart)

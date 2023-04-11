@@ -14,6 +14,7 @@ from .params import GravityParams
 class GravityDriver(InversionDriver):
     _params_class = GravityParams
     _validations = validations
+    PHYSICAL_PROPERTY = "density"
 
     def __init__(self, params: GravityParams, warmstart=True):
         super().__init__(params, warmstart)

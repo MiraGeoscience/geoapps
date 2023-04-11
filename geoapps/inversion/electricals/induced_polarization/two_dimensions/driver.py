@@ -14,6 +14,7 @@ from .params import InducedPolarization2DParams
 class InducedPolarization2DDriver(InversionDriver):
     _params_class = InducedPolarization2DParams
     _validations = validations
+    PHYSICAL_PROPERTY = "chargeability"
 
     def __init__(self, params: InducedPolarization2DParams, warmstart=True):
         super().__init__(params, warmstart)

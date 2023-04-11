@@ -34,6 +34,7 @@ from geoapps.utils.surveys import extract_dcip_survey
 class InducedPolarizationPseudo3DDriver(LineSweepDriver):
     _params_class = InducedPolarizationPseudo3DParams
     _validations = validations
+    PHYSICAL_PROPERTY = "chargeability"
 
     def __init__(
         self, params: InducedPolarizationPseudo3DParams

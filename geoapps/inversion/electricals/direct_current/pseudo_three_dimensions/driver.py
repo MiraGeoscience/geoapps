@@ -34,6 +34,7 @@ from geoapps.utils.surveys import extract_dcip_survey
 class DirectCurrentPseudo3DDriver(LineSweepDriver):
     _params_class = DirectCurrentPseudo3DParams
     _validations = validations
+    PHYSICAL_PROPERTY = "conductivity"
 
     def __init__(self, params: DirectCurrentPseudo3DParams):  # pylint: disable=W0235
         super().__init__(params)
