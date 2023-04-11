@@ -118,7 +118,7 @@ class InversionBaseParams(BaseParams):
                 ui_json=ui_json,
                 data=self.defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
 
         super().__init__(input_file=input_file, **kwargs)

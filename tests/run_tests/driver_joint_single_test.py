@@ -10,6 +10,8 @@ import os
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.joint.single_property import JointSingleParams
+from geoapps.inversion.joint.single_property.driver import JointSingleDriver
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -51,8 +53,7 @@ def test_gravity_fwr_run(
         data_object=survey.uid,
         starting_model=model.uid,
     )
-    fwr_driver = GravityDriver(params)
-    fwr_driver.run()
+    fwr_driver_a = GravityDriver(params)
 
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -74,7 +75,19 @@ def test_gravity_fwr_run(
         data_object=survey.uid,
         starting_model=model.uid,
     )
-    fwr_driver = GravityDriver(params)
+    fwr_driver_b = GravityDriver(params)
+
+    joint_params = JointSingleParams(
+        forward_only=True,
+        geoh5=geoh5,
+        mesh=model.parent.uid,
+        topography_object=topography.uid,
+        group_a=fwr_driver_a.params.ga_group,
+        group_b=fwr_driver_b.params.ga_group,
+        starting_model=model.uid,
+    )
+
+    fwr_driver = JointSingleDriver(joint_params)
     fwr_driver.run()
 
     return fwr_driver.starting_model

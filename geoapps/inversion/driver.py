@@ -39,7 +39,7 @@ from geoapps.inversion.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory, SaveIterationGeoh5Factory
 from geoapps.inversion.params import InversionBaseParams
 from geoapps.inversion.utils import tile_locations
 
@@ -244,12 +244,17 @@ class InversionDriver(BaseDriver):
 
         if self.params.forward_only:
             print("Running the forward simulation ...")
-            self.inversion_data.simulate(
-                self.inversion_models.starting,
-                self.inverse_problem,
-                self.data_misfit.sorting,
-                self.data_misfit.ordering,
+            dpred = inverse_problem.get_dpred(
+                self.inversion_models.starting, compute_J=False
             )
+
+            save_directive = SaveIterationGeoh5Factory(self.params).build(
+                inversion_object=self.inversion_data,
+                sorting=np.argsort(np.hstack(self.data_misfit.sorting)),
+                ordering=self.data_misfit.ordering,
+            )
+            save_directive.save_components(0, dpred)
+
             self.logger.end()
             sys.stdout = self.logger.terminal
             self.logger.log.close()
