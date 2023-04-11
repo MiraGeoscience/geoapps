@@ -86,7 +86,7 @@ default_ui_json.update(
         "fixed_contours": {
             "main": True,
             "label": "Fixed Contours",
-            "value": 0.0,
+            "value": "",
             "optional": True,
             "enabled": False,
         },
