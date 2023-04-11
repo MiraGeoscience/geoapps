@@ -779,9 +779,9 @@ def test_validate_out_group():
 
 def test_validate_distributed_workers():
     param = "distributed_workers"
-    newval = ["one", "two"]
+    newval = "one, two"
     param_test_generator(param, newval)
-    catch_invalid_generator(param, (), "type")
+    catch_invalid_generator(param, 123, "type")
 
 
 def test_gravity_inversion_type():
