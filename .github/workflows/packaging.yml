@@ -41,6 +41,7 @@ jobs:
         run: |
           platform_suffix=${{ fromJson('{"windows-latest": "win-64", "ubuntu-latest": "linux-64"}')[matrix.os] }}
           echo "suffix=$platform_suffix" >> $GITHUB_OUTPUT
+          # TODO: generate a lock file for core only
           echo "CONDA_LOCK_ENV_FILE=environments/conda-py-${{ matrix.python_ver }}-${platform_suffix}.lock.yml" >> $GITHUB_ENV
       - name: Setup application conda env
         uses: mamba-org/provision-with-micromamba@main
