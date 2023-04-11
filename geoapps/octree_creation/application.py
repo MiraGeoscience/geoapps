@@ -291,9 +291,7 @@ class OctreeMesh(ObjectDataSelection):
                 setattr(
                     self,
                     attr_name,
-                    Text(
-                        description=key.capitalize(), value=", ".join(map(str, value))
-                    ),
+                    Text(description=key.capitalize(), value=value),
                 )
             elif "type" in key:
                 setattr(
