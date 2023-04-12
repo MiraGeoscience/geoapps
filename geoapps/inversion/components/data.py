@@ -91,12 +91,12 @@ class InversionData(InversionLocations):
         self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
     ):
         """
-        :param: workspace: Geoh5py workspace object containing location based data.
+        :param: workspace: :obj`geoh5py.workspace.Workspace` workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
         :param: window: Center and size defining window for data, topography, etc.
         """
-        super().__init__(workspace, params, window)
-
+        super().__init__(workspace, params)
+        self.window: dict[str, Any] = window
         self.resolution: int | None = None
         self.offset: list[float] | None = None
         self.radar: np.ndarray | None = None
