@@ -14,7 +14,6 @@ from .params import MagneticVectorParams
 class MagneticVectorDriver(InversionDriver):
     _params_class = MagneticVectorParams
     _validations = validations
-    PHYSICAL_PROPERTY = "susceptibility"
 
     def __init__(self, params: MagneticVectorParams, warmstart=True):
         super().__init__(params, warmstart)

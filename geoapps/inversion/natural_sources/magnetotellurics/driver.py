@@ -14,7 +14,6 @@ from .params import MagnetotelluricsParams
 class MagnetotelluricsDriver(InversionDriver):
     _params_class = MagnetotelluricsParams
     _validations = validations
-    PHYSICAL_PROPERTY = "conductivity"
 
     def __init__(self, params: MagnetotelluricsParams, warmstart=True):
         super().__init__(params, warmstart)
