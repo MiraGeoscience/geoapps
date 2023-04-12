@@ -133,18 +133,7 @@ class InversionModelCollection:
         return mstart
 
     def _initialize(self):
-        self.is_sigma = (
-            True
-            if self.params.inversion_type
-            in [
-                "direct current 3d",
-                "direct current 2d",
-                "magnetotellurics",
-                "tipper",
-                "tdem",
-            ]
-            else False
-        )
+        self.is_sigma = self.params.PHYSICAL_PROPERTY == "conductivity"
         self.is_vector = (
             True if self.params.inversion_type == "magnetic vector" else False
         )
