@@ -50,10 +50,24 @@ class JointSingleDriver(InversionDriver):
         """List of inversion drivers."""
         return self._drivers
 
+    def get_local_actives(self, driver):
+        in_local = driver.inversion_mesh.mesh._get_containing_cell_indexes(
+            self.inversion_mesh.mesh.gridCC
+        )
+
+        if np.any(
+            self.inversion_mesh.mesh.cell_levels_by_index(np.arange(self.inversion_mesh.mesh.nC)) >
+            driver.inversion_mesh.mesh.cell_levels_by_index(in_local)
+        ):
+            raise UserWarning(f"Sub-mesh used by {driver} has smaller cells than the inversion mesh.")
+
+        return driver.models.active_cells[in_local]
+
     def initialize(self):
         """Generate sub drivers."""
         drivers = []
-        phys_props = []
+        physical_property = None
+        local_actives = []
         for group in [self.params.group_a, self.params.group_b, self.params.group_c]:
             if group is None:
                 continue
@@ -62,19 +76,29 @@ class JointSingleDriver(InversionDriver):
             mod_name, class_name = DRIVER_MAP.get(ifile.data["inversion_type"])
             module = __import__(mod_name, fromlist=[class_name])
             inversion_driver = getattr(module, class_name)
-
             params = inversion_driver._params_class(ifile)  # pylint: disable=W0212
+            driver = inversion_driver(params)
 
-            drivers.append(inversion_driver(params))
-            phys_props.append(inversion_driver.PHYSICAL_PROPERTY)
-
-        if len(drivers) > 0:
-            if not all([p == phys_props[0] for p in phys_props]):
+            if physical_property is None:
+                physical_property = params.PHYSICAL_PROPERTY
+            elif params.PHYSICAL_PROPERTY != physical_property:
                 raise ValueError(
-                    f"All physical properties must be the same. Provided SimPEG groups for {phys_props}"
+                    "All physical properties must be the same. "
+                    f"Provided SimPEG groups for {physical_property} and {params.PHYSICAL_PROPERTY}."
                 )
 
-            self._drivers = drivers
+            local_actives.append(
+                self.get_local_actives(driver.inversion_mesh)
+            )
+            drivers.append(driver)
+
+        self.params.PHYSICAL_PROPERTY = physical_property
+
+        mapping = maps.TileMap(
+            mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
+        )
+
+        self._drivers = drivers
 
     @property
     def inversion_data(self):
