@@ -85,20 +85,21 @@ class InversionDriver(BaseDriver):
     def data_misfit(self):
         """The Simpeg.data_misfit class"""
         if getattr(self, "_data_misfit", None) is None:
-            # Tile locations
-            tiles = self.get_tiles()
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                # Tile locations
+                tiles = self.get_tiles()
 
-            print(f"Setting up {len(tiles)} tile(s) . . .")
-            # Build tiled misfits and combine to form global misfit
-            self._data_misfit, self._sorting, self._ordering = MisfitFactory(
-                self.params, models=self.models
-            ).build(
-                tiles,
-                self.inversion_data,
-                self.inversion_mesh.mesh,
-                self.models.active_cells,
-            )
-            print("Done.")
+                print(f"Setting up {len(tiles)} tile(s) . . .")
+                # Build tiled misfits and combine to form global misfit
+                self._data_misfit, self._sorting, self._ordering = MisfitFactory(
+                    self.params, models=self.models
+                ).build(
+                    tiles,
+                    self.inversion_data,
+                    self.inversion_mesh.mesh,
+                    self.models.active_cells,
+                )
+                print("Done.")
 
         return self._data_misfit
 
@@ -120,9 +121,10 @@ class InversionDriver(BaseDriver):
     def inversion_data(self):
         """Inversion data"""
         if getattr(self, "_inversion_data", None) is None:
-            self._inversion_data = InversionData(
-                self.workspace, self.params, self.window()
-            )
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._inversion_data = InversionData(
+                    self.workspace, self.params, self.window()
+                )
 
         return self._inversion_data
 
@@ -143,7 +145,7 @@ class InversionDriver(BaseDriver):
         """Inversion topography"""
         if getattr(self, "_inversion_topography", None) is None:
             self._inversion_topography = InversionTopography(
-                self.workspace, self.params, self.inversion_data, self.window()
+                self.workspace, self.params
             )
         return self._inversion_topography
 
@@ -159,26 +161,28 @@ class InversionDriver(BaseDriver):
     def inversion_mesh(self):
         """Inversion mesh"""
         if getattr(self, "_inversion_mesh", None) is None:
-            self._inversion_mesh = InversionMesh(
-                self.workspace,
-                self.params,
-                self.inversion_data,
-                self.inversion_topography,
-            )
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._inversion_mesh = InversionMesh(
+                    self.workspace,
+                    self.params,
+                    self.inversion_data,
+                    self.inversion_topography,
+                )
         return self._inversion_mesh
 
     @property
     def models(self):
         """Inversion models"""
         if getattr(self, "_models", None) is None:
-            self._models = InversionModelCollection(
-                self.workspace, self.params, self.inversion_mesh
-            )
-            # Build active cells array and reduce models active set
-            if self.inversion_mesh is not None and self.inversion_data is not None:
-                self._models.active_cells = self.inversion_topography.active_cells(
-                    self.inversion_mesh, self.inversion_data
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._models = InversionModelCollection(
+                    self.workspace, self.params, self.inversion_mesh
                 )
+                # Build active cells array and reduce models active set
+                if self.inversion_mesh is not None and self.inversion_data is not None:
+                    self._models.active_cells = self.inversion_topography.active_cells(
+                        self.inversion_mesh, self.inversion_data
+                    )
 
         return self._models
 
@@ -223,13 +227,11 @@ class InversionDriver(BaseDriver):
 
     def run(self):
         """Run inversion from params"""
-
-        with fetch_active_workspace(self.workspace, mode="r+"):
-            simpeg_inversion = self.inversion
-
         if self.params.forward_only:
             print("Running the forward simulation ...")
-            dpred = simpeg_inversion.invProb.get_dpred(self.models.starting, compute_J=False)
+            dpred = self.inversion.invProb.get_dpred(
+                self.models.starting, compute_J=False
+            )
             SaveIterationGeoh5Factory(self.params).build(
                 inversion_object=self.inversion_data,
                 sorting=np.argsort(np.hstack(self.sorting)),
@@ -238,7 +240,7 @@ class InversionDriver(BaseDriver):
         else:
             # Run the inversion
             self.start_inversion_message()
-            simpeg_inversion.run(self.models.starting)
+            self.inversion.run(self.models.starting)
 
         self.logger.end()
         sys.stdout = self.logger.terminal

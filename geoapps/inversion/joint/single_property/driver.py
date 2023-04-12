@@ -4,6 +4,8 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+from __future__ import annotations
+
 import sys
 
 import numpy as np
@@ -14,7 +16,7 @@ from SimPEG.objective_function import ComboObjectiveFunction
 from geoapps.inversion import DRIVER_MAP
 from geoapps.inversion.components import InversionMesh
 from geoapps.inversion.components.factories import SaveIterationGeoh5Factory
-from geoapps.inversion.driver import DataMisfit, InversionDriver
+from geoapps.inversion.driver import InversionDriver
 
 from .constants import validations
 from .params import JointSingleParams
@@ -34,14 +36,10 @@ class JointSingleDriver(InversionDriver):
     def data_misfit(self):
         if getattr(self, "_data_misfit", None) is None and self.drivers is not None:
             objective_functions = []
-            sorting = []
-            ordering = []
 
             for driver in self.drivers:
                 if driver.data_misfit is not None:
-                    objective_functions.append(driver.data_misfit.objective_function)
-                    sorting.append(driver.data_misfit.sorting)
-                    ordering.append(driver.data_misfit.ordering)
+                    objective_functions.append(driver.data_misfit)
 
             self._data_misfit = ComboObjectiveFunction(objective_functions)
 
@@ -99,7 +97,7 @@ class JointSingleDriver(InversionDriver):
     def inverse_problem(self):
         if getattr(self, "_inverse_problem", None) is None:
             self._inverse_problem = inverse_problem.BaseInvProblem(
-                self.objective_function,
+                self.data_misfit,
                 self.regularization,
                 self.optimization,
                 beta=self.params.initial_beta,
@@ -109,28 +107,23 @@ class JointSingleDriver(InversionDriver):
 
     def run(self):
         """Run inversion from params"""
-
         if self.params.forward_only:
             print("Running the forward simulation ...")
-            dpred = inverse_problem.get_dpred(
-                self.inversion_models.starting, compute_J=False
+            predicted = self.inversion.invProb.get_dpred(
+                self.models.starting, compute_J=False
             )
 
-            save_directive = SaveIterationGeoh5Factory(self.params).build(
-                inversion_object=self.inversion_data,
-                sorting=np.argsort(np.hstack(self.data_misfit.sorting)),
-                ordering=self.data_misfit.ordering,
-            )
-            save_directive.save_components(0, dpred)
+            for sub, driver in zip(predicted, self.drivers):
+                SaveIterationGeoh5Factory(driver.params).build(
+                    inversion_object=driver.inversion_data,
+                    sorting=np.argsort(np.hstack(driver.sorting)),
+                    ordering=driver.ordering,
+                ).save_components(0, sub)
+        else:
+            # Run the inversion
+            self.start_inversion_message()
+            self.inversion.run(self.models.starting)
 
-            self.logger.end()
-            sys.stdout = self.logger.terminal
-            self.logger.log.close()
-            return
-
-        # Run the inversion
-        self.start_inversion_message()
-        self.inversion.run(self.inversion_models.starting)
         self.logger.end()
         sys.stdout = self.logger.terminal
         self.logger.log.close()
