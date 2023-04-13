@@ -43,6 +43,7 @@ def test_gravity_fwr_run(
         refinement=refinement,
         flatten=False,
     )
+
     params = GravityParams(
         forward_only=True,
         geoh5=geoh5,
@@ -53,6 +54,7 @@ def test_gravity_fwr_run(
         data_object=survey.uid,
         starting_model=model.uid,
     )
+
     fwr_driver_a = GravityDriver(params)
 
     geoh5, _, model, survey, topography = setup_inversion_workspace(
@@ -89,7 +91,7 @@ def test_gravity_fwr_run(
 
     fwr_driver = JointSingleDriver(joint_params)
     fwr_driver.run()
-
+    geoh5.close()
     return fwr_driver.models.starting
 
 

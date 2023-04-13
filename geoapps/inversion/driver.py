@@ -189,6 +189,9 @@ class InversionDriver(BaseDriver):
     @property
     def optimization(self):
         if getattr(self, "_optimization", None) is None:
+            if self.params.forward_only:
+                return optimization.ProjectedGNCG()
+
             self._optimization = optimization.ProjectedGNCG(
                 maxIter=self.params.max_global_iterations,
                 lower=self.models.lower_bound,
@@ -268,6 +271,9 @@ class InversionDriver(BaseDriver):
         )
 
     def get_regularization(self):
+        if self.params.forward_only:
+            return regularization.BaseRegularization(mesh=self.inversion_mesh.mesh)
+
         n_cells = int(np.sum(self.models.active_cells))
 
         if self.inversion_type == "magnetic vector":

@@ -33,14 +33,14 @@ class InversionBaseParams(BaseParams):
     _inversion_defaults = None
     _inversion_ui_json = None
     _inversion_type = None
-    _ga_group = None
 
     def __init__(
-        self, input_file: InputFile | None = None, forward_only: bool = False, **kwargs
+        self, input_file: InputFile | None = None, forward_only: bool = False, ga_group: SimPEGGroup | None=None, **kwargs
     ):
         self._forward_only: bool = (
             forward_only if input_file is None else input_file.data["forward_only"]
         )
+        self.ga_group = ga_group
         self._topography_object: UUID = None
         self._topography: UUID | float = None
         self._data_object: UUID = None
@@ -753,6 +753,13 @@ class InversionBaseParams(BaseParams):
             self.update_group_options(self._ga_group)
 
         return self._ga_group
+
+    @ga_group.setter
+    def ga_group(self, val):
+        if not isinstance(val, (SimPEGGroup, type(None))):
+            raise AttributeError("ga_group must be a SimPEGGroup.")
+
+        self._ga_group = val
 
     @property
     def distributed_workers(self):
