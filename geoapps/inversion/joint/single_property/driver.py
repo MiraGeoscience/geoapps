@@ -10,7 +10,7 @@ import sys
 
 import numpy as np
 from geoh5py.ui_json import InputFile
-from SimPEG import inverse_problem
+from SimPEG import inverse_problem, maps
 from SimPEG.objective_function import ComboObjectiveFunction
 
 from geoapps.inversion import DRIVER_MAP
@@ -68,6 +68,8 @@ class JointSingleDriver(InversionDriver):
         drivers = []
         physical_property = None
         local_actives = []
+
+        # Create sub-drivers and add re-projection to the global mesh
         for group in [self.params.group_a, self.params.group_b, self.params.group_c]:
             if group is None:
                 continue
@@ -88,16 +90,22 @@ class JointSingleDriver(InversionDriver):
                 )
 
             local_actives.append(
-                self.get_local_actives(driver.inversion_mesh)
+                self.get_local_actives(driver)
             )
             drivers.append(driver)
 
+        active_cells = np.zeros(driver.inversion_mesh.mesh.nC, dtype="bool")
+        active_cells[np.hstack(local_actives)] = True
+
+        # Add re-projection to the global mesh
+        for driver in drivers:
+            for func in driver.data_misfit.objfcts:
+                projection = maps.TileMap(
+                    driver.inversion_mesh.mesh, active_cells, func.simulation.mesh, enforce_active=True
+                )
+                func.mapping = func.mapping * projection
+
         self.params.PHYSICAL_PROPERTY = physical_property
-
-        mapping = maps.TileMap(
-            mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
-        )
-
         self._drivers = drivers
 
     @property
