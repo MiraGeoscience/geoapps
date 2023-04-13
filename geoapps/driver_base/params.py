@@ -16,6 +16,8 @@ from geoh5py.shared.utils import str2uuid, uuid2entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.workspace import Workspace
 
+import geoapps
+
 
 class BaseParams:
     """
@@ -389,5 +391,7 @@ class BaseParams:
             self.input_file.validation_options["disabled"] = True
 
         self.input_file.data = self.to_dict()
+        self.input_file.ui_json["version"] = geoapps.__version__
+        self.input_file.data["version"] = geoapps.__version__
 
         return self.input_file.write_ui_json(name=name, path=path)
