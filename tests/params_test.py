@@ -70,6 +70,7 @@ def tmp_input_file(filepath, idict):
 
 mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
+mvi_params.geoh5.open()
 
 
 def catch_invalid_generator(param, invalid_value, validation_type):
@@ -157,7 +158,7 @@ def test_input_file_construction(tmp_path):
             params = params_class(forward_only=forward_only)
             params.write_input_file(name=filename, path=tmp_path, validate=False)
             ifile = InputFile.read_ui_json(
-                os.path.join(tmp_path, filename), validation_options={"disabled": True}
+                os.path.join(tmp_path, filename), validate=False
             )
             params = params_class(input_file=ifile)
 
@@ -187,7 +188,7 @@ def test_default_input_file(tmp_path):
         filename = os.path.join(tmp_path, "test.ui.json")
         params = params_class()
         params.write_input_file(name=filename, path=tmp_path, validate=False)
-        ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
+        ifile = InputFile.read_ui_json(filename, validate=False)
 
         # check that reads back into input file with defaults
         check = []
@@ -759,6 +760,7 @@ grav_params = GravityParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+grav_params.geoh5.open()
 
 
 def test_validate_geoh5():
@@ -1249,6 +1251,7 @@ mag_params = MagneticScalarParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+mag_params.geoh5.open()
 
 
 def test_magnetic_scalar_inversion_type():
