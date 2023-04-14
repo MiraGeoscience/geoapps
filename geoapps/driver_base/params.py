@@ -12,7 +12,7 @@ from copy import deepcopy
 from typing import Any
 from uuid import UUID
 
-from geoh5py.shared.utils import str2uuid, uuid2entity
+from geoh5py.shared.utils import fetch_active_workspace, str2uuid, uuid2entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.workspace import Workspace
 
@@ -41,11 +41,10 @@ class BaseParams:
     _input_file: InputFile = None
     _monitoring_directory = None
     _ui_json = None
-    _input_file = None
+    _validate = True
     _validations = None
     _validation_options = None
     _validator: InputValidation = None
-    validate = True
 
     def __init__(
         self,
@@ -77,11 +76,13 @@ class BaseParams:
                 ui_json=self._default_ui_json,
                 data=self._defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
             )
-        self.update(self.input_file.data, validate=False)
+        original_validate_state = self.validate
+        self.validate = False
+        self.update(self.input_file.data)
+        self.validate = original_validate_state
+
         self.param_names = list(self.input_file.data.keys())
-        self.input_file.validation_options["disabled"] = False
 
         # Apply user input
         if any(kwargs):
@@ -102,23 +103,21 @@ class BaseParams:
 
         return self._ui_json
 
-    def update(self, params_dict: dict[str, Any], validate=True):
+    def update(self, params_dict: dict[str, Any]):
         """Update parameters with dictionary contents."""
-        original_validate_state = self.validate
-        self.validate = validate
-
         params_dict = self.input_file.numify(params_dict)
         if params_dict.get("geoh5", None) is not None:
             setattr(self, "geoh5", params_dict["geoh5"])
 
-        params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
+        with fetch_active_workspace(self.input_file.workspace):
+            params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
 
-        for key, value in params_dict.items():
-            if key not in self.ui_json.keys() or key == "geoh5":
-                continue  # ignores keys not in default_ui_json
+            for key, value in params_dict.items():
+                if key not in self.ui_json.keys() or key == "geoh5":
+                    continue  # ignores keys not in default_ui_json
 
-            setattr(self, key, value)
-            self.input_file.data[key] = value
+                setattr(self, key, value)
+                self.input_file.data[key] = value
 
         # Set all parameters belonging to groupOptional disabled.
         for key in utils.find_all(self.ui_json, "groupOptional"):
@@ -127,8 +126,6 @@ class BaseParams:
                     self.ui_json, "group", self.ui_json[key]["group"]
                 ):
                     setattr(self, elem, None)
-
-        self.validate = original_validate_state
 
     @property
     def workpath(self):
@@ -167,6 +164,22 @@ class BaseParams:
             )
 
         self._validation_options = value
+
+    @property
+    def validate(self):
+        """Return True if validation is enabled."""
+        return self._validate
+
+    @validate.setter
+    def validate(self, value: bool):
+        """Set validation state."""
+        if not isinstance(value, bool):
+            raise UserWarning("Input 'validate' must be a boolean.")
+
+        self._validate = value
+
+        if self.input_file is not None:
+            self.input_file.validate = value
 
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
@@ -385,9 +398,8 @@ class BaseParams:
         validate: bool = True,
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
-        if not validate:
-            self.input_file.validation_options["disabled"] = True
-
+        original_validate_state = self.input_file.validate
+        self.input_file.validate = validate
         self.input_file.data = self.to_dict()
-
+        self.input_file.validate = original_validate_state
         return self.input_file.write_ui_json(name=name, path=path)

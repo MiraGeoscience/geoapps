@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.driver_base.params import BaseParams
+    from geoapps.inversion.params import InversionBaseParams
 
 from copy import deepcopy
 
@@ -87,16 +87,12 @@ class InversionData(InversionLocations):
 
     """
 
-    def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
-    ):
+    def __init__(self, workspace: Workspace, params: InversionBaseParams):
         """
         :param: workspace: :obj`geoh5py.workspace.Workspace` workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
-        :param: window: Center and size defining window for data, topography, etc.
         """
         super().__init__(workspace, params)
-        self.window: dict[str, Any] = window
         self.resolution: int | None = None
         self.offset: list[float] | None = None
         self.radar: np.ndarray | None = None
@@ -135,7 +131,7 @@ class InversionData(InversionLocations):
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
-            window=self.window,
+            window=self.params.window,
             angle=self.angle,
             distance=self.params.resolution,
         )

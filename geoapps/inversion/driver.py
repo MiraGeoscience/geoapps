@@ -106,15 +106,16 @@ class InversionDriver(BaseDriver):
     @property
     def directives(self):
         if getattr(self, "_directives", None) is None and not self.params.forward_only:
-            self._directives = DirectivesFactory(self.params).build(
-                self.inversion_data,
-                self.inversion_mesh,
-                self.models.active_cells,
-                self.data_misfit,
-                np.argsort(np.hstack(self.sorting)),
-                self.ordering,
-                self.regularization,
-            )
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._directives = DirectivesFactory(self.params).build(
+                    self.inversion_data,
+                    self.inversion_mesh,
+                    self.models.active_cells,
+                    self.data_misfit,
+                    np.argsort(np.hstack(self.sorting)),
+                    self.ordering,
+                    self.regularization,
+                )
         return self._directives
 
     @property
@@ -122,9 +123,7 @@ class InversionDriver(BaseDriver):
         """Inversion data"""
         if getattr(self, "_inversion_data", None) is None:
             with fetch_active_workspace(self.workspace, mode="r+"):
-                self._inversion_data = InversionData(
-                    self.workspace, self.params, self.window()
-                )
+                self._inversion_data = InversionData(self.workspace, self.params)
 
         return self._inversion_data
 

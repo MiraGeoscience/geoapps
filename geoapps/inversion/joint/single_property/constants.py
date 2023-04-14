@@ -123,6 +123,15 @@ inversion_ui_json = {}
 default_ui_json = {
     "title": "SimPEG Joint Single-Property Inversion",
     "inversion_type": "joint_single_property",
+    "mesh": {
+        "group": "Mesh and Models",
+        "main": True,
+        "label": "Mesh",
+        "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
+        "value": None,
+        "enabled": False,
+        "optional": True,
+    },
     "lower_bound": {
         "association": ["Cell", "Vertex"],
         "main": True,

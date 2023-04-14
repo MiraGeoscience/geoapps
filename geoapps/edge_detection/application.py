@@ -13,6 +13,7 @@ from time import time
 import numpy as np
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
@@ -199,9 +200,12 @@ class EdgeDetectionApp(PlotSelection2D):
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as workspace:
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
 
             param_dict["geoh5"] = workspace
 
@@ -210,7 +214,6 @@ class EdgeDetectionApp(PlotSelection2D):
 
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
             )
             new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
             driver = EdgeDetectionDriver(new_params)

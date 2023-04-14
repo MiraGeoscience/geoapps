@@ -36,6 +36,7 @@ from geoapps.inversion.electricals.induced_polarization.three_dimensions import 
 from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
     InducedPolarization2DParams,
 )
+from geoapps.inversion.joint.single_property import JointSingleParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
@@ -174,6 +175,13 @@ def write_default_uijson(path, use_initializers=False):
     contour_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     contour_init = contour_init if use_initializers else {}
 
+    from geoapps.inversion.joint.single_property.constants import (
+        app_initializer as joint_single_property_init,
+    )
+
+    joint_single_property_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
+    joint_single_property_init = joint_single_property_init if use_initializers else {}
+
     filedict = {
         "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
         "gravity_forward.ui.json": GravityParams(forward_only=True, validate=False),
@@ -241,6 +249,12 @@ def write_default_uijson(path, use_initializers=False):
             forward_only=False, validate=False, **tipper_init
         ),
         "tipper_forward.ui.json": TipperParams(forward_only=True, validate=False),
+        "joint_single_property_inversion.ui.json": JointSingleParams(
+            forward_only=False, validate=False, **joint_single_property_init
+        ),
+        "joint_single_property_forward.ui.json": JointSingleParams(
+            forward_only=True, validate=False, **joint_single_property_init
+        ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
         "scatter.ui.json": ScatterPlotParams(validate=False, **scatter_init),

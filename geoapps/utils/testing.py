@@ -84,6 +84,7 @@ def setup_inversion_workspace(
     background=None,
     anomaly=None,
     cell_size=(5.0, 5.0, 5.0),
+    center=(0.0, 0.0, 0.0),
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
@@ -104,7 +105,11 @@ def setup_inversion_workspace(
         zz = np.zeros_like(xx)
     else:
         zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
-    topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
+    topo = np.c_[
+        utils.mkvc(xx) + center[0],
+        utils.mkvc(yy) + center[1],
+        utils.mkvc(zz) + center[2],
+    ]
     triang = Delaunay(topo[:, :2])
     topography = Surface.create(
         geoh5,
@@ -126,13 +131,21 @@ def setup_inversion_workspace(
     else:
         Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
 
-    vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
+    vertices = np.c_[
+        utils.mkvc(X.T) + center[0],
+        utils.mkvc(Y.T) + center[1],
+        utils.mkvc(Z.T) + center[2],
+    ]
 
     if inversion_type in ["dcip", "dcip_2d"]:
         ab_vertices = np.c_[
             X[:, :-2].flatten(), Y[:, :-2].flatten(), Z[:, :-2].flatten()
         ]
-        mn_vertices = np.c_[X[:, 2:].flatten(), Y[:, 2:].flatten(), Z[:, 2:].flatten()]
+        mn_vertices = np.c_[
+            X[:, 2:].flatten() + center[0],
+            Y[:, 2:].flatten() + center[1],
+            Z[:, 2:].flatten() + center[2],
+        ]
 
         parts = np.repeat(np.arange(n_lines), n_electrodes - 2).astype("int32")
         currents = CurrentElectrode.create(

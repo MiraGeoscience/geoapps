@@ -760,7 +760,6 @@ grav_params = GravityParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
-grav_params.geoh5.open()
 
 
 def test_validate_geoh5():
@@ -805,7 +804,7 @@ def test_gz_channel_bool():
 
 
 def test_gz_channel():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_channel = uuid4()
 
     with pytest.raises(TypeValidationError) as excinfo:
@@ -817,7 +816,7 @@ def test_gz_channel():
 
 
 def test_gz_uncertainty():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_uncertainty = uuid4()
 
     grav_params.gz_uncertainty = 4.0

@@ -35,7 +35,11 @@ class InversionBaseParams(BaseParams):
     _inversion_type = None
 
     def __init__(
-        self, input_file: InputFile | None = None, forward_only: bool = False, ga_group: SimPEGGroup | None=None, **kwargs
+        self,
+        input_file: InputFile | None = None,
+        forward_only: bool = False,
+        ga_group: SimPEGGroup | None = None,
+        **kwargs,
     ):
         self._forward_only: bool = (
             forward_only if input_file is None else input_file.data["forward_only"]
@@ -178,6 +182,7 @@ class InversionBaseParams(BaseParams):
 
         return comps
 
+    @property
     def window(self) -> dict[str, float]:
         """Returns window dictionary"""
         win = {

@@ -24,7 +24,7 @@ from dash import callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.objects import ObjectBase
-from geoh5py.shared.utils import is_uuid
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid
 from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
@@ -876,7 +876,7 @@ class Clustering(ScatterPlots):
                     "size": size,
                 }
             )
-            self.scatter_params.update(params_dict, validate=False)
+            self.scatter_params.update(params_dict)
             crossplot = go.Figure(self.scatter_driver.run())
             return crossplot
         else:
@@ -1296,15 +1296,15 @@ class Clustering(ScatterPlots):
             )
             if not live_link:
                 param_dict["monitoring_directory"] = ""
-
             with ws as workspace:
-                # Put entities in output workspace.
-                param_dict["geoh5"] = workspace
-                for key, value in param_dict.items():
-                    if isinstance(value, ObjectBase):
-                        param_dict[key] = value.copy(
-                            parent=workspace, copy_children=True
-                        )
+                with fetch_active_workspace(self.workspace):
+                    # Put entities in output workspace.
+                    param_dict["geoh5"] = workspace
+                    for key, value in param_dict.items():
+                        if isinstance(value, ObjectBase):
+                            param_dict[key] = value.copy(
+                                parent=workspace, copy_children=True
+                            )
                 # Write output uijson.
                 new_params = ClusteringParams(**param_dict)
                 new_params.write_input_file(

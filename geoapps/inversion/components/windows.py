@@ -58,7 +58,7 @@ class InversionWindow:
     def _initialize(self) -> None:
         """Extract data from workspace using params data."""
 
-        self.window = self.params.window()
+        self.window = self.params.window
 
         if self.is_empty():
             data_object = self.params.data_object
