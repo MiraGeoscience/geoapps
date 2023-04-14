@@ -18,7 +18,7 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Gravity inversion",
+    "title": "Gravity Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -121,7 +121,7 @@ inversion_defaults = {
     "gy_channel_bool": False,
 }
 forward_defaults = {
-    "title": "Gravity forward",
+    "title": "Gravity Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -193,7 +193,7 @@ forward_ui_json = {
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -227,7 +227,8 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+            "{b54f6be6-0eb5-4a4e-887a-ba9d276f9a83}",
+            "{5ffa3816-358d-4cdd-9b7d-e1f7f5543e05}",
         ],
         "value": None,
     },
@@ -534,7 +535,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -546,7 +547,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference density (g/cc)",
@@ -557,7 +558,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (g/cc)",
@@ -570,7 +571,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (g/cc)",
