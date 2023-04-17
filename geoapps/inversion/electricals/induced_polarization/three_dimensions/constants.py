@@ -15,7 +15,7 @@ from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
-    "title": "Induced Polarization 3D inversion",
+    "title": "Induced Polarization (IP) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -93,7 +93,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Induced Polarization 3D forward",
+    "title": "Induced Polarization (IP) 3D Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -144,6 +144,40 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
+    "z_from_topo": {
+        "group": "Survey",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
+    },
+    "chargeability_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "main": True,
+        "label": "Chargeability (V/V)",
+        "parent": "data_object",
+        "value": None,
+    },
+    "chargeability_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "main": True,
+        "isValue": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "property": None,
+        "value": 1.0,
+    },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
@@ -153,6 +187,8 @@ forward_ui_json = {
         "parent": "mesh",
         "label": "Chargeability (V/V)",
         "property": None,
+        "min": 0.0,
+        "max": 10000.0,
         "value": 0.0,
     },
     "gradient_type": "total",
@@ -166,7 +202,7 @@ forward_ui_json = {
     "z_norm": 2.0,
 }
 default_ui_json = {
-    "title": "Induced Polarization 3D inversion",
+    "title": "Induced Polarization (IP) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -214,6 +250,8 @@ default_ui_json = {
         "parent": "mesh",
         "label": "Initial Chargeability (V/V)",
         "property": None,
+        "min": 0.0,
+        "max": 10000.0,
         "value": 0.0,
     },
     "reference_model": {

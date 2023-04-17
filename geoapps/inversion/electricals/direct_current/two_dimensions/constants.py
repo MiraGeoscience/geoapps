@@ -16,7 +16,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current 2D inversion",
+    "title": "Direct Current (DC) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -93,7 +93,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current 2D forward",
+    "title": "Direct Current (DC) 2D Forward",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -156,6 +156,36 @@ forward_ui_json = {
         "property": None,
         "value": 1e-3,
     },
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
+    "z_from_topo": {
+        "group": "Survey",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
+    },
+    "line_object": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Referenced",
+        "group": "Survey",
+        "main": True,
+        "label": "Line ID",
+        "parent": "data_object",
+        "value": None,
+    },
+    "line_id": {
+        "group": "Survey",
+        "main": True,
+        "min": 1,
+        "label": "Line number",
+        "value": 1,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -168,7 +198,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Direct Current 2D inversion",
+    "title": "Direct Current (DC) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "line_object": {
@@ -176,7 +206,7 @@ default_ui_json = {
         "dataType": "Referenced",
         "group": "Data",
         "main": True,
-        "label": "Line field",
+        "label": "Line ID",
         "parent": "data_object",
         "value": None,
     },
@@ -231,7 +261,6 @@ default_ui_json = {
         "label": "Mesh",
         "meshType": "{C94968EA-CF7D-11EB-B8BC-0242AC130003}",
         "value": None,
-        "visible": True,
     },
     "starting_model": {
         "association": "Cell",
