@@ -476,7 +476,7 @@ class ScatterPlots(BaseDashApplication):
 
         # Update self.params
         param_dict = self.get_params_dict(update_dict)
-        self.params.update(param_dict)
+        self.params.update(param_dict, validate=False)
         # Run driver to get updated scatter plot.
         figure = go.Figure(self.driver.run())
 

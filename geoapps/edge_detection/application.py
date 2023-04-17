@@ -228,7 +228,9 @@ class EdgeDetectionApp(PlotSelection2D):
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.params.geoh5
-        self.params.update(param_dict)
+        self.params.update(
+            param_dict, validate=False
+        )  # Can't guarantee order of update
         self.refresh.value = False
         (
             vertices,
