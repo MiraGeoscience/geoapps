@@ -16,7 +16,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Induced Polarization 2d batch inversion",
+    "title": "Induced Polarization (IP) 2D Batch Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -103,7 +103,7 @@ inversion_defaults = {
     "chargeability_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Induced Polarization 2d batch forward",
+    "title": "Induced Polarization (IP) 2D Batch Forward",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -165,6 +165,34 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
+    "line_object": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Referenced",
+        "group": "Survey",
+        "main": True,
+        "label": "Line ID",
+        "parent": "data_object",
+        "value": None,
+    },
+    "line_id": 1,
+    "starting_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Mesh and models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Chargeability (V/V)",
+        "property": None,
+        "value": 1e-3,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -177,7 +205,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Induced Polarization inversion",
+    "title": "Induced Polarization (IP) 3D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization pseudo 3d",
     "line_object": {
@@ -185,7 +213,7 @@ default_ui_json = {
         "dataType": "Referenced",
         "group": "Data",
         "main": True,
-        "label": "Line field",
+        "label": "Line ID",
         "parent": "data_object",
         "value": None,
     },
