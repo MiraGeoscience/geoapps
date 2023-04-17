@@ -16,7 +16,7 @@ from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Induced Polarization 2D inversion",
+    "title": "Induced Polarization (IP) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -94,7 +94,7 @@ inversion_defaults = {
     "chargeability_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Induced Polarization 2D forward",
+    "title": "Induced Polarization (IP) 2D Forward",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -147,6 +147,56 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "line_object": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Referenced",
+        "group": "Survey",
+        "main": True,
+        "label": "Line ID",
+        "parent": "data_object",
+        "value": None,
+    },
+    "line_id": {
+        "group": "Survey",
+        "main": True,
+        "min": 1,
+        "label": "Line number",
+        "value": 1,
+    },
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
+    "z_from_topo": {
+        "group": "Survey",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
+    },
+    "chargeability_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "main": True,
+        "label": "Chargeability (V/V)",
+        "parent": "data_object",
+        "value": None,
+    },
+    "chargeability_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "main": True,
+        "isValue": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "property": None,
+        "value": 1.0,
+    },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
@@ -170,7 +220,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Induced Polarization 2D inversion",
+    "title": "Induced Polarization (IP) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "line_object": {
@@ -178,7 +228,7 @@ default_ui_json = {
         "dataType": "Referenced",
         "group": "Data",
         "main": True,
-        "label": "Line field",
+        "label": "Line ID",
         "parent": "data_object",
         "value": None,
     },

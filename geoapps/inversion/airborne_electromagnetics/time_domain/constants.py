@@ -17,7 +17,7 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Time domain electromagnetic inversion",
+    "title": "Time Domain Electromagnetic Inversion",
     "inversion_type": "tdem",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -98,7 +98,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Time domain electromagnetic forward",
+    "title": "Time Domain Electromagnetic Forward",
     "inversion_type": "tdem",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -153,6 +153,117 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": [
+            "{19730589-fd28-4649-9de0-ad47249d9aba}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+        ],
+        "value": None,
+    },
+    "z_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Z",
+        "value": False,
+    },
+    "z_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "z-component",
+        "parent": "data_object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
+    "z_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "dependency": "z_channel",
+        "dependencyType": "enabled",
+        "value": None,
+    },
+    "x_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "X",
+        "value": False,
+    },
+    "x_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "x-component",
+        "parent": "data_object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
+    "x_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "dependency": "x_channel",
+        "dependencyType": "enabled",
+        "value": None,
+    },
+    "y_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Y",
+        "value": False,
+    },
+    "y_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "y-component",
+        "parent": "data_object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
+    "y_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "dependency": "y_channel",
+        "dependencyType": "enabled",
+        "value": None,
+    },
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Conductivity (S/m)",
+        "property": None,
+        "value": 1e-3,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -165,7 +276,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Time domain electromagnetic inversion",
+    "title": "Time Domain Electromagnetic Inversion",
     "inversion_type": "tdem",
     "data_object": {
         "main": True,
