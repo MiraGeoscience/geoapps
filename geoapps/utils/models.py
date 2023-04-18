@@ -13,6 +13,7 @@ from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, DrapeModel, Octree
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
@@ -490,3 +491,90 @@ def get_block_model(
     object_out.origin["z"] += top_padding
 
     return object_out
+
+
+def create_octree_from_octrees(meshes: list[Octree | TreeMesh]) -> TreeMesh:
+    """
+    Create an all encompassing octree mesh from a list of meshes.
+
+    :param meshes: List of Octree or TreeMesh meshes.
+
+    :return octree: A global Octree.
+    """
+    cell_size = []
+    extents = []
+    for mesh in meshes:
+        attributes = get_octree_attributes(mesh)
+        extents.append(attributes["extent"])
+        cell_size.append(attributes["cell_size"])
+
+    cell_size = np.min(np.vstack(cell_size), axis=0)
+    extents = np.vstack(extents)
+    limits = np.c_[extents[:, :3].min(axis=0), extents[:, 3:].max(axis=0)].T
+    cells = []
+    for ind in range(3):
+        extent = limits[1, ind] - limits[0, ind]
+        maxLevel = int(np.log2(extent / cell_size[ind])) + 1
+        cells += [np.ones(2**maxLevel) * cell_size[ind]]
+
+    # Define the mesh and origin
+    treemesh = TreeMesh(cells, origin=limits[0, :])
+
+    for mesh in meshes:
+        if isinstance(mesh, Octree):
+            centers = mesh.centroids
+            levels = treemesh.max_level - np.log2(mesh.octree_cells["NCells"])
+        else:
+            centers = mesh.cell_centers
+            levels = (
+                treemesh.max_level
+                - mesh.max_level
+                + mesh.cell_levels_by_index(np.arange(mesh.nC))
+            )
+
+        treemesh.insert_cells(centers, levels, finalize=False)
+
+    treemesh.finalize()
+
+    return treemesh
+
+
+def get_octree_attributes(mesh: Octree | TreeMesh) -> dict[str, list]:
+    """
+    Get mesh attributes.
+
+    :param mesh: Input Octree or TreeMesh object.
+    :return mesh_attributes: Dictionary of mesh attributes.
+    """
+    if not isinstance(mesh, (Octree, TreeMesh)):
+        raise TypeError(f"All meshes must be Octree or TreeMesh, not {type(mesh)}")
+
+    cell_size = []
+    cell_count = []
+    dimensions = []
+    origin = []
+    if isinstance(mesh, TreeMesh):
+        for dim in range(3):
+            cell_size.append(mesh.h[dim][0])
+            cell_count.append(mesh.h[dim].size)
+            dimensions.append(mesh.h[dim].sum())
+        extent = np.r_[mesh.origin, mesh.origin + np.r_[dimensions]]
+        origin.append(mesh.origin)
+    else:
+        with fetch_active_workspace(mesh.workspace):
+            for dim in "uvw":
+                cell_size.append(np.abs(getattr(mesh, f"{dim}_cell_size")))
+                cell_count.append(getattr(mesh, f"{dim}_count"))
+                dimensions.append(
+                    getattr(mesh, f"{dim}_cell_size") * getattr(mesh, f"{dim}_count")
+                )
+            extent = mesh.extent.flatten()
+            origin.append(np.r_[mesh.origin["x"], mesh.origin["y"], mesh.origin["z"]])
+
+    return {
+        "cell_count": cell_count,
+        "cell_size": cell_size,
+        "dimensions": dimensions,
+        "extent": extent,
+        "origin": origin,
+    }

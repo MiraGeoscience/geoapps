@@ -7,17 +7,20 @@
 from __future__ import annotations
 
 import sys
+from warnings import warn
 
 import numpy as np
-from geoh5py.ui_json import InputFile
 from geoh5py.shared.utils import fetch_active_workspace
+from geoh5py.ui_json import InputFile
 from SimPEG import inverse_problem, maps
 from SimPEG.objective_function import ComboObjectiveFunction
 
+from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.inversion import DRIVER_MAP
 from geoapps.inversion.components import InversionMesh
 from geoapps.inversion.components.factories import SaveIterationGeoh5Factory
 from geoapps.inversion.driver import InversionDriver
+from geoapps.utils.models import create_octree_from_octrees, get_octree_attributes
 
 from .constants import validations
 from .params import JointSingleParams
@@ -50,65 +53,82 @@ class JointSingleDriver(InversionDriver):
     @property
     def drivers(self) -> list[InversionDriver] | None:
         """List of inversion drivers."""
+        if self._drivers is None:
+            drivers = []
+            physical_property = None
+            # Create sub-drivers
+            for group in [
+                self.params.group_a,
+                self.params.group_b,
+                self.params.group_c,
+            ]:
+                if group is None:
+                    continue
+
+                ifile = InputFile(ui_json=group.options)
+                mod_name, class_name = DRIVER_MAP.get(ifile.data["inversion_type"])
+                module = __import__(mod_name, fromlist=[class_name])
+                inversion_driver = getattr(module, class_name)
+                params = inversion_driver.params_class(
+                    ifile, ga_group=group
+                )  # pylint: disable=W0212
+                driver = inversion_driver(params)
+
+                if physical_property is None:
+                    physical_property = params.PHYSICAL_PROPERTY
+                elif params.PHYSICAL_PROPERTY != physical_property:
+                    raise ValueError(
+                        "All physical properties must be the same. "
+                        f"Provided SimPEG groups for {physical_property} and {params.PHYSICAL_PROPERTY}."
+                    )
+
+                group.parent = self.params.ga_group
+                drivers.append(driver)
+
+            self.params.PHYSICAL_PROPERTY = physical_property
+            self._drivers = drivers
+
         return self._drivers
 
-    def get_local_actives(self, driver):
-        in_local = driver.inversion_mesh.mesh._get_containing_cell_indexes(
+    def get_local_actives(self, driver: InversionDriver):
+        """Get all local active cells within the global mesh for a given driver."""
+
+        in_local = driver.inversion_mesh.mesh.get_containing_cell_indexes(
             self.inversion_mesh.mesh.gridCC
         )
-
-        if np.any(
-            self.inversion_mesh.mesh.cell_levels_by_index(np.arange(self.inversion_mesh.mesh.nC)) >
-            driver.inversion_mesh.mesh.cell_levels_by_index(in_local)
-        ):
-            raise UserWarning(f"Sub-mesh used by {driver} has smaller cells than the inversion mesh.")
-
-        return driver.models.active_cells[in_local]
+        local_actives = driver.inversion_topography.active_cells(
+            driver.inversion_mesh, driver.inversion_data
+        )
+        return local_actives[in_local]
 
     def initialize(self):
         """Generate sub drivers."""
-        drivers = []
-        physical_property = None
-        global_actives = None
 
-        # Create sub-drivers and add re-projection to the global mesh
-        for group in [self.params.group_a, self.params.group_b, self.params.group_c]:
-            if group is None:
-                continue
+        self.validate_create_mesh()
 
-            ifile = InputFile(ui_json=self.params.group_a.options)
-            mod_name, class_name = DRIVER_MAP.get(ifile.data["inversion_type"])
-            module = __import__(mod_name, fromlist=[class_name])
-            inversion_driver = getattr(module, class_name)
-            params = inversion_driver._params_class(ifile, ga_group=group)  # pylint: disable=W0212
-            driver = inversion_driver(params)
-            group.parent = self.params.ga_group
+        # # Add re-projection to the global mesh
+        global_actives = np.zeros(self.inversion_mesh.mesh.nC, dtype=bool)
+        for driver in self.drivers:
             local_actives = self.get_local_actives(driver)
-
-            if physical_property is None:
-                physical_property = params.PHYSICAL_PROPERTY
-                global_actives = local_actives
-            elif params.PHYSICAL_PROPERTY != physical_property:
-                raise ValueError(
-                    "All physical properties must be the same. "
-                    f"Provided SimPEG groups for {physical_property} and {params.PHYSICAL_PROPERTY}."
-                )
-
             global_actives |= local_actives
-            drivers.append(driver)
 
-        # Add re-projection to the global mesh
+        self.models.active_cells = global_actives[self.inversion_mesh.permutation]
 
-        for driver in drivers:
+        for driver in self.drivers:
+            projection = maps.TileMap(
+                self.inversion_mesh.mesh,
+                global_actives,
+                driver.inversion_mesh.mesh,
+                enforce_active=True,
+            )
+            driver.models.active_cells = projection.local_active[
+                driver.inversion_mesh.permutation
+            ]
+
             for func in driver.data_misfit.objfcts:
-                projection = maps.TileMap(
-                    self.inversion_mesh.mesh, global_actives, driver.inversion_mesh.mesh, enforce_active=True
-                )
                 func.model_map = func.model_map * projection
 
-        self.models.active_cells = global_actives
-        self.params.PHYSICAL_PROPERTY = physical_property
-        self._drivers = drivers
+        #
 
     @property
     def inversion_data(self):
@@ -138,6 +158,49 @@ class JointSingleDriver(InversionDriver):
             )
 
         return self._inverse_problem
+
+    def validate_create_mesh(self):
+        """Function to validate and create the inversion mesh."""
+
+        if self.params.mesh is None:
+            print("Creating a global mesh from sub-meshes parameters.")
+            tree = create_octree_from_octrees(
+                [driver.inversion_mesh.mesh for driver in self.drivers]
+            )
+            self.params.mesh = treemesh_2_octree(self.workspace, tree)
+
+        cell_size = []
+        for driver in self.drivers:
+            attributes = get_octree_attributes(driver.params.mesh)
+
+            if cell_size and not cell_size == attributes["cell_size"]:
+                raise ValueError(
+                    f"Cell size mismatch in dimension {cell_size} != {attributes['cell_size']}"
+                )
+            else:
+                cell_size = attributes["cell_size"]
+
+            origin = driver.inversion_mesh.mesh.origin
+            shift = np.zeros(3)
+            for dim in range(self.inversion_mesh.mesh.dim):
+                nodal = self.inversion_mesh.mesh.origin[dim] + np.cumsum(
+                    np.r_[0, self.inversion_mesh.mesh.h[dim]]
+                )
+
+                shift[dim] = (
+                    nodal[
+                        np.searchsorted(nodal, driver.inversion_mesh.mesh.origin[dim])
+                    ]
+                    - origin[dim]
+                )
+
+            if np.any(shift != 0.0):
+                warn(
+                    f"Shifting {driver} mesh origin by {shift} m to match inversion mesh."
+                )
+                driver.inversion_mesh.mesh.origin = (
+                    driver.inversion_mesh.mesh.origin + np.hstack(origin)
+                )
 
     def run(self):
         """Run inversion from params"""

@@ -23,6 +23,11 @@ class BaseDriver(ABC):
     def __init__(self, params: BaseParams):
         self.params = params
 
+    @property
+    def params_class(self):
+        """Default parameter class."""
+        return self._params_class
+
     @abstractmethod
     def run(self):
         """Run the application."""

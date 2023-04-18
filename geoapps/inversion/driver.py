@@ -174,14 +174,7 @@ class InversionDriver(BaseDriver):
         """Inversion models"""
         if getattr(self, "_models", None) is None:
             with fetch_active_workspace(self.workspace, mode="r+"):
-                self._models = InversionModelCollection(
-                    self.workspace, self.params, self.inversion_mesh
-                )
-                # Build active cells array and reduce models active set
-                if self.inversion_mesh is not None and self.inversion_data is not None:
-                    self._models.active_cells = self.inversion_topography.active_cells(
-                        self.inversion_mesh, self.inversion_data
-                    )
+                self._models = InversionModelCollection(self)
 
         return self._models
 

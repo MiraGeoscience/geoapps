@@ -109,9 +109,6 @@ class InversionTopography(InversionLocations):
             )
             active_cells = active_cells[np.argsort(mesh.permutation)]
 
-        ac_model = active_cells[mesh.permutation].astype("float64")
-        mesh.entity.add_data({"active_cells": {"values": ac_model}})
-
         return active_cells
 
     def get_locations(self, obj: Entity) -> np.ndarray:

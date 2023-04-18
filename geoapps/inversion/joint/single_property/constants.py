@@ -69,7 +69,6 @@ inversion_defaults = {
     "every_iteration_bool": False,
     "parallelized": True,
     "n_cpu": None,
-    "tile_spatial": 1,
     "store_sensitivities": "ram",
     "max_ram": None,
     "max_chunk_size": 128,
@@ -104,7 +103,6 @@ forward_defaults = {
     "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
-    "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": "JointForward",
@@ -182,6 +180,7 @@ default_ui_json = {
         "value": "",
     },
     "out_group": {"label": "Results group name", "value": "JointInversion"},
+    "tile_spatial": None,
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)

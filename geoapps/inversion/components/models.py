@@ -97,14 +97,9 @@ class InversionModelCollection:
 
         self.edit_ndv_model(active_cells)
         self.remove_air(active_cells)
-
-        ac_model = active_cells[self.driver.inversion_mesh.permutation].astype(
-            "float64"
-        )
         self.driver.inversion_mesh.entity.add_data(
-            {"active_cells": {"values": ac_model}}
+            {"active_cells": {"values": active_cells.astype(int)}}
         )
-
         self._active_cells = active_cells
 
     @property
