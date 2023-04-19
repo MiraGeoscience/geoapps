@@ -17,7 +17,8 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Time Domain Electromagnetic Inversion",
+    "title": "Time-domain EM (TEM) Inversion",
+    "icon": "surveyairborneem",
     "inversion_type": "tdem",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -98,7 +99,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Time Domain Electromagnetic Forward",
+    "title": "Time-domain EM (TEM) Forward",
+    "icon": "surveyairborneem",
     "inversion_type": "tdem",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -159,6 +161,7 @@ forward_ui_json = {
         "label": "Object",
         "meshType": [
             "{19730589-fd28-4649-9de0-ad47249d9aba}",
+            "{deebe11a-b57b-4a03-99d6-8f27b25eb2a8}",
             "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
         ],
         "value": None,
@@ -166,7 +169,7 @@ forward_ui_json = {
     "z_channel_bool": {
         "group": "Survey",
         "main": True,
-        "label": "Z",
+        "label": "Z component",
         "value": False,
     },
     "z_channel": {
@@ -196,7 +199,7 @@ forward_ui_json = {
     "x_channel_bool": {
         "group": "Survey",
         "main": True,
-        "label": "X",
+        "label": "X component",
         "value": False,
     },
     "x_channel": {
@@ -226,7 +229,7 @@ forward_ui_json = {
     "y_channel_bool": {
         "group": "Survey",
         "main": True,
-        "label": "Y",
+        "label": "Y component",
         "value": False,
     },
     "y_channel": {
@@ -277,6 +280,7 @@ forward_ui_json = {
 
 default_ui_json = {
     "title": "Time Domain Electromagnetic Inversion",
+    "icon": "surveyairborneem",
     "inversion_type": "tdem",
     "data_object": {
         "main": True,
@@ -284,6 +288,7 @@ default_ui_json = {
         "label": "Object",
         "meshType": [
             "{19730589-fd28-4649-9de0-ad47249d9aba}",
+            "{deebe11a-b57b-4a03-99d6-8f27b25eb2a8}",
             "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
         ],
         "value": None,
@@ -291,7 +296,7 @@ default_ui_json = {
     "z_channel_bool": {
         "group": "Data",
         "main": True,
-        "label": "Z",
+        "label": "Z component",
         "value": False,
     },
     "z_channel": {
@@ -321,7 +326,7 @@ default_ui_json = {
     "x_channel_bool": {
         "group": "Data",
         "main": True,
-        "label": "X",
+        "label": "X component",
         "value": False,
     },
     "x_channel": {
@@ -351,7 +356,7 @@ default_ui_json = {
     "y_channel_bool": {
         "group": "Data",
         "main": True,
-        "label": "Y",
+        "label": "Y component",
         "value": False,
     },
     "y_channel": {
