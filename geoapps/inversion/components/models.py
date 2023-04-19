@@ -95,10 +95,16 @@ class InversionModelCollection:
         if not isinstance(active_cells, np.ndarray) or active_cells.dtype != bool:
             raise ValueError("active_cells must be a boolean numpy array.")
 
-        self.edit_ndv_model(active_cells)
+        self.edit_ndv_model(active_cells[self.driver.inversion_mesh.permutation])
         self.remove_air(active_cells)
         self.driver.inversion_mesh.entity.add_data(
-            {"active_cells": {"values": active_cells.astype(int)}}
+            {
+                "active_cells": {
+                    "values": active_cells[
+                        self.driver.inversion_mesh.permutation
+                    ].astype(int)
+                }
+            }
         )
         self._active_cells = active_cells
 

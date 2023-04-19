@@ -514,7 +514,7 @@ def create_octree_from_octrees(meshes: list[Octree | TreeMesh]) -> TreeMesh:
     cells = []
     for ind in range(3):
         extent = limits[1, ind] - limits[0, ind]
-        maxLevel = int(np.log2(extent / cell_size[ind])) + 1
+        maxLevel = int(np.ceil(np.log2(extent / cell_size[ind])))
         cells += [np.ones(2**maxLevel) * cell_size[ind]]
 
     # Define the mesh and origin
@@ -552,14 +552,12 @@ def get_octree_attributes(mesh: Octree | TreeMesh) -> dict[str, list]:
     cell_size = []
     cell_count = []
     dimensions = []
-    origin = []
     if isinstance(mesh, TreeMesh):
         for dim in range(3):
             cell_size.append(mesh.h[dim][0])
             cell_count.append(mesh.h[dim].size)
             dimensions.append(mesh.h[dim].sum())
-        extent = np.r_[mesh.origin, mesh.origin + np.r_[dimensions]]
-        origin.append(mesh.origin)
+        origin = mesh.origin
     else:
         with fetch_active_workspace(mesh.workspace):
             for dim in "uvw":
@@ -568,8 +566,9 @@ def get_octree_attributes(mesh: Octree | TreeMesh) -> dict[str, list]:
                 dimensions.append(
                     getattr(mesh, f"{dim}_cell_size") * getattr(mesh, f"{dim}_count")
                 )
-            extent = mesh.extent.flatten()
-            origin.append(np.r_[mesh.origin["x"], mesh.origin["y"], mesh.origin["z"]])
+            origin = np.r_[mesh.origin["x"], mesh.origin["y"], mesh.origin["z"]]
+
+    extent = np.r_[origin, origin + np.r_[dimensions]]
 
     return {
         "cell_count": cell_count,

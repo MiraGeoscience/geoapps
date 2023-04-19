@@ -88,6 +88,8 @@ def setup_inversion_workspace(
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
+    x_limits=(-100.0, 100.0),
+    y_limits=(-100.0, 100.0),
     padding_distance=100,
     drape_height=5.0,
     inversion_type="other",
@@ -123,8 +125,8 @@ def setup_inversion_workspace(
         if (inversion_type in ["dcip", "dcip_2d"]) & (n_electrodes < 4)
         else n_electrodes
     )
-    xr = np.linspace(-100.0, 100.0, n_electrodes)
-    yr = np.linspace(-100.0, 100.0, n_lines)
+    xr = np.linspace(x_limits[0], x_limits[1], int(n_electrodes))
+    yr = np.linspace(y_limits[0], y_limits[1], int(n_lines))
     X, Y = np.meshgrid(xr, yr)
     if flatten:
         Z = np.ones_like(X) * drape_height

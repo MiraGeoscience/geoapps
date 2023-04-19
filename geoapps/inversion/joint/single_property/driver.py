@@ -69,9 +69,9 @@ class JointSingleDriver(InversionDriver):
                 mod_name, class_name = DRIVER_MAP.get(ifile.data["inversion_type"])
                 module = __import__(mod_name, fromlist=[class_name])
                 inversion_driver = getattr(module, class_name)
-                params = inversion_driver.params_class(
+                params = inversion_driver._params_class(  # pylint: disable=W0212
                     ifile, ga_group=group
-                )  # pylint: disable=W0212
+                )
                 driver = inversion_driver(params)
 
                 if physical_property is None:
@@ -93,13 +93,17 @@ class JointSingleDriver(InversionDriver):
     def get_local_actives(self, driver: InversionDriver):
         """Get all local active cells within the global mesh for a given driver."""
 
-        in_local = driver.inversion_mesh.mesh.get_containing_cell_indexes(
+        in_local = driver.inversion_mesh.mesh._get_containing_cell_indexes(  # pylint: disable=W0212
             self.inversion_mesh.mesh.gridCC
         )
         local_actives = driver.inversion_topography.active_cells(
             driver.inversion_mesh, driver.inversion_data
         )
-        return local_actives[in_local]
+        global_active = local_actives[in_local]
+        global_active[
+            ~driver.inversion_mesh.mesh.isInside(self.inversion_mesh.mesh.gridCC)
+        ] = False
+        return global_active
 
     def initialize(self):
         """Generate sub drivers."""
@@ -112,7 +116,7 @@ class JointSingleDriver(InversionDriver):
             local_actives = self.get_local_actives(driver)
             global_actives |= local_actives
 
-        self.models.active_cells = global_actives[self.inversion_mesh.permutation]
+        self.models.active_cells = global_actives
 
         for driver in self.drivers:
             projection = maps.TileMap(
@@ -121,13 +125,13 @@ class JointSingleDriver(InversionDriver):
                 driver.inversion_mesh.mesh,
                 enforce_active=True,
             )
-            driver.models.active_cells = projection.local_active[
-                driver.inversion_mesh.permutation
-            ]
+            driver.models.active_cells = projection.local_active
+            driver.data_misfit.model_map = projection
 
             for func in driver.data_misfit.objfcts:
                 func.model_map = func.model_map * projection
 
+        self.validate_create_models()
         #
 
     @property
@@ -200,6 +204,23 @@ class JointSingleDriver(InversionDriver):
                 )
                 driver.inversion_mesh.mesh.origin = (
                     driver.inversion_mesh.mesh.origin + np.hstack(origin)
+                )
+
+    def validate_create_models(self):
+        """Check if all models were provided."""
+        child_driver = self.drivers[0]
+        for model_type in self.models.model_types:
+            model_class = getattr(self.models, model_type)
+            if (
+                model_class is None
+                and getattr(child_driver.models, model_type) is not None
+            ):
+                model_local_values = getattr(child_driver.models, model_type)
+                setattr(
+                    getattr(self.models, f"_{model_type}"),
+                    "model",
+                    child_driver.data_misfit.model_map.projection.T
+                    * model_local_values,
                 )
 
     def run(self):

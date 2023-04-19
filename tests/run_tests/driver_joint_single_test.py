@@ -17,8 +17,6 @@ from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
-from SimPEG.utils import model_builder
-
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
@@ -31,17 +29,18 @@ target_run = {
 
 def test_joint_single_property_fwr_run(
     tmp_path,
-    n_grid_points=2,
+    n_grid_points=4,
     refinement=(2,),
 ):
     np.random.seed(0)
-    # Run the forward
+    # Create local problem A
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.75,
-        n_electrodes=n_grid_points,
-        n_lines=n_grid_points,
+        n_electrodes=n_grid_points / 2,
+        x_limits=[25.0, 100.0],
+        n_lines=n_grid_points / 2,
         refinement=refinement,
         flatten=False,
     )
@@ -59,13 +58,14 @@ def test_joint_single_property_fwr_run(
 
     fwr_driver_a = GravityDriver(params)
 
-    geoh5, _, model, survey, topography = setup_inversion_workspace(
+    # Create local problem B
+    _, _, model, survey, _ = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.75,
-        center=[200.0, 200.0, 0.0],
-        n_electrodes=n_grid_points,
-        n_lines=n_grid_points,
+        x_limits=[-100, -25.0],
+        n_electrodes=n_grid_points / 2,
+        n_lines=n_grid_points / 2,
         refinement=refinement,
         flatten=False,
         geoh5=geoh5,
@@ -88,22 +88,9 @@ def test_joint_single_property_fwr_run(
         topography_object=topography.uid,
         group_a=fwr_driver_a.params.ga_group,
         group_b=fwr_driver_b.params.ga_group,
-        starting_model=0.0,
     )
 
     fwr_driver = JointSingleDriver(joint_params)
-
-    model = model_builder.addBlock(
-        fwr_driver.inversion_mesh.mesh.cell_centers,
-        np.zeros(fwr_driver.inversion_mesh.mesh.nC),
-        np.r_[80, 80, -40],
-        np.r_[120, 120, 0],
-        0.1,
-    )
-    fwr_driver.models._starting.model = model[
-        fwr_driver.models._starting.permute_2_treemesh(fwr_driver.models.active_cells)
-    ]
-    fwr_driver.inversion_mesh.entity.add_data({"starting_model_NEW": {"values": model[fwr_driver.inversion_mesh.mesh._ubc_order]}})
     fwr_driver.run()
     geoh5.close()
     return fwr_driver.models.starting
