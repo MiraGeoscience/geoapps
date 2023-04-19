@@ -18,7 +18,7 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetotellurics Inversion",
+    "title": "Magnetotellurics (MT) Inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -116,7 +116,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Magnetotellurics Forward",
+    "title": "Magnetotellurics (MT) Forward",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
