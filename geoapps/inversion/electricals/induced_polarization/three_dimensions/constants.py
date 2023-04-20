@@ -11,10 +11,12 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
+    "version": geoapps.__version__,
     "title": "Induced Polarization (IP) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
@@ -93,6 +95,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
+    "version": geoapps.__version__,
     "title": "Induced Polarization (IP) 3D Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
