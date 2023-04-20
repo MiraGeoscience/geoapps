@@ -18,7 +18,10 @@ from SimPEG.objective_function import ComboObjectiveFunction
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.inversion import DRIVER_MAP
 from geoapps.inversion.components import InversionMesh
-from geoapps.inversion.components.factories import SaveIterationGeoh5Factory
+from geoapps.inversion.components.factories import (
+    DirectivesFactory,
+    SaveIterationGeoh5Factory,
+)
 from geoapps.inversion.driver import InversionDriver
 from geoapps.utils.models import create_octree_from_octrees, get_octree_attributes
 
@@ -203,7 +206,7 @@ class JointSingleDriver(InversionDriver):
                     f"Shifting {driver} mesh origin by {shift} m to match inversion mesh."
                 )
                 driver.inversion_mesh.mesh.origin = (
-                    driver.inversion_mesh.mesh.origin + np.hstack(origin)
+                    driver.inversion_mesh.mesh.origin + np.hstack(shift)
                 )
 
     def validate_create_models(self):
@@ -222,6 +225,33 @@ class JointSingleDriver(InversionDriver):
                     child_driver.data_misfit.model_map.projection.T
                     * model_local_values,
                 )
+
+    @property
+    def directives(self):
+        if getattr(self, "_directives", None) is None and not self.params.forward_only:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                directives_list = []
+                for ind, driver in enumerate(self.drivers):
+                    driver_directives = DirectivesFactory(driver)
+                    save_data = driver_directives.save_iteration_data_directive
+                    save_data.joint_index = ind
+                    directives_list.append(save_data)
+                    for directive in [
+                        "save_iteration_apparent_resistivity_directive",
+                        "vector_inversion_directive",
+                    ]:
+                        if getattr(driver_directives, directive) is not None:
+                            directives_list.append(
+                                getattr(driver_directives, directive)
+                            )
+
+                global_directives = DirectivesFactory(self)
+                self._directives = (
+                    global_directives.inversion_directives
+                    + [global_directives.save_iteration_model_directive]
+                    + directives_list
+                )
+        return self._directives
 
     def run(self):
         """Run inversion from params"""

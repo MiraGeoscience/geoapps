@@ -13,8 +13,8 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "SimPEG Joint Inversion - Single Property",
-    "inversion_type": "joint_single_property",
+    "title": "SimPEG Joint Surveys Inversion",
+    "inversion_type": "joint surveys",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,
@@ -83,7 +83,7 @@ inversion_defaults = {
 }
 forward_defaults = {
     "title": "Joint Forward",
-    "inversion_type": "joint_single_property",
+    "inversion_type": "joint surveys",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
     "topography_object": None,
@@ -119,8 +119,8 @@ forward_ui_json = {}
 inversion_ui_json = {}
 
 default_ui_json = {
-    "title": "SimPEG Joint Single-Property Inversion",
-    "inversion_type": "joint_single_property",
+    "title": "SimPEG Joint Surveys Inversion",
+    "inversion_type": "joint surveys",
     "mesh": {
         "group": "Mesh and Models",
         "main": True,
@@ -192,7 +192,7 @@ default_ui_json = {
         "enabled": False,
         "value": "",
     },
-    "out_group": {"label": "Results group name", "value": "JointInversion"},
+    "out_group": {"label": "Results group name", "value": "Joint Surveys Inversion"},
     "tile_spatial": None,
 }
 
@@ -204,7 +204,7 @@ default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {
     "inversion_type": {
         "required": True,
-        "values": ["joint_single_property"],
+        "values": ["joint surveys"],
     },
 }
 
