@@ -30,13 +30,6 @@ class MagneticScalarParams(InversionBaseParams):
     Parameter class for magnetics->susceptibility inversion.
     """
 
-    _directive_list = [
-        "UpdateSensitivityWeights",
-        "Update_IRLS",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
     PHYSICAL_PROPERTY = "susceptibility"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):

@@ -25,7 +25,6 @@ class InversionBaseParams(BaseParams):
     Base parameter class for geophysical->property inversion.
     """
 
-    _directive_list = None
     _default_ui_json = None
     _forward_defaults = None
     _forward_ui_json = None
@@ -223,11 +222,6 @@ class InversionBaseParams(BaseParams):
             self.y_norm,
             self.z_norm,
         ]
-
-    @property
-    def directive_list(self):
-        """List of directives"""
-        return self._directive_list
 
     @property
     def forward_defaults(self):

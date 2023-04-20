@@ -26,13 +26,6 @@ class GravityParams(InversionBaseParams):
     Parameter class for gravity->density inversion.
     """
 
-    _directive_list = [
-        "UpdateSensitivityWeights",
-        "Update_IRLS",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
     PHYSICAL_PROPERTY = "density"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):

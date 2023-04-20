@@ -23,20 +23,6 @@ if TYPE_CHECKING:
 
 
 class DirectivesFactory:
-    _directive_2_attr = {
-        "VectorInversion": ["vector_inversion_directive"],
-        "Update_IRLS": ["update_irls_directive"],
-        "UpdateSensitivityWeights": ["update_sensitivity_weights_directive"],
-        "BetaEstimate_ByEig": ["beta_estimate_by_eigenvalues_directive"],
-        "UpdatePreconditioner": ["update_preconditioner_directive"],
-        "SaveIterationsGeoH5": [
-            "save_iteration_model_directive",
-            "save_iteration_data_directive",
-            "save_iteration_residual_directive",
-            "save_iteration_apparent_resistivity_directive",
-        ],
-    }
-
     def __init__(self, driver: InversionDriver):
         self.driver = driver
         self.params = driver.params
@@ -52,15 +38,120 @@ class DirectivesFactory:
         self._save_iteration_apparent_resistivity_directive = None
 
     @property
-    def vector_inversion_directive(self):
-        """Directive to update vector model."""
-        if self._vector_inversion_directive is None:
-            self._vector_inversion_directive = directives.VectorInversion(
-                [local.simulation for local in self.driver.data_misfit.objfcts],
-                self.driver.regularization,
-                chifact_target=self.driver.params.chi_factor * 2,
+    def beta_estimate_by_eigenvalues_directive(self):
+        """"""
+        if (
+            self.params.initial_beta is None
+            and self._beta_estimate_by_eigenvalues_directive is None
+        ):
+            self._beta_estimate_by_eigenvalues_directive = (
+                directives.BetaEstimate_ByEig(
+                    beta0_ratio=self.params.initial_beta_ratio, method="ratio"
+                )
             )
-        return self._vector_inversion_directive
+
+        return self._beta_estimate_by_eigenvalues_directive
+
+    @property
+    def directive_list(self):
+        """List of directives to be used in inversion."""
+
+        # print(f"Generated directive list: {self.directive_list}")
+        return self.inversion_directives + self.save_directives
+
+    @property
+    def inversion_directives(self):
+        """List of directives that control the inverse."""
+        directives_list = []
+        for directive in [
+            "vector_inversion_directive",
+            "update_irls_directive",
+            "update_sensitivity_weights_directive",
+            "beta_estimate_by_eigenvalues_directive",
+            "update_preconditioner_directive",
+        ]:
+            if getattr(self, directive) is not None:
+                directives_list.append(getattr(self, directive))
+        return directives_list
+
+    @property
+    def save_directives(self):
+        """List of directives to save iteration data and models."""
+        directives_list = []
+        for directive in [
+            "save_iteration_model_directive",
+            "save_iteration_data_directive",
+            "save_iteration_residual_directive",
+            "save_iteration_apparent_resistivity_directive",
+        ]:
+            if getattr(self, directive) is not None:
+                directives_list.append(getattr(self, directive))
+        return directives_list
+
+    @property
+    def save_iteration_apparent_resistivity_directive(self):
+        """"""
+        if (
+            self._save_iteration_apparent_resistivity_directive is None
+            and "direct current" in self.factory_type
+        ):
+            self._save_iteration_apparent_resistivity_directive = (
+                SaveIterationGeoh5Factory(self.params).build(
+                    inversion_object=self.driver.inversion_data,
+                    active_cells=self.driver.models.active_cells,
+                    sorting=np.argsort(np.hstack(self.driver.sorting)),
+                    name="Apparent Resistivity",
+                )
+            )
+        return self._save_iteration_apparent_resistivity_directive
+
+    @property
+    def save_iteration_data_directive(self):
+        """"""
+        if self._save_iteration_data_directive is None:
+            self._save_iteration_data_directive = SaveIterationGeoh5Factory(
+                self.params
+            ).build(
+                inversion_object=self.driver.inversion_data,
+                active_cells=self.driver.models.active_cells,
+                sorting=np.argsort(np.hstack(self.driver.sorting)),
+                ordering=self.driver.ordering,
+                global_misfit=self.driver.data_misfit,
+                name="Data",
+            )
+        return self._save_iteration_data_directive
+
+    @property
+    def save_iteration_model_directive(self):
+        """"""
+        if self._save_iteration_model_directive is None:
+            self._save_iteration_model_directive = SaveIterationGeoh5Factory(
+                self.params
+            ).build(
+                inversion_object=self.driver.inversion_mesh,
+                active_cells=self.driver.models.active_cells,
+                save_objective_function=True,
+                name="Model",
+            )
+        return self._save_iteration_model_directive
+
+    @property
+    def save_iteration_residual_directive(self):
+        """"""
+        if (
+            self._save_iteration_residual_directive is None
+            and self.factory_type not in ["tdem"]
+        ):
+            self._save_iteration_residual_directive = SaveIterationGeoh5Factory(
+                self.params
+            ).build(
+                inversion_object=self.driver.inversion_data,
+                active_cells=self.driver.models.active_cells,
+                sorting=np.argsort(np.hstack(self.driver.sorting)),
+                ordering=self.driver.ordering,
+                name="Residual",
+            )
+        return self._save_iteration_residual_directive
 
     @property
     def update_irls_directive(self):
@@ -86,6 +177,14 @@ class DirectivesFactory:
         return self._update_irls_directive
 
     @property
+    def update_preconditioner_directive(self):
+        """"""
+        if self._update_preconditioner_directive is None:
+            self._update_preconditioner_directive = directives.UpdatePreconditioner()
+
+        return self._update_preconditioner_directive
+
+    @property
     def update_sensitivity_weights_directive(self):
         if self._update_sensitivity_weights_directive is None:
             self._update_sensitivity_weights_directive = (
@@ -101,105 +200,15 @@ class DirectivesFactory:
         return self._update_sensitivity_weights_directive
 
     @property
-    def beta_estimate_by_eigenvalues_directive(self):
-        """"""
-        if (
-            self.params.initial_beta is None
-            and self._beta_estimate_by_eigenvalues_directive is None
-        ):
-            self._beta_estimate_by_eigenvalues_directive = (
-                directives.BetaEstimate_ByEig(
-                    beta0_ratio=self.params.initial_beta_ratio, method="ratio"
-                )
+    def vector_inversion_directive(self):
+        """Directive to update vector model."""
+        if self._vector_inversion_directive is None and "vector" in self.factory_type:
+            self._vector_inversion_directive = directives.VectorInversion(
+                [local.simulation for local in self.driver.data_misfit.objfcts],
+                self.driver.regularization,
+                chifact_target=self.driver.params.chi_factor * 2,
             )
-
-        return self._beta_estimate_by_eigenvalues_directive
-
-    @property
-    def update_preconditioner_directive(self):
-        """"""
-        if self._update_preconditioner_directive is None:
-            self._update_preconditioner_directive = directives.UpdatePreconditioner()
-
-        return self._update_preconditioner_directive
-
-    @property
-    def save_iteration_model_directive(self):
-        """"""
-        if self._save_iteration_model_directive is None:
-            self._save_iteration_model_directive = SaveIterationGeoh5Factory(
-                self.params
-            ).build(
-                inversion_object=self.driver.inversion_mesh,
-                active_cells=self.driver.models.active_cells,
-                name="Model",
-            )
-        return self._save_iteration_model_directive
-
-    @property
-    def save_iteration_data_directive(self):
-        """"""
-        if self._save_iteration_data_directive is None:
-            self._save_iteration_data_directive = SaveIterationGeoh5Factory(
-                self.params
-            ).build(
-                inversion_object=self.driver.inversion_data,
-                active_cells=self.driver.models.active_cells,
-                sorting=np.argsort(np.hstack(self.driver.sorting)),
-                ordering=self.driver.ordering,
-                save_objective_function=True,
-                global_misfit=self.driver.data_misfit,
-                name="Data",
-            )
-        return self._save_iteration_data_directive
-
-    @property
-    def save_iteration_residual_directive(self):
-        """"""
-        if (
-            self._save_iteration_residual_directive is None
-            and self.factory_type not in ["tdem"]
-        ):
-            self._save_iteration_residual_directive = SaveIterationGeoh5Factory(
-                self.params
-            ).build(
-                inversion_object=self.driver.inversion_data,
-                active_cells=self.driver.models.active_cells,
-                sorting=np.argsort(np.hstack(self.driver.sorting)),
-                ordering=self.driver.ordering,
-                name="Residual",
-            )
-        return self._save_iteration_residual_directive
-
-    @property
-    def save_iteration_apparent_resistivity_directive(self):
-        """"""
-        if (
-            self._save_iteration_apparent_resistivity_directive is None
-            and "direct current" in self.factory_type
-        ):
-            self._save_iteration_apparent_resistivity_directive = (
-                SaveIterationGeoh5Factory(self.params).build(
-                    inversion_object=self.driver.inversion_data,
-                    active_cells=self.driver.models.active_cells,
-                    sorting=np.argsort(np.hstack(self.driver.sorting)),
-                    name="Apparent Resistivity",
-                )
-            )
-        return self._save_iteration_apparent_resistivity_directive
-
-    @property
-    def directive_list(self):
-        """List of directives to be used in inversion."""
-        directive_list = []
-        for directive_name in self.params.directive_list:
-            for attr in self._directive_2_attr[directive_name]:
-                directive = getattr(self, attr)
-                if directive is not None:
-                    directive_list.append(directive)
-
-        # print(f"Generated directive list: {self.directive_list}")
-        return directive_list
+        return self._vector_inversion_directive
 
 
 class SaveIterationGeoh5Factory(SimPEGFactory):

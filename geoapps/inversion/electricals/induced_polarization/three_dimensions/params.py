@@ -31,13 +31,6 @@ class InducedPolarization3DParams(InversionBaseParams):
     Parameter class for electrical-induced polarization (IP) inversion.
     """
 
-    _directive_list = [
-        "UpdateSensitivityWeights",
-        "Update_IRLS",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
     PHYSICAL_PROPERTY = "chargeability"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):

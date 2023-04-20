@@ -26,13 +26,6 @@ class DirectCurrent2DParams(InversionBaseParams):
     Parameter class for electrical->conductivity inversion.
     """
 
-    _directive_list = [
-        "UpdateSensitivityWeights",
-        "Update_IRLS",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
     PHYSICAL_PROPERTY = "conductivity"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
