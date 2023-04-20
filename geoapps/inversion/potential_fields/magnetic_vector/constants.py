@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
@@ -18,6 +19,7 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
+    "version": geoapps.__version__,
     "title": "Magnetic Vector (MVI) Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
@@ -129,6 +131,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
+    "version": geoapps.__version__,
     "title": "Magnetic Vector (MVI) Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornemagnetics",

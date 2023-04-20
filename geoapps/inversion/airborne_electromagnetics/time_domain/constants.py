@@ -11,12 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.electromagnetics.airborne_tem import AirborneTEMReceivers
 
+import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 ################# defaults ##################
 
 inversion_defaults = {
+    "version": geoapps.__version__,
     "title": "Time-domain EM (TEM) Inversion",
     "icon": "surveyairborneem",
     "inversion_type": "tdem",
@@ -99,6 +101,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
+    "version": geoapps.__version__,
     "title": "Time-domain EM (TEM) Forward",
     "icon": "surveyairborneem",
     "inversion_type": "tdem",

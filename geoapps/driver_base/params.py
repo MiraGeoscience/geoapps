@@ -47,6 +47,7 @@ class BaseParams:
     _validations = None
     _validation_options = None
     _validator: InputValidation = None
+    _version = geoapps.__version__
     validate = True
 
     def __init__(
@@ -82,12 +83,20 @@ class BaseParams:
                 validation_options={"disabled": True},
             )
         self.update(self.input_file.data, validate=False)
-        self.param_names = list(self.input_file.data.keys())
+        self.param_names = list(self.input_file.data)
         self.input_file.validation_options["disabled"] = False
 
         # Apply user input
         if any(kwargs):
             self.update(kwargs)
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, val):
+        self._version = val
 
     @property
     def defaults(self):
@@ -175,6 +184,7 @@ class BaseParams:
         params_dict = {
             k: getattr(self, k) for k in self.param_names if hasattr(self, k)
         }
+        params_dict["version"] = self._version
         if ui_json_format:
             self.input_file.data = params_dict
             return self.input_file.ui_json
@@ -391,7 +401,5 @@ class BaseParams:
             self.input_file.validation_options["disabled"] = True
 
         self.input_file.data = self.to_dict()
-        self.input_file.ui_json["version"] = geoapps.__version__
-        self.input_file.data["version"] = geoapps.__version__
 
         return self.input_file.write_ui_json(name=name, path=path)
