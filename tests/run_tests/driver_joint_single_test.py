@@ -8,6 +8,7 @@
 import os
 
 import numpy as np
+from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.joint.single_property import JointSingleParams
@@ -103,27 +104,41 @@ def test_joint_single_property_inv_run(
 ):
     workpath = os.path.join(tmp_path, "inversion_test.geoh5")
     if pytest:
-        workpath = str(tmp_path / "../test_gravity_fwr_run0/inversion_test.geoh5")
+        workpath = str(
+            tmp_path / "../test_joint_single_property_fwr0/inversion_test.geoh5"
+        )
 
     with Workspace(workpath) as geoh5:
-        gz = geoh5.get_entity("Iteration_0_gz")[0]
-        orig_gz = gz.values.copy()
-        mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
+        drivers = []
+        for group in geoh5.get_entity("GravityForward"):
+            survey = geoh5.get_entity(group.options["data_object"]["value"])[0]
+            for child in group.children:
+                if isinstance(child, Octree):
+                    mesh = child
+                else:
+                    survey = child
 
-        # Turn some values to nan
-        values = gz.values.copy()
-        values[0] = np.nan
-        gz.values = values
+            gz = survey.get_data("Iteration_0_gz")[0]
+            params = GravityParams(
+                geoh5=geoh5,
+                mesh=mesh.uid,
+                topography_object=topography.uid,
+                data_object=survey.uid,
+                gz_channel=gz.uid,
+                gz_uncertainty=1e-3,
+                starting_model=0.0,
+            )
+            drivers.append(GravityDriver(params))
 
         # Run the inverse
         np.random.seed(0)
-        params = GravityParams(
+        joint_params = JointSingleParams(
             geoh5=geoh5,
-            mesh=mesh.uid,
             topography_object=topography.uid,
-            resolution=0.0,
-            data_object=gz.parent.uid,
+            mesh=geoh5.get_entity("Octree")[0].uid,
+            group_a=drivers[0].params.ga_group,
+            group_b=drivers[1].params.ga_group,
             starting_model=1e-4,
             reference_model=0.0,
             s_norm=0.0,
@@ -131,19 +146,15 @@ def test_joint_single_property_inv_run(
             y_norm=0.0,
             z_norm=0.0,
             gradient_type="components",
-            gz_channel_bool=True,
-            z_from_topo=False,
-            gz_channel=gz.uid,
-            gz_uncertainty=2e-3,
             lower_bound=0.0,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
             store_sensitivities="ram",
         )
-        params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = GravityDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = JointSingleDriver(joint_params)
+    driver.run()
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
