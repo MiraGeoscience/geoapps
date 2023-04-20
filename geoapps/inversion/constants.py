@@ -11,6 +11,8 @@ from uuid import UUID
 
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
+import geoapps
+
 default_ui_json = {
     "forward_only": False,
     "topography_object": {
@@ -517,6 +519,7 @@ default_ui_json = {
     "run_command_boolean": None,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "version": geoapps.__version__,
 }
 
 ######################## Validations ###########################
@@ -534,4 +537,9 @@ validations = {
     "norm_y": {"types": [int, float]},
     "norm_z": {"types": [int, float]},
     "distributed_workers": {"types": [str, type(None)]},
+    "version": {
+        "types": [
+            str,
+        ]
+    },
 }

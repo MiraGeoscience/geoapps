@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
@@ -18,6 +19,7 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
+    "version": geoapps.__version__,
     "title": "Magnetotellurics (MT) Inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
@@ -116,6 +118,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
+    "version": geoapps.__version__,
     "title": "Magnetotellurics (MT) Forward",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",

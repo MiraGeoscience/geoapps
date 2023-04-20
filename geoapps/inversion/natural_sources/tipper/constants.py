@@ -11,11 +11,13 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.electromagnetics.tipper import TipperReceivers
 
+import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 ################# defaults ##################
 
 inversion_defaults = {
+    "version": geoapps.__version__,
     "title": "Tipper Inversion",
     "icon": "surveyztem",
     "inversion_type": "tipper",
@@ -102,6 +104,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
+    "version": geoapps.__version__,
     "title": "Tipper Forward",
     "icon": "surveyztem",
     "inversion_type": "tipper",

@@ -17,10 +17,12 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
 from geoapps import assets_path
 from geoapps.utils.geophysical_systems import parameters
 
 defaults = {
+    "version": geoapps.__version__,
     "title": "Peak Finder Parameters",
     "geoh5": None,
     "tem_checkbox": False,
@@ -51,6 +53,7 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Peak Finder Parameters",
         "tem_checkbox": {
             "main": True,

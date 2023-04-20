@@ -11,11 +11,13 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
+    "version": geoapps.__version__,
     "title": "Direct Current (DC) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
@@ -93,6 +95,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
+    "version": geoapps.__version__,
     "title": "Direct Current (DC) 2D Forward",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
