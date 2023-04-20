@@ -107,15 +107,7 @@ class InversionDriver(BaseDriver):
     def directives(self):
         if getattr(self, "_directives", None) is None and not self.params.forward_only:
             with fetch_active_workspace(self.workspace, mode="r+"):
-                self._directives = DirectivesFactory(self.params).build(
-                    self.inversion_data,
-                    self.inversion_mesh,
-                    self.models.active_cells,
-                    self.data_misfit,
-                    np.argsort(np.hstack(self.sorting)),
-                    self.ordering,
-                    self.regularization,
-                )
+                self._directives = DirectivesFactory(self).directive_list
         return self._directives
 
     @property
@@ -247,17 +239,25 @@ class InversionDriver(BaseDriver):
         chi_start = (
             self.params.starting_chi_factor if has_chi_start else self.params.chi_factor
         )
+
+        if getattr(self, "drivers", None) is not None:  # joint problem
+            data_count = np.sum(
+                [len(d.inversion_data.survey.std) for d in getattr(self, "drivers")]
+            )
+        else:
+            data_count = len(self.inversion_data.survey.std)
+
         print(
             "Target Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
-                0.5 * self.params.chi_factor * len(self.inversion_data.survey.std),
-                len(self.inversion_data.survey.std),
+                0.5 * self.params.chi_factor * data_count,
+                data_count,
                 self.params.chi_factor,
             )
         )
         print(
             "IRLS Start Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
-                0.5 * chi_start * len(self.inversion_data.survey.std),
-                len(self.inversion_data.survey.std),
+                0.5 * chi_start * data_count,
+                data_count,
                 chi_start,
             )
         )
