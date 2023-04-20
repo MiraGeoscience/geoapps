@@ -398,7 +398,8 @@ class BaseParams:
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
 
-        self.input_file.validation_options.update(validation_options)
+        if validation_options is not None:
+            self.input_file.validation_options.update(validation_options)
         self.input_file.data = self.to_dict()
 
         return self.input_file.write_ui_json(name=name, path=path)

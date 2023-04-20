@@ -1310,7 +1310,7 @@ class Clustering(ScatterPlots):
                 new_params.write_input_file(
                     name=temp_geoh5.replace(".geoh5", ".ui.json"),
                     path=monitoring_directory,
-                    validate=False,
+                    validation_options={"disabled": True},
                 )
                 # Run driver.
                 self.driver.params = new_params
