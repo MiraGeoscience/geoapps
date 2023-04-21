@@ -1,12 +1,13 @@
 {
-    "title": "Magnetic Vector forward",
+    "version": "0.11.0-alpha.1",
+    "title": "Magnetic Vector (MVI) Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornemagnetics",
     "inversion_type": "magnetic vector",
     "geoh5": "",
     "forward_only": true,
     "inducing_field_strength": {
-        "min": 0.0,
+        "min": 0.1,
         "max": 100000.0,
         "precision": 2,
         "lineEdit": false,
@@ -26,8 +27,8 @@
         "value": 90.0
     },
     "inducing_field_declination": {
-        "min": -180,
-        "max": 180,
+        "min": -180.0,
+        "max": 180.0,
         "precision": 2,
         "lineEdit": false,
         "main": true,
@@ -40,10 +41,10 @@
         "group": "Topography",
         "label": "Topography",
         "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}"
         ],
         "value": ""
@@ -66,15 +67,16 @@
     },
     "data_object": {
         "main": true,
-        "group": "Data",
+        "group": "Survey",
         "label": "Object",
         "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}"
+            "{4b99204c-d133-4579-a916-a9c8b98cfccb}",
+            "{028e4905-cc97-4dab-b1bf-d76f58b501b5}"
         ],
         "value": ""
     },
@@ -119,67 +121,67 @@
     },
     "gps_receivers_offset": "",
     "tmi_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "TMI (nT)",
         "value": true
     },
     "bx_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Bx (nT)",
         "value": false
     },
     "by_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "By (nT)",
         "value": false
     },
     "bz_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Bz (nT)",
         "value": false
     },
     "bxx_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Bxx (nT/m)",
         "value": false
     },
     "bxy_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Bxy (nT/m)",
         "value": false
     },
     "bxz_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Bxz (nT/m)",
         "value": false
     },
     "byy_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Byy (nT/m)",
         "value": false
     },
     "byz_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Byz (nT/m)",
         "value": false
     },
     "bzz_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
         "label": "Bzz (nT/m)",
         "value": false
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "label": "Mesh",
         "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
@@ -188,7 +190,7 @@
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "isValue": true,
         "parent": "mesh",
@@ -202,13 +204,13 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "isValue": true,
         "optional": true,
         "enabled": false,
         "parent": "mesh",
-        "label": "Initial inclination (deg)",
+        "label": "Inclination (deg)",
         "property": "",
         "value": 0.0
     },
@@ -218,13 +220,13 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "isValue": true,
         "optional": true,
         "enabled": false,
         "parent": "mesh",
-        "label": "Initial declination (deg)",
+        "label": "Declination (deg)",
         "property": "",
         "value": 0.0
     },

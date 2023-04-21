@@ -251,6 +251,8 @@ default_ui_json = {
         "main": True,
         "label": "Mesh",
         "meshType": "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+        "optional": True,
+        "enabled": False,
         "value": None,
         "visible": True,
     },

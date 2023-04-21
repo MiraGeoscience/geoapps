@@ -1,5 +1,6 @@
 {
-    "title": "Direct Current 2D inversion",
+    "version": "0.11.0-alpha.1",
+    "title": "Direct Current (DC) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 2d",
     "geoh5": "",
@@ -9,10 +10,10 @@
         "group": "Topography",
         "label": "Topography",
         "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}"
         ],
         "value": ""
@@ -55,7 +56,7 @@
         "dataType": "Referenced",
         "group": "Data",
         "main": true,
-        "label": "Line field",
+        "label": "Line ID",
         "parent": "data_object",
         "value": ""
     },
@@ -119,7 +120,7 @@
         "value": 1.0
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "optional": true,
         "enabled": false,
@@ -127,72 +128,10 @@
         "meshType": "{c94968ea-cf7d-11eb-b8bc-0242ac130003}",
         "value": ""
     },
-    "u_cell_size": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "Horizontal cell size (m)",
-        "value": 25.0
-    },
-    "v_cell_size": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "Vertical cell size (m)",
-        "value": 25.0
-    },
-    "depth_core": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "Depth of core (m)",
-        "value": 500.0
-    },
-    "horizontal_padding": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "Horizontal padding (m)",
-        "value": 1000.0
-    },
-    "vertical_padding": {
-        "min": 0.0,
-        "group": "Mesh and Models",
-        "main": true,
-        "enabled": true,
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "label": "Vertical padding (m)",
-        "value": 1000.0
-    },
-    "expansion_factor": {
-        "main": true,
-        "group": "Mesh and Models",
-        "label": "Expansion factor",
-        "dependency": "mesh",
-        "dependencyType": "disabled",
-        "value": 1.1,
-        "min": 1.0,
-        "max": 2.0,
-        "precision": 1,
-        "lineEdit": false
-    },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "isValue": true,
         "parent": "mesh",
@@ -204,7 +143,7 @@
         "association": "Cell",
         "dataType": "Float",
         "main": true,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": true,
         "parent": "mesh",
         "label": "Reference conductivity (S/m)",
@@ -215,7 +154,7 @@
         "association": "Cell",
         "main": true,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": true,
         "parent": "mesh",
         "label": "Lower bound (S/m)",
@@ -228,7 +167,7 @@
         "association": "Cell",
         "main": true,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": true,
         "parent": "mesh",
         "label": "Upper bound (S/m)",

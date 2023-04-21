@@ -1,7 +1,7 @@
 {
     "title": "Block Model Creation",
     "geoh5": "",
-    "run_command": "geoapps.block_model_creation.driver",
+    "run_command": "geoapps.grid_creation.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
@@ -12,18 +12,31 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
-    "version": "0.11.0-alpha.1",
+    "live_link": false,
     "objects": {
         "main": true,
         "meshType": [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-            "{202c5db1-a56d-4004-9cad-baafd8899406}",
-            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
-            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
             "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
         ],
-        "label": "Object",
+        "label": "Input object",
+        "value": ""
+    },
+    "xy_reference": {
+        "main": true,
+        "meshType": [
+            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}"
+        ],
+        "label": "Lateral extent",
         "value": ""
     },
     "new_grid": {
@@ -34,20 +47,20 @@
     "cell_size_x": {
         "main": true,
         "label": "Minimum x cell size",
-        "value": 1.0,
-        "min": 1e-14
+        "value": 0.0,
+        "min": 0.0
     },
     "cell_size_y": {
         "main": true,
         "label": "Minimum y cell size",
-        "value": 1.0,
-        "min": 1e-14
+        "value": 0.0,
+        "min": 0.0
     },
     "cell_size_z": {
         "main": true,
         "label": "Minimum z cell size",
-        "value": 1.0,
-        "min": 1e-14
+        "value": 0.0,
+        "min": 0.0
     },
     "depth_core": {
         "main": true,
@@ -71,11 +84,5 @@
         "main": true,
         "label": "Expansion factor",
         "value": 0.0
-    },
-    "generate_sweep": {
-        "label": "Generate sweep file",
-        "group": "Python run preferences",
-        "main": true,
-        "value": false
     }
 }

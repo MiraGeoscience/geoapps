@@ -1,5 +1,6 @@
 {
-    "title": "Direct Current 3D inversion",
+    "version": "0.11.0-alpha.1",
+    "title": "Direct Current (DC) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",
@@ -10,10 +11,10 @@
         "group": "Topography",
         "label": "Topography",
         "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}"
         ],
         "value": ""
@@ -100,7 +101,7 @@
         "value": 1.0
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "label": "Mesh",
         "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
@@ -112,7 +113,7 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Mesh and Models`",
+        "group": "Mesh and models",
         "main": true,
         "isValue": true,
         "parent": "mesh",
@@ -127,7 +128,7 @@
         ],
         "main": true,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": true,
         "parent": "mesh",
         "label": "Reference conductivity (S/m)",
@@ -141,7 +142,7 @@
         ],
         "main": true,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": true,
         "parent": "mesh",
         "label": "Lower bound (S/m)",
@@ -157,7 +158,7 @@
         ],
         "main": true,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": true,
         "parent": "mesh",
         "label": "Upper bound (S/m)",

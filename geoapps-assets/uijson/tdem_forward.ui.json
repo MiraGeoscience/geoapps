@@ -1,5 +1,7 @@
 {
-    "title": "Time domain electromagnetic forward",
+    "version": "0.11.0-alpha.1",
+    "title": "Time-domain EM (TEM) Forward",
+    "icon": "surveyairborneem",
     "inversion_type": "tdem",
     "geoh5": "",
     "forward_only": true,
@@ -8,10 +10,10 @@
         "group": "Topography",
         "label": "Topography",
         "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}"
         ],
         "value": ""
@@ -34,10 +36,11 @@
     },
     "data_object": {
         "main": true,
-        "group": "Data",
+        "group": "Survey",
         "label": "Object",
         "meshType": [
             "{19730589-fd28-4649-9de0-ad47249d9aba}",
+            "{deebe11a-b57b-4a03-99d6-8f27b25eb2a8}",
             "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}"
         ],
         "value": ""
@@ -83,25 +86,25 @@
     },
     "gps_receivers_offset": "",
     "z_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
-        "label": "Z",
+        "label": "Z component",
         "value": true
     },
     "x_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
-        "label": "X",
+        "label": "X component",
         "value": true
     },
     "y_channel_bool": {
-        "group": "Data",
+        "group": "Survey",
         "main": true,
-        "label": "Y",
+        "label": "Y component",
         "value": true
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "label": "Mesh",
         "meshType": "{4ea87376-3ece-438b-bf12-3479733ded46}",
@@ -113,11 +116,11 @@
             "Vertex"
         ],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": true,
         "isValue": true,
         "parent": "mesh",
-        "label": "Initial conductivity (S/m)",
+        "label": "Conductivity (S/m)",
         "property": "",
         "value": 0.001
     },
