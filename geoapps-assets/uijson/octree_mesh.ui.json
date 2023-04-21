@@ -12,18 +12,20 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
+    "version": "0.11.0-alpha.1",
     "objects": {
         "enabled": true,
         "group": "1- Core",
         "label": "Core hull extent",
         "main": true,
         "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
             "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
             "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
-            "{9b08bb5a-300c-48fe-9007-d206f971ea92}"
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+            "{19730589-fd28-4649-9de0-ad47249d9aba}"
         ],
         "value": ""
     },
@@ -84,39 +86,40 @@
     "workspace_geoh5": "",
     "Refinement A object": {
         "groupOptional": true,
-        "enabled": false,
+        "enabled": true,
         "group": "Refinement A",
         "label": "Object",
         "meshType": [
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
             "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
             "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
-            "{9b08bb5a-300c-48fe-9007-d206f971ea92}"
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+            "{19730589-fd28-4649-9de0-ad47249d9aba}"
         ],
         "value": ""
     },
     "Refinement A levels": {
-        "enabled": false,
+        "enabled": true,
         "group": "Refinement A",
         "label": "Levels",
-        "value": "4.0, 4.0, 4.0"
+        "value": ""
     },
     "Refinement A type": {
         "choiceList": [
             "surface",
             "radial"
         ],
-        "enabled": false,
+        "enabled": true,
         "group": "Refinement A",
         "label": "Type",
-        "value": "radial"
+        "value": ""
     },
     "Refinement A distance": {
-        "enabled": false,
+        "enabled": true,
         "group": "Refinement A",
         "label": "Distance",
-        "value": 1000.0
+        "value": ""
     }
 }

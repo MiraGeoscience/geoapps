@@ -12,6 +12,7 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
+    "version": "0.11.0-alpha.1",
     "objects": {
         "group": "Data Selection",
         "meshType": [

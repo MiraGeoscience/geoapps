@@ -16,6 +16,8 @@ from geoh5py.shared.utils import fetch_active_workspace, str2uuid, uuid2entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.workspace import Workspace
 
+import geoapps
+
 
 class BaseParams:
     """
@@ -45,6 +47,7 @@ class BaseParams:
     _validations = None
     _validation_options = None
     _validator: InputValidation = None
+    _version = geoapps.__version__
     validate = True
 
     def __init__(
@@ -80,12 +83,20 @@ class BaseParams:
                 validation_options={"disabled": True},
             )
         self.update(self.input_file.data, validate=False)
-        self.param_names = list(self.input_file.data.keys())
+        self.param_names = list(self.input_file.data)
         self.input_file.validation_options["disabled"] = False
 
         # Apply user input
         if any(kwargs):
             self.update(kwargs)
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, val):
+        self._version = val
 
     @property
     def defaults(self):
@@ -174,6 +185,7 @@ class BaseParams:
         params_dict = {
             k: getattr(self, k) for k in self.param_names if hasattr(self, k)
         }
+        params_dict["version"] = self._version
         if ui_json_format:
             self.input_file.data = params_dict
             return self.input_file.ui_json
@@ -383,12 +395,12 @@ class BaseParams:
         self,
         name: str | None = None,
         path: str | None = None,
-        validate: bool = True,
+        validation_options: dict | None = None,
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
-        if not validate:
-            self.input_file.validation_options["disabled"] = True
 
+        if validation_options is not None:
+            self.input_file.validation_options.update(validation_options)
         self.input_file.data = self.to_dict()
 
         return self.input_file.write_ui_json(name=name, path=path)
