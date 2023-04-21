@@ -235,7 +235,15 @@ class JointSingleDriver(InversionDriver):
                     driver_directives = DirectivesFactory(driver)
                     save_data = driver_directives.save_iteration_data_directive
                     save_data.joint_index = ind
-                    directives_list.append(save_data)
+                    save_model = driver_directives.save_iteration_model_directive
+                    save_model.transforms = [
+                        driver.data_misfit.model_map
+                    ] + save_model.transforms
+                    directives_list += [
+                        save_data,
+                        save_model,
+                    ]
+
                     for directive in [
                         "save_iteration_apparent_resistivity_directive",
                         "vector_inversion_directive",
@@ -255,6 +263,10 @@ class JointSingleDriver(InversionDriver):
 
     def run(self):
         """Run inversion from params"""
+        sys.stdout = self.logger
+        self.logger.start()
+        self.configure_dask()
+
         if self.params.forward_only:
             print("Running the forward simulation ...")
             predicted = self.inverse_problem.get_dpred(

@@ -67,19 +67,15 @@ class InversionDriver(BaseDriver):
         self._inverse_problem: inverse_problem.BaseInvProblem | None = None
         self._inversion: inversion.BaseInversion | None = None
         self._inversion_data: InversionData | None = None
-        self._models: InversionModelCollection | None = None
         self._inversion_mesh: InversionMesh | None = None
         self._inversion_topography: InversionTopography | None = None
+        self._logger: InversionLogger | None = None
+        self._models: InversionModelCollection | None = None
         self._optimization: optimization.ProjectedGNCG | None = None
         self._regularization: None = None
         self._sorting: list[np.ndarray] | None = None
         self._ordering: list[np.ndarray] | None = None
         self._window = None
-
-        self.logger = InversionLogger("SimPEG.log", self)
-        sys.stdout = self.logger
-        self.logger.start()
-        self.configure_dask()
 
     @property
     def data_misfit(self):
@@ -111,15 +107,6 @@ class InversionDriver(BaseDriver):
         return self._directives
 
     @property
-    def inversion_data(self):
-        """Inversion data"""
-        if getattr(self, "_inversion_data", None) is None:
-            with fetch_active_workspace(self.workspace, mode="r+"):
-                self._inversion_data = InversionData(self.workspace, self.params)
-
-        return self._inversion_data
-
-    @property
     def inverse_problem(self):
         if getattr(self, "_inverse_problem", None) is None:
             self._inverse_problem = inverse_problem.BaseInvProblem(
@@ -132,21 +119,21 @@ class InversionDriver(BaseDriver):
         return self._inverse_problem
 
     @property
-    def inversion_topography(self):
-        """Inversion topography"""
-        if getattr(self, "_inversion_topography", None) is None:
-            self._inversion_topography = InversionTopography(
-                self.workspace, self.params
-            )
-        return self._inversion_topography
-
-    @property
     def inversion(self):
         if getattr(self, "_inversion", None) is None:
             self._inversion = inversion.BaseInversion(
                 self.inverse_problem, directiveList=self.directives
             )
         return self._inversion
+
+    @property
+    def inversion_data(self):
+        """Inversion data"""
+        if getattr(self, "_inversion_data", None) is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._inversion_data = InversionData(self.workspace, self.params)
+
+        return self._inversion_data
 
     @property
     def inversion_mesh(self):
@@ -160,6 +147,25 @@ class InversionDriver(BaseDriver):
                     self.inversion_topography,
                 )
         return self._inversion_mesh
+
+    @property
+    def inversion_topography(self):
+        """Inversion topography"""
+        if getattr(self, "_inversion_topography", None) is None:
+            self._inversion_topography = InversionTopography(
+                self.workspace, self.params
+            )
+        return self._inversion_topography
+
+    @property
+    def logger(self):
+        """
+        Inversion logger
+        """
+        if getattr(self, "_logger", None) is None:
+            self._logger = InversionLogger("SimPEG.log", self)
+
+        return self._logger
 
     @property
     def models(self):
@@ -214,6 +220,10 @@ class InversionDriver(BaseDriver):
 
     def run(self):
         """Run inversion from params"""
+        sys.stdout = self.logger
+        self.logger.start()
+        self.configure_dask()
+
         if self.params.forward_only:
             print("Running the forward simulation ...")
             dpred = self.inversion.invProb.get_dpred(
@@ -400,6 +410,7 @@ class InversionDriver(BaseDriver):
 class InversionLogger:
     def __init__(self, logfile, driver):
         self.driver = driver
+        self.forward = driver.params.forward_only
         self.terminal = sys.stdout
         self.log = open(self.get_path(logfile), "w", encoding="utf8")
         self.initial_time = time()
@@ -407,7 +418,7 @@ class InversionLogger:
     def start(self):
         date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
         self.write(
-            f"SimPEG {self.driver.inversion_type} inversion started {date_time}\n"
+            f"SimPEG {self.driver.inversion_type} {'forward' if self.forward else 'inversion'} started {date_time}\n"
         )
 
     def end(self):
