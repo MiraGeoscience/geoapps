@@ -12,7 +12,7 @@ from copy import deepcopy
 from typing import Any
 from uuid import UUID
 
-from geoh5py.shared.utils import str2uuid, uuid2entity
+from geoh5py.shared.utils import fetch_active_workspace, str2uuid, uuid2entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.workspace import Workspace
 
@@ -122,22 +122,23 @@ class BaseParams:
         if params_dict.get("geoh5", None) is not None:
             setattr(self, "geoh5", params_dict["geoh5"])
 
-        params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
+        with fetch_active_workspace(self.geoh5):
+            params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
 
-        for key, value in params_dict.items():
-            if key not in self.ui_json.keys() or key == "geoh5":
-                continue  # ignores keys not in default_ui_json
+            for key, value in params_dict.items():
+                if key not in self.ui_json.keys() or key == "geoh5":
+                    continue  # ignores keys not in default_ui_json
 
-            setattr(self, key, value)
-            self.input_file.data[key] = value
+                setattr(self, key, value)
+                self.input_file.data[key] = value
 
-        # Set all parameters belonging to groupOptional disabled.
-        for key in utils.find_all(self.ui_json, "groupOptional"):
-            if key in params_dict and params_dict[key] is None:
-                for elem in utils.collect(
-                    self.ui_json, "group", self.ui_json[key]["group"]
-                ):
-                    setattr(self, elem, None)
+            # Set all parameters belonging to groupOptional disabled.
+            for key in utils.find_all(self.ui_json, "groupOptional"):
+                if key in params_dict and params_dict[key] is None:
+                    for elem in utils.collect(
+                        self.ui_json, "group", self.ui_json[key]["group"]
+                    ):
+                        setattr(self, elem, None)
 
         self.validate = original_validate_state
 
