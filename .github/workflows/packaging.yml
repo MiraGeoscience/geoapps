@@ -1,0 +1,85 @@
+name: packing
+
+on:
+  pull_request:
+    types: [labeled]
+  push:
+    tags:
+      - "v[0-9]+.**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  conda-pack:
+    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:env"]'), github.event.label.name) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python_ver: ['3.10']
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+    env:
+      PYTHONUTF8: 1
+      CONDA_ENV_NAME: geoapps
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+      - name: git info
+        id: git-info
+        run: |
+          REF_NAME=$(echo $GITHUB_REF_NAME | sed s=/=_=g)
+          SHORT_SHA=${GITHUB_SHA:0:8}
+          echo "git_ref_suffix=${REF_NAME}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+      - name: Get platform suffix
+        id: platform-suffix
+        run: |
+          platform_suffix=${{ fromJson('{"windows-latest": "win-64", "ubuntu-latest": "linux-64"}')[matrix.os] }}
+          echo "suffix=$platform_suffix" >> $GITHUB_OUTPUT
+          # TODO: generate a lock file for core only
+          echo "CONDA_LOCK_ENV_FILE=environments/conda-py-${{ matrix.python_ver }}-${platform_suffix}.lock.yml" >> $GITHUB_ENV
+      - name: Setup application conda env
+        uses: mamba-org/provision-with-micromamba@main
+        with:
+          environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
+          environment-name: geoapps
+          cache-downloads: true
+      - name: Install application
+        id: install-app
+        run: |
+          pip install .[core,apps] --no-deps
+          echo "conda-prefix=$( printf %q $CONDA_PREFIX )" >> $GITHUB_OUTPUT
+      - name: Cache tools conda env
+        uses: actions/cache@v3
+        env:
+          # Increase this value to reset cache if environment.yml has not changed
+          CACHE_NUMBER: 1
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{ hashFiles(env.CONDA_LOCK_ENV_FILE) }}
+      - name: Setup tools conda env
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+          auto-update-conda: true
+          miniforge-version: latest
+          python-version: ${{ matrix.python_ver }}
+      - name: Install conda-pack
+        run: conda install conda-pack
+      - name: Run conda-pack
+        id: conda-pack
+        run: |
+          mkdir -p build
+          conda-pack -j -1 -p ${{ steps.install-app.outputs.conda-prefix }} -o build/${{ env.CONDA_ENV_NAME }}-${{ matrix.os }}-pack.tar.gz
+      - uses: actions/upload-artifact@v3
+        with:
+          name: geoapps.conda-pack-${{ steps.platform-suffix.outputs.suffix }}.${{ steps.git-info.outputs.git_ref_suffix }}
+          path: build/*
+          retention-days: 1
+          if-no-files-found: error

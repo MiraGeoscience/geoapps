@@ -8,9 +8,13 @@ on:
       - "v[0-9]+.**"
       - "analyst-v[0-9]+.**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   create-env-file:
-    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:env"]'), github.event.label.name) }}
+    if: ${{ github.event.action != 'labeled' || contains(fromJSON('["pack:yml"]'), github.event.label.name) }}
     defaults:
       run:
         shell: bash -l {0}
@@ -48,8 +52,9 @@ jobs:
           [ $GITHUB_REF_TYPE == tag ] && REF_TYPE=tag || REF_TYPE=sha
           [ $REF_TYPE == tag ] && REF=${GITHUB_REF_NAME} || REF=${GITHUB_SHA}
           python devtools/create_application_env_files.py $REF_TYPE $REF --url $GITHUB_SERVER_URL/$GITHUB_REPOSITORY
-          echo "full_env_file=conda-py-${{ env.python_ver }}-win-64-geoapps.lock.yml" >> $GITHUB_OUTPUT
-          echo "simpeg_env_file=conda-py-${{ env.python_ver }}-win-64-geoapps-simpeg.lock.yml" >> $GITHUB_OUTPUT
+          echo "win64_apps_env_file=conda-py-${{ env.python_ver }}-win-64-geoapps-ui.lock.yml" >> $GITHUB_OUTPUT
+          echo "win64_core_env_file=conda-py-${{ env.python_ver }}-win-64-geoapps-core.lock.yml" >> $GITHUB_OUTPUT
+          echo "linux64_core_env_file=conda-py-${{ env.python_ver }}-linux-64-geoapps-core.lock.yml" >> $GITHUB_OUTPUT
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
@@ -94,4 +99,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh --version
-          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.create-env-file.outputs.full_env_file }}#Conda env file (.yml)"
+          gh release upload ${{ needs.draft-release.outputs.release_id }} "${{ needs.create-env-file.outputs.win64_apps_env_file }}#Win64 Conda env file (.yml)"
