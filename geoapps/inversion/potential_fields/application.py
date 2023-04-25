@@ -1342,7 +1342,7 @@ class InversionApp(PlotSelection2D):
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
-                params = self.params.to_dict(ui_json_format=False)
+                params = self.params.to_dict()
                 if params["resolution"] is None:
                     params["resolution"] = 0
 

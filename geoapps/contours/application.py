@@ -154,10 +154,7 @@ class ContourValues(PlotSelection2D):
                 if self.live_link.value:
                     param_dict["monitoring_directory"] = self.monitoring_directory
 
-                ifile = InputFile(
-                    ui_json=self.params.input_file.ui_json,
-                )
-                new_params = ContoursParams(input_file=ifile, **param_dict)
+                new_params = ContoursParams(**param_dict)
                 new_params.write_input_file()
                 driver = ContoursDriver(new_params)
                 driver.run()

@@ -181,7 +181,7 @@ class BaseApplication:
                 )
                 self.refresh.value = False
                 self.params.geoh5.open(mode="r")
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**self.params.to_dict())
                 self.refresh.value = True
 
             elif extension == ".geoh5":
