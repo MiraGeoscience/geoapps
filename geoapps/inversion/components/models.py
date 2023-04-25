@@ -117,6 +117,10 @@ class InversionModelCollection:
     @property
     def reference(self):
         mref = self._reference.model
+
+        if self.driver.params.forward_only:
+            return mref
+
         if mref is None:
             mref = self.starting
             self.driver.params.alpha_s = 0.0

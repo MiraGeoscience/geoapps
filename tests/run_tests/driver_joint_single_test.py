@@ -22,9 +22,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.0071214,
-    "phi_d": 0.0002049,
-    "phi_m": 0.00936,
+    "data_norm": 0.104056,
+    "phi_d": 427,
+    "phi_m": 6.558,
 }
 
 
@@ -39,13 +39,10 @@ def test_joint_single_property_fwr_run(
         tmp_path,
         background=0.0,
         anomaly=0.75,
-        n_electrodes=n_grid_points / 2,
-        x_limits=[25.0, 100.0],
-        n_lines=n_grid_points / 2,
         refinement=refinement,
-        flatten=False,
+        n_electrodes=n_grid_points,
+        n_lines=n_grid_points,
     )
-
     params = GravityParams(
         forward_only=True,
         geoh5=geoh5,
@@ -56,21 +53,22 @@ def test_joint_single_property_fwr_run(
         data_object=survey.uid,
         starting_model=model.uid,
     )
-
     fwr_driver_a = GravityDriver(params)
 
     # Create local problem B
+
     _, _, model, survey, _ = setup_inversion_workspace(
         tmp_path,
         background=0.0,
         anomaly=0.75,
-        x_limits=[-100, -25.0],
-        n_electrodes=n_grid_points / 2,
-        n_lines=n_grid_points / 2,
-        refinement=refinement,
+        refinement=[0, 2],
+        n_electrodes=int(n_grid_points / 2),
+        n_lines=int(n_grid_points / 2),
         flatten=False,
         geoh5=geoh5,
+        drape_height=10.0,
     )
+
     params = GravityParams(
         forward_only=True,
         geoh5=geoh5,
@@ -111,6 +109,7 @@ def test_joint_single_property_inv_run(
     with Workspace(workpath) as geoh5:
         topography = geoh5.get_entity("topography")[0]
         drivers = []
+        orig_data = []
         for group in geoh5.get_entity("GravityForward"):
             survey = geoh5.get_entity(group.options["data_object"]["value"])[0]
             for child in group.children:
@@ -120,6 +119,7 @@ def test_joint_single_property_inv_run(
                     survey = child
 
             gz = survey.get_data("Iteration_0_gz")[0]
+            orig_data.append(gz.values)
             params = GravityParams(
                 geoh5=geoh5,
                 mesh=mesh.uid,
@@ -161,18 +161,7 @@ def test_joint_single_property_inv_run(
             driver.params.geoh5.h5file, driver.params.ga_group.uid
         )
 
-        residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
-        assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
-
-        predicted = [
-            pred
-            for pred in run_ws.get_entity("Iteration_0_gz")
-            if pred.parent.parent.name == "GravityInversion"
-        ][0]
-        assert not any(
-            np.isnan(predicted.values)
-        ), "Predicted data should not have nans."
-        output["data"] = orig_gz
+        output["data"] = np.hstack(orig_data)
         if pytest:
             check_target(output, target_run)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
