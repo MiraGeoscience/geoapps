@@ -71,14 +71,16 @@ class BaseParams:
     def _initialize(self, **kwargs):
         """Custom actions to initialize the class and deal with input values."""
         # Set data on inputfile
+        original_validate_state = self.validate
+        self.validate = False
+
         if self._input_file is None:
             self.input_file = InputFile(
                 ui_json=self._default_ui_json,
-                data=self._defaults,
                 validations=self.validations,
+                validate=False
             )
-        original_validate_state = self.validate
-        self.validate = False
+
         self.update(self.input_file.data)
         self.validate = original_validate_state
 
@@ -106,18 +108,17 @@ class BaseParams:
     def update(self, params_dict: dict[str, Any]):
         """Update parameters with dictionary contents."""
         params_dict = self.input_file.numify(params_dict)
-        if params_dict.get("geoh5", None) is not None:
-            setattr(self, "geoh5", params_dict["geoh5"])
+        if params_dict.get("geoh5", None) is not None and self.input_file.geoh5 is None:
+            setattr(self, "geoh5", params_dict.pop("geoh5"))
 
-        with fetch_active_workspace(self.input_file.workspace):
+        with fetch_active_workspace(self.geoh5):
             params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
 
             for key, value in params_dict.items():
-                if key not in self.ui_json.keys() or key == "geoh5":
+                if key not in self.ui_json.keys():
                     continue  # ignores keys not in default_ui_json
 
                 setattr(self, key, value)
-                self.input_file.data[key] = value
 
         # Set all parameters belonging to groupOptional disabled.
         for key in utils.find_all(self.ui_json, "groupOptional"):
@@ -183,14 +184,12 @@ class BaseParams:
 
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
-        params_dict = {
+        if ui_json_format:
+            return self.input_file.stringify(self.input_file.demote(self.input_file.ui_json))
+
+        return {
             k: getattr(self, k) for k in self.param_names if hasattr(self, k)
         }
-        if ui_json_format:
-            self.input_file.data = params_dict
-            return self.input_file.ui_json
-
-        return params_dict
 
     def active_set(self):
         """Return list of parameters with non-null entries."""
@@ -261,19 +260,6 @@ class BaseParams:
         self._validations = validations
 
     @property
-    def validator(self) -> InputValidation:
-        if getattr(self, "_validator", None) is None:
-            self._validator = self.input_file.validators
-        return self._validator
-
-    @validator.setter
-    def validator(self, validator: InputValidation):
-        assert isinstance(
-            validator, InputValidation
-        ), f"Input value must be of class {InputValidation}"
-        self._validator = validator
-
-    @property
     def geoh5(self):
         return self._geoh5
 
@@ -285,8 +271,6 @@ class BaseParams:
         self.setter_validator(
             "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
         )
-        if self.input_file.workspace != self.geoh5:
-            self.input_file.workspace = self.geoh5
 
     @property
     def run_command(self):
@@ -375,21 +359,10 @@ class BaseParams:
 
         value = fun(value)
 
-        if self.validate:
-            if "association" in self.validations[key]:
-                validations = deepcopy(self.validations[key])
-                parent = getattr(self, self.validations[key]["association"])
-                if isinstance(parent, UUID):
-                    parent = self.geoh5.get_entity(parent)[0]
-                validations["association"] = parent
-            else:
-                validations = self.validations[key]
-
-            validations = {k: v for k, v in validations.items() if k != "one_of"}
-            self.validator.validate(key, value, validations)
+        if value != self.input_file.data[key]:
+            self.input_file.set_data_value({key: value})
 
         setattr(self, f"_{key}", value)
-        self.input_file.data[key] = value
 
     def write_input_file(
         self,

@@ -70,7 +70,7 @@ def tmp_input_file(filepath, idict):
 
 mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
-mvi_params.geoh5.open()
+mvi_params.input_file.geoh5.open()
 
 
 def catch_invalid_generator(param, invalid_value, validation_type):
@@ -760,6 +760,7 @@ grav_params = GravityParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+grav_params.geoh5.open()
 
 
 def test_validate_geoh5():
