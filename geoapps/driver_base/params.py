@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 import os
-from copy import deepcopy
 from typing import Any
 from uuid import UUID
 
@@ -78,7 +77,7 @@ class BaseParams:
             self.input_file = InputFile(
                 ui_json=self._default_ui_json,
                 validations=self.validations,
-                validate=False
+                validate=False,
             )
 
         self.update(self.input_file.data)
@@ -185,11 +184,11 @@ class BaseParams:
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
         if ui_json_format:
-            return self.input_file.stringify(self.input_file.demote(self.input_file.ui_json))
+            return self.input_file.stringify(
+                self.input_file.demote(self.input_file.ui_json)
+            )
 
-        return {
-            k: getattr(self, k) for k in self.param_names if hasattr(self, k)
-        }
+        return {k: getattr(self, k) for k in self.param_names if hasattr(self, k)}
 
     def active_set(self):
         """Return list of parameters with non-null entries."""

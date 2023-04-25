@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import json
 from copy import deepcopy
 from uuid import UUID
 
@@ -272,6 +271,7 @@ class InversionBaseParams(BaseParams):
     @data_object.setter
     def data_object(self, val):
         self.setter_validator("data_object", val, fun=self._uuid_promoter)
+        self.update_group_options()
 
     @property
     def starting_model(self):
@@ -392,6 +392,7 @@ class InversionBaseParams(BaseParams):
     @mesh.setter
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
+        self.update_group_options()
 
     @property
     def window_center_x(self):
@@ -748,7 +749,7 @@ class InversionBaseParams(BaseParams):
             self._ga_group = self.out_group
 
         if isinstance(self._ga_group, SimPEGGroup) and not self._ga_group.options:
-            self.update_group_options(self._ga_group)
+            self.update_group_options()
 
         return self._ga_group
 
@@ -767,18 +768,11 @@ class InversionBaseParams(BaseParams):
     def distributed_workers(self, val):
         self.setter_validator("distributed_workers", val)
 
-    def update_group_options(self, ga_group: SimPEGGroup):
+    def update_group_options(self):
         """
         Add options to the SimPEGGroup inversion using input file class.
-
-        :param ga_group: Inversion group
         """
-        if self.input_file is not None:
-            self.write_input_file(self.input_file.name, self.input_file.path)
-
-            with open(self.input_file.path_name, encoding="utf-8") as file:
-                ui_json = json.load(file)
-
-            ga_group.options = ui_json
-
-        ga_group.metadata = None
+        if self._input_file is not None and self._ga_group is not None:
+            ui_json = self.to_dict(ui_json_format=True)
+            self._ga_group.options = ui_json
+            self._ga_group.metadata = None

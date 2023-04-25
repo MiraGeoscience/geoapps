@@ -132,6 +132,7 @@ class InversionDriver(BaseDriver):
         if getattr(self, "_inversion_data", None) is None:
             with fetch_active_workspace(self.workspace, mode="r+"):
                 self._inversion_data = InversionData(self.workspace, self.params)
+                self.params.data_object = self._inversion_data.entity
 
         return self._inversion_data
 
