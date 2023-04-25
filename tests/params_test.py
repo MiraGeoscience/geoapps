@@ -156,7 +156,9 @@ def test_input_file_construction(tmp_path):
         filename = "test.ui.json"
         for forward_only in [True, False]:
             params = params_class(forward_only=forward_only)
-            params.write_input_file(name=filename, path=tmp_path, validate=False)
+            params.write_input_file(
+                name=filename, path=tmp_path, validation_options={"disabled": True}
+            )
             ifile = InputFile.read_ui_json(
                 os.path.join(tmp_path, filename), validate=False
             )
@@ -760,7 +762,7 @@ grav_params = GravityParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
-grav_params.geoh5.open()
+grav_params.input_file.geoh5.open()
 
 
 def test_validate_geoh5():

@@ -15,6 +15,8 @@ from geoh5py.shared.utils import fetch_active_workspace, str2uuid, uuid2entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.workspace import Workspace
 
+import geoapps
+
 
 class BaseParams:
     """
@@ -44,6 +46,8 @@ class BaseParams:
     _validations = None
     _validation_options = None
     _validator: InputValidation = None
+    _version = geoapps.__version__
+    validate = True
 
     def __init__(
         self,
@@ -79,15 +83,21 @@ class BaseParams:
                 validations=self.validations,
                 validate=False,
             )
-
         self.update(self.input_file.data)
         self.validate = original_validate_state
-
         self.param_names = list(self.input_file.data.keys())
 
         # Apply user input
         if any(kwargs):
             self.update(kwargs)
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, val):
+        self._version = val
 
     @property
     def defaults(self):
@@ -119,13 +129,13 @@ class BaseParams:
 
                 setattr(self, key, value)
 
-        # Set all parameters belonging to groupOptional disabled.
-        for key in utils.find_all(self.ui_json, "groupOptional"):
-            if key in params_dict and params_dict[key] is None:
-                for elem in utils.collect(
-                    self.ui_json, "group", self.ui_json[key]["group"]
-                ):
-                    setattr(self, elem, None)
+            # Set all parameters belonging to groupOptional disabled.
+            for key in utils.find_all(self.ui_json, "groupOptional"):
+                if key in params_dict and params_dict[key] is None:
+                    for elem in utils.collect(
+                        self.ui_json, "group", self.ui_json[key]["group"]
+                    ):
+                        setattr(self, elem, None)
 
     @property
     def workpath(self):

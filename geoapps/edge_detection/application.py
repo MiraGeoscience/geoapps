@@ -229,6 +229,7 @@ class EdgeDetectionApp(PlotSelection2D):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.params.geoh5
         self.params.update(param_dict)
+
         with fetch_active_workspace(self.params.geoh5):
             self.refresh.value = False
             (

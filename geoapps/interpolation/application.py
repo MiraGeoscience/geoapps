@@ -281,7 +281,8 @@ class DataInterpolation(ObjectDataSelection):
                 new_params.input_file.ui_json["skew_factor"]["enabled"] = True
 
             new_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"), validate=False
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                validate=False,
             )
 
             driver = DataInterpolationDriver(new_params)

@@ -267,7 +267,13 @@ def write_default_uijson(path, use_initializers=False):
     }
 
     for filename, params in filedict.items():
-        params.write_input_file(name=filename, path=path, validate=False)
+        validation_options = {"disabled": True}
+        validation_options["update_enabled"] = (
+            True if params.geoh5 is not None else False
+        )
+        params.write_input_file(
+            name=filename, path=path, validation_options=validation_options
+        )
 
 
 if __name__ == "__main__":
