@@ -12,6 +12,7 @@ import numpy as np
 from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
+from geoh5py.shared import INTEGER_NDV
 from geoh5py.objects import BlockModel, DrapeModel, Octree
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
@@ -92,7 +93,11 @@ def drape_to_octree(
         else:
             octree_model = octree_model[mesh._ubc_order]  # pylint: disable=W0212
 
-        octree_model[~active] = np.nan  # apply active cells
+        if octree_model.dtype == np.dtype(int):
+            octree_model[~active] = INTEGER_NDV
+        else:
+            octree_model[~active] = np.nan  # apply active cells
+
         octree.add_data({label: {"values": octree_model}})
 
     return octree
@@ -151,7 +156,6 @@ def get_drape_model(
     locs = compute_alongline_distance(locations)
     x_interp = interp1d(locs[:, 0], locations[:, 0], fill_value="extrapolate")
     y_interp = interp1d(locs[:, 0], locations[:, 1], fill_value="extrapolate")
-
     mesh = mesh_utils.mesh_builder_xyz(
         locs,
         h,
