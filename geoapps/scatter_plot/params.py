@@ -23,7 +23,9 @@ class ScatterPlotParams(BaseParams):
     """
 
     def __init__(self, input_file=None, **kwargs):
-        self._default_ui_json = deepcopy(default_ui_json)
+        if self._default_ui_json is None:
+            self._default_ui_json = deepcopy(default_ui_json)
+
         self._defaults = deepcopy(defaults)
         self._validations = validations
         self._objects = None

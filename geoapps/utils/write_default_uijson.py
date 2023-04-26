@@ -271,8 +271,7 @@ def write_default_uijson(path, use_initializers=False):
             "update_enabled": (True if params.geoh5 is not None else False)
         }
         params.input_file.validation_options = validation_options
-        params.input_file.validate = False
-        params.write_input_file(name=filename, path=path)
+        params.write_input_file(name=filename, path=path, validate=False)
 
 
 if __name__ == "__main__":

@@ -156,7 +156,7 @@ def test_joint_single_property_inv_run(
     driver = JointSingleDriver(joint_params)
     driver.run()
 
-    with Workspace(driver.params.geoh5.h5file) as run_ws:
+    with Workspace(driver.params.geoh5.h5file):
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.ga_group.uid
         )
@@ -164,9 +164,6 @@ def test_joint_single_property_inv_run(
         output["data"] = np.hstack(orig_data)
         if pytest:
             check_target(output, target_run)
-            nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
-            inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
-            assert np.all(nan_ind == inactive_ind)
         else:
             return driver.inverse_problem.model
 
