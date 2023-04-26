@@ -267,14 +267,12 @@ def write_default_uijson(path, use_initializers=False):
     }
 
     for filename, params in filedict.items():
-        validation_options = {"disabled": True}
-        validation_options["update_enabled"] = (
-            True if params.geoh5 is not None else False
-        )
+        validation_options = {
+            "update_enabled": (True if params.geoh5 is not None else False)
+        }
         params.input_file.validation_options = validation_options
-        params.write_input_file(
-            name=filename, path=path
-        )
+        params.input_file.validate = False
+        params.write_input_file(name=filename, path=path)
 
 
 if __name__ == "__main__":
