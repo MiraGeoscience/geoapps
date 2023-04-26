@@ -383,7 +383,7 @@ def cell_centers_to_faces(centers: np.ndarray) -> np.ndarray:
     """
 
     h = np.diff(centers)
-    icore = np.where(np.isclose(h, h.min()))[0]
+    icore = np.where(np.isclose(h, h.min(), atol=1.0))[0]
     icore = np.append(icore, icore[-1] + 1)  # index of core hs to core centers
     faces = np.hstack([centers[icore] - h.min() / 2, centers[icore][-1] + h.min() / 2])
 
