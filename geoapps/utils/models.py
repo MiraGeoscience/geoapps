@@ -12,8 +12,8 @@ import numpy as np
 from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
-from geoh5py.shared import INTEGER_NDV
 from geoh5py.objects import BlockModel, DrapeModel, Octree
+from geoh5py.shared import INTEGER_NDV
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
