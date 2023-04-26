@@ -369,7 +369,7 @@ class BaseParams:
         value = fun(value)
 
         if value != self.input_file.data[key]:
-            self.input_file.set_data_value({key: value})
+            self.input_file.set_data_value(key, value)
 
         setattr(self, f"_{key}", value)
 
