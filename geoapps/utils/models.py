@@ -18,8 +18,9 @@ from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.driver import BlockModelDriver
+from geoapps.driver_base.utils import running_mean
 from geoapps.shared_utils.utils import octree_2_treemesh, rotate_xyz
-from geoapps.utils.surveys import compute_alongline_distance
+from geoapps.utils.surveys import compute_alongline_distance, traveling_salesman
 
 
 def drape_to_octree(
@@ -147,12 +148,23 @@ def get_drape_model(
 
     locations = BlockModelDriver.truncate_locs_depths(locations, depth_core)
     depth_core = BlockModelDriver.minimum_depth_core(locations, depth_core, h[1])
-    locs = compute_alongline_distance(locations)
-    x_interp = interp1d(locs[:, 0], locations[:, 0], fill_value="extrapolate")
-    y_interp = interp1d(locs[:, 0], locations[:, 1], fill_value="extrapolate")
+    order = traveling_salesman(locations)
+
+    # Smooth the locations
+    xy_smooth = np.c_[
+        running_mean(locations[order, 0], 2),
+        running_mean(locations[order, 1], 2),
+        running_mean(locations[order, 2], 2),
+    ]
+    locations = np.vstack(
+        [np.c_[locations[order[0], :]].T, xy_smooth, np.c_[locations[order[-1], :]].T]
+    )
+    distances = compute_alongline_distance(locations)
+    x_interp = interp1d(distances[:, 0], locations[:, 0], fill_value="extrapolate")
+    y_interp = interp1d(distances[:, 0], locations[:, 1], fill_value="extrapolate")
 
     mesh = mesh_utils.mesh_builder_xyz(
-        locs,
+        distances,
         h,
         padding_distance=[
             [pads[0], pads[1]],
@@ -173,10 +185,11 @@ def get_drape_model(
     layers = []
     indices = []
     index = 0
-    for i, d in enumerate(np.unique(mesh.cell_centers[:, 0])):
-        prisms.append(
-            [float(x_interp(d)), float(y_interp(d)), top, i * n_layers, n_layers]
-        )
+    nodal_distance = mesh.origin[0] + np.r_[0, np.cumsum(mesh.h[0])]
+    nodal_xy = np.c_[x_interp(nodal_distance), y_interp(nodal_distance)]
+    center_xy = (nodal_xy[:-1, :] + nodal_xy[:-1, :]) / 2
+    for i, (x_center, y_center) in enumerate(center_xy):
+        prisms.append([float(x_center), float(y_center), top, i * n_layers, n_layers])
         for k, b in enumerate(bottoms):
             layers.append([i, k, b])
             indices.append(index)

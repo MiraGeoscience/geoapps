@@ -38,7 +38,7 @@ def get_containing_cells(
         )
 
     elif isinstance(mesh, TensorMesh):
-        locations = compute_alongline_distance(data.survey.unique_locations)
+        locations = data.pseudo_locations(data.survey.unique_locations)
         xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
         yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
         inds = xi + yi * mesh.shape_cells[0]
@@ -103,38 +103,49 @@ def find_unique_tops(locations: np.ndarray):
     return locations
 
 
-def find_endpoints(locs: np.ndarray, ends=None, start_index: int = 0):
+def traveling_salesman(locs: np.ndarray) -> np.ndarray:
     """
-    Finds the end locations of a roughly linear point set.
+    Finds the order of a roughly linear point set.
+
+    Uses the point furthest from the mean location as the starting point.
 
     :param: locs: Cartesian coordinates of points lying either roughly within a plane or a line.
-    :param: ends: Any previously computed endpoints.
-    :param: start_index: Index of starting location.
+    :param: return_index: Return the indices of the end points in the original array.
     """
-    locs = find_unique_tops(locs)
-    ends = [] if ends is None else ends
-    start = locs[start_index, :2]
-    dist = np.linalg.norm(start - locs[:, :2], axis=1)
-    end_id = np.where(dist == dist.max())[0]
-    ends.append(locs[end_id].squeeze().tolist())
-    if len(ends) < 2:
-        ends = find_endpoints(locs, ends, start_index=end_id)
-    return ends
+    mean = locs[:, :2].mean(axis=0)
+    current = np.argmax(np.linalg.norm(locs[:, :2] - mean, axis=1))
+    order = [current]
+    mask = np.ones(locs.shape[0], dtype=bool)
+    mask[current] = False
+
+    for _ in range(locs.shape[0] - 1):
+        remaining = np.where(mask)[0]
+        ind = np.argmin(np.linalg.norm(locs[current, :2] - locs[remaining, :2], axis=1))
+        current = remaining[ind]
+        order.append(current)
+        mask[current] = False
+
+    return np.asarray(order)
 
 
-def compute_alongline_distance(points: np.ndarray):
+def compute_alongline_distance(points: np.ndarray, ordered: bool = True):
     """
-    Convert from cartesian (x, y, z) points to (distance, z) locations.
+    Convert from cartesian (x, y, values) points to (distance, values) locations.
 
     :param: points: Cartesian coordinates of points lying either roughly within a
         plane or a line.
     """
-    endpoints = find_endpoints(points, start_index=-1)
-    distances = np.linalg.norm(endpoints[0][:2] - points[:, :2], axis=1)
+    if not ordered:
+        order = traveling_salesman(points)
+        points = points[order, :]
+
+    distances = np.cumsum(
+        np.r_[0, np.linalg.norm(np.diff(points[:, :2], axis=0), axis=1)]
+    )
     if points.shape[1] == 3:
-        return np.c_[distances, points[:, 2]]
-    else:
-        return distances
+        distances = np.c_[distances, points[:, 2:]]
+
+    return distances
 
 
 def survey_lines(survey, start_loc: list[int | float], save: str | None = None):

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 import numpy as np
 from scipy.interpolate import interp1d
 
-from geoapps.utils.surveys import compute_alongline_distance, extract_dcip_survey
+from geoapps.utils.surveys import extract_dcip_survey
 
 from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
@@ -304,37 +304,22 @@ class SurveyFactory(SimPEGFactory):
         )
         currents = receiver_entity.current_electrodes
 
+        if "2d" in self.params.inversion_type:
+            receiver_locations = receiver_entity.vertices
+            source_locations = currents.vertices
+            if local_index is not None:
+                receiver_locations = data.pseudo_locations(receiver_locations)
+                source_locations = data.pseudo_locations(source_locations)
+
+        else:
+            receiver_locations = data.locations
+            source_locations = currents.vertices
+
         # TODO hook up tile_spatial to handle local_index handling
         sources = []
         self.local_index = []
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
             receiver_indices = receiver_group(source_id, receiver_entity)
-
-            if "2d" in self.params.inversion_type:
-                receiver_locations = receiver_entity.vertices
-                source_locations = currents.vertices
-                if local_index is not None:
-                    locations = np.vstack([receiver_locations, source_locations])
-                    locations = np.unique(locations, axis=0)
-                    distances = compute_alongline_distance(locations)
-                    xrange = locations[:, 0].max() - locations[:, 0].min()
-                    yrange = locations[:, 1].max() - locations[:, 1].min()
-                    use_x = xrange >= yrange
-                    if use_x:
-                        to_distance = interp1d(locations[:, 0], distances[:, 0])
-                        rec_dist = to_distance(receiver_locations[:, 0])
-                        src_dist = to_distance(source_locations[:, 0])
-                    else:
-                        to_distance = interp1d(locations[:, 1], distances[:, 0])
-                        rec_dist = to_distance(receiver_locations[:, 1])
-                        src_dist = to_distance(source_locations[:, 1])
-
-                    receiver_locations = np.c_[rec_dist, receiver_locations[:, 2]]
-                    source_locations = np.c_[src_dist, source_locations[:, 2]]
-            else:
-                receiver_locations = data.locations
-                source_locations = currents.vertices
-
             receivers = ReceiversFactory(self.params).build(
                 locations=receiver_locations,
                 local_index=receiver_entity.cells[receiver_indices],

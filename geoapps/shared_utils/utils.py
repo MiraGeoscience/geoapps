@@ -412,10 +412,11 @@ def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tup
 
     z = np.append(np.unique(layers[:, 2]), prisms[:, 2].max())
     x = compute_alongline_distance(prisms[:, :2])
-    x = cell_centers_to_faces(x)
-    dx = np.diff(np.unique(x))
-    h = [np.diff(x), np.diff(z)]
-    origin = [-dx[: np.argmin(dx.round(6))].sum(), layers[:, 2].min()]
+    dx = np.diff(x)
+    edges = x[:-1] + dx / 2.0
+    edges = np.r_[-dx[0] / 2, edges, x[-1] + dx[-1] / 2.0]
+    h = [np.diff(edges), np.diff(z)]
+    origin = [-h[0][: np.argmin(h[0].round(1)) - 1].sum(), layers[:, 2].min()]
     mesh = TensorMesh(h, origin)
 
     if return_sorting:
