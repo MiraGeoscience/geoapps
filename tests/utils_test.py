@@ -50,7 +50,6 @@ from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
     compute_alongline_distance,
     extract_dcip_survey,
-    find_endpoints,
     find_unique_tops,
     new_neighbors,
     split_dcip_survey,
@@ -229,13 +228,6 @@ def test_compute_alongline_distance():
     locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
     test = compute_alongline_distance(locs)
     assert True
-
-
-def test_find_endpoints():
-    x = np.arange(11)
-    y = -x + 10
-    p = find_endpoints(np.c_[x, y])
-    assert np.allclose(p, [[10, 0], [0, 10]])
 
 
 def test_cell_centers_to_faces():
