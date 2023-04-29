@@ -375,30 +375,6 @@ def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
         return xyz_out
 
 
-def cell_centers_to_faces(centers: np.ndarray) -> np.ndarray:
-    """
-    Compute faces from centers of cells containing a evenly spaced core region.
-
-    :param: centers: Array of grid centers in one dimension.
-    """
-
-    h = np.diff(centers)
-    icore = np.where(np.isclose(h, h.min(), atol=1.0))[0]
-    icore = np.append(icore, icore[-1] + 1)  # index of core hs to core centers
-    faces = np.hstack([centers[icore] - h.min() / 2, centers[icore][-1] + h.min() / 2])
-
-    # Don't assume symmetric padding loop over each extremity individually
-    right_pad_inds = np.arange(icore[-1] + 1, len(centers))
-    for i in right_pad_inds:
-        faces = np.hstack([faces, 2 * centers[i] - faces[-1]])
-
-    left_pad_inds = np.arange(icore[0])[::-1]
-    for i in left_pad_inds:
-        faces = np.hstack([2 * centers[i] - faces[0], faces])
-
-    return faces
-
-
 def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tuple:
     """
     Convert a geoh5 drape model to discretize.TensorMesh.
@@ -409,14 +385,19 @@ def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tup
     """
     prisms = drape_model.prisms
     layers = drape_model.layers
-
     z = np.append(np.unique(layers[:, 2]), prisms[:, 2].max())
     x = compute_alongline_distance(prisms[:, :2])
     dx = np.diff(x)
-    edges = x[:-1] + dx / 2.0
-    edges = np.r_[-dx[0] / 2, edges, x[-1] + dx[-1] / 2.0]
-    h = [np.diff(edges), np.diff(z)]
-    origin = [-h[0][: np.argmin(h[0].round(1)) - 1].sum(), layers[:, 2].min()]
+    end_core = [np.argmin(dx.round(1)), len(dx) - np.argmin(dx[::-1].round(1))]
+    core = dx[end_core[0]]
+    exp_fact = dx[0] / dx[1]
+    cell_width = np.r_[
+        core * exp_fact ** np.arange(end_core[0], 0, -1),
+        core * np.ones(end_core[1] - end_core[0] + 1),
+        core * exp_fact ** np.arange(1, len(dx) - end_core[1] + 1),
+    ]
+    h = [cell_width, np.diff(z)]
+    origin = [-cell_width[: end_core[0]].sum(), layers[:, 2].min()]
     mesh = TensorMesh(h, origin)
 
     if return_sorting:

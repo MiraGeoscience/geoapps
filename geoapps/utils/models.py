@@ -185,9 +185,7 @@ def get_drape_model(
     layers = []
     indices = []
     index = 0
-    nodal_distance = mesh.origin[0] + np.r_[0, np.cumsum(mesh.h[0])]
-    nodal_xy = np.c_[x_interp(nodal_distance), y_interp(nodal_distance)]
-    center_xy = (nodal_xy[:-1, :] + nodal_xy[:-1, :]) / 2
+    center_xy = np.c_[x_interp(mesh.cell_centers_x), y_interp(mesh.cell_centers_x)]
     for i, (x_center, y_center) in enumerate(center_xy):
         prisms.append([float(x_center), float(y_center), top, i * n_layers, n_layers])
         for k, b in enumerate(bottoms):
@@ -195,12 +193,13 @@ def get_drape_model(
             indices.append(index)
             index += 1
 
-    model = DrapeModel.create(workspace, name=name, parent=parent)
-    model.prisms = np.vstack(prisms)
+    prisms = np.vstack(prisms)
     layers = np.vstack(layers)
     layers[:, 2] = layers[:, 2][::-1]
-    model.layers = layers
 
+    model = DrapeModel.create(
+        workspace, layers=layers, name=name, prisms=prisms, parent=parent
+    )
     model.add_data(
         {
             "indices": {

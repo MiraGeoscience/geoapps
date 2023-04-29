@@ -26,7 +26,6 @@ from geoh5py.workspace import Workspace
 from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
 from geoapps.shared_utils.utils import (
-    cell_centers_to_faces,
     downsample_grid,
     downsample_xy,
     drape_2_tensor,
@@ -168,7 +167,7 @@ def test_get_drape_model(tmp_path):
     ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
     x = np.arange(11)
     y = -x + 10
-    locs = np.c_[x, y, np.zeros_like(x)]
+    locs = np.c_[x, y, np.zeros_like(x)].astype(float)
     h = [0.5, 0.5]
     depth_core = 5.0
     pads = [0, 0, 0, 0]  # [5, 5, 3, 1]
@@ -218,7 +217,7 @@ def test_compute_alongline_distance():
     y = -x + 10
     locs = np.c_[x, y]
     test = compute_alongline_distance(locs)
-    assert np.max(test) == np.sqrt(2) * 10
+    np.testing.assert_almost_equal(np.max(test), np.sqrt(2) * 10)
 
     x = np.linspace(0, 1, 5)
     z = np.linspace(-1, 1, 4)
@@ -228,13 +227,6 @@ def test_compute_alongline_distance():
     locs = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
     test = compute_alongline_distance(locs)
     assert True
-
-
-def test_cell_centers_to_faces():
-    test_faces = np.array([0, 3, 5, 6, 7, 8, 10, 13], dtype=float)
-    centers = running_mean(test_faces, width=1, method="forward")[1:]
-    faces = cell_centers_to_faces(centers)
-    assert np.allclose(test_faces, faces)
 
 
 def test_find_unique_tops():
@@ -796,7 +788,7 @@ def test_drape_2_tensormesh(tmp_path):
     h = [20, 40]
     depth_core = 200
     pads = [500] * 4
-    expfact = 1.1
+    expfact = 1.4
     drape, tensor, _ = get_drape_model(  # pylint: disable=W0632
         ws,
         "test_drape",
