@@ -97,6 +97,7 @@ class InversionModelCollection:
 
         self.edit_ndv_model(active_cells[self.driver.inversion_mesh.permutation])
         self.remove_air(active_cells)
+        print(active_cells)
         self.driver.inversion_mesh.entity.add_data(
             {
                 "active_cells": {
