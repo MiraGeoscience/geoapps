@@ -93,7 +93,7 @@ def drape_to_octree(
         else:
             octree_model = octree_model[mesh._ubc_order]  # pylint: disable=W0212
 
-        if octree_model.dtype == np.dtype(int):
+        if np.issubdtype(octree_model.dtype, np.integer):
             octree_model[~active] = INTEGER_NDV
         else:
             octree_model[~active] = np.nan  # apply active cells
