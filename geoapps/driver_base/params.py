@@ -47,7 +47,6 @@ class BaseParams:
     _validation_options = None
     _validator: InputValidation = None
     _version = geoapps.__version__
-    validate = True
 
     def __init__(
         self,
