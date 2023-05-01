@@ -206,13 +206,7 @@ class SimulationFactory(SimPEGFactory):
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
-
-        conversion = {
-            "Seconds (s)": 1.0,
-            "Milliseconds (ms)": 1e-3,
-            "Microseconds (us)": 1e-6,
-        }
-        kwargs["t0"] = -receivers.timing_mark * conversion[receivers.unit]
+        kwargs["t0"] = -receivers.timing_mark * self.params.unit_conversion
         kwargs["time_steps"] = np.round((np.diff(receivers.waveform[:, 0])), decimals=6)
 
         return kwargs
