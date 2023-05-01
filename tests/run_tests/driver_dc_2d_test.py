@@ -24,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.6326,
-    "phi_d": 740,
-    "phi_m": 2.87,
+    "data_norm": 0.63471,
+    "phi_d": 792.7,
+    "phi_m": 2.499,
 }
 
 np.random.seed(0)
