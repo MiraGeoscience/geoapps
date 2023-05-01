@@ -155,7 +155,9 @@ def test_input_file_construction(tmp_path):
         filename = "test.ui.json"
         for forward_only in [True, False]:
             params = params_class(forward_only=forward_only)
-            params.write_input_file(name=filename, path=tmp_path, validate=False)
+            params.write_input_file(
+                name=filename, path=tmp_path, validation_options={"disabled": True}
+            )
             ifile = InputFile.read_ui_json(
                 os.path.join(tmp_path, filename), validation_options={"disabled": True}
             )
@@ -186,7 +188,9 @@ def test_default_input_file(tmp_path):
     ]:
         filename = os.path.join(tmp_path, "test.ui.json")
         params = params_class()
-        params.write_input_file(name=filename, path=tmp_path, validate=False)
+        params.write_input_file(
+            name=filename, path=tmp_path, validation_options={"disabled": True}
+        )
         ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
 
         # check that reads back into input file with defaults
@@ -779,9 +783,9 @@ def test_validate_out_group():
 
 def test_validate_distributed_workers():
     param = "distributed_workers"
-    newval = ["one", "two"]
+    newval = "one, two"
     param_test_generator(param, newval)
-    catch_invalid_generator(param, (), "type")
+    catch_invalid_generator(param, 123, "type")
 
 
 def test_gravity_inversion_type():
@@ -1942,7 +1946,9 @@ def test_isValue(tmp_path):
     file_name = "test.ui.json"
     mesh = geoh5.get_entity("O2O_Interp_25m")[0]
     mag_params.starting_model = 0.0
-    mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
+    mag_params.write_input_file(
+        name=file_name, path=tmp_path, validation_options={"disabled": True}
+    )
 
     with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
         ui = json.load(f)
@@ -1951,7 +1957,9 @@ def test_isValue(tmp_path):
 
     mag_params.starting_model = mesh.get_data("VTEM_model")[0].uid
 
-    mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
+    mag_params.write_input_file(
+        name=file_name, path=tmp_path, validation_options={"disabled": True}
+    )
     with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
         ui = json.load(f)
 

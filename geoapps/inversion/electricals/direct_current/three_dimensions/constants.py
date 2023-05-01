@@ -11,12 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current 3D inversion",
+    "version": geoapps.__version__,
+    "title": "Direct Current (DC) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",
@@ -92,7 +94,8 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current 3D forward",
+    "version": geoapps.__version__,
+    "title": "Direct Current (DC) 3D Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",
@@ -143,16 +146,30 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
+    "z_from_topo": {
+        "group": "Survey",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
+    },
     "starting_model": {
-        "association": "Cell",
+        "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models`",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
         "label": "Conductivity (S/m)",
         "property": None,
-        "value": 0.0,
+        "value": 1e-1,
     },
     "gradient_type": "total",
     "alpha_s": 1.0,
@@ -166,7 +183,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Direct Current 3D inversion",
+    "title": "Direct Current (DC) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",
@@ -208,7 +225,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models`",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -220,7 +237,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference conductivity (S/m)",
@@ -231,7 +248,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (S/m)",
@@ -244,7 +261,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (S/m)",

@@ -11,12 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.electromagnetics.tipper import TipperReceivers
 
+import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Tipper inversion",
+    "version": geoapps.__version__,
+    "title": "Tipper Inversion",
     "icon": "surveyztem",
     "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -102,7 +104,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Tipper forward",
+    "version": geoapps.__version__,
+    "title": "Tipper Forward",
     "icon": "surveyztem",
     "inversion_type": "tipper",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -161,6 +164,144 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+        "value": None,
+    },
+    "txz_real_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Txz real",
+        "value": False,
+    },
+    "txz_real_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Txz real",
+        "parent": "data_object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
+    "txz_real_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "dependency": "txz_real_channel",
+        "dependencyType": "enabled",
+        "value": None,
+    },
+    "txz_imag_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Txz imaginary",
+        "value": False,
+    },
+    "txz_imag_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Txz imaginary",
+        "parent": "data_object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
+    "txz_imag_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "dependency": "txz_imag_channel",
+        "dependencyType": "enabled",
+        "value": None,
+    },
+    "tyz_real_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Tyz real",
+        "value": False,
+    },
+    "tyz_real_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Tyz real",
+        "parent": "data_object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
+    "tyz_real_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "dependency": "tyz_real_channel",
+        "dependencyType": "enabled",
+        "value": None,
+    },
+    "tyz_imag_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Tyz imaginary",
+        "value": False,
+    },
+    "tyz_imag_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Tyz imaginary",
+        "parent": "data_object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
+    "tyz_imag_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "dataGroupType": "Multi-element",
+        "main": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "dependency": "tyz_imag_channel",
+        "dependencyType": "enabled",
+        "value": None,
+    },
+    "starting_model": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Conductivity (S/m)",
+        "property": None,
+        "value": 1e-3,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -173,7 +314,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Tipper inversion",
+    "title": "Tipper Inversion",
     "icon": "surveyztem",
     "inversion_type": "tipper",
     "data_object": {
@@ -306,7 +447,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -318,7 +459,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference conductivity (S/m)",
@@ -328,7 +469,7 @@ default_ui_json = {
     "background_conductivity": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -340,7 +481,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (S/m)",
@@ -353,7 +494,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (S/m)",
