@@ -20,11 +20,12 @@ from copy import deepcopy
 
 import numpy as np
 from discretize import TreeMesh
+from scipy.spatial import cKDTree
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 
 from geoapps.inversion.utils import calculate_2D_trend, create_nested_mesh
-from geoapps.shared_utils.utils import filter_xy
+from geoapps.shared_utils.utils import drape_2_tensor, filter_xy
 
 from .factories import (
     EntityFactory,
@@ -105,7 +106,6 @@ class InversionData(InversionLocations):
         self.detrend_order: float | None = None
         self.detrend_type: str | None = None
         self.locations: np.ndarray | None = None
-        self.has_pseudo: bool = False
         self.mask: np.ndarray | None = None
         self.global_map: np.ndarray | None = None
         self.indices: np.ndarray | None = None
@@ -160,6 +160,28 @@ class InversionData(InversionLocations):
         self.locations = super().get_locations(self.entity)
         self.survey, _, _ = self.create_survey()
         self.save_data(self.entity)
+
+    def drape_locations(self, locations: np.ndarray) -> np.ndarray:
+        """
+        Return pseudo locations along line in distance, depth.
+
+        The horizontal distance is referenced to first node of the core mesh.
+
+        """
+        local_tensor = drape_2_tensor(self.params.mesh)
+
+        # Interpolate distance assuming always inside the mesh trace
+        tree = cKDTree(self.params.mesh.prisms[:, :2])
+        rad, ind = tree.query(locations[:, :2], k=2)
+        distance_interp = 0.0
+        for ii in range(2):
+            distance_interp += local_tensor.cell_centers_x[ind[:, ii]] / (
+                rad[:, ii] + 1e-8
+            )
+
+        distance_interp /= ((rad + 1e-8) ** -1.0).sum(axis=1)
+
+        return np.c_[distance_interp, locations[:, 2:]]
 
     def filter(self, a):
         """Remove vertices based on mask property."""
