@@ -308,8 +308,8 @@ class SurveyFactory(SimPEGFactory):
             receiver_locations = receiver_entity.vertices
             source_locations = currents.vertices
             if local_index is not None:
-                receiver_locations = data.pseudo_locations(receiver_locations)
-                source_locations = data.pseudo_locations(source_locations)
+                receiver_locations = data.drape_locations(receiver_locations)
+                source_locations = data.drape_locations(source_locations)
 
         else:
             receiver_locations = data.locations
