@@ -161,7 +161,7 @@ class InversionData(InversionLocations):
         self.survey, _, _ = self.create_survey()
         self.save_data(self.entity)
 
-    def pseudo_locations(self, locations: np.ndarray) -> np.ndarray:
+    def drape_locations(self, locations: np.ndarray) -> np.ndarray:
         """
         Return pseudo locations along line in distance, depth.
 

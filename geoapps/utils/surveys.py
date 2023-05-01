@@ -38,7 +38,7 @@ def get_containing_cells(
         )
 
     elif isinstance(mesh, TensorMesh):
-        locations = data.pseudo_locations(data.survey.unique_locations)
+        locations = data.drape_locations(data.survey.unique_locations)
         xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
         yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
         inds = xi + yi * mesh.shape_cells[0]
