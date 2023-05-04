@@ -772,7 +772,7 @@ class InversionBaseParams(BaseParams):
     def unit_conversion(self):
         """Return unit conversion factor."""
         return None
-        
+
     def update_group_options(self):
         """
         Add options to the SimPEGGroup inversion using input file class.
