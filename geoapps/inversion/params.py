@@ -762,6 +762,11 @@ class InversionBaseParams(BaseParams):
     def distributed_workers(self, val):
         self.setter_validator("distributed_workers", val)
 
+    @property
+    def unit_conversion(self):
+        """Return unit conversion factor."""
+        return None
+
     def update_group_options(self, ga_group: SimPEGGroup):
         """
         Add options to the SimPEGGroup inversion using input file class.

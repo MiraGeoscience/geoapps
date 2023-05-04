@@ -389,15 +389,9 @@ class SurveyFactory(SimPEGFactory):
         else:
             rx_lookup = {k: [k] for k in self.local_index}
             tx_locs_lookup = {k: transmitters.vertices[k, :] for k in self.local_index}
-
-            conversion = {
-                "Seconds (s)": 1.0,
-                "Milliseconds (ms)": 1e-3,
-                "Microseconds (us)": 1e-6,
-            }
             wave_function = interp1d(
                 (receivers.waveform[:, 0] - receivers.timing_mark)
-                * conversion[receivers.unit],
+                * self.params.unit_conversion,
                 receivers.waveform[:, 1],
                 fill_value="extrapolate",
             )
