@@ -151,18 +151,21 @@ def get_drape_model(
     order = traveling_salesman(locations)
 
     # Smooth the locations
-    xy_smooth = np.c_[
-        running_mean(locations[order, 0], 2),
-        running_mean(locations[order, 1], 2),
-        running_mean(locations[order, 2], 2),
-    ]
-    locations = np.vstack(
-        [np.c_[locations[order[0], :]].T, xy_smooth, np.c_[locations[order[-1], :]].T]
+    xy_smooth = np.vstack(
+        [
+            np.c_[locations[order[0], :]].T,
+            np.c_[
+                running_mean(locations[order, 0], 2),
+                running_mean(locations[order, 1], 2),
+                running_mean(locations[order, 2], 2),
+            ],
+            np.c_[locations[order[-1], :]].T,
+        ]
     )
-    distances = compute_alongline_distance(locations)
-    x_interp = interp1d(distances[:, 0], locations[:, 0], fill_value="extrapolate")
-    y_interp = interp1d(distances[:, 0], locations[:, 1], fill_value="extrapolate")
-
+    distances = compute_alongline_distance(xy_smooth)
+    distances[:, -1] += locations[:, 2].max() - distances[:, -1].max() + h[1]
+    x_interp = interp1d(distances[:, 0], xy_smooth[:, 0], fill_value="extrapolate")
+    y_interp = interp1d(distances[:, 0], xy_smooth[:, 1], fill_value="extrapolate")
     mesh = mesh_utils.mesh_builder_xyz(
         distances,
         h,
