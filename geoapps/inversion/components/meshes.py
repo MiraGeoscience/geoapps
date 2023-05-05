@@ -89,7 +89,6 @@ class InversionMesh:
         self.n_cells = self.entity.n_cells
 
         if isinstance(self.entity, Octree):
-
             if self.entity.rotation:
                 origin = self.entity.origin.tolist()
                 angle = self.entity.rotation[0]
@@ -106,7 +105,6 @@ class InversionMesh:
     def build_from_params(self) -> Octree:
         """Runs geoapps.create.OctreeMesh to create mesh from params."""
         if "2d" in self.params.inversion_type:
-
             self.params.geoh5.get_entity("")
 
             (  # pylint: disable=W0632

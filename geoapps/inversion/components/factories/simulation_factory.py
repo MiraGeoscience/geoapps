@@ -45,7 +45,6 @@ class SimulationFactory(SimPEGFactory):
             self.solver = solver_module.Pardiso
 
     def concrete_object(self):
-
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             from SimPEG.potential_fields.magnetics import simulation
 
@@ -104,7 +103,6 @@ class SimulationFactory(SimPEGFactory):
         mapping=None,
         tile_id=None,
     ):
-
         mesh = global_mesh if tile_id is None else local_mesh
         sensitivity_path = self._get_sensitivity_path(tile_id)
 

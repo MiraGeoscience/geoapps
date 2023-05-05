@@ -12,7 +12,6 @@ from .params import MagneticScalarParams
 
 
 class MagneticScalarDriver(InversionDriver):
-
     _params_class = MagneticScalarParams
     _validations = validations
 
