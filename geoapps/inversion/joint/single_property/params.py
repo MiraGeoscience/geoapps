@@ -49,7 +49,7 @@ class JointSingleParams(InversionBaseParams):
         return self._group_a
 
     @group_a.setter
-    def group_a(self, val):
+    def group_a(self, val: SimPEGGroup):
         self.setter_validator("group_a", val, fun=self._uuid_promoter)
 
     @property
