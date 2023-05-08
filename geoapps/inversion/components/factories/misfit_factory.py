@@ -93,16 +93,16 @@ class MisfitFactory(SimPEGFactory):
                     # TODO this should be done in the simulation factory
                     lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
 
+                local_data = data.Data(survey)
+
                 if self.params.forward_only:
-                    lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
+                    lmisfit = data_misfit.L2DataMisfit(local_data, lsim, model_map=lmap)
+
                 else:
-                    ldat = (
-                        data.Data(
-                            survey, dobs=survey.dobs, standard_deviation=survey.std
-                        ),
-                    )
+                    local_data.dobs = survey.dobs
+                    local_data.standard_deviation = survey.std
                     lmisfit = data_misfit.L2DataMisfit(
-                        data=ldat[0],
+                        data=local_data,
                         simulation=lsim,
                         model_map=lmap,
                     )

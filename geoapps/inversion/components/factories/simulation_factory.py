@@ -153,7 +153,7 @@ class SimulationFactory(SimPEGFactory):
             )
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
-        kwargs["actInd"] = active_cells
+        kwargs["ind_active"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
         kwargs["model_type"] = "vector"
         kwargs["chunk_format"] = "row"
@@ -161,14 +161,14 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
-        kwargs["actInd"] = active_cells
+        kwargs["ind_active"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["chunk_format"] = "row"
 
         return kwargs
 
     def _gravity_keywords(self, kwargs, active_cells=None):
-        kwargs["actInd"] = active_cells
+        kwargs["ind_active"] = active_cells
         kwargs["rhoMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["chunk_format"] = "row"
 
