@@ -81,7 +81,7 @@ inversion_defaults = {
     "coolEpsFact": 1.2,
     "beta_search": False,
     "gradient_type": "total",
-    "sens_wts_threshold": 60.0,
+    "sens_wts_threshold": 5.0,
     "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,

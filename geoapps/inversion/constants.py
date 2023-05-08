@@ -205,7 +205,7 @@ default_ui_json = {
         "group": "Update sensitivity weights directive",
         "tooltip": "Update sensitivity weight threshold",
         "label": "Threshold (%)",
-        "value": 30.0,
+        "value": 5.0,
         "max": 99.9,
         "min": 0.0,
         "precision": 1,

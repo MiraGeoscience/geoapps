@@ -189,13 +189,10 @@ class DirectivesFactory:
         if self._update_sensitivity_weights_directive is None:
             self._update_sensitivity_weights_directive = (
                 directives.UpdateSensitivityWeights(
-                    everyIter=self.params.every_iteration_bool,
-                    threshold=self.params.sens_wts_threshold,
+                    every_iteration=self.params.every_iteration_bool,
+                    threshold_value=self.params.sens_wts_threshold / 100.0,
                 )
             )
-
-            if self.params.inversion_type in ["tdem"]:
-                self.update_sensitivity_weights_directive.method = "percent_amplitude"
 
         return self._update_sensitivity_weights_directive
 

@@ -166,7 +166,7 @@ class InversionApp(PlotSelection2D):
         self._coolingFactor = FloatText(value=2, description="Beta cooling factor")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._sens_wts_threshold = FloatText(
-            value=80, description="Threshold sensitivity weights", max=100, min=0
+            value=5, description="Threshold sensitivity weights", max=100, min=0
         )
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
         self._n_cpu = IntText(
