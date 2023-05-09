@@ -7,9 +7,8 @@
 
 from __future__ import annotations
 
-import os
 import sys
-from os import path
+from pathlib import Path
 
 import numpy as np
 from discretize.utils import mesh_utils
@@ -188,11 +187,12 @@ class BlockModelDriver(BaseDriver):
 
         object_out.origin = np.r_[object_out.origin.tolist()] - d_xyz
 
-        if self.params.monitoring_directory is not None and path.exists(
-            os.path.abspath(self.params.monitoring_directory)
+        if (
+            self.params.monitoring_directory is not None
+            and Path(self.params.monitoring_directory).is_dir()
         ):
             monitored_directory_copy(
-                os.path.abspath(self.params.monitoring_directory), object_out
+                str(Path(self.params.monitoring_directory).absolute()), object_out
             )
 
 
