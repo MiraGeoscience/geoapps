@@ -298,8 +298,8 @@ class InversionModel:
                 inclination[np.isnan(inclination)] = 0
                 declination[np.isnan(declination)] = 0
                 field_vecs = dip_azimuth2cartesian(
-                    dip=inclination,
-                    azm_N=declination,
+                    inclination,
+                    declination,
                 )
 
                 if model is not None:

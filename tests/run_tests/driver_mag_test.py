@@ -23,8 +23,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 11.707134,
-    "phi_d": 1.598,
-    "phi_m": 8.824e-6,
+    "phi_d": 57.01,
+    "phi_m": 8.54e-6,
 }
 
 
@@ -109,9 +109,8 @@ def test_susceptibility_run(
             tmi_channel_bool=True,
             z_from_topo=False,
             tmi_channel=tmi.uid,
-            tmi_uncertainty=4.0,
+            tmi_uncertainty=1.0,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e0,
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")

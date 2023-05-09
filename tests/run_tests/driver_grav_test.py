@@ -20,8 +20,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.0071214,
-    "phi_d": 0.0002049,
-    "phi_m": 0.00936,
+    "phi_d": 7.031e-6,
+    "phi_m": 0.1282,
 }
 
 
@@ -97,6 +97,7 @@ def test_gravity_run(
             gz_channel=gz.uid,
             gz_uncertainty=2e-3,
             lower_bound=0.0,
+            upper_bound=1.0,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
