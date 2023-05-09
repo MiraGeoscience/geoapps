@@ -30,7 +30,6 @@ from geoapps.utils.statistics import random_sampling
 
 
 class ClusteringDriver(BaseDriver):
-
     _params_class = ClusteringParams
     _validations = validations
 

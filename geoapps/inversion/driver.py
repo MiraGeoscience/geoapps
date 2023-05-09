@@ -39,7 +39,6 @@ from geoapps.inversion.params import InversionBaseParams
 
 
 class InversionDriver(BaseDriver):
-
     _params_class = InversionBaseParams  # pylint: disable=E0601
     _validations = None
 
@@ -96,7 +95,6 @@ class InversionDriver(BaseDriver):
         return self.models.upper_bound
 
     def initialize(self):
-
         ### Collect inversion components ###
 
         self.configure_dask()
@@ -220,7 +218,6 @@ class InversionDriver(BaseDriver):
         self.logger.end()
 
     def start_inversion_message(self):
-
         # SimPEG reports half phi_d, so we scale to match
         has_chi_start = self.params.starting_chi_factor is not None
         chi_start = (
@@ -240,7 +237,6 @@ class InversionDriver(BaseDriver):
         )
 
     def get_regularization(self):
-
         if self.inversion_type == "magnetic vector":
             wires = maps.Wires(
                 ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)
@@ -289,7 +285,6 @@ class InversionDriver(BaseDriver):
             reg.mref = self.reference_model
 
         else:
-
             reg = regularization.Sparse(
                 self.mesh,
                 indActive=self.active_cells,
@@ -306,7 +301,6 @@ class InversionDriver(BaseDriver):
         return reg
 
     def get_tiles(self):
-
         if self.params.inversion_type in [
             "direct current 3d",
             "induced polarization 3d",
@@ -403,7 +397,6 @@ class InversionLogger:
 
 
 if __name__ == "__main__":
-
     from . import DRIVER_MAP
 
     filepath = sys.argv[1]

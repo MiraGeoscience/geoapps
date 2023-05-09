@@ -12,7 +12,6 @@ from .params import InducedPolarization2DParams
 
 
 class InducedPolarization2DDriver(InversionDriver):
-
     _params_class = InducedPolarization2DParams
     _validations = validations
 

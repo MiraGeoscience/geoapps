@@ -12,7 +12,6 @@ from .params import DirectCurrent3DParams
 
 
 class DirectCurrent3DDriver(InversionDriver):
-
     _params_class = DirectCurrent3DParams
     _validations = validations
 
