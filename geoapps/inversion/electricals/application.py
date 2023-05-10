@@ -784,7 +784,12 @@ class InversionApp(PlotSelection2D):
         else:
             data_type_list = ["chargeability"]
 
-        self.ga_group_name.value = self.params.defaults["out_group"]
+        if getattr(self.params, "_out_group", None) is not None:
+            self.ga_group_name.value = self.params.out_group.name
+        else:
+            self.ga_group_name.value = (
+                self.params.inversion_type.capitalize() + "Inversion"
+            )
 
         flag = self.inversion_type.value
         self._reference_model_group.units = inversion_defaults()["units"][flag]

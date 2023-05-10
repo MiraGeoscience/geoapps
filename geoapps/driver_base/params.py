@@ -171,7 +171,9 @@ class BaseParams:
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
         params_dict = {
-            k: getattr(self, k) for k in self.param_names if hasattr(self, k)
+            k: getattr(self, "_" + k)
+            for k in self.param_names
+            if hasattr(self, "_" + k)
         }
         if ui_json_format:
             self.input_file.data = params_dict
