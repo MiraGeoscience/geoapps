@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -33,7 +35,7 @@ np.random.seed(0)
 
 
 def test_ip_2d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=10,
     n_lines=3,
     refinement=(4, 6),
@@ -71,13 +73,13 @@ def test_ip_2d_fwr_run(
 
 
 def test_ip_2d_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_ip_2d_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_ip_2d_fwr_run0" / "inversion_test.geoh5"
 
     with Workspace(workpath) as geoh5:
         chargeability = geoh5.get_entity("Iteration_0_ip")[0]
@@ -116,9 +118,7 @@ def test_ip_2d_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = InducedPolarization2DDriver.start(
-        os.path.join(tmp_path, "Inv_run.ui.json")
-    )
+    driver = InducedPolarization2DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.ga_group.uid

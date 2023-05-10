@@ -6,6 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
+from pathlib import Path
+
 import numpy as np
 from geoh5py.workspace import Workspace
 
@@ -33,7 +37,7 @@ def setup_params(tmp):
     return geotest.make()
 
 
-def test_get_locations(tmp_path):
+def test_get_locations(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     window = InversionWindow(ws, params).window
     inversion_data = InversionData(ws, params, window)

@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
+from pathlib import Path
 
 import numpy as np
 from geoh5py.data import Data
@@ -940,7 +941,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + 'python -m geoapps.inversion.airborne_electromagnetics.driver "'
-            + f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
+            + f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
         )
         self.trigger.button_style = ""
 
@@ -1356,9 +1357,9 @@ class InversionApp(PlotSelection2D):
             return
 
         with Workspace(
-            os.path.join(
-                self.export_directory.selected_path,
-                self.ga_group_name.value + ".geoh5",
+            str(
+                Path(self.export_directory.selected_path)
+                / (self.ga_group_name.value + ".geoh5")
             )
         ) as new_workspace:
             obj, _ = self.get_selected_entities()
@@ -1422,10 +1423,11 @@ class InversionApp(PlotSelection2D):
                             continue
                         d.copy(parent=new_obj)
 
-        input_dict["workspace"] = os.path.abspath(new_workspace.h5file)
-        input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)
+        input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
+            Path(new_workspace.h5file).absolute()
+        )
 
-        file = f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
+        file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
 
         with open(file, "w", encoding="utf8") as f:
             json.dump(input_dict, f, indent=4)

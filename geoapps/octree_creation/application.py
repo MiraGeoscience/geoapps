@@ -9,10 +9,10 @@
 
 from __future__ import annotations
 
-import os
 import sys
 import uuid
 import warnings
+from pathlib import Path
 from time import time
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
@@ -48,7 +48,7 @@ class OctreeMesh(ObjectDataSelection):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)

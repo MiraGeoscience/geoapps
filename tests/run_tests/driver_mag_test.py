@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -28,7 +30,7 @@ target_run = {
 
 
 def test_susceptibility_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -66,14 +68,14 @@ def test_susceptibility_fwr_run(
 
 
 def test_susceptibility_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.geoh5"
     if pytest:
-        workpath = str(
-            tmp_path / "../test_susceptibility_fwr_run0/inversion_test.geoh5"
+        workpath = (
+            tmp_path.parent / "test_susceptibility_fwr_run0" / "inversion_test.geoh5"
         )
 
     with Workspace(workpath) as geoh5:
@@ -111,7 +113,7 @@ def test_susceptibility_run(
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = MagneticScalarDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = MagneticScalarDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(

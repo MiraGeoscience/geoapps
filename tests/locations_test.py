@@ -6,6 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
+from pathlib import Path
+
 import numpy as np
 import pytest
 from geoh5py.objects import Grid2D, Points
@@ -27,7 +31,7 @@ def setup_params(tmp):
     return geotest.make()
 
 
-def test_mask(tmp_path):
+def test_mask(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     locations = InversionLocations(ws, params, window)
@@ -41,7 +45,7 @@ def test_mask(tmp_path):
     assert "Badly formed" in str(excinfo.value)
 
 
-def test_get_locations(tmp_path):
+def test_get_locations(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     locs = np.ones((10, 3), dtype=float)
@@ -66,7 +70,7 @@ def test_get_locations(tmp_path):
     np.testing.assert_allclose(dlocs, locs)
 
 
-def test_filter(tmp_path):
+def test_filter(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     locations = InversionLocations(ws, params, window)
@@ -80,7 +84,7 @@ def test_filter(tmp_path):
     assert np.all(filtered_data["key"] == [2, 3, 4])
 
 
-def test_rotate(tmp_path):
+def test_rotate(tmp_path: Path):
     # Basic test since rotate_xy already tested
     ws, params = setup_params(tmp_path)
     window = params.window()
@@ -90,7 +94,7 @@ def test_rotate(tmp_path):
     assert locs_rot.shape == test_locs.shape
 
 
-def test_z_from_topo(tmp_path):
+def test_z_from_topo(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     window = params.window()
     locations = InversionLocations(ws, params, window)

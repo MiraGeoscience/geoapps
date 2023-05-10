@@ -7,9 +7,11 @@
 
 # pylint: disable=protected-access
 
+from __future__ import annotations
+
 import base64
 import uuid
-from os import listdir, path
+from pathlib import Path
 
 import pytest
 from geoh5py.objects import Curve
@@ -35,8 +37,8 @@ from .. import PROJECT
 GEOH5 = Workspace(PROJECT)
 
 
-def test_block_model(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_block_model(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -82,7 +84,7 @@ def test_block_model(tmp_path):
     assert expansion_fact == block_model.params.expansion_fact
 
     # Create a second workspace to test file uploads
-    temp_workspace2 = path.join(tmp_path, "contour2.geoh5")
+    temp_workspace2 = str(tmp_path / "contour2.geoh5")
     with Workspace(temp_workspace2) as workspace:
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -114,15 +116,15 @@ def test_block_model(tmp_path):
     )
 
     filename = list(
-        filter(lambda x: ("BlockModel_" in x) and ("geoh5" in x), listdir(tmp_path))
+        filter(lambda x: ("BlockModel_" in x) and ("geoh5" in x), tmp_path.iterdir())
     )[0]
-    with Workspace(path.join(tmp_path, filename)) as workspace:
+    with Workspace(str(tmp_path / filename)) as workspace:
         ent = workspace.get_entity("BlockModel")
         assert (len(ent) == 1) and (ent[0] is not None)
 
 
-def test_calculator(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_calculator(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
@@ -134,8 +136,8 @@ def test_calculator(tmp_path):
         assert output.values.shape[0] == 4438, "Change in output. Need to verify."
 
 
-def test_coordinate_transformation(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_coordinate_transformation(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
@@ -147,8 +149,8 @@ def test_coordinate_transformation(tmp_path):
         assert len(workspace.objects) == 2, "Coordinate transform failed."
 
 
-def test_contour_values(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_contour_values(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
             parent=workspace
@@ -162,8 +164,8 @@ def test_contour_values(tmp_path):
         assert output.n_vertices == 2655, "Change in output. Need to verify."
 
 
-def test_create_surface(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_create_surface(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
@@ -184,8 +186,8 @@ def test_create_surface(tmp_path):
         assert len(group.children) == 1
 
 
-def test_clustering(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_clustering(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -239,14 +241,14 @@ def test_clustering(tmp_path):
     )
 
     filename = list(
-        filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
+        filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), (tmp_path.iterdir()))
     )[0]
-    with Workspace(path.join(tmp_path, filename)) as workspace:
+    with Workspace(str(tmp_path / filename)) as workspace:
         assert len(workspace.get_entity("Clusters")) == 1
 
 
-def test_data_interpolation(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_data_interpolation(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
@@ -263,8 +265,8 @@ def test_data_interpolation(tmp_path):
         assert len(workspace.get_entity("Iteration_7_model_Interp")) == 1
 
 
-def test_edge_detection(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_edge_detection(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
@@ -308,8 +310,8 @@ def test_export():
     # TODO write all the files types and check that appropriate files are written
 
 
-def test_iso_surface(tmp_path):
-    temp_workspace = path.join(tmp_path, "contour.geoh5")
+def test_iso_surface(tmp_path: Path):
+    temp_workspace = str(tmp_path / "contour.geoh5")
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",

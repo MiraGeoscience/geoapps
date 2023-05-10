@@ -10,7 +10,6 @@ from __future__ import annotations
 import time
 import types
 import uuid
-from os import makedirs, mkdir, path
 from pathlib import Path
 from shutil import copyfile
 
@@ -163,7 +162,7 @@ class BaseApplication:
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable="protected-access"
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
 
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()
@@ -206,7 +205,7 @@ class BaseApplication:
         """
         if self.live_link.value:
             if (self.h5file is not None) and (self.monitoring_directory is None):
-                live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
+                live_path = str((Path(self.h5file).parent / "Temp").absolute())
                 self.monitoring_directory = live_path
 
             if getattr(self, "_params", None) is not None:
@@ -237,17 +236,17 @@ class BaseApplication:
         return self._monitoring_directory
 
     @monitoring_directory.setter
-    def monitoring_directory(self, live_path: str):
-        if not path.exists(live_path):
-            mkdir(live_path)
+    def monitoring_directory(self, live_path: str | Path):
+        live_path = Path(live_path)
+        live_path.mkdir(exist_ok=True)
 
-        live_path = path.abspath(live_path)
+        live_path_str = str(live_path.absolute())
         self.export_directory._set_form_values(  # pylint: disable=protected-access
-            live_path, ""
+            live_path_str, ""
         )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
 
-        self._monitoring_directory = live_path
+        self._monitoring_directory = live_path_str
 
     @property
     def copy_trigger(self):
@@ -296,22 +295,23 @@ class BaseApplication:
             raise TypeError
 
     @staticmethod
-    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
+    def get_output_workspace(
+        live_link, workpath: str | Path = Path(), name: str = "Temp.geoh5"
+    ):
         """
         Create an active workspace with check for GA monitoring directory
         """
-        if not name.endswith(".geoh5"):
+        if Path(name).suffix != ".geoh5":
             name += ".geoh5"
-        workspace = Workspace(path.join(workpath, name))
+        workspace = Workspace(Path(workpath) / name)
         workspace.close()
         new_live_link = False
         time.sleep(1)
         # Check if GA digested the file already
-        if not path.exists(workspace.h5file):
-            workpath = path.join(workpath, ".working")
-            if not path.exists(workpath):
-                makedirs(workpath)
-            workspace = Workspace(path.join(workpath, name))
+        if not Path(workspace.h5file).is_file():
+            workpath = Path(workpath) / ".working"
+            workpath.mkdir(parents=True, exist_ok=True)
+            workspace = Workspace(workpath / name)
             workspace.close()
             new_live_link = True
             if not live_link:
@@ -428,7 +428,7 @@ class BaseApplication:
             getattr(self, "_working_directory", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._working_directory = path.abspath(path.dirname(self.h5file))
+            self._working_directory = str(Path(self.h5file).parent.absolute())
         return self._working_directory
 
     @property
@@ -440,12 +440,12 @@ class BaseApplication:
             getattr(self, "_workspace_geoh5", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._workspace_geoh5 = path.abspath(self.h5file)
+            self._workspace_geoh5 = str(Path(self.h5file).absolute())
         return self._workspace_geoh5
 
     @workspace_geoh5.setter
-    def workspace_geoh5(self, file_path):
-        self._workspace_geoh5 = path.abspath(file_path)
+    def workspace_geoh5(self, file_path: str | Path):
+        self._workspace_geoh5 = str(Path(file_path).absolute())
 
     def create_copy(self, _):
         if self.h5file is not None:
@@ -474,16 +474,15 @@ class BaseApplication:
         self._h5file = workspace.h5file
         self._file_browser.reset(
             path=self.working_directory,
-            filename=path.basename(self._h5file),
+            filename=Path(self._h5file).name,
         )
         self._file_browser._apply_selection()  # pylint: disable=protected-access
 
-        export_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
-        if not path.exists(export_path):
-            mkdir(export_path)
+        export_path = (Path(self.h5file).parent / "Temp").absolute()
+        export_path.mkdir(exist_ok=True)
 
         self.export_directory._set_form_values(  # pylint: disable=protected-access
-            export_path, ""
+            str(export_path), ""
         )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
 

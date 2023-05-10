@@ -7,7 +7,9 @@
 
 # pylint: disable=W0212
 
-from os import path
+from __future__ import annotations
+
+from pathlib import Path
 from uuid import UUID
 
 from geoh5py.shared import Entity
@@ -34,10 +36,10 @@ from .. import PROJECT, PROJECT_DCIP
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
-def test_mag_inversion(tmp_path):
+def test_mag_inversion(tmp_path: Path):
     """Tests the jupyter application for mag-mvi"""
     with Workspace(PROJECT) as ws:
-        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+        with Workspace(tmp_path / "invtest.geoh5") as new_geoh5:
             new_topo = ws.get_entity(UUID("ab3c2083-6ea8-4d31-9230-7aad3ec09525"))[
                 0
             ].copy(parent=new_geoh5)
@@ -140,10 +142,10 @@ def test_mag_inversion(tmp_path):
                 ), f"Property group {group} did not reset to 'None'"
 
 
-def test_dc_inversion(tmp_path):
+def test_dc_inversion(tmp_path: Path):
     """Tests the jupyter application for dc inversion"""
     with Workspace(PROJECT_DCIP) as ws:
-        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+        with Workspace(tmp_path / "invtest.geoh5") as new_geoh5:
             new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
                 0
             ].copy(parent=new_geoh5)
@@ -161,7 +163,7 @@ def test_dc_inversion(tmp_path):
     }
     side_effects = {}
     app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
-    app.geoh5 = path.join(tmp_path, "invtest.geoh5")
+    app.geoh5 = str(tmp_path / "invtest.geoh5")
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
@@ -210,10 +212,10 @@ def test_dc_inversion(tmp_path):
             ), f"Property group {group} did not reset to 'None'"
 
 
-def test_ip_inversion(tmp_path):
+def test_ip_inversion(tmp_path: Path):
     """Tests the jupyter application for dc inversion"""
     with Workspace(PROJECT_DCIP) as ws:
-        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+        with Workspace(tmp_path / "invtest.geoh5") as new_geoh5:
             new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
                 0
             ].copy(parent=new_geoh5)
@@ -286,10 +288,10 @@ def test_ip_inversion(tmp_path):
             ), f"Property group {group} did not reset to 'None'"
 
 
-def test_em1d_inversion(tmp_path):
+def test_em1d_inversion(tmp_path: Path):
     """Tests the jupyter application for em1d inversion."""
     with Workspace(PROJECT) as ws:
-        with Workspace(path.join(tmp_path, "invtest.geoh5")) as new_geoh5:
+        with Workspace(tmp_path / "invtest.geoh5") as new_geoh5:
             new_obj = ws.get_entity(UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"))[
                 0
             ].copy(parent=new_geoh5)

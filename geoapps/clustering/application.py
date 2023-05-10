@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import uuid
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -45,7 +46,7 @@ class Clustering(ScatterPlots):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
+        if ui_json is not None and Path(ui_json.path).is_file():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
@@ -1283,11 +1284,11 @@ class Clustering(ScatterPlots):
             if (
                 monitoring_directory is not None
                 and monitoring_directory != ""
-                and os.path.exists(os.path.abspath(monitoring_directory))
+                and Path(monitoring_directory).is_dir()
             ):
-                monitoring_directory = os.path.abspath(monitoring_directory)
+                monitoring_directory = str(Path(monitoring_directory).absolute())
             else:
-                monitoring_directory = os.path.dirname(self.workspace.h5file)
+                monitoring_directory = str(Path(self.workspace.h5file).parent)
 
             # Get output workspace.
             temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
@@ -1320,7 +1321,7 @@ class Clustering(ScatterPlots):
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return [True]
             else:
-                print("Saved to " + os.path.abspath(monitoring_directory))
+                print(f"Saved to {Path(monitoring_directory).absolute()}")
                 return []
         else:
             return no_update

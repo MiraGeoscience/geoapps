@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
-import os
+from pathlib import Path
 
 import numpy as np
 from SimPEG import maps
@@ -219,11 +219,11 @@ class SimulationFactory(SimPEGFactory):
 
     def _get_sensitivity_path(self, tile_id: int) -> str:
         """Build path to destination of on-disk sensitivities."""
-        out_dir = os.path.join(self.params.workpath, "SimPEG_PFInversion") + os.path.sep
+        out_dir = Path(self.params.workpath) / "SimPEG_PFInversion"
 
         if tile_id is None:
-            sens_path = out_dir + "Tile.zarr"
+            sens_path = str(out_dir / "Tile.zarr")
         else:
-            sens_path = out_dir + "Tile" + str(tile_id) + ".zarr"
+            sens_path = str(out_dir / f"Tile{tile_id}.zarr")
 
         return sens_path

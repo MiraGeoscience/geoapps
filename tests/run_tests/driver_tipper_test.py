@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -28,7 +30,7 @@ np.random.seed(0)
 
 
 def test_tipper_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -66,10 +68,10 @@ def test_tipper_fwr_run(
     return fwr_driver.starting_model
 
 
-def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
+    workpath = tmp_path / "inversion_test.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_tipper_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_tipper_fwr_run0" / "inversion_test.geoh5"
 
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
@@ -143,7 +145,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = TipperDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = TipperDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(

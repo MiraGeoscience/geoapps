@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import os
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -54,7 +54,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)

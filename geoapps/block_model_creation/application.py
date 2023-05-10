@@ -39,7 +39,7 @@ class BlockModelCreation(BaseDashApplication):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json.path).exists():
+        if ui_json is not None and Path(ui_json.path).is_file():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
@@ -141,7 +141,7 @@ class BlockModelCreation(BaseDashApplication):
             if (
                 (monitoring_directory is not None)
                 and (monitoring_directory != "")
-                and Path(monitoring_directory).exists()
+                and Path(monitoring_directory).is_dir()
             ):
                 monitoring_directory = str(Path(monitoring_directory).absolute())
             else:

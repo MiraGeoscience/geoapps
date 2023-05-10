@@ -7,8 +7,8 @@
 
 from __future__ import annotations
 
-import os
 from copy import deepcopy
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -139,15 +139,15 @@ class BaseParams:
             getattr(self, "_workpath", None) is None
             and getattr(self, "_geoh5", None) is not None
         ):
-            self._workpath = os.path.dirname(self.geoh5.h5file)
+            self._workpath = str(Path(self.geoh5.h5file).parent)
         return self._workpath
 
     @workpath.setter
     def workpath(self, val: str | None):
         if val is not None:
-            if not os.path.exists(val):
+            if not Path(val).is_dir():
                 raise ValueError("Provided 'workpath' is not a valid path.")
-            val = os.path.abspath(val)
+            val = str(Path(val).absolute())
 
         self._workpath = val
 

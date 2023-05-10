@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import sys
-from os import path
+from pathlib import Path
 
 import numpy as np
 from dask import compute, delayed
@@ -323,8 +323,9 @@ class PeakFinderDriver(BaseDriver):
                         parent=output_group,
                     )
 
-            if self.params.monitoring_directory is not None and path.exists(
-                self.params.monitoring_directory
+            if (
+                self.params.monitoring_directory is not None
+                and Path(self.params.monitoring_directory).is_dir()
             ):
                 monitored_directory_copy(self.params.monitoring_directory, output_group)
 

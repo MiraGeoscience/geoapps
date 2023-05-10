@@ -6,6 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
+from pathlib import Path
+
 import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
@@ -50,7 +54,7 @@ def setup_params(path):
     return geotest.make()
 
 
-def test_zero_reference_model(tmp_path):
+def test_zero_reference_model(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
@@ -67,7 +71,7 @@ def test_zero_reference_model(tmp_path):
     assert np.isclose(decl[0], 11.0)
 
 
-def test_collection(tmp_path):
+def test_collection(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
@@ -83,7 +87,7 @@ def test_collection(tmp_path):
     np.testing.assert_allclose(models.starting, starting.model)
 
 
-def test_initialize(tmp_path):
+def test_initialize(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
     inversion_data = InversionData(ws, params, inversion_window.window)
@@ -96,7 +100,7 @@ def test_initialize(tmp_path):
     assert len(np.unique(starting_model.model)) == 3
 
 
-def test_model_from_object(tmp_path):
+def test_model_from_object(tmp_path: Path):
     # Test behaviour when loading model from Points object with non-matching mesh
     ws, params = setup_params(tmp_path)
     inversion_window = InversionWindow(ws, params)
@@ -123,7 +127,7 @@ def test_model_from_object(tmp_path):
     np.testing.assert_array_almost_equal(m, m0, decimal=1)
 
 
-def test_permute_2_octree(tmp_path):
+def test_permute_2_octree(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     params.lower_bound = 0.0
     inversion_window = InversionWindow(ws, params)
@@ -162,7 +166,7 @@ def test_permute_2_octree(tmp_path):
     assert zmax >= locs_perm_rot[:, 2].max()
 
 
-def test_permute_2_treemesh(tmp_path):
+def test_permute_2_treemesh(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     cc = params.mesh.centroids
     center = np.mean(cc, axis=0)

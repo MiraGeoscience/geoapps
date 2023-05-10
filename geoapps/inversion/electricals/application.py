@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import os.path as path
 import uuid
 import warnings
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -106,7 +106,7 @@ class InversionApp(PlotSelection2D):
             kwargs.pop("plot_result")
 
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
@@ -1137,7 +1137,7 @@ class InversionApp(PlotSelection2D):
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
 
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()

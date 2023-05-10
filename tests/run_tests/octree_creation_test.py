@@ -5,7 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
 from pathlib import Path
 
 import numpy as np
@@ -22,10 +23,9 @@ from geoapps.utils.testing import get_output_workspace
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
-def test_create_octree_app(tmp_path):
-    project = os.path.join(tmp_path, "testOctree.geoh5")
+def test_create_octree_app(tmp_path: Path):
     # Create temp workspace
-    with Workspace(project) as workspace:
+    with Workspace(tmp_path / "testOctree.geoh5") as workspace:
         n_data = 12
         xyz = np.random.randn(n_data, 3) * 100
         points = Points.create(workspace, vertices=xyz)
@@ -121,13 +121,10 @@ def test_create_octree_app(tmp_path):
             compare_entities(octree, rec_octree, ignore=["_uid"])
 
 
-def test_create_octree_driver(tmp_path):
-    uijson_path = Path(tmp_path) / r"../test_create_octree_app0/Temp"
-    for file in os.listdir(uijson_path):
-        if file.endswith(".json"):
-            json_file = file
-
-    driver = OctreeDriver.start(os.path.join(uijson_path, json_file))
+def test_create_octree_driver(tmp_path: Path):
+    uijson_path = tmp_path.parent / "test_create_octree_app0" / "Temp"
+    json_file = uijson_path.glob("*.ui.json")[0]
+    driver = OctreeDriver.start(str(json_file))
 
     with driver.params.geoh5.open(mode="r"):
         results = driver.params.geoh5.get_entity("Octree_Mesh")
