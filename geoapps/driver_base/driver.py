@@ -40,7 +40,7 @@ class BaseDriver(ABC):
             driver_class = cls
 
         print("Loading input file . . .")
-        filepath = str(Path(filepath).absolute())
+        filepath = str(Path(filepath).resolve())
         ifile = InputFile.read_ui_json(
             filepath, validations=driver_class._validations  # pylint: disable=W0212
         )

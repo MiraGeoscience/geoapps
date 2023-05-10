@@ -43,7 +43,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             with self.workspace.open():
                 self.pseudo3d_params.write_input_file(
                     name=path.name,
-                    path=str(path.parent.absolute()),
+                    path=str(path.parent.resolve()),
                 )
         generate(
             str(path),
@@ -51,7 +51,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             update_values={"conda_environment": "geoapps"},
         )
         ifile = InputFile.read_ui_json(
-            str(path.with_stem(f"{path.stem}_sweep.ui").absolute())
+            str(path.with_stem(f"{path.stem}_sweep.ui").resolve())
         )
         with self.workspace.open(mode="r"):
             lines = self.pseudo3d_params.line_object.values

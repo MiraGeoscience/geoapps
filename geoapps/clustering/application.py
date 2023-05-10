@@ -1286,7 +1286,7 @@ class Clustering(ScatterPlots):
                 and monitoring_directory != ""
                 and Path(monitoring_directory).is_dir()
             ):
-                monitoring_directory = str(Path(monitoring_directory).absolute())
+                monitoring_directory = str(Path(monitoring_directory).resolve())
             else:
                 monitoring_directory = str(Path(self.workspace.h5file).parent)
 
@@ -1321,7 +1321,7 @@ class Clustering(ScatterPlots):
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return [True]
             else:
-                print(f"Saved to {Path(monitoring_directory).absolute()}")
+                print(f"Saved to {Path(monitoring_directory).resolve()}")
                 return []
         else:
             return no_update

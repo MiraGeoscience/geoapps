@@ -1424,7 +1424,7 @@ class InversionApp(PlotSelection2D):
                         d.copy(parent=new_obj)
 
         input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
-            Path(new_workspace.h5file).absolute()
+            Path(new_workspace.h5file).resolve()
         )
 
         file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"

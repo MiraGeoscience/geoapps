@@ -473,6 +473,6 @@ class InversionLogger:
 
 
 if __name__ == "__main__":
-    file = str(Path(sys.argv[1]).absolute())
+    file = str(Path(sys.argv[1]).resolve())
     InversionDriver.start(file)
     sys.stdout.close()

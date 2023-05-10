@@ -251,6 +251,6 @@ class ClusteringDriver(BaseDriver):
                 and Path(self.params.monitoring_directory).is_dir()
             ):
                 monitored_directory_copy(
-                    str(Path(self.params.monitoring_directory).absolute()),
+                    str(Path(self.params.monitoring_directory).resolve()),
                     self.params.objects,
                 )

@@ -228,7 +228,7 @@ class BaseDashApplication:
             ):
                 if self.workspace is not None:
                     update_dict["monitoring_directory_value"] = str(
-                        Path(self.workspace.h5file).parent.absolute()
+                        Path(self.workspace.h5file).parent.resolve()
                     )
 
         # Format updated params to return to the callback

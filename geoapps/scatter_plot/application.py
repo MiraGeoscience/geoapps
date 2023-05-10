@@ -508,7 +508,7 @@ class ScatterPlots(BaseDashApplication):
                 and Path(monitoring_directory).is_dir()
             ):
                 param_dict["monitoring_directory"] = str(
-                    Path(monitoring_directory).absolute()
+                    Path(monitoring_directory).resolve()
                 )
                 temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 

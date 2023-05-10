@@ -143,7 +143,7 @@ class BlockModelCreation(BaseDashApplication):
                 and (monitoring_directory != "")
                 and Path(monitoring_directory).is_dir()
             ):
-                monitoring_directory = str(Path(monitoring_directory).absolute())
+                monitoring_directory = str(Path(monitoring_directory).resolve())
             else:
                 print("Invalid output path.")
                 raise PreventUpdate

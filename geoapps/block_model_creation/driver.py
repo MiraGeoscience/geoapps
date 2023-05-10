@@ -192,7 +192,7 @@ class BlockModelDriver(BaseDriver):
             and Path(self.params.monitoring_directory).is_dir()
         ):
             monitored_directory_copy(
-                str(Path(self.params.monitoring_directory).absolute()), object_out
+                str(Path(self.params.monitoring_directory).resolve()), object_out
             )
 
 

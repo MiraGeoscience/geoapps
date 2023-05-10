@@ -205,7 +205,7 @@ class BaseApplication:
         """
         if self.live_link.value:
             if (self.h5file is not None) and (self.monitoring_directory is None):
-                live_path = str((Path(self.h5file).parent / "Temp").absolute())
+                live_path = str((Path(self.h5file).parent / "Temp").resolve())
                 self.monitoring_directory = live_path
 
             if getattr(self, "_params", None) is not None:
@@ -240,7 +240,7 @@ class BaseApplication:
         live_path = Path(live_path)
         live_path.mkdir(exist_ok=True)
 
-        live_path_str = str(live_path.absolute())
+        live_path_str = str(live_path.resolve())
         self.export_directory._set_form_values(  # pylint: disable=protected-access
             live_path_str, ""
         )
@@ -428,7 +428,7 @@ class BaseApplication:
             getattr(self, "_working_directory", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._working_directory = str(Path(self.h5file).parent.absolute())
+            self._working_directory = str(Path(self.h5file).parent.resolve())
         return self._working_directory
 
     @property
@@ -440,12 +440,12 @@ class BaseApplication:
             getattr(self, "_workspace_geoh5", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._workspace_geoh5 = str(Path(self.h5file).absolute())
+            self._workspace_geoh5 = str(Path(self.h5file).resolve())
         return self._workspace_geoh5
 
     @workspace_geoh5.setter
     def workspace_geoh5(self, file_path: str | Path):
-        self._workspace_geoh5 = str(Path(file_path).absolute())
+        self._workspace_geoh5 = str(Path(file_path).resolve())
 
     def create_copy(self, _):
         if self.h5file is not None:
@@ -478,7 +478,7 @@ class BaseApplication:
         )
         self._file_browser._apply_selection()  # pylint: disable=protected-access
 
-        export_path = (Path(self.h5file).parent / "Temp").absolute()
+        export_path = (Path(self.h5file).parent / "Temp").resolve()
         export_path.mkdir(exist_ok=True)
 
         self.export_directory._set_form_values(  # pylint: disable=protected-access

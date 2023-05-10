@@ -147,7 +147,7 @@ class BaseParams:
         if val is not None:
             if not Path(val).is_dir():
                 raise ValueError("Provided 'workpath' is not a valid path.")
-            val = str(Path(val).absolute())
+            val = str(Path(val).resolve())
 
         self._workpath = val
 
