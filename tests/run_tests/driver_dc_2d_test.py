@@ -112,7 +112,7 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
     driver = DirectCurrent2DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = potential.values[np.isfinite(potential.values)]

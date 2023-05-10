@@ -102,7 +102,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "GravityInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -158,7 +158,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "GravityForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -579,7 +579,6 @@ default_ui_json = {
         "value": 10.0,
         "enabled": False,
     },
-    "out_group": {"label": "Results group name", "value": "GravityInversion"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)

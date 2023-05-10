@@ -504,6 +504,15 @@ default_ui_json = {
         "value": True,
         "verbose": 3,
     },
+    "out_group": {
+        "label": "SimPEG group",
+        "value": None,
+        "groupType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
+        "group": "Drag-and-drop options",
+        "visible": True,
+        "optional": True,
+        "enabled": False,
+    },
     "generate_sweep": {
         "label": "Generate sweep file",
         "group": "Python run preferences",

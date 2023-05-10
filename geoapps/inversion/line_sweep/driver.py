@@ -85,7 +85,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         lines = np.unique(self.pseudo3d_params.line_object.values)
         models_group = ContainerGroup.create(self.workspace, name="Models")
         data_result = self.pseudo3d_params.data_object.copy(
-            parent=self.pseudo3d_params.ga_group
+            parent=self.pseudo3d_params.out_group
         )
 
         data = {}
@@ -141,7 +141,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             )
 
         octree_model.copy(parent=models_group)
-        models_group.parent = self.pseudo3d_params.ga_group
+        models_group.parent = self.pseudo3d_params.out_group
 
     def collect_line_data(self, survey, data):
         for child in survey.children:  # initialize data values dictionary

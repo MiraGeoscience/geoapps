@@ -83,7 +83,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -122,7 +122,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -345,7 +345,6 @@ default_ui_json = {
     "detrend_order": None,
     "detrend_type": None,
     "tile_spatial": 1,
-    "out_group": {"label": "Results group name", "value": "DirectCurrentInversion"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -390,5 +389,4 @@ app_initializer = {
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "receivers_offset_z": 0.0,
-    "out_group": "DCInversion",
 }

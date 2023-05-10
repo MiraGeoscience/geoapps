@@ -155,11 +155,11 @@ def test_ip_p3d_run(
             k for k in middle_inversion_group.children if isinstance(k, FilenameData)
         ][0]
 
-        with driver.pseudo3d_params.ga_group.workspace.open(mode="r+"):
-            filedata.copy(parent=driver.pseudo3d_params.ga_group)
+        with driver.pseudo3d_params.out_group.workspace.open(mode="r+"):
+            filedata.copy(parent=driver.pseudo3d_params.out_group)
 
     output = get_inversion_output(
-        driver.pseudo3d_params.geoh5.h5file, driver.pseudo3d_params.ga_group.uid
+        driver.pseudo3d_params.geoh5.h5file, driver.pseudo3d_params.out_group.uid
     )
     if geoh5.open():
         output["data"] = chargeability.values
