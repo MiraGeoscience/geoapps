@@ -62,6 +62,9 @@ class BaseParams:
         self._title = None
         self._conda_environment: str = None
         self._conda_environment_boolean: bool = None
+        self._generate_sweep: bool = False
+        self._workspace = None
+        self._run_command_boolean: bool = False
         self.workpath = workpath
         self.input_file = input_file
         self.validate = validate
