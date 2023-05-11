@@ -101,6 +101,9 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
         data_result.add_data(data)
 
+        if self.pseudo3d_params.mesh is None:
+            return
+
         # interpolate drape model children common to all drape models into octree
         active = active_from_xyz(
             self.pseudo3d_params.mesh, self.inversion_topography.locations
