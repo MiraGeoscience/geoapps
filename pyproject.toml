@@ -42,7 +42,7 @@ python = "^3.9, < 3.11"
 ## dependencies for a minimal environment
 numpy = "~1.23.5" # also geoh5py, simpeg and geoana
 
-geoh5py = { version = "~0.7.0-rc.6", source = "pypi", allow-prereleases = true}
+geoh5py = { version = "~0.7.0-rc.4", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.7.0.zip#sha256="}
 mira-omf = { version = "~3.0.0-rc.3", source = "pypi", allow-prereleases = true}
 #mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.0.0.zip#sha256="}
