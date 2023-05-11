@@ -416,7 +416,7 @@ class BaseApplication:
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(workspace, Workspace), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
     @property
