@@ -472,13 +472,14 @@ class BaseApplication:
     def base_workspace_changes(self, workspace: Workspace):
         self._workspace = workspace
         self._h5file = workspace.h5file
+        h5_file_path = Path(self._h5file).resolve()
         self._file_browser.reset(
             path=self.working_directory,
-            filename=Path(self._h5file).name,
+            filename=h5_file_path.name,
         )
         self._file_browser._apply_selection()  # pylint: disable=protected-access
 
-        export_path = (Path(self.h5file).parent / "Temp").resolve()
+        export_path = h5_file_path.parent / "Temp"
         export_path.mkdir(exist_ok=True)
 
         self.export_directory._set_form_values(  # pylint: disable=protected-access

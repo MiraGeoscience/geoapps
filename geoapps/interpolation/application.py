@@ -287,4 +287,4 @@ class DataInterpolation(ObjectDataSelection):
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
         else:
-            print("Saved to " + new_params.geoh5.h5file)
+            print(f"Saved to {new_params.geoh5.h5file}")

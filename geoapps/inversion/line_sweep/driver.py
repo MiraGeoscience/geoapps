@@ -38,20 +38,21 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             self.file_cleanup()
 
     def setup_params(self):
-        path = Path(self.workspace.h5file).with_suffix(".ui.json")
-        if not path.is_file():
+        h5_file_path = Path(self.workspace.h5file).resolve()
+        ui_json_path = h5_file_path.with_suffix(".ui.json")
+        if not ui_json_path.is_file():
             with self.workspace.open():
                 self.pseudo3d_params.write_input_file(
-                    name=path.name,
-                    path=str(path.parent.resolve()),
+                    name=ui_json_path.name,
+                    path=str(ui_json_path.parent),
                 )
         generate(
-            str(path),
+            str(ui_json_path),
             parameters=["line_id"],
             update_values={"conda_environment": "geoapps"},
         )
         ifile = InputFile.read_ui_json(
-            str(path.with_stem(f"{path.stem}_sweep.ui").resolve())
+            str(h5_file_path.parent / f"{h5_file_path.stem}_sweep.ui.json")
         )
         with self.workspace.open(mode="r"):
             lines = self.pseudo3d_params.line_object.values
