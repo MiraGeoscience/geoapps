@@ -178,6 +178,11 @@ class BaseParams:
             for k in self.param_names
             if hasattr(self, "_" + k)
         }
+
+        for free_dict in self.free_parameter_dict.values():
+            for v in free_dict.values():
+                params_dict[v] = getattr(self, v)
+
         if ui_json_format:
             self.input_file.data = params_dict
             return self.input_file.ui_json

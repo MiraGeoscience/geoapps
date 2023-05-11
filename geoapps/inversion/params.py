@@ -130,6 +130,22 @@ class InversionBaseParams(BaseParams):
         """Return uuid of data channel."""
         return getattr(self, "_".join([component, "channel"]), None)
 
+    @property
+    def documentation(self):
+        return self._documentation
+
+    @documentation.setter
+    def documentation(self, val):
+        self.setter_validator("documentation", val)
+
+    @property
+    def icon(self):
+        return self._icon
+
+    @icon.setter
+    def icon(self, val):
+        self.setter_validator("icon", val)
+
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""
         return getattr(self, "_".join([component, "uncertainty"]), None)
