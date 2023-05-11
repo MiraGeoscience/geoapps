@@ -283,7 +283,7 @@ dependencies:
   - ipywidgets=7.7.5=pyhd8ed1ab_0
   - ipyfilechooser=0.6.0=pyhd8ed1ab_0
   - pip:
-    - geoh5py === 0.7.0rc5 --hash=sha256:b6763f11d14d1482c465f3c0ce3762ac6e45d126bc0168764b959b942c5c9d19
+    - geoh5py === 0.7.0rc6 --hash=sha256:a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
     - simpeg-archive === 0.9.1.dev5 --hash=sha256:44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
     - mira-omf === 3.0.0rc4 --hash=sha256:408259d5c4d3db92ba43192be9e2609dd77256873aaf871353035299c5403f28
     - mira-simpeg === 0.15.1.dev9 --hash=sha256:e6cfc09e1d9fb995de81714bb0d76a6399a174e9974aba473321324a8b20671a

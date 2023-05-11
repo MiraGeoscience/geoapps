@@ -4639,13 +4639,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b6763f11d14d1482c465f3c0ce3762ac6e45d126bc0168764b959b942c5c9d19
+    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/e2/3a/7972eb1d0eb21eab906efa372a3f65b8553ede658c36b0e9d64f7f42e667/geoh5py-0.7.0rc5-py3-none-any.whl
-  version: 0.7.0rc5
+  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
+  version: 0.7.0rc6
 - category: core
   dependencies:
     discretize: '*'
@@ -8968,13 +8968,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b6763f11d14d1482c465f3c0ce3762ac6e45d126bc0168764b959b942c5c9d19
+    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/e2/3a/7972eb1d0eb21eab906efa372a3f65b8553ede658c36b0e9d64f7f42e667/geoh5py-0.7.0rc5-py3-none-any.whl
-  version: 0.7.0rc5
+  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
+  version: 0.7.0rc6
 - category: core
   dependencies:
     discretize: '*'
@@ -13508,13 +13508,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: b6763f11d14d1482c465f3c0ce3762ac6e45d126bc0168764b959b942c5c9d19
+    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/e2/3a/7972eb1d0eb21eab906efa372a3f65b8553ede658c36b0e9d64f7f42e667/geoh5py-0.7.0rc5-py3-none-any.whl
-  version: 0.7.0rc5
+  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
+  version: 0.7.0rc6
 - category: core
   dependencies:
     discretize: '*'
