@@ -115,10 +115,8 @@ def test_block_model(tmp_path: Path):
         trigger="export",
     )
 
-    filename = list(
-        filter(lambda x: ("BlockModel_" in x) and ("geoh5" in x), tmp_path.iterdir())
-    )[0]
-    with Workspace(str(tmp_path / filename)) as workspace:
+    filename = tmp_path.glob("BlockModel_*.geoh5")[0]
+    with Workspace(filename) as workspace:
         ent = workspace.get_entity("BlockModel")
         assert (len(ent) == 1) and (ent[0] is not None)
 
@@ -240,10 +238,8 @@ def test_clustering(tmp_path: Path):
         trigger="export",
     )
 
-    filename = list(
-        filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), (tmp_path.iterdir()))
-    )[0]
-    with Workspace(str(tmp_path / filename)) as workspace:
+    filename = tmp_path.glob("Clustering_*.geoh5")[0]
+    with Workspace(filename) as workspace:
         assert len(workspace.get_entity("Clusters")) == 1
 
 

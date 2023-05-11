@@ -70,7 +70,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
         files = [f"{f}.ui.json" for f in files] + [f"{f}.ui.geoh5" for f in files]
         files += ["lookup.json", "SimPEG.log", "SimPEG.out"]
-        files += [f for f in path.iterdir() if "_sweep.ui.json" in f]
+        files += [f.name for f in path.glob("*_sweep.ui.json")]
         for file in files:
             (path / file).unlink(missing_ok=True)
 

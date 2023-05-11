@@ -357,7 +357,7 @@ def get_output_workspace(tmp_dir):
     """
     Extract the output geoh5 from the 'Temp' directory.
     """
-    files = [file for file in (tmp_dir / "Temp").iterdir() if file.suffix == ".geoh5"]
+    files = (tmp_dir / "Temp").glob("*.geoh5")
     if len(files) != 1:
         raise UserWarning("Could not find a unique output workspace.")
     return str(files[0])
