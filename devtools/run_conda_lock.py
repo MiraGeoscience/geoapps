@@ -38,6 +38,8 @@ variables:
 
 _environments_folder = Path("environments")
 
+_python_versions = ["3.10", "3.9"]
+
 
 @contextmanager
 def print_execution_time(name: str = "") -> Generator:
@@ -217,26 +219,44 @@ def config_conda() -> None:
     )
 
 
-def delete_existing_files() -> None:
-    if _environments_folder.exists():
-        for f in _environments_folder.glob("*.lock.yml"):
-            f.unlink()
-
+def delete_multiplatform_lock_files() -> None:
     for f in Path().glob("*-lock.yml"):
         f.unlink()
 
 
-if __name__ == "__main__":
-    assert _environments_folder.is_dir()
-    delete_existing_files()
+def recreate_multiplatform_lock_files() -> None:
+    delete_multiplatform_lock_files()
 
-    config_conda()
+    # also delete per-platform lock files to make it obvious that
+    # they must be cre-created after the multi-platform files were updated
+    delete_per_platform_lock_files()
 
-    patch_pyproject_toml()
-    with print_execution_time("run_conda_lock"):
-        for py_ver in ["3.10", "3.9"]:
+    with print_execution_time("create_multi_platform_lock"):
+        for py_ver in _python_versions:
             create_multi_platform_lock(py_ver)
+
+
+def delete_per_platform_lock_files() -> None:
+    if _environments_folder.exists():
+        for f in _environments_folder.glob("*.lock.yml"):
+            f.unlink()
+
+
+def recreate_per_platform_lock_files() -> None:
+    delete_per_platform_lock_files()
+    with print_execution_time("create_per_platform_lock"):
+        for py_ver in _python_versions:
             per_platform_env(py_ver, ["core", "apps"], dev=False)
             finalize_per_platform_envs(py_ver, dev=False)
             per_platform_env(py_ver, ["core", "apps"], dev=True)
             finalize_per_platform_envs(py_ver, dev=True)
+
+
+if __name__ == "__main__":
+    assert _environments_folder.is_dir()
+
+    config_conda()
+    patch_pyproject_toml()
+
+    recreate_multiplatform_lock_files()
+    recreate_per_platform_lock_files()
