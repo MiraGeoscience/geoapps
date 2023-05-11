@@ -56,7 +56,7 @@ def patch_pyproject_toml() -> None:
         return
 
     tag_url_re = re.compile(
-        r"""^(\s*\S*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/tags/.*)#sha256=\w*"(.*}.*)"""
+        r"""^(\s*[^#]\S+\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/tags/.*)#sha256=\w*"(.*}.*)"""
     )
     pyproject_sha = Path("pyproject-sha.toml")
     with open(pyproject_sha, "w") as patched:
@@ -79,7 +79,7 @@ def patch_pyproject_toml() -> None:
 
 def has_git_branches(pyproject: Path) -> bool:
     branch_url_re = re.compile(
-        r"""^(\s*\S*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/heads/.*)\S*"(.*}.*)"""
+        r"""^(\s*[^#]\S+\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/heads/.*)\S*"(.*}.*)"""
     )
     with open(pyproject) as input:
         for line in input:

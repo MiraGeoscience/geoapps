@@ -4672,13 +4672,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 42f4fa2cd29c11d0abef74809dfcb587fb96a048a3c619ff78683c82c6264df4
+    sha256: 408259d5c4d3db92ba43192be9e2609dd77256873aaf871353035299c5403f28
   manager: pip
   name: mira-omf
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/d4/9d/2e7a1d1972cd1aa156b319565b118c79b9141a1b772c63310d3551371929/mira_omf-3.0.0rc3-py3-none-any.whl
-  version: 3.0.0rc3
+  url: https://files.pythonhosted.org/packages/af/32/5528f983e93452401037d61856cd83a45f44dfcbe424f03895fb12ac54f6/mira_omf-3.0.0rc4-py3-none-any.whl
+  version: 3.0.0rc4
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -9003,13 +9003,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 42f4fa2cd29c11d0abef74809dfcb587fb96a048a3c619ff78683c82c6264df4
+    sha256: 408259d5c4d3db92ba43192be9e2609dd77256873aaf871353035299c5403f28
   manager: pip
   name: mira-omf
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/d4/9d/2e7a1d1972cd1aa156b319565b118c79b9141a1b772c63310d3551371929/mira_omf-3.0.0rc3-py3-none-any.whl
-  version: 3.0.0rc3
+  url: https://files.pythonhosted.org/packages/af/32/5528f983e93452401037d61856cd83a45f44dfcbe424f03895fb12ac54f6/mira_omf-3.0.0rc4-py3-none-any.whl
+  version: 3.0.0rc4
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -13545,13 +13545,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 42f4fa2cd29c11d0abef74809dfcb587fb96a048a3c619ff78683c82c6264df4
+    sha256: 408259d5c4d3db92ba43192be9e2609dd77256873aaf871353035299c5403f28
   manager: pip
   name: mira-omf
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/d4/9d/2e7a1d1972cd1aa156b319565b118c79b9141a1b772c63310d3551371929/mira_omf-3.0.0rc3-py3-none-any.whl
-  version: 3.0.0rc3
+  url: https://files.pythonhosted.org/packages/af/32/5528f983e93452401037d61856cd83a45f44dfcbe424f03895fb12ac54f6/mira_omf-3.0.0rc4-py3-none-any.whl
+  version: 3.0.0rc4
 - category: core
   dependencies:
     discretize: '>=0.7.0'

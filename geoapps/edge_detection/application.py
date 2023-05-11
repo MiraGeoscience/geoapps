@@ -13,6 +13,7 @@ from time import time
 import numpy as np
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
@@ -228,17 +229,16 @@ class EdgeDetectionApp(PlotSelection2D):
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.params.geoh5
-        self.params.update(
-            param_dict, validate=False
-        )  # Can't guarantee order of update
-        self.refresh.value = False
-        (
-            vertices,
-            _,
-        ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
-        self.collections = [
-            collections.LineCollection(
-                np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
-            )
-        ]
-        self.refresh.value = True
+        with fetch_active_workspace(self.params.geoh5):
+            self.params.update(param_dict, validate=False)
+            self.refresh.value = False
+            (
+                vertices,
+                _,
+            ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
+            self.collections = [
+                collections.LineCollection(
+                    np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
+                )
+            ]
+            self.refresh.value = True
