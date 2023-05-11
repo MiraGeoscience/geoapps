@@ -70,7 +70,11 @@ def create_multi_platform_lock(py_ver: str, platform: str | None = None) -> None
         patch_absolute_path(Path(f"conda-py-{py_ver}-lock.yml"))
 
 
-def per_platform_env(py_ver: str, extras=[], dev=False, suffix="") -> None:
+def per_platform_env(
+    py_ver: str, extras: list[str] | None = None, dev=False, suffix=""
+) -> None:
+    if extras is None:
+        extras = []
     print(
         f"# Creating per platform Conda env files for Python {py_ver} ({'WITH' if dev else 'NO'} dev dependencies) ... "
     )
@@ -107,8 +111,8 @@ def patch_absolute_path(file: Path) -> None:
 
     with tempfile.TemporaryDirectory(dir=str(file.parent)) as tmpdirname:
         patched_file = Path(tmpdirname) / file.name
-        with open(patched_file, "w") as patched:
-            with open(file) as f:
+        with open(patched_file, mode="w", encoding="utf-8") as patched:
+            with open(file, encoding="utf-8") as f:
                 for line in f:
                     patched.write(
                         line.replace(abs_path_base, "").replace(
@@ -136,7 +140,7 @@ class LockFilePatcher:
         Add the variables section to the lock file.
         """
 
-        with open(self.lock_file, "a") as f:
+        with open(self.lock_file, mode="a", encoding="utf-8") as f:
             f.write(env_file_variables_section_)
 
     def patch_none_hash(self) -> None:
@@ -152,7 +156,9 @@ class LockFilePatcher:
         )
         with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
             patched_file = Path(tmpdirname) / self.lock_file.name
-            with open(patched_file, "w") as patched, open(self.lock_file) as f:
+            with open(patched_file, mode="w", encoding="utf-8") as patched, open(
+                self.lock_file, encoding="utf-8"
+            ) as f:
                 for line in f:
                     match = none_hash_re.match(line)
                     if not match:
@@ -167,7 +173,7 @@ class LockFilePatcher:
         """
 
         pip_dependency_re = re.compile(r"^\s*- (\S+) (@|===) .*")
-        with open(self.lock_file) as file:
+        with open(self.lock_file, encoding="utf-8") as file:
             while not self.pip_section_re.match(file.readline()):
                 pass
 
@@ -183,7 +189,9 @@ class LockFilePatcher:
 
         with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
             patched_file = Path(tmpdirname) / self.lock_file.name
-            with open(patched_file, "w") as patched, open(self.lock_file) as f:
+            with open(patched_file, mode="w", encoding="utf-8") as patched, open(
+                self.lock_file, encoding="utf-8"
+            ) as f:
                 for line in f:
                     patched_line = self.sha_re.sub(r"\1", line)
                     patched.write(patched_line)
