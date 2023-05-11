@@ -98,11 +98,7 @@ class InversionApp(PlotSelection2D):
     _topography = None
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, **kwargs):
-        if "plot_result" in kwargs:
-            self.plot_result = kwargs["plot_result"]
-            kwargs.pop("plot_result")
-
+    def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and path.exists(ui_json):
             ifile = InputFile.read_ui_json(ui_json)
@@ -376,7 +372,7 @@ class InversionApp(PlotSelection2D):
             self.data_channel_choices_observer, names="value"
         )
         self.plotting_data = None
-        super().__init__(**self.defaults)
+        super().__init__(plot_result=plot_result, **self.defaults)
         self.write.on_click(self.write_trigger)
 
     @property
@@ -875,7 +871,13 @@ class InversionApp(PlotSelection2D):
             self._param_class = GravityParams
 
         self.params = self._param_class(validate=False, verbose=False)
-        self.ga_group_name.value = self.params.out_group
+
+        if getattr(self.params, "_out_group", None) is not None:
+            self.ga_group_name.value = self.params.out_group.name
+        else:
+            self.ga_group_name.value = (
+                self.params.inversion_type.capitalize() + "Inversion"
+            )
 
         if self.inversion_type.value in ["magnetic vector", "magnetic scalar"]:
             data_type_list = [

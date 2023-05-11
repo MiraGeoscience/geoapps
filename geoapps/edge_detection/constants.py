@@ -162,7 +162,6 @@ default_ui_json.update(
         "resolution": 50.0,
         "colorbar": False,
         "zoom_extent": False,
-        "plot_result": True,
     }
 )
 

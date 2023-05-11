@@ -77,7 +77,7 @@ class InversionMesh:
             raise ValueError("Must pass pre-constructed mesh.")
         else:
             self.entity = self.params.mesh.copy(
-                parent=self.params.ga_group, copy_children=False
+                parent=self.params.out_group, copy_children=False
             )
 
         if getattr(self.entity, "rotation", None) and self.inversion_data.has_tensor:

@@ -62,6 +62,9 @@ class BaseParams:
         self._title = None
         self._conda_environment: str = None
         self._conda_environment_boolean: bool = None
+        self._generate_sweep: bool = False
+        self._workspace = None
+        self._run_command_boolean: bool = False
         self.workpath = workpath
         self.input_file = input_file
         self.validate = validate
@@ -171,8 +174,15 @@ class BaseParams:
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
         params_dict = {
-            k: getattr(self, k) for k in self.param_names if hasattr(self, k)
+            k: getattr(self, "_" + k)
+            for k in self.param_names
+            if hasattr(self, "_" + k)
         }
+
+        for free_dict in self.free_parameter_dict.values():
+            for v in free_dict.values():
+                params_dict[v] = getattr(self, v)
+
         if ui_json_format:
             self.input_file.data = params_dict
             return self.input_file.ui_json
