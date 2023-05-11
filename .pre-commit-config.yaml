@@ -47,7 +47,7 @@ repos:
         language: system
         require_serial: true  # pylint does its own parallelism
         types: [python]
-        exclude: (devtools|docs)/
+        exclude: docs/
     -   id: check-copyright
         name: Check copyright
         entry: python devtools/check-copyright.py
