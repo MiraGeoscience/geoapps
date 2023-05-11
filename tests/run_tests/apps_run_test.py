@@ -115,7 +115,7 @@ def test_block_model(tmp_path: Path):
         trigger="export",
     )
 
-    filename = tmp_path.glob("BlockModel_*.geoh5")[0]
+    filename = next(tmp_path.glob("BlockModel_*.geoh5"))
     with Workspace(filename) as workspace:
         ent = workspace.get_entity("BlockModel")
         assert (len(ent) == 1) and (ent[0] is not None)
@@ -238,7 +238,7 @@ def test_clustering(tmp_path: Path):
         trigger="export",
     )
 
-    filename = tmp_path.glob("Clustering_*.geoh5")[0]
+    filename = next(tmp_path.glob("Clustering_*.geoh5"))
     with Workspace(filename) as workspace:
         assert len(workspace.get_entity("Clusters")) == 1
 

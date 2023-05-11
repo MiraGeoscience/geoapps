@@ -123,7 +123,7 @@ def test_create_octree_app(tmp_path: Path):
 
 def test_create_octree_driver(tmp_path: Path):
     uijson_path = tmp_path.parent / "test_create_octree_app0" / "Temp"
-    json_file = uijson_path.glob("*.ui.json")[0]
+    json_file = next(uijson_path.glob("*.ui.json"))
     driver = OctreeDriver.start(str(json_file))
 
     with driver.params.geoh5.open(mode="r"):

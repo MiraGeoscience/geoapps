@@ -86,7 +86,7 @@ def test_peak_finder_app(tmp_path: Path):
 
 def test_peak_finder_driver(tmp_path: Path):
     uijson_path = tmp_path.parent / "test_peak_finder_app0" / "Temp"
-    json_file = uijson_path.glob("*.ui.json")[0]
+    json_file = next(uijson_path.glob("*.ui.json"))
     driver = PeakFinderDriver.start(str(uijson_path / json_file))
 
     with driver.params.geoh5.open(mode="r"):

@@ -353,11 +353,11 @@ def check_target(output: dict, target: dict, tolerance=0.1):
     )
 
 
-def get_output_workspace(tmp_dir):
+def get_output_workspace(tmp_dir: Path):
     """
     Extract the output geoh5 from the 'Temp' directory.
     """
-    files = (tmp_dir / "Temp").glob("*.geoh5")
+    files = all((tmp_dir / "Temp").glob("*.geoh5"))
     if len(files) != 1:
         raise UserWarning("Could not find a unique output workspace.")
     return str(files[0])
