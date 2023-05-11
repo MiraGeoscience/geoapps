@@ -16,7 +16,6 @@ import numpy as np
 from geoh5py.data import NumericData
 from geoh5py.groups import SimPEGGroup
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.params import BaseParams
 
@@ -33,7 +32,6 @@ class InversionBaseParams(BaseParams):
     _inversion_defaults = None
     _inversion_ui_json = None
     _inversion_type = None
-    _ga_group = None
 
     def __init__(
         self, input_file: InputFile | None = None, forward_only: bool = False, **kwargs
@@ -102,8 +100,8 @@ class InversionBaseParams(BaseParams):
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
-        self._documentation: str = None
-        self._icon: str = None
+        self._documentation: str = ""
+        self._icon: str = ""
         self._defaults = (
             self._forward_defaults if self.forward_only else self._inversion_defaults
         )
@@ -133,6 +131,22 @@ class InversionBaseParams(BaseParams):
     def data_channel(self, component: str):
         """Return uuid of data channel."""
         return getattr(self, "_".join([component, "channel"]), None)
+
+    @property
+    def documentation(self):
+        return self._documentation
+
+    @documentation.setter
+    def documentation(self, val):
+        self.setter_validator("documentation", val)
+
+    @property
+    def icon(self):
+        return self._icon
+
+    @icon.setter
+    def icon(self, val):
+        self.setter_validator("icon", val)
 
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""
@@ -725,6 +739,15 @@ class InversionBaseParams(BaseParams):
 
     @property
     def out_group(self):
+        if self._out_group is None and self.geoh5 is not None:
+            name = self.inversion_type.capitalize()
+            if self.forward_only:
+                name += "Forward"
+            else:
+                name += "Inversion"
+
+            self.out_group = SimPEGGroup.create(self.geoh5, name=name)
+
         return self._out_group
 
     @out_group.setter
@@ -737,22 +760,6 @@ class InversionBaseParams(BaseParams):
             "out_group",
             val,
         )
-
-    @property
-    def ga_group(self) -> SimPEGGroup | None:
-        if (
-            getattr(self, "_ga_group", None) is None
-            and isinstance(self.geoh5, Workspace)
-            and isinstance(self.out_group, str)
-        ):
-            self._ga_group = SimPEGGroup.create(self.geoh5, name=self.out_group)
-        elif isinstance(self.out_group, SimPEGGroup):
-            self._ga_group = self.out_group
-
-        if isinstance(self._ga_group, SimPEGGroup) and not self._ga_group.options:
-            self.update_group_options(self._ga_group)
-
-        return self._ga_group
 
     @property
     def distributed_workers(self):

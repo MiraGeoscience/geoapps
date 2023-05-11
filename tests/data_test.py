@@ -32,7 +32,6 @@ def setup_params(tmp):
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("gyz_channel", "{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
-    geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
 
 

@@ -92,7 +92,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "InducedPolarizationPseudo3DInversion",
+    "out_group": None,
     "generate_sweep": False,
     "files_only": False,
     "cleanup": True,
@@ -142,7 +142,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "InducedPolarizationPseudo3DForward",
+    "out_group": None,
     "generate_sweep": False,
     "files_only": False,
     "cleanup": False,
@@ -368,10 +368,6 @@ default_ui_json = {
     "detrend_order": None,
     "detrend_type": None,
     "tile_spatial": 1,
-    "out_group": {
-        "label": "Results group name",
-        "value": "InducedPolarizationPseudo3DInversion",
-    },
     "files_only": {
         "label": "Generate files only",
         "group": "Python run preferences",
@@ -428,6 +424,5 @@ app_initializer = {
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "receivers_offset_z": 0.0,
-    "out_group": "InducedPolarizationPseudo3DInversion",
     "cleanup": True,
 }

@@ -84,7 +84,7 @@ inversion_defaults = {
     "store_sensitivities": "ram",
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "InducedPolarizationInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -125,7 +125,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "InducedPolarizationForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -308,10 +308,6 @@ default_ui_json = {
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
-    "out_group": {
-        "label": "Results group name",
-        "value": "InducedPolarizationInversion",
-    },
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",

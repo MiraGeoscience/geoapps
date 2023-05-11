@@ -166,7 +166,6 @@ default_ui_json.update(
             "value": False,
         },
         "resolution": 50.0,
-        "plot_result": True,
     }
 )
 

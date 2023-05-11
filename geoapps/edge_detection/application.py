@@ -52,7 +52,7 @@ class EdgeDetectionApp(PlotSelection2D):
     _object_types = (Grid2D,)
     _param_class = EdgeDetectionParams
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and os.path.exists(ui_json):
             self.params = self._param_class(InputFile(ui_json))
@@ -116,7 +116,7 @@ class EdgeDetectionApp(PlotSelection2D):
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
 
-        super().__init__(**self.defaults)
+        super().__init__(plot_result=plot_result, **self.defaults)
 
         # Make changes to trigger warning color
         self.trigger.description = "Export"

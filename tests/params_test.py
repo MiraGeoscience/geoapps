@@ -777,8 +777,8 @@ def test_validate_geoh5():
 def test_validate_out_group():
     param = "out_group"
     newval = "test_"
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
+    with pytest.raises(UUIDValidationError, match="not a valid uuid string"):
+        param_test_generator(param, newval)
 
 
 def test_validate_distributed_workers():
