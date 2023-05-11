@@ -45,9 +45,8 @@ class PlotSelection2D(ObjectDataSelection):
     Application for selecting data in 2D plan map view
     """
 
-    plot_result = True
-
-    def __init__(self, **kwargs):
+    def __init__(self, plot_result=True, **kwargs):
+        self.plot_result = plot_result
         self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.axis = None

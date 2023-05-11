@@ -98,7 +98,6 @@ class InversionBaseParams(BaseParams):
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
-        self._generate_sweep: bool = False
         self._documentation: str = ""
         self._icon: str = ""
         self._defaults = (
@@ -130,6 +129,22 @@ class InversionBaseParams(BaseParams):
     def data_channel(self, component: str):
         """Return uuid of data channel."""
         return getattr(self, "_".join([component, "channel"]), None)
+
+    @property
+    def documentation(self):
+        return self._documentation
+
+    @documentation.setter
+    def documentation(self, val):
+        self.setter_validator("documentation", val)
+
+    @property
+    def icon(self):
+        return self._icon
+
+    @icon.setter
+    def icon(self, val):
+        self.setter_validator("icon", val)
 
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""
@@ -722,7 +737,7 @@ class InversionBaseParams(BaseParams):
 
     @property
     def out_group(self):
-        if self._out_group is None:
+        if self._out_group is None and self.geoh5 is not None:
             name = self.inversion_type.capitalize()
             if self.forward_only:
                 name += "Forward"

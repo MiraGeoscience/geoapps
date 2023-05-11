@@ -19,9 +19,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.00877,
-    "phi_d": 2.396,
-    "phi_m": 0.3094,
+    "data_norm": 0.004784,
+    "phi_d": 12.56,
+    "phi_m": 16.51,
 }
 
 np.random.seed(0)
@@ -53,7 +53,7 @@ def test_tipper_fwr_run(
         z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
-        conductivity_model=1e-2,
+        background_conductivity=1e-2,
         txz_real_channel_bool=True,
         txz_imag_channel_bool=True,
         tyz_real_channel_bool=True,
@@ -126,7 +126,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             data_object=survey.uid,
             starting_model=0.01,
             reference_model=0.01,
-            conductivity_model=1e-2,
+            background_conductivity=1e-2,
             s_norm=1.0,
             x_norm=1.0,
             y_norm=1.0,
