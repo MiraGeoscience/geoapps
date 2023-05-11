@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: de70b07c6ac07fa7f232dbd7e0860a08176553da9404e1ca859b25686d980cb3
-    osx-64: 6193f2cbd4e24bc7cedeeba7466900e19eed569a1284c1aff87af7fb3c724809
-    win-64: f92c26a6637745f978bb47e8e0439238da7d209ec842dc4510df983b03896562
+    linux-64: f09ae499a2a36406a2c80631733fad563405326d4b284992ebb5b3f1a6319c02
+    osx-64: eff833d7efbc9f8f17f05248f9c8a044bf53552560b7d3c27da8e619d6e2e294
+    win-64: cb86a7193834ff766b4632e189fc87b3d847525451cd9badd62572252a8add38
   platforms:
   - win-64
   - osx-64
@@ -4623,16 +4623,16 @@ package:
 - category: main
   dependencies:
     h5py: '>=3.2.1,<4.0.0'
-    numpy: '>=1.23.5,<1.24.0'
+    numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
+    sha256: 0194edc9780e225bfd1d25716ebe9dc0b71457185b09b906b8258d88364104e0
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
-  version: 0.7.0rc6
+  url: https://files.pythonhosted.org/packages/92/2b/537d36a79be5bd821f1ca7a4d346138b93537f63eab5703d54f24cde9ead/geoh5py-0.6.1-py3-none-any.whl
+  version: 0.6.1
 - category: core
   dependencies:
     discretize: '*'
@@ -8969,16 +8969,16 @@ package:
 - category: main
   dependencies:
     h5py: '>=3.2.1,<4.0.0'
-    numpy: '>=1.23.5,<1.24.0'
+    numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
+    sha256: 0194edc9780e225bfd1d25716ebe9dc0b71457185b09b906b8258d88364104e0
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
-  version: 0.7.0rc6
+  url: https://files.pythonhosted.org/packages/92/2b/537d36a79be5bd821f1ca7a4d346138b93537f63eab5703d54f24cde9ead/geoh5py-0.6.1-py3-none-any.whl
+  version: 0.6.1
 - category: core
   dependencies:
     discretize: '*'
@@ -10550,19 +10550,19 @@ package:
   dependencies:
     krb5: '>=1.20.1,<1.21.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
-    openssl: '>=3.0.8,<4.0a0'
+    openssl: '>=3.1.0,<4.0a0'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
+    vc14_runtime: '>=14.29.30139'
   hash:
-    md5: dd4e0f2881b08f08b76c2c4d1763b38a
-    sha256: 4fff4a17264e4a2e1e16c4991524ba6ac6b82199ff643baddb29c481d05b4328
+    md5: 15a2162dddc641e0a398ed5067690e9d
+    sha256: 8d016549752ea6509e37b79834c9476e49e26f61d94e5db496228998086db74f
   manager: conda
   name: libpq
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libpq-15.2-ha9684e8_0.conda
-  version: '15.2'
+  url: https://conda.anaconda.org/conda-forge/win-64/libpq-15.3-ha9684e8_0.conda
+  version: '15.3'
 - category: main
   dependencies:
     lerc: '>=4.0.0,<5.0a0'
@@ -11798,23 +11798,23 @@ package:
 - category: apps
   dependencies:
     krb5: '>=1.20.1,<1.21.0a0'
-    libpq: 15.2 ha9684e8_0
-    libxml2: '>=2.10.3,<2.11.0a0'
+    libpq: 15.3 ha9684e8_0
+    libxml2: '>=2.10.4,<2.11.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
-    openssl: '>=3.0.8,<4.0a0'
+    openssl: '>=3.1.0,<4.0a0'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
+    vc14_runtime: '>=14.29.30139'
     zlib: ''
   hash:
-    md5: 9148e8b6b7ec9e7dedf9bf9987f606cd
-    sha256: b32ad30a1c90da0858f62a369c74b82b6ec525e806a241ebdda80452d3d3dc9c
+    md5: addf239257cdfe6f84c3b43482563462
+    sha256: 4c7857dd707b32c12bf5c94a3d63d9a4d477101226e6c917befa35735886e107
   manager: conda
   name: postgresql
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/postgresql-15.2-hd87cd2b_0.conda
-  version: '15.2'
+  url: https://conda.anaconda.org/conda-forge/win-64/postgresql-15.3-hd87cd2b_0.conda
+  version: '15.3'
 - category: apps
   dependencies:
     libcurl: '>=7.88.1,<9.0a0'
@@ -13512,16 +13512,16 @@ package:
 - category: main
   dependencies:
     h5py: '>=3.2.1,<4.0.0'
-    numpy: '>=1.23.5,<1.24.0'
+    numpy: '>=1.21.5,<2.0.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
+    sha256: 0194edc9780e225bfd1d25716ebe9dc0b71457185b09b906b8258d88364104e0
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
-  version: 0.7.0rc6
+  url: https://files.pythonhosted.org/packages/92/2b/537d36a79be5bd821f1ca7a4d346138b93537f63eab5703d54f24cde9ead/geoh5py-0.6.1-py3-none-any.whl
+  version: 0.6.1
 - category: core
   dependencies:
     discretize: '*'
