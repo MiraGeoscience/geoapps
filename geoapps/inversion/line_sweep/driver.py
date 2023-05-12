@@ -10,7 +10,7 @@ import os
 import re
 
 import numpy as np
-from geoh5py.groups import ContainerGroup
+from geoh5py.data import FilenameData
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
@@ -66,7 +66,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             files = list(json.load(f))
 
         files = [f"{f}.ui.json" for f in files] + [f"{f}.ui.geoh5" for f in files]
-        files += ["lookup.json", "SimPEG.log", "SimPEG.out"]
+        files += ["lookup.json"]
         files += [f for f in os.listdir(path) if "_sweep.ui.json" in f]
         for file in files:
             filepath = os.path.join(path, file)
@@ -83,7 +83,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         path = os.path.join(os.path.dirname(self.workspace.h5file))
         files = LineSweepDriver.line_files(path)
         lines = np.unique(self.pseudo3d_params.line_object.values)
-        models_group = ContainerGroup.create(self.workspace, name="Models")
         data_result = self.pseudo3d_params.data_object.copy(
             parent=self.pseudo3d_params.out_group
         )
@@ -94,9 +93,20 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             with Workspace(f"{os.path.join(path, files[line])}.ui.geoh5") as ws:
                 survey = ws.get_entity("Data")[0]
                 data = self.collect_line_data(survey, data)
+
                 mesh = ws.get_entity("Models")[0]
-                mesh = mesh.copy(parent=models_group)
-                mesh.name = f"Line {line}"
+                filedata = [
+                    k for k in mesh.parent.children if isinstance(k, FilenameData)
+                ]
+                local_simpeg_group = mesh.parent.copy(
+                    name=f"Line {line}",
+                    parent=self.pseudo3d_params.out_group,
+                    copy_children=False,
+                )
+                for fdat in filedata:
+                    fdat.copy(parent=local_simpeg_group)
+                mesh = mesh.copy(parent=local_simpeg_group)
+                mesh.name = "models"
                 drape_models.append(mesh)
 
         data_result.add_data(data)
@@ -140,8 +150,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 method="nearest",
             )
 
-        octree_model.copy(parent=models_group)
-        models_group.parent = self.pseudo3d_params.out_group
+        octree_model.copy(parent=self.pseudo3d_params.out_group)
 
     def collect_line_data(self, survey, data):
         for child in survey.children:  # initialize data values dictionary
