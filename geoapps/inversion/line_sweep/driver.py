@@ -106,7 +106,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 for fdat in filedata:
                     fdat.copy(parent=local_simpeg_group)
                 mesh = mesh.copy(parent=local_simpeg_group)
-                mesh.name = f"models"
+                mesh.name = "models"
                 drape_models.append(mesh)
 
         data_result.add_data(data)
