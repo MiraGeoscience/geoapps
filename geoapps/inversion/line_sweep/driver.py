@@ -10,9 +10,9 @@ import os
 import re
 
 import numpy as np
+from geoh5py.data import FilenameData
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from geoh5py.data import FilenameData
 from param_sweeps.driver import SweepDriver, SweepParams
 from param_sweeps.generate import generate
 
@@ -65,7 +65,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         with open(os.path.join(path, "lookup.json"), encoding="utf8") as f:
             files = list(json.load(f))
 
-
         files = [f"{f}.ui.json" for f in files] + [f"{f}.ui.geoh5" for f in files]
         files += ["lookup.json"]
         files += [f for f in os.listdir(path) if "_sweep.ui.json" in f]
@@ -92,13 +91,18 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         drape_models = []
         for line in lines:
             with Workspace(f"{os.path.join(path, files[line])}.ui.geoh5") as ws:
-
                 survey = ws.get_entity("Data")[0]
                 data = self.collect_line_data(survey, data)
 
                 mesh = ws.get_entity("Models")[0]
-                filedata = [k for k in mesh.parent.children if isinstance(k, FilenameData)]
-                local_simpeg_group = mesh.parent.copy(name=f"Line {line}", parent=self.pseudo3d_params.out_group, copy_children=False)
+                filedata = [
+                    k for k in mesh.parent.children if isinstance(k, FilenameData)
+                ]
+                local_simpeg_group = mesh.parent.copy(
+                    name=f"Line {line}",
+                    parent=self.pseudo3d_params.out_group,
+                    copy_children=False,
+                )
                 for fdat in filedata:
                     fdat.copy(parent=local_simpeg_group)
                 mesh = mesh.copy(parent=local_simpeg_group)
