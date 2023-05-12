@@ -10,9 +10,9 @@ import os
 import re
 
 import numpy as np
-from geoh5py.groups import ContainerGroup
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
+from geoh5py.data import FilenameData
 from param_sweeps.driver import SweepDriver, SweepParams
 from param_sweeps.generate import generate
 
@@ -97,12 +97,17 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 data = self.collect_line_data(survey, data)
 
                 mesh = ws.get_entity("Models")[0]
+                filedata = [k for k in mesh.parent.children if isinstance(k, FilenameData)]
                 local_simpeg_group = mesh.parent.copy(name=f"Line {line}", parent=self.pseudo3d_params.out_group, copy_children=False)
+                for fdat in filedata:
+                    fdat.copy(parent=local_simpeg_group)
                 mesh = mesh.copy(parent=local_simpeg_group)
                 mesh.name = f"models"
                 drape_models.append(mesh)
 
         data_result.add_data(data)
+        with fdat.workspace.open():
+            fdat.copy(parent=self.pseudo3d_params.out_group)
 
         if self.pseudo3d_params.mesh is None:
             return
