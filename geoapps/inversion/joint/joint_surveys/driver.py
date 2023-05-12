@@ -29,7 +29,7 @@ from .constants import validations
 from .params import JointSingleParams
 
 
-class JointSingleDriver(InversionDriver):
+class JointSurveyDriver(InversionDriver):
     _params_class = JointSingleParams
     _validations = validations
     _drivers = None

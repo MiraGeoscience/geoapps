@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from geoh5py.groups.simpeg_group import SimPEGGroup
+
 from geoapps.inversion.params import InversionBaseParams
 
 from .constants import (

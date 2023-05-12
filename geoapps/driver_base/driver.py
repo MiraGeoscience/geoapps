@@ -12,6 +12,7 @@ from abc import ABC, abstractmethod
 
 from geoh5py import Workspace
 from geoh5py.ui_json import InputFile
+from param_sweeps.driver import SweepParams
 from param_sweeps.generate import generate
 
 from geoapps.driver_base.params import BaseParams
@@ -33,8 +34,8 @@ class BaseDriver(ABC):
 
     @params.setter
     def params(self, val):
-        if not isinstance(val, self.params_class):
-            raise TypeError(f"Parameters must be of type {self.params_class.__name__}.")
+        if not isinstance(val, (BaseParams, SweepParams)):
+            raise TypeError("Parameters must be of type BaseParams.")
         self._params = val
 
     @property
@@ -44,6 +45,17 @@ class BaseDriver(ABC):
             self._workspace = self._params.geoh5
 
         return self._workspace
+
+    @workspace.setter
+    def workspace(self, workspace):
+        """Application workspace."""
+
+        if not isinstance(workspace, Workspace):
+            raise TypeError(
+                "Input value for `workspace` must be of type geoh5py.Workspace."
+            )
+
+        self._workspace = workspace
 
     @property
     def params_class(self):
