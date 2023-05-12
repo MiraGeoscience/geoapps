@@ -74,10 +74,9 @@ def test_dc_p3d_fwr_run(
     fwr_driver = DirectCurrentPseudo3DDriver(params)
     fwr_driver.run()
 
-    drape_model = geoh5.get_entity("Line 2")[0]
-    starting_model = [c for c in drape_model.children if c.name == "starting_model"][
-        0
-    ].values
+    local_simpeg_group = geoh5.get_entity("Line 2")[0]
+    drape_model = local_simpeg_group.get_entity("models")[0]
+    starting_model = drape_model.get_data("starting_model")[0].values
 
     return starting_model
 
@@ -95,8 +94,8 @@ def test_dc_p3d_run(
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
-        models = geoh5.get_entity("Models")[0]
-        mesh = models.get_entity("mesh")[0]  # Finds the octree mesh
+        out_group = geoh5.get_entity("Line 1")[0].parent
+        mesh = out_group.get_entity("mesh")[0]  # Finds the octree mesh
         topography = geoh5.get_entity("topography")[0]
         _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
 
