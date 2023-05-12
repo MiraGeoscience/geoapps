@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 from abc import ABC, abstractmethod
 
+from geoh5py import Workspace
 from geoh5py.ui_json import InputFile
 from param_sweeps.generate import generate
 
@@ -17,11 +18,32 @@ from geoapps.driver_base.params import BaseParams
 
 
 class BaseDriver(ABC):
+    _workspace: Workspace | None = None
+    _params: BaseParams
     _params_class = BaseParams
     _validations = None
 
     def __init__(self, params: BaseParams):
         self.params = params
+
+    @property
+    def params(self):
+        """Application parameters."""
+        return self._params
+
+    @params.setter
+    def params(self, val):
+        if not isinstance(val, self.params_class):
+            raise TypeError(f"Parameters must be of type {self.params_class.__name__}.")
+        self._params = val
+
+    @property
+    def workspace(self):
+        """Application workspace."""
+        if self._workspace is None and self._params is not None:
+            self._workspace = self._params.geoh5
+
+        return self._workspace
 
     @property
     def params_class(self):
