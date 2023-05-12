@@ -55,11 +55,10 @@ class InversionDriver(BaseDriver):
     _params_class = InversionBaseParams  # pylint: disable=E0601
     _validations = None
 
-    def __init__(self, params: InversionBaseParams, warmstart=False):
+    def __init__(self, params: InversionBaseParams):
         super().__init__(params)
 
         self.params = params
-        self.warmstart = warmstart
         self.workspace = params.geoh5
         self.inversion_type = params.inversion_type
         self._data_misfit: objective_function.ComboObjectiveFunction | None = None

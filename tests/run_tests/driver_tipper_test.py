@@ -60,7 +60,7 @@ def test_tipper_fwr_run(
         tyz_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = TipperDriver(params, warmstart=False)
+    fwr_driver = TipperDriver(params)
     fwr_driver.run()
 
     return fwr_driver.models.starting

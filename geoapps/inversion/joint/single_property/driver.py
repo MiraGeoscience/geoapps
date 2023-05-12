@@ -34,8 +34,8 @@ class JointSingleDriver(InversionDriver):
     _validations = validations
     _drivers = None
 
-    def __init__(self, params: JointSingleParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: JointSingleParams):
+        super().__init__(params)
 
         with fetch_active_workspace(self.workspace, mode="r+"):
             self.initialize()

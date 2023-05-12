@@ -15,5 +15,5 @@ class MagneticScalarDriver(InversionDriver):
     _params_class = MagneticScalarParams
     _validations = validations
 
-    def __init__(self, params: MagneticScalarParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: MagneticScalarParams):
+        super().__init__(params)

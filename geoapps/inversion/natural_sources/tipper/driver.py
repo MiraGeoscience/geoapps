@@ -15,5 +15,5 @@ class TipperDriver(InversionDriver):
     _params_class = TipperParams
     _validations = validations
 
-    def __init__(self, params: TipperParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: TipperParams):
+        super().__init__(params)
