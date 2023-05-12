@@ -106,8 +106,6 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 drape_models.append(mesh)
 
         data_result.add_data(data)
-        with fdat.workspace.open():
-            fdat.copy(parent=self.pseudo3d_params.out_group)
 
         if self.pseudo3d_params.mesh is None:
             return
