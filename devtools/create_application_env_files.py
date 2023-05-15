@@ -49,8 +49,14 @@ def create_distrib_full_lock(git_url: str):
 
 
 def create_distrib_lock(
-    version_spec: str, extras=[], suffix="", py_ver="3.10", platform="win-64"
+    version_spec: str,
+    extras: list[str] | None = None,
+    suffix="",
+    py_ver="3.10",
+    platform="win-64",
 ):
+    if extras is None:
+        extras = []
     print(
         f"# Creating lock file for distributing a stand-alone environment (extras={','.join(extras)})..."
     )
@@ -73,11 +79,15 @@ def create_distrib_lock(
             f.unlink()
 
 
-def add_application(version_spec: str, lock_file: Path, extras=[]):
+def add_application(
+    version_spec: str, lock_file: Path, extras: list[str] | None = None
+):
+    if extras is None:
+        extras = []
     print(f"# Patching {lock_file} for standalone environment ...")
     extras_string = f"[{','.join(extras)}]" if len(extras) else ""
     application_pip = f"    - {APP_NAME}{extras_string} {version_spec}\n"
-    with open(lock_file, "a") as file:
+    with open(lock_file, mode="a", encoding="utf-8") as file:
         file.write(application_pip)
 
 
