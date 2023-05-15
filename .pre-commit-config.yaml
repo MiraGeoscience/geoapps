@@ -12,7 +12,8 @@ ci:
 
 repos:
 -   repo: https://github.com/psf/black
-    rev: 23.1.0
+    rev: 23.3.0
+
     hooks:
     -   id: black
 -   repo: https://github.com/PyCQA/isort
@@ -29,7 +30,8 @@ repos:
 #    hooks:
 #    -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.1
+    rev: v3.3.2
+
     hooks:
     -   id: pyupgrade
         args: [--py39-plus]
@@ -56,10 +58,11 @@ repos:
         types: [text]
         exclude: (^setup.py$|^\.|\b(docs|geoapps-assets)/)
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.2.2
+    rev: v2.2.4
+
     hooks:
     -   id: codespell
-        exclude: (\.ipynb$)
+        exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb)$
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
@@ -78,7 +81,8 @@ repos:
     -   id: mixed-line-ending
     -   id: name-tests-test
 -   repo: https://github.com/rstcheck/rstcheck
-    rev: v6.1.1
+    rev: v6.1.2
+
     hooks:
     -   id: rstcheck
         additional_dependencies: [sphinx]
