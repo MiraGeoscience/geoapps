@@ -11,8 +11,8 @@ import numpy as np
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.joint.single_property import JointSingleParams
-from geoapps.inversion.joint.single_property.driver import JointSingleDriver
+from geoapps.inversion.joint.joint_surveys import JointSingleParams
+from geoapps.inversion.joint.joint_surveys.driver import JointSurveyDriver
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -89,7 +89,7 @@ def test_joint_single_property_fwr_run(
         group_b=fwr_driver_b.params.ga_group,
     )
 
-    fwr_driver = JointSingleDriver(joint_params)
+    fwr_driver = JointSurveyDriver(joint_params)
     fwr_driver.run()
     geoh5.close()
     return fwr_driver.models.starting
@@ -153,7 +153,7 @@ def test_joint_single_property_inv_run(
             store_sensitivities="ram",
         )
 
-    driver = JointSingleDriver(joint_params)
+    driver = JointSurveyDriver(joint_params)
     driver.run()
 
     with Workspace(driver.params.geoh5.h5file):

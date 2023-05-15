@@ -36,7 +36,7 @@ from geoapps.inversion.electricals.induced_polarization.three_dimensions import 
 from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
     InducedPolarization2DParams,
 )
-from geoapps.inversion.joint.single_property import JointSingleParams
+from geoapps.inversion.joint.joint_surveys import JointSingleParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
@@ -175,7 +175,7 @@ def write_default_uijson(path, use_initializers=False):
     contour_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     contour_init = contour_init if use_initializers else {}
 
-    from geoapps.inversion.joint.single_property.constants import (
+    from geoapps.inversion.joint.joint_surveys.constants import (
         app_initializer as joint_single_property_init,
     )
 

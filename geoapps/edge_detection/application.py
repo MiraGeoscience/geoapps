@@ -228,9 +228,10 @@ class EdgeDetectionApp(PlotSelection2D):
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.params.geoh5
-        self.params.update(param_dict)
 
         with fetch_active_workspace(self.params.geoh5):
+            self.params.update(param_dict)
+
             self.refresh.value = False
             (
                 vertices,

@@ -524,13 +524,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        conversion = {
-            "Seconds (s)": 1.0,
-            "Milliseconds (ms)": 1e-3,
-            "Microseconds (us)": 1e-6,
-        }
         receivers = inversion_object.entity
-        time_channels = np.r_[receivers.channels] * conversion[receivers.unit]
+        time_channels = np.r_[receivers.channels] * self.params.unit_conversion
 
         components = list(inversion_object.observed)
         ordering = np.vstack(ordering)

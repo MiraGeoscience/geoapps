@@ -191,7 +191,10 @@ class ReceiversFactory(SimPEGFactory):
         return args
 
     def _tdem_arguments(self, data=None, locations=None, local_index=None, mesh=None):
-        return [locations, data.entity.channels]
+        return [
+            locations,
+            np.asarray(data.entity.channels) * self.params.unit_conversion,
+        ]
 
     def _magnetotellurics_arguments(self, locations=None, local_index=None, mesh=None):
         args = []

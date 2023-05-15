@@ -29,13 +29,13 @@ from .constants import validations
 from .params import JointSingleParams
 
 
-class JointSingleDriver(InversionDriver):
+class JointSurveyDriver(InversionDriver):
     _params_class = JointSingleParams
     _validations = validations
     _drivers = None
 
-    def __init__(self, params: JointSingleParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: JointSingleParams):
+        super().__init__(params)
 
         with fetch_active_workspace(self.workspace, mode="r+"):
             self.initialize()

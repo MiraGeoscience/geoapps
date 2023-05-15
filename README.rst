@@ -29,7 +29,7 @@
 Welcome to **geoapps** - Open-source applications in geosciences
 ================================================================
 
-.. image:: https://github.com/MiraGeoscience/geoapps/raw/v0.10.0-rc.2/docs/images/index_page.png
+.. image:: https://github.com/MiraGeoscience/geoapps/raw/v0.10.0-rc.3/docs/images/index_page.png
     :align: right
     :width: 50%
 
