@@ -4653,13 +4653,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
+    sha256: 07fc1914026a63df774d2e1afad04157bdecfef1c70343ee585cc21543617a7d
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
-  version: 0.7.0rc6
+  url: https://files.pythonhosted.org/packages/b7/57/053508bc0eb97b30d473c58660d2dcf3dd25f0de9c074c7b256455f61e9e/geoh5py-0.7.0-py3-none-any.whl
+  version: 0.7.0
 - category: core
   dependencies:
     discretize: '*'
@@ -4684,13 +4684,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 408259d5c4d3db92ba43192be9e2609dd77256873aaf871353035299c5403f28
+    sha256: c0bf6ba425aeb3e05bc954cd7bbb6d73fc0234f5cead276aa1d18d0fa3dbab3d
   manager: pip
   name: mira-omf
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/af/32/5528f983e93452401037d61856cd83a45f44dfcbe424f03895fb12ac54f6/mira_omf-3.0.0rc4-py3-none-any.whl
-  version: 3.0.0rc4
+  url: https://files.pythonhosted.org/packages/03/23/166c149187e3192218c47d1c5618e4e880a0ccdf635eac2aaa58ed52e986/mira_omf-3.0.0-py3-none-any.whl
+  version: 3.0.0
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -4717,13 +4717,13 @@ package:
     geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
-    sha256: fd40348f6685dbea6d8d61e92bbee12ab6f84df90bc18032d66486f474fe748d
+    sha256: 5c48ffa262fd4fc996de120fa3639595bfe69ec65594de9cccab7992bccdad2f
   manager: pip
   name: param-sweeps
   optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/e5/7e/c517d4f30c2fa7fd8aad130948a64f4fa21aa05155f49324967745cbbcfb/param_sweeps-0.1.5rc1-py3-none-any.whl
-  version: 0.1.5rc1
+  url: https://files.pythonhosted.org/packages/8d/17/f99888394963cf9424846805cd83012ced475c70954e127e5b9f57ebab60/param_sweeps-0.1.5-py3-none-any.whl
+  version: 0.1.5
 - category: main
   dependencies: {}
   hash:
@@ -8996,13 +8996,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
+    sha256: 07fc1914026a63df774d2e1afad04157bdecfef1c70343ee585cc21543617a7d
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
-  version: 0.7.0rc6
+  url: https://files.pythonhosted.org/packages/b7/57/053508bc0eb97b30d473c58660d2dcf3dd25f0de9c074c7b256455f61e9e/geoh5py-0.7.0-py3-none-any.whl
+  version: 0.7.0
 - category: core
   dependencies:
     discretize: '*'
@@ -9027,13 +9027,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 408259d5c4d3db92ba43192be9e2609dd77256873aaf871353035299c5403f28
+    sha256: c0bf6ba425aeb3e05bc954cd7bbb6d73fc0234f5cead276aa1d18d0fa3dbab3d
   manager: pip
   name: mira-omf
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/af/32/5528f983e93452401037d61856cd83a45f44dfcbe424f03895fb12ac54f6/mira_omf-3.0.0rc4-py3-none-any.whl
-  version: 3.0.0rc4
+  url: https://files.pythonhosted.org/packages/03/23/166c149187e3192218c47d1c5618e4e880a0ccdf635eac2aaa58ed52e986/mira_omf-3.0.0-py3-none-any.whl
+  version: 3.0.0
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -9060,13 +9060,13 @@ package:
     geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
-    sha256: fd40348f6685dbea6d8d61e92bbee12ab6f84df90bc18032d66486f474fe748d
+    sha256: 5c48ffa262fd4fc996de120fa3639595bfe69ec65594de9cccab7992bccdad2f
   manager: pip
   name: param-sweeps
   optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/e5/7e/c517d4f30c2fa7fd8aad130948a64f4fa21aa05155f49324967745cbbcfb/param_sweeps-0.1.5rc1-py3-none-any.whl
-  version: 0.1.5rc1
+  url: https://files.pythonhosted.org/packages/8d/17/f99888394963cf9424846805cd83012ced475c70954e127e5b9f57ebab60/param_sweeps-0.1.5-py3-none-any.whl
+  version: 0.1.5
 - category: main
   dependencies: {}
   hash:
@@ -13550,13 +13550,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: a2662f7231766ca57ce44c4c78fd2dae5b3ec7847066752d4b1225876ba2897b
+    sha256: 07fc1914026a63df774d2e1afad04157bdecfef1c70343ee585cc21543617a7d
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/b3/0c/088093e3d25d34379806c2577328f94f4317def68982fabf54a0f1850a09/geoh5py-0.7.0rc6-py3-none-any.whl
-  version: 0.7.0rc6
+  url: https://files.pythonhosted.org/packages/b7/57/053508bc0eb97b30d473c58660d2dcf3dd25f0de9c074c7b256455f61e9e/geoh5py-0.7.0-py3-none-any.whl
+  version: 0.7.0
 - category: core
   dependencies:
     discretize: '*'
@@ -13581,13 +13581,13 @@ package:
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
   hash:
-    sha256: 408259d5c4d3db92ba43192be9e2609dd77256873aaf871353035299c5403f28
+    sha256: c0bf6ba425aeb3e05bc954cd7bbb6d73fc0234f5cead276aa1d18d0fa3dbab3d
   manager: pip
   name: mira-omf
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/af/32/5528f983e93452401037d61856cd83a45f44dfcbe424f03895fb12ac54f6/mira_omf-3.0.0rc4-py3-none-any.whl
-  version: 3.0.0rc4
+  url: https://files.pythonhosted.org/packages/03/23/166c149187e3192218c47d1c5618e4e880a0ccdf635eac2aaa58ed52e986/mira_omf-3.0.0-py3-none-any.whl
+  version: 3.0.0
 - category: core
   dependencies:
     discretize: '>=0.7.0'
@@ -13614,11 +13614,11 @@ package:
     geoh5py: '>=0.6.0'
     numpy: '>=1.21.5,<2.0.0'
   hash:
-    sha256: fd40348f6685dbea6d8d61e92bbee12ab6f84df90bc18032d66486f474fe748d
+    sha256: 5c48ffa262fd4fc996de120fa3639595bfe69ec65594de9cccab7992bccdad2f
   manager: pip
   name: param-sweeps
   optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/e5/7e/c517d4f30c2fa7fd8aad130948a64f4fa21aa05155f49324967745cbbcfb/param_sweeps-0.1.5rc1-py3-none-any.whl
-  version: 0.1.5rc1
+  url: https://files.pythonhosted.org/packages/8d/17/f99888394963cf9424846805cd83012ced475c70954e127e5b9f57ebab60/param_sweeps-0.1.5-py3-none-any.whl
+  version: 0.1.5
 version: 1
