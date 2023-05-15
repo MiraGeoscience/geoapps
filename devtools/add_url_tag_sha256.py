@@ -14,16 +14,19 @@ Usage: at the root of the project:
 > python devtools/add_url_tag_sha256.py
 """
 
-import hashlib
+from __future__ import annotations
+
 import re
+import subprocess
 import tempfile
+import warnings
 from pathlib import Path
 from urllib import request
 
 _url_filename_re = re.compile(".*/([^/]*)")
 
 
-def computeSha256(url: str, base_name: str = None) -> str:
+def compute_sha256(url: str, base_name: str | None = None) -> str:
     filename_match = _url_filename_re.match(url)
     assert filename_match
 
@@ -34,23 +37,31 @@ def computeSha256(url: str, base_name: str = None) -> str:
         copy = Path(tmpdirname) / filename
         print(f"# Fetching {url} ...")
         request.urlretrieve(url, str(copy))
-        with open(copy, "rb") as f:
-            f_byte = f.read()
-            sha256 = hashlib.sha256(f_byte)
-            return sha256.hexdigest()
+        return (
+            subprocess.check_output(["pip", "hash", "--algorithm", "sha256", copy])
+            .decode("utf-8")
+            .splitlines()[1]
+            .split(":")[1]
+        )
 
 
-def patchPyprojectToml():
+def patch_pyproject_toml() -> None:
     pyproject = Path("pyproject.toml")
     assert pyproject.is_file()
 
+    if has_git_branches(pyproject):
+        warnings.warn(
+            f"{pyproject} contains git branches: not computing the sha256 for any git dependency."
+        )
+        return
+
     tag_url_re = re.compile(
-        r"""^(\s*\S*\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/tags/.*)#sha256=\w*"(.*}.*)"""
+        r"""^(\s*[^#]\S+\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/tags/.*)#sha256=\w*"(.*}.*)"""
     )
     pyproject_sha = Path("pyproject-sha.toml")
-    with open(pyproject_sha, "w") as patched:
-        with open(pyproject) as input:
-            for line in input:
+    with open(pyproject_sha, mode="w", encoding="utf-8") as patched:
+        with open(pyproject, encoding="utf-8") as original:
+            for line in original:
                 match = tag_url_re.match(line)
                 if not match:
                     patched.write(line)
@@ -59,12 +70,24 @@ def patchPyprojectToml():
                     package_name = line_start.strip()
                     url = match[2]
                     line_end = match[3]
-                    sha = computeSha256(url, package_name)
+                    sha = compute_sha256(url, package_name)
                     patched_line = f"""{line_start}"{url}#sha256={sha}"{line_end}\n"""
                     patched.write(patched_line)
 
     pyproject_sha.replace(pyproject)
 
 
+def has_git_branches(pyproject: Path) -> bool:
+    branch_url_re = re.compile(
+        r"""^(\s*[^#]\S+\s*=\s*{\s*url\s*=\s*)"(.*/archive/refs/heads/.*)\S*"(.*}.*)"""
+    )
+    with open(pyproject, encoding="utf-8") as f:
+        for line in f:
+            match = branch_url_re.match(line)
+            if match:
+                return True
+    return False
+
+
 if __name__ == "__main__":
-    patchPyprojectToml()
+    patch_pyproject_toml()

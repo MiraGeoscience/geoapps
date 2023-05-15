@@ -12,6 +12,8 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+from geoapps import assets_path
+
 defaults = {
     "title": "Create Iso Surfaces",
     "geoh5": None,
@@ -113,7 +115,7 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
     "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
     "max_distance": 500.0,

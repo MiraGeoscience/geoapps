@@ -13,12 +13,9 @@ ci:
 repos:
 -   repo: https://github.com/psf/black
     rev: 23.3.0
+
     hooks:
     -   id: black
--   repo: https://github.com/asottile/seed-isort-config
-    rev: v2.2.0
-    hooks:
-        -   id: seed-isort-config
 -   repo: https://github.com/PyCQA/isort
     rev: 5.12.0
     hooks:
@@ -34,6 +31,7 @@ repos:
 #    -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
     rev: v3.3.2
+
     hooks:
     -   id: pyupgrade
         args: [--py39-plus]
@@ -51,15 +49,17 @@ repos:
         language: system
         require_serial: true  # pylint does its own parallelism
         types: [python]
-        exclude: (devtools|docs)/
+        exclude: docs/
     -   id: check-copyright
         name: Check copyright
         entry: python devtools/check-copyright.py
         language: python
-        types: [python]
-        exclude: (^setup.py$|(docs|assets)/)
+        files: (^LICENSE|README.rst|\.py|\.pyi)$
+        types: [text]
+        exclude: (^setup.py$|^\.|\b(docs|geoapps-assets)/)
 -   repo: https://github.com/codespell-project/codespell
     rev: v2.2.4
+
     hooks:
     -   id: codespell
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb)$
@@ -82,6 +82,7 @@ repos:
     -   id: name-tests-test
 -   repo: https://github.com/rstcheck/rstcheck
     rev: v6.1.2
+
     hooks:
     -   id: rstcheck
         additional_dependencies: [sphinx]

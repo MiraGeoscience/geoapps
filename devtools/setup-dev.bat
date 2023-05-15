@@ -18,15 +18,33 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-set PY_VER=3.9
+set PYTHONUTF8=1
+
+:: all dependencies are installed from conda
+set PIP_NO_DEPS=1
+
+set PY_VER=3.10
 
 set env_path=%project_dir%\.conda-env
-call !MY_CONDA_EXE! activate
-call mamba env update -p %env_path% -f %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml
-call conda activate %env_path%
+call !MY_CONDA_EXE! activate base ^
+  && call !MY_CONDA_EXE! env update -p %env_path% --file %project_dir%\environments\conda-py-%PY_VER%-win-64-dev.lock.yml
+
+if !errorlevel! neq 0 (
+  pause
+  exit /B !errorlevel!
+)
+
 if exist %project_dir%\..\geoh5py\ (
-  pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py --no-deps
+  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py
+)
+if exist %project_dir%\..\param-sweeps\ (
+  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps
+)
+
+if !errorlevel! neq 0 (
+  pause
+  exit /B !errorlevel!
 )
 
 pause
-cmd /k
+cmd /k !MY_CONDA_EXE! activate %env_path%

@@ -54,12 +54,13 @@ from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.constants import app_initializer as peak_initializer
 from geoapps.peak_finder.params import PeakFinderParams
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT, PROJECT_DCIP
+
+geoh5 = Workspace(PROJECT)
 
 # Setup
 tmpfile = lambda path: os.path.join(path, "test.ui.json")
-wrkstr = "FlinFlon.geoh5"
-geoh5 = Workspace(wrkstr)
+geoh5 = Workspace(PROJECT)
 
 
 def tmp_input_file(filepath, idict):
@@ -67,7 +68,7 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-mvi_init["geoh5"] = "./FlinFlon.geoh5"
+mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
 
 
@@ -99,7 +100,7 @@ def param_test_generator(param, value):
 
 
 def test_write_input_file_validation(tmp_path):
-    grav_init["geoh5"] = "./FlinFlon.geoh5"
+    grav_init["geoh5"] = str(PROJECT)
     params = GravityParams(validate=False, **grav_init)
     params.validate = True
     with pytest.raises(OptionalValidationError) as excinfo:
@@ -245,7 +246,7 @@ def test_chunk_validation_grav(tmp_path):
 
 
 def test_chunk_validation_dc(tmp_path):
-    with Workspace("./FlinFlon_dcip.geoh5") as dc_geoh5:
+    with Workspace(PROJECT_DCIP) as dc_geoh5:
         test_dict = dc_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
         test_dict.pop("topography_object")
@@ -258,7 +259,7 @@ def test_chunk_validation_dc(tmp_path):
 
 
 def test_chunk_validation_ip(tmp_path):
-    with Workspace("./FlinFlon_dcip.geoh5") as dc_geoh5:
+    with Workspace(PROJECT_DCIP) as dc_geoh5:
         test_dict = ip_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
         test_dict.pop("topography_object")
@@ -416,22 +417,8 @@ def test_validate_receivers_radar_drape():
     catch_invalid_generator(param, {}, "type")
 
 
-def test_validate_receivers_offset_x():
-    param = "receivers_offset_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "test", "type")
-
-
-def test_validate_receivers_offset_y():
-    param = "receivers_offset_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "test", "type")
-
-
 def test_validate_receivers_offset_z():
-    param = "receivers_offset_x"
+    param = "receivers_offset_z"
     newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
@@ -768,7 +755,7 @@ def test_validate_n_cpu():
 
 grav_params = GravityParams(
     **{
-        "geoh5": "./FlinFlon.geoh5",
+        "geoh5": str(PROJECT),
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
@@ -786,8 +773,8 @@ def test_validate_geoh5():
 def test_validate_out_group():
     param = "out_group"
     newval = "test_"
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
+    with pytest.raises(UUIDValidationError, match="not a valid uuid string"):
+        param_test_generator(param, newval)
 
 
 def test_validate_distributed_workers():
@@ -1258,7 +1245,7 @@ def test_gy_uncertainty():
 
 mag_params = MagneticScalarParams(
     **{
-        "geoh5": "./FlinFlon.geoh5",
+        "geoh5": str(PROJECT),
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )

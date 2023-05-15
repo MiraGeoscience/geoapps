@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
+from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
@@ -31,8 +32,6 @@ inversion_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": False,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -110,7 +109,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagneticVectorInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -144,8 +143,6 @@ forward_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": False,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -174,7 +171,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagneticVectorForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -207,7 +204,7 @@ inversion_ui_json = {
 
 forward_ui_json = {
     "starting_model": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models",
         "main": True,
@@ -677,7 +674,6 @@ default_ui_json = {
         "value": 1.0,
         "enabled": False,
     },
-    "out_group": {"label": "Results group name", "value": "MagneticVectorInversion"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -717,7 +713,7 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),

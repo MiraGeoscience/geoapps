@@ -18,7 +18,9 @@ from geoapps.inversion.components import (
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def setup_params(tmp):
@@ -29,7 +31,6 @@ def setup_params(tmp):
     geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
-    geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
 
 

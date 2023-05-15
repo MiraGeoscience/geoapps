@@ -22,7 +22,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.drivers import InversionData
+    from geoapps.inversion.components.data import InversionData
 
 import numpy as np
 from geoh5py.objects import Curve, Grid2D
@@ -44,10 +44,12 @@ class EntityFactory(AbstractFactory):
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
@@ -65,10 +67,12 @@ class EntityFactory(AbstractFactory):
         """Constructs geoh5py object for provided inversion type."""
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             return self._build_dcip(inversion_data)
         else:
@@ -89,7 +93,7 @@ class EntityFactory(AbstractFactory):
         entity = PotentialElectrode.create(
             workspace,
             name="Data",
-            parent=self.params.ga_group,
+            parent=self.params.out_group,
             vertices=inversion_data.apply_transformations(rcv_locations),
             cells=rcv_cells,
         )
@@ -103,7 +107,7 @@ class EntityFactory(AbstractFactory):
         new_currents = CurrentElectrode.create(
             workspace,
             name="Data (currents)",
-            parent=self.params.ga_group,
+            parent=self.params.out_group,
             vertices=inversion_data.apply_transformations(src_locations),
             cells=src_cells,
         )
@@ -113,25 +117,28 @@ class EntityFactory(AbstractFactory):
         return entity
 
     def _build(self, inversion_data: InversionData):
-        entity = inversion_data.create_entity(
-            "Data", inversion_data.locations, geoh5_object=self.concrete_object
-        )
-
-        if np.any(~inversion_data.mask):
-            entity.remove_vertices(np.where(~inversion_data.mask))
-
-        if getattr(self.params.data_object, "parts", None) is not None:
-            entity.parts = self.params.data_object.parts[inversion_data.mask]
-
-        if getattr(self.params.data_object, "base_stations", None) is not None:
-            entity.base_stations = type(self.params.data_object.base_stations).create(
-                entity.workspace,
-                parent=entity.parent,
-                vertices=self.params.data_object.base_stations.vertices,
+        if isinstance(self.params.data_object, Grid2D):
+            entity = inversion_data.create_entity(
+                "Data", inversion_data.locations, geoh5_object=self.concrete_object
             )
 
-        if getattr(self.params.data_object, "channels", None) is not None:
-            entity.channels = [float(val) for val in self.params.data_object.channels]
+        else:
+            entity = self.params.data_object.copy(
+                parent=self.params.out_group,
+                copy_children=False,
+                vertices=inversion_data.locations,
+            )
+
+        if getattr(entity, "transmitters", None) is not None:
+            entity.transmitters.vertices = inversion_data.apply_transformations(
+                entity.transmitters.vertices
+            )
+
+        if np.any(~inversion_data.mask):
+            entity.remove_vertices(~inversion_data.mask)
+
+            if getattr(entity, "transmitters", None) is not None:
+                entity.transmitters.remove_vertices(~inversion_data.mask)
 
         return entity
 

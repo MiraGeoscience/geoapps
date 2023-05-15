@@ -11,13 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
+from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetotellurics (MT) inversion",
+    "title": "Magnetotellurics inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -28,8 +29,6 @@ inversion_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "zxx_real_channel": None,
@@ -67,13 +66,13 @@ inversion_defaults = {
     "chi_factor": 1.0,
     "initial_beta_ratio": 1e2,
     "initial_beta": None,
-    "coolingRate": 2,
+    "coolingRate": 4,
     "coolingFactor": 2.0,
     "max_global_iterations": 50,
     "max_line_search_iterations": 20,
-    "max_cg_iterations": 30,
+    "max_cg_iterations": 50,
     "tol_cg": 1e-4,
-    "alpha_s": 1.0,
+    "alpha_s": 0.0,
     "alpha_x": 1.0,
     "alpha_y": 1.0,
     "alpha_z": 1.0,
@@ -91,7 +90,7 @@ inversion_defaults = {
     "coolEpsFact": 1.2,
     "beta_search": False,
     "sens_wts_threshold": 60.0,
-    "every_iteration_bool": False,
+    "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -99,7 +98,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagnetotelluricsInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -117,7 +116,7 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Magnetotellurics (MT) forward",
+    "title": "Magnetotellurics forward",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -128,8 +127,6 @@ forward_defaults = {
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
     "zxx_real_channel_bool": True,
@@ -154,7 +151,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagnetotelluricsForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -198,7 +195,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Magnetotellurics (MT) inversion",
+    "title": "Magnetotellurics inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "data_object": {
@@ -507,7 +504,6 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
-    "out_group": {"label": "Results group name", "value": "MagnetotelluricsInversion"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -541,7 +537,7 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon_natural_sources.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon_natural_sources.geoh5"),
     "topography_object": UUID("{cfabb8dd-d1ad-4c4e-a87c-7b3dd224c3f5}"),
     "data_object": UUID("{9664afc1-cbda-4955-b936-526ca771f517}"),
     "zxx_real_channel": UUID("{a73159fc-8c1b-411a-b435-12a5dac4a209}"),

@@ -70,8 +70,6 @@ class InversionLocations:
         self.angle: float = None
         self.is_rotated: bool = False
         self.locations: np.ndarray = None
-        self.has_pseudo: bool = False
-        self.pseudo_locations: np.ndarray = None
 
         if params.mesh is not None:
             if hasattr(params.mesh, "rotation"):
@@ -109,7 +107,7 @@ class InversionLocations:
             self.workspace,
             name=name,
             vertices=locs,
-            parent=self.params.ga_group,
+            parent=self.params.out_group,
         )
 
         return entity

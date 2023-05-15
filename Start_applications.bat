@@ -7,6 +7,8 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
+set ENV_NAME=geoapps
+
 set MY_CONDA=!MY_CONDA_EXE:"=!
-call "!MY_CONDA!" activate geoapps && jupyter notebook geoapps\index.ipynb
-cmd /k
+call "!MY_CONDA!" run --live-stream -n %ENV_NAME% python -m geoapps.scripts.start_notebook
+cmd /k "!MY_CONDA!" activate %ENV_NAME%

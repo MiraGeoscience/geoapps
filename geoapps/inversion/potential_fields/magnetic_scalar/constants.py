@@ -11,13 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
+from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetic inversion",
+    "title": "Magnetic Susceptibility inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornemagnetics",
     "inversion_type": "magnetic scalar",
@@ -31,8 +32,6 @@ inversion_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": False,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -106,7 +105,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagneticSusceptibilityInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -139,8 +138,6 @@ forward_defaults = {
     "data_object": None,
     "resolution": 50.0,
     "z_from_topo": False,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -167,7 +164,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagneticScalarForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -200,7 +197,7 @@ inversion_ui_json = {
 
 forward_ui_json = {
     "starting_model": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models",
         "main": True,
@@ -618,10 +615,6 @@ default_ui_json = {
         "value": 1.0,
         "enabled": False,
     },
-    "out_group": {
-        "label": "Results group name",
-        "value": "MagneticSusceptibilityInversion",
-    },
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -660,7 +653,7 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "resolution": 50.0,
@@ -684,7 +677,5 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0.0,
-    "receivers_offset_y": 0.0,
     "receivers_offset_z": 60.0,
 }

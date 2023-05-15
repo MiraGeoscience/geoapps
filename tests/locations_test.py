@@ -15,7 +15,9 @@ from geoapps.inversion.components.locations import InversionLocations
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def setup_params(tmp):
@@ -53,8 +55,8 @@ def test_get_locations(tmp_path):
     grid_object = Grid2D.create(
         ws,
         origin=[0, 0, 0],
-        u_cell_size=1,
-        v_cell_size=1,
+        u_cell_size=1.0,
+        v_cell_size=1.0,
         u_count=5,
         v_count=5,
         rotation=0.0,

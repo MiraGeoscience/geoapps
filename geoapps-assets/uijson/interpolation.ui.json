@@ -160,5 +160,11 @@
         "label": "Output Label",
         "value": "_Interp",
         "group": "Python run preferences"
+    },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
     }
 }

@@ -30,7 +30,7 @@ target_run = {
 np.random.seed(0)
 
 
-def test_dc_fwr_run(
+def test_dc_3d_fwr_run(
     tmp_path,
     n_electrodes=4,
     n_lines=3,
@@ -65,7 +65,7 @@ def test_dc_fwr_run(
     return fwr_driver.starting_model
 
 
-def test_dc_run(
+def test_dc_3d_run(
     tmp_path,
     max_iterations=1,
     pytest=True,
@@ -73,7 +73,7 @@ def test_dc_run(
 ):
     workpath = os.path.join(tmp_path, "inversion_test.geoh5")
     if pytest:
-        workpath = str(tmp_path / "../test_dc_fwr_run0/inversion_test.geoh5")
+        workpath = str(tmp_path / "../test_dc_3d_fwr_run0/inversion_test.geoh5")
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
@@ -113,7 +113,7 @@ def test_dc_run(
     driver = DirectCurrent3DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = potential.values
@@ -123,17 +123,50 @@ def test_dc_run(
         return driver.inverse_problem.model
 
 
+def test_dc_single_line_fwr_run(
+    tmp_path,
+    n_electrodes=4,
+    n_lines=1,
+    refinement=(4, 6),
+):
+    # Run the forward
+    geoh5, _, model, survey, topography = setup_inversion_workspace(
+        tmp_path,
+        background=0.01,
+        anomaly=10,
+        n_electrodes=n_electrodes,
+        n_lines=n_lines,
+        refinement=refinement,
+        drape_height=0.0,
+        inversion_type="dcip",
+        flatten=False,
+    )
+    params = DirectCurrent3DParams(
+        forward_only=True,
+        geoh5=geoh5,
+        mesh=model.parent.uid,
+        topography_object=topography.uid,
+        z_from_topo=False,
+        data_object=survey.uid,
+        starting_model=model.uid,
+        resolution=None,
+    )
+    params.workpath = tmp_path
+    fwr_driver = DirectCurrent3DDriver(params)
+    assert np.all(fwr_driver.window["size"] > 0)
+
+
 if __name__ == "__main__":
     # Full run
 
-    m_start = test_dc_fwr_run(
+    m_start = test_dc_3d_fwr_run(
         "./",
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
-    m_rec = test_dc_run(
+    m_rec = test_dc_3d_run(
         "./",
         n_lines=5,
         max_iterations=15,

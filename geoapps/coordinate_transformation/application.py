@@ -18,6 +18,7 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
 
+from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
@@ -40,7 +41,7 @@ with warn_module_not_found():
 
 app_initializer = {
     "ga_group_name": "CoordinateTransformation",
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": [
         "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",

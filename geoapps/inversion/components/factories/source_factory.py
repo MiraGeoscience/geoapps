@@ -51,6 +51,11 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.Dipole
 
+        elif "tdem" in self.factory_type:
+            from SimPEG.electromagnetics.time_domain import sources
+
+            return sources.MagDipole
+
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import sources
 
@@ -61,9 +66,11 @@ class SourcesFactory(SimPEGFactory):
         receivers=None,
         locations=None,
         frequency=None,
+        waveform=None,
     ):  # pylint: disable=arguments-differ
         """Provides implementations to assemble arguments for sources object."""
 
+        _ = waveform
         args = []
 
         if locations is not None and getattr(self.params.mesh, "rotation", None):
@@ -74,10 +81,12 @@ class SourcesFactory(SimPEGFactory):
             )
 
         if self.factory_type in [
+            "direct current pseudo 3d",
             "direct current 3d",
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
+            "induced polarization pseudo 3d",
         ]:
             args += self._dcip_arguments(
                 receivers=receivers,
@@ -88,31 +97,38 @@ class SourcesFactory(SimPEGFactory):
             args.append(receivers)
             args.append(frequency)
 
+        elif self.factory_type in ["tdem"]:
+            args.append(receivers)
+
         else:
             args.append([receivers])
 
         return args
 
     def assemble_keyword_arguments(  # pylint: disable=arguments-differ
-        self, receivers=None, locations=None, frequency=None
+        self, receivers=None, locations=None, frequency=None, waveform=None
     ):
         """Provides implementations to assemble keyword arguments for receivers object."""
-        _ = (receivers, locations, frequency)
+        _ = (receivers, frequency)
         kwargs = {}
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
             kwargs["parameters"] = self.params.inducing_field_aid()
         if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["sigma_primary"] = [self.params.background_conductivity]
+        if self.factory_type in ["tdem"]:
+            kwargs["location"] = locations
+            kwargs["waveform"] = waveform
 
         return kwargs
 
     def build(
-        self, receivers=None, locations=None, frequency=None
+        self, receivers=None, locations=None, frequency=None, waveform=None
     ):  #  pylint: disable=arguments-differ
         return super().build(
             receivers=receivers,
             locations=locations,
             frequency=frequency,
+            waveform=waveform,
         )
 
     def _dcip_arguments(self, receivers=None, locations=None):

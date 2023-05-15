@@ -11,11 +11,12 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+from geoapps import assets_path
 from geoapps.inversion.constants import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current 3d inversion",
+    "title": "Direct Current 3D inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",
@@ -26,8 +27,6 @@ inversion_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": True,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -83,7 +82,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -93,7 +92,7 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current 3d forward",
+    "title": "Direct Current 3D forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",
@@ -104,8 +103,6 @@ forward_defaults = {
     "data_object": None,
     "resolution": None,
     "z_from_topo": True,
-    "receivers_offset_x": None,
-    "receivers_offset_y": None,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
     "gps_receivers_offset": None,
@@ -123,7 +120,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "DirectCurrentForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -147,7 +144,7 @@ inversion_ui_json = {
 
 forward_ui_json = {
     "starting_model": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Mesh and Models`",
         "main": True,
@@ -169,7 +166,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "SimPEG Direct Current inversion",
+    "title": "Direct Current 3D inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "direct current 3d",
@@ -279,7 +276,6 @@ default_ui_json = {
     "resolution": None,
     "detrend_order": None,
     "detrend_type": None,
-    "out_group": {"label": "Results group name", "value": "DirectCurrentInversion"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -298,7 +294,7 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon_dcip.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon_dcip.geoh5"),
     "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
     "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
     "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
@@ -327,7 +323,5 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "receivers_offset_x": 0.0,
-    "receivers_offset_y": 0.0,
     "receivers_offset_z": 0.0,
 }

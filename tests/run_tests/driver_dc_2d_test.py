@@ -24,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.6326,
-    "phi_d": 740,
-    "phi_m": 2.87,
+    "data_norm": 0.63079,
+    "phi_d": 907.5,
+    "phi_m": 2.642,
 }
 
 np.random.seed(0)
@@ -112,7 +112,7 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
     driver = DirectCurrent2DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = potential.values[np.isfinite(potential.values)]

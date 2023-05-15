@@ -19,7 +19,9 @@ from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def setup_params(tmp):
@@ -30,7 +32,6 @@ def setup_params(tmp):
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("gyz_channel", "{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
-    geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
 
 
@@ -295,5 +296,5 @@ def test_get_survey(tmp_path):
     locs = params.data_object.centroids
     window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
     data = InversionData(ws, params, window)
-    survey, _ = data.create_survey()
-    assert isinstance(survey, SimPEG.potential_fields.magnetics.Survey)
+    survey = data.create_survey()
+    assert isinstance(survey[0], SimPEG.potential_fields.magnetics.Survey)

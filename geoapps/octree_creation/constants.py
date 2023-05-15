@@ -12,6 +12,8 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+from geoapps import assets_path
+
 defaults = {
     "title": "octree Mesh Creator",
     "geoh5": None,
@@ -48,6 +50,7 @@ default_ui_json.update(
                 "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
                 "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
                 "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+                "{19730589-fd28-4649-9de0-ad47249d9aba}",
             ],
             "value": None,
         },
@@ -124,6 +127,7 @@ template_dict = {
             "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
             "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
             "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+            "{19730589-fd28-4649-9de0-ad47249d9aba}",
         ],
         "value": None,
     },
@@ -151,7 +155,7 @@ template_dict = {
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A levels": [4, 4, 4],

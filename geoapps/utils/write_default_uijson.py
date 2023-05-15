@@ -9,17 +9,26 @@ from __future__ import annotations
 
 import argparse
 
-import geoapps
+from geoapps import assets_path
 from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
+from geoapps.inversion.airborne_electromagnetics.time_domain import (
+    TimeDomainElectromagneticsParams,
+)
+from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
+    DirectCurrentPseudo3DParams,
+)
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
 from geoapps.inversion.electricals.direct_current.two_dimensions import (
     DirectCurrent2DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.params import (
+    InducedPolarizationPseudo3DParams,
 )
 from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
@@ -38,118 +47,131 @@ from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
-path_to_flinflon = lambda file: "\\".join(
-    geoapps.__file__.split("\\")[:-2] + ["assets", file]
-)
-
 
 def write_default_uijson(path, use_initializers=False):
     from geoapps.inversion.potential_fields.gravity.constants import (
         app_initializer as grav_init,
     )
 
-    grav_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    grav_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     grav_init = grav_init if use_initializers else {}
 
     from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
         app_initializer as mag_init,
     )
 
-    mag_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mag_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     mag_init = mag_init if use_initializers else {}
 
     from geoapps.inversion.potential_fields.magnetic_vector.constants import (
         app_initializer as mvi_init,
     )
 
-    mvi_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    mvi_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     mvi_init = mvi_init if use_initializers else {}
 
     from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
         app_initializer as dc_3d_init,
     )
 
-    dc_3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    dc_3d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
     dc_3d_init = dc_3d_init if use_initializers else {}
 
     from geoapps.inversion.electricals.direct_current.two_dimensions.constants import (
         app_initializer as dc_2d_init,
     )
 
-    dc_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    dc_2d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
     dc_2d_init = dc_2d_init if use_initializers else {}
+
+    from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
+        app_initializer as dc_p3d_init,
+    )
+
+    dc_p3d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
+    dc_p3d_init = dc_p3d_init if use_initializers else {}
 
     from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
         app_initializer as ip_3d_init,
     )
 
-    ip_3d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_3d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
     ip_3d_init = ip_3d_init if use_initializers else {}
 
     from geoapps.inversion.electricals.induced_polarization.two_dimensions.constants import (
         app_initializer as ip_2d_init,
     )
 
-    ip_2d_init["geoh5"] = path_to_flinflon("FlinFlon_dcip.geoh5")
+    ip_2d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
     ip_2d_init = ip_2d_init if use_initializers else {}
 
+    from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.constants import (
+        app_initializer as ip_p3d_init,
+    )
+
+    ip_p3d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
+    ip_p3d_init = ip_p3d_init if use_initializers else {}
+
+    from geoapps.inversion.airborne_electromagnetics.time_domain.constants import (
+        app_initializer as tdem_init,
+    )
     from geoapps.inversion.natural_sources.magnetotellurics.constants import (
         app_initializer as mt_init,
     )
 
-    mt_init["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
+    mt_init["geoh5"] = str(assets_path() / "FlinFlon_natural_sources.geoh5")
     mt_init = mt_init if use_initializers else {}
 
     from geoapps.inversion.natural_sources.tipper.constants import (
         app_initializer as tipper_init,
     )
 
-    tipper_init["geoh5"] = path_to_flinflon("FlinFlon_natural_sources.geoh5")
+    tipper_init["geoh5"] = str(assets_path() / "FlinFlon_natural_sources.geoh5")
     tipper_init = tipper_init if use_initializers else {}
 
     from geoapps.octree_creation.constants import app_initializer as oct_init
 
-    oct_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    oct_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     oct_init = oct_init if use_initializers else {}
 
     from geoapps.scatter_plot.constants import app_initializer as scatter_init
 
-    scatter_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    scatter_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     scatter_init = scatter_init if use_initializers else {}
 
     from geoapps.interpolation.constants import app_initializer as interp_init
 
-    interp_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    interp_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     interp_init = interp_init if use_initializers else {}
 
     from geoapps.block_model_creation.constants import app_initializer as block_init
 
-    block_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    block_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     block_init = block_init if use_initializers else {}
 
     from geoapps.clustering.constants import app_initializer as cluster_init
 
-    cluster_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    cluster_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     cluster_init = cluster_init if use_initializers else {}
 
     from geoapps.peak_finder.constants import app_initializer as peak_init
 
-    peak_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    peak_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     peak_init = peak_init if use_initializers else {}
 
     from geoapps.iso_surfaces.constants import app_initializer as iso_init
 
-    iso_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    iso_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     iso_init = iso_init if use_initializers else {}
 
     from geoapps.edge_detection.constants import app_initializer as edge_init
 
-    edge_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    edge_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     edge_init = edge_init if use_initializers else {}
 
     from geoapps.contours.constants import app_initializer as contour_init
 
-    contour_init["geoh5"] = path_to_flinflon("FlinFlon.geoh5")
+    contour_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     contour_init = contour_init if use_initializers else {}
 
     filedict = {
@@ -179,6 +201,12 @@ def write_default_uijson(path, use_initializers=False):
         "direct_current_forward_3d.ui.json": DirectCurrent3DParams(
             forward_only=True, validate=False
         ),
+        "direct_current_inversion_pseudo3d.ui.json": DirectCurrentPseudo3DParams(
+            validate=False, **dc_p3d_init
+        ),
+        "direct_current_forward_pseudo3d.ui.json": DirectCurrentPseudo3DParams(
+            forward_only=True, validate=False
+        ),
         "induced_polarization_inversion_2d.ui.json": InducedPolarization2DParams(
             validate=False, **ip_2d_init
         ),
@@ -189,6 +217,18 @@ def write_default_uijson(path, use_initializers=False):
             validate=False, **ip_3d_init
         ),
         "induced_polarization_forward_3d.ui.json": InducedPolarization3DParams(
+            forward_only=True, validate=False
+        ),
+        "induced_polarization_inversion_pseudo3d.ui.json": InducedPolarizationPseudo3DParams(
+            validate=False, **ip_p3d_init
+        ),
+        "induced_polarization_forward_pseudo3d.ui.json": InducedPolarizationPseudo3DParams(
+            forward_only=True, validate=False
+        ),
+        "tdem_inversion.ui.json": TimeDomainElectromagneticsParams(
+            forward_only=False, validate=False, **tdem_init
+        ),
+        "tdem_forward.ui.json": TimeDomainElectromagneticsParams(
             forward_only=True, validate=False
         ),
         "magnetotellurics_inversion.ui.json": MagnetotelluricsParams(
