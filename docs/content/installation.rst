@@ -15,16 +15,9 @@ Installation
 Install Conda
 ~~~~~~~~~~~~~
 
-Install Conda for Python 3.9 or higher. You can use any of the following distributions of Conda:
+Install Conda for Python 3.9 or higher. Follow this link to download its Windows installer (~140 MB of disk space):
 
-- `Miniforge <https://github.com/conda-forge/miniforge#download>`_: ~140 MB of disk space
-- `Miniconda <https://docs.conda.io/en/latest/miniconda.html#latest-miniconda-installer-links>`_: ~400 MB of disk space
-- `Anaconda <https://www.anaconda.com/download/>`_: ~3 GB of disk space
-
-We recommend installing **Miniforge**: beyond being smaller,
-it also installs packages from the conda-forge repository by default,
-which has no restriction for commercial use. Follow this link to download its Windows installer:
-`Miniforge Windows x86_64 <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe>`_
+`Miniforge <https://github.com/conda-forge/miniforge#download>`_ `(Windows x86_64) <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe>`_
 
 .. figure:: ../images/Miniforge3_Setup-1.png
     :align: center
@@ -37,7 +30,9 @@ which has no restriction for commercial use. Follow this link to download its Wi
 Registering the Conda distribution as the default Python 3.10 interpreter is totally optional.
 Preferably uncheck that box if you already have Python 3 installed on your system.
 
-.. note:: Both Miniconda and Anaconda distributions use the Anaconda repository by default: see `Anaconda Terms of Service <https://www.anaconda.com/terms-of-service>`_ for details.
+.. note:: We recommend installing **Miniforge**: beyond being smaller,
+    it also installs packages from the conda-forge repository by default,
+    which has no restriction for commercial use, while both Miniconda and Anaconda distributions use the Anaconda repository by default: see `Anaconda Terms of Service <https://www.anaconda.com/terms-of-service>`_ for details.
     In any case, the installation of **geoapps** forces the usage of the conda-forge repository,
     and is thus not affected by the Anaconda Terms of Service.
 

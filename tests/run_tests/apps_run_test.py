@@ -4,6 +4,9 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+# pylint: disable=protected-access
+
 import base64
 import uuid
 from os import listdir, path
@@ -266,10 +269,24 @@ def test_edge_detection(tmp_path):
         for uid in [
             "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         ]:
-            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+            new_copy = GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+            new_data = new_copy.add_data(
+                {
+                    "copy_data": {
+                        "values": new_copy.children[0].values,
+                        "association": "CELL",
+                    }
+                }
+            )
 
-    app = EdgeDetectionApp(geoh5=temp_workspace, plot_result=False)
-
+    app = EdgeDetectionApp(plot_result=False)
+    app._file_browser.reset(
+        path=tmp_path,
+        filename="contour.geoh5",
+    )
+    app._file_browser._apply_selection()
+    app.file_browser_change(None)
+    app.data.value = new_data.uid
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -277,7 +294,7 @@ def test_edge_detection(tmp_path):
             len(
                 [
                     child
-                    for child in workspace.get_entity("Airborne_Gxx")
+                    for child in workspace.get_entity("copy_data")
                     if isinstance(child, Curve)
                 ]
             )

@@ -10,18 +10,52 @@ from __future__ import annotations
 import os
 from abc import ABC, abstractmethod
 
+from geoh5py import Workspace
 from geoh5py.ui_json import InputFile
+from param_sweeps.driver import SweepParams
 from param_sweeps.generate import generate
 
 from geoapps.driver_base.params import BaseParams
 
 
 class BaseDriver(ABC):
+    _workspace: Workspace | None = None
+    _params: BaseParams
     _params_class = BaseParams
     _validations = None
 
     def __init__(self, params: BaseParams):
         self.params = params
+
+    @property
+    def params(self):
+        """Application parameters."""
+        return self._params
+
+    @params.setter
+    def params(self, val):
+        if not isinstance(val, (BaseParams, SweepParams)):
+            raise TypeError("Parameters must be of type BaseParams.")
+        self._params = val
+
+    @property
+    def workspace(self):
+        """Application workspace."""
+        if self._workspace is None and self._params is not None:
+            self._workspace = self._params.geoh5
+
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, workspace):
+        """Application workspace."""
+
+        if not isinstance(workspace, Workspace):
+            raise TypeError(
+                "Input value for `workspace` must be of type geoh5py.Workspace."
+            )
+
+        self._workspace = workspace
 
     @property
     def params_class(self):

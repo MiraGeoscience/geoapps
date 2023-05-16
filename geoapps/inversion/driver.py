@@ -53,14 +53,13 @@ from geoapps.inversion.utils import tile_locations
 
 class InversionDriver(BaseDriver):
     _params_class = InversionBaseParams  # pylint: disable=E0601
+    _inversion_type: str | None = None
     _validations = None
 
-    def __init__(self, params: InversionBaseParams, warmstart=False):
+    def __init__(self, params: InversionBaseParams):
         super().__init__(params)
 
         self.params = params
-        self.warmstart = warmstart
-        self.workspace = params.geoh5
         self.inversion_type = params.inversion_type
         self._data_misfit: objective_function.ComboObjectiveFunction | None = None
         self._directives: list[directives.InversionDirective] | None = None
@@ -159,6 +158,17 @@ class InversionDriver(BaseDriver):
                 self.workspace, self.params
             )
         return self._inversion_topography
+
+    @property
+    def inversion_type(self) -> str | None:
+        """Inversion type"""
+        return self._inversion_type
+
+    @inversion_type.setter
+    def inversion_type(self, value):
+        if value not in DRIVER_MAP:
+            raise ValueError(f"Invalid inversion type: {value}")
+        self._inversion_type = value
 
     @property
     def logger(self):

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from geoh5py.groups.simpeg_group import SimPEGGroup
+
 from geoapps.inversion.params import InversionBaseParams
 
 from .constants import (
@@ -49,7 +51,7 @@ class JointSingleParams(InversionBaseParams):
         return self._group_a
 
     @group_a.setter
-    def group_a(self, val):
+    def group_a(self, val: SimPEGGroup):
         self.setter_validator("group_a", val, fun=self._uuid_promoter)
 
     @property
@@ -58,7 +60,7 @@ class JointSingleParams(InversionBaseParams):
         return self._group_b
 
     @group_b.setter
-    def group_b(self, val):
+    def group_b(self, val: SimPEGGroup):
         self.setter_validator("group_b", val, fun=self._uuid_promoter)
 
     @property
@@ -67,5 +69,5 @@ class JointSingleParams(InversionBaseParams):
         return self._group_c
 
     @group_c.setter
-    def group_c(self, val):
+    def group_c(self, val: SimPEGGroup):
         self.setter_validator("group_c", val, fun=self._uuid_promoter)

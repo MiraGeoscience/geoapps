@@ -29,13 +29,13 @@ from .constants import validations
 from .params import JointSingleParams
 
 
-class JointSingleDriver(InversionDriver):
+class JointSurveyDriver(InversionDriver):
     _params_class = JointSingleParams
     _validations = validations
     _drivers = None
 
-    def __init__(self, params: JointSingleParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: JointSingleParams):
+        super().__init__(params)
 
         with fetch_active_workspace(self.workspace, mode="r+"):
             self.initialize()
@@ -68,7 +68,10 @@ class JointSingleDriver(InversionDriver):
                 if group is None:
                     continue
 
-                ifile = InputFile(ui_json=group.options)
+                ui_json = group.options
+                ui_json["geoh5"] = self.workspace
+
+                ifile = InputFile(ui_json=ui_json)
                 mod_name, class_name = DRIVER_MAP.get(ifile.data["inversion_type"])
                 module = __import__(mod_name, fromlist=[class_name])
                 inversion_driver = getattr(module, class_name)
