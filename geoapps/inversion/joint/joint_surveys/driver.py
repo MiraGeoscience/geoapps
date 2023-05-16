@@ -68,7 +68,10 @@ class JointSurveyDriver(InversionDriver):
                 if group is None:
                     continue
 
-                ifile = InputFile(ui_json=group.options)
+                ui_json = group.options
+                ui_json["geoh5"] = self.workspace
+
+                ifile = InputFile(ui_json=ui_json)
                 mod_name, class_name = DRIVER_MAP.get(ifile.data["inversion_type"])
                 module = __import__(mod_name, fromlist=[class_name])
                 inversion_driver = getattr(module, class_name)
