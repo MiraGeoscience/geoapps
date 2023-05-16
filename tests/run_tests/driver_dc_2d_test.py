@@ -24,9 +24,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.63079,
-    "phi_d": 907.5,
-    "phi_m": 2.642,
+    "data_norm": 0.621741,
+    "phi_d": 799.5,
+    "phi_m": 2.885,
 }
 
 np.random.seed(0)
@@ -54,7 +54,12 @@ def test_dc_2d_fwr_run(
     params = DirectCurrent2DParams(
         forward_only=True,
         geoh5=geoh5,
-        mesh=model.parent.uid,
+        u_cell_size=5.0,
+        v_cell_size=5.0,
+        depth_core=100.0,
+        horizontal_padding=100.0,
+        vertical_padding=100.0,
+        expansion_factor=1.1,
         topography_object=topography.uid,
         z_from_topo=False,
         data_object=survey.uid,
@@ -66,7 +71,7 @@ def test_dc_2d_fwr_run(
     fwr_driver = DirectCurrent2DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):

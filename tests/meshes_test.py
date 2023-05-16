@@ -13,7 +13,6 @@ from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
     InversionTopography,
-    InversionWindow,
 )
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
@@ -37,10 +36,7 @@ def setup_params(tmp):
 
 def test_initialize(tmp_path):
     ws, params = setup_params(tmp_path)
-    inversion_window = InversionWindow(ws, params)
-    inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(
-        ws, params, inversion_data, inversion_window.window
-    )
+    inversion_data = InversionData(ws, params)
+    inversion_topography = InversionTopography(ws, params)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     assert isinstance(inversion_mesh.mesh, TreeMesh)

@@ -19,9 +19,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.00877,
-    "phi_d": 2.396,
-    "phi_m": 0.3094,
+    "data_norm": 0.008729,
+    "phi_d": 2.195,
+    "phi_m": 0.4823,
 }
 
 np.random.seed(0)
@@ -60,10 +60,10 @@ def test_tipper_fwr_run(
         tyz_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = TipperDriver(params, warmstart=False)
+    fwr_driver = TipperDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_tipper_run(tmp_path, max_iterations=1, pytest=True):

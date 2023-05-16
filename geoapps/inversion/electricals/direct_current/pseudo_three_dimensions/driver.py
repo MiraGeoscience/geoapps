@@ -47,17 +47,11 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
         ifile = DirectCurrent2DParams(forward_only=forward_only).input_file
 
         with self.workspace.open(mode="r+"):
-            self.inversion_window = InversionWindow(
+            self._window = InversionWindow(self.workspace, self.pseudo3d_params)
+            self._inversion_data = InversionData(self.workspace, self.pseudo3d_params)
+            self._inversion_topography = InversionTopography(
                 self.workspace, self.pseudo3d_params
             )
-            self.inversion_data = InversionData(
-                self.workspace, self.pseudo3d_params, self.window
-            )
-
-            self.inversion_topography = InversionTopography(
-                self.workspace, self.pseudo3d_params, self.inversion_data, self.window
-            )
-
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
             models = {"starting_model": self.pseudo3d_params.starting_model}
             if not forward_only:

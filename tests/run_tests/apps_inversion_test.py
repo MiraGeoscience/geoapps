@@ -88,7 +88,7 @@ def test_mag_inversion(tmp_path):
     new_app._file_browser._apply_selection()
     new_app.file_browser_change(None)
 
-    with new_app.params.geoh5:
+    with new_app.params.geoh5.open():
         objs = new_app.params.geoh5.list_entities_name
         check_objs = [
             new_obj.uid,

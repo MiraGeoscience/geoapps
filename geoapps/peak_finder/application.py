@@ -18,6 +18,7 @@ import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -715,26 +716,27 @@ class PeakFinder(ObjectDataSelection):
 
     def create_default_groups(self, _):
         if self.group_auto.value:
-            obj = self.workspace.get_entity(self.objects.value)[0]
-            if obj is None:
-                return
+            with fetch_active_workspace(self.workspace) as workspace:
+                obj = workspace.get_entity(self.objects.value)[0]
+                if obj is None:
+                    return
 
-            group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
-            if any(group):
-                channel_groups = default_groups_from_property_group(group[0])
-                self._channel_groups = channel_groups
-                self.pause_refresh = True
+                group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
+                if any(group):
+                    channel_groups = default_groups_from_property_group(group[0])
+                    self._channel_groups = channel_groups
+                    self.pause_refresh = True
 
-                group_list = []
-                self.update_data_list(None)
-                self.pause_refresh = True
-                for pg, params in self._channel_groups.items():
-                    group_list += [self.add_group_widget(pg, params)]
+                    group_list = []
+                    self.update_data_list(None)
+                    self.pause_refresh = True
+                    for pg, params in self._channel_groups.items():
+                        group_list += [self.add_group_widget(pg, params)]
 
-                self.pause_refresh = False
-                self.groups_panel.children = group_list
+                    self.pause_refresh = False
+                    self.groups_panel.children = group_list
 
-                self.set_data(None)
+                    self.set_data(None)
 
         self.group_auto.value = False
         self._group_auto.button_style = "success"

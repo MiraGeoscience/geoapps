@@ -16,7 +16,12 @@ from shutil import copyfile
 
 from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
-from geoh5py.shared.utils import dict_mapper, entity2uuid, str2uuid
+from geoh5py.shared.utils import (
+    dict_mapper,
+    entity2uuid,
+    fetch_active_workspace,
+    str2uuid,
+)
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import list2str, monitored_directory_copy
 from geoh5py.workspace import Workspace
@@ -114,39 +119,41 @@ class BaseApplication:
 
     def __populate__(self, **kwargs):
         mappers = [entity2uuid, str2uuid]
+        workspace = getattr(getattr(self, "params", None), "geoh5", None)
 
-        for key, value in kwargs.items():
-            if key[0] == "_":
-                key = key[1:]
-            if hasattr(self, "_" + key) or hasattr(self, key):
-                if isinstance(value, list):
-                    value = [dict_mapper(val, mappers) for val in value]
-                else:
-                    value = dict_mapper(value, mappers)
-
-                try:
-                    if isinstance(getattr(self, key, None), Widget) and not isinstance(
-                        value, Widget
-                    ):
-                        widget = getattr(self, key)
-
-                        if isinstance(widget, Text):
-                            value = list2str(value)
-
-                        setattr(widget, "value", value)
-                        if hasattr(widget, "style"):
-                            widget.style = {"description_width": "initial"}
-
-                    elif isinstance(value, BaseApplication) and isinstance(
-                        getattr(self, "_" + key, None), BaseApplication
-                    ):
-                        setattr(self, "_" + key, value)
-                    elif type(getattr(self, key, None)) is types.MethodType:
-                        getattr(self, key, None)(key, value)
+        with fetch_active_workspace(workspace):
+            for key, value in kwargs.items():
+                if key[0] == "_":
+                    key = key[1:]
+                if hasattr(self, "_" + key) or hasattr(self, key):
+                    if isinstance(value, list):
+                        value = [dict_mapper(val, mappers) for val in value]
                     else:
-                        setattr(self, key, value)
-                except (AttributeError, TypeError, TraitError, AssertionError):
-                    pass
+                        value = dict_mapper(value, mappers)
+
+                    try:
+                        if isinstance(
+                            getattr(self, key, None), Widget
+                        ) and not isinstance(value, Widget):
+                            widget = getattr(self, key)
+
+                            if isinstance(widget, Text):
+                                value = list2str(value)
+
+                            setattr(widget, "value", value)
+                            if hasattr(widget, "style"):
+                                widget.style = {"description_width": "initial"}
+
+                        elif isinstance(value, BaseApplication) and isinstance(
+                            getattr(self, "_" + key, None), BaseApplication
+                        ):
+                            setattr(self, "_" + key, value)
+                        elif type(getattr(self, key, None)) is types.MethodType:
+                            getattr(self, key, None)(key, value)
+                        else:
+                            setattr(self, key, value)
+                    except (AttributeError, TypeError, TraitError, AssertionError):
+                        pass
 
     @property
     def defaults(self):
@@ -174,7 +181,7 @@ class BaseApplication:
                 )
                 self.refresh.value = False
                 self.params.geoh5.open(mode="r")
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**self.params.to_dict())
                 self.refresh.value = True
 
             elif extension == ".geoh5":

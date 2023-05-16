@@ -70,6 +70,7 @@ def tmp_input_file(filepath, idict):
 
 mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
+mvi_params.input_file.geoh5.open()
 
 
 def catch_invalid_generator(param, invalid_value, validation_type):
@@ -155,11 +156,9 @@ def test_input_file_construction(tmp_path):
         filename = "test.ui.json"
         for forward_only in [True, False]:
             params = params_class(forward_only=forward_only)
-            params.write_input_file(
-                name=filename, path=tmp_path, validation_options={"disabled": True}
-            )
+            params.write_input_file(name=filename, path=tmp_path, validate=False)
             ifile = InputFile.read_ui_json(
-                os.path.join(tmp_path, filename), validation_options={"disabled": True}
+                os.path.join(tmp_path, filename), validate=False
             )
             params = params_class(input_file=ifile)
 
@@ -188,10 +187,8 @@ def test_default_input_file(tmp_path):
     ]:
         filename = os.path.join(tmp_path, "test.ui.json")
         params = params_class()
-        params.write_input_file(
-            name=filename, path=tmp_path, validation_options={"disabled": True}
-        )
-        ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
+        params.write_input_file(name=filename, path=tmp_path, validate=False)
+        ifile = InputFile.read_ui_json(filename, validate=False)
 
         # check that reads back into input file with defaults
         check = []
@@ -763,6 +760,7 @@ grav_params = GravityParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+grav_params.input_file.geoh5.open()
 
 
 def test_validate_geoh5():
@@ -807,7 +805,7 @@ def test_gz_channel_bool():
 
 
 def test_gz_channel():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_channel = uuid4()
 
     with pytest.raises(TypeValidationError) as excinfo:
@@ -819,7 +817,7 @@ def test_gz_channel():
 
 
 def test_gz_uncertainty():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_uncertainty = uuid4()
 
     grav_params.gz_uncertainty = 4.0
@@ -1253,6 +1251,7 @@ mag_params = MagneticScalarParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+mag_params.geoh5.open()
 
 
 def test_magnetic_scalar_inversion_type():
@@ -1946,9 +1945,7 @@ def test_isValue(tmp_path):
     file_name = "test.ui.json"
     mesh = geoh5.get_entity("O2O_Interp_25m")[0]
     mag_params.starting_model = 0.0
-    mag_params.write_input_file(
-        name=file_name, path=tmp_path, validation_options={"disabled": True}
-    )
+    mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
 
     with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
         ui = json.load(f)
@@ -1957,9 +1954,7 @@ def test_isValue(tmp_path):
 
     mag_params.starting_model = mesh.get_data("VTEM_model")[0].uid
 
-    mag_params.write_input_file(
-        name=file_name, path=tmp_path, validation_options={"disabled": True}
-    )
+    mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
     with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
         ui = json.load(f)
 

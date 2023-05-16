@@ -68,10 +68,10 @@ def test_magnetotellurics_fwr_run(
         zyy_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = MagnetotelluricsDriver(params, warmstart=False)
+    fwr_driver = MagnetotelluricsDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):

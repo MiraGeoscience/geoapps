@@ -15,5 +15,5 @@ class DirectCurrent3DDriver(InversionDriver):
     _params_class = DirectCurrent3DParams
     _validations = validations
 
-    def __init__(self, params: DirectCurrent3DParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: DirectCurrent3DParams):
+        super().__init__(params)

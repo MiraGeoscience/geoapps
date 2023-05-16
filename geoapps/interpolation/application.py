@@ -12,6 +12,7 @@ from time import time
 
 from geoh5py.objects import ObjectBase
 from geoh5py.objects.object_base import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 
@@ -256,9 +257,12 @@ class DataInterpolation(ObjectDataSelection):
         )
 
         with ws as workspace:
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
 
             param_dict["geoh5"] = workspace
             if self.live_link.value:
@@ -278,7 +282,7 @@ class DataInterpolation(ObjectDataSelection):
 
             new_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                validation_options={"disabled": True},
+                validate=False,
             )
 
             driver = DataInterpolationDriver(new_params)

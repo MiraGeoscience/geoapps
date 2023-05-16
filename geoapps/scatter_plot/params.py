@@ -11,7 +11,6 @@ from copy import deepcopy
 
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
-from geoh5py.ui_json import InputFile
 
 from geoapps.driver_base.params import BaseParams
 
@@ -24,7 +23,9 @@ class ScatterPlotParams(BaseParams):
     """
 
     def __init__(self, input_file=None, **kwargs):
-        self._default_ui_json = deepcopy(default_ui_json)
+        if self._default_ui_json is None:
+            self._default_ui_json = deepcopy(default_ui_json)
+
         self._defaults = deepcopy(defaults)
         self._validations = validations
         self._objects = None
@@ -57,14 +58,6 @@ class ScatterPlotParams(BaseParams):
         self._size_thresh = None
         self._size_markers = None
         self._monitoring_directory = None
-
-        if input_file is None:
-            ui_json = deepcopy(self._default_ui_json)
-            input_file = InputFile(
-                ui_json=ui_json,
-                validations=self.validations,
-                validation_options={"disabled": True},
-            )
 
         super().__init__(input_file=input_file, **kwargs)
 
