@@ -63,7 +63,7 @@ class ScatterPlotParams(BaseParams):
             input_file = InputFile(
                 ui_json=ui_json,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
 
         super().__init__(input_file=input_file, **kwargs)

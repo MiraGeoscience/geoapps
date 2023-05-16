@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
-from os import path
+from pathlib import Path
 from uuid import UUID
 
 import numpy as np
@@ -120,7 +120,7 @@ class InversionBaseParams(BaseParams):
                 ui_json=ui_json,
                 data=self.defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
 
         super().__init__(input_file=input_file, **kwargs)
@@ -774,7 +774,7 @@ class InversionBaseParams(BaseParams):
         :param ga_group: Inversion group
         """
         if self.input_file is not None:
-            if not path.exists(self.input_file.path_name):
+            if not Path(self.input_file.path_name).is_file():
                 self.write_input_file(self.input_file.name, self.input_file.path)
 
             with open(self.input_file.path_name, encoding="utf-8") as file:

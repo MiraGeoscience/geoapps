@@ -59,9 +59,7 @@ class OctreeParams(BaseParams):
                     self._defaults[f"{group} {key}"] = form["value"]
 
             input_file = InputFile(
-                ui_json=ui_json,
-                validations=self.validations,
-                validation_options={"disabled": True},
+                ui_json=ui_json, validations=self.validations, validate=False
             )
 
         super().__init__(input_file=input_file, **kwargs)

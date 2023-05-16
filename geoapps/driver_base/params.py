@@ -80,7 +80,7 @@ class BaseParams:
                 ui_json=self._default_ui_json,
                 data=self._defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
         self.update(self.input_file.data, validate=False)
         self.param_names = list(self.input_file.data)

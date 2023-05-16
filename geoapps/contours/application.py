@@ -152,7 +152,7 @@ class ContourValues(PlotSelection2D):
 
             ifile = InputFile(
                 ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
+                validate=False,
             )
             new_params = ContoursParams(input_file=ifile, **param_dict)
             new_params.write_input_file()

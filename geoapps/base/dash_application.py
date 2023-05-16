@@ -97,7 +97,7 @@ class BaseDashApplication:
                 # Initialization of app from self.params.
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
-                    validation_options={"disabled": True},
+                    validate=False,
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json_data = ifile.demote(ifile.data)
