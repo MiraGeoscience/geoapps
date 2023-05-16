@@ -28,7 +28,7 @@ target_run = {
 }
 
 
-def test_joint_single_property_fwr_run(
+def test_joint_surveys_fwr_run(
     tmp_path,
     n_grid_points=4,
     refinement=(2,),
@@ -95,16 +95,14 @@ def test_joint_single_property_fwr_run(
     return fwr_driver.models.starting
 
 
-def test_joint_single_property_inv_run(
+def test_joint_surveys_inv_run(
     tmp_path,
     max_iterations=1,
     pytest=True,
 ):
     workpath = os.path.join(tmp_path, "inversion_test.geoh5")
     if pytest:
-        workpath = str(
-            tmp_path / "../test_joint_single_property_fwr0/inversion_test.geoh5"
-        )
+        workpath = str(tmp_path / "../test_joint_surveys_fwr_run0/inversion_test.geoh5")
 
     with Workspace(workpath) as geoh5:
         topography = geoh5.get_entity("topography")[0]
@@ -170,13 +168,13 @@ def test_joint_single_property_inv_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_joint_single_property_fwr_run(
+    m_start = test_joint_surveys_fwr_run(
         "./",
         n_grid_points=20,
         refinement=(4, 8),
     )
 
-    m_rec = test_joint_single_property_inv_run(
+    m_rec = test_joint_surveys_inv_run(
         "./",
         max_iterations=15,
         pytest=False,
