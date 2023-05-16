@@ -158,7 +158,8 @@ def test_input_file_construction(tmp_path: Path):
                 name=filename, path=tmp_path, validation_options={"disabled": True}
             )
             ifile = InputFile.read_ui_json(
-                str(tmp_path / filename), validation_options={"disabled": True}
+                str(tmp_path / filename),
+                validate=False,
             )
             params = params_class(input_file=ifile)
 
@@ -190,7 +191,10 @@ def test_default_input_file(tmp_path: Path):
         params.write_input_file(
             name=filename, path=tmp_path, validation_options={"disabled": True}
         )
-        ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
+        ifile = InputFile.read_ui_json(
+            filename,
+            validate=False,
+        )
 
         # check that reads back into input file with defaults
         check = []
