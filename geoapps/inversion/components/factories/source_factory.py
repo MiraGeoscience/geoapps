@@ -34,12 +34,12 @@ class SourcesFactory(SimPEGFactory):
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import sources
 
-            return sources.SourceField
+            return sources.UniformBackgroundField
 
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import sources
 
-            return sources.SourceField
+            return sources.UniformBackgroundField
 
         elif "direct current" in self.factory_type:
             from SimPEG.electromagnetics.static.resistivity import sources

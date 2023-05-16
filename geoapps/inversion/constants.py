@@ -337,6 +337,7 @@ default_ui_json = {
     "initial_beta": {
         "min": 0.0,
         "group": "Optimization",
+        "optional": True,
         "enabled": False,
         "dependency": "initial_beta_ratio",
         "dependencyType": "disabled",
