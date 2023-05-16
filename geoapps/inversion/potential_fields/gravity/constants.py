@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
@@ -18,7 +19,8 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Gravity inversion",
+    "version": geoapps.__version__,
+    "title": "Gravity Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -121,7 +123,8 @@ inversion_defaults = {
     "gy_channel_bool": False,
 }
 forward_defaults = {
-    "title": "Gravity forward",
+    "version": geoapps.__version__,
+    "title": "Gravity Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -193,13 +196,88 @@ forward_ui_json = {
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
         "label": "Density contrast (g/cc)",
         "property": None,
         "value": 1e-3,
+    },
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": [
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{b54f6be6-0eb5-4a4e-887a-ba9d276f9a83}",
+            "{5ffa3816-358d-4cdd-9b7d-e1f7f5543e05}",
+        ],
+        "value": None,
+    },
+    "gz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gz (mGal)",
+        "value": True,
+    },
+    "gx_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gx (mGal)",
+        "value": False,
+    },
+    "gy_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gy (mGal)",
+        "value": False,
+    },
+    "guv_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Guv (Eo)",
+        "value": False,
+    },
+    "gxy_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gxy/Gne (Eo)",
+        "value": False,
+    },
+    "gxx_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gxx (Eo)",
+        "value": False,
+    },
+    "gyy_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gyy (Eo)",
+        "value": False,
+    },
+    "gzz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gzz (Eo)",
+        "value": False,
+    },
+    "gxz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gxz (Eo)",
+        "value": False,
+    },
+    "gyz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Gyz (Eo)",
+        "value": False,
     },
     "gradient_type": "total",
     "alpha_s": 1.0,
@@ -213,7 +291,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Gravity inversion",
+    "title": "Gravity Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -227,7 +305,8 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+            "{b54f6be6-0eb5-4a4e-887a-ba9d276f9a83}",
+            "{5ffa3816-358d-4cdd-9b7d-e1f7f5543e05}",
         ],
         "value": None,
     },
@@ -534,7 +613,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -546,7 +625,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference density (g/cc)",
@@ -557,7 +636,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (g/cc)",
@@ -570,7 +649,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (g/cc)",

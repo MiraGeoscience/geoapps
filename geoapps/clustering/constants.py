@@ -11,10 +11,12 @@ from copy import deepcopy
 
 import plotly.express as px
 
+import geoapps
 from geoapps import assets_path
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
 
 defaults = {
+    "version": geoapps.__version__,
     "title": "Clustering",
     "n_clusters": None,
     "ga_group_name": None,
@@ -34,6 +36,7 @@ defaults = {
 default_ui_json = deepcopy(base_default_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Clustering",
         "color_maps": {
             "choiceList": px.colors.named_colorscales() + ["kmeans"],

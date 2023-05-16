@@ -11,9 +11,11 @@ from copy import deepcopy
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
 from geoapps import assets_path
 
 defaults = {
+    "version": geoapps.__version__,
     "title": "Create Contours",
     "geoh5": None,
     "objects": None,
@@ -39,6 +41,7 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Create Contours",
         "geoh5": "",
         "run_command": "geoapps.contours.driver",

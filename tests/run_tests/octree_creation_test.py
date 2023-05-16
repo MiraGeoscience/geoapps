@@ -13,6 +13,7 @@ import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points, Surface
 from geoh5py.shared.utils import compare_entities
+from geoh5py.ui_json.utils import str2list
 from geoh5py.workspace import Workspace
 from scipy import spatial
 
@@ -49,8 +50,8 @@ def test_create_octree_app(tmp_path: Path):
             [vertical_padding, vertical_padding],
         ]
         max_distance = 200
-        refine_a = [4, 4, 4]
-        refine_b = [0, 0, 4]
+        refine_a = "4, 4, 4"
+        refine_b = "0, 0, 4"
 
         # Create a tree mesh from discretize
         treemesh = mesh_builder_xyz(
@@ -64,7 +65,7 @@ def test_create_octree_app(tmp_path: Path):
             treemesh,
             points.vertices,
             method="radial",
-            octree_levels=refine_a,
+            octree_levels=str2list(refine_a),
             max_distance=max_distance,
             finalize=False,
         )
@@ -72,7 +73,7 @@ def test_create_octree_app(tmp_path: Path):
             treemesh,
             topo.vertices,
             method="surface",
-            octree_levels=refine_b,
+            octree_levels=str2list(refine_b),
             max_distance=max_distance,
             finalize=False,
         )
@@ -80,7 +81,7 @@ def test_create_octree_app(tmp_path: Path):
             treemesh,
             remote.vertices,
             method="radial",
-            octree_levels=refine_a,
+            octree_levels=str2list(refine_a),
             max_distance=max_distance,
             finalize=True,
         )

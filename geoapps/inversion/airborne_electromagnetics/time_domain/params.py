@@ -87,6 +87,16 @@ class TimeDomainElectromagneticsParams(InversionBaseParams):
 
             return data
 
+    @property
+    def unit_conversion(self):
+        """Return time unit conversion factor."""
+        conversion = {
+            "Seconds (s)": 1.0,
+            "Milliseconds (ms)": 1e-3,
+            "Microseconds (us)": 1e-6,
+        }
+        return conversion[self.data_object.unit]
+
     def data(self, component: str):
         """Returns array of data for chosen data component."""
         property_group = self.data_channel(component)

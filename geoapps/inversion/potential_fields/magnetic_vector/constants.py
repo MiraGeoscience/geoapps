@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
@@ -18,7 +19,8 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetic Vector inversion",
+    "version": geoapps.__version__,
+    "title": "Magnetic Vector (MVI) Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "magnetic vector",
@@ -129,7 +131,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Magnetic Vector forward",
+    "version": geoapps.__version__,
+    "title": "Magnetic Vector (MVI) Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornemagnetics",
     "inversion_type": "magnetic vector",
@@ -206,13 +209,114 @@ forward_ui_json = {
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
         "label": "Susceptibility (SI)",
         "property": None,
         "value": 1e-4,
+    },
+    "starting_inclination": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and models",
+        "main": True,
+        "isValue": False,
+        "optional": True,
+        "enabled": False,
+        "parent": "mesh",
+        "label": "Inclination (deg)",
+        "property": None,
+        "value": 0.0,
+    },
+    "starting_declination": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Mesh and models",
+        "main": True,
+        "isValue": False,
+        "optional": True,
+        "enabled": False,
+        "parent": "mesh",
+        "label": "Declination (deg)",
+        "property": None,
+        "value": 0.0,
+    },
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": [
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4b99204c-d133-4579-a916-a9c8b98cfccb}",
+            "{028e4905-cc97-4dab-b1bf-d76f58b501b5}",
+        ],
+        "value": None,
+    },
+    "tmi_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "TMI (nT)",
+        "value": True,
+    },
+    "bx_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Bx (nT)",
+        "value": False,
+    },
+    "by_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "By (nT)",
+        "value": False,
+    },
+    "bz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Bz (nT)",
+        "value": False,
+    },
+    "bxx_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Bxx (nT/m)",
+        "value": False,
+    },
+    "bxy_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Bxy (nT/m)",
+        "value": False,
+    },
+    "bxz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Bxz (nT/m)",
+        "value": False,
+    },
+    "byy_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Byy (nT/m)",
+        "value": False,
+    },
+    "byz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Byz (nT/m)",
+        "value": False,
+    },
+    "bzz_channel_bool": {
+        "group": "Survey",
+        "main": True,
+        "label": "Bzz (nT/m)",
+        "value": False,
     },
     "gradient_type": "total",
     "alpha_s": 1.0,
@@ -226,12 +330,12 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Magnetic Vector inversion",
+    "title": "Magnetic Vector (MVI) Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "magnetic vector",
     "inducing_field_strength": {
-        "min": 0.0,
+        "min": 0.1,
         "max": 100000.0,
         "precision": 2,
         "lineEdit": False,
@@ -251,8 +355,8 @@ default_ui_json = {
         "value": 90.0,
     },
     "inducing_field_declination": {
-        "min": -180,
-        "max": 180,
+        "min": -180.0,
+        "max": 180.0,
         "precision": 2,
         "lineEdit": False,
         "main": True,
@@ -270,7 +374,8 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+            "{4b99204c-d133-4579-a916-a9c8b98cfccb}",
+            "{028e4905-cc97-4dab-b1bf-d76f58b501b5}",
         ],
         "value": None,
     },
@@ -288,7 +393,7 @@ default_ui_json = {
         "label": "TMI (nT)",
         "parent": "data_object",
         "optional": True,
-        "enabled": True,
+        "enabled": False,
         "value": None,
     },
     "tmi_uncertainty": {
@@ -577,7 +682,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -588,7 +693,7 @@ default_ui_json = {
     "starting_inclination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "optional": True,
@@ -601,7 +706,7 @@ default_ui_json = {
     "starting_declination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "optional": True,
@@ -615,7 +720,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference susceptibility (SI)",
@@ -625,7 +730,7 @@ default_ui_json = {
     "reference_inclination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "optional": True,
@@ -638,7 +743,7 @@ default_ui_json = {
     "reference_declination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "optional": True,
@@ -652,7 +757,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": False,
         "parent": "mesh",
         "label": "Lower bound (SI)",
@@ -665,7 +770,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": False,
         "parent": "mesh",
         "label": "Upper bound (SI)",

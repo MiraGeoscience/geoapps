@@ -11,6 +11,8 @@ from uuid import UUID
 
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
+import geoapps
+
 default_ui_json = {
     "forward_only": False,
     "topography_object": {
@@ -49,14 +51,13 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
         "value": None,
     },
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -143,7 +144,7 @@ default_ui_json = {
         "verbose": 3,
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "label": "Mesh",
         "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
@@ -427,7 +428,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference",
@@ -445,7 +446,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound",
@@ -458,7 +459,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound",
@@ -518,6 +519,7 @@ default_ui_json = {
     "run_command_boolean": None,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "version": geoapps.__version__,
 }
 
 ######################## Validations ###########################
@@ -534,5 +536,10 @@ validations = {
     "norm_x": {"types": [int, float]},
     "norm_y": {"types": [int, float]},
     "norm_z": {"types": [int, float]},
-    "distributed_workers": {"types": [list, type(None)]},
+    "distributed_workers": {"types": [str, type(None)]},
+    "version": {
+        "types": [
+            str,
+        ]
+    },
 }

@@ -12,9 +12,11 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
 from geoapps import assets_path
 
 defaults = {
+    "version": geoapps.__version__,
     "title": "octree Mesh Creator",
     "geoh5": None,
     "objects": None,
@@ -36,6 +38,7 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "octree Mesh Creator",
         "geoh5": None,
         "objects": {
@@ -158,11 +161,11 @@ app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
-    "Refinement A levels": [4, 4, 4],
+    "Refinement A levels": "4, 4, 4",
     "Refinement A type": "radial",
     "Refinement A distance": 1000.0,
     "Refinement B object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
-    "Refinement B levels": [0, 0, 4],
+    "Refinement B levels": "0, 0, 4",
     "Refinement B type": "surface",
     "Refinement B distance": 1200.0,
 }

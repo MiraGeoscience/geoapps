@@ -11,12 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Induced Polarization 2D inversion",
+    "version": geoapps.__version__,
+    "title": "Induced Polarization (IP) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -34,6 +36,12 @@ inversion_defaults = {
     "chargeability_channel": None,
     "chargeability_uncertainty": 1.0,
     "mesh": None,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "depth_core": 500.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "expansion_factor": 1.1,
     "conductivity_model": 1e-3,
     "starting_model": None,
     "reference_model": None,
@@ -94,7 +102,8 @@ inversion_defaults = {
     "chargeability_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Induced Polarization 2D forward",
+    "version": geoapps.__version__,
+    "title": "Induced Polarization (IP) 2D Forward",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -111,6 +120,12 @@ forward_defaults = {
     "gps_receivers_offset": None,
     "chargeability_channel_bool": True,
     "mesh": None,
+    "u_cell_size": 25.0,
+    "v_cell_size": 25.0,
+    "depth_core": 500.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "expansion_factor": 1.1,
     "conductivity_model": 1e-3,
     "starting_model": None,
     "output_tile_files": False,
@@ -147,10 +162,60 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "line_object": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Referenced",
+        "group": "Survey",
+        "main": True,
+        "label": "Line ID",
+        "parent": "data_object",
+        "value": None,
+    },
+    "line_id": {
+        "group": "Survey",
+        "main": True,
+        "min": 1,
+        "label": "Line number",
+        "value": 1,
+    },
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
+    "z_from_topo": {
+        "group": "Survey",
+        "main": True,
+        "label": "Surface survey",
+        "tooltip": "Uncheck if borehole data is present",
+        "value": True,
+    },
+    "chargeability_channel": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "main": True,
+        "label": "Chargeability (V/V)",
+        "parent": "data_object",
+        "value": None,
+    },
+    "chargeability_uncertainty": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Float",
+        "group": "Survey",
+        "main": True,
+        "isValue": True,
+        "label": "Uncertainty",
+        "parent": "data_object",
+        "property": None,
+        "value": 1.0,
+    },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -170,7 +235,7 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Induced Polarization 2D inversion",
+    "title": "Induced Polarization (IP) 2D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 2d",
     "line_object": {
@@ -178,7 +243,7 @@ default_ui_json = {
         "dataType": "Referenced",
         "group": "Data",
         "main": True,
-        "label": "Line field",
+        "label": "Line ID",
         "parent": "data_object",
         "value": None,
     },
@@ -225,7 +290,7 @@ default_ui_json = {
         "value": 1.0,
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "optional": True,
         "enabled": False,
@@ -233,10 +298,56 @@ default_ui_json = {
         "meshType": "{C94968EA-CF7D-11EB-B8BC-0242AC130003}",
         "value": None,
     },
+    "u_cell_size": {
+        "min": 0.0,
+        "group": "Mesh and models",
+        "main": True,
+        "enabled": True,
+        "label": "Easting core cell size (m)",
+        "value": 25.0,
+    },
+    "v_cell_size": {
+        "min": 0.0,
+        "group": "Mesh and models",
+        "main": True,
+        "enabled": True,
+        "label": "Northing core cell size (m)",
+        "value": 25.0,
+    },
+    "depth_core": {
+        "min": 0.0,
+        "group": "Mesh and models",
+        "main": True,
+        "enabled": True,
+        "label": "Depth of core (m)",
+        "value": 500.0,
+    },
+    "horizontal_padding": {
+        "min": 0.0,
+        "group": "Mesh and models",
+        "main": True,
+        "enabled": True,
+        "label": "Horizontal padding (m)",
+        "value": 1000.0,
+    },
+    "vertical_padding": {
+        "min": 0.0,
+        "group": "Mesh and models",
+        "main": True,
+        "dependencyType": "disabled",
+        "label": "Vertical padding (m)",
+        "value": 1000.0,
+    },
+    "expansion_factor": {
+        "main": True,
+        "group": "Mesh and models",
+        "label": "Expansion factor",
+        "value": 1.1,
+    },
     "conductivity_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -247,7 +358,7 @@ default_ui_json = {
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -259,7 +370,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference chargeability (V/V)",
@@ -270,7 +381,7 @@ default_ui_json = {
         "association": "Cell",
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (V/V)",
@@ -283,7 +394,7 @@ default_ui_json = {
         "association": "Cell",
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (V/V)",

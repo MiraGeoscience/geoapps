@@ -11,12 +11,15 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Direct Current 2d batch inversion",
+    "version": geoapps.__version__,
+    "title": "Direct Current (DC) 2D Batch Inversion",
+    "icon": "PotentialElectrode",
     "inversion_type": "direct current pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
@@ -101,7 +104,9 @@ inversion_defaults = {
     "potential_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Direct Current 2d batch forward",
+    "version": geoapps.__version__,
+    "title": "Direct Current (DC) 2D Batch Forward",
+    "icon": "PotentialElectrode",
     "inversion_type": "direct current pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": True,
@@ -161,6 +166,33 @@ inversion_ui_json = {
 }
 
 forward_ui_json = {
+    "data_object": {
+        "main": True,
+        "group": "Survey",
+        "label": "Object",
+        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
+        "value": None,
+    },
+    "line_object": {
+        "association": ["Cell", "Vertex"],
+        "dataType": "Referenced",
+        "group": "Survey",
+        "main": True,
+        "label": "Line ID",
+        "parent": "data_object",
+        "value": None,
+    },
+    "starting_model": {
+        "association": "Cell",
+        "dataType": "Float",
+        "group": "Mesh and models",
+        "main": True,
+        "isValue": False,
+        "parent": "mesh",
+        "label": "Conductivity (S/m)",
+        "property": None,
+        "value": 1e-3,
+    },
     "gradient_type": "total",
     "alpha_s": 1.0,
     "alpha_x": 1.0,
@@ -173,14 +205,15 @@ forward_ui_json = {
 }
 
 default_ui_json = {
-    "title": "Direct Current inversion",
+    "title": "Direct Current (DC) 3D Inversion",
+    "icon": "PotentialElectrode",
     "inversion_type": "direct current pseudo 3d",
     "line_object": {
         "association": ["Cell", "Vertex"],
         "dataType": "Referenced",
         "group": "Data",
         "main": True,
-        "label": "Line field",
+        "label": "Line ID",
         "parent": "data_object",
         "value": None,
     },
@@ -214,16 +247,18 @@ default_ui_json = {
         "value": 1.0,
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "label": "Mesh",
         "meshType": "{4EA87376-3ECE-438B-BF12-3479733DED46}",
+        "optional": True,
+        "enabled": False,
         "value": None,
         "visible": True,
     },
     "u_cell_size": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Easting core cell size (m)",
@@ -231,7 +266,7 @@ default_ui_json = {
     },
     "v_cell_size": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Northing core cell size (m)",
@@ -239,7 +274,7 @@ default_ui_json = {
     },
     "depth_core": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Depth of core (m)",
@@ -247,7 +282,7 @@ default_ui_json = {
     },
     "horizontal_padding": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Horizontal padding (m)",
@@ -255,7 +290,7 @@ default_ui_json = {
     },
     "vertical_padding": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "dependencyType": "disabled",
         "label": "Vertical padding (m)",
@@ -263,14 +298,14 @@ default_ui_json = {
     },
     "expansion_factor": {
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "label": "Expansion factor",
         "value": 1.1,
     },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -282,7 +317,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference Conductivity (S/m)",
@@ -293,7 +328,7 @@ default_ui_json = {
         "association": "Cell",
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (S/m)",
@@ -306,7 +341,7 @@ default_ui_json = {
         "association": "Cell",
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (S/m)",

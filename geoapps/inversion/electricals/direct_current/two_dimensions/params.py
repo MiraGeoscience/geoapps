@@ -9,8 +9,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from geoapps.inversion import InversionBaseParams
-
+from ...params import Base2DParams
 from .constants import (
     default_ui_json,
     forward_defaults,
@@ -21,7 +20,7 @@ from .constants import (
 )
 
 
-class DirectCurrent2DParams(InversionBaseParams):
+class DirectCurrent2DParams(Base2DParams):
     """
     Parameter class for electrical->conductivity inversion.
     """
@@ -49,30 +48,6 @@ class DirectCurrent2DParams(InversionBaseParams):
         self._line_id = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
-
-    @property
-    def inversion_type(self):
-        return self._inversion_type
-
-    @inversion_type.setter
-    def inversion_type(self, val):
-        self.setter_validator("inversion_type", val)
-
-    @property
-    def line_object(self):
-        return self._line_object
-
-    @line_object.setter
-    def line_object(self, val):
-        self._line_object = val
-
-    @property
-    def line_id(self):
-        return self._line_id
-
-    @line_id.setter
-    def line_id(self, val):
-        self._line_id = val
 
     @property
     def potential_channel_bool(self):
