@@ -63,7 +63,7 @@ def test_mag_inversion(tmp_path: Path):
         "window_width": 100.0,
     }
     side_effects = {"starting_inclination": 35}
-    app = MagInversionApp(geoh5=new_geoh5.h5file, plot_result=False)
+    app = MagInversionApp(geoh5=new_geoh5, plot_result=False)
 
     assert (
         len(getattr(app, "_lower_bound_group").objects.options) == 2

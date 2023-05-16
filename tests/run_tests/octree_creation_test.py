@@ -104,7 +104,7 @@ def test_create_octree_app(tmp_path: Path):
             "Refinement C distance": max_distance,
         }
         app = OctreeMesh(
-            geoh5=str(workspace.h5file),
+            geoh5=workspace,
             objects=str(points.uid),
             u_cell_size=h[0],
             v_cell_size=h[1],
