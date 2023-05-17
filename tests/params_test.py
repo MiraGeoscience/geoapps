@@ -157,7 +157,7 @@ def test_input_file_construction(tmp_path: Path):
             params = params_class(forward_only=forward_only)
             params.write_input_file(name=filename, path=tmp_path, validate=False)
             ifile = InputFile.read_ui_json(
-                str(tmp_path / filename)), validate=False
+                str(tmp_path / filename), validate=False
             )
             params = params_class(input_file=ifile)
 
