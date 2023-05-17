@@ -794,7 +794,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must be of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.sensor.workspace = workspace

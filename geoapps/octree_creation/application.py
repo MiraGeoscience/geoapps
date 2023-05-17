@@ -194,7 +194,9 @@ class OctreeMesh(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must be of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_choices()
         self.params.geoh5 = workspace

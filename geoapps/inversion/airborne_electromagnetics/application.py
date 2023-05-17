@@ -918,7 +918,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must be of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
