@@ -39,7 +39,7 @@ class SourcesFactory(SimPEGFactory):
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import sources
 
-            return sources.UniformBackgroundField
+            return sources.SourceField
 
         elif "direct current" in self.factory_type:
             from SimPEG.electromagnetics.static.resistivity import sources
