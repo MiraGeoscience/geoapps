@@ -1,0 +1,10 @@
+- name: No import os.path
+  pattern: 'from os import\b.*\bpath\b'
+  hint: Use from pathlib import Path
+  filePattern: .*\.pyi?
+  error: false
+- name: No os.path
+  pattern: '\bos\.path\b'
+  hint: Use pathlib.Path
+  filePattern: .*\.pyi?
+  error: false
