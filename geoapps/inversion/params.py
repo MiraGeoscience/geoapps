@@ -7,9 +7,7 @@
 
 from __future__ import annotations
 
-import json
 from copy import deepcopy
-from pathlib import Path
 from uuid import UUID
 
 import numpy as np
@@ -26,21 +24,24 @@ class InversionBaseParams(BaseParams):
     Base parameter class for geophysical->property inversion.
     """
 
-    _directive_list = None
     _default_ui_json = None
     _forward_defaults = None
     _forward_ui_json = None
     _inversion_defaults = None
     _inversion_ui_json = None
     _inversion_type = None
-    _ga_group = None
 
     def __init__(
-        self, input_file: InputFile | None = None, forward_only: bool = False, **kwargs
+        self,
+        input_file: InputFile | None = None,
+        forward_only: bool = False,
+        ga_group: SimPEGGroup | None = None,
+        **kwargs,
     ):
         self._forward_only: bool = (
             forward_only if input_file is None else input_file.data["forward_only"]
         )
+        self.ga_group = ga_group
         self._topography_object: UUID = None
         self._topography: UUID | float = None
         self._data_object: UUID = None
@@ -178,6 +179,7 @@ class InversionBaseParams(BaseParams):
 
         return comps
 
+    @property
     def window(self) -> dict[str, float]:
         """Returns window dictionary"""
         win = {
@@ -219,11 +221,6 @@ class InversionBaseParams(BaseParams):
             self.y_norm,
             self.z_norm,
         ]
-
-    @property
-    def directive_list(self):
-        """List of directives"""
-        return self._directive_list
 
     @property
     def forward_defaults(self):
@@ -274,6 +271,7 @@ class InversionBaseParams(BaseParams):
     @data_object.setter
     def data_object(self, val):
         self.setter_validator("data_object", val, fun=self._uuid_promoter)
+        self.update_group_options()
 
     @property
     def starting_model(self):
@@ -394,6 +392,7 @@ class InversionBaseParams(BaseParams):
     @mesh.setter
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
+        self.update_group_options()
 
     @property
     def window_center_x(self):
@@ -750,9 +749,16 @@ class InversionBaseParams(BaseParams):
             self._ga_group = self.out_group
 
         if isinstance(self._ga_group, SimPEGGroup) and not self._ga_group.options:
-            self.update_group_options(self._ga_group)
+            self.update_group_options()
 
         return self._ga_group
+
+    @ga_group.setter
+    def ga_group(self, val):
+        if not isinstance(val, (SimPEGGroup, type(None))):
+            raise AttributeError("ga_group must be a SimPEGGroup.")
+
+        self._ga_group = val
 
     @property
     def distributed_workers(self):
@@ -767,19 +773,11 @@ class InversionBaseParams(BaseParams):
         """Return unit conversion factor."""
         return None
 
-    def update_group_options(self, ga_group: SimPEGGroup):
+    def update_group_options(self):
         """
         Add options to the SimPEGGroup inversion using input file class.
-
-        :param ga_group: Inversion group
         """
-        if self.input_file is not None:
-            if not Path(self.input_file.path_name).is_file():
-                self.write_input_file(self.input_file.name, self.input_file.path)
-
-            with open(self.input_file.path_name, encoding="utf-8") as file:
-                ui_json = json.load(file)
-
-            ga_group.options = ui_json
-
-        ga_group.metadata = None
+        if self._input_file is not None and self._ga_group is not None:
+            ui_json = self.to_dict(ui_json_format=True)
+            self._ga_group.options = ui_json
+            self._ga_group.metadata = None

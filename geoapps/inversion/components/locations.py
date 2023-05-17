@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
@@ -53,18 +53,13 @@ class InversionLocations:
 
     """
 
-    def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
-    ):
+    def __init__(self, workspace: Workspace, params: BaseParams):
         """
         :param workspace: Geoh5py workspace object containing location based data.
         :param params: Params object containing location based data parameters.
-        :param window: Center and size defining window for data, topography, etc.
-
         """
         self.workspace = workspace
         self.params = params
-        self.window = window
         self.mask: np.ndarray = None
         self.origin: list[float] = None
         self.angle: float = None

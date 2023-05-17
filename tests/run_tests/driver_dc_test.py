@@ -65,7 +65,7 @@ def test_dc_3d_fwr_run(
     fwr_driver = DirectCurrent3DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_dc_3d_run(
@@ -156,7 +156,7 @@ def test_dc_single_line_fwr_run(
     )
     params.workpath = tmp_path
     fwr_driver = DirectCurrent3DDriver(params)
-    assert np.all(fwr_driver.window["size"] > 0)
+    assert np.all(fwr_driver.window.window["size"] > 0)
 
 
 if __name__ == "__main__":

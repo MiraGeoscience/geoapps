@@ -7,11 +7,9 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import numpy as np
-from geoh5py.shared.utils import str2uuid
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.potential_fields import MagneticScalarParams
@@ -69,21 +67,7 @@ def test_susceptibility_fwr_run(
 
     fwr_driver.run()
 
-    with geoh5.open():
-        # Check the inversion output
-        sp_group = geoh5.get_entity("MagneticScalarForward")[0]
-
-        with open(params.input_file.path_name, encoding="utf-8") as file:
-            ui_json = json.load(file)
-
-        for key, values in sp_group.options.items():
-            if isinstance(values, dict):
-                for elem, value in values.items():
-                    assert str2uuid(ui_json[key][elem]) == value
-            else:
-                assert ui_json[key] == values
-
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_susceptibility_run(
@@ -132,7 +116,8 @@ def test_susceptibility_run(
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = MagneticScalarDriver.start(str(tmp_path / "Inv_run.ui.json"))
+
+    driver = MagneticScalarDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(

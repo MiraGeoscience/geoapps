@@ -19,6 +19,6 @@ def test_write_default_uijson(tmp_path: Path):
     write_default_uijson(tmp_path)
     filepath = tmp_path / "gravity_inversion.ui.json"
     assert filepath.is_file()
-    ifile = InputFile.read_ui_json(str(filepath), validate=False,)
+    ifile = InputFile.read_ui_json(str(filepath), validate=False)
     params = GravityParams(input_file=ifile, validate=False)
     assert params.gz_uncertainty == 1.0

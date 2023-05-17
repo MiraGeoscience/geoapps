@@ -17,5 +17,5 @@ class MagnetotelluricsDriver(InversionDriver):
     _params_class = MagnetotelluricsParams
     _validations = validations
 
-    def __init__(self, params: MagnetotelluricsParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: MagnetotelluricsParams):
+        super().__init__(params)

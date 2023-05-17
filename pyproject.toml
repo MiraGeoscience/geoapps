@@ -42,7 +42,7 @@ python = "^3.9, < 3.11"
 ## dependencies for a minimal environment
 numpy = "~1.23.5" # also geoh5py, simpeg and geoana
 
-#geoh5py = { version = "~0.7.0", source = "pypi", allow-prereleases = true}
+#geoh5py = { version = "~0.8.0a1", source = "pypi", allow-prereleases = true}
 geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256="}
 mira-omf = {version = "~3.0.0", source = "pypi", allow-prereleases = true}
 #mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/develop.zip#sha256="}
@@ -61,8 +61,8 @@ scipy = {version = "~1.10.1", optional = true } # also in simpeg and geoana
 tqdm = {version = "^4.64.0", optional = true }
 
 simpeg_archive = {version = "~0.9.1.dev5", source = "pypi", optional = true}
-mira-simpeg = {version = "~0.15.1.dev9", source = "pypi", optional = true}
-#mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev9+geoapps.0.10.0.zip#sha256=", optional = true}
+#mira-simpeg = {version = "~0.15.1.dev9", source = "pypi", optional = true}
+mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip#sha256=", optional = true}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = {version = "~2.2.1", optional = true} # from simpeg and geoana

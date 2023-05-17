@@ -17,5 +17,5 @@ class GravityDriver(InversionDriver):
     _params_class = GravityParams
     _validations = validations
 
-    def __init__(self, params: GravityParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: GravityParams):
+        super().__init__(params)

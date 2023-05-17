@@ -17,6 +17,7 @@ from time import time
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -235,12 +236,13 @@ class OctreeMesh(ObjectDataSelection):
         with ws as new_workspace:
             param_dict["geoh5"] = new_workspace
 
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    obj = new_workspace.get_entity(value.uid)[0]
-                    if obj is None:
-                        obj = value.copy(parent=new_workspace, copy_children=True)
-                    param_dict[key] = obj
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        obj = new_workspace.get_entity(value.uid)[0]
+                        if obj is None:
+                            obj = value.copy(parent=new_workspace, copy_children=True)
+                        param_dict[key] = obj
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory

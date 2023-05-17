@@ -112,7 +112,7 @@ class InversionApp(PlotSelection2D):
             self.params = self._param_class(**app_initializer)
 
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
 
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -129,7 +129,7 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
@@ -758,7 +758,7 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict(ui_json_format=False)
+        params = self.params.to_dict()
         if self.inversion_type.value == "direct current 3d" and not isinstance(
             self.params, DirectCurrent3DParams
         ):
@@ -1158,7 +1158,7 @@ class InversionApp(PlotSelection2D):
                 )
                 self.params.geoh5.open(mode="r")
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**self.params.to_dict())
                 self.refresh.value = True
 
             elif extension == ".geoh5":
