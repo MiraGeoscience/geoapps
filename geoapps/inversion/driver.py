@@ -401,7 +401,7 @@ class InversionDriver(BaseDriver):
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
     @classmethod
-    def start(cls, filepath, driver_class=None):
+    def start(cls, filepath: str | Path, driver_class=None):
         _ = driver_class
 
         ifile = InputFile.read_ui_json(filepath)

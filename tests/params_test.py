@@ -156,7 +156,7 @@ def test_input_file_construction(tmp_path: Path):
         for forward_only in [True, False]:
             params = params_class(forward_only=forward_only)
             params.write_input_file(name=filename, path=tmp_path, validate=False)
-            ifile = InputFile.read_ui_json(str(tmp_path / filename), validate=False)
+            ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
             params = params_class(input_file=ifile)
 
             check = []
@@ -182,10 +182,10 @@ def test_default_input_file(tmp_path: Path):
         DirectCurrent3DParams,
         InducedPolarization3DParams,
     ]:
-        filename = str(tmp_path / "test.ui.json")
+        filename = "test.ui.json"
         params = params_class()
         params.write_input_file(name=filename, path=tmp_path, validate=False)
-        ifile = InputFile.read_ui_json(filename, validate=False)
+        ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
 
         # check that reads back into input file with defaults
         check = []

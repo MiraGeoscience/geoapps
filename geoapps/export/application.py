@@ -234,11 +234,9 @@ class Export(ObjectDataSelection):
 
     def _export_geotiff(self, entity):
         for key in self.data.value:
-            name = (
-                str(Path(self.export_directory.selected_path) / self.export_as.value)
-                + "_"
-                + self.data.uid_name_map[key]
-                + ".tif"
+            name = str(
+                Path(self.export_directory.selected_path)
+                / f"{self.export_as.value}_{self.data.uid_name_map[key]}.tif"
             )
             if self.workspace.get_entity(key):
                 export_grid_2_geotiff(

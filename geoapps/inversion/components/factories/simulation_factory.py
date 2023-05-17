@@ -216,8 +216,8 @@ class SimulationFactory(SimPEGFactory):
         out_dir = Path(self.params.workpath) / "SimPEG_PFInversion"
 
         if tile_id is None:
-            sens_path = str(out_dir / "Tile.zarr")
+            sens_path = out_dir / "Tile.zarr"
         else:
-            sens_path = str(out_dir / f"Tile{tile_id}.zarr")
+            sens_path = out_dir / f"Tile{tile_id}.zarr"
 
-        return sens_path
+        return str(sens_path)

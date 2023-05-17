@@ -98,7 +98,7 @@ class InversionApp(PlotSelection2D):
     _topography = None
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json: str | Path | None = None, **kwargs):
         if "plot_result" in kwargs:
             self.plot_result = kwargs["plot_result"]
             kwargs.pop("plot_result")

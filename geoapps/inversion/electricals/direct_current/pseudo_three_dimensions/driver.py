@@ -70,7 +70,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                     continue
 
                 filepath = Path(self.working_directory) / f"{uuid}.ui.geoh5"
-                with Workspace(str(filepath)) as iter_workspace:
+                with Workspace(filepath) as iter_workspace:
                     receiver_entity = extract_dcip_survey(
                         iter_workspace,
                         self.inversion_data.entity,

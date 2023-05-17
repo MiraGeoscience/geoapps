@@ -68,7 +68,7 @@ class BaseDriver(ABC):
         raise NotImplementedError
 
     @classmethod
-    def start(cls, filepath: str, driver_class=None):
+    def start(cls, filepath: str | Path, driver_class=None):
         """
         Run application specified by 'filepath' ui.json file.
 
@@ -79,7 +79,7 @@ class BaseDriver(ABC):
             driver_class = cls
 
         print("Loading input file . . .")
-        filepath = str(Path(filepath).resolve())
+        filepath = Path(filepath).resolve()
         ifile = InputFile.read_ui_json(
             filepath, validations=driver_class._validations  # pylint: disable=W0212
         )
@@ -87,10 +87,11 @@ class BaseDriver(ABC):
         generate_sweep = ifile.data.get("generate_sweep", None)
         if generate_sweep:
             ifile.data["generate_sweep"] = False
-            name, path = (lambda p: (p.name, str(p.parent)))(Path(filepath))
+            name = filepath.name
+            path = filepath.parent
             ifile.write_ui_json(name=name, path=path)
             generate(  # pylint: disable=E1123
-                filepath, update_values={"conda_environment": "geoapps"}
+                str(filepath), update_values={"conda_environment": "geoapps"}
             )
         else:
             params = driver_class._params_class(ifile)  # pylint: disable=W0212

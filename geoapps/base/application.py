@@ -212,8 +212,9 @@ class BaseApplication:
         """
         if self.live_link.value:
             if (self.h5file is not None) and (self.monitoring_directory is None):
-                live_path = str((Path(self.h5file).parent / "Temp").resolve())
-                self.monitoring_directory = live_path
+                self.monitoring_directory = str(
+                    (Path(self.h5file).parent / "Temp").resolve()
+                )
 
             if getattr(self, "_params", None) is not None:
                 setattr(self.params, "monitoring_directory", self.monitoring_directory)
