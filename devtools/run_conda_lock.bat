@@ -17,6 +17,8 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
+:: use test-pypi to get development versions if needed
+set POETRY_REPOSITORIES_TEST_PYPI_URL=https://test.pypi.org/simple/
 call !MY_CONDA_EXE! activate && python devtools\run_conda_lock.py
 
 pause
