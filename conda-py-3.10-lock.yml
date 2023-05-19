@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: 91de8a4097bb270084cc762e1676bea702be7501fa840ac4128d47eac8c1d581
-    osx-64: 13541d6f64843607c91aabdb39657b752326acab0fbded93286cc2275359adc6
-    win-64: 51c5ea439d849b073e6a3366b4b191beae3ab4bda964cab14f2e8bd1144c45d6
+    linux-64: 554b191609984fa79e162dadb824272bca59a629215be37a055a5fb34e19f251
+    osx-64: 0110bed2e5047737526995b589d308ac39ca9bfebaf9442cdc3750d53c7294ea
+    win-64: 95b8b02ae33bd7405ecaac0079dfbb274dcacd7d9d345a5f1addf7a3c6278e79
   platforms:
   - win-64
   - osx-64
@@ -892,14 +892,14 @@ package:
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
   hash:
-    md5: cae79c6fd61cc6823cbebdbb2c16c60e
-    sha256: fe02eb90fb3c9a2eb57c0b653d7630f7df72ee8b3093b0c3d1c34296e4e01134
+    md5: 6894ed8d236107ed0aa175f45af4b8df
+    sha256: 18e34edb122ef212df94bbcad372190db214ee0cefe7730730533b70b6c81037
   manager: conda
-  name: libllvm11
+  name: libllvm14
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libllvm11-11.1.0-he0ac6c6_5.tar.bz2
-  version: 11.1.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/libllvm14-14.0.6-hcd5def8_2.conda
+  version: 14.0.6
 - category: main
   dependencies:
     c-ares: '>=1.18.1,<2.0a0'
@@ -1276,14 +1276,14 @@ package:
     libzlib: '>=1.2.13,<1.3.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 540ca195771d87e180778d37c98410eb
-    sha256: db3e31fb366f4a9a6c404fc5a914cab8d2fd37bf2ec04ec37666e35cc735a403
+    md5: 68ffdf82a717033ead1c5edbfeff9f54
+    sha256: 48df036610d3ee357b408256f222589ea24909572b20e0bf73f9a1a3c42fe255
   manager: conda
   name: llvm-openmp
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/llvm-openmp-16.0.3-h4dfa4b3_0.conda
-  version: 16.0.3
+  url: https://conda.anaconda.org/conda-forge/linux-64/llvm-openmp-16.0.4-h4dfa4b3_0.conda
+  version: 16.0.4
 - category: apps
   dependencies:
     __glibc: '>=2.17,<3.0.a0'
@@ -1841,20 +1841,20 @@ package:
 - category: core
   dependencies:
     libgcc-ng: '>=12'
-    libllvm11: '>=11.1.0,<11.2.0a0'
+    libllvm14: '>=14.0.6,<14.1.0a0'
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: 18c28e036ae9c5366c56ecd0c875a108
-    sha256: 9215e71d019f1b99f687700fe00dc5d4fba9edc9a482ce5c8aa321d62772a479
+    md5: 3e14b22cc052a9a039932825d0b276a7
+    sha256: 63ce6ee190cc4420e2370fcf79a4f61b52834a42cfc90d2927c8117320f20188
   manager: conda
   name: llvmlite
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/llvmlite-0.39.1-py310h58363a5_1.tar.bz2
-  version: 0.39.1
+  url: https://conda.anaconda.org/conda-forge/linux-64/llvmlite-0.40.0-py310h1b8f574_0.conda
+  version: 0.40.0
 - category: core
   dependencies:
     python: '>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*'
@@ -3351,13 +3351,13 @@ package:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
   hash:
-    md5: 2a897e10c11cfb2e457798661454d51b
-    sha256: 0a2fc61829ff0398e94ff5c28d813f14895475fa271ac7bbd83fe137f229837e
+    md5: f38e5e47f62d6633166040192ad420a1
+    sha256: c301c63fbdd3bee9ddd7032ce3c9dcb4be6ed0fa172d86e388d2f2fed0975407
   manager: conda
   name: kealib
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/kealib-1.5.1-h3845be2_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/kealib-1.5.1-h3845be2_3.conda
   version: 1.5.1
 - category: main
   dependencies:
@@ -4003,20 +4003,19 @@ package:
   dependencies:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-    llvmlite: '>=0.39.1,<0.40.0a0'
+    llvmlite: '>=0.40.0,<0.41.0a0'
     numpy: '>=1.21.6,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
-    setuptools: ''
   hash:
-    md5: fe57b83f32db6d332342db71571f501b
-    sha256: 74493f33481d04a2c9dd14c9b70ba2941f0d1784d408170377080395c72e5caf
+    md5: 8156d69b54e3db50465485b28847487e
+    sha256: a180cfa7883c7ce0e6ad4f8b2744d9c639c1c129e068f0553326e206fea92818
   manager: conda
   name: numba
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/numba-0.56.4-py310h0e39c9b_1.conda
-  version: 0.56.4
+  url: https://conda.anaconda.org/conda-forge/linux-64/numba-0.57.0-py310h0f6aa51_0.conda
+  version: 0.57.0
 - category: core
   dependencies:
     entrypoints: ''
@@ -4625,13 +4624,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: c152eb88d6ecf5a34d63de102c810349db10132d3d7467c73feed700e6406820
+    sha256: cc61921677dde96ee801b49c50ac98ab7ed8a6d30ec292e1831f88d497d61449
   manager: pip
   name: geoh5py
   optional: false
   platform: linux-64
-  url: https://test-files.pythonhosted.org/packages/56/7f/373707ee860db3183f8488485cb645f61abe4104f140d91d3193679e55c0/geoh5py-0.8.0a2-py3-none-any.whl
-  version: 0.8.0a2
+  url: https://test-files.pythonhosted.org/packages/86/c8/807506524199d2257c615624057ade50565fd575d45bcdc759e6dd898c90/geoh5py-0.8.0a2.dev1-py3-none-any.whl
+  version: 0.8.0a2.dev1
 - category: core
   dependencies:
     discretize: '*'
@@ -4859,14 +4858,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: a18d8a09f5f3037723862e5ffd3d8efa
-    sha256: 1d68b7e733cefa9d2a6d488c2b89a8d1d5cd76e3c424f2047fe29b9d02e927df
+    md5: 195236e2eeb3b108e3b8eee47ad074fd
+    sha256: c4c3d6636d1142e81b3952a84f051cea4825aec4451fed551ff867bce5c7ea91
   manager: conda
   name: libcxx
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libcxx-16.0.3-hd57cbcb_0.conda
-  version: 16.0.3
+  url: https://conda.anaconda.org/conda-forge/osx-64/libcxx-16.0.4-hd57cbcb_0.conda
+  version: 16.0.4
 - category: main
   dependencies: {}
   hash:
@@ -4969,14 +4968,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 4493294698b915041f100126923769e3
-    sha256: 1edb73c9c168262a02e09e0b21c8a5882f3ccfb05b4fb8521e2d7de716e2e6ac
+    md5: 2957c70d4309ee9ec5e3afbb1e446986
+    sha256: 57ea255d7e49b50cd589fdf89d3181f159cb48d4f88f8936a75a77cb1139e12b
   manager: conda
   name: llvm-openmp
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/llvm-openmp-16.0.3-hff08bdf_0.conda
-  version: 16.0.3
+  url: https://conda.anaconda.org/conda-forge/osx-64/llvm-openmp-16.0.4-hff08bdf_0.conda
+  version: 16.0.4
 - category: main
   dependencies: {}
   hash:
@@ -5283,17 +5282,17 @@ package:
   version: 12.2.0
 - category: core
   dependencies:
-    libcxx: '>=14.a0'
+    libcxx: '>=15'
     libzlib: '>=1.2.13,<1.3.0a0'
   hash:
-    md5: 7c9c5bf4c2e24b54e56ace2a20e79dca
-    sha256: 1513e2606e5bf9a6ae42b300346232af8a021be9bb55027a1939d43b080c1382
+    md5: d37c4953ccffbfecd64f0d703576aa9b
+    sha256: 79437a61b239b629f736ece4751a000c31688da162f7ee168b1959b4ec5e2a2e
   manager: conda
-  name: libllvm11
+  name: libllvm14
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libllvm11-11.1.0-h8fb7429_5.tar.bz2
-  version: 11.1.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/libllvm14-14.0.6-hc8e404f_2.conda
+  version: 14.0.6
 - category: main
   dependencies:
     libzlib: '>=1.2.13,<1.3.0a0'
@@ -6283,20 +6282,20 @@ package:
   version: '15.3'
 - category: core
   dependencies:
-    libcxx: '>=14.0.4'
-    libllvm11: '>=11.1.0,<11.2.0a0'
+    libcxx: '>=15.0.7'
+    libllvm14: '>=14.0.6,<14.1.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: 50be72775bc4e8db5c65c2a274febea2
-    sha256: 00878cc3bce34e944b5761ecad5033661aa7b3533f072243bdaae026e93d7871
+    md5: 418424d23767c6863dec185a23739022
+    sha256: e4ca1db00482f113e324ddc1e73088a75e25ac4e023be158c564979c0ca8003b
   manager: conda
   name: llvmlite
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.39.1-py310h2bfb868_1.tar.bz2
-  version: 0.39.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.40.0-py310hd8379ad_0.conda
+  version: 0.40.0
 - category: core
   dependencies:
     python: '>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*'
@@ -7728,13 +7727,13 @@ package:
     hdf5: '>=1.14.0,<1.14.1.0a0'
     libcxx: '>=15.0.7'
   hash:
-    md5: 094e55f89ab6531bafd30da59c953161
-    sha256: 3f3e78ea0aeafb51db311213383c82f34dd845c7ca5a006d082a6aaa6587926c
+    md5: 4717277790fa124705072a7e8c71fe04
+    sha256: b3a47cf7c44b99d205cde455d0caa7e551af05262b916e8c1ae2d0747ea441d6
   manager: conda
   name: kealib
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/kealib-1.5.1-hde10d81_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/kealib-1.5.1-hde10d81_3.conda
   version: 1.5.1
 - category: apps
   dependencies:
@@ -8103,22 +8102,21 @@ package:
   version: 3.6.4
 - category: core
   dependencies:
-    libcxx: '>=14.0.6'
-    llvm-openmp: '>=16.0.0'
-    llvmlite: '>=0.39.1,<0.40.0a0'
+    libcxx: '>=15.0.7'
+    llvm-openmp: '>=16.0.4'
+    llvmlite: '>=0.40.0,<0.41.0a0'
     numpy: '>=1.21.6,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
-    setuptools: ''
   hash:
-    md5: 1d1021656c875dea69210aa81a949ee6
-    sha256: 121d0bfb34cef01acec73745475a558bcfcde53baa889cff44a2f317362e913d
+    md5: d2faec606a2c58293988de637972a1d5
+    sha256: 145c9a952ad8fa55c2b1f13d16f0c462d81b35d69d2be1efc4659933786b80e3
   manager: conda
   name: numba
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/numba-0.56.4-py310h62db5c2_1.conda
-  version: 0.56.4
+  url: https://conda.anaconda.org/conda-forge/osx-64/numba-0.57.0-py310he09a53b_0.conda
+  version: 0.57.0
 - category: core
   dependencies:
     entrypoints: ''
@@ -8976,13 +8974,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: c152eb88d6ecf5a34d63de102c810349db10132d3d7467c73feed700e6406820
+    sha256: cc61921677dde96ee801b49c50ac98ab7ed8a6d30ec292e1831f88d497d61449
   manager: pip
   name: geoh5py
   optional: false
   platform: osx-64
-  url: https://test-files.pythonhosted.org/packages/56/7f/373707ee860db3183f8488485cb645f61abe4104f140d91d3193679e55c0/geoh5py-0.8.0a2-py3-none-any.whl
-  version: 0.8.0a2
+  url: https://test-files.pythonhosted.org/packages/86/c8/807506524199d2257c615624057ade50565fd575d45bcdc759e6dd898c90/geoh5py-0.8.0a2.dev1-py3-none-any.whl
+  version: 0.8.0a2.dev1
 - category: core
   dependencies:
     discretize: '*'
@@ -10601,16 +10599,17 @@ package:
     python_abi: 3.10.* *_cp310
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
+    vc14_runtime: '>=14.29.30139'
+    vs2015_runtime: ''
   hash:
-    md5: db4165b53b8010875cc8b663714363cb
-    sha256: 8231cbb3ce448957410876ee2177ff9a73fb1517405cf9520ac7c10c2fd20cb8
+    md5: 9f09172b294906d5da921a466eb394e5
+    sha256: 4e716c9c7d0e80b905b011173d3cb326a252b4cdf85c6977d3a8d5cc716b4bed
   manager: conda
   name: llvmlite
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.39.1-py310hb84602e_1.tar.bz2
-  version: 0.39.1
+  url: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.40.0-py310hb84602e_0.conda
+  version: 0.40.0
 - category: core
   dependencies:
     python: '>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*'
@@ -12194,13 +12193,13 @@ package:
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
   hash:
-    md5: c1c6232273879b8c6acae1cdb0c70f2d
-    sha256: c901b7805b9b123cb2ae3b99c654f3af9206b358c300a1674a4d1935db630221
+    md5: 3df257a636743a428882b29b0bcfc600
+    sha256: 008fbff79c4f172e8f321f04c5fa07e9716bcc85bfb7a463d11e87d78c760b9e
   manager: conda
   name: kealib
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/kealib-1.5.1-h2e80506_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/kealib-1.5.1-hc8369a0_3.conda
   version: 1.5.1
 - category: apps
   dependencies:
@@ -12957,23 +12956,22 @@ package:
   version: 7.4.0
 - category: core
   dependencies:
-    llvmlite: '>=0.39.1,<0.40.0a0'
+    llvmlite: '>=0.40.0,<0.41.0a0'
     numpy: '>=1.21.6,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
-    setuptools: ''
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
+    vc14_runtime: '>=14.29.30139'
   hash:
-    md5: 264d5e2e9095466970d6474c8a365814
-    sha256: 3b94a9a9a83cb0d4629cd958b671b47929d1dc9ad7e1be0d1b46e87fd413088a
+    md5: 61b55b6b3d49da6ef7795a6276761a65
+    sha256: 7b4780214d9e4f6548b58eea76f154c0df0dbe866b05b5a688feb1dea97531a7
   manager: conda
   name: numba
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/numba-0.56.4-py310h19bcfe9_1.conda
-  version: 0.56.4
+  url: https://conda.anaconda.org/conda-forge/win-64/numba-0.57.0-py310h19bcfe9_0.conda
+  version: 0.57.0
 - category: core
   dependencies:
     entrypoints: ''
@@ -13525,13 +13523,13 @@ package:
     numpy: '>=1.23.5,<1.24.0'
     pillow: '>=8.0.1,<10.0.0'
   hash:
-    sha256: c152eb88d6ecf5a34d63de102c810349db10132d3d7467c73feed700e6406820
+    sha256: cc61921677dde96ee801b49c50ac98ab7ed8a6d30ec292e1831f88d497d61449
   manager: pip
   name: geoh5py
   optional: false
   platform: win-64
-  url: https://test-files.pythonhosted.org/packages/56/7f/373707ee860db3183f8488485cb645f61abe4104f140d91d3193679e55c0/geoh5py-0.8.0a2-py3-none-any.whl
-  version: 0.8.0a2
+  url: https://test-files.pythonhosted.org/packages/86/c8/807506524199d2257c615624057ade50565fd575d45bcdc759e6dd898c90/geoh5py-0.8.0a2.dev1-py3-none-any.whl
+  version: 0.8.0a2.dev1
 - category: core
   dependencies:
     discretize: '*'
