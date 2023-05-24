@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import os
+from pathlib import Path
 from time import time
 
 from geoh5py.objects import ObjectBase
@@ -36,7 +36,7 @@ class DataInterpolation(ObjectDataSelection):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
@@ -222,7 +222,9 @@ class DataInterpolation(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.out_object.options = self.objects.options
@@ -292,4 +294,4 @@ class DataInterpolation(ObjectDataSelection):
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
         else:
-            print("Saved to " + new_params.geoh5.h5file)
+            print(f"Saved to {new_params.geoh5.h5file}")

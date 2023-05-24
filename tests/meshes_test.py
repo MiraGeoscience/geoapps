@@ -6,6 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
+from pathlib import Path
+
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
@@ -34,7 +38,7 @@ def setup_params(tmp):
     return geotest.make()
 
 
-def test_initialize(tmp_path):
+def test_initialize(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     inversion_data = InversionData(ws, params)
     inversion_topography = InversionTopography(ws, params)

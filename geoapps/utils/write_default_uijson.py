@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 from geoapps import assets_path
 from geoapps.block_model_creation.params import BlockModelParams
@@ -49,7 +50,7 @@ from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
 
-def write_default_uijson(path, use_initializers=False):
+def write_default_uijson(path: str | Path, use_initializers=False):
     from geoapps.inversion.potential_fields.gravity.constants import (
         app_initializer as grav_init,
     )
@@ -277,7 +278,9 @@ def write_default_uijson(path, use_initializers=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Write defaulted ui.json files.")
     parser.add_argument(
-        "path", help="Path to folder where default ui.json files will be written."
+        "path",
+        type=Path,
+        help="Path to folder where default ui.json files will be written.",
     )
     parser.add_argument(
         "--use_initializers",
