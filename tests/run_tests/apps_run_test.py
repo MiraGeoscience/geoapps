@@ -12,6 +12,8 @@ import uuid
 from os import listdir, path
 
 import pytest
+from dash._callback_context import context_value
+from dash._utils import AttributeDict
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
@@ -237,6 +239,45 @@ def test_clustering(tmp_path):
         monitoring_directory=str(tmp_path),
         trigger="export",
     )
+
+    context_value.set(
+        AttributeDict(
+            **{"triggered_inputs": [{"prop_id": "downsampling.value", "value": 80}]}
+        )
+    )
+    figure = app.update_plot(
+        downsampling=80,
+        objects="{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
+        x="{0e4833e3-74ad-4ca9-a98b-d8119069bc01}",
+        x_log=[True],
+        x_thresh=0.1,
+        x_min=0,
+        x_max=0,
+        y="{18c2560c-6161-468a-8571-5d9d59649535}",
+        y_log=[True],
+        y_thresh=0.1,
+        y_min=0,
+        y_max=0,
+        z=None,
+        z_log=[True],
+        z_thresh=0.1,
+        z_min=0,
+        z_max=0,
+        color=None,
+        color_log=[True],
+        color_thresh=0.1,
+        color_min=0,
+        color_max=0,
+        color_maps=None,
+        size=None,
+        size_log=[True],
+        size_thresh=0.1,
+        size_min=0,
+        size_max=0,
+        size_markers=20,
+    )
+    # Check that the plot is not empty
+    assert len(figure["layout"]) != 0
 
     filename = list(
         filter(lambda x: ("Clustering_" in x) and ("geoh5" in x), listdir(tmp_path))
