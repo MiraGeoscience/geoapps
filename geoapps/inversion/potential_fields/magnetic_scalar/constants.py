@@ -98,7 +98,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 0.0,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": False,
     "parallelized": True,
     "n_cpu": None,
