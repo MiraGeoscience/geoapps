@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import sys
-from os import path
+from pathlib import Path
 
 import geoh5py.data
 import geoh5py.objects
@@ -58,8 +58,9 @@ class EdgeDetectionDriver(BaseDriver):
                     parent=out_entity,
                 )
 
-                if self.params.monitoring_directory is not None and path.exists(
-                    self.params.monitoring_directory
+                if (
+                    self.params.monitoring_directory is not None
+                    and Path(self.params.monitoring_directory).is_dir()
                 ):
                     monitored_directory_copy(
                         self.params.monitoring_directory, out_entity

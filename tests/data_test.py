@@ -5,7 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 import SimPEG
@@ -36,10 +39,10 @@ def setup_params(tmp):
     return geotest.make()
 
 
-def test_survey_data(tmp_path):
+def test_survey_data(tmp_path: Path):
     X, Y, Z = np.meshgrid(np.linspace(0, 100, 3), np.linspace(0, 100, 3), 0)
     verts = np.column_stack([X.ravel(), Y.ravel(), Z.ravel()])
-    with Workspace(os.path.join(tmp_path, "test_workspace.geoh5")) as workspace:
+    with Workspace(tmp_path / "test_workspace.geoh5") as workspace:
         test_data_object = Points.create(
             workspace, vertices=verts, name="test_data_object"
         )
@@ -152,7 +155,7 @@ def test_survey_data(tmp_path):
         ), "Residual data should be zero."
 
 
-def test_save_data(tmp_path):
+def test_save_data(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(
@@ -182,7 +185,7 @@ def test_has_tensor():
     assert not InversionData.check_tensor(["tmi"])
 
 
-def test_get_uncertainty_component(tmp_path):
+def test_get_uncertainty_component(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(
@@ -201,7 +204,7 @@ def test_get_uncertainty_component(tmp_path):
     assert len(unc) == len(data.mask)
 
 
-def test_parse_ignore_values(tmp_path):
+def test_parse_ignore_values(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(
@@ -231,7 +234,7 @@ def test_parse_ignore_values(tmp_path):
     assert logic == "="
 
 
-def test_set_infinity_uncertainties(tmp_path):
+def test_set_infinity_uncertainties(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(
@@ -272,7 +275,7 @@ def test_set_infinity_uncertainties(tmp_path):
     assert np.all(test_unc == unc)
 
 
-def test_displace(tmp_path):
+def test_displace(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(
@@ -301,7 +304,7 @@ def test_displace(tmp_path):
     assert np.all(displaced_locs == expected_locs)
 
 
-def test_drape(tmp_path):
+def test_drape(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(
@@ -321,7 +324,7 @@ def test_drape(tmp_path):
     assert np.all(draped_locs == expected_locs)
 
 
-def test_normalize(tmp_path):
+def test_normalize(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(
@@ -341,7 +344,7 @@ def test_normalize(tmp_path):
     assert all(test_data["gz"] == (-1 * data.observed["gz"]))
 
 
-def test_get_survey(tmp_path):
+def test_get_survey(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
     params.update(

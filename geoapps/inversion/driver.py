@@ -13,10 +13,10 @@ if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
-import os
 import sys
 from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -403,7 +403,7 @@ class InversionDriver(BaseDriver):
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
     @classmethod
-    def start(cls, filepath, driver_class=None):
+    def start(cls, filepath: str | Path, driver_class=None):
         _ = driver_class
 
         ifile = InputFile.read_ui_json(filepath)
@@ -462,12 +462,12 @@ class InversionLogger:
     def flush(self):
         pass
 
-    def get_path(self, filepath):
-        root_directory = os.path.dirname(self.driver.workspace.h5file)
-        return os.path.join(root_directory, filepath)
+    def get_path(self, filepath: str | Path) -> str:
+        root_directory = Path(self.driver.workspace.h5file).parent
+        return str(root_directory / filepath)
 
 
 if __name__ == "__main__":
-    file = os.path.abspath(sys.argv[1])
+    file = str(Path(sys.argv[1]).resolve())
     InversionDriver.start(file)
     sys.stdout.close()

@@ -37,6 +37,7 @@ jobs:
     env:
       PYTHONUTF8: 1
       CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-win-64-dev.lock.yml
+      PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
     steps:
       - uses: actions/checkout@v3
         with:

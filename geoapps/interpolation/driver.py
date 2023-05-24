@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import sys
-from os import path
+from pathlib import Path
 
 import numpy as np
 from geoh5py.ui_json.utils import monitored_directory_copy
@@ -169,8 +169,9 @@ class DataInterpolationDriver(BaseDriver):
                 {key + self.params.ga_group_name: {"values": vals, "type": primitive}}
             )
 
-        if self.params.monitoring_directory is not None and path.exists(
-            self.params.monitoring_directory
+        if (
+            self.params.monitoring_directory is not None
+            and Path(self.params.monitoring_directory).is_dir()
         ):
             monitored_directory_copy(
                 self.params.monitoring_directory, self.params.out_object

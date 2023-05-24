@@ -12,8 +12,8 @@
 
 from __future__ import annotations
 
-import os
 import warnings
+from pathlib import Path
 from uuid import UUID
 
 import numpy as np
@@ -43,7 +43,7 @@ class Geoh5Tester:
 
     def __init__(self, geoh5, path, name, params_class=None):
         self.geoh5 = geoh5
-        self.tmp_path = os.path.join(path, name)
+        self.tmp_path = Path(path) / name
 
         if params_class is not None:
             self.ws = Workspace(self.tmp_path)
@@ -97,8 +97,7 @@ def setup_inversion_workspace(
     geoh5=None,
 ):
     if geoh5 is None:
-        project = os.path.join(work_dir, "inversion_test.geoh5")
-        geoh5 = Workspace(project)
+        geoh5 = Workspace(Path(work_dir) / "inversion_test.geoh5")
     # Topography
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
     b = 100
@@ -370,15 +369,11 @@ def check_target(output: dict, target: dict, tolerance=0.1):
     )
 
 
-def get_output_workspace(tmp_dir):
+def get_output_workspace(tmp_dir: Path):
     """
     Extract the output geoh5 from the 'Temp' directory.
     """
-    files = [
-        file
-        for file in os.listdir(os.path.join(tmp_dir, "Temp"))
-        if file.endswith("geoh5")
-    ]
+    files = list((tmp_dir / "Temp").glob("*.geoh5"))
     if len(files) != 1:
         raise UserWarning("Could not find a unique output workspace.")
-    return os.path.join(tmp_dir, "Temp", files[0])
+    return str(files[0])

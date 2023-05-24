@@ -5,9 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
 import sys
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 from geoh5py.data import Data
@@ -67,10 +69,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                 if trial["status"] != "pending":
                     continue
 
-                filepath = os.path.join(
-                    self.working_directory,  # pylint: disable=E1101
-                    f"{uuid}.ui.geoh5",
-                )
+                filepath = Path(self.working_directory) / f"{uuid}.ui.geoh5"
                 with Workspace(filepath) as iter_workspace:
                     receiver_entity = extract_dcip_survey(
                         iter_workspace,

@@ -10,10 +10,10 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import os.path as path
 import uuid
 import warnings
 from collections import OrderedDict
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -46,7 +46,6 @@ with warn_module_not_found():
         VBox,
         Widget,
     )
-
 
 from .gravity.params import GravityParams
 from .magnetic_scalar.params import MagneticScalarParams
@@ -99,13 +98,13 @@ class InversionApp(PlotSelection2D):
     _topography = None
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json: str | Path | None = None, **kwargs):
         if "plot_result" in kwargs:
             self.plot_result = kwargs["plot_result"]
             kwargs.pop("plot_result")
 
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             ifile = InputFile.read_ui_json(ui_json)
             self.params = self._param_class(ifile, **kwargs)
         else:
@@ -795,7 +794,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.sensor.workspace = workspace
@@ -1322,7 +1323,7 @@ class InversionApp(PlotSelection2D):
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
 
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()
