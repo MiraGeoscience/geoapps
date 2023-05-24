@@ -125,7 +125,7 @@ class SimulationFactory(SimPEGFactory):
         kwargs["max_chunk_size"] = self.params.max_chunk_size
         # kwargs["n_cpu"] = self.params.n_cpu
         kwargs["store_sensitivities"] = (
-            "forward_only"
+            None
             if self.params.forward_only
             else self.params.store_sensitivities
         )
