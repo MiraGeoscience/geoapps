@@ -139,7 +139,6 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             upper_bound=0.75,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e4,
-            sens_wts_threshold=60.0,
             prctile=100,
             store_sensitivities="ram",
             **data_kwargs,
