@@ -425,7 +425,7 @@
         "value": 0.001,
         "max": 1.0,
         "min": 0.0,
-        "precision": 4,
+        "precision": 5,
         "lineEdit": false
     },
     "every_iteration_bool": {

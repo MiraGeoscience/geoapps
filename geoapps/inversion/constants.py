@@ -208,8 +208,7 @@ default_ui_json = {
         "value": 0.001,
         "max": 1.0,
         "min": 0.0,
-        "precision": 4,
-        "lineEdit": False,
+        "precision": 5,
         "verbose": 2,
     },
     "every_iteration_bool": {
