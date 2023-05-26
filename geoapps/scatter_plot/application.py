@@ -20,6 +20,7 @@ from dash import callback_context, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
@@ -286,11 +287,10 @@ class ScatterPlots(BaseDashApplication):
 
         if channel == "kmeans" and kmeans is not None:
             data = kmeans
-        elif (
-            channel is not None
-            and self.workspace.get_entity(uuid.UUID(channel))[0] is not None
-        ):
-            data = self.workspace.get_entity(uuid.UUID(channel))[0].values
+        elif channel is not None:
+            with fetch_active_workspace(self.workspace, mode="r") as ws:
+                if ws.get_entity(uuid.UUID(channel))[0] is not None:
+                    data = self.workspace.get_entity(uuid.UUID(channel))[0].values
 
         if data is not None:
             cmin = float(f"{np.nanmin(data):.2e}")
@@ -476,7 +476,9 @@ class ScatterPlots(BaseDashApplication):
 
         # Update self.params
         param_dict = self.get_params_dict(update_dict)
-        self.params.update(param_dict, validate=False)
+
+        self.params.update(param_dict)
+        # validate=False
         # Run driver to get updated scatter plot.
         figure = go.Figure(self.driver.run())
 
@@ -516,29 +518,30 @@ class ScatterPlots(BaseDashApplication):
                     False, param_dict["monitoring_directory"], temp_geoh5
                 )
 
-                with ws as new_workspace:
-                    # Put entities in output workspace.
-                    param_dict["geoh5"] = new_workspace
-                    for key, value in param_dict.items():
-                        if isinstance(value, ObjectBase):
-                            param_dict[key] = value.copy(
-                                parent=new_workspace, copy_children=True
-                            )
+                with fetch_active_workspace(ws, mode="r") as new_workspace:
+                    with fetch_active_workspace(self.workspace, mode="r+"):
+                        # Put entities in output workspace.
+                        param_dict["geoh5"] = new_workspace
+                        for key, value in param_dict.items():
+                            if isinstance(value, ObjectBase):
+                                param_dict[key] = value.copy(
+                                    parent=new_workspace, copy_children=True
+                                )
 
-                    # Write output uijson.
-                    new_params = ScatterPlotParams(**param_dict)
-                    new_params.write_input_file(
-                        name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                        path=param_dict["monitoring_directory"],
-                        validate=False,
-                    )
+                # Write output uijson.
+                new_params = ScatterPlotParams(**param_dict)
+                new_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=param_dict["monitoring_directory"],
+                    validate=False,
+                )
 
-                    go.Figure(figure).write_html(
-                        os.path.join(
-                            param_dict["monitoring_directory"],
-                            temp_geoh5.replace(".geoh5", ".html"),
-                        )
+                go.Figure(figure).write_html(
+                    os.path.join(
+                        param_dict["monitoring_directory"],
+                        temp_geoh5.replace(".geoh5", ".html"),
                     )
+                )
                 print("Saved to " + param_dict["monitoring_directory"])
             else:
                 print("Invalid output path.")
