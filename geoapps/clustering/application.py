@@ -24,7 +24,7 @@ from dash import callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.objects import ObjectBase
-from geoh5py.shared.utils import fetch_active_workspace, is_uuid
+from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
@@ -53,7 +53,7 @@ class Clustering(ScatterPlots):
         super().__init__(**self.params.to_dict())
 
         # Params and driver used for updating scatter plot in make_scatter_plot function.
-        self.scatter_params = self._param_class(**self.params.to_dict())
+        self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)
         self.scatter_driver = ScatterPlotDriver(self.scatter_params)
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -720,6 +720,7 @@ class Clustering(ScatterPlots):
             np.array(mapping),
             update_all_clusters,
         )
+
         return kmeans, clusters
 
     @staticmethod
@@ -857,12 +858,15 @@ class Clustering(ScatterPlots):
                         axis_values[i] = PlotData(
                             axis_name, dataframe[axis_name].values
                         )
+                    # axis_values[i] = self.workspace.get_entity(axis_name)[0]
 
             x, y, z, color, size = tuple(axis_values)
 
             update_dict = {}
             for item in callback_context.triggered:
-                update_dict[item["prop_id"].split(".")[0]] = item["value"]
+                key = item["prop_id"].split(".")[0]
+                if key != "channel":
+                    update_dict[key] = item["value"]
 
             params_dict = self.get_params_dict(update_dict)
             params_dict.update(
@@ -1297,14 +1301,13 @@ class Clustering(ScatterPlots):
             if not live_link:
                 param_dict["monitoring_directory"] = ""
             with ws as workspace:
-                with fetch_active_workspace(self.workspace):
-                    # Put entities in output workspace.
-                    param_dict["geoh5"] = workspace
-                    for key, value in param_dict.items():
-                        if isinstance(value, ObjectBase):
-                            param_dict[key] = value.copy(
-                                parent=workspace, copy_children=True
-                            )
+                # Put entities in output workspace.
+                param_dict["geoh5"] = workspace
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
                 # Write output uijson.
                 new_params = ClusteringParams(**param_dict)
                 new_params.write_input_file(

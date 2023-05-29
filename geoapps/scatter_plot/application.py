@@ -288,9 +288,8 @@ class ScatterPlots(BaseDashApplication):
         if channel == "kmeans" and kmeans is not None:
             data = kmeans
         elif channel is not None:
-            with fetch_active_workspace(self.workspace, mode="r") as ws:
-                if ws.get_entity(uuid.UUID(channel))[0] is not None:
-                    data = self.workspace.get_entity(uuid.UUID(channel))[0].values
+            if self.workspace.get_entity(uuid.UUID(channel))[0] is not None:
+                data = self.workspace.get_entity(uuid.UUID(channel))[0].values
 
         if data is not None:
             cmin = float(f"{np.nanmin(data):.2e}")
@@ -478,7 +477,6 @@ class ScatterPlots(BaseDashApplication):
         param_dict = self.get_params_dict(update_dict)
 
         self.params.update(param_dict)
-        # validate=False
         # Run driver to get updated scatter plot.
         figure = go.Figure(self.driver.run())
 
@@ -519,14 +517,13 @@ class ScatterPlots(BaseDashApplication):
                 )
 
                 with fetch_active_workspace(ws, mode="r") as new_workspace:
-                    with fetch_active_workspace(self.workspace, mode="r+"):
-                        # Put entities in output workspace.
-                        param_dict["geoh5"] = new_workspace
-                        for key, value in param_dict.items():
-                            if isinstance(value, ObjectBase):
-                                param_dict[key] = value.copy(
-                                    parent=new_workspace, copy_children=True
-                                )
+                    # Put entities in output workspace.
+                    param_dict["geoh5"] = new_workspace
+                    for key, value in param_dict.items():
+                        if isinstance(value, ObjectBase):
+                            param_dict[key] = value.copy(
+                                parent=new_workspace, copy_children=True
+                            )
 
                 # Write output uijson.
                 new_params = ScatterPlotParams(**param_dict)

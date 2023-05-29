@@ -47,7 +47,7 @@ class ClusteringDriver(BaseDriver):
         update_all_clusters: bool,
     ) -> tuple:
         """
-        Normalize the the selected data and perform the kmeans clustering.
+        Normalize the selected data and perform the kmeans clustering.
         :param n_clusters: Number of clusters.
         :param dataframe_dict: Data names and values for selected data subset.
         :param full_scales: Scaling factors for selected data subset.
@@ -82,7 +82,9 @@ class ClusteringDriver(BaseDriver):
 
         for val in [2, 4, 8, 16, 32, n_clusters]:
             if update_all_clusters or val == n_clusters:
-                kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
+                kmeans = KMeans(n_clusters=val, random_state=0, n_init=10).fit(
+                    np.vstack(values).T
+                )
                 kmeans_dict = {
                     "labels": kmeans.labels_.astype(float),
                     "inertia": kmeans.inertia_,
@@ -101,7 +103,7 @@ class ClusteringDriver(BaseDriver):
         downsample_min: int | None = None,
     ) -> tuple:
         """
-        Normalize the the selected data and perform the kmeans clustering.
+        Normalize the selected data and perform the kmeans clustering.
         :param downsampling: Percent downsampling.
         :param channels: Data subset.
         :param workspace: Current workspace.
@@ -121,6 +123,7 @@ class ClusteringDriver(BaseDriver):
                 workspace,
                 downsample_min=downsample_min,
             )
+
             n_values = values.shape[0]
 
             dataframe = pd.DataFrame(
