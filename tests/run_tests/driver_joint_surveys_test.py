@@ -5,8 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
-
 import numpy as np
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
@@ -100,9 +98,11 @@ def test_joint_surveys_inv_run(
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_joint_surveys_fwr_run0/inversion_test.geoh5")
+        workpath = (
+            tmp_path.parent / "test_joint_surveys_fwr_run0" / "inversion_test.geoh5"
+        )
 
     with Workspace(workpath) as geoh5:
         topography = geoh5.get_entity("topography")[0]

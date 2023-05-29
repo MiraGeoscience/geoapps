@@ -16,6 +16,8 @@ from geoh5py.workspace import Workspace
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from geoh5py.ui_json import monitored_directory_copy
@@ -247,10 +249,11 @@ class ClusteringDriver(BaseDriver):
                 "values": color_map,
             }
 
-            if self.params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self.params.monitoring_directory)
+            if (
+                self.params.monitoring_directory is not None
+                and Path(self.params.monitoring_directory).is_dir()
             ):
                 monitored_directory_copy(
-                    os.path.abspath(self.params.monitoring_directory),
+                    str(Path(self.params.monitoring_directory).resolve()),
                     self.params.objects,
                 )

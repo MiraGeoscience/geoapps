@@ -8,9 +8,9 @@
 
 from __future__ import annotations
 
-import os
 import sys
 import warnings
+from pathlib import Path
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
@@ -73,8 +73,9 @@ class IsoSurfacesDriver(BaseDriver):
                             parent=container,
                         )
                     ]
-            if self.params.monitoring_directory is not None and os.path.exists(
-                self.params.monitoring_directory
+            if (
+                self.params.monitoring_directory is not None
+                and Path(self.params.monitoring_directory).is_dir()
             ):
                 monitored_directory_copy(self.params.monitoring_directory, container)
 

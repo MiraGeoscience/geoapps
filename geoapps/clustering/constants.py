@@ -96,7 +96,7 @@ validations = {}
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "monitoring_directory": str((assets_path() / "Temp").absolute()),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
     "channel": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",

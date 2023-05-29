@@ -5,6 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
+from pathlib import Path
+
 import numpy as np
 from geoh5py.objects import BlockModel, Points, Surface
 from geoh5py.workspace import Workspace
@@ -12,7 +16,7 @@ from geoh5py.workspace import Workspace
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 
 
-def test_centroids(tmp_path):
+def test_centroids(tmp_path: Path):
     """
     Test iso_surface with a block model. Data values are the distance from a point.
     """
@@ -93,7 +97,7 @@ def test_centroids(tmp_path):
     ws.finalize()
 
 
-def test_vertices(tmp_path):
+def test_vertices(tmp_path: Path):
     """
     Test iso_surface with a points object. Data values are the distance from a point.
     """

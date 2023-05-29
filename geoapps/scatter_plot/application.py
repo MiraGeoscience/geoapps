@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 import sys
 import uuid
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -42,7 +43,7 @@ class ScatterPlots(BaseDashApplication):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
+        if ui_json is not None and Path(ui_json.path).is_file():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
@@ -502,12 +503,12 @@ class ScatterPlots(BaseDashApplication):
 
             # Get output path.
             if (
-                (monitoring_directory is not None)
-                and (monitoring_directory != "")
-                and (os.path.exists(os.path.abspath(monitoring_directory)))
+                monitoring_directory is not None
+                and monitoring_directory != ""
+                and Path(monitoring_directory).is_dir()
             ):
-                param_dict["monitoring_directory"] = os.path.abspath(
-                    monitoring_directory
+                param_dict["monitoring_directory"] = str(
+                    Path(monitoring_directory).resolve()
                 )
                 temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 
@@ -534,9 +535,10 @@ class ScatterPlots(BaseDashApplication):
                 )
 
                 go.Figure(figure).write_html(
-                    os.path.join(
-                        param_dict["monitoring_directory"],
-                        temp_geoh5.replace(".geoh5", ".html"),
+                    str(
+                        (
+                            Path(param_dict["monitoring_directory"]) / temp_geoh5
+                        ).with_suffix(".html")
                     )
                 )
                 print("Saved to " + param_dict["monitoring_directory"])

@@ -10,11 +10,11 @@ from __future__ import annotations
 import base64
 import io
 import json
-import os
 import socket
 import uuid
 import webbrowser
 from os import environ
+from pathlib import Path
 
 import numpy as np
 from dash import callback_context, no_update
@@ -228,8 +228,8 @@ class BaseDashApplication:
                 or update_dict["monitoring_directory"] is None
             ):
                 if self.workspace is not None:
-                    update_dict["monitoring_directory_value"] = os.path.abspath(
-                        os.path.dirname(self.workspace.h5file)
+                    update_dict["monitoring_directory_value"] = str(
+                        Path(self.workspace.h5file).parent.resolve()
                     )
 
         # Format updated params to return to the callback
