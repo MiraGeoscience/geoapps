@@ -272,7 +272,6 @@ class BaseDashApplication:
 
             # Otherwise, continue as normal
             self.app.run_server(host="127.0.0.1", port=port, debug=False)
-            self.workspace.close()
 
     @property
     def params(self) -> BaseParams:

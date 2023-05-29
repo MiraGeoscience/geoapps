@@ -858,7 +858,6 @@ class Clustering(ScatterPlots):
                         axis_values[i] = PlotData(
                             axis_name, dataframe[axis_name].values
                         )
-                    # axis_values[i] = self.workspace.get_entity(axis_name)[0]
 
             x, y, z, color, size = tuple(axis_values)
 
