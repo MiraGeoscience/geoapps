@@ -21,6 +21,7 @@ from dash import callback_context, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
@@ -478,6 +479,7 @@ class ScatterPlots(BaseDashApplication):
         # Update self.params
         param_dict = self.get_params_dict(update_dict)
         self.params.update(param_dict)
+
         # Run driver to get updated scatter plot.
         figure = go.Figure(self.driver.run())
 
@@ -517,7 +519,7 @@ class ScatterPlots(BaseDashApplication):
                     False, param_dict["monitoring_directory"], temp_geoh5
                 )
 
-                with ws as new_workspace:
+                with fetch_active_workspace(ws, mode="r") as new_workspace:
                     # Put entities in output workspace.
                     param_dict["geoh5"] = new_workspace
                     for key, value in param_dict.items():
@@ -526,21 +528,21 @@ class ScatterPlots(BaseDashApplication):
                                 parent=new_workspace, copy_children=True
                             )
 
-                    # Write output uijson.
-                    new_params = ScatterPlotParams(**param_dict)
-                    new_params.write_input_file(
-                        name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                        path=param_dict["monitoring_directory"],
-                        validate=False,
-                    )
+                # Write output uijson.
+                new_params = ScatterPlotParams(**param_dict)
+                new_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=param_dict["monitoring_directory"],
+                    validate=False,
+                )
 
-                    go.Figure(figure).write_html(
-                        str(
-                            (
-                                Path(param_dict["monitoring_directory"]) / temp_geoh5
-                            ).with_suffix(".html")
-                        )
+                go.Figure(figure).write_html(
+                    str(
+                        (
+                            Path(param_dict["monitoring_directory"]) / temp_geoh5
+                        ).with_suffix(".html")
                     )
+                )
                 print("Saved to " + param_dict["monitoring_directory"])
             else:
                 print("Invalid output path.")
