@@ -163,7 +163,6 @@ class BaseDashApplication:
         # Get validations to know expected type for keys in self.params.
         validations = self.params.validations
 
-        # with fetch_active_workspace(self.workspace, mode="r") as ws:
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
             if key in update_dict:

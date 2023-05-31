@@ -288,9 +288,11 @@ class ScatterPlots(BaseDashApplication):
 
         if channel == "kmeans" and kmeans is not None:
             data = kmeans
-        elif channel is not None:
-            if self.workspace.get_entity(uuid.UUID(channel))[0] is not None:
-                data = self.workspace.get_entity(uuid.UUID(channel))[0].values
+        elif (
+            channel is not None
+            and self.workspace.get_entity(uuid.UUID(channel))[0] is not None
+        ):
+            data = self.workspace.get_entity(uuid.UUID(channel))[0].values
 
         if data is not None:
             cmin = float(f"{np.nanmin(data):.2e}")
