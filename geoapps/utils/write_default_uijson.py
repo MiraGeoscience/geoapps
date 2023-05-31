@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 
 from geoapps import assets_path
 from geoapps.block_model_creation.params import BlockModelParams
@@ -49,7 +50,7 @@ from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
 
-def write_default_uijson(path, use_initializers=False):
+def write_default_uijson(path: str | Path, use_initializers=False):
     from geoapps.inversion.potential_fields.gravity.constants import (
         app_initializer as grav_init,
     )
@@ -176,11 +177,11 @@ def write_default_uijson(path, use_initializers=False):
     contour_init = contour_init if use_initializers else {}
 
     from geoapps.inversion.joint.joint_surveys.constants import (
-        app_initializer as joint_single_property_init,
+        app_initializer as joint_surveys_init,
     )
 
-    joint_single_property_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
-    joint_single_property_init = joint_single_property_init if use_initializers else {}
+    joint_surveys_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
+    joint_surveys_init = joint_surveys_init if use_initializers else {}
 
     filedict = {
         "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
@@ -249,11 +250,11 @@ def write_default_uijson(path, use_initializers=False):
             forward_only=False, validate=False, **tipper_init
         ),
         "tipper_forward.ui.json": TipperParams(forward_only=True, validate=False),
-        "joint_single_property_inversion.ui.json": JointSingleParams(
-            forward_only=False, validate=False, **joint_single_property_init
+        "joint_surveys_inversion.ui.json": JointSingleParams(
+            forward_only=False, validate=False, **joint_surveys_init
         ),
-        "joint_single_property_forward.ui.json": JointSingleParams(
-            forward_only=True, validate=False, **joint_single_property_init
+        "joint_surveys_forward.ui.json": JointSingleParams(
+            forward_only=True, validate=False, **joint_surveys_init
         ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
@@ -277,7 +278,9 @@ def write_default_uijson(path, use_initializers=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Write defaulted ui.json files.")
     parser.add_argument(
-        "path", help="Path to folder where default ui.json files will be written."
+        "path",
+        type=Path,
+        help="Path to folder where default ui.json files will be written.",
     )
     parser.add_argument(
         "--use_initializers",

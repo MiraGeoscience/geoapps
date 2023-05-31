@@ -6,6 +6,8 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
 from geoapps.inversion.driver import InversionDriver
 
 from .constants import validations

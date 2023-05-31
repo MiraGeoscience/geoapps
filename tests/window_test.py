@@ -6,6 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
+from pathlib import Path
+
 import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
@@ -19,7 +23,7 @@ from . import PROJECT
 geoh5 = Workspace(PROJECT)
 
 
-def test_initialize(tmp_path):
+def test_initialize(tmp_path: Path):
     # Test initialize from params
     tester = Geoh5Tester(
         geoh5,

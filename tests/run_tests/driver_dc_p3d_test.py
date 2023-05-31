@@ -4,8 +4,11 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
 import json
-import os
+from pathlib import Path
 
 import numpy as np
 from geoh5py.data import FilenameData
@@ -35,7 +38,7 @@ np.random.seed(0)
 
 
 def test_dc_p3d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=10,
     n_lines=3,
     refinement=(4, 6),
@@ -83,15 +86,13 @@ def test_dc_p3d_fwr_run(
 
 
 def test_dc_p3d_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.geoh5"
     if pytest:
-        workpath = os.path.abspath(
-            tmp_path / "../test_dc_p3d_fwr_run0/inversion_test.geoh5"
-        )
+        workpath = tmp_path.parent / "test_dc_p3d_fwr_run0" / "inversion_test.geoh5"
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
@@ -134,18 +135,14 @@ def test_dc_p3d_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = DirectCurrentPseudo3DDriver.start(
-        os.path.join(tmp_path, "Inv_run.ui.json")
-    )
+    driver = DirectCurrentPseudo3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
-    basepath = os.path.dirname(workpath)
-    with open(os.path.join(basepath, "lookup.json"), encoding="utf8") as f:
+    basepath = workpath.parent
+    with open(basepath / "lookup.json", encoding="utf8") as f:
         lookup = json.load(f)
         middle_line_id = [k for k, v in lookup.items() if v["line_id"] == 2][0]
 
-    with Workspace(
-        os.path.join(basepath, f"{middle_line_id}.ui.geoh5"), mode="r"
-    ) as workspace:
+    with Workspace(basepath / f"{middle_line_id}.ui.geoh5", mode="r") as workspace:
         middle_inversion_group = [
             k for k in workspace.groups if isinstance(k, SimPEGGroup)
         ][0]

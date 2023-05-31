@@ -389,5 +389,5 @@ app_initializer = {
     "size_max": 24.8,
     "downsampling": 80,
     "size_markers": 20,
-    "monitoring_directory": str(assets_path().absolute()),
+    "monitoring_directory": str(assets_path().resolve()),
 }

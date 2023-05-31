@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import os
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -145,15 +145,15 @@ class BaseParams:
             getattr(self, "_workpath", None) is None
             and getattr(self, "_geoh5", None) is not None
         ):
-            self._workpath = os.path.dirname(self.geoh5.h5file)
+            self._workpath = str(Path(self.geoh5.h5file).parent)
         return self._workpath
 
     @workpath.setter
     def workpath(self, val: str | None):
         if val is not None:
-            if not os.path.exists(val):
+            if not Path(val).is_dir():
                 raise ValueError("Provided 'workpath' is not a valid path.")
-            val = os.path.abspath(val)
+            val = str(Path(val).resolve())
 
         self._workpath = val
 
@@ -375,7 +375,7 @@ class BaseParams:
     def write_input_file(
         self,
         name: str | None = None,
-        path: str | None = None,
+        path: str | Path | None = None,
         validate: bool = True,
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
