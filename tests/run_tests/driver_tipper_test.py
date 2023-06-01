@@ -165,7 +165,7 @@ if __name__ == "__main__":
     mstart = test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
 
     m_rec = test_tipper_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )
