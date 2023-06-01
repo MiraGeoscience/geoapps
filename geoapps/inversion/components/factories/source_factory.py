@@ -59,7 +59,7 @@ class SourcesFactory(SimPEGFactory):
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import sources
 
-            return sources.Planewave_xy_1Dprimary
+            return sources.PlanewaveXYPrimary
 
     def assemble_arguments(
         self,

@@ -62,7 +62,7 @@ class ReceiversFactory(SimPEGFactory):
         elif self.factory_type == "magnetotellurics":
             from SimPEG.electromagnetics.natural_source import receivers
 
-            return receivers.Point3DImpedance
+            return receivers.PointNaturalSource
 
         elif self.factory_type == "tipper":
             from SimPEG.electromagnetics.natural_source import receivers
