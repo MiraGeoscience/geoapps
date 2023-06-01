@@ -15,14 +15,48 @@ workspace_layout = html.Div(
         dcc.Upload(
             id="upload",
             children=html.Button("Upload Workspace/ui.json"),
-            style={"margin-bottom": "20px"},
+            style={"margin_bottom": "40px"},
         ),
-        dcc.Markdown(children="Object: "),
-        dcc.Dropdown(
-            id="objects",
-            style={"margin-bottom": "20px"},
-            clearable=False,
+        html.Div(
+            [
+                dcc.Markdown(
+                    children="Object:",
+                    style={
+                        "width": "20%",
+                        "display": "inline-block",
+                        "margin-top": "20px",
+                        "vertical-align": "bottom",
+                    },
+                ),
+                dcc.Dropdown(
+                    id="objects",
+                    style={
+                        "width": "65%",
+                        "display": "inline-block",
+                        "margin_bottom": "40px",
+                        "vertical-align": "bottom",
+                    },
+                ),
+            ]
         ),
+        html.Div(
+            [
+                html.Button("Launch App", id="launch_app", n_clicks=0),
+                dcc.Markdown(
+                    children="",
+                    id="launch_app_markdown",
+                    style={"width": "50%", "display": "inline-block"},
+                ),
+            ],
+            style={"margin_top": "40px"},
+        ),
+        dcc.Store(id="ui_json_data"),
+    ]
+)
+
+
+downsampling_layout = html.Div(
+    [
         html.Div(
             [
                 dcc.Markdown(
@@ -493,7 +527,7 @@ plot_layout = html.Div(
 scatter_layout = html.Div(
     [
         html.Div(
-            [workspace_layout, axis_layout],
+            [downsampling_layout, axis_layout],
             style={
                 "width": "40%",
                 "display": "inline-block",
@@ -520,7 +554,7 @@ scatter_layout = html.Div(
                 "vertical-align": "bottom",
             },
         ),
-        dcc.Store(id="ui_json_data"),
+        dcc.Store(id="objects"),
     ],
     style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
 )

@@ -9,28 +9,226 @@
 
 from __future__ import annotations
 
+import base64
+import io
+import json
 import os
+import socket
 import sys
+import threading
 import uuid
 from pathlib import Path
 from time import time
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import callback_context, no_update
-from dash.dependencies import Input, Output
+from dash import callback_context, dcc, no_update
+from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.objects import ObjectBase
+from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
+from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
+from PyQt5 import QtCore
+from PyQt5.QtCore import *
+from PyQt5.QtWebEngineWidgets import *
+from PyQt5.QtWidgets import *
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
-from geoapps.scatter_plot.layout import scatter_layout
+from geoapps.scatter_plot.layout import scatter_layout, workspace_layout
 from geoapps.scatter_plot.params import ScatterPlotParams
+
+
+class ObjectSelection:
+    """ """
+
+    _workspace = None
+    _param_class = ScatterPlotParams
+
+    def __init__(self, ui_json=None, **kwargs):
+        app_initializer.update(kwargs)
+
+        if ui_json is not None and Path(ui_json.path).is_file():
+            self.params = self._param_class(ui_json)
+        else:
+            self.params = self._param_class(**app_initializer)
+
+        self.workspace = self.params.geoh5
+
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
+        )
+
+        self.app.layout = workspace_layout
+
+        # set up callbacks
+        self.app.callback(
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="ui_json_data", component_property="data"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+        self.app.callback(
+            Output(component_id="launch_app_markdown", component_property="children"),
+            State(component_id="objects", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="launch_app", component_property="n_clicks"),
+        )(self.launch_qt)
+
+    # Duplicate of function from BaseDashApplication
+    def update_object_options(
+        self, filename: str, contents: str, trigger: str | None = None
+    ) -> (list, str, dict, None, None):
+        """
+        This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
+        and sets the new object options and values.
+
+        :param filename: Uploaded filename. Workspace or ui.json.
+        :param contents: Uploaded file contents. Workspace or ui.json.
+        :param trigger: Dash component which triggered the callback.
+
+        :return object_options: New object dropdown options.
+        :return object_value: New object value.
+        :return ui_json_data: Uploaded ui_json data.
+        :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
+        :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
+        """
+        ui_json_data, object_options, object_value = no_update, no_update, None
+
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if contents is not None or trigger == "":
+            if filename is not None and filename.endswith(".ui.json"):
+                # Uploaded ui.json
+                _, content_string = contents.split(",")
+                decoded = base64.b64decode(content_string)
+                ui_json = json.loads(decoded)
+                self.workspace = Workspace(ui_json["geoh5"], mode="r")
+                self.params = self._param_class(**{"geoh5": self.workspace})
+                # Create ifile from ui.json
+                ifile = InputFile(ui_json=ui_json)
+                # Demote ifile data so it can be stored as a string
+                ui_json_data = ifile.demote(ifile.data)
+                # Get new object value for dropdown from ui.json
+                object_value = ui_json_data["objects"]
+            elif filename is not None and filename.endswith(".geoh5"):
+                # Uploaded workspace
+                _, content_string = contents.split(",")
+                decoded = io.BytesIO(base64.b64decode(content_string))
+                self.workspace = Workspace(decoded, mode="r")
+                # Update self.params with new workspace, but keep unaffected params the same.
+                new_params = self.params.to_dict()
+                for key, value in new_params.items():
+                    if isinstance(value, Entity):
+                        new_params[key] = None
+                new_params["geoh5"] = self.workspace
+                self.params = self._param_class(**new_params)
+                ui_json_data = no_update
+            elif trigger == "":
+                # Initialization of app from self.params.
+                ifile = InputFile(
+                    ui_json=self.params.input_file.ui_json,
+                    validate=False,
+                )
+                ifile.update_ui_values(self.params.to_dict())
+                ui_json_data = ifile.demote(ifile.data)
+                object_value = ui_json_data["objects"]
+
+            # Get new options for object dropdown
+            object_options = [
+                {
+                    "label": obj.parent.name + "/" + obj.name,
+                    "value": "{" + str(obj.uid) + "}",
+                }
+                for obj in self.workspace.objects
+            ]
+
+        return object_options, object_value, ui_json_data, None, None
+
+    # Copy of function from BaseDashApplication
+    @staticmethod
+    def get_port() -> int:
+        """
+        Loop through a list of ports to find an available port.
+
+        :return port: Available port.
+        """
+        port = None
+        for p in np.arange(8050, 8101):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                in_use = s.connect_ex(("localhost", p)) == 0
+            if in_use is False:
+                port = p
+                break
+        if port is None:
+            print("No open port found.")
+        return port
+
+    def start_server(self, port, ui_json, ui_json_data):
+        scatter = ScatterPlots(ui_json=ui_json, ui_json_data=ui_json_data)
+        if port is not None:
+            scatter.app.run_server(host="127.0.0.1", port=port)
+
+    def get_url(self, port):
+        return "http://127.0.0.1:" + str(port)
+
+    def launch_qt(self, objects, ui_json_data, n_clicks):
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "launch_app" in triggers and objects is not None:
+            # Make new workspace with only the selected object
+            obj = self.workspace.get_entity(uuid.UUID(objects))[0]
+            temp_dir = "../.././geoapps-assets/Temp/"
+            temp_geoh5 = "Scatterplot_" + f"{time():.0f}.geoh5"
+            temp_workspace = Workspace(Path(temp_dir + temp_geoh5))
+
+            # Update ui.json with temp_workspace to pass initialize scatter plot app
+            param_dict = self.params.to_dict()
+            param_dict["geoh5"] = temp_workspace
+            with fetch_active_workspace(temp_workspace):
+                with fetch_active_workspace(self.workspace):
+                    param_dict["objects"] = obj.copy(
+                        parent=temp_workspace, copy_children=True
+                    )
+
+            new_params = ScatterPlotParams(**param_dict)
+
+            ui_json_path = temp_dir + temp_geoh5.replace(".geoh5", ".ui.json")
+            new_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=temp_dir,
+                validate=False,
+            )
+            ifile = InputFile.read_ui_json(ui_json_path)
+
+            # Start server
+            port = BaseDashApplication.get_port()
+            threading.Thread(
+                target=self.start_server, args=(port, ifile, ui_json_data), daemon=True
+            ).start()
+
+            # Make Qt window
+            app = QApplication(sys.argv)
+            web = QWebEngineView()
+            web.setWindowTitle("Scatter plots app")
+            web.load(QUrl(self.get_url(port)))
+            web.setWindowFlags(web.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
+            web.showMaximized()
+
+            sys.exit(app.exec_())
+        return ""
 
 
 class ScatterPlots(BaseDashApplication):
@@ -41,14 +239,16 @@ class ScatterPlots(BaseDashApplication):
     _param_class = ScatterPlotParams
     _driver_class = ScatterPlotDriver
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json=None, ui_json_data=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json.path).is_file():
+
+        if ui_json is not None and Path(ui_json.path).is_dir():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
 
         super().__init__()
+        self.workspace.open()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
@@ -59,8 +259,14 @@ class ScatterPlots(BaseDashApplication):
         )
 
         self.app.layout = scatter_layout
+        scatter_layout.children.append(dcc.Store(id="ui_json_data", data=ui_json_data))
 
         # Set up callbacks
+        self.app.callback(
+            Output(component_id="objects", component_property="data"),
+            Output(component_id="ui_json_data", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
+        )(self.set_objects_value)
         self.app.callback(
             Output(component_id="x_div", component_property="style"),
             Output(component_id="y_div", component_property="style"),
@@ -69,15 +275,6 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_div", component_property="style"),
             Input(component_id="axes_panels", component_property="value"),
         )(ScatterPlots.update_visibility)
-        self.app.callback(
-            Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
-            Output(component_id="ui_json_data", component_property="data"),
-            Output(component_id="upload", component_property="filename"),
-            Output(component_id="upload", component_property="contents"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-        )(self.update_object_options)
         self.app.callback(
             Output(component_id="x", component_property="options"),
             Output(component_id="y", component_property="options"),
@@ -90,7 +287,6 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="color", component_property="value"),
             Output(component_id="size", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
-            Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
@@ -130,7 +326,7 @@ class ScatterPlots(BaseDashApplication):
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
             Input(component_id="downsampling", component_property="value"),
-            Input(component_id="objects", component_property="value"),
+            Input(component_id="objects", component_property="data"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -165,6 +361,13 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="monitoring_directory", component_property="value"),
             Input(component_id="crossplot", component_property="figure"),
         )(self.trigger_click)
+
+    def set_objects_value(self, ui_json_data):
+        """
+        Initializing objects from the ObjectSelection ui_json_data. Setting ui_json_data to trigger the other functions'
+        initialization.
+        """
+        return ui_json_data.get("objects", None), ui_json_data
 
     @staticmethod
     def update_visibility(axis: str) -> (dict, dict, dict, dict, dict):
@@ -220,12 +423,11 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def update_data_options(self, ui_json_data: dict, object_uid: str):
+    def update_data_options(self, ui_json_data: dict):
         """
         Get data dropdown options from a given object.
 
         :param ui_json_data: Uploaded ui.json data to read object from.
-        :param object_uid: Selected object in object dropdown.
 
         :return options: Data dropdown options for x-axis of scatter plot.
         :return options: Data dropdown options for y-axis of scatter plot.
@@ -238,26 +440,14 @@ class ScatterPlots(BaseDashApplication):
         :return color_value: Data dropdown options for color-axis of scatter plot.
         :return size_value: Data dropdown options for size-axis of scatter plot.
         """
-        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if "ui_json_data" in triggers:
-            x_value = ui_json_data.get("x", None)
-            y_value = ui_json_data.get("y", None)
-            z_value = ui_json_data.get("z", None)
-            color_value = ui_json_data.get("color", None)
-            size_value = ui_json_data.get("size", None)
-            trigger = "ui_json"
-        else:
-            x_value, y_value, z_value, color_value, size_value = (
-                None,
-                None,
-                None,
-                None,
-                None,
-            )
-            trigger = "objects"
+        x_value = ui_json_data.get("x", None)
+        y_value = ui_json_data.get("y", None)
+        z_value = ui_json_data.get("z", None)
+        color_value = ui_json_data.get("color", None)
+        size_value = ui_json_data.get("size", None)
 
-        options = self.get_data_options(trigger, ui_json_data, object_uid)
+        options = self.get_data_options("ui_json_data", ui_json_data, None)
 
         return (
             options,
@@ -357,7 +547,8 @@ class ScatterPlots(BaseDashApplication):
         )
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json_data":
+
+        if trigger == "ui_json_data" or trigger == "":
             x_min, x_max = ui_json_data.get("x_min", None), ui_json_data.get(
                 "x_max", None
             )

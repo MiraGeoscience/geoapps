@@ -40,7 +40,6 @@ class BaseDashApplication:
 
     def __init__(self):
         self.workspace = self.params.geoh5
-        self.workspace.open()
         self.driver = self._driver_class(self.params)  # pylint: disable=E1102
         self.app = None
 
@@ -127,9 +126,10 @@ class BaseDashApplication:
         :return value: Data dropdown value.
         """
         obj = None
-
         if trigger == "ui_json_data" and "objects" in ui_json_data:
-            if self.workspace.get_entity(ui_json_data["objects"])[0] is not None:
+            if is_uuid(ui_json_data["objects"]):
+                object_uid = ui_json_data["objects"]
+            elif self.workspace.get_entity(ui_json_data["objects"])[0] is not None:
                 object_uid = self.workspace.get_entity(ui_json_data["objects"])[0].uid
 
         if object_uid is not None:
