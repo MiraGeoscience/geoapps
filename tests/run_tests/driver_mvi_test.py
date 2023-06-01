@@ -140,8 +140,10 @@ def test_magnetic_vector_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_magnetic_vector_fwr_run("./", n_grid_points=20, refinement=(4, 8))
-    m_rec = test_magnetic_vector_run("./", max_iterations=30, pytest=False)
+    m_start = test_magnetic_vector_fwr_run(
+        Path("./"), n_grid_points=20, refinement=(4, 8)
+    )
+    m_rec = test_magnetic_vector_run(Path("./"), max_iterations=30, pytest=False)
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
         residual < 50.0

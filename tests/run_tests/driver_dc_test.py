@@ -163,14 +163,14 @@ if __name__ == "__main__":
     # Full run
 
     m_start = test_dc_3d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
     m_rec = test_dc_3d_run(
-        "./",
+        Path("./"),
         n_lines=5,
         max_iterations=15,
         pytest=False,

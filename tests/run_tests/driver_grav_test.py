@@ -138,13 +138,13 @@ def test_gravity_run(
 if __name__ == "__main__":
     # Full run
     m_start = test_gravity_fwr_run(
-        "./",
+        Path("./"),
         n_grid_points=20,
         refinement=(4, 8),
     )
 
     m_rec = test_gravity_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

@@ -134,8 +134,10 @@ def test_susceptibility_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_susceptibility_fwr_run("./", n_grid_points=20, refinement=(4, 8))
-    m_rec = test_susceptibility_run("./", max_iterations=30, pytest=False)
+    m_start = test_susceptibility_fwr_run(
+        Path("./"), n_grid_points=20, refinement=(4, 8)
+    )
+    m_rec = test_susceptibility_run(Path("./"), max_iterations=30, pytest=False)
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
         residual < 15.0

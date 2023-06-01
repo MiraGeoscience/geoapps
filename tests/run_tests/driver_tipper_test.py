@@ -162,7 +162,7 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_tipper_fwr_run("./", n_grid_points=8, refinement=(4, 8))
+    mstart = test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
 
     m_rec = test_tipper_run(
         "./",

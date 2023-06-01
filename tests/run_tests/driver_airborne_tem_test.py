@@ -170,10 +170,12 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_airborne_tem_fwr_run("./", n_grid_points=5, refinement=(0, 0, 4))
+    mstart = test_airborne_tem_fwr_run(
+        Path("./"), n_grid_points=5, refinement=(0, 0, 4)
+    )
 
     m_rec = test_airborne_tem_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )
