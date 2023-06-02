@@ -10,21 +10,32 @@ from __future__ import annotations
 import base64
 import io
 import json
+import os
+import signal
 import socket
+import sys
+import tempfile
+import threading
 import uuid
 import webbrowser
 from os import environ
 from pathlib import Path
+from time import time
 
 import numpy as np
 from dash import callback_context, no_update
+from dash.dependencies import Input, Output, State
+from flask import Flask
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
-from geoh5py.shared.utils import is_uuid
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
+from jupyter_dash import JupyterDash
+from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets
 
+from geoapps.base.layout import workspace_layout
 from geoapps.driver_base.params import BaseParams
 
 
@@ -103,6 +114,7 @@ class BaseDashApplication:
                 ui_json_data = ifile.demote(ifile.data)
                 object_value = ui_json_data["objects"]
 
+            self.workspace.open()
             # Get new options for object dropdown
             object_options = [
                 {
@@ -114,7 +126,9 @@ class BaseDashApplication:
 
         return object_options, object_value, ui_json_data, None, None
 
-    def get_data_options(self, trigger: str, ui_json_data: dict, object_uid: str):
+    def get_data_options(
+        self, trigger: str, ui_json_data: dict, object_uid: str
+    ) -> list:
         """
         Get data dropdown options from a given object.
 
@@ -123,7 +137,6 @@ class BaseDashApplication:
         :param object_uid: Selected object in object dropdown.
 
         :return options: Data dropdown options.
-        :return value: Data dropdown value.
         """
         obj = None
         if trigger == "ui_json_data" and "objects" in ui_json_data:
@@ -151,7 +164,7 @@ class BaseDashApplication:
         else:
             return []
 
-    def get_params_dict(self, update_dict: dict):
+    def get_params_dict(self, update_dict: dict) -> dict:
         """
         Get dict of current params.
 
@@ -300,3 +313,245 @@ class BaseDashApplication:
         if self._workspace is not None:
             self._workspace.close()
         self._workspace = workspace
+
+
+class ObjectSelection:
+    """
+    Dash app to select workspace and object. Creates temporary workspace with the object, and
+    opens a Qt window to run an app.
+    """
+
+    _app_name = None
+    _workspace = None
+    _param_class = None
+    _app_class = None
+
+    def __init__(self, app_name, app_initializer, app_class, param_class, **kwargs):
+        self.app_name = app_name
+        self.app_class = app_class
+        self.param_class = param_class
+
+        app_initializer.update(kwargs)
+        self.params = self.param_class(**app_initializer)
+        self.workspace = self.params.geoh5
+
+        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        server = Flask(__name__)
+        self.app = JupyterDash(
+            server=server,
+            url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
+            external_stylesheets=external_stylesheets,
+        )
+
+        self.app.layout = workspace_layout
+
+        # set up callbacks
+        self.app.callback(
+            Output(component_id="objects", component_property="options"),
+            Output(component_id="objects", component_property="value"),
+            Output(component_id="ui_json_data", component_property="data"),
+            Output(component_id="upload", component_property="filename"),
+            Output(component_id="upload", component_property="contents"),
+            Input(component_id="upload", component_property="filename"),
+            Input(component_id="upload", component_property="contents"),
+        )(self.update_object_options)
+        self.app.callback(
+            Output(component_id="launch_app_markdown", component_property="children"),
+            State(component_id="objects", component_property="value"),
+            Input(component_id="launch_app", component_property="n_clicks"),
+        )(self.launch_qt)
+
+    def update_object_options(
+        self, filename: str, contents: str, trigger: str | None = None
+    ) -> (list, str, dict, None, None):
+        """
+        This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
+        and sets the new object options and values.
+
+        :param filename: Uploaded filename. Workspace or ui.json.
+        :param contents: Uploaded file contents. Workspace or ui.json.
+        :param trigger: Dash component which triggered the callback.
+
+        :return object_options: New object dropdown options.
+        :return object_value: New object value.
+        :return ui_json_data: Uploaded ui_json data.
+        :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
+        :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
+        """
+        ui_json_data, object_options, object_value = no_update, no_update, None
+
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+        if contents is not None or trigger == "":
+            if filename is not None and filename.endswith(".ui.json"):
+                # Uploaded ui.json
+                _, content_string = contents.split(",")
+                decoded = base64.b64decode(content_string)
+                ui_json = json.loads(decoded)
+                self.workspace = Workspace(ui_json["geoh5"], mode="r")
+                # Create ifile from ui.json
+                ifile = InputFile(ui_json=ui_json)
+                self.params = self.param_class(ifile)
+                # Demote ifile data so it can be stored as a string
+                ui_json_data = ifile.demote(ifile.data.copy())
+                # Get new object value for dropdown from ui.json
+                object_value = ui_json_data["objects"]
+            elif filename is not None and filename.endswith(".geoh5"):
+                # Uploaded workspace
+                _, content_string = contents.split(",")
+                decoded = io.BytesIO(base64.b64decode(content_string))
+                self.workspace = Workspace(decoded, mode="r")
+                # Update self.params with new workspace, but keep unaffected params the same.
+                new_params = self.params.to_dict()
+                for key, value in new_params.items():
+                    if isinstance(value, Entity):
+                        new_params[key] = None
+                new_params["geoh5"] = self.workspace
+                self.params = self.param_class(**new_params)
+                ui_json_data = no_update
+            elif trigger == "":
+                # Initialization of app from self.params.
+                ifile = InputFile(
+                    ui_json=self.params.input_file.ui_json,
+                    validate=False,
+                )
+                ifile.update_ui_values(self.params.to_dict())
+                ui_json_data = ifile.demote(ifile.data)
+                object_value = ui_json_data["objects"]
+
+            # Get new options for object dropdown
+            object_options = [
+                {
+                    "label": obj.parent.name + "/" + obj.name,
+                    "value": "{" + str(obj.uid) + "}",
+                }
+                for obj in self.workspace.objects
+            ]
+
+        return object_options, object_value, ui_json_data, None, None
+
+    @staticmethod
+    def get_port() -> int:
+        """
+        Loop through a list of ports to find an available port.
+
+        :return port: Available port.
+        """
+        port = None
+        for p in np.arange(8050, 8101):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                in_use = s.connect_ex(("localhost", p)) == 0
+            if in_use is False:
+                port = p
+                break
+        if port is None:
+            print("No open port found.")
+        return port
+
+    @staticmethod
+    def start_server(
+        port: int,
+        app_class,
+        ui_json: InputFile = None,
+        ui_json_data: dict = None,
+        params=None,
+    ):
+        """
+        Launch dash app server using given port.
+
+        :param port: Port for where to launch server.
+        :param ui_json: ifile corresponding to the ui_json_data.
+        :param ui_json_data: Dict of current params to provide to app init.
+        """
+        app = app_class(ui_json=ui_json, ui_json_data=ui_json_data, params=params)
+        if port is not None:
+            app.app.run_server(host="127.0.0.1", port=port)
+
+    @staticmethod
+    def make_qt_window(app_name, port: int):
+        """
+        Make Qt window and load dash url with the given port.
+
+        :param port: Port where the dash app has been launched.
+        """
+        app = QtWidgets.QApplication(sys.argv)
+        browser = QtWebEngineWidgets.QWebEngineView()
+
+        browser.setWindowTitle(app_name)
+        browser.load(QtCore.QUrl("http://127.0.0.1:" + str(port)))
+        # Brings Qt window to the front
+        browser.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        # Setting window size
+        browser.resize(1200, 800)
+        browser.show()
+
+        app.exec_()  # running the Qt app
+        os.kill(os.getpid(), signal.SIGTERM)  # shut down dash server and notebook
+
+    def launch_qt(self, objects: str, n_clicks: int) -> str:  # pylint: disable=W0613
+        """
+        Launch the Qt app when launch app button is clicked.
+
+        :param objects: Selected object uid.
+        :param ui_json_data: Dict of input ui.json params.
+        :param n_clicks: Number of times button has been clicked; triggers callback.
+
+        :return launch_app_markdown: Empty string since callbacks must have output.
+        """
+
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+        if "launch_app" in triggers and objects is not None:
+            # Make new workspace with only the selected object
+            obj = self.workspace.get_entity(uuid.UUID(objects))[0]
+
+            temp_geoh5 = "Scatterplot_" + f"{time():.0f}.geoh5"
+            temp_dir = tempfile.TemporaryDirectory().name
+            os.mkdir(temp_dir)
+            temp_workspace = Workspace(Path(temp_dir) / temp_geoh5)
+
+            # Update ui.json with temp_workspace to pass initialize scatter plot app
+            param_dict = self.params.to_dict()
+            param_dict["geoh5"] = temp_workspace
+
+            with fetch_active_workspace(temp_workspace):
+                with fetch_active_workspace(self.workspace):
+                    param_dict["objects"] = obj.copy(
+                        parent=temp_workspace, copy_children=True
+                    )
+
+            new_params = self.param_class(**param_dict)
+
+            ui_json_path = Path(temp_dir) / temp_geoh5.replace(".geoh5", ".ui.json")
+            new_params.write_input_file(
+                name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                path=temp_dir,
+                validate=False,
+            )
+            ifile = InputFile.read_ui_json(ui_json_path)
+            ui_json_data = ifile.demote(ifile.data)
+
+            # Start server
+            port = BaseDashApplication.get_port()
+            threading.Thread(
+                target=self.start_server,
+                args=(port, self.app_class, ifile, ui_json_data, new_params),
+                daemon=True,
+            ).start()
+
+            # Make Qt window
+            self.make_qt_window(self.app_name, port)
+        return ""
+
+    @staticmethod
+    def run_qt(app_name, app_class, ui_json):
+        """ """
+        # Start server
+        port = ObjectSelection.get_port()
+        threading.Thread(
+            target=ObjectSelection.start_server,
+            args=(port, app_class, ui_json),
+            daemon=True,
+        ).start()
+
+        # Make Qt window
+        ObjectSelection.make_qt_window(app_name, port)

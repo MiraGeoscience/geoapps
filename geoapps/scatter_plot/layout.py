@@ -10,51 +10,6 @@ from __future__ import annotations
 import plotly.express as px
 from dash import dcc, html
 
-workspace_layout = html.Div(
-    [
-        dcc.Upload(
-            id="upload",
-            children=html.Button("Upload Workspace/ui.json"),
-            style={"margin_bottom": "40px"},
-        ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    children="Object:",
-                    style={
-                        "width": "20%",
-                        "display": "inline-block",
-                        "margin-top": "20px",
-                        "vertical-align": "bottom",
-                    },
-                ),
-                dcc.Dropdown(
-                    id="objects",
-                    style={
-                        "width": "65%",
-                        "display": "inline-block",
-                        "margin_bottom": "40px",
-                        "vertical-align": "bottom",
-                    },
-                ),
-            ]
-        ),
-        html.Div(
-            [
-                html.Button("Launch App", id="launch_app", n_clicks=0),
-                dcc.Markdown(
-                    children="",
-                    id="launch_app_markdown",
-                    style={"width": "50%", "display": "inline-block"},
-                ),
-            ],
-            style={"margin_top": "40px"},
-        ),
-        dcc.Store(id="ui_json_data"),
-    ]
-)
-
-
 downsampling_layout = html.Div(
     [
         html.Div(
@@ -556,5 +511,5 @@ scatter_layout = html.Div(
         ),
         dcc.Store(id="objects"),
     ],
-    style={"width": "70%", "margin-left": "50px", "margin-top": "30px"},
+    style={"width": "100%", "margin-left": "50px", "margin-top": "30px"},
 )
