@@ -168,15 +168,6 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 inversion_ui_json = {
@@ -279,15 +270,6 @@ forward_ui_json = {
         "label": "Gyz (Eo)",
         "value": False,
     },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
