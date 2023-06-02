@@ -40,6 +40,7 @@ class BaseDashApplication:
 
     def __init__(self):
         self.workspace = self.params.geoh5
+        self.workspace.open()
         self.driver = self._driver_class(self.params)  # pylint: disable=E1102
         self.app = None
 
@@ -174,7 +175,7 @@ class BaseDashApplication:
                 elif (
                     float in validations[key]["types"] and type(update_dict[key]) == int
                 ):
-                    # Checking for values that Dash has given as int when they should be float.
+                    # Checking for values that Dash has given as int when they should be floats.
                     output_dict[key] = float(update_dict[key])
                 elif is_uuid(update_dict[key]):
                     output_dict[key] = self.workspace.get_entity(
@@ -182,7 +183,6 @@ class BaseDashApplication:
                     )[0]
                 else:
                     output_dict[key] = update_dict[key]
-
         return output_dict
 
     def update_remainder_from_ui_json(

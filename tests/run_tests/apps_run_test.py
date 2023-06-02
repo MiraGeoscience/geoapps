@@ -14,6 +14,8 @@ import uuid
 from pathlib import Path
 
 import pytest
+from dash._callback_context import context_value
+from dash._utils import AttributeDict
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 
@@ -191,51 +193,194 @@ def test_clustering(tmp_path: Path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
     app = Clustering(geoh5=str(temp_workspace), output_path=str(tmp_path))
 
+    # Set test variables
+    n_clicks = 0
+    live_link = []
+    n_clusters = 3
+    objects = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
+    data_subset = [
+        "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
+        "{18c2560c-6161-468a-8571-5d9d59649535}",
+    ]
+    color_pickers = ["#FF5733", "#33FF9D", "#E433FF"]
+    downsampling = 80
+    full_scales = {}
+    full_lower_bounds = {}
+    full_upper_bounds = {}
+    x = "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"
+    x_log = [False]
+    x_thresh = 0.1
+    x_min = -17.0
+    x_max = 25.5
+    y = "{18c2560c-6161-468a-8571-5d9d59649535}"
+    y_log = [True]
+    y_thresh = 0.1
+    y_min = -17.0
+    y_max = 29.8
+    z = None
+    z_log = [True]
+    z_thresh = 0.1
+    z_min = 0
+    z_max = 0
+    color = None
+    color_log = [True]
+    color_thresh = 0.1
+    color_min = 0
+    color_max = 0
+    size = None
+    size_log = [True]
+    size_thresh = 0.1
+    size_min = 0
+    size_max = 0
+    size_markers = 20
+    channel = "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"
+    channel_options = [
+        {"label": "Al2O3", "value": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"},
+        {"label": "CaO", "value": "{18c2560c-6161-468a-8571-5d9d59649535}"},
+    ]
+    ga_group_name = "Clusters"
+    monitoring_directory = str(tmp_path)
+    trigger = "export"
+    clusters = {}
+
+    dataframe_dict, mapping, indices = app.update_dataframe(downsampling, data_subset)
+
+    # Set a callback since callback_context is used by run_clustering
+    context_value.set(
+        AttributeDict(
+            **{"triggered_inputs": [{"prop_id": "n_clusters.value", "value": 3}]}
+        )
+    )
+    kmeans, clusters = app.run_clustering(
+        dataframe_dict,
+        n_clusters,
+        full_scales,
+        clusters,
+        mapping,
+    )
+    color_maps = "kmeans"
+
+    # Set a callback since callback_context is used by scatter plot
+    context_value.set(
+        AttributeDict(
+            **{"triggered_inputs": [{"prop_id": "downsampling.value", "value": 80}]}
+        )
+    )
+
+    # Test scatter plot output
+    figure = app.make_scatter_plot(
+        n_clusters,
+        dataframe_dict,
+        kmeans,
+        indices,
+        color_pickers,
+        channel_options,
+        x,
+        x_log,
+        x_thresh,
+        x_min,
+        x_max,
+        y,
+        y_log,
+        y_thresh,
+        y_min,
+        y_max,
+        z,
+        z_log,
+        z_thresh,
+        z_min,
+        z_max,
+        color,
+        color_log,
+        color_thresh,
+        color_min,
+        color_max,
+        color_maps,
+        size,
+        size_log,
+        size_thresh,
+        size_min,
+        size_max,
+        size_markers,
+    )
+    assert len(figure["data"]) != 0
+
+    # Test inertia plot
+    figure = app.make_inertia_plot(n_clusters, clusters)
+    assert len(figure["data"]) != 0
+
+    # Test histogram
+    figure = app.make_hist_plot(
+        dataframe_dict,
+        channel,
+        channel_options,
+        lower_bounds=x_min,
+        upper_bounds=x_max,
+    )
+    assert len(figure["data"]) != 0
+
+    # Test boxplot
+    figure = app.make_boxplot(
+        n_clusters,
+        channel,
+        channel_options,
+        color_pickers,
+        kmeans,
+        indices,
+    )
+    assert len(figure["data"]) != 0
+
+    # Test stats table
+    table = app.make_stats_table(dataframe_dict)
+    assert table is not None
+
+    # Test heatmap
+    figure = app.make_heatmap(dataframe_dict)
+    assert len(figure["data"]) != 0
+
+    # Test export
     app.trigger_click(
-        n_clicks=0,
-        live_link=[],
-        n_clusters=3,
-        objects="{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-        data_subset=[
-            "{0e4833e3-74ad-4ca9-a98b-d8119069bc01}",
-            "{18c2560c-6161-468a-8571-5d9d59649535}",
-        ],
-        color_pickers=[],
-        downsampling=80,
-        full_scales={},
-        full_lower_bounds={},
-        full_upper_bounds={},
-        x="{0e4833e3-74ad-4ca9-a98b-d8119069bc01}",
-        x_log=[True],
-        x_thresh=0.1,
-        x_min=0,
-        x_max=0,
-        y="{18c2560c-6161-468a-8571-5d9d59649535}",
-        y_log=[True],
-        y_thresh=0.1,
-        y_min=0,
-        y_max=0,
-        z=None,
-        z_log=[True],
-        z_thresh=0.1,
-        z_min=0,
-        z_max=0,
-        color=None,
-        color_log=[True],
-        color_thresh=0.1,
-        color_min=0,
-        color_max=0,
-        color_maps=None,
-        size=None,
-        size_log=[True],
-        size_thresh=0.1,
-        size_min=0,
-        size_max=0,
-        size_markers=20,
-        channel=None,
-        ga_group_name="Clusters",
-        monitoring_directory=str(tmp_path),
-        trigger="export",
+        n_clicks,
+        monitoring_directory,
+        live_link,
+        n_clusters,
+        objects,
+        data_subset,
+        color_pickers,
+        downsampling,
+        full_scales,
+        full_lower_bounds,
+        full_upper_bounds,
+        x,
+        x_log,
+        x_thresh,
+        x_min,
+        x_max,
+        y,
+        y_log,
+        y_thresh,
+        y_min,
+        y_max,
+        z,
+        z_log,
+        z_thresh,
+        z_min,
+        z_max,
+        color,
+        color_log,
+        color_thresh,
+        color_min,
+        color_max,
+        color_maps,
+        size,
+        size_log,
+        size_thresh,
+        size_min,
+        size_max,
+        size_markers,
+        channel,
+        ga_group_name,
+        trigger,
     )
 
     filename = next(tmp_path.glob("Clustering_*.geoh5"))
