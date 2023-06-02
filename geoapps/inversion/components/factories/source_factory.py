@@ -117,7 +117,7 @@ class SourcesFactory(SimPEGFactory):
             kwargs["sigma_primary"] = [self.params.background_conductivity]
         if self.factory_type in ["tdem"]:
             kwargs["location"] = locations
-            kwargs["waveform_function"] = waveform
+            kwargs["waveform"] = waveform
 
         return kwargs
 

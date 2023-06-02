@@ -382,7 +382,7 @@ class SurveyFactory(SimPEGFactory):
             )
             import SimPEG.electromagnetics.time_domain as tdem
 
-            waveform = tdem.sources.RawWaveform(waveFct=wave_function, offTime=0.0)
+            waveform = tdem.sources.RawWaveform(waveform_function=wave_function, offTime=0.0)
 
         self.ordering = []
         rx_factory = ReceiversFactory(self.params)
