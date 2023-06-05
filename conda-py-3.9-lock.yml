@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: d4444b32915e345cbb8c97ef900fd386fbe45039ae99a0c8ecb28677f8645fa7
-    osx-64: b13b5e14f9e8fb85507d2a029573dc728e5db7caebb45dfe0fac69ef478edd44
-    linux-64: 21bf20c86d7aed19e5bc75e363acab58dd79c3ce62fd2f75feb3a75f64da5871
+    win-64: 10d275ca2836902104d0b4f55e01ea7f83aa40e9063e2ffec2deda845d8dee56
+    osx-64: 3de51521e89c9bd9c7f427231d07847bd647ffc2b6618f5749e6a15f16b07d9a
+    linux-64: 370c5955ec127cae7c79b84447bf1f72d29dfcecde641b3389c58dab0c4a92ff
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -375,8 +375,8 @@ package:
   hash:
     md5: 96f3b11872ef6fad973eac856cd2624f
     sha256: 41ec165704ccce2faa0437f4f53c03c06261a2cc9ff7614828e51427d9261f4b
-  category: apps
-  optional: true
+  category: main
+  optional: false
 - name: graphite2
   version: 1.3.13
   manager: conda
@@ -784,6 +784,42 @@ package:
     sha256: 0518e65929deded6afc5f91f31febb15e8c93f7ee599a18b787f9fab3f79cfd6
   category: main
   optional: false
+- name: xorg-compositeproto
+  version: 0.4.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-compositeproto-0.4.2-h7f98852_1001.tar.bz2
+  hash:
+    md5: 8bf27eeb636d3acce5c6cb570ba63487
+    sha256: 8127541fb7ee4ba81cabd3ac464953ec928489bf01d647e5819cd7cd9428730c
+  category: main
+  optional: false
+- name: xorg-damageproto
+  version: 1.2.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-damageproto-1.2.1-h7f98852_1002.tar.bz2
+  hash:
+    md5: 58c9bb067637c5a13a045a7124eeb027
+    sha256: b0a62b8eedc3e1b47fbbe3bbe6011542d36867b90f9b4bf251b78109ee1f0d9b
+  category: main
+  optional: false
+- name: xorg-inputproto
+  version: 2.3.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-inputproto-2.3.2-h7f98852_1002.tar.bz2
+  hash:
+    md5: bcd1b3396ec6960cbc1d2855a9e60b2b
+    sha256: 6c8c2803de0f643f8bad16ece3f9a7259e4a49247543239c182d66d5e3a129a7
+  category: main
+  optional: false
 - name: xorg-kbproto
   version: 1.0.7
   manager: conda
@@ -832,6 +868,30 @@ package:
     sha256: 4df7c5ee11b8686d3453e7f3f4aa20ceef441262b49860733066c52cfd0e4a77
   category: main
   optional: false
+- name: xorg-randrproto
+  version: 1.5.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-randrproto-1.5.0-h7f98852_1001.tar.bz2
+  hash:
+    md5: 68cce654461713977dac6f9ac1bce89a
+    sha256: f5c7c2de3655a95153e900118959df6a50b6c104a3d7afaee3eadbf86b85fa2e
+  category: main
+  optional: false
+- name: xorg-recordproto
+  version: 1.14.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-recordproto-1.14.2-h7f98852_1002.tar.bz2
+  hash:
+    md5: 2f835e6c386e73c6faaddfe9eda67e98
+    sha256: 4b91d48fed368c83eafd03891ebfd5bae0a03adc087ebea8a680ae22da99a85f
+  category: main
+  optional: false
 - name: xorg-renderproto
   version: 0.11.1
   manager: conda
@@ -842,6 +902,18 @@ package:
   hash:
     md5: 06feff3d2634e3097ce2fe681474b534
     sha256: 38942930f233d1898594dd9edf4b0c0786f3dbc12065a0c308634c37fd936034
+  category: main
+  optional: false
+- name: xorg-util-macros
+  version: 1.19.3
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-util-macros-1.19.3-h7f98852_0.tar.bz2
+  hash:
+    md5: b1780cc89cf3949f670d6ca2aa6a7e42
+    sha256: 128591045b700d375de98be76f215a0b67c9d6939523b743edc0dca389cdb4be
   category: main
   optional: false
 - name: xorg-xextproto
@@ -1275,6 +1347,19 @@ package:
   hash:
     md5: 5b8c42eb62e9fc961af70bdd6a26e168
     sha256: 032fd769aad9d4cad40ba261ab222675acb7ec951a8832455fce18ef33fa8df0
+  category: main
+  optional: false
+- name: xorg-fixesproto
+  version: '5.0'
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+    xorg-xextproto: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-fixesproto-5.0-h7f98852_1002.tar.bz2
+  hash:
+    md5: 65ad6e1eb4aed2b0611855aff05e04f6
+    sha256: 5d2af1b40f82128221bace9466565eca87c97726bb80bbfcd03871813f3e1876
   category: main
   optional: false
 - name: xorg-libsm
@@ -2256,6 +2341,23 @@ package:
     sha256: 13f5db46b7ded028f5b53fd5373e27a47789b9a655b52a92c4b324099602f29a
   category: main
   optional: false
+- name: libwebp
+  version: 1.3.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    giflib: '>=5.2.1,<5.3.0a0'
+    libgcc-ng: '>=12'
+    libjpeg-turbo: '>=2.1.5.1,<3.0a0'
+    libpng: '>=1.6.39,<1.7.0a0'
+    libtiff: '>=4.5.0,<4.6.0a0'
+    libwebp-base: '>=1.3.0,<2.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libwebp-1.3.0-hb47c5f0_0.conda
+  hash:
+    md5: 9cfd7ad6e1539ca1ad172083586b3301
+    sha256: 461fe2c0279309c21f206f114f3bd6592e906ef6f8cc181b2e28482941b8b925
+  category: main
+  optional: false
 - name: llvmlite
   version: 0.40.0
   manager: conda
@@ -2400,8 +2502,8 @@ package:
   hash:
     md5: 91cda59e66e1e4afe9476f8ef98f5c30
     sha256: ded536a96a00d45a693dbc2971bb688248324dadd129eddda2100e177583d768
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: pandocfilters
   version: 1.5.0
   manager: conda
@@ -2462,6 +2564,18 @@ package:
     sha256: c25e1757e4e90638bb1e778aba3ee5f3c01fae9752e3c3929f9be7d367f6c7f3
   category: dev
   optional: true
+- name: ply
+  version: '3.11'
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: ''
+  url: https://conda.anaconda.org/conda-forge/noarch/ply-3.11-py_1.tar.bz2
+  hash:
+    md5: 7205635cd71531943440fbfe3b6b5727
+    sha256: 2cd6fae8f9cbc806b7f828f006ae4a83c23fac917cacfd73c37ce322d4324e53
+  category: main
+  optional: false
 - name: prometheus_client
   version: 0.17.0
   manager: conda
@@ -2788,8 +2902,8 @@ package:
   hash:
     md5: 5844808ffab9ebdb694585b50ba02a96
     sha256: 4cd48aba7cd026d17e86886af48d0d2ebc67ed36f87f6534f4b67138f5a5a58f
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: tomlkit
   version: 0.11.8
   manager: conda
@@ -2954,6 +3068,20 @@ package:
   hash:
     md5: 82b6df12252e6f32402b96dacc656fec
     sha256: 73e5cfbdff41ef8a844441f884412aa5a585a0f0632ec901da035a03e1fe1249
+  category: main
+  optional: false
+- name: xorg-libxfixes
+  version: 5.0.3
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+    xorg-fixesproto: ''
+    xorg-libx11: '>=1.7.0,<2.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxfixes-5.0.3-h7f98852_1004.tar.bz2
+  hash:
+    md5: e9a21aa4d5e3e5f1aed71e8cefd46b6a
+    sha256: 1e426a1abb774ef1dcf741945ed5c42ad12ea2dc7aeed7682d293879c3e1e4c3
   category: main
   optional: false
 - name: xorg-libxrender
@@ -3611,6 +3739,24 @@ package:
     sha256: ef407b88c45171f41eadcbbcfd41243cb137fe7438fc18f4cd08181c522664cf
   category: apps
   optional: true
+- name: sip
+  version: 6.7.9
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    packaging: ''
+    ply: ''
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    tomli: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/sip-6.7.9-py39h3d6467e_0.conda
+  hash:
+    md5: 6d990f672cc70e5c480ddb74b789a17c
+    sha256: 939e643d5c638f2e731fe00ae9ff58b77525026880603e504a54b1d58d68d7fd
+  category: main
+  optional: false
 - name: terminado
   version: 0.17.1
   manager: conda
@@ -3707,6 +3853,74 @@ package:
     sha256: 2054940042a03f53202fa145b77ca35b367634f5b316607fe2f2fd7af877247a
   category: apps
   optional: true
+- name: xorg-libxcomposite
+  version: 0.4.6
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=12'
+    xorg-compositeproto: ''
+    xorg-libx11: '>=1.7.2,<2.0a0'
+    xorg-libxfixes: ''
+    xorg-xproto: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxcomposite-0.4.6-h0b41bf4_1.conda
+  hash:
+    md5: ada6777364a0ea2407a1894e54779cc4
+    sha256: 7c5806a8de1ce0d4e0c7aae8d29565f11fba6c6da4a787c3e09f1fcc428725a4
+  category: main
+  optional: false
+- name: xorg-libxdamage
+  version: 1.1.5
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.4.0'
+    xorg-damageproto: ''
+    xorg-libx11: '>=1.7.2,<2.0a0'
+    xorg-libxext: 1.3.*
+    xorg-libxfixes: ''
+    xorg-util-macros: ''
+    xorg-xproto: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxdamage-1.1.5-h7f98852_1.tar.bz2
+  hash:
+    md5: bebd3814ec2355fab6a474b07ed73093
+    sha256: 4cab878855e48669b64dd7522a518433ac83bb56fa79743d12db316326e2e39e
+  category: main
+  optional: false
+- name: xorg-libxi
+  version: 1.7.10
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+    xorg-inputproto: ''
+    xorg-libx11: '>=1.7.0,<2.0a0'
+    xorg-libxext: 1.3.*
+    xorg-libxfixes: 5.0.*
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxi-1.7.10-h7f98852_0.tar.bz2
+  hash:
+    md5: e77615e5141cad5a2acaa043d1cf0ca5
+    sha256: 745c1284a96b4282fe6fe122b2643e1e8c26a7ff40b733a8f4b61357238c4e68
+  category: main
+  optional: false
+- name: xorg-libxrandr
+  version: 1.5.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+    xorg-libx11: '>=1.7.1,<2.0a0'
+    xorg-libxext: ''
+    xorg-libxrender: ''
+    xorg-randrproto: ''
+    xorg-renderproto: ''
+    xorg-xextproto: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxrandr-1.5.2-h7f98852_1.tar.bz2
+  hash:
+    md5: 5b0f7da25a4556c9619c3e4b4a98ab07
+    sha256: ffd075a463896ed86d9519e26dc36f754b695b9c1e1b6115d34fe138b36d8200
+  category: main
+  optional: false
 - name: argon2-cffi-bindings
   version: 21.2.0
   manager: conda
@@ -3972,6 +4186,24 @@ package:
     sha256: d15edb63b5a7e6319446e71cf61694b20b519bbfccd63e045c8036b2877f3668
   category: apps
   optional: true
+- name: pyqt5-sip
+  version: 12.11.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    packaging: ''
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    sip: ''
+    toml: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/pyqt5-sip-12.11.0-py39h227be39_3.conda
+  hash:
+    md5: 9e381db00691e26bcf670c3586397be1
+    sha256: aff0befab89f536c4540dba017543d1616862b2d51350cb6d2875c294bd1b199
+  category: main
+  optional: false
 - name: pytest
   version: 7.3.1
   manager: conda
@@ -4055,6 +4287,23 @@ package:
     sha256: c1bd0ad7d854cae56977b7915ac2b78b652fa5f7ec1e9fc21e7fdb30cf4519b1
   category: apps
   optional: true
+- name: xorg-libxtst
+  version: 1.2.3
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=9.3.0'
+    xorg-inputproto: ''
+    xorg-libx11: '>=1.7.1,<2.0a0'
+    xorg-libxext: 1.3.*
+    xorg-libxi: 1.7.*
+    xorg-recordproto: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxtst-1.2.3-h7f98852_1002.tar.bz2
+  hash:
+    md5: a220b1a513e19d5cb56c1311d44f12e6
+    sha256: 9a51ae2869b9a47735539dada9d85534418a765d1461c9f91fe7564f3ee75e87
+  category: main
+  optional: false
 - name: argon2-cffi
   version: 21.3.0
   manager: conda
@@ -4626,6 +4875,24 @@ package:
     sha256: ab03a569f9910c27de04ab10b8f9e5cd3481df5920ca88617aea4a761a5cf1e9
   category: core
   optional: true
+- name: pyqt
+  version: 5.15.7
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    pyqt5-sip: 12.11.0
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    qt-main: '>=5.15.6,<5.16.0a0'
+    sip: '>=6.7.5,<6.8.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/pyqt-5.15.7-py39h5c7b992_3.conda
+  hash:
+    md5: 19e30314fe824605750da905febb8ee6
+    sha256: 1dfa1bff6d1334682790063c889198671b477a95c71a3d73ff656b4d88ea542b
+  category: main
+  optional: false
 - name: pyside2
   version: 5.15.8
   manager: conda
@@ -4661,6 +4928,55 @@ package:
     sha256: d2556db0f0e3ee42a81334888373d54e471f0cd27de8d19d5027dced0c0c16fc
   category: apps
   optional: true
+- name: qt-webengine
+  version: 5.15.8
+  manager: conda
+  platform: linux-64
+  dependencies:
+    __glibc: '>=2.17,<3.0.a0'
+    alsa-lib: '>=1.2.8,<1.2.9.0a0'
+    dbus: '>=1.13.6,<2.0a0'
+    fontconfig: '>=2.14.2,<3.0a0'
+    fonts-conda-ecosystem: ''
+    freetype: '>=2.12.1,<3.0a0'
+    gst-plugins-base: '>=1.22.0,<1.23.0a0'
+    gstreamer: '>=1.22.0,<1.23.0a0'
+    harfbuzz: '>=7.3.0,<8.0a0'
+    libcups: '>=2.3.3,<2.4.0a0'
+    libevent: '>=2.1.12,<2.1.13.0a0'
+    libexpat: '>=2.5.0,<3.0a0'
+    libgcc-ng: '>=12'
+    libglib: '>=2.76.2,<3.0a0'
+    libiconv: '>=1.17,<2.0a0'
+    libjpeg-turbo: '>=2.1.5.1,<3.0a0'
+    libopus: '>=1.3.1,<2.0a0'
+    libpng: '>=1.6.39,<1.7.0a0'
+    libsqlite: '>=3.41.2,<4.0a0'
+    libstdcxx-ng: '>=12'
+    libwebp: ''
+    libwebp-base: '>=1.3.0,<2.0a0'
+    libxcb: '>=1.13,<1.14.0a0'
+    libxkbcommon: '>=1.5.0,<2.0a0'
+    libxml2: '>=2.10.4,<2.11.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    nspr: '>=4.35,<5.0a0'
+    nss: '>=3.89,<4.0a0'
+    pulseaudio-client: '>=16.1,<16.2.0a0'
+    qt-main: '>=5.15.8,<5.16.0a0'
+    xorg-libx11: '>=1.8.4,<2.0a0'
+    xorg-libxcomposite: ''
+    xorg-libxdamage: ''
+    xorg-libxext: '>=1.3.4,<2.0a0'
+    xorg-libxfixes: ''
+    xorg-libxrandr: ''
+    xorg-libxrender: ''
+    xorg-libxtst: ''
+  url: https://conda.anaconda.org/conda-forge/linux-64/qt-webengine-5.15.8-h8a331fa_1.conda
+  hash:
+    md5: fc1d28f9f37efcb1c7ac9af514988f82
+    sha256: 4c4df2c1fe40fd29abd6c84a905c059a09882f47107afd5b6390a690f3879fc6
+  category: main
+  optional: false
 - name: scipy
   version: 1.10.1
   manager: conda
@@ -4883,6 +5199,25 @@ package:
     sha256: e29addcede74fc759ef484900f2796a2cec5accca93a184317d26676dea8c410
   category: core
   optional: true
+- name: pyqtwebengine
+  version: 5.15.7
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
+    pyqt: '>=5.15.7,<5.16.0a0'
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    qt-main: '>=5.15.6,<5.16.0a0'
+    qt-webengine: '>=5.15.4,<5.16.0a0'
+    sip: '>=6.7.5,<6.8.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/pyqtwebengine-5.15.7-py39ha048f5d_3.conda
+  hash:
+    md5: b2ed7a3022521c6dcd8150a61aabdc07
+    sha256: ae4fb41c2706c7e648df3a5a47c904659422858b8f86832947116e5f9e42c21f
+  category: main
+  optional: false
 - name: scikit-learn
   version: 1.2.2
   manager: conda
@@ -5234,17 +5569,17 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    utm: '*'
-    numpy: '>=1.7'
-    vectormath: '>=0.2.0'
-    discretize: '>=0.7.0'
-    scikit-learn: '>=0.22'
-    pandas: '*'
     geoh5py: '*'
-    scipy: '>=1.0.0'
+    utm: '*'
+    pandas: '*'
+    vectormath: '>=0.2.0'
     empymod: '*'
-    pymatsolver: '>=0.1.1'
     properties: '>=0.5.2'
+    scikit-learn: '>=0.22'
+    scipy: '>=1.0.0'
+    discretize: '>=0.7.0'
+    pymatsolver: '>=0.1.1'
+    numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
   hash:
     sha256: ''
@@ -5376,8 +5711,8 @@ package:
   hash:
     md5: aca150b0186836f893ebac79019e5498
     sha256: 47515e0874bcf67e438e1d5d093b074c1781f055067195f0d00a7790a56d446d
-  category: apps
-  optional: true
+  category: main
+  optional: false
 - name: icu
   version: '72.1'
   manager: conda
@@ -6935,6 +7270,22 @@ package:
     sha256: bb084c127f22e486731704f0a515bd823ec20dc717c7d219263f244ee5b13a62
   category: main
   optional: false
+- name: libwebp
+  version: 1.3.0
+  manager: conda
+  platform: osx-64
+  dependencies:
+    giflib: '>=5.2.1,<5.3.0a0'
+    libjpeg-turbo: '>=2.1.5.1,<3.0a0'
+    libpng: '>=1.6.39,<1.7.0a0'
+    libtiff: '>=4.5.0,<4.6.0a0'
+    libwebp-base: '>=1.3.0,<2.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/libwebp-1.3.0-ha9aa8fa_0.conda
+  hash:
+    md5: da767942db1b11e8139a5a2ab9afc989
+    sha256: b22fbcf3e5de2b2b4dc2afd1bd9897995338b6a1180b7d196a2c5ed178267a7d
+  category: main
+  optional: false
 - name: llvmlite
   version: 0.40.0
   manager: conda
@@ -7091,8 +7442,8 @@ package:
   hash:
     md5: 91cda59e66e1e4afe9476f8ef98f5c30
     sha256: ded536a96a00d45a693dbc2971bb688248324dadd129eddda2100e177583d768
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: pandocfilters
   version: 1.5.0
   manager: conda
@@ -7153,6 +7504,18 @@ package:
     sha256: c25e1757e4e90638bb1e778aba3ee5f3c01fae9752e3c3929f9be7d367f6c7f3
   category: dev
   optional: true
+- name: ply
+  version: '3.11'
+  manager: conda
+  platform: osx-64
+  dependencies:
+    python: ''
+  url: https://conda.anaconda.org/conda-forge/noarch/ply-3.11-py_1.tar.bz2
+  hash:
+    md5: 7205635cd71531943440fbfe3b6b5727
+    sha256: 2cd6fae8f9cbc806b7f828f006ae4a83c23fac917cacfd73c37ce322d4324e53
+  category: main
+  optional: false
 - name: prometheus_client
   version: 0.17.0
   manager: conda
@@ -7448,8 +7811,8 @@ package:
   hash:
     md5: 5844808ffab9ebdb694585b50ba02a96
     sha256: 4cd48aba7cd026d17e86886af48d0d2ebc67ed36f87f6534f4b67138f5a5a58f
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: tomlkit
   version: 0.11.8
   manager: conda
@@ -8215,6 +8578,23 @@ package:
     sha256: ef407b88c45171f41eadcbbcfd41243cb137fe7438fc18f4cd08181c522664cf
   category: apps
   optional: true
+- name: sip
+  version: 6.7.9
+  manager: conda
+  platform: osx-64
+  dependencies:
+    libcxx: '>=15.0.7'
+    packaging: ''
+    ply: ''
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    tomli: ''
+  url: https://conda.anaconda.org/conda-forge/osx-64/sip-6.7.9-py39h840bb9f_0.conda
+  hash:
+    md5: 0e67a967dc4215c4f611dc5796bfca70
+    sha256: a2477bd19fef6d7a43de66230f815b65a7404b6f821d1b37897d7f2bd2fa3871
+  category: main
+  optional: false
 - name: terminado
   version: 0.17.1
   manager: conda
@@ -8569,6 +8949,23 @@ package:
     sha256: f8d5b8d4d4785ea6a2bd557fe2561c0e4a2b1b966e158bab38b6af518a3e1b13
   category: apps
   optional: true
+- name: pyqt5-sip
+  version: 12.11.0
+  manager: conda
+  platform: osx-64
+  dependencies:
+    libcxx: '>=14.0.6'
+    packaging: ''
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    sip: ''
+    toml: ''
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyqt5-sip-12.11.0-py39hc100f75_3.conda
+  hash:
+    md5: 5b3ce3c7bb952648f1f64fc18d61cbc3
+    sha256: 74a315bbf923170db695c7cd8b27bd4d8d512826cfaf4ccc2f9a1f09d8d9ec7d
+  category: main
+  optional: false
 - name: pytest
   version: 7.3.1
   manager: conda
@@ -9383,6 +9780,23 @@ package:
     sha256: 354968cf58289350c3ca3ac23b111b308b3370ff8512cffd8d32db6fb5b2595b
   category: core
   optional: true
+- name: pyqt
+  version: 5.15.7
+  manager: conda
+  platform: osx-64
+  dependencies:
+    libcxx: '>=14.0.6'
+    pyqt5-sip: 12.11.0
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    qt-main: '>=5.15.6,<5.16.0a0'
+    sip: '>=6.7.5,<6.8.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyqt-5.15.7-py39h327fbb6_3.conda
+  hash:
+    md5: 3d48b509306121be65ea414f11f28eb4
+    sha256: 8c19f28ac3dea26e961b094e8eb7345f796f678643f29b87c34b9d1bf321f742
+  category: main
+  optional: false
 - name: pyside2
   version: 5.15.8
   manager: conda
@@ -9399,6 +9813,30 @@ package:
   hash:
     md5: ef956758abbe7d6bae55060011095c47
     sha256: 920781ef1ae7e341624d0b6b831fcd7f0cfd464eb191ecb3cd4fcca84d81d315
+  category: main
+  optional: false
+- name: qt-webengine
+  version: 5.15.8
+  manager: conda
+  platform: osx-64
+  dependencies:
+    gst-plugins-base: '>=1.22.0,<1.23.0a0'
+    gstreamer: '>=1.22.0,<1.23.0a0'
+    libcxx: '>=15.0.7'
+    libiconv: '>=1.17,<2.0a0'
+    libjpeg-turbo: '>=2.1.5.1,<3.0a0'
+    libpng: '>=1.6.39,<1.7.0a0'
+    libsqlite: '>=3.41.2,<4.0a0'
+    libwebp: ''
+    libwebp-base: '>=1.3.0,<2.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    nspr: '>=4.35,<5.0a0'
+    nss: '>=3.89,<4.0a0'
+    qt-main: '>=5.15.8,<5.16.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/qt-webengine-5.15.8-h66b1b81_1.conda
+  hash:
+    md5: 183448718729483126b26da6a93fba5d
+    sha256: 49b701f56c66bda56dee75255d67d871cf99e8f3830f75feb946c3dfa02d4e72
   category: main
   optional: false
 - name: scikit-image
@@ -9515,6 +9953,24 @@ package:
     sha256: e1d39044c41541a09ba846c51c2ba315858622dfb4e7eaebcb0823316159fab8
   category: core
   optional: true
+- name: pyqtwebengine
+  version: 5.15.7
+  manager: conda
+  platform: osx-64
+  dependencies:
+    libcxx: '>=14.0.6'
+    pyqt: '>=5.15.7,<5.16.0a0'
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    qt-main: '>=5.15.6,<5.16.0a0'
+    qt-webengine: '>=5.15.4,<5.16.0a0'
+    sip: '>=6.7.5,<6.8.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyqtwebengine-5.15.7-py39hb593388_3.conda
+  hash:
+    md5: 535b82046a987e0cdb672b555d47085e
+    sha256: a00c82ebbc67eeb891517d6525f7ad780eff16015156f985d431fb2bb8274e1b
+  category: main
+  optional: false
 - name: jupyter-dash
   version: 0.4.2
   manager: conda
@@ -9755,17 +10211,17 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    utm: '*'
-    numpy: '>=1.7'
-    vectormath: '>=0.2.0'
-    discretize: '>=0.7.0'
-    scikit-learn: '>=0.22'
-    pandas: '*'
     geoh5py: '*'
-    scipy: '>=1.0.0'
+    utm: '*'
+    pandas: '*'
+    vectormath: '>=0.2.0'
     empymod: '*'
-    pymatsolver: '>=0.1.1'
     properties: '>=0.5.2'
+    scikit-learn: '>=0.22'
+    scipy: '>=1.0.0'
+    discretize: '>=0.7.0'
+    pymatsolver: '>=0.1.1'
+    numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
   hash:
     sha256: ''
@@ -10666,6 +11122,21 @@ package:
     sha256: 6cdc018a024908270205d8512d92f92cf0adaaa5401c2b403757189b138bf56a
   category: main
   optional: false
+- name: libwebp
+  version: 1.3.0
+  manager: conda
+  platform: win-64
+  dependencies:
+    libwebp-base: '>=1.3.0,<2.0a0'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/libwebp-1.3.0-hcfcfb64_0.conda
+  hash:
+    md5: 0c1f2c4b45406631c600ec22ca9523fc
+    sha256: 9100912fc7f8f9772299ca44801c3a44e129e01e9e7acf9210d01aa43e25f19e
+  category: main
+  optional: false
 - name: libxml2
   version: 2.11.4
   manager: conda
@@ -11505,8 +11976,8 @@ package:
   hash:
     md5: 91cda59e66e1e4afe9476f8ef98f5c30
     sha256: ded536a96a00d45a693dbc2971bb688248324dadd129eddda2100e177583d768
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: pandocfilters
   version: 1.5.0
   manager: conda
@@ -11567,6 +12038,18 @@ package:
     sha256: c25e1757e4e90638bb1e778aba3ee5f3c01fae9752e3c3929f9be7d367f6c7f3
   category: dev
   optional: true
+- name: ply
+  version: '3.11'
+  manager: conda
+  platform: win-64
+  dependencies:
+    python: ''
+  url: https://conda.anaconda.org/conda-forge/noarch/ply-3.11-py_1.tar.bz2
+  hash:
+    md5: 7205635cd71531943440fbfe3b6b5727
+    sha256: 2cd6fae8f9cbc806b7f828f006ae4a83c23fac917cacfd73c37ce322d4324e53
+  category: main
+  optional: false
 - name: prometheus_client
   version: 0.17.0
   manager: conda
@@ -11893,8 +12376,8 @@ package:
   hash:
     md5: 5844808ffab9ebdb694585b50ba02a96
     sha256: 4cd48aba7cd026d17e86886af48d0d2ebc67ed36f87f6534f4b67138f5a5a58f
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: tomlkit
   version: 0.11.8
   manager: conda
@@ -12713,6 +13196,25 @@ package:
     sha256: 55208c6b48d68dc9ad2e2cf81ab9dc6b8a1d607e67acf9115bdc7794accc84bc
   category: apps
   optional: true
+- name: sip
+  version: 6.7.9
+  manager: conda
+  platform: win-64
+  dependencies:
+    packaging: ''
+    ply: ''
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    tomli: ''
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/sip-6.7.9-py39h99910a6_0.conda
+  hash:
+    md5: 50ae05f69023036a2736c46af3de7323
+    sha256: a57590448340406fde30f5fd08038b49f1817bc0a1ddeddc3388d35fec44c541
+  category: main
+  optional: false
 - name: tbb
   version: 2021.9.0
   manager: conda
@@ -13113,6 +13615,25 @@ package:
     sha256: d7845c01a9ee5a224cc9242782befed7d12dc6aac1103650ec87917b20f3579e
   category: dev
   optional: true
+- name: pyqt5-sip
+  version: 12.11.0
+  manager: conda
+  platform: win-64
+  dependencies:
+    packaging: ''
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    sip: ''
+    toml: ''
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/pyqt5-sip-12.11.0-py39h99910a6_3.conda
+  hash:
+    md5: 357fa31f4fe2a298a48475d9234146c6
+    sha256: 1f57ec67e8b8d96f28424c0667e5f732e613997686057be24171a7806beeebd2
+  category: main
+  optional: false
 - name: pytest
   version: 7.3.1
   manager: conda
@@ -13870,6 +14391,25 @@ package:
     sha256: 308de77c0d1464e719b5e2e82e367d7e1fa137b523e881aa3bca03dfdc6fde8a
   category: core
   optional: true
+- name: pyqt
+  version: 5.15.7
+  manager: conda
+  platform: win-64
+  dependencies:
+    pyqt5-sip: 12.11.0
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    qt-main: '>=5.15.6,<5.16.0a0'
+    sip: '>=6.7.5,<6.8.0a0'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/pyqt-5.15.7-py39hb77abff_3.conda
+  hash:
+    md5: 9a993f314551fd258ab60ea8a466da19
+    sha256: 98c35a8686d378c854adda00023809b6353f106f9881eb7f12ccfe27618169df
+  category: main
+  optional: false
 - name: pyside2
   version: 5.15.8
   manager: conda
@@ -13907,6 +14447,29 @@ package:
     sha256: 864f3d29e14c80767152a3aa3de3a054f6add9cac2ad8c97e60306c95dc475a8
   category: apps
   optional: true
+- name: qt-webengine
+  version: 5.15.8
+  manager: conda
+  platform: win-64
+  dependencies:
+    gst-plugins-base: '>=1.22.0,<1.23.0a0'
+    gstreamer: '>=1.22.0,<1.23.0a0'
+    libiconv: '>=1.17,<2.0a0'
+    libpng: '>=1.6.39,<1.7.0a0'
+    libsqlite: '>=3.40.0,<4.0a0'
+    libwebp: ''
+    libwebp-base: '>=1.2.4,<2.0a0'
+    libzlib: '>=1.2.13,<1.3.0a0'
+    qt-main: '>=5.15.8,<5.16.0a0'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/qt-webengine-5.15.8-h5b1ea0b_0.tar.bz2
+  hash:
+    md5: df6e5e96e08d7934169367b27c2f4eee
+    sha256: cf1e81025f75c46754649c823754cedd47689df281807ffbbfc6e4bdf5582de8
+  category: main
+  optional: false
 - name: scipy
   version: 1.10.1
   manager: conda
@@ -14143,6 +14706,26 @@ package:
     sha256: f293370dcb860a3643c6348cef18206d3b9667238ec2f9a2e968961477b32797
   category: core
   optional: true
+- name: pyqtwebengine
+  version: 5.15.7
+  manager: conda
+  platform: win-64
+  dependencies:
+    pyqt: '>=5.15.7,<5.16.0a0'
+    python: '>=3.9,<3.10.0a0'
+    python_abi: 3.9.*
+    qt-main: '>=5.15.6,<5.16.0a0'
+    qt-webengine: '>=5.15.4,<5.16.0a0'
+    sip: '>=6.7.5,<6.8.0a0'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/pyqtwebengine-5.15.7-py39h2f4a3f1_3.conda
+  hash:
+    md5: b1684dad9aee68c966da463b7b903dfa
+    sha256: 4c5ea4c7f22e9d22190f3a5e6594bef05960f4af34003e03a8821eded5d6415b
+  category: main
+  optional: false
 - name: scikit-learn
   version: 1.2.2
   manager: conda
@@ -14434,17 +15017,17 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    utm: '*'
-    numpy: '>=1.7'
-    vectormath: '>=0.2.0'
-    discretize: '>=0.7.0'
-    scikit-learn: '>=0.22'
-    pandas: '*'
     geoh5py: '*'
-    scipy: '>=1.0.0'
+    utm: '*'
+    pandas: '*'
+    vectormath: '>=0.2.0'
     empymod: '*'
-    pymatsolver: '>=0.1.1'
     properties: '>=0.5.2'
+    scikit-learn: '>=0.22'
+    scipy: '>=1.0.0'
+    discretize: '>=0.7.0'
+    pymatsolver: '>=0.1.1'
+    numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
   hash:
     sha256: ''
