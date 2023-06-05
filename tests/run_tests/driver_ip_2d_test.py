@@ -103,7 +103,6 @@ def test_ip_2d_run(
             conductivity_model=1e-2,
             s_norm=0.0,
             x_norm=0.0,
-            y_norm=0.0,
             z_norm=0.0,
             gradient_type="components",
             chargeability_channel_bool=True,

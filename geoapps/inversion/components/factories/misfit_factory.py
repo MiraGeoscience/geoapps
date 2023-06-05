@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
-from SimPEG import data, data_misfit, objective_function
+from SimPEG import data, data_misfit, maps, objective_function
 
 from .simpeg_factory import SimPEGFactory
 
@@ -91,7 +91,11 @@ class MisfitFactory(SimPEGFactory):
                 lsim.workers = self.params.distributed_workers
                 if "induced polarization" in self.params.inversion_type:
                     # TODO this should be done in the simulation factory
-                    lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
+                    lsim.sigma = (
+                        maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
+                        * lmap
+                        * self.models.conductivity
+                    )
 
                 local_data = data.Data(survey)
 

@@ -77,11 +77,11 @@ class SimulationFactory(SimPEGFactory):
             return simulation.Simulation3DNodal
 
         if self.factory_type == "induced polarization 2d":
-            from SimPEG.electromagnetics.static.induced_polarization import (
-                simulation_2d,
+            from SimPEG.electromagnetics.static.induced_polarization.simulation import (
+                Simulation2DNodal,
             )
 
-            return simulation_2d.Simulation2DNodal
+            return Simulation2DNodal
 
         if self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import simulation
@@ -184,12 +184,9 @@ class SimulationFactory(SimPEGFactory):
         mesh,
         active_cells=None,
     ):
-        actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
         etamap = maps.InjectActiveCells(mesh, indActive=active_cells, valInactive=0)
         kwargs["etaMap"] = etamap
-        kwargs["sigmaMap"] = actmap
         kwargs["solver"] = self.solver
-        kwargs["max_ram"] = 1
 
         return kwargs
 
