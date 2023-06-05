@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 10d275ca2836902104d0b4f55e01ea7f83aa40e9063e2ffec2deda845d8dee56
-    osx-64: 3de51521e89c9bd9c7f427231d07847bd647ffc2b6618f5749e6a15f16b07d9a
-    linux-64: 370c5955ec127cae7c79b84447bf1f72d29dfcecde641b3389c58dab0c4a92ff
+    win-64: d12baddfb047d13c6d73a5fb1a34a99e150ce4d49290a7020ac3234faf00a6bf
+    osx-64: b0dd89692fcd79961c999f647f443244b295d4c9fcc65ffb89b1bb7dd20aa01b
+    linux-64: b7c496a0a331e8ff2929195caf279e89e13b11391db381cf2832b88418804dc8
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -5525,13 +5525,13 @@ package:
   dependencies:
     h5py: '>=3.2.1,<4.0.0'
     numpy: '!=1.19.4'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-961.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-961.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
   version: 0.9.1.dev5
@@ -5570,16 +5570,16 @@ package:
   platform: linux-64
   dependencies:
     geoh5py: '*'
-    utm: '*'
-    pandas: '*'
-    vectormath: '>=0.2.0'
-    empymod: '*'
     properties: '>=0.5.2'
-    scikit-learn: '>=0.22'
-    scipy: '>=1.0.0'
-    discretize: '>=0.7.0'
     pymatsolver: '>=0.1.1'
+    utm: '*'
+    scipy: '>=1.0.0'
+    vectormath: '>=0.2.0'
+    discretize: '>=0.7.0'
+    pandas: '*'
+    scikit-learn: '>=0.22'
     numpy: '>=1.7'
+    empymod: '*'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
   hash:
     sha256: ''
@@ -10167,13 +10167,13 @@ package:
   dependencies:
     h5py: '>=3.2.1,<4.0.0'
     numpy: '!=1.19.4'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-961.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-961.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
   version: 0.9.1.dev5
@@ -10212,16 +10212,16 @@ package:
   platform: osx-64
   dependencies:
     geoh5py: '*'
-    utm: '*'
-    pandas: '*'
-    vectormath: '>=0.2.0'
-    empymod: '*'
     properties: '>=0.5.2'
-    scikit-learn: '>=0.22'
-    scipy: '>=1.0.0'
-    discretize: '>=0.7.0'
     pymatsolver: '>=0.1.1'
+    utm: '*'
+    scipy: '>=1.0.0'
+    vectormath: '>=0.2.0'
+    discretize: '>=0.7.0'
+    pandas: '*'
+    scikit-learn: '>=0.22'
     numpy: '>=1.7'
+    empymod: '*'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
   hash:
     sha256: ''
@@ -14973,13 +14973,13 @@ package:
   dependencies:
     h5py: '>=3.2.1,<4.0.0'
     numpy: '!=1.19.4'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-961.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-961.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
   version: 0.9.1.dev5
@@ -15018,16 +15018,16 @@ package:
   platform: win-64
   dependencies:
     geoh5py: '*'
-    utm: '*'
-    pandas: '*'
-    vectormath: '>=0.2.0'
-    empymod: '*'
     properties: '>=0.5.2'
-    scikit-learn: '>=0.22'
-    scipy: '>=1.0.0'
-    discretize: '>=0.7.0'
     pymatsolver: '>=0.1.1'
+    utm: '*'
+    scipy: '>=1.0.0'
+    vectormath: '>=0.2.0'
+    discretize: '>=0.7.0'
+    pandas: '*'
+    scikit-learn: '>=0.22'
     numpy: '>=1.7'
+    empymod: '*'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
   hash:
     sha256: ''
