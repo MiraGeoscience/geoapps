@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -25,7 +25,6 @@ def find_value(labels: list, keywords: list, default=None) -> list:
     value = None
     for entry in labels:
         for string in keywords:
-
             if isinstance(entry, list):
                 name = entry[0]
             else:

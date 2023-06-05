@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from time import time
 
 from dash import callback_context, no_update
@@ -38,7 +39,7 @@ class BlockModelCreation(BaseDashApplication):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
+        if ui_json is not None and Path(ui_json.path).is_file():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
@@ -107,7 +108,7 @@ class BlockModelCreation(BaseDashApplication):
         expansion_fact: float,
         live_link: list,
         monitoring_directory: str,
-        trigger: str = None,
+        trigger: str | None = None,
     ) -> list:
         """
         When the export button is pressed, run block model driver to export block model.
@@ -140,9 +141,9 @@ class BlockModelCreation(BaseDashApplication):
             if (
                 (monitoring_directory is not None)
                 and (monitoring_directory != "")
-                and (os.path.exists(os.path.abspath(monitoring_directory)))
+                and Path(monitoring_directory).is_dir()
             ):
-                monitoring_directory = os.path.abspath(monitoring_directory)
+                monitoring_directory = str(Path(monitoring_directory).resolve())
             else:
                 print("Invalid output path.")
                 raise PreventUpdate

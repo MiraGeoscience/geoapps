@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -16,12 +16,14 @@ import re
 from uuid import UUID
 
 import numpy as np
-from discretize import TreeMesh
+from discretize import TensorMesh, TreeMesh
+from geoh5py.objects import DrapeModel
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
 from geoapps.utils.string import string_to_numeric
+from geoapps.utils.surveys import compute_alongline_distance
 
 
 def hex_to_rgb(hex_color):
@@ -120,7 +122,10 @@ def weighted_average(
 
 
 def window_xy(
-    x: np.ndarray, y: np.ndarray, window: dict[str, float], mask: np.array = None
+    x: np.ndarray,
+    y: np.ndarray,
+    window: dict[str, float],
+    mask: np.array | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Window x, y coordinates with window limits built from center and size.
@@ -175,9 +180,8 @@ def window_xy(
 
 
 def downsample_xy(
-    x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray = None
+    x: np.ndarray, y: np.ndarray, distance: float, mask: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-
     """
     Downsample locations to approximate a grid with defined spacing.
 
@@ -213,7 +217,7 @@ def downsample_xy(
 
 
 def downsample_grid(
-    xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray = None
+    xg: np.ndarray, yg: np.ndarray, distance: float, mask: np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     Downsample grid locations to approximate spacing provided by 'distance'.
@@ -255,10 +259,10 @@ def downsample_grid(
 def filter_xy(
     x: np.array,
     y: np.array,
-    distance: float = None,
-    window: dict = None,
-    angle: float = None,
-    mask: np.ndarray = None,
+    distance: float | None = None,
+    window: dict | None = None,
+    angle: float | None = None,
+    mask: np.ndarray | None = None,
 ) -> np.array:
     """
     Window and down-sample locations based on distance and window parameters.
@@ -300,17 +304,14 @@ def filter_xy(
         yr = xy_locs[:, 1].reshape(y.shape)
 
     if window is not None:
-
         if is_rotated:
             mask, _, _ = window_xy(xr, yr, window, mask=mask)
         else:
             mask, _, _ = window_xy(x, y, window, mask=mask)
 
     if distance not in [None, 0]:
-
         is_grid = False
         if x.ndim > 1:
-
             if is_rotated:
                 u_diff = np.unique(np.round(np.diff(xr, axis=1), 8))
                 v_diff = np.unique(np.round(np.diff(yr, axis=0), 8))
@@ -372,6 +373,40 @@ def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
         return xyz_out[:, :2]
     else:
         return xyz_out
+
+
+def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tuple:
+    """
+    Convert a geoh5 drape model to discretize.TensorMesh.
+
+    :param: drape_model: geoh5py.DrapeModel object.
+    :param: return_sorting: If True then return an index array that would
+        re-sort a model in TensorMesh order to DrapeModel order.
+    """
+    prisms = drape_model.prisms
+    layers = drape_model.layers
+    z = np.append(np.unique(layers[:, 2]), prisms[:, 2].max())
+    x = compute_alongline_distance(prisms[:, :2])
+    dx = np.diff(x)
+    end_core = [np.argmin(dx.round(1)), len(dx) - np.argmin(dx[::-1].round(1))]
+    core = dx[end_core[0]]
+    exp_fact = dx[0] / dx[1]
+    cell_width = np.r_[
+        core * exp_fact ** np.arange(end_core[0], 0, -1),
+        core * np.ones(end_core[1] - end_core[0] + 1),
+        core * exp_fact ** np.arange(1, len(dx) - end_core[1] + 1),
+    ]
+    h = [cell_width, np.diff(z)]
+    origin = [-cell_width[: end_core[0]].sum(), layers[:, 2].min()]
+    mesh = TensorMesh(h, origin)
+
+    if return_sorting:
+        sorting = np.arange(mesh.n_cells)
+        sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
+        sorting = sorting[::-1].T.flatten()
+        return (mesh, sorting)
+    else:
+        return mesh
 
 
 def octree_2_treemesh(mesh):
@@ -439,6 +474,8 @@ def get_contours(
         if type(fixed_contours) is str:
             fixed_contours = re.split(",", fixed_contours.replace(" ", ""))
             fixed_contours = [float(c) for c in fixed_contours]
+        elif type(fixed_contours) is float:
+            fixed_contours = [fixed_contours]
     else:
         fixed_contours = []
 

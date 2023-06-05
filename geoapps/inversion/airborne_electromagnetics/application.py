@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,13 +10,22 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
+from pathlib import Path
 
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import BlockModel, Curve, Octree, Points, Surface
+from geoh5py.objects import (
+    AirborneTEMReceivers,
+    BlockModel,
+    Curve,
+    Octree,
+    Points,
+    Surface,
+)
 from geoh5py.workspace import Workspace
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
@@ -49,7 +58,6 @@ class ChannelOptions:
     """
 
     def __init__(self, key, description, **kwargs):
-
         self._active = Checkbox(
             value=False,
             indent=True,
@@ -154,7 +162,6 @@ class SensorOptions(ObjectDataSelection):
 
     @property
     def options(self):
-
         if getattr(self, "_options", None) is None:
             self._options = widgets.RadioButtons(
                 options=[
@@ -354,7 +361,6 @@ class ModelOptions(ObjectDataSelection):
         )
 
     def update_panel(self, _):
-
         if self._options.value == "Model":
             self._main.children[1].children = [self._options, self.selection_widget]
             self._main.children[1].children[1].layout.visibility = "visible"
@@ -651,7 +657,6 @@ def plot_convergence_curve(h5file):
     )
 
     def plot_curve(objects):
-
         inversion = workspace.get_entity(objects)[0]
         result = None
         if getattr(inversion, "comments", None) is not None:
@@ -695,9 +700,9 @@ def inversion_defaults():
 
 
 app_initializer = {
-    "geoh5": "../../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-    "data": ["{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"],
+    "data": "{2d165431-63bd-4e07-9db8-5b44acf8c9bf}",
     "resolution": 50,
     "window_width": 1500,
     "window_height": 1500,
@@ -709,17 +714,16 @@ app_initializer = {
         "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
     },
     "lines": {
-        "data": "{c004eda2-70f6-4181-9a55-e7b2e1b25da8}",
-        "lines": [6072400.0, 6072600.0, 6072800.0, 6073000.0, 6073200.0],
+        "data": "{b6927372-22d2-4ca1-9c23-372411ddc772}",
+        "lines": [8, 9, 10, 11, 12],
     },
     "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
 }
 
 
 class InversionApp(PlotSelection2D):
-
-    _select_multiple = True
-    _add_groups = True
+    _select_multiple = False
+    _add_groups = "only"
     _sensor = None
     _lines = None
     _topography = None
@@ -728,6 +732,9 @@ class InversionApp(PlotSelection2D):
     def __init__(self, **kwargs):
         self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
+        self._uncertainties = Dropdown(
+            description="Uncertainties: ",
+        )
         self.em_system_specs = geophysical_systems.parameters()
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -736,7 +743,7 @@ class InversionApp(PlotSelection2D):
         )
         self._starting_channel = (IntText(value=None, description="Starting Channel"),)
         self._system = Dropdown(
-            options=list(self.em_system_specs),
+            options=["Airborne TEM Survey"] + list(self.em_system_specs),
             description="Survey Type: ",
         )
         self._write = Button(
@@ -803,7 +810,7 @@ class InversionApp(PlotSelection2D):
                     self.project_panel,
                     HBox(
                         [
-                            self.data_panel,
+                            VBox([self.objects, self.data, self._uncertainties]),
                             VBox(
                                 [
                                     VBox(
@@ -891,7 +898,6 @@ class InversionApp(PlotSelection2D):
     @property
     def topography(self):
         if getattr(self, "_topography", None) is None:
-
             self._topography = TopographyOptions(
                 workspace=self._workspace, **self.defaults["topography"]
             )
@@ -912,7 +918,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -935,7 +943,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + 'python -m geoapps.inversion.airborne_electromagnetics.driver "'
-            + f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
+            + f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
         )
         self.trigger.button_style = ""
 
@@ -943,30 +951,15 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
+
         self.sensor.offset.value = ", ".join(
             [
                 str(offset)
                 for offset in self.em_system_specs[self.system.value]["bird_offset"]
             ]
         )
-        uncertainties = self.em_system_specs[self.system.value]["uncertainty"]
 
         # if start_channel is None:
-        start_channel = self.em_system_specs[self.system.value]["channel_start_index"]
-        if self.em_system_specs[self.system.value]["type"] == "time":
-            labels = ["Time (s)"] * len(
-                self.em_system_specs[self.system.value]["channels"]
-            )
-        else:
-            labels = ["Frequency (Hz)"] * len(
-                self.em_system_specs[self.system.value]["channels"]
-            )
-
-        system_specs = {}
-        for key, time in self.em_system_specs[self.system.value]["channels"].items():
-            system_specs[key] = f"{time:.5e}"
-
         self.inversion_parameters.reference_model.options.options = [
             "Best-fitting halfspace",
             "Model",
@@ -1006,7 +999,6 @@ class InversionApp(PlotSelection2D):
         )
 
         def channel_setter(caller):
-
             channel = caller["owner"]
             data_widget = self.data_channel_choices.data_channel_options[channel.header]
 
@@ -1027,30 +1019,51 @@ class InversionApp(PlotSelection2D):
                 self.refresh.value = True
 
         data_channel_options = {}
-        for ind, (key, channel) in enumerate(system_specs.items()):
-            if ind + 1 < start_channel:
-                continue
-
-            if len(tx_offsets) > 1:
-                offsets = tx_offsets[ind]
+        if self.system.value != "Airborne TEM Survey":
+            if self.em_system_specs[self.system.value]["type"] == "time":
+                labels = ["Time (s)"] * len(
+                    self.em_system_specs[self.system.value]["channels"]
+                )
             else:
-                offsets = tx_offsets[0]
-
-            try:
-                channel_options = ChannelOptions(
-                    key,
-                    labels[ind],
-                    uncertainties=", ".join(
-                        [str(uncert) for uncert in uncertainties[ind][:2]]
-                    ),
-                    offsets=", ".join([str(offset) for offset in offsets]),
+                labels = ["Frequency (Hz)"] * len(
+                    self.em_system_specs[self.system.value]["channels"]
                 )
 
-            except IndexError:
-                continue
-            channel_options.channel_selection.observe(channel_setter, names="value")
-            data_channel_options[key] = channel_options.main
-            data_channel_options[key].children[1].value = channel
+            start_channel = self.em_system_specs[self.system.value][
+                "channel_start_index"
+            ]
+            tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
+            uncertainties = self.em_system_specs[self.system.value]["uncertainty"]
+            system_specs = {}
+            for key, time in self.em_system_specs[self.system.value][
+                "channels"
+            ].items():
+                system_specs[key] = f"{time:.5e}"
+
+            for ind, (key, channel) in enumerate(system_specs.items()):
+                if ind + 1 < start_channel:
+                    continue
+
+                if len(tx_offsets) > 1:
+                    offsets = tx_offsets[ind]
+                else:
+                    offsets = tx_offsets[0]
+
+                try:
+                    channel_options = ChannelOptions(
+                        key,
+                        labels[ind],
+                        uncertainties=", ".join(
+                            [str(uncert) for uncert in uncertainties[ind][:2]]
+                        ),
+                        offsets=", ".join([str(offset) for offset in offsets]),
+                    )
+
+                except IndexError:
+                    continue
+                channel_options.channel_selection.observe(channel_setter, names="value")
+                data_channel_options[key] = channel_options.main
+                data_channel_options[key].children[1].value = channel
 
         if len(data_channel_options) > 0:
             self.data_channel_choices.options = list(data_channel_options)
@@ -1060,6 +1073,10 @@ class InversionApp(PlotSelection2D):
                 self.data_channel_choices,
                 data_channel_options[self.data_channel_choices.value],
             ]
+        else:
+            self.data_channel_choices.options = []
+            self.data_channel_choices.data_channel_options = None
+            self.data_channel_panel.children = [self.data_channel_choices]
 
         self.update_component_panel(None)
 
@@ -1078,7 +1095,6 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
     def object_observer(self, _):
-
         self.resolution.indices = None
         entity = self._workspace.get_entity(self.objects.value)[0]
         if entity is None:
@@ -1089,18 +1105,20 @@ class InversionApp(PlotSelection2D):
         self.lines.update_data_list(None)
         self.lines.update_line_list(None)
 
-        for aem_system, specs in self.em_system_specs.items():
-            if any(
-                [
-                    specs["flag"] in channel
-                    for channel in self.data.uid_name_map.values()
-                ]
-            ):
-                self.system.value = aem_system
+        if isinstance(entity, AirborneTEMReceivers):
+            self.system.value = "Airborne TEM Survey"
+        else:
+            for aem_system, specs in self.em_system_specs.items():
+                if aem_system == "Airborne TEM Survey":
+                    continue
+
+                if any([specs["flag"] in data.name for data in entity.children]):
+                    self.system.value = aem_system
+                    break
 
         self.system_observer(None)
 
-        if hasattr(self.data_channel_choices, "data_channel_options"):
+        if getattr(self.data_channel_choices, "data_channel_options", None) is not None:
             for (
                 key,
                 data_widget,
@@ -1113,7 +1131,6 @@ class InversionApp(PlotSelection2D):
         self.trigger.button_style = "danger"
 
     def update_component_panel(self, _):
-
         obj, data_list = self.get_selected_entities()
 
         if obj is None:
@@ -1122,7 +1139,9 @@ class InversionApp(PlotSelection2D):
         options = [
             [data.name, data.uid] for data in data_list if isinstance(data, Data)
         ]
-        if hasattr(self.data_channel_choices, "data_channel_options"):
+
+        self._uncertainties.options = self.data.options
+        if getattr(self.data_channel_choices, "data_channel_options", None) is not None:
             for (
                 key,
                 data_widget,
@@ -1131,9 +1150,9 @@ class InversionApp(PlotSelection2D):
                 data_widget.children[2].value = find_value(options, [key])
 
     def data_channel_choices_observer(self, _):
-        if hasattr(
-            self.data_channel_choices, "data_channel_options"
-        ) and self.data_channel_choices.value in (
+        if getattr(
+            self.data_channel_choices, "data_channel_options", None
+        ) is not None and self.data_channel_choices.value in (
             self.data_channel_choices.data_channel_options
         ):
             data_widget = self.data_channel_choices.data_channel_options[
@@ -1167,26 +1186,20 @@ class InversionApp(PlotSelection2D):
         input_dict = {
             "out_group": self.ga_group_name.value,
             "mesh": "Mesh",
+            "system": self.system.value,
+            "lines": {str(self.lines.data.value): [self.lines.lines.value]},
+            "mesh 1D": [
+                self.mesh_1D.hz_min.value,
+                self.mesh_1D.hz_expansion.value,
+                self.mesh_1D.n_cells.value,
+            ],
+            "uncertainty_mode": self.inversion_parameters.uncert_mode.value,
+            "chi_factor": self.inversion_parameters.chi_factor.value,
+            "max_iterations": self.inversion_parameters.max_iterations.value,
+            "max_cg_iterations": self.inversion_parameters.max_cg_iterations.value,
+            "n_cpu": self.inversion_parameters.n_cpu.value,
+            "max_ram": self.inversion_parameters.max_ram.value,
         }
-        input_dict["system"] = self.system.value
-        input_dict["lines"] = {
-            str(self.lines.data.value): [str(line) for line in self.lines.lines.value]
-        }
-
-        input_dict["mesh 1D"] = [
-            self.mesh_1D.hz_min.value,
-            self.mesh_1D.hz_expansion.value,
-            self.mesh_1D.n_cells.value,
-        ]
-        input_dict["uncertainty_mode"] = self.inversion_parameters.uncert_mode.value
-
-        input_dict["chi_factor"] = self.inversion_parameters.chi_factor.value
-        input_dict["max_iterations"] = self.inversion_parameters.max_iterations.value
-        input_dict[
-            "max_cg_iterations"
-        ] = self.inversion_parameters.max_cg_iterations.value
-        input_dict["n_cpu"] = self.inversion_parameters.n_cpu.value
-        input_dict["max_ram"] = self.inversion_parameters.max_ram.value
 
         if self.inversion_parameters.beta_start_options.value == "value":
             input_dict["initial_beta"] = self.inversion_parameters.beta_start.value
@@ -1273,11 +1286,9 @@ class InversionApp(PlotSelection2D):
                 self.inversion_parameters.upper_bound.value
             )
 
-        input_dict["data"] = {}
-        input_dict["data"]["type"] = "GA_object"
-        input_dict["data"]["name"] = str(self.objects.value)
+        input_dict["data"] = {"type": "GA_object", "name": str(self.objects.value)}
 
-        if hasattr(self.data_channel_choices, "data_channel_options"):
+        if getattr(self.data_channel_choices, "data_channel_options", None) is not None:
             channel_param = {}
 
             for (
@@ -1299,6 +1310,8 @@ class InversionApp(PlotSelection2D):
                 )
 
             input_dict["data"]["channels"] = channel_param
+        else:
+            input_dict["data"]["channels"] = str(self.data.value)
 
         if self.sensor.options.value == "sensor location + (dx, dy, dz)":
             input_dict["receivers_offset"] = {
@@ -1338,17 +1351,49 @@ class InversionApp(PlotSelection2D):
             self.trigger.button_style = "danger"
             return
 
+        if (
+            self.system.value == "Airborne TEM Survey"
+            and self._uncertainties.value is None
+        ):
+            print("TEM survey requires an Uncertainty group.")
+            return
+
         with Workspace(
-            os.path.join(
-                self.export_directory.selected_path,
-                self.ga_group_name.value + ".geoh5",
+            str(
+                Path(self.export_directory.selected_path)
+                / (self.ga_group_name.value + ".geoh5")
             )
         ) as new_workspace:
-
-            obj, data = self.get_selected_entities()
+            obj, _ = self.get_selected_entities()
             new_obj = obj.copy(parent=new_workspace, copy_children=False)
-            for d in data:
-                d.copy(parent=new_obj)
+
+            prop_group = obj.find_or_create_property_group(
+                name=self.data.uid_name_map[self.data.value]
+            )
+            data_list = []
+            for prop in prop_group.properties:
+                data = self.workspace.get_entity(prop)[0]
+                data_list.append(data.copy(parent=new_obj))
+
+            new_group = new_obj.add_data_to_group(data_list, prop_group.name)
+
+            if isinstance(input_dict["data"]["channels"], str):
+                input_dict["data"]["channels"] = str(new_group.uid)
+
+            if self._uncertainties.value is not None:
+                prop_group = obj.find_or_create_property_group(
+                    name=self.data.uid_name_map[self._uncertainties.value]
+                )
+                data_list = []
+                for prop in prop_group.properties:
+                    data = self.workspace.get_entity(prop)[0]
+                    data_list.append(data.copy(parent=new_obj))
+
+                new_group = new_obj.add_data_to_group(data_list, prop_group.name)
+                input_dict["uncertainty_channel"] = str(new_group.uid)
+            # if self.system.value == "Airborne TEM Survey":
+            #     prop_group = new_obj.add_data_to_group(data_list, )
+            #
 
             _, data = self.sensor.get_selected_entities()
             for d in data:
@@ -1371,16 +1416,21 @@ class InversionApp(PlotSelection2D):
                 obj, data = elem.get_selected_entities()
 
                 if obj is not None:
-                    new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                    new_obj = new_workspace.get_entity(obj.uid)[0]
+                    if new_obj is None:
+                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
+
                     for d in data:
                         if d is None:
                             continue
                         d.copy(parent=new_obj)
 
-        input_dict["workspace"] = os.path.abspath(new_workspace.h5file)
-        input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)
+        input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
+            Path(new_workspace.h5file).resolve()
+        )
 
-        file = f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
+        file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
+
         with open(file, "w", encoding="utf8") as f:
             json.dump(input_dict, f, indent=4)
 

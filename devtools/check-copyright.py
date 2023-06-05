@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 # This file is part of geoapps.
 #
 # geoapps is distributed under the terms and conditions of the MIT License
 # (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
 
 import re
 import sys
@@ -23,7 +25,7 @@ if __name__ == "__main__":
             has_dated_copyright = False
             for line in file:
                 count += 1
-                if count >= max_lines:
+                if count >= max_lines and not f.endswith("README.rst"):
                     break
                 if re.search(copyright_re, line):
                     has_dated_copyright = True

@@ -13,11 +13,11 @@ set project_dir=%~dp0..
 cd %project_dir%
 call get_conda_exec.bat
 if !errorlevel! neq 0 (
+  pause
   exit /B !errorlevel!
 )
 
-call !MY_CONDA_EXE! activate
-python devtools\run_conda_lock.py
+call !MY_CONDA_EXE! activate && python devtools\run_conda_lock.py
 
 pause
 cmd /k

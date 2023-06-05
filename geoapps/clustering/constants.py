@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,14 +7,16 @@
 
 from __future__ import annotations
 
-import os
 from copy import deepcopy
 
 import plotly.express as px
 
+import geoapps
+from geoapps import assets_path
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
 
 defaults = {
+    "version": geoapps.__version__,
     "title": "Clustering",
     "n_clusters": None,
     "ga_group_name": None,
@@ -25,7 +27,6 @@ defaults = {
     "color_pickers": None,
     "plot_kmeans": None,
     "run_command": "geoapps.clustering.application",
-    "run_command_boolean": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -35,6 +36,7 @@ defaults = {
 default_ui_json = deepcopy(base_default_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Clustering",
         "color_maps": {
             "choiceList": px.colors.named_colorscales() + ["kmeans"],
@@ -93,8 +95,8 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
-    "monitoring_directory": os.path.abspath("../../assets/Temp"),
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
     "channel": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",

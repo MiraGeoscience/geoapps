@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -12,7 +12,11 @@ from copy import deepcopy
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
+from geoapps import assets_path
+
 defaults = {
+    "version": geoapps.__version__,
     "title": "Edge Detection",
     "geoh5": None,
     "objects": None,
@@ -21,8 +25,8 @@ defaults = {
     "window_azimuth": None,
     "export_as": "",
     "ga_group_name": None,
+    "generate_sweep": False,
     "run_command": "geoapps.edge_detection.driver",
-    "run_command_boolean": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -31,15 +35,10 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Edge Detection",
         "geoh5": "",
         "run_command": "geoapps.edge_detection.driver",
-        "run_command_boolean": {
-            "value": False,
-            "label": "Run python module ",
-            "tooltip": "Warning: launches process to run python model on save",
-            "main": True,
-        },
         "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
@@ -157,6 +156,12 @@ default_ui_json.update(
             "value": "",
             "group": "Python run preferences",
         },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
+        },
         "resolution": 50.0,
         "colorbar": False,
         "zoom_extent": False,
@@ -167,7 +172,7 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
     "sigma": 0.5,

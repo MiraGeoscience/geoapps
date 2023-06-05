@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,13 +11,14 @@ import sys
 import uuid
 import warnings
 from copy import deepcopy
-from os import path
+from pathlib import Path
 from time import time
 
 import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -104,7 +105,7 @@ class PeakFinder(ObjectDataSelection):
         self.figure = None
         self.plot_result = plot_result
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
@@ -647,7 +648,9 @@ class PeakFinder(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.lines.workspace = workspace
@@ -715,26 +718,27 @@ class PeakFinder(ObjectDataSelection):
 
     def create_default_groups(self, _):
         if self.group_auto.value:
-            obj = self.workspace.get_entity(self.objects.value)[0]
-            if obj is None:
-                return
+            with fetch_active_workspace(self.workspace) as workspace:
+                obj = workspace.get_entity(self.objects.value)[0]
+                if obj is None:
+                    return
 
-            group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
-            if any(group):
-                channel_groups = default_groups_from_property_group(group[0])
-                self._channel_groups = channel_groups
-                self.pause_refresh = True
+                group = [pg for pg in obj.property_groups if pg.uid == self.data.value]
+                if any(group):
+                    channel_groups = default_groups_from_property_group(group[0])
+                    self._channel_groups = channel_groups
+                    self.pause_refresh = True
 
-                group_list = []
-                self.update_data_list(None)
-                self.pause_refresh = True
-                for pg, params in self._channel_groups.items():
-                    group_list += [self.add_group_widget(pg, params)]
+                    group_list = []
+                    self.update_data_list(None)
+                    self.pause_refresh = True
+                    for pg, params in self._channel_groups.items():
+                        group_list += [self.add_group_widget(pg, params)]
 
-                self.pause_refresh = False
-                self.groups_panel.children = group_list
+                    self.pause_refresh = False
+                    self.groups_panel.children = group_list
 
-                self.set_data(None)
+                    self.set_data(None)
 
         self.group_auto.value = False
         self._group_auto.button_style = "success"
@@ -768,15 +772,8 @@ class PeakFinder(ObjectDataSelection):
         """
         line_data = self.workspace.get_entity(self.lines.data.value)[0]
 
-        if isinstance(line_data, ReferencedData):
-            line_id = [
-                key
-                for key, value in line_data.value_map.map.items()
-                if value == line_id
-            ]
-
-            if line_id:
-                line_id = line_id[0]
+        if not isinstance(line_data, ReferencedData):
+            return
 
         indices = np.where(np.asarray(line_data.values) == line_id)[0]
 
@@ -885,7 +882,7 @@ class PeakFinder(ObjectDataSelection):
             child.children[0].options = self.data.options
 
         for aem_system, specs in self.em_system_specs.items():
-            if any(
+            if specs["flag"] is not None and any(
                 [specs["flag"] in channel for channel in self._survey.get_data_list()]
             ):
                 if aem_system in self.system.options:
@@ -960,7 +957,6 @@ class PeakFinder(ObjectDataSelection):
         dwn_markers_x, dwn_markers_y = [], []
 
         for cc, channel in enumerate(self.active_channels.values()):
-
             if "values" not in channel:
                 continue
 
@@ -1134,7 +1130,6 @@ class PeakFinder(ObjectDataSelection):
             and hasattr(self.lines, "profile")
             and self.tem_checkbox.value
         ):
-
             if self.decay_figure is None:
                 self.decay_figure = plt.figure(figsize=(8, 8))
 
@@ -1302,13 +1297,14 @@ class PeakFinder(ObjectDataSelection):
                 ui_json[name]["group"] = f"Group {label}"
                 param_dict[name] = group[member]
 
+        p_g_uid = {p_g.uid: p_g.name for p_g in param_dict["objects"].property_groups}
+
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
 
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
-
             for key, value in param_dict.items():
                 if isinstance(value, ObjectBase):
                     if new_workspace.get_entity(value.uid)[0] is None:
@@ -1320,6 +1316,11 @@ class PeakFinder(ObjectDataSelection):
                         ]
                         if line_field:
                             param_dict["line_field"] = line_field[0]
+
+                elif isinstance(value, uuid.UUID) and value in p_g_uid:
+                    param_dict[key] = param_dict[
+                        "objects"
+                    ].find_or_create_property_group(name=p_g_uid[value])
 
             param_dict["geoh5"] = new_workspace
             if self.live_link.value:

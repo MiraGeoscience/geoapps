@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -30,6 +30,7 @@ class MisfitFactory(SimPEGFactory):
         self.factory_type = self.params.inversion_type
         self.models = models
         self.sorting = None
+        self.ordering = None
 
     def concrete_object(self):
         return objective_function.ComboObjectiveFunction
@@ -43,7 +44,7 @@ class MisfitFactory(SimPEGFactory):
             mesh=mesh,
             active_cells=active_cells,
         )
-        return global_misfit, self.sorting
+        return global_misfit, self.sorting, self.ordering
 
     def assemble_arguments(  # pylint: disable=arguments-differ
         self,
@@ -52,92 +53,45 @@ class MisfitFactory(SimPEGFactory):
         mesh,
         active_cells,
     ):
+        # Base slice over frequencies
         if self.factory_type in ["magnetotellurics", "tipper"]:
-            return self._naturalsource_arguments(
-                tiles=tiles,
-                inversion_data=inversion_data,
-                mesh=mesh,
-                active_cells=active_cells,
-            )
+            channels = np.unique([list(v) for v in inversion_data.observed.values()])
         else:
-            return self._generic_arguments(
-                tiles=tiles,
-                inversion_data=inversion_data,
-                mesh=mesh,
-                active_cells=active_cells,
-            )
+            channels = [None]
 
-    def _generic_arguments(
-        self,
-        tiles=None,
-        inversion_data=None,
-        mesh=None,
-        active_cells=None,
-    ):
-        local_misfits, self.sorting, = (
-            [],
-            [],
-        )
-
+        local_misfits = []
+        self.sorting = []
+        self.ordering = []
         tile_num = 0
+        data_count = 0
         for local_index in tiles:
-            survey, local_index = inversion_data.survey(mesh, active_cells, local_index)
-
-            lsim, lmap = inversion_data.simulation(mesh, active_cells, survey, tile_num)
-
-            # TODO Parse workers to simulations
-            lsim.workers = self.params.distributed_workers
-            if self.params.inversion_type == "induced polarization":
-                # TODO this should be done in the simulation factory
-                lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
-
-            if self.params.forward_only:
-                lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
-            else:
-                ldat = (
-                    data.Data(survey, dobs=survey.dobs, standard_deviation=survey.std),
+            for count, channel in enumerate(channels):
+                survey, local_index, ordering = inversion_data.create_survey(
+                    mesh=mesh, local_index=local_index, channel=channel
                 )
-                lmisfit = data_misfit.L2DataMisfit(
-                    data=ldat[0],
-                    simulation=lsim,
-                    model_map=lmap,
-                )
-                lmisfit.W = 1 / survey.std
 
-            local_misfits.append(lmisfit)
-            self.sorting.append(local_index)
-            tile_num += 1
+                if count == 0:
+                    if self.factory_type in ["tdem"]:
+                        self.sorting.append(
+                            np.arange(
+                                data_count,
+                                data_count + len(local_index),
+                                dtype=int,
+                            )
+                        )
+                        data_count += len(local_index)
+                    else:
+                        self.sorting.append(local_index)
 
-        return [local_misfits]
-
-    def _naturalsource_arguments(
-        self,
-        tiles=None,
-        inversion_data=None,
-        mesh=None,
-        active_cells=None,
-    ):
-
-        local_misfits, self.sorting, = (
-            [],
-            [],
-        )
-        frequencies = np.unique([list(v) for v in inversion_data.observed.values()])
-        tile_num = 0
-
-        for local_index in tiles:
-            self.sorting.append(local_index)
-            for freq in frequencies:
-
-                survey, local_index = inversion_data.survey(
-                    mesh, active_cells, local_index, channel=freq
-                )
                 lsim, lmap = inversion_data.simulation(
                     mesh, active_cells, survey, tile_num
                 )
 
                 # TODO Parse workers to simulations
                 lsim.workers = self.params.distributed_workers
+                if "induced polarization" in self.params.inversion_type:
+                    # TODO this should be done in the simulation factory
+                    lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
 
                 if self.params.forward_only:
                     lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
@@ -155,6 +109,7 @@ class MisfitFactory(SimPEGFactory):
                     lmisfit.W = 1 / survey.std
 
                 local_misfits.append(lmisfit)
+                self.ordering.append(ordering)
                 tile_num += 1
 
         return [local_misfits]

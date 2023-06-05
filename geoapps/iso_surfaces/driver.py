@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,24 +8,32 @@
 
 from __future__ import annotations
 
-import os
 import sys
+import warnings
+from pathlib import Path
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, ObjectBase, Surface
-from geoh5py.ui_json import InputFile
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
+from tqdm import tqdm
 
+from geoapps.driver_base.driver import BaseDriver
+from geoapps.iso_surfaces.constants import validations
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.shared_utils.utils import get_contours, rotate_xyz, weighted_average
 from geoapps.utils.formatters import string_name
 
 
-class IsoSurfacesDriver:
+class IsoSurfacesDriver(BaseDriver):
+    _params_class = IsoSurfacesParams
+    _validations = validations
+
     def __init__(self, params: IsoSurfacesParams):
+        super().__init__(params)
         self.params: IsoSurfacesParams = params
 
     def run(self):
@@ -41,32 +49,35 @@ class IsoSurfacesDriver:
 
         if len(levels) < 1:
             return
-        print("Starting the isosurface creation.")
-        surfaces = self.iso_surface(
-            self.params.objects,
-            self.params.data.values,
-            levels,
-            resolution=self.params.resolution,
-            max_distance=self.params.max_distance,
-        )
 
-        container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
-        result = []
-        for surface, level in zip(surfaces, levels):
-            if len(surface[0]) > 0 and len(surface[1]) > 0:
-                result += [
-                    Surface.create(
-                        self.params.geoh5,
-                        name=string_name(self.params.export_as + f"_{level:.2e}"),
-                        vertices=surface[0],
-                        cells=surface[1],
-                        parent=container,
-                    )
-                ]
-        if self.params.monitoring_directory is not None and os.path.exists(
-            self.params.monitoring_directory
-        ):
-            monitored_directory_copy(self.params.monitoring_directory, container)
+        with fetch_active_workspace(self.params.geoh5, mode="r+"):
+            print("Starting the isosurface creation.")
+            surfaces = self.iso_surface(
+                self.params.objects,
+                self.params.data.values,
+                levels,
+                resolution=self.params.resolution,
+                max_distance=self.params.max_distance,
+            )
+
+            container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
+            result = []
+            for surface, level in zip(surfaces, levels):
+                if len(surface[0]) > 0 and len(surface[1]) > 0:
+                    result += [
+                        Surface.create(
+                            self.params.geoh5,
+                            name=string_name(self.params.export_as + f"_{level:.2e}"),
+                            vertices=surface[0],
+                            cells=surface[1],
+                            parent=container,
+                        )
+                    ]
+            if (
+                self.params.monitoring_directory is not None
+                and Path(self.params.monitoring_directory).is_dir()
+            ):
+                monitored_directory_copy(self.params.monitoring_directory, container)
 
         print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
 
@@ -129,6 +140,7 @@ class IsoSurfacesDriver:
                 grid.append(cell_delimiters[:-1] + dx / 2)
 
         else:
+            print("Interpolating the model onto a regular grid...")
             grid = []
             for i in range(3):
                 grid += [
@@ -150,9 +162,15 @@ class IsoSurfacesDriver:
             )
             values = values[0].reshape(x.shape)
 
+        lower, upper = np.nanmin(values), np.nanmax(values)
         surfaces = []
-        for level in levels:
+        print("Running marching cubes on levels.")
+        skip = []
+        for level in tqdm(levels):
             try:
+                if level < lower or level > upper:
+                    skip += [level]
+                    continue
                 verts, faces, _, _ = marching_cubes(values, level=level)
 
                 # Remove all vertices and cells with nan
@@ -189,15 +207,11 @@ class IsoSurfacesDriver:
 
             surfaces += [[vertices, faces]]
 
+        if any(skip):
+            warnings.warn(f"The following levels were out of bound and ignored: {skip}")
         return surfaces
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
     file = sys.argv[1]
-    params_class = IsoSurfacesParams(InputFile.read_ui_json(file))
-    driver = IsoSurfacesDriver(params_class)
-    print("Loaded. Running iso surface creation . . .")
-    with params_class.geoh5.open(mode="r+"):
-        driver.run()
-    print("Done.")
+    IsoSurfacesDriver.start(file)

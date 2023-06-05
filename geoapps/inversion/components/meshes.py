@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,20 +10,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-from geoh5py.objects import PotentialElectrode
+from geoh5py.objects import DrapeModel, Octree
 
-from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.octree_creation.params import OctreeParams
-from geoapps.shared_utils.utils import octree_2_treemesh
+from geoapps.shared_utils.utils import drape_2_tensor, octree_2_treemesh
 
 if TYPE_CHECKING:
-    from discretize import TreeMesh
-    from geoh5py.objects import Octree
     from geoh5py.workspace import Workspace
 
-    from geoapps.driver_base.params import BaseParams
-
     from . import InversionData, InversionTopography
+
+from discretize import TensorMesh, TreeMesh
 
 
 class InversionMesh:
@@ -37,7 +34,7 @@ class InversionMesh:
         Number of cells in the mesh.
     rotation :
         Rotation of original octree mesh.
-    octree_permutation:
+    permutation:
         Permutation vector to restore cell centers or model values to
         origin octree mesh order.
 
@@ -47,7 +44,7 @@ class InversionMesh:
         self,
         workspace: Workspace,
         params: OctreeParams,
-        inversion_data: InversionData,
+        inversion_data: InversionData | None,
         inversion_topography: InversionTopography,
     ) -> None:
         """
@@ -60,11 +57,11 @@ class InversionMesh:
         self.params = params
         self.inversion_data = inversion_data
         self.inversion_topography = inversion_topography
-        self.mesh: TreeMesh = None
-        self.n_cells: int = None
-        self.rotation: dict[str, float] = None
-        self.octree_permutation: np.ndarray = None
-        self.entity: Octree = None
+        self._mesh: TreeMesh | TensorMesh | None = None
+        self.n_cells: int | None = None
+        self.rotation: dict[str, float] | None = None
+        self._permutation: np.ndarray | None = None
+        self.entity: Octree | DrapeModel | None = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -76,73 +73,49 @@ class InversionMesh:
         original the octree mesh type.
         """
 
-        if self.params.mesh is not None:
+        if self.params.mesh is None:
+            raise ValueError("Must pass pre-constructed mesh.")
+        else:
             self.entity = self.params.mesh.copy(
                 parent=self.params.ga_group, copy_children=False
             )
-        else:
-            self.build_from_params()
+            self.params.mesh = self.entity
+
+        if (
+            getattr(self.entity, "rotation", None)
+            and self.inversion_data is not None
+            and self.inversion_data.has_tensor
+        ):
+            msg = "Cannot use tensor components with rotated mesh."
+            raise NotImplementedError(msg)
 
         self.uid = self.entity.uid
         self.n_cells = self.entity.n_cells
 
-        if self.entity.rotation:
-            origin = self.entity.origin.tolist()
-            angle = self.entity.rotation[0]
-            self.rotation = {"origin": origin, "angle": angle}
+    @property
+    def mesh(self) -> TreeMesh | TensorMesh:
+        """"""
+        if self._mesh is None:
+            if isinstance(self.entity, Octree):
+                if self.entity.rotation:
+                    origin = self.entity.origin.tolist()
+                    angle = self.entity.rotation[0]
+                    self.rotation = {"origin": origin, "angle": angle}
 
-        self.mesh = octree_2_treemesh(self.entity)
-        self.octree_permutation = getattr(self.mesh, "_ubc_order")
+                self._mesh = octree_2_treemesh(self.entity)
+                self._permutation = getattr(self.mesh, "_ubc_order")
 
-    def collect_mesh_params(self, params: BaseParams) -> OctreeParams:
-        """Collect mesh params from inversion params set and return octree Params object."""
+            if isinstance(self.entity, DrapeModel) and self._mesh is None:
+                self._mesh, self._permutation = drape_2_tensor(
+                    self.entity, return_sorting=True
+                )
 
-        mesh_param_names = [
-            "u_cell_size",
-            "v_cell_size",
-            "w_cell_size",
-            "depth_core",
-            "horizontal_padding",
-            "vertical_padding",
-            "geoh5",
-        ]
+        return self._mesh
 
-        mesh_params_dict = params.to_dict(ui_json_format=False)
-        for k in mesh_param_names:
-            if (k not in mesh_params_dict) or (mesh_params_dict[k] is None):
-                msg = f"Cannot create OctreeParams from {type(params)} instance. "
-                msg += f"Missing param: {k}."
-                raise ValueError(msg)
+    @property
+    def permutation(self) -> np.ndarray:
+        """Permutation vector between discretize and geoh5py ordering."""
+        if self.mesh is None:
+            raise ValueError("A 'mesh' must be assigned before accessing permutation.")
 
-        mesh_params_dict = {
-            k: v for k, v in mesh_params_dict.items() if k in mesh_param_names
-        }
-        mesh_params_dict["Refinement A object"] = self.inversion_data.entity.uid
-        mesh_params_dict["Refinement A levels"] = params.octree_levels_obs
-        mesh_params_dict["Refinement A type"] = "radial"
-        mesh_params_dict["Refinement A distance"] = params.max_distance
-
-        mesh_params_dict["Refinement B object"] = self.inversion_topography.entity.uid
-        mesh_params_dict["Refinement B levels"] = params.octree_levels_topo
-        mesh_params_dict["Refinement B type"] = "surface"
-        mesh_params_dict["Refinement B distance"] = params.max_distance
-
-        if isinstance(self.inversion_data.entity, PotentialElectrode):
-            mesh_params_dict["Refinement C object"] = (
-                self.inversion_data.entity.current_electrodes.uid,
-            )
-            mesh_params_dict["Refinement C levels"] = params.octree_levels_obs
-            mesh_params_dict["Refinement C type"] = "radial"
-            mesh_params_dict["Refinement C distance"] = params.max_distance
-
-        mesh_params_dict["objects"] = self.inversion_data.entity.uid
-        mesh_params_dict["geoh5"] = self.workspace
-
-        return OctreeParams(**mesh_params_dict, validate=False)
-
-    def build_from_params(self) -> Octree:
-        """Runs geoapps.create.OctreeMesh to create mesh from params."""
-        octree_params = self.collect_mesh_params(self.params)
-        driver = OctreeDriver(octree_params)
-        self.entity = driver.run()
-        self.entity.parent = self.params.ga_group
+        return self._permutation

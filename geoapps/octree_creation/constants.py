@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -12,7 +12,11 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
+from geoapps import assets_path
+
 defaults = {
+    "version": geoapps.__version__,
     "title": "octree Mesh Creator",
     "geoh5": None,
     "objects": None,
@@ -23,8 +27,8 @@ defaults = {
     "vertical_padding": 1000.0,
     "depth_core": 500.0,
     "ga_group_name": "Octree_Mesh",
+    "generate_sweep": False,
     "run_command": "geoapps.octree_creation.driver",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
@@ -34,6 +38,7 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "octree Mesh Creator",
         "geoh5": None,
         "objects": {
@@ -45,6 +50,10 @@ default_ui_json.update(
                 "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
                 "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
                 "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+                "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+                "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+                "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+                "{19730589-fd28-4649-9de0-ad47249d9aba}",
             ],
             "value": None,
         },
@@ -96,6 +105,12 @@ default_ui_json.update(
             "label": "Name:",
             "value": "Octree_Mesh",
         },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
+        },
         "conda_environment": "geoapps",
         "workspace_geoh5": None,
         "run_command": "geoapps.octree_creation.driver",
@@ -112,6 +127,10 @@ template_dict = {
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+            "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+            "{19730589-fd28-4649-9de0-ad47249d9aba}",
         ],
         "value": None,
     },
@@ -139,14 +158,14 @@ template_dict = {
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
-    "Refinement A levels": [4, 4, 4],
+    "Refinement A levels": "4, 4, 4",
     "Refinement A type": "radial",
     "Refinement A distance": 1000.0,
     "Refinement B object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
-    "Refinement B levels": [0, 0, 4],
+    "Refinement B levels": "0, 0, 4",
     "Refinement B type": "surface",
     "Refinement B distance": 1200.0,
 }

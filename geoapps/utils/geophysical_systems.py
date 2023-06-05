@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -13,6 +13,13 @@ def parameters():
     Dictionary of parameters defining geophysical acquisition systems
     """
     return {
+        "Airborne TEM Survey": {
+            "type": "time",
+            "data_type": "dBzdt",
+            "flag": None,
+            "channel_start_index": 1,
+            "bird_offset": [0, 0, 0],
+        },
         "AeroTEM (2007)": {
             "type": "time",
             "flag": "Zoff",

@@ -1,0 +1,125 @@
+{
+    "title": "octree Mesh Creator",
+    "geoh5": "",
+    "run_command": "geoapps.octree_creation.driver",
+    "run_command_boolean": {
+        "value": false,
+        "label": "Run python module ",
+        "tooltip": "Warning: launches process to run python model on save",
+        "main": true
+    },
+    "monitoring_directory": "",
+    "conda_environment": "geoapps",
+    "conda_environment_boolean": false,
+    "workspace": "",
+    "version": "0.11.0-alpha.1",
+    "objects": {
+        "enabled": true,
+        "group": "1- Core",
+        "label": "Core hull extent",
+        "main": true,
+        "meshType": [
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+            "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+            "{19730589-fd28-4649-9de0-ad47249d9aba}"
+        ],
+        "value": ""
+    },
+    "u_cell_size": {
+        "enabled": true,
+        "group": "2- Core cell size",
+        "label": "Easting (m)",
+        "main": true,
+        "value": 25.0
+    },
+    "v_cell_size": {
+        "enabled": true,
+        "group": "2- Core cell size",
+        "label": "Northing (m)",
+        "main": true,
+        "value": 25.0
+    },
+    "w_cell_size": {
+        "enabled": true,
+        "group": "2- Core cell size",
+        "label": "Vertical (m)",
+        "main": true,
+        "value": 25.0
+    },
+    "horizontal_padding": {
+        "enabled": true,
+        "group": "3- Padding distance",
+        "label": "Horizontal (m)",
+        "main": true,
+        "value": 1000.0
+    },
+    "vertical_padding": {
+        "enabled": true,
+        "group": "3- Padding distance",
+        "label": "Vertical (m)",
+        "main": true,
+        "value": 1000.0
+    },
+    "depth_core": {
+        "enabled": true,
+        "group": "1- Core",
+        "label": "Minimum Depth (m)",
+        "main": true,
+        "value": 500.0
+    },
+    "ga_group_name": {
+        "enabled": true,
+        "group": "",
+        "label": "Name:",
+        "value": "Octree_Mesh"
+    },
+    "generate_sweep": {
+        "label": "Generate sweep file",
+        "group": "Python run preferences",
+        "main": true,
+        "value": false
+    },
+    "workspace_geoh5": "",
+    "Refinement A object": {
+        "groupOptional": true,
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Object",
+        "meshType": [
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+            "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+            "{19730589-fd28-4649-9de0-ad47249d9aba}"
+        ],
+        "value": ""
+    },
+    "Refinement A levels": {
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Levels",
+        "value": ""
+    },
+    "Refinement A type": {
+        "choiceList": [
+            "surface",
+            "radial"
+        ],
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Type",
+        "value": ""
+    },
+    "Refinement A distance": {
+        "enabled": true,
+        "group": "Refinement A",
+        "label": "Distance",
+        "value": ""
+    }
+}

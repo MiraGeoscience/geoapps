@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -13,20 +13,28 @@ if TYPE_CHECKING:
     from geoapps.inversion import InversionBaseParams
 
 import multiprocessing
-import os
 import sys
 from datetime import datetime, timedelta
 from multiprocessing.pool import ThreadPool
+from pathlib import Path
 from time import time
 
 import numpy as np
 from dask import config as dconf
-from dask.distributed import Client, LocalCluster, get_client
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
-from SimPEG import dask  # pylint: disable=unused-import
-from SimPEG import inverse_problem, inversion, maps, optimization, regularization
-from SimPEG.utils import tile_locations
+from SimPEG import (
+    directives,
+    inverse_problem,
+    inversion,
+    maps,
+    objective_function,
+    optimization,
+    regularization,
+)
 
+from geoapps.driver_base.driver import BaseDriver
+from geoapps.inversion import DRIVER_MAP
 from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
@@ -34,218 +42,259 @@ from geoapps.inversion.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
+from geoapps.inversion.components.factories import (
+    DirectivesFactory,
+    MisfitFactory,
+    SaveIterationGeoh5Factory,
+)
 from geoapps.inversion.params import InversionBaseParams
+from geoapps.inversion.utils import tile_locations
 
 
-class InversionDriver:
-    def __init__(self, params: InversionBaseParams, warmstart=True):
+class InversionDriver(BaseDriver):
+    _params_class = InversionBaseParams  # pylint: disable=E0601
+    _inversion_type: str | None = None
+    _validations = None
+
+    def __init__(self, params: InversionBaseParams):
+        super().__init__(params)
+
         self.params = params
-        self.warmstart = warmstart
-        self.workspace = params.geoh5
         self.inversion_type = params.inversion_type
-        self.inversion_window = None
-        self.inversion_data = None
-        self.inversion_topography = None
-        self.inversion_mesh = None
-        self.inversion_models = None
-        self.inverse_problem = None
-        self.survey = None
-        self.active_cells = None
-        self.running = False
+        self._data_misfit: objective_function.ComboObjectiveFunction | None = None
+        self._directives: list[directives.InversionDirective] | None = None
+        self._inverse_problem: inverse_problem.BaseInvProblem | None = None
+        self._inversion: inversion.BaseInversion | None = None
+        self._inversion_data: InversionData | None = None
+        self._inversion_mesh: InversionMesh | None = None
+        self._inversion_topography: InversionTopography | None = None
+        self._logger: InversionLogger | None = None
+        self._models: InversionModelCollection | None = None
+        self._optimization: optimization.ProjectedGNCG | None = None
+        self._regularization: None = None
+        self._sorting: list[np.ndarray] | None = None
+        self._ordering: list[np.ndarray] | None = None
+        self._window = None
 
-        self.logger = InversionLogger("SimPEG.log", self)
-        sys.stdout = self.logger
-        self.logger.start()
+    @property
+    def data_misfit(self):
+        """The Simpeg.data_misfit class"""
+        if getattr(self, "_data_misfit", None) is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                # Tile locations
+                tiles = self.get_tiles()
 
-        with self.workspace.open(mode="r+"):
-            self.initialize()
+                print(f"Setting up {len(tiles)} tile(s) . . .")
+                # Build tiled misfits and combine to form global misfit
+                self._data_misfit, self._sorting, self._ordering = MisfitFactory(
+                    self.params, models=self.models
+                ).build(
+                    tiles,
+                    self.inversion_data,
+                    self.inversion_mesh.mesh,
+                    self.models.active_cells,
+                )
+                print("Done.")
+
+        return self._data_misfit
+
+    @property
+    def directives(self):
+        if getattr(self, "_directives", None) is None and not self.params.forward_only:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._directives = DirectivesFactory(self).directive_list
+        return self._directives
+
+    @property
+    def inverse_problem(self):
+        if getattr(self, "_inverse_problem", None) is None:
+            self._inverse_problem = inverse_problem.BaseInvProblem(
+                self.data_misfit,
+                self.regularization,
+                self.optimization,
+                beta=self.params.initial_beta,
+            )
+
+        return self._inverse_problem
+
+    @property
+    def inversion(self):
+        if getattr(self, "_inversion", None) is None:
+            self._inversion = inversion.BaseInversion(
+                self.inverse_problem, directiveList=self.directives
+            )
+        return self._inversion
+
+    @property
+    def inversion_data(self):
+        """Inversion data"""
+        if getattr(self, "_inversion_data", None) is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._inversion_data = InversionData(self.workspace, self.params)
+                self.params.data_object = self._inversion_data.entity
+
+        return self._inversion_data
+
+    @property
+    def inversion_mesh(self):
+        """Inversion mesh"""
+        if getattr(self, "_inversion_mesh", None) is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._inversion_mesh = InversionMesh(
+                    self.workspace,
+                    self.params,
+                    self.inversion_data,
+                    self.inversion_topography,
+                )
+        return self._inversion_mesh
+
+    @property
+    def inversion_topography(self):
+        """Inversion topography"""
+        if getattr(self, "_inversion_topography", None) is None:
+            self._inversion_topography = InversionTopography(
+                self.workspace, self.params
+            )
+        return self._inversion_topography
+
+    @property
+    def inversion_type(self) -> str | None:
+        """Inversion type"""
+        return self._inversion_type
+
+    @inversion_type.setter
+    def inversion_type(self, value):
+        if value not in DRIVER_MAP:
+            raise ValueError(f"Invalid inversion type: {value}")
+        self._inversion_type = value
+
+    @property
+    def logger(self):
+        """
+        Inversion logger
+        """
+        if getattr(self, "_logger", None) is None:
+            self._logger = InversionLogger("SimPEG.log", self)
+
+        return self._logger
+
+    @property
+    def models(self):
+        """Inversion models"""
+        if getattr(self, "_models", None) is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                self._models = InversionModelCollection(self)
+
+        return self._models
+
+    @property
+    def optimization(self):
+        if getattr(self, "_optimization", None) is None:
+            if self.params.forward_only:
+                return optimization.ProjectedGNCG()
+
+            self._optimization = optimization.ProjectedGNCG(
+                maxIter=self.params.max_global_iterations,
+                lower=self.models.lower_bound,
+                upper=self.models.upper_bound,
+                maxIterLS=self.params.max_line_search_iterations,
+                maxIterCG=self.params.max_cg_iterations,
+                tolCG=self.params.tol_cg,
+                stepOffBoundsFact=1e-8,
+                LSshorten=0.25,
+            )
+        return self._optimization
+
+    @property
+    def ordering(self):
+        """List of ordering of the data."""
+        return self._ordering
+
+    @property
+    def regularization(self):
+        if getattr(self, "_regularization", None) is None:
+            self._regularization = self.get_regularization()
+
+        return self._regularization
+
+    @property
+    def sorting(self):
+        """List of arrays for sorting of data from tiles."""
+        return self._sorting
 
     @property
     def window(self):
-        return self.inversion_window.window
-
-    @property
-    def locations(self):
-        return self.inversion_data.locations
-
-    @property
-    def mesh(self):
-        return self.inversion_mesh.mesh
-
-    @property
-    def starting_model(self):
-        return self.models.starting
-
-    @property
-    def reference_model(self):
-        return self.models.reference
-
-    @property
-    def lower_bound(self):
-        return self.models.lower_bound
-
-    @property
-    def upper_bound(self):
-        return self.models.upper_bound
-
-    def initialize(self):
-
-        ### Collect inversion components ###
-
-        self.configure_dask()
-
-        self.inversion_window = InversionWindow(self.workspace, self.params)
-
-        self.inversion_data = InversionData(self.workspace, self.params, self.window)
-
-        self.inversion_topography = InversionTopography(
-            self.workspace, self.params, self.window
-        )
-
-        self.inversion_mesh = InversionMesh(
-            self.workspace, self.params, self.inversion_data, self.inversion_topography
-        )
-
-        self.models = InversionModelCollection(
-            self.workspace, self.params, self.inversion_mesh
-        )
-
-        # TODO Need to setup/test workers with address
-        if self.params.distributed_workers is not None:
-            try:
-                get_client()
-            except ValueError:
-                cluster = LocalCluster(processes=False)
-                Client(cluster)
-
-        # Build active cells array and reduce models active set
-        self.active_cells = self.inversion_topography.active_cells(
-            self.inversion_mesh, self.inversion_data
-        )
-        self.workspace.remove_entity(self.inversion_topography.entity)
-        self.models.edit_ndv_model(
-            self.inversion_mesh.entity.get_data("active_cells")[0].values.astype(bool)
-        )
-        self.models.remove_air(self.active_cells)
-        self.active_cells_map = maps.InjectActiveCells(
-            self.mesh, self.active_cells, np.nan
-        )
-        self.n_cells = int(np.sum(self.active_cells))
-        self.is_vector = self.models.is_vector
-        self.n_blocks = 3 if self.is_vector else 1
-        self.is_rotated = False if self.inversion_mesh.rotation is None else True
-
-        # Create SimPEG Survey object
-        self.survey = self.inversion_data._survey  # pylint: disable=protected-access
-
-        # Tile locations
-        self.tiles = self.get_tiles()  # [np.arange(len(self.survey.source_list))]#
-
-        self.n_tiles = len(self.tiles)
-        print(f"Setting up {self.n_tiles} tile(s) ...")
-        # Build tiled misfits and combine to form global misfit
-
-        self.global_misfit, self.sorting = MisfitFactory(
-            self.params, models=self.models
-        ).build(self.tiles, self.inversion_data, self.mesh, self.active_cells)
-        print("Done.")
-
-        # Create regularization
-        self.regularization = self.get_regularization()
-
-        # Specify optimization algorithm and set parameters
-        self.optimization = optimization.ProjectedGNCG(
-            maxIter=self.params.max_iterations,
-            lower=self.lower_bound,
-            upper=self.upper_bound,
-            maxIterLS=self.params.max_line_search_iterations,
-            maxIterCG=self.params.max_cg_iterations,
-            tolCG=self.params.tol_cg,
-            stepOffBoundsFact=1e-8,
-            LSshorten=0.25,
-        )
-
-        # Create the default L2 inverse problem from the above objects
-        self.inverse_problem = inverse_problem.BaseInvProblem(
-            self.global_misfit,
-            self.regularization,
-            self.optimization,
-            beta=self.params.initial_beta,
-        )
-
-        if self.warmstart and not self.params.forward_only:
-            print("Pre-computing sensitivities ...")
-            self.inverse_problem.dpred = self.inversion_data.simulate(  # pylint: disable=assignment-from-no-return
-                self.starting_model, self.inverse_problem, self.sorting
-            )
-
-        # If forward only option enabled, stop here
-        if self.params.forward_only:
-            return
-
-        # Add a list of directives to the inversion
-        self.directive_list = DirectivesFactory(self.params).build(
-            self.inversion_data,
-            self.inversion_mesh,
-            self.active_cells,
-            np.argsort(np.hstack(self.sorting)),
-            self.global_misfit,
-            self.regularization,
-        )
-
-        # Put all the parts together
-        self.inversion = inversion.BaseInversion(
-            self.inverse_problem, directiveList=self.directive_list
-        )
+        """Inversion window"""
+        if getattr(self, "_window", None) is None:
+            self._window = InversionWindow(self.workspace, self.params)
+        return self._window
 
     def run(self):
         """Run inversion from params"""
+        sys.stdout = self.logger
+        self.logger.start()
+        self.configure_dask()
 
         if self.params.forward_only:
             print("Running the forward simulation ...")
-            self.inversion_data.simulate(
-                self.starting_model, self.inverse_problem, self.sorting
+            dpred = self.inversion.invProb.get_dpred(
+                self.models.starting, compute_J=False
             )
-            self.logger.end()
-            return
+            SaveIterationGeoh5Factory(self.params).build(
+                inversion_object=self.inversion_data,
+                sorting=np.argsort(np.hstack(self.sorting)),
+                ordering=self.ordering,
+            ).save_components(0, dpred)
+        else:
+            # Run the inversion
+            self.start_inversion_message()
+            self.inversion.run(self.models.starting)
 
-        # Run the inversion
-        self.start_inversion_message()
-        self.running = True
-        self.inversion.run(self.starting_model)
         self.logger.end()
+        sys.stdout = self.logger.terminal
+        self.logger.log.close()
 
     def start_inversion_message(self):
-
         # SimPEG reports half phi_d, so we scale to match
         has_chi_start = self.params.starting_chi_factor is not None
         chi_start = (
             self.params.starting_chi_factor if has_chi_start else self.params.chi_factor
         )
+
+        if getattr(self, "drivers", None) is not None:  # joint problem
+            data_count = np.sum(
+                [len(d.inversion_data.survey.std) for d in getattr(self, "drivers")]
+            )
+        else:
+            data_count = len(self.inversion_data.survey.std)
+
         print(
             "Target Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
-                0.5 * self.params.chi_factor * len(self.survey.std),
-                len(self.survey.std),
+                0.5 * self.params.chi_factor * data_count,
+                data_count,
                 self.params.chi_factor,
             )
         )
         print(
             "IRLS Start Misfit: {:.2e} ({} data with chifact = {}) / 2".format(
-                0.5 * chi_start * len(self.survey.std), len(self.survey.std), chi_start
+                0.5 * chi_start * data_count,
+                data_count,
+                chi_start,
             )
         )
 
     def get_regularization(self):
+        if self.params.forward_only:
+            return regularization.BaseRegularization(mesh=self.inversion_mesh.mesh)
+
+        n_cells = int(np.sum(self.models.active_cells))
 
         if self.inversion_type == "magnetic vector":
-            wires = maps.Wires(
-                ("p", self.n_cells), ("s", self.n_cells), ("t", self.n_cells)
-            )
+            wires = maps.Wires(("p", n_cells), ("s", n_cells), ("t", n_cells))
 
             reg_p = regularization.Sparse(
-                self.mesh,
-                indActive=self.active_cells,
+                self.inversion_mesh.mesh,
+                indActive=self.models.active_cells,
                 mapping=wires.p,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
@@ -253,11 +302,11 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.reference_model,
+                mref=self.models.reference,
             )
             reg_s = regularization.Sparse(
-                self.mesh,
-                indActive=self.active_cells,
+                self.inversion_mesh.mesh,
+                indActive=self.models.active_cells,
                 mapping=wires.s,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
@@ -265,12 +314,12 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.reference_model,
+                mref=self.models.reference,
             )
 
             reg_t = regularization.Sparse(
-                self.mesh,
-                indActive=self.active_cells,
+                self.inversion_mesh.mesh,
+                indActive=self.models.active_cells,
                 mapping=wires.t,  # pylint: disable=no-member
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
@@ -278,33 +327,34 @@ class InversionDriver:
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.reference_model,
+                mref=self.models.reference,
             )
 
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
-            reg.mref = self.reference_model
+            reg.mref = self.models.reference
 
         else:
-
             reg = regularization.Sparse(
-                self.mesh,
-                indActive=self.active_cells,
-                mapping=maps.IdentityMap(nP=self.n_cells),
+                self.inversion_mesh.mesh,
+                indActive=self.models.active_cells,
+                mapping=maps.IdentityMap(nP=n_cells),
                 gradientType=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
                 alpha_x=self.params.alpha_x,
                 alpha_y=self.params.alpha_y,
                 alpha_z=self.params.alpha_z,
                 norms=self.params.model_norms(),
-                mref=self.reference_model,
+                mref=self.models.reference,
             )
 
         return reg
 
     def get_tiles(self):
-
-        if self.params.inversion_type in ["direct current", "induced polarization"]:
+        if self.params.inversion_type in [
+            "direct current 3d",
+            "induced polarization 3d",
+        ]:
             tiles = []
             potential_electrodes = self.inversion_data.entity
             current_electrodes = potential_electrodes.current_electrodes
@@ -329,9 +379,11 @@ class InversionDriver:
 
             # TODO Figure out how to handle a tile_spatial object to replace above
 
+        elif "2d" in self.params.inversion_type:
+            tiles = [self.inversion_data.indices]
         else:
             tiles = tile_locations(
-                self.locations,
+                self.inversion_data.locations,
                 self.params.tile_spatial,
                 method="kmeans",
             )
@@ -348,10 +400,28 @@ class InversionDriver:
             dconf.set({"array.chunk-size": str(self.params.max_chunk_size) + "MiB"})
             dconf.set(scheduler="threads", pool=ThreadPool(self.params.n_cpu))
 
+    @classmethod
+    def start(cls, filepath: str | Path, driver_class=None):
+        _ = driver_class
+
+        ifile = InputFile.read_ui_json(filepath)
+        inversion_type = ifile.data["inversion_type"]
+        if inversion_type not in DRIVER_MAP:
+            msg = f"Inversion type {inversion_type} is not supported."
+            msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
+            raise NotImplementedError(msg)
+
+        mod_name, class_name = DRIVER_MAP.get(inversion_type)
+        module = __import__(mod_name, fromlist=[class_name])
+        inversion_driver = getattr(module, class_name)
+        driver = BaseDriver.start(filepath, driver_class=inversion_driver)
+        return driver
+
 
 class InversionLogger:
     def __init__(self, logfile, driver):
         self.driver = driver
+        self.forward = driver.params.forward_only
         self.terminal = sys.stdout
         self.log = open(self.get_path(logfile), "w", encoding="utf8")
         self.initial_time = time()
@@ -359,7 +429,7 @@ class InversionLogger:
     def start(self):
         date_time = datetime.now().strftime("%b-%d-%Y:%H:%M:%S")
         self.write(
-            f"SimPEG {self.driver.inversion_type} inversion started {date_time}\n"
+            f"SimPEG {self.driver.inversion_type} {'forward' if self.forward else 'inversion'} started {date_time}\n"
         )
 
     def end(self):
@@ -374,7 +444,8 @@ class InversionLogger:
         self.log.write(message)
         self.log.flush()
 
-    def format_seconds(self, seconds):
+    @staticmethod
+    def format_seconds(seconds):
         days = seconds // (24 * 3600)
         seconds = seconds % (24 * 3600)
         hours = seconds // 3600
@@ -389,63 +460,12 @@ class InversionLogger:
     def flush(self):
         pass
 
-    def get_path(self, file):
-        root_directory = os.path.dirname(self.driver.workspace.h5file)
-        return os.path.join(root_directory, file)
-
-
-def start_inversion(filepath=None, **kwargs) -> InversionDriver:
-    """Starts inversion with parameters defined in input file."""
-
-    if filepath is not None:
-        input_file = InputFile.read_ui_json(filepath)
-        inversion_type = input_file.data.get("inversion_type")
-    else:
-        input_file = None
-        inversion_type = kwargs.get("inversion_type")
-
-    if inversion_type == "magnetic vector":
-        from .potential_fields import MagneticVectorParams as ParamClass
-        from .potential_fields.magnetic_vector.constants import validations
-
-    elif inversion_type == "magnetic scalar":
-        from .potential_fields import MagneticScalarParams as ParamClass
-        from .potential_fields.magnetic_scalar.constants import validations
-
-    elif inversion_type == "gravity":
-        from geoapps.inversion.potential_fields import GravityParams as ParamClass
-        from geoapps.inversion.potential_fields.gravity.constants import validations
-
-    elif inversion_type == "magnetotellurics":
-        from .natural_sources import MagnetotelluricsParams as ParamClass
-        from .natural_sources.magnetotellurics.constants import validations
-
-    elif inversion_type == "tipper":
-        from .natural_sources import TipperParams as ParamClass
-        from .natural_sources.tipper.constants import validations
-
-    elif inversion_type == "direct current":
-        from .electricals import DirectCurrentParams as ParamClass
-        from .electricals.direct_current.constants import validations
-
-    elif inversion_type == "induced polarization":
-        from .electricals import InducedPolarizationParams as ParamClass
-        from .electricals.induced_polarization.constants import validations
-
-    else:
-        raise UserWarning("A supported 'inversion_type' must be provided.")
-
-    input_file = InputFile.read_ui_json(filepath, validations=validations)
-    params = ParamClass(input_file=input_file, **kwargs)
-
-    driver = InversionDriver(params)
-
-    with params.geoh5.open(mode="r+"):
-        driver.run()
-
-    return driver
+    def get_path(self, filepath: str | Path) -> str:
+        root_directory = Path(self.driver.workspace.h5file).parent
+        return str(root_directory / filepath)
 
 
 if __name__ == "__main__":
-    start_inversion(sys.argv[1])
+    file = str(Path(sys.argv[1]).resolve())
+    InversionDriver.start(file)
     sys.stdout.close()

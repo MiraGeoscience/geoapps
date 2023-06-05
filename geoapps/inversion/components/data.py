@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -14,18 +14,18 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.drivers import BaseParams
+    from geoapps.inversion.params import InversionBaseParams
 
 from copy import deepcopy
 
 import numpy as np
 from discretize import TreeMesh
+from scipy.spatial import cKDTree
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
-from SimPEG.utils.drivers import create_nested_mesh
 
-from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.shared_utils.utils import filter_xy
+from geoapps.inversion.utils import calculate_2D_trend, create_nested_mesh
+from geoapps.shared_utils.utils import drape_2_tensor, filter_xy
 
 from .factories import (
     EntityFactory,
@@ -88,30 +88,26 @@ class InversionData(InversionLocations):
 
     """
 
-    def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
-    ):
+    def __init__(self, workspace: Workspace, params: InversionBaseParams):
         """
-        :param: workspace: Geoh5py workspace object containing location based data.
+        :param: workspace: :obj`geoh5py.workspace.Workspace` workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
-        :param: window: Center and size defining window for data, topography, etc.
         """
-        super().__init__(workspace, params, window)
-
-        self.resolution: int = None
-        self.offset: list[float] = None
-        self.radar: np.ndarray = None
-        self.ignore_value: float = None
-        self.ignore_type: str = None
-        self.detrend_order: float = None
-        self.detrend_type: str = None
-        self.locations: np.ndarray = None
-        self.has_pseudo: bool = False
-        self.mask: np.ndarray = None
-        self.indices: np.ndarray = None
-        self.vector: bool = None
-        self.n_blocks: int = None
-        self.components: list[str] = None
+        super().__init__(workspace, params)
+        self.resolution: int | None = None
+        self.offset: list[float] | None = None
+        self.radar: np.ndarray | None = None
+        self.ignore_value: float | None = None
+        self.ignore_type: str | None = None
+        self.detrend_order: float | None = None
+        self.detrend_type: str | None = None
+        self.locations: np.ndarray | None = None
+        self.mask: np.ndarray | None = None
+        self.global_map: np.ndarray | None = None
+        self.indices: np.ndarray | None = None
+        self.vector: bool | None = None
+        self.n_blocks: int | None = None
+        self.components: list[str] | None = None
         self.observed: dict[str, np.ndarray] = {}
         self.predicted: dict[str, np.ndarray] = {}
         self.uncertainties: dict[str, np.ndarray] = {}
@@ -120,7 +116,7 @@ class InversionData(InversionLocations):
         self.entity = None
         self.data_entity = None
         self._observed_data_types = {}
-        self._survey = None
+        self.survey = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -129,12 +125,13 @@ class InversionData(InversionLocations):
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
         self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
+        self.has_tensor = InversionData.check_tensor(self.components)
         self.offset, self.radar = self.params.offset()
         self.locations = super().get_locations(self.params.data_object)
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
-            window=self.window,
+            window=self.params.window,
             angle=self.angle,
             distance=self.params.resolution,
         )
@@ -143,7 +140,6 @@ class InversionData(InversionLocations):
             if any(np.isnan(self.radar)):
                 self.mask[np.isnan(self.radar)] = False
 
-        self.locations = self.locations[self.mask, :]
         self.observed = self.filter(self.observed)
         self.radar = self.filter(self.radar)
         self.uncertainties = self.filter(self.uncertainties)
@@ -158,13 +154,43 @@ class InversionData(InversionLocations):
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
-        self._survey, _ = self.survey()
+        self.survey, _, _ = self.create_survey()
         self.save_data(self.entity)
+
+    def drape_locations(self, locations: np.ndarray) -> np.ndarray:
+        """
+        Return pseudo locations along line in distance, depth.
+
+        The horizontal distance is referenced to first node of the core mesh.
+
+        """
+        local_tensor = drape_2_tensor(self.params.mesh)
+
+        # Interpolate distance assuming always inside the mesh trace
+        tree = cKDTree(self.params.mesh.prisms[:, :2])
+        rad, ind = tree.query(locations[:, :2], k=2)
+        distance_interp = 0.0
+        for ii in range(2):
+            distance_interp += local_tensor.cell_centers_x[ind[:, ii]] / (
+                rad[:, ii] + 1e-8
+            )
+
+        distance_interp /= ((rad + 1e-8) ** -1.0).sum(axis=1)
+
+        return np.c_[distance_interp, locations[:, 2:]]
 
     def filter(self, a):
         """Remove vertices based on mask property."""
         if (
-            self.params.inversion_type in ["direct current", "induced polarization"]
+            self.params.inversion_type
+            in [
+                "direct current pseudo 3d",
+                "direct current 3d",
+                "direct current 2d",
+                "induced polarization 3d",
+                "induced polarization 2d",
+                "induced polarization pseudo 3d",
+            ]
             and self.indices is None
         ):
             ab_ind = np.where(np.any(self.mask[self.params.data_object.cells], axis=1))[
@@ -179,7 +205,7 @@ class InversionData(InversionLocations):
 
         return a
 
-    def get_data(self) -> tuple[dict[str, np.ndarray], np.ndarray, np.ndarray]:
+    def get_data(self) -> tuple[list, dict, dict]:
         """
         Get all data and uncertainty components and possibly set infinite uncertainties.
 
@@ -215,7 +241,7 @@ class InversionData(InversionLocations):
         self._observed_data_types = {c: {} for c in data.keys()}
         data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type in ["magnetotellurics", "tipper"]:
+        if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = self.normalizations[component] * values
@@ -242,8 +268,10 @@ class InversionData(InversionLocations):
                             uncert_entity, f"Uncertainties_{component}"
                         )
         else:
-            for component in data.keys():
+            for component in data:
                 dnorm = self.normalizations[component] * data[component]
+                if "2d" in self.params.inversion_type:
+                    dnorm = self._embed_2d(dnorm)
                 data_entity[component] = entity.add_data(
                     {f"{basename}_{component}": {"values": dnorm}}
                 )
@@ -253,15 +281,22 @@ class InversionData(InversionLocations):
                     ].entity_type
                     uncerts = self.uncertainties[component].copy()
                     uncerts[np.isinf(uncerts)] = np.nan
+                    if "2d" in self.params.inversion_type:
+                        uncerts = self._embed_2d(uncerts)
                     entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
 
-                if self.params.inversion_type == "direct current":
+                if "direct current" in self.params.inversion_type:
                     self.transformations[component] = 1 / (
-                        geometric_factor(self._survey) + 1e-10
+                        geometric_factor(self.survey) + 1e-10
                     )
-                    apparent_property = (
-                        data[component] * self.transformations[component]
-                    )
+
+                    apparent_property = data[component].copy()
+                    apparent_property[self.global_map] *= self.transformations[
+                        component
+                    ]
+                    if "2d" in self.params.inversion_type:
+                        apparent_property = self._embed_2d(apparent_property)
+
                     data_entity["apparent_resistivity"] = entity.add_data(
                         {
                             f"{basename}_apparent_resistivity": {
@@ -284,7 +319,6 @@ class InversionData(InversionLocations):
                 if ignore_type in ["<", ">"]:
                     ignore_value = float(ignore_values.split(ignore_type)[1])
                 else:
-
                     try:
                         ignore_value = float(ignore_values)
                     except ValueError:
@@ -396,21 +430,20 @@ class InversionData(InversionLocations):
             if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
                 normalizations[comp] = -1.0
             elif self.params.inversion_type in ["magnetotellurics"]:
+                normalizations[comp] = -1.0
+            elif self.params.inversion_type in ["tipper"]:
                 if "imag" in comp:
                     normalizations[comp] = -1.0
-            elif self.params.inversion_type in ["tipper"]:
-                if "real" in comp:
+            elif self.params.inversion_type in ["tdem"]:
+                if comp in ["x", "z"]:
                     normalizations[comp] = -1.0
-            if normalizations[comp] == -1.0:
-                print(f"Sign flip for component {comp}.")
 
         return normalizations
 
-    def survey(
+    def create_survey(
         self,
-        mesh: TreeMesh = None,
-        active_cells: np.ndarray = None,
-        local_index: np.ndarray = None,
+        mesh: TreeMesh | None = None,
+        local_index: np.ndarray | None = None,
         channel=None,
     ):
         """
@@ -428,10 +461,10 @@ class InversionData(InversionLocations):
         survey = survey_factory.build(
             data=self,
             mesh=mesh,
-            active_cells=active_cells,
             local_index=local_index,
             channel=channel,
         )
+
         return survey
 
     def simulation(
@@ -439,7 +472,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh,
         active_cells: np.ndarray,
         survey,
-        tile_id: int = None,
+        tile_id: int | None = None,
         padding_cells: int = 6,
     ):
         """
@@ -460,10 +493,13 @@ class InversionData(InversionLocations):
         """
         simulation_factory = SimulationFactory(self.params)
 
-        if tile_id is None:
+        if tile_id is None or "2d" in self.params.inversion_type:
             mapping = maps.IdentityMap(nP=int(self.n_blocks * active_cells.sum()))
             sim = simulation_factory.build(
-                survey=survey, global_mesh=mesh, active_cells=active_cells, map=mapping
+                survey=survey,
+                global_mesh=mesh,
+                active_cells=active_cells,
+                mapping=mapping,
             )
 
         else:
@@ -481,6 +517,7 @@ class InversionData(InversionLocations):
             )
             sim = simulation_factory.build(
                 survey=survey,
+                receivers=self.entity,
                 global_mesh=mesh,
                 local_mesh=nested_mesh,
                 active_cells=mapping.local_active,
@@ -489,7 +526,7 @@ class InversionData(InversionLocations):
             )
         return sim, mapping
 
-    def simulate(self, model, inverse_problem, sorting):
+    def simulate(self, model, inverse_problem, sorting, ordering):
         """Simulate fields for a particular model."""
         dpred = inverse_problem.get_dpred(
             model, compute_J=False if self.params.forward_only else True
@@ -498,8 +535,11 @@ class InversionData(InversionLocations):
             save_directive = SaveIterationGeoh5Factory(self.params).build(
                 inversion_object=self,
                 sorting=np.argsort(np.hstack(sorting)),
+                ordering=ordering,
             )
             save_directive.save_components(0, dpred)
+
+        inverse_problem.dpred = dpred
 
     @property
     def observed_data_types(self):
@@ -507,3 +547,15 @@ class InversionData(InversionLocations):
         Stored data types
         """
         return self._observed_data_types
+
+    def _embed_2d(self, data):
+        ind = np.ones_like(data, dtype=bool)
+        ind[self.global_map] = False
+        data[ind] = np.nan
+        return data
+
+    @staticmethod
+    def check_tensor(channels):
+        tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
+        has_tensor = lambda c: any(k in c for k in tensor_components)
+        return any(has_tensor(c) for c in channels)

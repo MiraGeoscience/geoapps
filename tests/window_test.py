@@ -1,10 +1,14 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.objects import Points
@@ -14,11 +18,12 @@ from geoapps.inversion.components import InversionWindow
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
-def test_initialize(tmp_path):
-
+def test_initialize(tmp_path: Path):
     # Test initialize from params
     tester = Geoh5Tester(
         geoh5,
@@ -55,5 +60,5 @@ def test_initialize(tmp_path):
     params.window_height = None
 
     win = InversionWindow(ws, params)
-    assert win.window["center"] == [50.0, 50.0]
-    assert win.window["size"] == [100.0, 100.0]
+    assert np.allclose(win.window["center"], np.r_[50.0, 50.0])
+    assert np.allclose(win.window["size"], np.r_[100.0, 100.0])

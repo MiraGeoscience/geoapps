@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,13 +7,16 @@
 
 from __future__ import annotations
 
-import os
 from copy import deepcopy
 
 import plotly.express as px
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
+from geoapps import assets_path
+
 defaults = {
+    "version": geoapps.__version__,
     "title": "Scatter Plot",
     "geoh5": None,
     "objects": None,
@@ -46,7 +49,6 @@ defaults = {
     "size_thresh": None,
     "size_markers": None,
     "run_command": "geoapps.scatter_plot.application",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
@@ -56,6 +58,7 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Scatter Plot",
         "geoh5": "",
         "monitoring_directory": "",
@@ -361,7 +364,7 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x_log": False,
@@ -386,5 +389,5 @@ app_initializer = {
     "size_max": 24.8,
     "downsampling": 80,
     "size_markers": 20,
-    "monitoring_directory": os.path.abspath("../../assets"),
+    "monitoring_directory": str(assets_path().resolve()),
 }

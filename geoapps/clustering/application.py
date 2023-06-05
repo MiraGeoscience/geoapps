@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -15,6 +15,7 @@ import os
 import sys
 import time
 import uuid
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -45,7 +46,7 @@ class Clustering(ScatterPlots):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
+        if ui_json is not None and Path(ui_json.path).is_file():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
@@ -53,7 +54,7 @@ class Clustering(ScatterPlots):
         super().__init__(**self.params.to_dict())
 
         # Params and driver used for updating scatter plot in make_scatter_plot function.
-        self.scatter_params = self._param_class(**self.params.to_dict())
+        self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)
         self.scatter_driver = ScatterPlotDriver(self.scatter_params)
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -722,6 +723,7 @@ class Clustering(ScatterPlots):
             np.array(mapping),
             update_all_clusters,
         )
+
         return kmeans, clusters
 
     @staticmethod
@@ -864,7 +866,9 @@ class Clustering(ScatterPlots):
 
             update_dict = {}
             for item in callback_context.triggered:
-                update_dict[item["prop_id"].split(".")[0]] = item["value"]
+                key = item["prop_id"].split(".")[0]
+                if key != "channel":
+                    update_dict[key] = item["value"]
 
             params_dict = self.get_params_dict(update_dict)
             params_dict.update(
@@ -878,11 +882,10 @@ class Clustering(ScatterPlots):
                     "size": size,
                 }
             )
-            self.scatter_params.update(params_dict, validate=False)
+            self.scatter_params.update(params_dict)
             crossplot = go.Figure(self.scatter_driver.run())
             return crossplot
         else:
-
             return go.Figure()
 
     @staticmethod
@@ -1206,7 +1209,7 @@ class Clustering(ScatterPlots):
         size_markers: int,
         channel: str,
         ga_group_name: str,
-        trigger: str = None,
+        trigger: str | None = None,
     ) -> list:
         """
         Write cluster groups to the target geoh5 object. Inputs are all params that are written to ui.json.
@@ -1286,11 +1289,11 @@ class Clustering(ScatterPlots):
             if (
                 monitoring_directory is not None
                 and monitoring_directory != ""
-                and os.path.exists(os.path.abspath(monitoring_directory))
+                and Path(monitoring_directory).is_dir()
             ):
-                monitoring_directory = os.path.abspath(monitoring_directory)
+                monitoring_directory = str(Path(monitoring_directory).resolve())
             else:
-                monitoring_directory = os.path.dirname(self.workspace.h5file)
+                monitoring_directory = str(Path(self.workspace.h5file).parent)
 
             # Get output workspace.
             temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
@@ -1299,7 +1302,6 @@ class Clustering(ScatterPlots):
             )
             if not live_link:
                 param_dict["monitoring_directory"] = ""
-
             with ws as workspace:
                 # Put entities in output workspace.
                 param_dict["geoh5"] = workspace
@@ -1323,7 +1325,7 @@ class Clustering(ScatterPlots):
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return [True]
             else:
-                print("Saved to " + os.path.abspath(monitoring_directory))
+                print(f"Saved to {Path(monitoring_directory).resolve()}")
                 return []
         else:
             return no_update

@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -42,10 +42,16 @@ class SimPEGFactory:
         "gravity",
         "magnetic scalar",
         "magnetic vector",
-        "direct current",
-        "induced polarization",
+        "direct current pseudo 3d",
+        "direct current 3d",
+        "direct current 2d",
+        "induced polarization 3d",
+        "induced polarization 2d",
+        "induced polarization pseudo 3d",
+        "tdem",
         "magnetotellurics",
         "tipper",
+        "joint surveys",
     ]
 
     def __init__(self, params: BaseParams):
@@ -64,12 +70,12 @@ class SimPEGFactory:
         return self._factory_type
 
     @factory_type.setter
-    def factory_type(self, p):
-        if p not in self.valid_factory_types:
-            msg = f"Factory type: {self.factory_type} not implemented yet."
+    def factory_type(self, val):
+        if val not in self.valid_factory_types:
+            msg = f"Factory type: {val} not implemented yet."
             raise NotImplementedError(msg)
         else:
-            self._factory_type = p
+            self._factory_type = val
 
     def concrete_object(self):
         """To be over-ridden in factory implementations."""

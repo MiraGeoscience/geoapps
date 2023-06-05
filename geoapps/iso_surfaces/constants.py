@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -12,7 +12,11 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
+from geoapps import assets_path
+
 defaults = {
+    "version": geoapps.__version__,
     "title": "Create Iso Surfaces",
     "geoh5": None,
     "objects": None,
@@ -20,11 +24,11 @@ defaults = {
     "interval_min": 0.005,
     "interval_max": 0.02,
     "interval_spacing": 0.005,
-    "fixed_contours": "0.0025",
+    "fixed_contours": None,
     "max_distance": 500.0,
     "resolution": 50.0,
+    "generate_sweep": False,
     "run_command": "geoapps.iso_surfaces.driver",
-    "run_command_boolean": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
@@ -34,15 +38,10 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Create Iso Surfaces",
         "geoh5": "",
         "run_command": "geoapps.iso_surfaces.driver",
-        "run_command_boolean": {
-            "value": False,
-            "label": "Run python module ",
-            "tooltip": "Warning: launches process to run python model on save",
-            "main": True,
-        },
         "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
@@ -90,9 +89,9 @@ default_ui_json.update(
         "fixed_contours": {
             "main": True,
             "label": "Fixed Contours",
-            "value": "0",
+            "value": "",
             "optional": True,
-            "enabled": True,
+            "enabled": False,
         },
         "max_distance": {
             "enabled": True,
@@ -106,6 +105,12 @@ default_ui_json.update(
             "main": True,
             "value": 50.0,
         },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
+        },
         "export_as": {"main": True, "label": "Name", "value": "Iso_"},
     }
 )
@@ -113,7 +118,7 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
     "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
     "max_distance": 500.0,
@@ -121,6 +126,5 @@ app_initializer = {
     "interval_min": 0.005,
     "interval_max": 0.02,
     "interval_spacing": 0.005,
-    "fixed_contours": "0.0025",
     "export_as": "Iso_Iteration_7_model",
 }

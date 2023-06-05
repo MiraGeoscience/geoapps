@@ -1,30 +1,32 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from os import path
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Points, Surface
 from geoh5py.shared.utils import compare_entities
+from geoh5py.ui_json.utils import str2list
 from geoh5py.workspace import Workspace
 from scipy import spatial
 
 from geoapps.driver_base.utils import treemesh_2_octree
-from geoapps.octree_creation.application import OctreeMesh
+from geoapps.octree_creation.application import OctreeDriver, OctreeMesh
 from geoapps.utils.testing import get_output_workspace
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
-def test_create_octree_app(tmp_path):
-    project = path.join(tmp_path, "testOctree.geoh5")
+def test_create_octree_app(tmp_path: Path):
     # Create temp workspace
-    with Workspace(project) as workspace:
+    with Workspace(tmp_path / "testOctree.geoh5") as workspace:
         n_data = 12
         xyz = np.random.randn(n_data, 3) * 100
         points = Points.create(workspace, vertices=xyz)
@@ -48,8 +50,8 @@ def test_create_octree_app(tmp_path):
             [vertical_padding, vertical_padding],
         ]
         max_distance = 200
-        refine_a = [4, 4, 4]
-        refine_b = [0, 0, 4]
+        refine_a = "4, 4, 4"
+        refine_b = "0, 0, 4"
 
         # Create a tree mesh from discretize
         treemesh = mesh_builder_xyz(
@@ -63,7 +65,7 @@ def test_create_octree_app(tmp_path):
             treemesh,
             points.vertices,
             method="radial",
-            octree_levels=refine_a,
+            octree_levels=str2list(refine_a),
             max_distance=max_distance,
             finalize=False,
         )
@@ -71,7 +73,7 @@ def test_create_octree_app(tmp_path):
             treemesh,
             topo.vertices,
             method="surface",
-            octree_levels=refine_b,
+            octree_levels=str2list(refine_b),
             max_distance=max_distance,
             finalize=False,
         )
@@ -79,7 +81,7 @@ def test_create_octree_app(tmp_path):
             treemesh,
             remote.vertices,
             method="radial",
-            octree_levels=refine_a,
+            octree_levels=str2list(refine_a),
             max_distance=max_distance,
             finalize=True,
         )
@@ -102,7 +104,7 @@ def test_create_octree_app(tmp_path):
             "Refinement C distance": max_distance,
         }
         app = OctreeMesh(
-            geoh5=str(workspace.h5file),
+            geoh5=workspace,
             objects=str(points.uid),
             u_cell_size=h[0],
             v_cell_size=h[1],
@@ -118,3 +120,13 @@ def test_create_octree_app(tmp_path):
         with Workspace(get_output_workspace(tmp_path)) as workspace:
             rec_octree = workspace.get_entity("Octree_Mesh")[0]
             compare_entities(octree, rec_octree, ignore=["_uid"])
+
+
+def test_create_octree_driver(tmp_path: Path):
+    uijson_path = tmp_path.parent / "test_create_octree_app0" / "Temp"
+    json_file = next(uijson_path.glob("*.ui.json"))
+    driver = OctreeDriver.start(str(json_file))
+
+    with driver.params.geoh5.open(mode="r"):
+        results = driver.params.geoh5.get_entity("Octree_Mesh")
+        compare_entities(results[0], results[1], ignore=["_uid"])

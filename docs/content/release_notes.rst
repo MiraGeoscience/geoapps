@@ -1,7 +1,78 @@
 Release Notes
 =============
 
-Release 0.8.0 - 2022/07/06
+Release 0.10.0 (2023-03-20)
+---------------------------
+
+**(Major Release)**
+
+GEOPY-738: Add Airborne Time-Domain EM (ATEM) inversion to the inversion suite.
+GEOPY-829, 727: Bug fixes
+
+
+Release 0.9.2 (2023-01-17)
+--------------------------
+
+Hotfix release for issues encountered since 0.9.1.
+
+GEOPY-835: Fix iso-surface creation crash after multiple runs of marching cube.
+GEOPY-734, 827, 828, 829, 833: Improve installation and fix SSL error encountered by some users.
+GEOPY-814: Update copyright year
+GEOPY-732: Fix crash on ui.json execution of non-inversion apps from ANALYST.
+GEOPY-729: Add version information to main documentation page.
+
+
+Release 0.9.1 (2022-12-13)
+--------------------------
+
+This release fixes some of the issues encountered since releasing v0.9.0.
+
+GEOPY-697, 694, 685: Better handling of Curve entity in inversions UI.
+GEOPY-690: Re-implementation of the Z from topo option for DC-IP and MT inversions. Source and receivers are no longer draped onto the active (discretized) topography. To reduce numerical artifacts, the active set is instead augmented to include cells intercepted by receivers locations. The drape on top remains optional as for all other methods.
+GEOPY-397: Re-simulation of tensor gravity and magnetics in the Flin Flon demo project.
+Also included are SimPEG specific changes:
+
+Fix error in the IRLS weights for MVI using the "total" gradient option.
+Fix error in the stashed regularization operator introduced in v0.9.0
+
+
+Release 0.9.0 (2022-10-28)
+--------------------------
+
+**(Major Release)**
+
+This release focuses on SimPEG DC/IP 2D inversion as well as a revamp of all inversion UIs.
+
+- GEOPY-604-606: Create inversion UI and mechanics for SimPEG DC/IP 2D inversion.
+- GEOPY-657: Standardization and update of all inversion UIs (Grav, MVI, DCIP, Natural Sources)
+    - Removal of octree mesh creation within the inversion UI. Creation must be done prior to running the inversion.
+    - Reference, starting and bound models referenced to the input mesh. Interpolation most be done prior to running the inversion.
+    - General UX improvements to layout.
+- GEOPY-645: Add beta cooling rate and cooling factor option.
+- GEOPY-641: Add option to store sensitivities on RAM or SSD (default).
+- GEOPY-613: Allow for TEM survey entities as input for SimPEG EM1D inversions.
+
+New or revamped applications:
+- GEOPY-579: New BlockModel creation application.
+- GEOPY-592: Conversion of Clustering to Dash (Plotly) app with ui.json implementation.
+- GEOPY-588: Conversion of Scatter Plot to Dash (Plotly) app with ui.json implementation.
+- GEOPY-534: Conversion of Edge Detection to Dash (Plotly) app with ui.json implementation.
+- GEOPY-456: Conversion of Contouring to Dash (Plotly) app with ui.json implementation.
+
+
+
+Release 0.8.1 (2022-09-15)
+--------------------------
+
+**(Hot fix)**
+
+- Fix corruption of geoh5 file for inversions from ANALYST runs.
+- Fix issues with iso-surface introduced by geoh5py v0.4.0 update.
+- Fix re-load of jupyter apps (Peak Finder, 3D inversions)  from ui.json.
+- PEP8 (pylint) compliance code update.
+
+
+Release 0.8.0 (2022-07-06)
 --------------------------
 
 **(Major Release)**
@@ -20,7 +91,7 @@ Inversion updates:
 General maintenance and bug fixes.
 
 
-Release 0.7.1 - 2022/05/03
+Release 0.7.1 (2022-05-03)
 --------------------------
 
 **(Hot fix)**
@@ -28,7 +99,7 @@ Release 0.7.1 - 2022/05/03
 Fix dependency on geoana v0.1.3
 
 
-Release 0.7.0 - 2022/04/25
+Release 0.7.0 (2022-04-25)
 --------------------------
 
 **(Major Release)**
@@ -52,7 +123,7 @@ Bug fixes:
  - Wrong padding direction on Data transfer app mesh creation.
 
 
-Release 0.6.3 - 2022/02/09
+Release 0.6.3 (2022-02-09)
 --------------------------
 
 **(Hot fixes)**
@@ -65,7 +136,7 @@ Release 0.6.3 - 2022/02/09
     - Update ui.json for default bool index
 
 
-Release 0.6.2 - 2022/01/05
+Release 0.6.2 (2022-01-05)
 --------------------------
 
 **(Hot fixes)**
@@ -79,7 +150,7 @@ Release 0.6.2 - 2022/01/05
  - Docs maintenance
 
 
-Release 0.6.1 - 2021/12/09
+Release 0.6.1 (2021-12-09)
 --------------------------
 
 **(Minor Release)**
@@ -95,7 +166,7 @@ This release mostly addresses issues encountered since release of v0.6.0.
  - General API maintenance and unit tests
 
 
-Release 0.6.0 - 2021/11/08
+Release 0.6.0 (2021-11-08)
 --------------------------
 
 **(Major Release)**
@@ -133,7 +204,7 @@ Please visit the `Getting Started <https://geoapps.readthedocs.io/en/latest/cont
 
 
 
-Release 0.5.1 - 2021/09/01
+Release 0.5.1 (2021-09-01)
 --------------------------
 
 **(Hot fix)**
@@ -144,7 +215,7 @@ Release 0.5.1 - 2021/09/01
 - Add unit test
 
 
-Release 0.5.0 - 2021/07/15
+Release 0.5.0 (2021-07-15)
 --------------------------
 
 **(Major Release)**
@@ -169,14 +240,14 @@ New application for the creation of octree meshes with arbitrary refinements aro
         .. image:: applications/images/GA_pro_octree.gif
 
 
-Release 0.4.1 - 2021/04/07
+Release 0.4.1 (2021-04-07)
 --------------------------
 
 - Add unit tests on utils
 - Hot fixes for docs
 
 
-Release 0.4.0 - 2021/03/10
+Release 0.4.0 (2021-03-10)
 --------------------------
 
 **New Application** - Isosurface
@@ -201,7 +272,7 @@ of most third-party packages. Users will be notified if an update of the require
 - Add base run test for all apps
 
 
-Release 0.3.0 - 2021/02/11
+Release 0.3.0 (2021-02-11)
 --------------------------
 
 (Major Release)
@@ -234,7 +305,7 @@ Major re-work of the documentation to solve limitations with ReadTheDocs.
 Previous Releases
 -----------------
 
-Release 0.2.10 - 2021/01/28
+Release 0.2.10 (2021-01-28)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 (Hot fix)
@@ -242,7 +313,7 @@ Release 0.2.10 - 2021/01/28
 -  Broken dependencies (thanks Joel)
 
 
-Release 0.2.9 - 2021/01/19
+Release 0.2.9 (2021-01-19)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 (Minor Release)
@@ -253,7 +324,7 @@ Release 0.2.9 - 2021/01/19
 
 
 
-Release 0.2.6 - 2020/12/14
+Release 0.2.6 (2020-12-14)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Update KMeans clustering application for reference data.

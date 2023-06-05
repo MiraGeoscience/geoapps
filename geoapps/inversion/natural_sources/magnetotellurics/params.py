@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -27,13 +27,7 @@ class MagnetotelluricsParams(InversionBaseParams):
     Parameter class for magnetotelluric->conductivity inversion.
     """
 
-    _directive_list = [
-        "Update_IRLS",
-        "UpdateSensitivityWeights",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
+    PHYSICAL_PROPERTY = "conductivity"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
@@ -80,7 +74,6 @@ class MagnetotelluricsParams(InversionBaseParams):
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def property_group_data(self, property_group: UUID):
-
         data = {}
         frequencies = self.data_object.channels
         if self.forward_only:

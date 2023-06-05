@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -19,6 +19,7 @@ from geoh5py.workspace import Workspace
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import Delaunay, cKDTree
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils import warn_module_not_found
@@ -112,7 +113,6 @@ class Surface2D(ObjectDataSelection):
 
         if self.z_option.value == "depth":
             if self.topography.options.value == "Object":
-
                 topo_obj = self.workspace.get_entity(self.topography.objects.value)[0]
 
                 if hasattr(topo_obj, "centroids"):
@@ -154,7 +154,6 @@ class Surface2D(ObjectDataSelection):
             self.models = []
             line_ids = []
             for line in lines:
-
                 line_ind = np.where(lines_id == line)[0]
 
                 n_sounding = len(line_ind)
@@ -273,7 +272,6 @@ class Surface2D(ObjectDataSelection):
             self.models = list(np.vstack(self.models).T)
 
         else:
-
             if elevations:  # Assumes non-property_group selection
                 z_values = elevations[0].values
                 ind = np.isnan(z_values) == False
@@ -376,7 +374,6 @@ class Surface2D(ObjectDataSelection):
         self.elevations.update_data_list(None)
 
     def data_change(self, _):
-
         if self.data.value:
             self.export_as.value = (
                 self.data.uid_name_map[self.data.value[0]] + "_surface"
@@ -498,7 +495,9 @@ class Surface2D(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -510,11 +509,11 @@ class Surface2D(ObjectDataSelection):
 
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}"),
     "data": [UUID("{f94e8e29-6d1b-4e53-bb4a-6cb77e8f07d8}")],
     "max_distance": 250,
     "elevations": {"data": UUID("{b154b397-9c0d-4dcf-baeb-3909fb9a2a19}")},
-    "lines": {"data": UUID("{0be5374c-3ebb-4762-962a-97d99f3cb0e1}")},
+    "lines": {"data": UUID("{50f6be8d-226d-4f07-9a1c-531e722df260}")},
     "topography": {},
 }

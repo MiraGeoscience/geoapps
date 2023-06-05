@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,7 +8,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from uuid import UUID
 
 from geoapps.inversion import InversionBaseParams
 
@@ -27,14 +26,7 @@ class MagneticVectorParams(InversionBaseParams):
     Parameter class for magnetics->vector magnetization inversion.
     """
 
-    _directive_list = [
-        "VectorInversion",
-        "Update_IRLS",
-        "UpdateSensitivityWeights",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
+    PHYSICAL_PROPERTY = "magnetization"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
@@ -77,12 +69,8 @@ class MagneticVectorParams(InversionBaseParams):
         self._bz_channel_bool = None
         self._bz_channel = None
         self._bz_uncertainty = None
-        self._starting_inclination_object: UUID = None
-        self._starting_declination_object: UUID = None
         self._starting_inclination = None
         self._starting_declination = None
-        self._reference_inclination_object: UUID = None
-        self._reference_declination_object: UUID = None
         self._reference_inclination = None
         self._reference_declination = None
         self._fix_aspect_ratio = None
@@ -377,26 +365,6 @@ class MagneticVectorParams(InversionBaseParams):
         self.setter_validator("bz_uncertainty", val, fun=self._uuid_promoter)
 
     @property
-    def starting_inclination_object(self):
-        return self._starting_inclination_object
-
-    @starting_inclination_object.setter
-    def starting_inclination_object(self, val):
-        self.setter_validator(
-            "starting_inclination_object", val, fun=self._uuid_promoter
-        )
-
-    @property
-    def starting_declination_object(self):
-        return self._starting_declination_object
-
-    @starting_declination_object.setter
-    def starting_declination_object(self, val):
-        self.setter_validator(
-            "starting_declination_object", val, fun=self._uuid_promoter
-        )
-
-    @property
     def starting_inclination(self):
         return self._starting_inclination
 
@@ -411,26 +379,6 @@ class MagneticVectorParams(InversionBaseParams):
     @starting_declination.setter
     def starting_declination(self, val):
         self.setter_validator("starting_declination", val, fun=self._uuid_promoter)
-
-    @property
-    def reference_inclination_object(self):
-        return self._reference_inclination_object
-
-    @reference_inclination_object.setter
-    def reference_inclination_object(self, val):
-        self.setter_validator(
-            "reference_inclination_object", val, fun=self._uuid_promoter
-        )
-
-    @property
-    def reference_declination_object(self):
-        return self._reference_declination_object
-
-    @reference_declination_object.setter
-    def reference_declination_object(self, val):
-        self.setter_validator(
-            "reference_declination_object", val, fun=self._uuid_promoter
-        )
 
     @property
     def reference_inclination(self):

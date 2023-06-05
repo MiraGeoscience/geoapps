@@ -1,15 +1,21 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from copy import deepcopy
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
+from geoapps import assets_path
+
 defaults = {
+    "version": geoapps.__version__,
     "title": "Create Contours",
     "geoh5": None,
     "objects": None,
@@ -20,13 +26,13 @@ defaults = {
     "fixed_contours": "",
     "resolution": None,
     "ga_group_name": None,
+    "generate_sweep": False,
     "window_azimuth": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
     "window_height": None,
     "run_command": "geoapps.contours.driver",
-    "run_command_boolean": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -35,15 +41,10 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Create Contours",
         "geoh5": "",
         "run_command": "geoapps.contours.driver",
-        "run_command_boolean": {
-            "value": False,
-            "label": "Run python module ",
-            "tooltip": "Warning: launches process to run python model on save",
-            "main": True,
-        },
         "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
@@ -160,6 +161,12 @@ default_ui_json.update(
             "value": "Contours",
             "group": "Python run preferences",
         },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
+        },
         "resolution": 50.0,
         "plot_result": True,
     }
@@ -168,7 +175,7 @@ default_ui_json.update(
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
     "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
     "interval_min": -400.0,

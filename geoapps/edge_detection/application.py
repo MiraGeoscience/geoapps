@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,12 +7,13 @@
 
 from __future__ import annotations
 
-import os
+from pathlib import Path
 from time import time
 
 import numpy as np
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
@@ -53,7 +54,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
@@ -198,21 +199,20 @@ class EdgeDetectionApp(PlotSelection2D):
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
-        with ws as workspace:
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+        with fetch_active_workspace(ws) as workspace:
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
 
             param_dict["geoh5"] = workspace
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-            new_params = EdgeDetectionParams(input_file=ifile, **param_dict)
+            new_params = EdgeDetectionParams(**param_dict)
             driver = EdgeDetectionDriver(new_params)
             driver.run()
 
@@ -228,15 +228,18 @@ class EdgeDetectionApp(PlotSelection2D):
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.params.geoh5
-        self.params.update(param_dict)
-        self.refresh.value = False
-        (
-            vertices,
-            _,
-        ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
-        self.collections = [
-            collections.LineCollection(
-                np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
-            )
-        ]
-        self.refresh.value = True
+
+        with fetch_active_workspace(self.params.geoh5):
+            self.params.update(param_dict)
+
+            self.refresh.value = False
+            (
+                vertices,
+                _,
+            ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
+            self.collections = [
+                collections.LineCollection(
+                    np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
+                )
+            ]
+            self.refresh.value = True

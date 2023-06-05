@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
@@ -53,28 +53,21 @@ class InversionLocations:
 
     """
 
-    def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
-    ):
+    def __init__(self, workspace: Workspace, params: BaseParams):
         """
         :param workspace: Geoh5py workspace object containing location based data.
         :param params: Params object containing location based data parameters.
-        :param window: Center and size defining window for data, topography, etc.
-
         """
         self.workspace = workspace
         self.params = params
-        self.window = window
         self.mask: np.ndarray = None
         self.origin: list[float] = None
         self.angle: float = None
         self.is_rotated: bool = False
         self.locations: np.ndarray = None
-        self.has_pseudo: bool = False
-        self.pseudo_locations: np.ndarray = None
 
         if params.mesh is not None:
-            if params.mesh.rotation is not None:
+            if hasattr(params.mesh, "rotation"):
                 self.origin = np.asarray(params.mesh.origin.tolist())
                 self.angle = -1 * params.mesh.rotation
                 self.is_rotated = True if np.abs(self.angle) != 0 else False
@@ -165,13 +158,11 @@ class InversionLocations:
         mask = self.mask if mask is None else mask
 
         if isinstance(a, dict):
-
             if self._none_dict(a):
                 return a
             else:
                 return self._filter(a, mask)
         else:
-
             if a is None:
                 return None
             else:

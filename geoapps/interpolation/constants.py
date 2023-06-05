@@ -1,15 +1,21 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from copy import deepcopy
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
+from geoapps import assets_path
+
 defaults = {
+    "version": geoapps.__version__,
     "title": "Data Transfer",
     "geoh5": None,
     "objects": None,
@@ -25,8 +31,8 @@ defaults = {
     "no_data_value": None,
     "out_object": None,
     "ga_group_name": None,
+    "generate_sweep": False,
     "run_command": "geoapps.interpolation.driver",
-    "run_command_boolean": False,
     "workspace_geoh5": None,
     "conda_environment": "geoapps",
     "conda_environment_boolean": False,
@@ -35,15 +41,10 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Data Transfer",
         "geoh5": "",
         "run_command": "geoapps.interpolation.driver",
-        "run_command_boolean": {
-            "value": False,
-            "label": "Run python module ",
-            "tooltip": "Warning: launches process to run python model on save",
-            "main": True,
-        },
         "monitoring_directory": "",
         "conda_environment": "geoapps",
         "conda_environment_boolean": False,
@@ -188,13 +189,19 @@ default_ui_json.update(
             "value": "_Interp",
             "group": "Python run preferences",
         },
+        "generate_sweep": {
+            "label": "Generate sweep file",
+            "group": "Python run preferences",
+            "main": True,
+            "value": False,
+        },
     }
 )
 
 validations = {}
 
 app_initializer = {
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
     "max_distance": 2e3,

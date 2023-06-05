@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from uuid import UUID
 
-import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.workspace import Workspace
@@ -232,7 +231,9 @@ class ObjectDataSelection(BaseApplication):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -276,6 +277,7 @@ class ObjectDataSelection(BaseApplication):
         if getattr(self, "_workspace", None) is not None:
             obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
             if obj is None or getattr(obj, "get_data_list", None) is None:
+                self.data.options = [["", None]]
                 self.refresh.value = refresh
                 return
 
@@ -344,6 +346,10 @@ class ObjectDataSelection(BaseApplication):
 
             if value in dict(self.objects.options).values():
                 self.objects.value = value
+
+            self.update_data_list(None)
+
+            if data in dict(self.data.options).values():
                 self.data.value = data
 
     def update_uid_name_map(self):
@@ -367,7 +373,6 @@ class LineOptions(ObjectDataSelection):
     _defaults = {"find_label": "line"}
 
     def __init__(self, **kwargs):
-
         self._multiple_lines = None
         self._add_xyz = False
         self._lines = None
@@ -378,6 +383,40 @@ class LineOptions(ObjectDataSelection):
         self.objects.observe(self.update_data_list, names="value")
         self.data.observe(self.update_line_list, names="value")
         self.data.description = "Lines field"
+
+    def update_data_list(self, _):
+        refresh = self.refresh.value
+        self.refresh.value = False
+        if getattr(self, "_workspace", None) is not None:
+            obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+            if obj is None or getattr(obj, "get_data_list", None) is None:
+                self.refresh.value = refresh
+                return
+
+            options = [["", None]]
+
+            children = sorted_children_dict(obj)
+
+            options += [
+                [k, v]
+                for k, v in children.items()
+                if isinstance(obj.get_entity(v)[0], ReferencedData)
+            ]
+
+            value = self.data.value
+            self.data.options = options
+
+            self.update_uid_name_map()
+
+            if value in dict(options).values():
+                self.data.value = value
+            elif self.find_label:
+                self.data.value = find_value(self.data.options, self.find_label)
+        else:
+            self.data.options = []
+            self.data.uid_name_map = {}
+
+        self.refresh.value = refresh
 
     @property
     def main(self):
@@ -421,12 +460,15 @@ class LineOptions(ObjectDataSelection):
         _, data = self.get_selected_entities()
         if data and getattr(data[0], "values", None) is not None:
             if isinstance(data[0], ReferencedData):
-                self.lines.options = [""] + list(data[0].value_map.map.values())
+                self.lines.options = [["", None]] + [
+                    [v, k] for k, v in data[0].value_map.map.items()
+                ]
             else:
-                self.lines.options = [""] + np.unique(data[0].values).tolist()
+                self.lines.options = [["", None]]
+                print("Line field must be of type 'ReferencedData'")
 
         else:
-            self.lines.options = [""]
+            self.lines.options = [["", None]]
 
 
 class TopographyOptions(ObjectDataSelection):

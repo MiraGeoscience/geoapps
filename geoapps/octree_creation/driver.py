@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,33 +9,39 @@
 from __future__ import annotations
 
 import sys
-from os import path
+from pathlib import Path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase, Octree
-from geoh5py.ui_json import InputFile, monitored_directory_copy
+from geoh5py.shared.utils import fetch_active_workspace
+from geoh5py.ui_json import monitored_directory_copy, utils
 
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.driver_base.utils import treemesh_2_octree
+from geoapps.octree_creation.constants import validations
 from geoapps.octree_creation.params import OctreeParams
 
 
-class OctreeDriver:
+class OctreeDriver(BaseDriver):
+    _params_class = OctreeParams
+    _validations = validations
+
     def __init__(self, params: OctreeParams):
+        super().__init__(params)
         self.params: OctreeParams = params
 
     def run(self) -> Octree:
         """
         Create an octree mesh from input values
         """
-        octree = self.octree_from_params(self.params)
+        with fetch_active_workspace(self.params.geoh5, mode="r+"):
+            octree = self.octree_from_params(self.params)
 
-        if self.params.monitoring_directory is not None and path.exists(
-            self.params.monitoring_directory
-        ):
-            monitored_directory_copy(self.params.monitoring_directory, octree)
-
-        else:
-            print(f"Result exported to: {self.params.geoh5.h5file}")
+            if (
+                self.params.monitoring_directory is not None
+                and Path(self.params.monitoring_directory).is_dir()
+            ):
+                monitored_directory_copy(self.params.monitoring_directory, octree)
 
         return octree
 
@@ -78,12 +84,12 @@ class OctreeDriver:
                 treemesh,
                 getattr(params, value["object"]).vertices,
                 method=getattr(params, value["type"]),
-                octree_levels=getattr(params, value["levels"]),
+                octree_levels=utils.str2list(getattr(params, value["levels"])),
                 max_distance=getattr(params, value["distance"]),
                 finalize=False,
             )
 
-        print("Finalizing...")
+        print("Finalizing . . .")
         treemesh.finalize()
 
         octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
@@ -93,8 +99,4 @@ class OctreeDriver:
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    params_class = OctreeParams(InputFile.read_ui_json(file))
-    driver = OctreeDriver(params_class)
-
-    with params_class.geoh5.open(model="r+"):
-        driver.run()
+    OctreeDriver.start(file)

@@ -1,12 +1,14 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
-import os
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
@@ -23,11 +25,16 @@ from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import requires_value
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.electricals.direct_current.constants import (
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer as dc_initializer,
 )
-from geoapps.inversion.electricals.induced_polarization.constants import (
+from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
     app_initializer as ip_initializer,
 )
 from geoapps.inversion.potential_fields import (
@@ -49,12 +56,10 @@ from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.constants import app_initializer as peak_initializer
 from geoapps.peak_finder.params import PeakFinderParams
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT, PROJECT_DCIP
 
 # Setup
-tmpfile = lambda path: os.path.join(path, "test.ui.json")
-wrkstr = "FlinFlon.geoh5"
-geoh5 = Workspace(wrkstr)
+geoh5 = Workspace(PROJECT)
 
 
 def tmp_input_file(filepath, idict):
@@ -62,8 +67,9 @@ def tmp_input_file(filepath, idict):
         json.dump(idict, f)
 
 
-mvi_init["geoh5"] = "./FlinFlon.geoh5"
+mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
+mvi_params.input_file.geoh5.open()
 
 
 def catch_invalid_generator(param, invalid_value, validation_type):
@@ -93,16 +99,14 @@ def param_test_generator(param, value):
     assert pval == value
 
 
-def test_write_input_file_validation(tmp_path):
-
-    grav_init["geoh5"] = "./FlinFlon.geoh5"
+def test_write_input_file_validation(tmp_path: Path):
+    grav_init["geoh5"] = str(PROJECT)
     params = GravityParams(validate=False, **grav_init)
-    params.starting_model = None
     params.validate = True
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
 
-    assert "starting_model" in str(excinfo.value)
+    assert "gz_channel" in str(excinfo.value)
 
 
 def test_params_initialize():
@@ -110,8 +114,8 @@ def test_params_initialize():
         MagneticScalarParams(),
         MagneticVectorParams(),
         GravityParams(),
-        DirectCurrentParams(),
-        InducedPolarizationParams(),
+        DirectCurrent3DParams(),
+        InducedPolarization3DParams(),
         OctreeParams(),
         PeakFinderParams(),
     ]:
@@ -126,24 +130,23 @@ def test_params_initialize():
             check.append(getattr(params, k) == v)
         assert all(check)
 
-    params = MagneticVectorParams(u_cell_size=9999.0)
-    assert params.u_cell_size == 9999.0
-    params = GravityParams(u_cell_size=9999.0)
-    assert params.u_cell_size == 9999.0
+    params = MagneticVectorParams(starting_model=1.0)
+    assert params.starting_model == 1.0
+    params = GravityParams(starting_model=1.0)
+    assert params.starting_model == 1.0
     params = OctreeParams(vertical_padding=500.0)
     assert params.vertical_padding == 500.0
     params = PeakFinderParams(center=1000.0)
     assert params.center == 1000.0
 
 
-def test_input_file_construction(tmp_path):
-
+def test_input_file_construction(tmp_path: Path):
     params_classes = [
         GravityParams,
         MagneticScalarParams,
         MagneticVectorParams,
-        DirectCurrentParams,
-        InducedPolarizationParams,
+        DirectCurrent3DParams,
+        InducedPolarization3DParams,
         OctreeParams,
         PeakFinderParams,
     ]
@@ -153,9 +156,7 @@ def test_input_file_construction(tmp_path):
         for forward_only in [True, False]:
             params = params_class(forward_only=forward_only)
             params.write_input_file(name=filename, path=tmp_path, validate=False)
-            ifile = InputFile.read_ui_json(
-                os.path.join(tmp_path, filename), validation_options={"disabled": True}
-            )
+            ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
             params = params_class(input_file=ifile)
 
             check = []
@@ -163,6 +164,7 @@ def test_input_file_construction(tmp_path):
                 # TODO Need to better handle defaults None to value
                 if (" " in k) or k in [
                     "starting_model",
+                    "reference_model",
                     "conductivity_model",
                     "min_value",
                 ]:
@@ -172,19 +174,18 @@ def test_input_file_construction(tmp_path):
             assert all(check)
 
 
-def test_default_input_file(tmp_path):
-
+def test_default_input_file(tmp_path: Path):
     for params_class in [
         MagneticScalarParams,
         MagneticVectorParams,
         GravityParams,
-        DirectCurrentParams,
-        InducedPolarizationParams,
+        DirectCurrent3DParams,
+        InducedPolarization3DParams,
     ]:
-        filename = os.path.join(tmp_path, "test.ui.json")
+        filename = "test.ui.json"
         params = params_class()
         params.write_input_file(name=filename, path=tmp_path, validate=False)
-        ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
+        ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
 
         # check that reads back into input file with defaults
         check = []
@@ -206,14 +207,14 @@ def test_default_input_file(tmp_path):
 
 def test_update():
     new_params = {
-        "u_cell_size": 5.0,
+        "starting_model": 99.0,
     }
     params = MagneticVectorParams()
     params.update(new_params)
-    assert params.u_cell_size == 5.0
+    assert params.starting_model == 99.0
 
 
-def test_chunk_validation_mvi(tmp_path):
+def test_chunk_validation_mvi(tmp_path: Path):
     test_dict = dict(mvi_init, **{"geoh5": geoh5})
     test_dict.pop("data_object")
     params = MagneticVectorParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -223,7 +224,7 @@ def test_chunk_validation_mvi(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_mag(tmp_path):
+def test_chunk_validation_mag(tmp_path: Path):
     test_dict = dict(mag_initializer, **{"geoh5": geoh5})
     test_dict["inducing_field_strength"] = None
     params = MagneticScalarParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -233,41 +234,44 @@ def test_chunk_validation_mag(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_grav(tmp_path):
+def test_chunk_validation_grav(tmp_path: Path):
     test_dict = dict(grav_init, **{"geoh5": geoh5})
-    test_dict["starting_model"] = None
     params = GravityParams(**test_dict)  # pylint: disable=repeated-keyword
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Cannot set a None", "starting_model"]:
+    for a in ["Cannot set a None", "gz_channel"]:
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_dc(tmp_path):
-    dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
-    test_dict = dict(dc_initializer, **{"geoh5": dc_geoh5})
-    test_dict.pop("topography_object")
-    params = DirectCurrentParams(**test_dict)  # pylint: disable=repeated-keyword
+def test_chunk_validation_dc(tmp_path: Path):
+    with Workspace(PROJECT_DCIP) as dc_geoh5:
+        test_dict = dc_initializer.copy()
+        test_dict.update({"geoh5": dc_geoh5})
+        test_dict.pop("topography_object")
+        params = DirectCurrent3DParams(**test_dict)  # pylint: disable=repeated-keyword
 
-    with pytest.raises(OptionalValidationError) as excinfo:
-        params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Cannot set a None value", "topography_object"]:
-        assert a in str(excinfo.value)
-
-
-def test_chunk_validation_ip(tmp_path):
-    dc_geoh5 = Workspace("FlinFlon_dcip.geoh5")
-    test_dict = dict(ip_initializer, **{"geoh5": dc_geoh5})
-    test_dict.pop("conductivity_model")
-    params = InducedPolarizationParams(**test_dict)  # pylint: disable=repeated-keyword
-
-    with pytest.raises(OptionalValidationError) as excinfo:
-        params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Cannot set a None", "conductivity_model"]:
-        assert a in str(excinfo.value)
+        with pytest.raises(OptionalValidationError) as excinfo:
+            params.write_input_file(name="test.ui.json", path=tmp_path)
+        for a in ["Cannot set a None value", "topography_object"]:
+            assert a in str(excinfo.value)
 
 
-def test_chunk_validation_octree(tmp_path):
+def test_chunk_validation_ip(tmp_path: Path):
+    with Workspace(PROJECT_DCIP) as dc_geoh5:
+        test_dict = ip_initializer.copy()
+        test_dict.update({"geoh5": dc_geoh5})
+        test_dict.pop("topography_object")
+        params = InducedPolarization3DParams(
+            **test_dict
+        )  # pylint: disable=repeated-keyword
+
+        with pytest.raises(OptionalValidationError) as excinfo:
+            params.write_input_file(name="test.ui.json", path=tmp_path)
+        for a in ["Cannot set a None", "topography_object"]:
+            assert a in str(excinfo.value)
+
+
+def test_chunk_validation_octree(tmp_path: Path):
     test_dict = dict(octree_initializer, **{"geoh5": geoh5})
     test_dict.pop("objects")
     params = OctreeParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -278,7 +282,7 @@ def test_chunk_validation_octree(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_peakfinder(tmp_path):
+def test_chunk_validation_peakfinder(tmp_path: Path):
     test_dict = dict(peak_initializer, **{"geoh5": geoh5})
     test_dict.pop("data")
     params = PeakFinderParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -293,7 +297,7 @@ def test_active_set():
     test_dict = dict(mvi_init, **{"geoh5": geoh5})
     params = MagneticVectorParams(**test_dict)  # pylint: disable=repeated-keyword
     assert "inversion_type" in params.active_set()
-    assert "u_cell_size" in params.active_set()
+    assert "mesh" in params.active_set()
 
 
 def test_validate_inversion_type():
@@ -338,8 +342,6 @@ def test_validate_topography():
     mvi_params.topography_object = UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     newval = UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}")
     param_test_generator(param, newval)
-    newval = 1234.0
-    param_test_generator(param, newval)
     newval = UUID("{79b719bc-d996-4f52-9af0-10aa9c7bb941}")
     catch_invalid_generator(param, newval, "association")
     newval = "abc"
@@ -372,36 +374,8 @@ def test_validate_tmi_uncertainty():
     catch_invalid_generator(param, {}, "type")
 
 
-def test_validate_starting_model_object():
-    param = "starting_model_object"
-    newval = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
-    param_test_generator(param, newval)
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_starting_inclination_object():
-    param = "starting_inclination_object"
-    newval = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
-    param_test_generator(param, newval)
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_starting_declination_object():
-    param = "starting_declination_object"
-    newval = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
-    param_test_generator(param, newval)
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
 def test_validate_starting_model():
     param = "starting_model"
-    mvi_params.starting_model_object = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
     param_test_generator(param, 1.0)
     newval = uuid4()
     catch_invalid_generator(param, newval, "association")
@@ -410,7 +384,6 @@ def test_validate_starting_model():
 
 def test_validate_starting_inclination():
     param = "starting_inclination"
-    mvi_params.starting_model_object = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
     param_test_generator(param, 1.0)
     newval = uuid4()
     catch_invalid_generator(param, newval, "association")
@@ -419,7 +392,6 @@ def test_validate_starting_inclination():
 
 def test_validate_starting_declination():
     param = "starting_declination"
-    mvi_params.starting_model_object = UUID("{e334f687-df71-4538-ad28-264e420210b8}")
     param_test_generator(param, 1.0)
     newval = uuid4()
     catch_invalid_generator(param, newval, "association")
@@ -443,22 +415,8 @@ def test_validate_receivers_radar_drape():
     catch_invalid_generator(param, {}, "type")
 
 
-def test_validate_receivers_offset_x():
-    param = "receivers_offset_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "test", "type")
-
-
-def test_validate_receivers_offset_y():
-    param = "receivers_offset_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "test", "type")
-
-
 def test_validate_receivers_offset_z():
-    param = "receivers_offset_x"
+    param = "receivers_offset_z"
     newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
@@ -520,69 +478,6 @@ def test_validate_mesh():
     catch_invalid_generator(param, {}, "type")
 
 
-def test_validate_u_cell_size():
-    param = "u_cell_size"
-    newval = 9.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "sdf", "type")
-
-
-def test_validate_v_cell_size():
-    param = "v_cell_size"
-    newval = 9.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "sdf", "type")
-
-
-def test_validate_w_cell_size():
-    param = "w_cell_size"
-    newval = 9.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "sdf", "type")
-
-
-def test_validate_octree_levels_topo():
-    param = "octree_levels_topo"
-    newval = [1, 2, 3]
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_octree_levels_obs():
-    param = "octree_levels_obs"
-    newval = [1, 2, 3]
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_depth_core():
-    param = "depth_core"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_max_distance():
-    param = "max_distance"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_horizontal_padding():
-    param = "horizontal_padding"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_vertical_padding():
-    param = "vertical_padding"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
 def test_validate_window_center_x():
     param = "window_center_x"
     newval = 99.0
@@ -625,22 +520,99 @@ def test_validate_chi_factor():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_max_iterations():
-    param = "max_iterations"
-    newval = 2
+def test_sens_wts_threshold():
+    param = "sens_wts_threshold"
+    newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_max_cg_iterations():
-    param = "max_cg_iterations"
-    newval = 2
+def test_every_iteration_bool():
+    param = "every_iteration_bool"
+    newval = True
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_f_min_change():
+    param = "f_min_change"
+    newval = 1e-3
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_beta_tol():
+    param = "beta_tol"
+    newval = 0.2
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_prctile():
+    param = "prctile"
+    newval = 90
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolingRate():
+    param = "coolingRate"
+    newval = 3
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolingFactor():
+    param = "coolingFactor"
+    newval = 4.0
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolEps_q():
+    param = "coolEps_q"
+    newval = False
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_coolEpsFact():
+    param = "coolEpsFact"
+    newval = 1.1
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_beta_search():
+    param = "beta_search"
+    newval = True
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_starting_chi_factor():
+    param = "starting_chi_factor"
+    newval = 2.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
 def test_validate_max_global_iterations():
     param = "max_global_iterations"
+    newval = 2
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_validate_max_irls_iterations():
+    param = "max_irls_iterations"
+    newval = 1
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, "test", "type")
+
+
+def test_validate_max_cg_iterations():
+    param = "max_cg_iterations"
     newval = 2
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
@@ -723,44 +695,23 @@ def test_validate_z_norm():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_reference_model_object():
-    param = "reference_model_object"
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_reference_inclination_object():
-    param = "reference_inclination_object"
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_reference_declination_object():
-    param = "reference_declination_object"
-    newval = uuid4()
-    catch_invalid_generator(param, newval, "association")
-    catch_invalid_generator(param, {}, "type")
-
-
 def test_validate_reference_model():
     param = "reference_model"
-    newval = uuid4()
+    newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
 
 
 def test_validate_reference_inclination():
     param = "reference_inclination"
-    newval = uuid4()
+    newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
 
 
 def test_validate_reference_declination():
     param = "reference_declination"
-    newval = uuid4()
+    newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
 
@@ -802,10 +753,11 @@ def test_validate_n_cpu():
 
 grav_params = GravityParams(
     **{
-        "geoh5": "./FlinFlon.geoh5",
+        "geoh5": str(PROJECT),
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+grav_params.input_file.geoh5.open()
 
 
 def test_validate_geoh5():
@@ -822,6 +774,13 @@ def test_validate_out_group():
     newval = "test_"
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
+
+
+def test_validate_distributed_workers():
+    param = "distributed_workers"
+    newval = "one, two"
+    param_test_generator(param, newval)
+    catch_invalid_generator(param, 123, "type")
 
 
 def test_gravity_inversion_type():
@@ -843,7 +802,7 @@ def test_gz_channel_bool():
 
 
 def test_gz_channel():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_channel = uuid4()
 
     with pytest.raises(TypeValidationError) as excinfo:
@@ -855,7 +814,7 @@ def test_gz_channel():
 
 
 def test_gz_uncertainty():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_uncertainty = uuid4()
 
     grav_params.gz_uncertainty = 4.0
@@ -879,7 +838,6 @@ def test_gz_uncertainty():
 
 
 def test_guv_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.guv_channel_bool = "alskdj"
 
@@ -925,7 +883,6 @@ def test_guv_uncertainty():
 
 
 def test_gxy_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gxy_channel_bool = "alskdj"
 
@@ -971,7 +928,6 @@ def test_gxy_uncertainty():
 
 
 def test_gxx_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gxx_channel_bool = "alskdj"
 
@@ -1017,7 +973,6 @@ def test_gxx_uncertainty():
 
 
 def test_gyy_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gyy_channel_bool = "alskdj"
 
@@ -1063,7 +1018,6 @@ def test_gyy_uncertainty():
 
 
 def test_gzz_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gzz_channel_bool = "alskdj"
 
@@ -1109,7 +1063,6 @@ def test_gzz_uncertainty():
 
 
 def test_gxz_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gxz_channel_bool = "alskdj"
 
@@ -1155,7 +1108,6 @@ def test_gxz_uncertainty():
 
 
 def test_gyz_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gyz_channel_bool = "alskdj"
 
@@ -1201,7 +1153,6 @@ def test_gyz_uncertainty():
 
 
 def test_gx_channel_bool():
-
     with pytest.raises(TypeValidationError) as excinfo:
         grav_params.gx_channel_bool = "alskdj"
 
@@ -1293,10 +1244,11 @@ def test_gy_uncertainty():
 
 mag_params = MagneticScalarParams(
     **{
-        "geoh5": "./FlinFlon.geoh5",
+        "geoh5": str(PROJECT),
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+mag_params.geoh5.open()
 
 
 def test_magnetic_scalar_inversion_type():
@@ -1797,8 +1749,8 @@ def test_bz_uncertainty():
 
 
 def test_direct_current_inversion_type():
-    params = DirectCurrentParams()
-    params.inversion_type = "direct current"
+    params = DirectCurrent3DParams()
+    params.inversion_type = "direct current 3d"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
 
@@ -1811,7 +1763,7 @@ def test_direct_current_inversion_type():
 
 
 def test_direct_current_data_object():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     params.data_object = uuid4()
 
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1826,7 +1778,7 @@ def test_direct_current_data_object():
 
 
 def test_potential_channel_bool():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     with pytest.raises(TypeValidationError) as excinfo:
         params.potential_channel_bool = "alskdj"
 
@@ -1839,7 +1791,7 @@ def test_potential_channel_bool():
 
 
 def test_potential_channel():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     params.potential_channel = uuid4()
     params.potential_channel = uuid4()
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1854,7 +1806,7 @@ def test_potential_channel():
 
 
 def test_potential_uncertainty():
-    params = DirectCurrentParams()
+    params = DirectCurrent3DParams()
     params.potential_uncertainty = uuid4()
     params.potential_uncertainty = uuid4()
     params.potential_uncertainty = 4
@@ -1879,8 +1831,8 @@ def test_potential_uncertainty():
 
 
 def test_induced_polarization_inversion_type():
-    params = InducedPolarizationParams()
-    params.inversion_type = "induced polarization"
+    params = InducedPolarization3DParams()
+    params.inversion_type = "induced polarization 3d"
     with pytest.raises(ValueValidationError) as excinfo:
         params.inversion_type = "alskdj"
 
@@ -1893,7 +1845,7 @@ def test_induced_polarization_inversion_type():
 
 
 def test_chargeability_channel_bool():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.chargeability_channel_bool = True
     with pytest.raises(TypeValidationError) as excinfo:
         params.chargeability_channel_bool = "alskdj"
@@ -1907,7 +1859,7 @@ def test_chargeability_channel_bool():
 
 
 def test_chargeability_channel():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.chargeability_channel = uuid4()
     params.chargeability_channel = uuid4()
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1922,7 +1874,7 @@ def test_chargeability_channel():
 
 
 def test_chargeability_uncertainty():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.chargeability_uncertainty = uuid4()
     params.chargeability_uncertainty = uuid4()
     params.chargeability_uncertainty = 4
@@ -1947,7 +1899,7 @@ def test_chargeability_uncertainty():
 
 
 def conductivity_model_object():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.conductivity_model_object = uuid4()
     params.conductivity_model_object = uuid4()
     with pytest.raises(TypeValidationError) as excinfo:
@@ -1962,7 +1914,7 @@ def conductivity_model_object():
 
 
 def test_conductivity_model():
-    params = InducedPolarizationParams()
+    params = InducedPolarization3DParams()
     params.conductivity_model = uuid4()
     params.conductivity_model = uuid4()
     params.conductivity_model = 4
@@ -1986,14 +1938,13 @@ def test_conductivity_model():
     )
 
 
-def test_isValue(tmp_path):
+def test_isValue(tmp_path: Path):
     file_name = "test.ui.json"
     mesh = geoh5.get_entity("O2O_Interp_25m")[0]
-    mag_params.starting_model_object = mesh.uid
     mag_params.starting_model = 0.0
     mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
 
-    with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
+    with open(tmp_path / file_name, encoding="utf-8") as f:
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is True, "isValue should be True"
@@ -2001,7 +1952,7 @@ def test_isValue(tmp_path):
     mag_params.starting_model = mesh.get_data("VTEM_model")[0].uid
 
     mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
-    with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
+    with open(tmp_path / file_name, encoding="utf-8") as f:
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is False, "isValue should be False"

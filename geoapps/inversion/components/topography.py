@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,27 +9,22 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from geoh5py.shared import Entity
-
-from geoapps.inversion.natural_sources.magnetotellurics.params import (
-    MagnetotelluricsParams,
-)
-
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.drivers import BaseParams
+    from geoapps.driver_base.params import BaseParams
     from . import InversionMesh
-    from typing import Any
 
-from copy import deepcopy
+import warnings
 
 import numpy as np
+from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
+from geoapps.inversion.components.data import InversionData
+from geoapps.inversion.components.locations import InversionLocations
 from geoapps.shared_utils.utils import filter_xy
-
-from .data import InversionData
-from .locations import InversionLocations
+from geoapps.utils.models import floating_active
+from geoapps.utils.surveys import get_containing_cells
 
 
 class InversionTopography(InversionLocations):
@@ -52,40 +47,31 @@ class InversionTopography(InversionLocations):
     """
 
     def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
+        self,
+        workspace: Workspace,
+        params: BaseParams,
     ):
         """
-        :param: workspace: Geoh5py workspace object containing location based data.
+        :param: workspace: :obj`geoh5py.workspace.Workspace` object containing location based data.
         :param: params: Params object containing location based data parameters.
-        :param: window: Center and size defining window for data, topography, etc.
         """
-        super().__init__(workspace, params, window)
-        self.locations: np.ndarray = None
-        self.mask: np.ndarray = None
+        super().__init__(workspace, params)
+        self.locations: np.ndarray | None = None
+        self.mask: np.ndarray | None = None
         self._initialize()
 
     def _initialize(self):
         self.locations = self.get_locations(self.params.topography_object)
-        self.mask = np.ones(len(self.locations), dtype=bool)
-        topo_window = deepcopy(self.window)
-
-        if topo_window is not None:
-            topo_window["size"] = [2 * s for s in topo_window["size"]]
-
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
-            window=topo_window,
             angle=self.angle,
-            mask=self.mask,
         )
 
         self.locations = super().filter(self.locations)
 
         if self.is_rotated:
             self.locations = super().rotate(self.locations)
-
-        self.entity = self.write_entity()
 
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
@@ -95,27 +81,33 @@ class InversionTopography(InversionLocations):
         :return: active_cells: Mask that restricts a model to the set of
             earth cells that are active in the inversion (beneath topography).
         """
-        if isinstance(self.params, MagnetotelluricsParams):
+        forced_to_surface = [
+            "magnetotellurics",
+            "direct current 3d",
+            "direct current 2d",
+            "induced polarization 3d",
+            "induced polarization 2d",
+        ]
+        if self.params.inversion_type in forced_to_surface:
             active_cells = active_from_xyz(
-                mesh.mesh, self.locations, grid_reference="bottom_nodes", logical="any"
+                mesh.entity, self.locations, grid_reference="bottom"
             )
-            active_cells[
-                mesh.mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
-                    data.locations
+            active_cells = active_cells[np.argsort(mesh.permutation)]
+            print(
+                "Adjusting active cells so that receivers are all within an active cell . . ."
+            )
+            active_cells[get_containing_cells(mesh.mesh, data)] = True
+
+            if floating_active(mesh.mesh, active_cells):
+                warnings.warn(
+                    "Active cell adjustment has created a patch of active cells in the air, likely due to a faulty survey location."
                 )
-            ] = True
+
         else:
             active_cells = active_from_xyz(
-                mesh.mesh, self.locations, grid_reference="cell_centers"
+                mesh.entity, self.locations, grid_reference="center"
             )
-
-        mesh.entity.add_data(
-            {
-                "active_cells": {
-                    "values": active_cells[mesh.octree_permutation].astype("float64")
-                }
-            }
-        )
+            active_cells = active_cells[np.argsort(mesh.permutation)]
 
         return active_cells
 
@@ -144,10 +136,3 @@ class InversionTopography(InversionLocations):
                 locs[:, 2] = elev
 
         return locs
-
-    def write_entity(self):
-        """Write out the survey to geoh5"""
-
-        entity = super().create_entity("Topo", self.locations)
-
-        return entity

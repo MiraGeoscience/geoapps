@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -33,13 +33,13 @@ class LineDataDerivatives:
 
     def __init__(
         self,
-        locations: np.ndarray = None,
-        values: np.array = None,
-        epsilon: float = None,
+        locations: np.ndarray | None = None,
+        values: np.array | None = None,
+        epsilon: float | None = None,
         interpolation: str = "gaussian",
         smoothing: int = 0,
         residual: bool = False,
-        sampling: float = None,
+        sampling: float | None = None,
         **kwargs,
     ):
         self._locations_resampled = None
@@ -310,7 +310,6 @@ class LineDataDerivatives:
 
 
 def default_groups_from_property_group(property_group, start_index=0):
-
     _default_channel_groups = {
         "early": {"label": ["early"], "color": "#0000FF", "channels": []},
         "middle": {"label": ["middle"], "color": "#FFFF00", "channels": []},
@@ -656,7 +655,6 @@ def find_anomalies(
             "linear_fit": linear_fit,
         }
         if minimal_output:
-
             group["skew"] = np.mean(skew)
             group["inflx_dwn"] = np.c_[
                 profile.interp_x(locs[inflx_dwn]),

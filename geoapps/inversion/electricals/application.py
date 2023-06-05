@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,33 +10,35 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import os.path as path
 import uuid
 import warnings
+from pathlib import Path
 from time import time
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.objects import (
-    BlockModel,
-    CurrentElectrode,
-    Curve,
-    Octree,
-    Points,
-    PotentialElectrode,
-    Surface,
-)
+from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.electricals import DirectCurrentParams, InducedPolarizationParams
-from geoapps.inversion.electricals.direct_current.constants import app_initializer
+from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+    app_initializer,
+)
+from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
+    InducedPolarization3DParams,
+)
+from geoapps.inversion.potential_fields.application import (
+    MeshOctreeOptions,
+    ModelOptions,
+)
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
-from geoapps.utils.string import string_2_list
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -60,24 +62,24 @@ def inversion_defaults():
     """
     return {
         "units": {
-            "direct current": "S/m",
-            "induced polarization": "V/V",
+            "direct current 3d": "S/m",
+            "induced polarization 3d": "V/V",
         },
         "property": {
-            "direct current": "conductivity",
-            "induced polarization": "chargeability",
+            "direct current 3d": "conductivity",
+            "induced polarization 3d": "chargeability",
         },
         "reference_value": {
-            "direct current": 1e-1,
-            "induced polarization": 0.0,
+            "direct current 3d": 1e-1,
+            "induced polarization 3d": 0.0,
         },
         "starting_value": {
-            "direct current": 1e-1,
-            "induced polarization": 1e-4,
+            "direct current 3d": 1e-1,
+            "induced polarization 3d": 1e-4,
         },
         "component": {
-            "direct current": "potential",
-            "induced polarization": "chargeability",
+            "direct current 3d": "potential",
+            "induced polarization 3d": "chargeability",
         },
     }
 
@@ -87,7 +89,7 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = DirectCurrentParams
+    _param_class = DirectCurrent3DParams
     _select_multiple = True
     _add_groups = False
     _sensor = None
@@ -104,13 +106,13 @@ class InversionApp(PlotSelection2D):
             kwargs.pop("plot_result")
 
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
 
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
 
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -118,7 +120,7 @@ class InversionApp(PlotSelection2D):
             description="Forward only",
         )
         self._inversion_type = Dropdown(
-            options=["direct current", "induced polarization"],
+            options=["direct current 3d", "induced polarization 3d"],
             description="inversion Type:",
         )
         self._write = Button(
@@ -127,24 +129,45 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
         self._chi_factor = FloatText(
             value=1, description="Target misfit", disabled=False
         )
+
+        self._mesh_octree = MeshOctreeOptions(workspace=self.defaults.get("geoh5"))
+        self.mesh = self._mesh_octree.mesh
+
         self._lower_bound_group = ModelOptions(
-            "lower_bound", add_xyz=False, **self.defaults
+            "lower_bound",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._upper_bound_group = ModelOptions(
-            "upper_bound", add_xyz=False, **self.defaults
+            "upper_bound",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._ignore_values = widgets.Text(
             description="Value (i.e. '<0' for no negatives)",
         )
-        self._max_iterations = IntText(value=10, description="Max beta Iterations")
+        self._store_sensitivities = Dropdown(
+            options=["ram", "disk"], description="Storage device:", value="disk"
+        )
+        self._max_global_iterations = IntText(
+            value=10, description="Max beta Iterations"
+        )
+        self._max_irls_iterations = IntText(value=10, description="Max IRLS iterations")
+        self._coolingRate = IntText(value=1, description="Iterations per beta")
+        self._coolingFactor = FloatText(value=2, description="Beta cooling factor")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
+        self._sens_wts_threshold = FloatText(
+            value=80, description="Threshold sensitivity weights", max=100, min=0
+        )
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
         self._n_cpu = IntText(
             value=int(multiprocessing.cpu_count() / 2), description="Max CPUs"
@@ -156,25 +179,40 @@ class InversionApp(PlotSelection2D):
         self._initial_beta_panel = HBox([self._initial_beta_ratio])
         self._optimization = VBox(
             [
-                self._max_iterations,
+                self._max_global_iterations,
+                self._max_irls_iterations,
+                self._coolingRate,
+                self._coolingFactor,
                 self._chi_factor,
                 self._initial_beta_panel,
                 self._max_cg_iterations,
                 self._tol_cg,
                 self._n_cpu,
+                self._store_sensitivities,
+                self._sens_wts_threshold,
                 self._tile_spatial,
             ]
         )
         self._starting_model_group = ModelOptions(
-            "starting_model", add_xyz=False, **self.defaults
+            "starting_model",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._starting_model_group.options.options = ["Constant", "Model"]
+        self._starting_model_group.options.value = "Constant"
         self._conductivity_model_group = ModelOptions(
-            "conductivity_model", add_xyz=False, **self.defaults
+            "conductivity_model",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._conductivity_model_group.options.options = ["Model"]
         self._reference_model_group = ModelOptions(
-            "reference_model", add_xyz=False, **self.defaults
+            "reference_model",
+            add_xyz=False,
+            objects=self._mesh_octree.mesh,
+            **self.defaults,
         )
         self._reference_model_group.options.observe(self.update_ref)
         self._topography_group = TopographyOptions(add_xyz=False, **self.defaults)
@@ -184,8 +222,6 @@ class InversionApp(PlotSelection2D):
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
             add_xyz=False,
-            receivers_offset_x=self.defaults["receivers_offset_x"],
-            receivers_offset_y=self.defaults["receivers_offset_y"],
             receivers_offset_z=self.defaults["receivers_offset_z"],
             z_from_topo=self.defaults["z_from_topo"],
             receivers_radar_drape=self.defaults["receivers_radar_drape"],
@@ -259,7 +295,6 @@ class InversionApp(PlotSelection2D):
                 ),
             ]
         )
-        self._mesh_octree = MeshOctreeOptions(**self.defaults)
         self.inversion_options = {
             "conductivity model": VBox(
                 [
@@ -298,14 +333,11 @@ class InversionApp(PlotSelection2D):
         )
         self.plotting = None
         self._starting_channel = None
-        self._mesh = None
+        self._mesh = self._mesh_octree.mesh
         self._detrend_type = None
         self._detrend_order = None
         self._initial_beta_options = None
         super().__init__(**self.defaults)
-
-        for item in ["window_width", "window_height", "resolution"]:
-            getattr(self, item).observe(self.update_octree_param, names="value")
 
         self.write.on_click(self.write_trigger)
 
@@ -334,6 +366,14 @@ class InversionApp(PlotSelection2D):
     #     return self._initial_beta
 
     @property
+    def coolingRate(self):
+        return self._coolingRate
+
+    @property
+    def coolingFactor(self):
+        return self._coolingFactor
+
+    @property
     def initial_beta(self):
         return self._initial_beta_ratio
 
@@ -358,8 +398,12 @@ class InversionApp(PlotSelection2D):
         return self._ignore_values
 
     @property
-    def max_iterations(self):
-        return self._max_iterations
+    def max_global_iterations(self):
+        return self._max_global_iterations
+
+    @property
+    def max_irls_iterations(self):
+        return self._max_irls_iterations
 
     @property
     def max_cg_iterations(self):
@@ -378,10 +422,6 @@ class InversionApp(PlotSelection2D):
         ipywidgets.IntText()
         """
         return self._tile_spatial
-
-    @property
-    def mesh(self):
-        return self._mesh
 
     @property
     def norms(self):
@@ -416,6 +456,10 @@ class InversionApp(PlotSelection2D):
         return self._ga_group_name
 
     @property
+    def store_sensitivities(self):
+        return self._store_sensitivities
+
+    @property
     def reference_model(self):
         if self._reference_model_group.options.value == "Model":
             return self._reference_model_group.data.value
@@ -435,10 +479,6 @@ class InversionApp(PlotSelection2D):
             self._reference_model_group.data.value = value
 
     @property
-    def reference_model_object(self):
-        return self._reference_model_group.objects
-
-    @property
     def starting_model(self):
         if self._starting_model_group.options.value == "Model":
             return self._starting_model_group.data.value
@@ -456,10 +496,6 @@ class InversionApp(PlotSelection2D):
             self._starting_model_group.data.value = value
 
     @property
-    def starting_model_object(self):
-        return self._starting_model_group.objects
-
-    @property
     def conductivity_model(self):
         if self._conductivity_model_group.options.value == "Model":
             return self._conductivity_model_group.data.value
@@ -475,10 +511,6 @@ class InversionApp(PlotSelection2D):
             self._conductivity_model_group.constant.value = value
         else:
             self._conductivity_model_group.data.value = value
-
-    @property
-    def conductivity_model_object(self):
-        return self._conductivity_model_group.objects
 
     @property
     def lower_bound(self):
@@ -500,10 +532,6 @@ class InversionApp(PlotSelection2D):
             self._lower_bound_group.data.value = value
 
     @property
-    def lower_bound_object(self):
-        return self._lower_bound_group.objects
-
-    @property
     def upper_bound(self):
         if self._upper_bound_group.options.value == "Model":
             return self._upper_bound_group.data.value
@@ -523,8 +551,8 @@ class InversionApp(PlotSelection2D):
             self._upper_bound_group.data.value = value
 
     @property
-    def upper_bound_object(self):
-        return self._upper_bound_group.objects
+    def sens_wts_threshold(self):
+        return self._sens_wts_threshold
 
     @property
     def tol_cg(self):
@@ -630,14 +658,6 @@ class InversionApp(PlotSelection2D):
         return self.sensor.data
 
     @property
-    def receivers_offset_x(self):
-        return self.sensor.receivers_offset_x
-
-    @property
-    def receivers_offset_y(self):
-        return self.sensor.receivers_offset_y
-
-    @property
     def receivers_offset_z(self):
         return self.sensor.receivers_offset_z
 
@@ -693,7 +713,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace
@@ -738,20 +760,20 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict(ui_json_format=False)
-        if self.inversion_type.value == "direct current" and not isinstance(
-            self.params, DirectCurrentParams
+        params = self.params.to_dict()
+        if self.inversion_type.value == "direct current 3d" and not isinstance(
+            self.params, DirectCurrent3DParams
         ):
-            self._param_class = DirectCurrentParams
-            params["inversion_type"] = "direct current"
+            self._param_class = DirectCurrent3DParams
+            params["inversion_type"] = "direct current 3d"
             params["out_group"] = "DCInversion"
             self.option_choices.options = list(self.inversion_options)[1:]
 
-        elif self.inversion_type.value == "induced polarization" and not isinstance(
-            self.params, InducedPolarizationParams
+        elif self.inversion_type.value == "induced polarization 3d" and not isinstance(
+            self.params, InducedPolarization3DParams
         ):
-            self._param_class = InducedPolarizationParams
-            params["inversion_type"] = "induced polarization"
+            self._param_class = InducedPolarization3DParams
+            params["inversion_type"] = "induced polarization 3d"
             params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options)
 
@@ -759,7 +781,7 @@ class InversionApp(PlotSelection2D):
             # validator_opts={"ignore_requirements": True}
         )
 
-        if self.inversion_type.value in ["direct current"]:
+        if self.inversion_type.value in ["direct current 3d"]:
             data_type_list = ["potential"]
         else:
             data_type_list = ["chargeability"]
@@ -768,6 +790,7 @@ class InversionApp(PlotSelection2D):
 
         flag = self.inversion_type.value
         self._reference_model_group.units = inversion_defaults()["units"][flag]
+        self._reference_model_group.options.value = "Constant"
         self._reference_model_group.constant.value = inversion_defaults()[
             "reference_value"
         ][flag]
@@ -775,6 +798,7 @@ class InversionApp(PlotSelection2D):
             "Reference " + inversion_defaults()["property"][flag]
         )
         self._starting_model_group.units = inversion_defaults()["units"][flag]
+        self._starting_model_group.options.value = "Constant"
         self._starting_model_group.constant.value = inversion_defaults()[
             "starting_value"
         ][flag]
@@ -917,7 +941,7 @@ class InversionApp(PlotSelection2D):
         self._run_params = None
         self.trigger.button_style = "danger"
 
-        if self.inversion_type.value == "direct current":
+        if self.inversion_type.value == "direct current 3d":
             self._lower_bound_group.options.value = "Constant"
             self._lower_bound_group.constant.value = 1e-5
         else:
@@ -933,8 +957,6 @@ class InversionApp(PlotSelection2D):
 
         self.update_data_list(None)
         self.sensor.update_data_list(None)
-        # self.lines.update_data_list(None)
-        # self.lines.update_line_list(None)
         self.inversion_type_observer(None)
         self.write.button_style = "warning"
         self._run_params = None
@@ -956,7 +978,6 @@ class InversionApp(PlotSelection2D):
                 and data_list is not None
                 and data_widget.children[1].value is None
             ):
-
                 options = [[data.name, data.uid] for data in data_list]
                 data_widget.children[1].value = find_value(
                     options, [self.data_channel_choices.value]
@@ -970,26 +991,9 @@ class InversionApp(PlotSelection2D):
         self._run_params = None
         self.trigger.button_style = "danger"
 
-    def update_octree_param(self, _):
-        dl = self.resolution.value
-        self._mesh_octree.u_cell_size.value = f"{dl/2:.0f}"
-        self._mesh_octree.v_cell_size.value = f"{dl / 2:.0f}"
-        self._mesh_octree.w_cell_size.value = f"{dl / 2:.0f}"
-        self._mesh_octree.depth_core.value = np.ceil(
-            np.min([self.window_width.value, self.window_height.value]) / 2.0
-        )
-        self._mesh_octree.horizontal_padding.value = (
-            np.max([self.window_width.value, self.window_width.value]) / 2
-        )
-        self.resolution.indices = None
-        self.write.button_style = "warning"
-        self._run_params = None
-        self.trigger.button_style = "danger"
-
     def write_trigger(self, _):
-
         if (
-            self.inversion_type.value == "induced polarization"
+            "induced polarization 3d" in self.inversion_type.value
             and self._conductivity_model_group.data.value is None
         ):
             print(
@@ -1017,14 +1021,12 @@ class InversionApp(PlotSelection2D):
             except AttributeError:
                 continue
 
-        self.workspace.open(mode="r")
         # Create a new workapce and copy objects into it
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
         with ws as new_workspace:
-
             param_dict["geoh5"] = new_workspace
 
             for elem in [
@@ -1090,8 +1092,11 @@ class InversionApp(PlotSelection2D):
                         param_dict[key.lstrip("_")] = value
                 else:
                     sub_keys = []
-                    if isinstance(attr, (ModelOptions, TopographyOptions)):
+                    if isinstance(attr, TopographyOptions):
                         sub_keys = [attr.identifier, attr.identifier + "_object"]
+                        attr = self
+                    elif isinstance(attr, ModelOptions):
+                        sub_keys = [attr.identifier]
                         attr = self
                     elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
                         sub_keys = attr.params_keys
@@ -1114,15 +1119,13 @@ class InversionApp(PlotSelection2D):
 
         self.write.button_style = ""
         self.trigger.button_style = "success"
-        self.workspace.close()
 
     @staticmethod
     def run(params):
-
-        if not isinstance(params, (DirectCurrentParams, InducedPolarizationParams)):
-            raise ValueError(
+        if not isinstance(params, (DirectCurrent3DParams, InducedPolarization3DParams)):
+            raise TypeError(
                 "Parameter 'inversion_type' must be one of "
-                "'direct current' or 'induced polarization'"
+                "'direct current 3d' or 'induced polarization 3d'"
             )
 
         os.system(
@@ -1136,25 +1139,28 @@ class InversionApp(PlotSelection2D):
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
+
+            if isinstance(self.geoh5, Workspace):
+                self.geoh5.close()
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
-
                 # Read the inversion type first...
                 with open(self.file_browser.selected, encoding="utf8") as f:
                     data = json.load(f)
 
-                if data["inversion_type"] == "direct current":
-                    self._param_class = DirectCurrentParams
+                if data["inversion_type"] == "direct current 3d":
+                    self._param_class = DirectCurrent3DParams
 
-                elif data["inversion_type"] == "induced polarization":
-                    self._param_class = InducedPolarizationParams
+                elif data["inversion_type"] == "induced polarization 3d":
+                    self._param_class = InducedPolarization3DParams
 
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
+                self.params.geoh5.open(mode="r")
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**self.params.to_dict())
                 self.refresh.value = True
 
             elif extension == ".geoh5":
@@ -1169,8 +1175,6 @@ class SensorOptions(ObjectDataSelection):
     _options = None
     defaults = {}
     params_keys = [
-        "receivers_offset_x",
-        "receivers_offset_y",
         "receivers_offset_z",
         "z_from_topo",
         "receivers_radar_drape",
@@ -1178,10 +1182,10 @@ class SensorOptions(ObjectDataSelection):
 
     def __init__(self, **kwargs):
         self.defaults.update(**kwargs)
-        self._receivers_offset_x = FloatText(description="dx (+East)", value=0.0)
-        self._receivers_offset_y = FloatText(description="dy (+North)", value=0.0)
         self._receivers_offset_z = FloatText(description="dz (+ve up)", value=0.0)
-        self._z_from_topo = Checkbox(description="Set Z from topo + offsets")
+        self._z_from_topo = Checkbox(
+            description="Set Z from topo + offsets", value=True
+        )
         self.data.description = "Radar (Optional):"
         self._receivers_radar_drape = self.data
         self._offset = None
@@ -1194,8 +1198,6 @@ class SensorOptions(ObjectDataSelection):
                 [
                     self.z_from_topo,
                     Label("Offsets"),
-                    self._receivers_offset_x,
-                    self._receivers_offset_y,
                     self._receivers_offset_z,
                     # self._receivers_radar_drape,
                 ]
@@ -1212,226 +1214,9 @@ class SensorOptions(ObjectDataSelection):
         return self._offset
 
     @property
-    def receivers_offset_x(self):
-        return self._receivers_offset_x
-
-    @property
-    def receivers_offset_y(self):
-        return self._receivers_offset_y
-
-    @property
     def receivers_offset_z(self):
         return self._receivers_offset_z
 
     @property
     def z_from_topo(self):
         return self._z_from_topo
-
-
-class MeshOctreeOptions(ObjectDataSelection):
-    """
-    Widget used for the creation of an octree meshes
-    """
-
-    params_keys = [
-        "mesh",
-        "u_cell_size",
-        "v_cell_size",
-        "w_cell_size",
-        "octree_levels_topo",
-        "octree_levels_obs",
-        "depth_core",
-        "horizontal_padding",
-        "vertical_padding",
-        "max_distance",
-    ]
-
-    def __init__(self, **kwargs):
-        self._mesh = self.objects
-        self._u_cell_size = widgets.FloatText(
-            value=25.0,
-            description="",
-        )
-        self._v_cell_size = widgets.FloatText(
-            value=25.0,
-            description="",
-        )
-        self._w_cell_size = widgets.FloatText(
-            value=25.0,
-            description="",
-        )
-        self._octree_levels_topo = widgets.Text(
-            value="0, 0, 0, 2",
-            description="# Cells below topography",
-        )
-        self._octree_levels_obs = widgets.Text(
-            value="5, 5, 5, 5",
-            description="# Cells below sensors",
-        )
-        self._depth_core = FloatText(
-            value=500,
-            description="Minimum depth (m)",
-        )
-        self._horizontal_padding = widgets.FloatText(
-            value=1000.0,
-            description="Horizontal padding (m)",
-        )
-        self._vertical_padding = widgets.FloatText(
-            value=1000.0,
-            description="Vertical padding (m)",
-        )
-        self._max_distance = FloatText(
-            value=1000,
-            description="Maximum distance (m)",
-        )
-        self._parameters = widgets.VBox(
-            [
-                Label("Core cell size (u, v, z)"),
-                self._u_cell_size,
-                self._v_cell_size,
-                self._w_cell_size,
-                Label("Refinement Layers"),
-                self._octree_levels_topo,
-                self._octree_levels_obs,
-                self._max_distance,
-                Label("Dimensions"),
-                self._horizontal_padding,
-                self._vertical_padding,
-                self._depth_core,
-            ]
-        )
-        self._main = VBox([self.objects, self._parameters])
-        self._objects.observe(self.mesh_selection, names="value")
-
-        super().__init__(**kwargs)
-
-    @property
-    def main(self):
-        return self._main
-
-    @property
-    def mesh(self):
-        return self._mesh
-
-    @property
-    def u_cell_size(self):
-        return self._u_cell_size
-
-    @property
-    def v_cell_size(self):
-        return self._v_cell_size
-
-    @property
-    def w_cell_size(self):
-        return self._w_cell_size
-
-    @property
-    def depth_core(self):
-        return self._depth_core
-
-    @property
-    def max_distance(self):
-        return self._max_distance
-
-    @property
-    def octree_levels_obs(self):
-        return self._octree_levels_obs
-
-    @octree_levels_obs.getter
-    def octree_levels_obs(self):
-        return string_2_list(self._octree_levels_obs.value)
-
-    @property
-    def octree_levels_topo(self):
-        return self._octree_levels_topo
-
-    @octree_levels_topo.getter
-    def octree_levels_topo(self):
-        return string_2_list(self._octree_levels_topo.value)
-
-    @property
-    def horizontal_padding(self):
-        return self._horizontal_padding
-
-    @property
-    def vertical_padding(self):
-        return self._vertical_padding
-
-    def mesh_selection(self, _):
-        if self._mesh.value is None:
-            self._main.children = [
-                self.objects,
-                self._parameters,
-            ]
-        else:
-            self._main.children = [self.objects]
-
-
-class ModelOptions(ObjectDataSelection):
-    """
-    Widgets for the selection of model options
-    """
-
-    def __init__(self, identifier: str = None, **kwargs):
-        self._units = "Units"
-        self._identifier = identifier
-        self._object_types = (BlockModel, Octree, Surface, Curve, Points)
-        self._options = widgets.RadioButtons(
-            options=["Model", "Constant", "None"],
-            value="Constant",
-            disabled=False,
-        )
-        self._options.observe(self.update_panel, names="value")
-        self.objects.description = "Object"
-
-        self.data.description = "Values"
-        self._constant = FloatText(description=self.units)
-        self._description = Label()
-
-        super().__init__(**kwargs)
-
-        self.objects.observe(self.objects_setter, names="value")
-        self.selection_widget = self.main
-        self._main = widgets.VBox(
-            [self._description, widgets.VBox([self._options, self._constant])]
-        )
-
-    def update_panel(self, _):
-
-        if self._options.value == "Model":
-            self._main.children[1].children = [self._options, self.selection_widget]
-            self._main.children[1].children[1].layout.visibility = "visible"
-        elif self._options.value == "Constant":
-            self._main.children[1].children = [self._options, self._constant]
-            self._main.children[1].children[1].layout.visibility = "visible"
-        else:
-            self._main.children[1].children[1].layout.visibility = "hidden"
-
-    def objects_setter(self, _):
-        if self.objects.value is not None:
-            self.options.value = "Model"
-
-    @property
-    def constant(self):
-        return self._constant
-
-    @property
-    def description(self):
-        return self._description
-
-    @property
-    def identifier(self):
-        return self._identifier
-
-    @property
-    def options(self):
-        return self._options
-
-    @property
-    def units(self):
-        return self._units
-
-    @units.setter
-    def units(self, value):
-        self._units = value
-        self._constant.description = value

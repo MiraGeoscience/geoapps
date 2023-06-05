@@ -1,18 +1,20 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import base64
 import io
 import json
-import os
 import socket
 import uuid
 import webbrowser
 from os import environ
+from pathlib import Path
 
 import numpy as np
 from dash import callback_context, no_update
@@ -38,6 +40,7 @@ class BaseDashApplication:
 
     def __init__(self):
         self.workspace = self.params.geoh5
+        self.workspace.open()
         if self._driver_class is not None:
             self.driver = self._driver_class(self.params)  # pylint: disable=E1102
         self.app = None
@@ -80,7 +83,7 @@ class BaseDashApplication:
                 # Create ifile from ui.json
                 ifile = InputFile(ui_json=ui_json)
                 # Demote ifile data so it can be stored as a string
-                ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
+                ui_json_data = ifile.demote(ifile.data)
                 # Get new object value for dropdown from ui.json
                 object_value = ui_json_data[param_name]
             elif filename is not None and filename.endswith(".geoh5"):
@@ -110,11 +113,12 @@ class BaseDashApplication:
                 # Initialization of app from self.params.
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
-                    validation_options={"disabled": True},
+                    validate=False,
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json_data = ifile._demote(ifile.data)  # pylint: disable=W0212
+                ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
                 object_value = ui_json_data[param_name]
+
             # Get new options for object dropdown
             object_options = [
                 {
@@ -194,7 +198,7 @@ class BaseDashApplication:
                     and int not in validations[key]["types"]
                     and type(update_dict[key]) == int
                 ):
-                    # Checking for values that Dash has given as int when they should be float.
+                    # Checking for values that Dash has given as int when they should be floats.
                     output_dict[key] = float(update_dict[key])
                 elif is_uuid(update_dict[key]):
                     output_dict[key] = self.workspace.get_entity(
@@ -202,11 +206,13 @@ class BaseDashApplication:
                     )[0]
                 else:
                     output_dict[key] = update_dict[key]
-
         return output_dict
 
     def update_remainder_from_ui_json(
-        self, ui_json_data: dict, output_ids: list = None, trigger: str = None
+        self,
+        ui_json_data: dict,
+        output_ids: list | None = None,
+        trigger: str | None = None,
     ) -> tuple:
         """
         Update parameters from uploaded ui_json that aren't involved in another callback.
@@ -244,8 +250,8 @@ class BaseDashApplication:
                 or update_dict["monitoring_directory"] is None
             ):
                 if self.workspace is not None:
-                    update_dict["monitoring_directory"] = os.path.abspath(
-                        os.path.dirname(self.workspace.h5file)
+                    update_dict["monitoring_directory_value"] = str(
+                        Path(self.workspace.h5file).parent.resolve()
                     )
 
         # Format updated params to return to the callback

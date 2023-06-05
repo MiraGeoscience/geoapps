@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -16,7 +16,10 @@ from geoapps.shared_utils.utils import rotate_xyz
 
 
 def export_grid_2_geotiff(
-    data: Entity | None, file_name: str, wkt_code: str = None, data_type: str = "float"
+    data: Entity | None,
+    file_name: str,
+    wkt_code: str | None = None,
+    data_type: str = "float",
 ):
     """
     Write a geotiff from float data stored on a Grid2D object.

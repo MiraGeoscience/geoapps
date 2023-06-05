@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -12,6 +12,7 @@ from __future__ import annotations
 import os
 import sys
 import uuid
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -20,6 +21,7 @@ from dash import callback_context, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
@@ -41,7 +43,7 @@ class ScatterPlots(BaseDashApplication):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
+        if ui_json is not None and Path(ui_json.path).is_file():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
@@ -270,7 +272,9 @@ class ScatterPlots(BaseDashApplication):
             size_value,
         )
 
-    def get_channel_bounds(self, channel: str, kmeans: list = None) -> (float, float):
+    def get_channel_bounds(
+        self, channel: str, kmeans: list | None = None
+    ) -> (float, float):
         """
         Set the min and max values for the given axis channel.
 
@@ -304,7 +308,7 @@ class ScatterPlots(BaseDashApplication):
         z: str,
         color: str,
         size: str,
-        kmeans: list = None,
+        kmeans: list | None = None,
     ):
         """
         Update min and max for all channels, either from uploaded ui.json or from change of data.
@@ -475,13 +479,17 @@ class ScatterPlots(BaseDashApplication):
         # Update self.params
         param_dict = self.get_params_dict(update_dict)
         self.params.update(param_dict)
+
         # Run driver to get updated scatter plot.
         figure = go.Figure(self.driver.run())
 
         return figure
 
     def trigger_click(
-        self, n_clicks: int, monitoring_directory: str, figure: go.Figure = None
+        self,
+        n_clicks: int,
+        monitoring_directory: str,
+        figure: go.Figure | None = None,
     ):
         """
         Save the plot as html, write out ui.json.
@@ -497,12 +505,12 @@ class ScatterPlots(BaseDashApplication):
 
             # Get output path.
             if (
-                (monitoring_directory is not None)
-                and (monitoring_directory != "")
-                and (os.path.exists(os.path.abspath(monitoring_directory)))
+                monitoring_directory is not None
+                and monitoring_directory != ""
+                and Path(monitoring_directory).is_dir()
             ):
-                param_dict["monitoring_directory"] = os.path.abspath(
-                    monitoring_directory
+                param_dict["monitoring_directory"] = str(
+                    Path(monitoring_directory).resolve()
                 )
                 temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 
@@ -511,7 +519,7 @@ class ScatterPlots(BaseDashApplication):
                     False, param_dict["monitoring_directory"], temp_geoh5
                 )
 
-                with ws as new_workspace:
+                with fetch_active_workspace(ws, mode="r") as new_workspace:
                     # Put entities in output workspace.
                     param_dict["geoh5"] = new_workspace
                     for key, value in param_dict.items():
@@ -520,20 +528,21 @@ class ScatterPlots(BaseDashApplication):
                                 parent=new_workspace, copy_children=True
                             )
 
-                    # Write output uijson.
-                    new_params = ScatterPlotParams(**param_dict)
-                    new_params.write_input_file(
-                        name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                        path=param_dict["monitoring_directory"],
-                        validate=False,
-                    )
+                # Write output uijson.
+                new_params = ScatterPlotParams(**param_dict)
+                new_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=param_dict["monitoring_directory"],
+                    validate=False,
+                )
 
-                    go.Figure(figure).write_html(
-                        os.path.join(
-                            param_dict["monitoring_directory"],
-                            temp_geoh5.replace(".geoh5", ".html"),
-                        )
+                go.Figure(figure).write_html(
+                    str(
+                        (
+                            Path(param_dict["monitoring_directory"]) / temp_geoh5
+                        ).with_suffix(".html")
                     )
+                )
                 print("Saved to " + param_dict["monitoring_directory"])
             else:
                 print("Invalid output path.")

@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,5 +7,5 @@
 
 from __future__ import annotations
 
-from .direct_current.params import DirectCurrentParams
-from .induced_polarization.params import InducedPolarizationParams
+from .direct_current.three_dimensions import DirectCurrent3DParams
+from .induced_polarization.three_dimensions.params import InducedPolarization3DParams

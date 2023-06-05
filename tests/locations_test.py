@@ -1,10 +1,14 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -15,20 +19,21 @@ from geoapps.inversion.components.locations import InversionLocations
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
-geoh5 = Workspace("./FlinFlon.geoh5")
+from . import PROJECT
+
+geoh5 = Workspace(PROJECT)
 
 
 def setup_params(tmp):
     geotest = Geoh5Tester(geoh5, tmp, "test.geoh5", MagneticVectorParams)
-    geotest.set_param("mesh", "{e334f687-df71-4538-ad28-264e420210b8}")
+    geotest.set_param("mesh", "{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     return geotest.make()
 
 
-def test_mask(tmp_path):
+def test_mask(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
-    locations = InversionLocations(ws, params, window)
+    locations = InversionLocations(ws, params)
     loc_mask = [0, 1, 1, 0]
     locations.mask = loc_mask
     assert isinstance(locations.mask, np.ndarray)
@@ -39,12 +44,11 @@ def test_mask(tmp_path):
     assert "Badly formed" in str(excinfo.value)
 
 
-def test_get_locations(tmp_path):
+def test_get_locations(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
     locs = np.ones((10, 3), dtype=float)
     points_object = Points.create(ws, name="test-data", vertices=locs)
-    locations = InversionLocations(ws, params, window)
+    locations = InversionLocations(ws, params)
     dlocs = locations.get_locations(points_object.uid)
     np.testing.assert_allclose(locs, dlocs)
 
@@ -53,8 +57,8 @@ def test_get_locations(tmp_path):
     grid_object = Grid2D.create(
         ws,
         origin=[0, 0, 0],
-        u_cell_size=1,
-        v_cell_size=1,
+        u_cell_size=1.0,
+        v_cell_size=1.0,
         u_count=5,
         v_count=5,
         rotation=0.0,
@@ -64,10 +68,9 @@ def test_get_locations(tmp_path):
     np.testing.assert_allclose(dlocs, locs)
 
 
-def test_filter(tmp_path):
+def test_filter(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
-    locations = InversionLocations(ws, params, window)
+    locations = InversionLocations(ws, params)
     test_data = np.array([0, 1, 2, 3, 4, 5])
     locations.mask = np.array([0, 0, 1, 1, 1, 0])
     filtered_data = locations.filter(test_data)
@@ -78,24 +81,22 @@ def test_filter(tmp_path):
     assert np.all(filtered_data["key"] == [2, 3, 4])
 
 
-def test_rotate(tmp_path):
+def test_rotate(tmp_path: Path):
     # Basic test since rotate_xy already tested
     ws, params = setup_params(tmp_path)
-    window = params.window()
-    locations = InversionLocations(ws, params, window)
+    locations = InversionLocations(ws, params)
     test_locs = np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [6.0, 7.0, 8.0]])
     locs_rot = locations.rotate(test_locs)
     assert locs_rot.shape == test_locs.shape
 
 
-def test_z_from_topo(tmp_path):
+def test_z_from_topo(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    window = params.window()
-    locations = InversionLocations(ws, params, window)
+    locations = InversionLocations(ws, params)
     locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
     assert locs[0, 2] == 326
 
     params.topography = 320.0
-    locations = InversionLocations(ws, params, window)
+    locations = InversionLocations(ws, params)
     locs = locations.set_z_from_topo(np.array([[315674, 6070832, 0]]))
     assert locs[0, 2] == 320.0

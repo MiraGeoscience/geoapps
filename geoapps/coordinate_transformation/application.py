@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,9 +7,9 @@
 
 from __future__ import annotations
 
-import os
 import re
 import uuid
+from pathlib import Path
 from time import time
 
 import numpy
@@ -18,6 +18,7 @@ from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
 
+from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
@@ -40,7 +41,7 @@ with warn_module_not_found():
 
 app_initializer = {
     "ga_group_name": "CoordinateTransformation",
-    "geoh5": "../../assets/FlinFlon.geoh5",
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": [
         "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
@@ -94,7 +95,6 @@ class CoordinateTransformation(ObjectDataSelection):
         import matplotlib.pyplot as plt
 
         if self.wkt_in.value != "" and self.wkt_out.value != "":
-
             if self.plot_result:
                 self._figure = plt.figure(figsize=(12, 8))
                 ax1 = plt.subplot(1, 2, 1)
@@ -110,7 +110,6 @@ class CoordinateTransformation(ObjectDataSelection):
                 )
 
                 for uid in self.objects.value:
-
                     obj = self.workspace.get_entity(uid)[0]
 
                     if isinstance(obj, Grid2D):
@@ -123,7 +122,6 @@ class CoordinateTransformation(ObjectDataSelection):
                             temp_file_out = child.name + ".tif"
 
                             if isinstance(child, FloatData):
-
                                 export_grid_2_geotiff(
                                     child,
                                     temp_file,
@@ -152,12 +150,8 @@ class CoordinateTransformation(ObjectDataSelection):
                                     )
 
                                 del grid
-                                if os.path.exists(temp_file):
-                                    os.remove(temp_file)
-
-                                if os.path.exists(temp_file_out):
-                                    os.remove(temp_file_out)
-
+                                Path(temp_file).unlink(missing_ok=True)
+                                Path(temp_file_out).unlink(missing_ok=True)
                                 count += 1
                     else:
                         if not hasattr(obj, "vertices"):

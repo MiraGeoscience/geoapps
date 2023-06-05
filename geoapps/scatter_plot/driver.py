@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,13 +11,19 @@ from __future__ import annotations
 import numpy as np
 import plotly.graph_objects as go
 
+from geoapps.driver_base.driver import BaseDriver
+from geoapps.scatter_plot.constants import validations
 from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils.plotting import format_axis, normalize, symlog
 from geoapps.utils.statistics import random_sampling
 
 
-class ScatterPlotDriver:
+class ScatterPlotDriver(BaseDriver):
+    _params_class = ScatterPlotParams
+    _validations = validations
+
     def __init__(self, params: ScatterPlotParams):
+        super().__init__(params)
         self.params: ScatterPlotParams = params
 
     def run(self):
@@ -27,7 +33,6 @@ class ScatterPlotDriver:
         figure = go.Figure()
 
         if (self.params.x is not None) & (self.params.y is not None):
-
             if self.params.downsampling is None:
                 self.params.downsampling = 100
             indices = self.get_indices()
@@ -82,7 +87,10 @@ class ScatterPlotDriver:
             if np.sum(inbound) > 0:
                 x_axis[~inbound] = np.nan
                 x_axis, x_label, x_ticks, _ = format_axis(
-                    self.params.x.name, x_axis, self.params.x_log, self.params.x_thresh
+                    self.params.x.name,
+                    x_axis,
+                    self.params.x_log,
+                    self.params.x_thresh,
                 )
             else:
                 return figure
@@ -97,7 +105,10 @@ class ScatterPlotDriver:
             if np.sum(inbound) > 0:
                 y_axis[~inbound] = np.nan
                 y_axis, y_label, y_ticks, _ = format_axis(
-                    self.params.y.name, y_axis, self.params.y_log, self.params.y_thresh
+                    self.params.y.name,
+                    y_axis,
+                    self.params.y_log,
+                    self.params.y_thresh,
                 )
             else:
                 return figure

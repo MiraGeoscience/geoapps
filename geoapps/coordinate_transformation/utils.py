@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,7 +7,7 @@
 
 from __future__ import annotations
 
-import os
+from pathlib import Path
 
 import numpy as np
 from geoh5py.groups import Group
@@ -19,9 +19,9 @@ from osgeo import gdal
 def geotiff_2_grid(
     workspace: Workspace,
     file_name: str,
-    grid: Grid2D = None,
-    grid_name: str = None,
-    parent: Group = None,
+    grid: Grid2D | None = None,
+    grid_name: str | None = None,
+    parent: Group | None = None,
 ) -> Grid2D | None:
     """
     Load a geotiff from file.
@@ -39,7 +39,7 @@ def geotiff_2_grid(
     band = tiff_object.GetRasterBand(1)
     temp = band.ReadAsArray()
 
-    file_name = os.path.basename(file_name).split(".")[0]
+    file_name = Path(file_name).stem
     if grid is None:
         if grid_name is None:
             grid_name = file_name
