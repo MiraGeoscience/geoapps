@@ -472,6 +472,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh,
         active_cells: np.ndarray,
         survey,
+        models,
         tile_id: int | None = None,
         padding_cells: int = 6,
     ):
@@ -524,6 +525,18 @@ class InversionData(InversionLocations):
                 mapping=mapping,
                 tile_id=tile_id,
             )
+
+        if "induced polarization" in self.params.inversion_type:
+            if "2d" in self.params.inversion_type:
+                proj = maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
+            else:
+                proj = maps.InjectActiveCells(
+                    nested_mesh, mapping.local_active, valInactive=1e-8
+                )
+
+            # TODO this should be done in the simulation factory
+            sim.sigma = proj * mapping * models.conductivity
+
         return sim, mapping
 
     def simulate(self, model, inverse_problem, sorting, ordering):

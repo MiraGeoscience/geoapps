@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
-from SimPEG import data, data_misfit, maps, objective_function
+from SimPEG import data, data_misfit, objective_function
 
 from .simpeg_factory import SimPEGFactory
 
@@ -83,32 +83,25 @@ class MisfitFactory(SimPEGFactory):
                     else:
                         self.sorting.append(local_index)
 
-                lsim, lmap = inversion_data.simulation(
-                    mesh, active_cells, survey, tile_num
+                local_sim, local_map = inversion_data.simulation(
+                    mesh, active_cells, survey, self.models, tile_id=tile_num
                 )
-
                 # TODO Parse workers to simulations
-                lsim.workers = self.params.distributed_workers
-                if "induced polarization" in self.params.inversion_type:
-                    # TODO this should be done in the simulation factory
-                    lsim.sigma = (
-                        maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
-                        * lmap
-                        * self.models.conductivity
-                    )
-
+                local_sim.workers = self.params.distributed_workers
                 local_data = data.Data(survey)
 
                 if self.params.forward_only:
-                    lmisfit = data_misfit.L2DataMisfit(local_data, lsim, model_map=lmap)
+                    lmisfit = data_misfit.L2DataMisfit(
+                        local_data, local_sim, model_map=local_map
+                    )
 
                 else:
                     local_data.dobs = survey.dobs
                     local_data.standard_deviation = survey.std
                     lmisfit = data_misfit.L2DataMisfit(
                         data=local_data,
-                        simulation=lsim,
-                        model_map=lmap,
+                        simulation=local_sim,
+                        model_map=local_map,
                     )
                     lmisfit.W = 1 / survey.std
 
