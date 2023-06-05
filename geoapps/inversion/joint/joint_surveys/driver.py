@@ -12,7 +12,7 @@ from warnings import warn
 import numpy as np
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
-from SimPEG import inverse_problem, maps
+from SimPEG import maps
 from SimPEG.objective_function import ComboObjectiveFunction
 
 from geoapps.driver_base.utils import treemesh_2_octree
@@ -156,18 +156,6 @@ class JointSurveyDriver(InversionDriver):
                 self.inversion_topography,
             )
         return self._inversion_mesh
-
-    @property
-    def inverse_problem(self):
-        if getattr(self, "_inverse_problem", None) is None:
-            self._inverse_problem = inverse_problem.BaseInvProblem(
-                self.data_misfit,
-                self.regularization,
-                self.optimization,
-                beta=self.params.initial_beta,
-            )
-
-        return self._inverse_problem
 
     def validate_create_mesh(self):
         """Function to validate and create the inversion mesh."""
