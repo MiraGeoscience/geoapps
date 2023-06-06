@@ -557,5 +557,5 @@ if __name__ == "__main__":
     ifile = InputFile.read_ui_json(file)
     ifile.workspace.open("r")
     print("Loaded. Building the plotly scatterplot . . .")
-    ObjectSelection.run_qt("Scatter Plots", ScatterPlots, ifile)
+    ObjectSelection.run("Scatter Plots", ScatterPlots, ifile)
     print("Done")

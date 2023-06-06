@@ -345,7 +345,7 @@ class ObjectSelection:
 
         self.app.layout = workspace_layout
 
-        # set up callbacks
+        # Set up callbacks
         self.app.callback(
             Output(component_id="objects", component_property="options"),
             Output(component_id="objects", component_property="value"),
@@ -451,27 +451,30 @@ class ObjectSelection:
     @staticmethod
     def start_server(
         port: int,
-        app_class,
+        app_class: BaseDashApplication,
         ui_json: InputFile = None,
         ui_json_data: dict = None,
-        params=None,
+        params: BaseParams = None,
     ):
         """
         Launch dash app server using given port.
 
         :param port: Port for where to launch server.
+        :param app_class: Type of app to create.
         :param ui_json: ifile corresponding to the ui_json_data.
         :param ui_json_data: Dict of current params to provide to app init.
+        :param params: Current params to pass to new app.
         """
         app = app_class(ui_json=ui_json, ui_json_data=ui_json_data, params=params)
         if port is not None:
             app.app.run_server(host="127.0.0.1", port=port)
 
     @staticmethod
-    def make_qt_window(app_name, port: int):
+    def make_qt_window(app_name: str, port: int):
         """
         Make Qt window and load dash url with the given port.
 
+        :param app_name: App name to display as Qt window title.
         :param port: Port where the dash app has been launched.
         """
         app = QtWidgets.QApplication(sys.argv)
@@ -493,7 +496,6 @@ class ObjectSelection:
         Launch the Qt app when launch app button is clicked.
 
         :param objects: Selected object uid.
-        :param ui_json_data: Dict of input ui.json params.
         :param n_clicks: Number of times button has been clicked; triggers callback.
 
         :return launch_app_markdown: Empty string since callbacks must have output.
@@ -543,8 +545,14 @@ class ObjectSelection:
         return ""
 
     @staticmethod
-    def run_qt(app_name, app_class, ui_json):
-        """ """
+    def run(app_name: str, app_class: BaseDashApplication, ui_json: InputFile):
+        """
+        Launch Qt app from terminal.
+
+        :param app_name: Name of app to display as Qt window title.
+        :param app_class: Type of app to create.
+        :param ui_json: Input file to pass to app for initialization.
+        """
         # Start server
         port = ObjectSelection.get_port()
         threading.Thread(
