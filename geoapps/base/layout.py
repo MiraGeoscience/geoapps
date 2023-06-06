@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from dash import dcc, html
 
-# Workspace selection, object selection layout.
 workspace_layout = html.Div(
     [
         dcc.Upload(
@@ -39,6 +38,11 @@ workspace_layout = html.Div(
                 ),
             ]
         ),
+    ]
+)
+
+launch_qt_layout = html.Div(
+    [
         html.Div(
             [
                 html.Button("Launch App", id="launch_app", n_clicks=0),
@@ -53,3 +57,5 @@ workspace_layout = html.Div(
         dcc.Store(id="ui_json_data"),
     ]
 )
+
+object_selection_layout = html.Div([workspace_layout, launch_qt_layout])

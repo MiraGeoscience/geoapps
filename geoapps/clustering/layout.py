@@ -10,39 +10,8 @@ from __future__ import annotations
 import dash_daq as daq
 from dash import dash_table, dcc, html
 
+from geoapps.base.layout import workspace_layout
 from geoapps.scatter_plot.layout import axis_layout, downsampling_layout, plot_layout
-
-workspace_layout = html.Div(
-    [
-        dcc.Upload(
-            id="upload",
-            children=html.Button("Upload Workspace/ui.json"),
-            style={"margin_bottom": "40px"},
-        ),
-        html.Div(
-            [
-                dcc.Markdown(
-                    children="Object:",
-                    style={
-                        "width": "20%",
-                        "display": "inline-block",
-                        "margin-top": "20px",
-                        "vertical-align": "bottom",
-                    },
-                ),
-                dcc.Dropdown(
-                    id="objects",
-                    style={
-                        "width": "65%",
-                        "display": "inline-block",
-                        "margin_bottom": "40px",
-                        "vertical-align": "bottom",
-                    },
-                ),
-            ]
-        ),
-    ]
-)
 
 # Layout for histogram, stats table, confusion matrix
 norm_tabs_layout = html.Div(
@@ -215,8 +184,8 @@ cluster_layout = html.Div(
         html.Div(
             [
                 # Workspace, object, downsampling, data subset selection
-                downsampling_layout,
                 workspace_layout,
+                downsampling_layout,
                 dcc.Markdown("Data subset: "),
                 dcc.Dropdown(
                     id="data_subset",

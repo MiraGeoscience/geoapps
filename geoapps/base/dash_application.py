@@ -35,7 +35,7 @@ from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
 from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets
 
-from geoapps.base.layout import workspace_layout
+from geoapps.base.layout import object_selection_layout
 from geoapps.driver_base.params import BaseParams
 
 
@@ -317,16 +317,20 @@ class BaseDashApplication:
 
 class ObjectSelection:
     """
-    Dash app to select workspace and object. Creates temporary workspace with the object, and
+    Dash app to select workspace and object.
+
+    Creates temporary workspace with the object, and
     opens a Qt window to run an app.
     """
 
-    _app_name = None
-    _workspace = None
-    _param_class = None
-    _app_class = None
-
-    def __init__(self, app_name, app_initializer, app_class, param_class, **kwargs):
+    def __init__(
+        self,
+        app_name: str,
+        app_initializer: dict,
+        app_class: BaseDashApplication,
+        param_class: BaseParams,
+        **kwargs,
+    ):
         self.app_name = app_name
         self.app_class = app_class
         self.param_class = param_class
@@ -343,7 +347,7 @@ class ObjectSelection:
             external_stylesheets=external_stylesheets,
         )
 
-        self.app.layout = workspace_layout
+        self.app.layout = object_selection_layout
 
         # Set up callbacks
         self.app.callback(
@@ -506,7 +510,7 @@ class ObjectSelection:
             # Make new workspace with only the selected object
             obj = self.workspace.get_entity(uuid.UUID(objects))[0]
 
-            temp_geoh5 = "Scatterplot_" + f"{time():.0f}.geoh5"
+            temp_geoh5 = self.workspace.name + "_" + f"{time():.0f}.geoh5"
             temp_dir = tempfile.TemporaryDirectory().name
             os.mkdir(temp_dir)
             temp_workspace = Workspace(Path(temp_dir) / temp_geoh5)
@@ -563,3 +567,59 @@ class ObjectSelection:
 
         # Make Qt window
         ObjectSelection.make_qt_window(app_name, port)
+
+    @property
+    def app_name(self) -> str | None:
+        """
+        Name of app that appears as Qt window title.
+        """
+        return self._app_name
+
+    @app_name.setter
+    def app_name(self, val):
+        if isinstance(val, str) | (val is None):
+            self._app_name = val
+        else:
+            raise TypeError
+
+    @property
+    def app_class(self) -> type[BaseDashApplication]:
+        """
+        The kind of app to launch.
+        """
+        return self._app_class
+
+    @app_class.setter
+    def app_class(self, val):
+        if issubclass(val, BaseDashApplication):
+            self._app_class = val
+        else:
+            raise TypeError
+
+    @property
+    def param_class(self) -> type[BaseParams]:
+        """
+        The param class associated with the launched app.
+        """
+        return self._param_class
+
+    @param_class.setter
+    def param_class(self, val):
+        if issubclass(val, BaseParams):
+            self._param_class = val
+        else:
+            raise TypeError
+
+    @property
+    def workspace(self) -> Workspace:
+        """
+        Input workspace.
+        """
+        return self._workspace
+
+    @workspace.setter
+    def workspace(self, val):
+        if isinstance(val, Workspace):
+            self._workspace = val
+        else:
+            raise TypeError
