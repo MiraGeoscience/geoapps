@@ -54,6 +54,22 @@ default_ui_json = {
         ],
         "value": None,
     },
+    "starting_model_object": {
+        "group": "Starting Model",
+        "main": True,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "optional": True,
+        "enabled": False,
+        "label": "Object",
+        "value": None,
+    },
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
@@ -287,7 +303,7 @@ default_ui_json = {
         "enabled": True,
         "verbose": 2,
     },
-    "coolingRate": {
+    "cooling_rate": {
         "group": "Optimization",
         "label": "Iterations per beta",
         "value": 2,
@@ -297,7 +313,7 @@ default_ui_json = {
         "precision": 1,
         "verbose": 2,
     },
-    "coolingFactor": {
+    "cooling_factor": {
         "group": "Optimization",
         "label": "Beta cooling factor",
         "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
@@ -424,6 +440,21 @@ default_ui_json = {
         "lineEdit": False,
         "enabled": True,
     },
+    "reference_model_object": {
+        "group": "Regularization",
+        "label": "Reference model object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
     "reference_model": {
         "association": ["Cell", "Vertex"],
         "main": True,
@@ -442,6 +473,21 @@ default_ui_json = {
         "value": "total",
         "verbose": 3,
     },
+    "lower_bound_object": {
+        "group": "Regularization",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "label": "Lower bound object",
+        "optional": True,
+        "enabled": False,
+        "value": None,
+    },
     "lower_bound": {
         "association": ["Cell", "Vertex"],
         "main": True,
@@ -454,6 +500,21 @@ default_ui_json = {
         "optional": True,
         "value": -10.0,
         "enabled": False,
+    },
+    "upper_bound_object": {
+        "group": "Regularization",
+        "label": "Upper bound object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "optional": True,
+        "enabled": False,
+        "value": None,
     },
     "upper_bound": {
         "association": ["Cell", "Vertex"],

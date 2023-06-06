@@ -1,9 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -15,6 +10,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import uuid
 import warnings
 import webbrowser
@@ -36,7 +32,6 @@ from plotly import graph_objects as go
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
-from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
 from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
 
@@ -51,13 +46,7 @@ class InversionApp(BaseDashApplication):
     _run_params = None
     _layout = None
 
-    def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
-            self.params = self._param_class(ui_json)
-        else:
-            self.params = self._param_class(**app_initializer)
-
+    def __init__(self):
         super().__init__()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -238,8 +227,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="resolution", component_property="value"),
             # Topography
             Output(component_id="z_from_topo", component_property="value"),
-            Output(component_id="receivers_offset_x", component_property="value"),
-            Output(component_id="receivers_offset_y", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
             # Inversion - mesh
             Output(component_id="mesh", component_property="value"),
@@ -258,12 +245,16 @@ class InversionApp(BaseDashApplication):
             # Inversion - ignore values
             Output(component_id="ignore_values", component_property="value"),
             # Inversion - optimization
-            Output(component_id="max_iterations", component_property="value"),
+            Output(component_id="max_global_iterations", component_property="value"),
+            Output(component_id="max_irls_iterations", component_property="value"),
+            Output(component_id="cooling_rate", component_property="value"),
+            Output(component_id="cooling_factor", component_property="value"),
             Output(component_id="chi_factor", component_property="value"),
             Output(component_id="initial_beta_ratio", component_property="value"),
             Output(component_id="max_cg_iterations", component_property="value"),
             Output(component_id="tol_cg", component_property="value"),
             Output(component_id="n_cpu", component_property="value"),
+            Output(component_id="store_sensitivities", component_property="value"),
             Output(component_id="tile_spatial", component_property="value"),
             # Output
             Output(component_id="out_group", component_property="value"),
@@ -447,7 +438,7 @@ class InversionApp(BaseDashApplication):
         nb_port = None
         servers = list(notebookapp.list_running_servers())
         for s in servers:
-            if s["notebook_dir"] == os.path.abspath("../../../"):
+            if s["notebook_dir"] == pathlib.Path.resolve("../../../"):
                 nb_port = s["port"]
                 break
 
@@ -524,7 +515,6 @@ class InversionApp(BaseDashApplication):
             no_update,
             no_update,
         )
-
         # Get param name based on callback input.
         prefix, param = tuple(
             callback_context.outputs_list[0]["id"]
@@ -909,45 +899,29 @@ class InversionApp(BaseDashApplication):
         else:
             resolution = kwargs["resolution"]
 
-        if "window" not in kwargs.keys():
-            window = None
-        else:
-            window = kwargs["window"]
-            if (
-                window["center"][0] is None
-                and window["center"][1] is None
-                and window["size"][0] is None
-                and window["size"][1] is None
-            ):
-                window = None
-
-            # Figure layout changes
-            # Fix aspect ratio
-            if "fix_aspect_ratio" in kwargs.keys():
-                if kwargs["fix_aspect_ratio"]:
-                    figure.update_layout(yaxis_scaleanchor="x")
-                else:
-                    figure.update_layout(yaxis_scaleanchor=None)
-
-            # Set plot axes limits
-            if window:
-                figure.update_layout(
-                    xaxis_autorange=False,
-                    xaxis_range=[
-                        window["center"][0] - (window["size"][0] / 2),
-                        window["center"][0] + (window["size"][0] / 2),
-                    ],
-                    yaxis_autorange=False,
-                    yaxis_range=[
-                        window["center"][1] - (window["size"][1] / 2),
-                        window["center"][1] + (window["size"][1] / 2),
-                    ],
-                )
+        # Figure layout changes
+        # Fix aspect ratio
+        if "fix_aspect_ratio" in kwargs.keys():
+            if kwargs["fix_aspect_ratio"]:
+                figure.update_layout(yaxis_scaleanchor="x")
             else:
-                figure.update_layout(
-                    xaxis_autorange=True,
-                    yaxis_autorange=True,
-                )
+                figure.update_layout(yaxis_scaleanchor=None)
+
+        if "window" in kwargs.keys() and kwargs["window"] is not None:
+            window = kwargs["window"]
+            # Set plot axes limits
+            figure.update_layout(
+                xaxis_autorange=False,
+                xaxis_range=[
+                    window["center"][0] - (window["size"][0] / 2),
+                    window["center"][0] + (window["size"][0] / 2),
+                ],
+                yaxis_autorange=False,
+                yaxis_range=[
+                    window["center"][1] - (window["size"][1] / 2),
+                    window["center"][1] + (window["size"][1] / 2),
+                ],
+            )
 
         # Add data to figure
         if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
@@ -965,7 +939,7 @@ class InversionApp(BaseDashApplication):
             # Plot heatmap
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
             y = entity.centroids[:, 1].reshape(entity.shape, order="F")
-            rot = entity.rotation[0]
+            rot = entity.rotation
 
             if values is not None:
                 values = np.asarray(
@@ -1082,10 +1056,10 @@ class InversionApp(BaseDashApplication):
 
         :return figure: Updated figure.
         :return data_count: Displayed data count value.
-        :param center_x: Window center x.
-        :param center_y: Window center y.
-        :param width: Window width.
-        :param height: Window height
+        :return center_x: Window center x.
+        :return center_y: Window center y.
+        :return width: Window width.
+        :return height: Window height
         :return fix_aspect_ratio: Whether to fix aspect ratio. Turned off when width/height sliders adjusted.
         """
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
@@ -1138,7 +1112,6 @@ class InversionApp(BaseDashApplication):
 
         if channel is not None:
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
-
             window = None
             # Update plot bounds from ui.json.
             if "ui_json_data" in triggers or reinitialize:
@@ -1172,6 +1145,7 @@ class InversionApp(BaseDashApplication):
                 ]
                 for elem in triggers
             ):
+                # Updating figure if sliders are changed.
                 if "window_width" in triggers or "window_height" in triggers:
                     fix_aspect_ratio = []
                 window = {
@@ -1397,8 +1371,6 @@ class InversionApp(BaseDashApplication):
         topography_data: str,
         topography_const: float,
         z_from_topo: list,
-        receivers_offset_x: float,
-        receivers_offset_y: float,
         receivers_offset_z: float,
         receivers_radar_drape: str,
         forward_only: list,
@@ -1430,7 +1402,7 @@ class InversionApp(BaseDashApplication):
         detrend_type: str,
         detrend_order: int,
         ignore_values: str,
-        max_iterations: int,
+        max_global_iterations: int,
         chi_factor: float,
         initial_beta_ratio: float,
         max_cg_iterations: int,
@@ -1477,8 +1449,6 @@ class InversionApp(BaseDashApplication):
         :param topography_data: Topography data uuid.
         :param topography_const: Topography constant.
         :param z_from_topo: Checkbox for getting z from topography.
-        :param receivers_offset_x: Sensor offset East.
-        :param receivers_offset_y: Sensor offset North.
         :param receivers_offset_z: Sensor offset up.
         :param receivers_radar_drape: Radar.
         :param forward_only: Checkbox for performing forward inversion.
@@ -1510,7 +1480,7 @@ class InversionApp(BaseDashApplication):
         :param detrend_type: Detrend method (all, perimeter).
         :param detrend_order: Detrend order.
         :param ignore_values: Specified values to ignore.
-        :param max_iterations: Max iterations.
+        :param max_global_iterations: Max iterations.
         :param chi_factor: Target misfit.
         :param initial_beta_ratio: Beta ratio (phi_d/phi_m).
         :param max_cg_iterations: Max CG iterations.
@@ -1561,8 +1531,6 @@ class InversionApp(BaseDashApplication):
             "window_height": window_height,
             "fix_aspect_ratio": fix_aspect_ratio,
             "z_from_topo": z_from_topo,
-            "receivers_offset_x": receivers_offset_x,
-            "receivers_offset_y": receivers_offset_y,
             "receivers_offset_z": receivers_offset_z,
             "receivers_radar_drape": receivers_radar_drape,
             "forward_only": forward_only,
@@ -1577,7 +1545,7 @@ class InversionApp(BaseDashApplication):
             "detrend_type": detrend_type,
             "detrend_order": detrend_order,
             "ignore_values": ignore_values,
-            "max_iterations": max_iterations,
+            "max_global_iterations": max_global_iterations,
             "chi_factor": chi_factor,
             "initial_beta_ratio": initial_beta_ratio,
             "max_cg_iterations": max_cg_iterations,
@@ -1601,11 +1569,11 @@ class InversionApp(BaseDashApplication):
         if (
             monitoring_directory is not None
             and monitoring_directory != ""
-            and os.path.exists(os.path.abspath(monitoring_directory))
+            and pathlib.Path.resolve(monitoring_directory).exists()
         ):
-            monitoring_directory = os.path.abspath(monitoring_directory)
+            monitoring_directory = pathlib.Path.resolve(monitoring_directory)
         else:
-            monitoring_directory = os.path.dirname(self.workspace.h5file)
+            monitoring_directory = pathlib.Path.resolve(self.workspace.h5file).parent
 
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{out_group}_{time():.0f}.geoh5"
@@ -1662,12 +1630,13 @@ class InversionApp(BaseDashApplication):
                 path=monitoring_directory,
             )
 
-            if self._run_params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self._run_params.monitoring_directory)
+            if (
+                self._run_params.monitoring_directory is not None
+                and pathlib.Path.resolve(self._run_params.monitoring_directory).exists()
             ):
                 for obj in ws.objects:
                     monitored_directory_copy(
-                        os.path.abspath(self._run_params.monitoring_directory),
+                        pathlib.Path.resolve(self._run_params.monitoring_directory),
                         obj,
                     )
 
@@ -1675,7 +1644,7 @@ class InversionApp(BaseDashApplication):
             print("Live link active. Check your ANALYST session for new mesh.")
             return [True]
         else:
-            print("Saved to " + os.path.abspath(monitoring_directory))
+            print("Saved to " + pathlib.Path.resolve(monitoring_directory))
             return []
 
     def trigger_click(self, _):

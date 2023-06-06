@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
@@ -59,9 +60,13 @@ inversion_defaults = {
     "bzz_uncertainty": 1.0,
     "mesh": None,
     "starting_model": 1e-4,
+    "starting_model_object": None,
     "reference_model": 0.0,
+    "reference_model_object": None,
     "lower_bound": None,
+    "lower_bound_object": None,
     "upper_bound": None,
+    "upper_bound_object": None,
     "output_tile_files": False,
     "ignore_values": None,
     "detrend_order": None,
@@ -75,8 +80,8 @@ inversion_defaults = {
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
     "initial_beta": None,
-    "coolingRate": 1,
-    "coolingFactor": 2.0,
+    "cooling_rate": 1,
+    "cooling_factor": 2.0,
     "max_global_iterations": 100,
     "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
@@ -157,6 +162,7 @@ forward_defaults = {
     "bzz_channel_bool": False,
     "mesh": None,
     "starting_model": 1e-4,
+    "starting_model_object": None,
     "output_tile_files": False,
     "window_center_x": None,
     "window_center_y": None,
@@ -732,6 +738,7 @@ validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "resolution": 50.0,
@@ -756,7 +763,10 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
+    "detrend_order": 0,
+    "detrend_type": None,
     "receivers_offset_z": 60.0,
     "out_group": "ScalarInversion",
     "fix_aspect_ratio": True,
+    "n_cpu": int(multiprocessing.cpu_count() / 2),
 }

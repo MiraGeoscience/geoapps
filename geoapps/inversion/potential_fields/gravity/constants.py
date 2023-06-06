@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
@@ -56,9 +57,13 @@ inversion_defaults = {
     "gyz_uncertainty": 1.0,
     "mesh": None,
     "starting_model": 1e-3,
+    "starting_model_object": None,
     "reference_model": 0.0,
+    "reference_model_object": None,
     "lower_bound": None,
+    "lower_bound_object": None,
     "upper_bound": None,
+    "upper_bound_object": None,
     "output_tile_files": False,
     "ignore_values": None,
     "detrend_order": None,
@@ -72,8 +77,8 @@ inversion_defaults = {
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
     "initial_beta": None,
-    "coolingRate": 1,
-    "coolingFactor": 2.0,
+    "cooling_rate": 1,
+    "cooling_factor": 2.0,
     "max_global_iterations": 100,
     "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
@@ -151,6 +156,7 @@ forward_defaults = {
     "gyz_channel_bool": False,
     "mesh": None,
     "starting_model": None,
+    "starting_model_object": None,
     "output_tile_files": False,
     "window_center_x": None,
     "window_center_y": None,
@@ -693,14 +699,12 @@ validations = {
 validations = dict(base_validations, **validations)
 
 app_initializer = {
-    # "gz_channel_bool": True,
-    # "gz_channel": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
-    # "gz_uncertainty": 0.05,
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "gxx_channel": UUID("{53e59b2b-c2ae-4b77-923b-23e06d874e62}"),
-    "gxx_uncertainty": 1.0,
+    "gxx_uncertainty": 10.0,
     "gyy_channel": UUID("{51c0acd7-84b8-421f-a66b-fdc15c826a47}"),
     "gyy_uncertainty": 1.0,
     "gzz_channel": UUID("{f450906d-80e2-4c50-ab27-6da5cf0906af}"),
@@ -723,12 +727,14 @@ app_initializer = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "starting_model": 1e-3,
-    "max_iterations": 25,
-    "n_cpu": 4,
+    "max_global_iterations": 25,
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
+    "receivers_offset_z": 60.0,
+    "detrend_order": 0,
+    "detrend_type": None,
     "out_group": "GravityInversion",
-    "monitoring_directory": None,
     "fix_aspect_ratio": True,
+    "n_cpu": int(multiprocessing.cpu_count() / 2),
 }

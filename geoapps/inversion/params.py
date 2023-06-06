@@ -92,9 +92,12 @@ class InversionBaseParams(BaseParams):
         self._x_norm: float = None
         self._y_norm: float = None
         self._z_norm: float = None
+        self._reference_model_object: UUID = None
         self._reference_model = None
         self._gradient_type: str = None
+        self._lower_bound_object: UUID = None
         self._lower_bound = None
+        self._upper_bound_object: UUID = None
         self._upper_bound = None
         self._parallelized: bool = None
         self._n_cpu: int = None

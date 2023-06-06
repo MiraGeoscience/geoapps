@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,7 +8,7 @@
 
 from __future__ import annotations
 
-import os
+import pathlib
 
 from dash import Input, Output, State
 
@@ -33,12 +33,12 @@ class GravityApp(InversionApp):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
+        if ui_json is not None and pathlib.Path(ui_json.path).exists():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
 
-        super().__init__(**self.params.to_dict())
+        super().__init__()
 
         # Write params
         self.app.callback(

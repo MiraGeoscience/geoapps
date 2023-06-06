@@ -1,4 +1,4 @@
-#  Copyright (c) 2022 Mira Geoscience Ltd.
+#  Copyright (c) 2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -702,32 +702,6 @@ topography_layout = html.Div(
                 html.Div(
                     [
                         dcc.Markdown(
-                            "dx (+East)",
-                            style={"display": "inline-block", "width": "25%"},
-                        ),
-                        dcc.Input(
-                            id="receivers_offset_x",
-                            type="number",
-                            style={"display": "inline-block", "width": "50%"},
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            "dy (+North)",
-                            style={"display": "inline-block", "width": "25%"},
-                        ),
-                        dcc.Input(
-                            id="receivers_offset_y",
-                            type="number",
-                            style={"display": "inline-block", "width": "50%"},
-                        ),
-                    ]
-                ),
-                html.Div(
-                    [
-                        dcc.Markdown(
                             "dz (+ve up)",
                             style={"display": "inline-block", "width": "25%"},
                         ),
@@ -934,7 +908,7 @@ optimization = html.Div(
                     style={"display": "inline-block", "width": "50%"},
                 ),
                 dcc.Input(
-                    id="max_iterations",
+                    id="max_global_iterations",
                     type="number",
                     step=1,
                     style={"display": "inline-block", "width": "50%"},
@@ -944,11 +918,55 @@ optimization = html.Div(
         html.Div(
             [
                 dcc.Markdown(
-                    "Target misfit", style={"display": "inline-block", "width": "50%"}
+                    "Max IRLS Iterations",
+                    style={"display": "inline-block", "width": "50%"},
+                ),
+                dcc.Input(
+                    id="max_irls_iterations",
+                    type="number",
+                    step=1,
+                    style={"display": "inline-block", "width": "50%"},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Iterations per beta",
+                    style={"display": "inline-block", "width": "50%"},
+                ),
+                dcc.Input(
+                    id="cooling_rate",
+                    type="number",
+                    step=1,
+                    style={"display": "inline-block", "width": "50%"},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Beta cooling factor",
+                    style={"display": "inline-block", "width": "50%"},
+                ),
+                dcc.Input(
+                    id="cooling_factor",
+                    type="number",
+                    step=1,
+                    style={"display": "inline-block", "width": "50%"},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Target misfit",
+                    style={"display": "inline-block", "width": "50%"},
                 ),
                 dcc.Input(
                     id="chi_factor",
                     type="number",
+                    step=1,
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
@@ -975,7 +993,6 @@ optimization = html.Div(
                 dcc.Input(
                     id="max_cg_iterations",
                     type="number",
-                    step=1,
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
@@ -1001,6 +1018,18 @@ optimization = html.Div(
                     id="n_cpu",
                     type="number",
                     step=1,
+                    style={"display": "inline-block", "width": "50%"},
+                ),
+            ]
+        ),
+        html.Div(
+            [
+                dcc.Markdown(
+                    "Storage device", style={"display": "inline-block", "width": "50%"}
+                ),
+                dcc.Dropdown(
+                    options=["ram", "disk"],
+                    id="store_sensitivities",
                     style={"display": "inline-block", "width": "50%"},
                 ),
             ]
