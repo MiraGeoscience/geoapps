@@ -331,6 +331,11 @@ class ObjectSelection:
         param_class: BaseParams,
         **kwargs,
     ):
+        self._app_name = None
+        self._app_class = BaseDashApplication
+        self._param_class = BaseParams
+        self._workspace = None
+
         self.app_name = app_name
         self.app_class = app_class
         self.param_class = param_class
@@ -346,7 +351,6 @@ class ObjectSelection:
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
         )
-
         self.app.layout = object_selection_layout
 
         # Set up callbacks
@@ -577,10 +581,9 @@ class ObjectSelection:
 
     @app_name.setter
     def app_name(self, val):
-        if isinstance(val, str) | (val is None):
-            self._app_name = val
-        else:
-            raise TypeError
+        if not isinstance(val, str) and (val is not None):
+            raise TypeError("Value for attribute `app_name` should be 'str' or 'None'")
+        self._app_name = val
 
     @property
     def app_class(self) -> type[BaseDashApplication]:
@@ -591,10 +594,11 @@ class ObjectSelection:
 
     @app_class.setter
     def app_class(self, val):
-        if issubclass(val, BaseDashApplication):
-            self._app_class = val
-        else:
-            raise TypeError
+        if not issubclass(val, BaseDashApplication):
+            raise TypeError(
+                "Value for attribute `app_class` should be a subclass of :obj:`geoapps.base.BaseDashApplication`"
+            )
+        self._app_class = val
 
     @property
     def param_class(self) -> type[BaseParams]:
@@ -605,13 +609,14 @@ class ObjectSelection:
 
     @param_class.setter
     def param_class(self, val):
-        if issubclass(val, BaseParams):
-            self._param_class = val
-        else:
-            raise TypeError
+        if not issubclass(val, BaseParams):
+            raise TypeError(
+                "Value for attribute `param_class` should be a subclass of :obj:`geoapps.driver_base.BaseParams`"
+            )
+        self._param_class = val
 
     @property
-    def workspace(self) -> Workspace:
+    def workspace(self) -> Workspace | None:
         """
         Input workspace.
         """
@@ -619,7 +624,11 @@ class ObjectSelection:
 
     @workspace.setter
     def workspace(self, val):
-        if isinstance(val, Workspace):
-            self._workspace = val
-        else:
-            raise TypeError
+        if not isinstance(val, Workspace) and (val is not None):
+            raise TypeError(
+                "Value for attribute `workspace` should be :obj:`geoh5py.workspace.Workspace` or 'None'"
+            )
+        if self._workspace is not None:
+            # Close old workspace
+            self._workspace.close()
+        self._workspace = val
