@@ -60,8 +60,6 @@ class GravityApp(InversionApp):
             State(component_id="topography_data", component_property="value"),
             State(component_id="topography_const", component_property="value"),
             State(component_id="z_from_topo", component_property="value"),
-            State(component_id="receivers_offset_x", component_property="value"),
-            State(component_id="receivers_offset_y", component_property="value"),
             State(component_id="receivers_offset_z", component_property="value"),
             State(component_id="receivers_radar_drape", component_property="value"),
             # Inversion Parameters
@@ -102,12 +100,16 @@ class GravityApp(InversionApp):
             # Ignore Values
             State(component_id="ignore_values", component_property="value"),
             # Optimization
-            State(component_id="max_iterations", component_property="value"),
+            State(component_id="max_global_iterations", component_property="value"),
+            State(component_id="max_irls_iterations", component_property="value"),
+            State(component_id="cooling_rate", component_property="value"),
+            State(component_id="cooling_factor", component_property="value"),
             State(component_id="chi_factor", component_property="value"),
             State(component_id="initial_beta_ratio", component_property="value"),
             State(component_id="max_cg_iterations", component_property="value"),
             State(component_id="tol_cg", component_property="value"),
             State(component_id="n_cpu", component_property="value"),
+            State(component_id="store_sensitivities", component_property="value"),
             State(component_id="tile_spatial", component_property="value"),
             # Output
             State(component_id="out_group", component_property="value"),

@@ -10,10 +10,10 @@
 from __future__ import annotations
 
 import os
-import pathlib
 import uuid
 import warnings
 import webbrowser
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -438,7 +438,7 @@ class InversionApp(BaseDashApplication):
         nb_port = None
         servers = list(notebookapp.list_running_servers())
         for s in servers:
-            if s["notebook_dir"] == pathlib.Path.resolve("../../../"):
+            if s["notebook_dir"] == Path("../../../").resolve():
                 nb_port = s["port"]
                 break
 
@@ -1403,11 +1403,15 @@ class InversionApp(BaseDashApplication):
         detrend_order: int,
         ignore_values: str,
         max_global_iterations: int,
+        max_irls_iterations: int,
+        cooling_rate: int,
+        cooling_factor: int,
         chi_factor: float,
         initial_beta_ratio: float,
         max_cg_iterations: int,
         tol_cg: float,
         n_cpu: int,
+        store_sensitivities: str,
         tile_spatial: int,
         out_group: str,
         monitoring_directory: str,
@@ -1480,13 +1484,17 @@ class InversionApp(BaseDashApplication):
         :param detrend_type: Detrend method (all, perimeter).
         :param detrend_order: Detrend order.
         :param ignore_values: Specified values to ignore.
-        :param max_global_iterations: Max iterations.
-        :param chi_factor: Target misfit.
-        :param initial_beta_ratio: Beta ratio (phi_d/phi_m).
-        :param max_cg_iterations: Max CG iterations.
-        :param tol_cg: CG tolerance.
-        :param n_cpu: Max CPUs.
-        :param tile_spatial: Number of tiles.
+        :param max_global_iterations:
+        :param max_irls_iterations:
+        :param cooling_rate:
+        :param cooling_factor:
+        :param chi_factor:
+        :param initial_beta_ratio:
+        :param max_cg_iterations:
+        :param tol_cg:
+        :param n_cpu:
+        :param store_sensitivities:
+        :param tile_spatial:
         :param out_group: GA group name.
         :param monitoring_directory: Export path.
         :param inducing_field_strength: (Magnetic specific.) Inducing field strength (nT).
@@ -1546,11 +1554,15 @@ class InversionApp(BaseDashApplication):
             "detrend_order": detrend_order,
             "ignore_values": ignore_values,
             "max_global_iterations": max_global_iterations,
+            "max_irls_iterations": max_irls_iterations,
+            "cooling_rate": cooling_rate,
+            "cooling_factor": cooling_factor,
             "chi_factor": chi_factor,
             "initial_beta_ratio": initial_beta_ratio,
             "max_cg_iterations": max_cg_iterations,
             "tol_cg": tol_cg,
             "n_cpu": n_cpu,
+            "store_sensitivities": store_sensitivities,
             "tile_spatial": tile_spatial,
             "out_group": out_group,
             "monitoring_directory": monitoring_directory,
@@ -1558,6 +1570,7 @@ class InversionApp(BaseDashApplication):
             "inducing_field_inclination": inducing_field_inclination,
             "inducing_field_declination": inducing_field_declination,
         }
+
         param_dict = self.get_params_dict(update_dict)
 
         if not live_link:
@@ -1569,11 +1582,11 @@ class InversionApp(BaseDashApplication):
         if (
             monitoring_directory is not None
             and monitoring_directory != ""
-            and pathlib.Path.resolve(monitoring_directory).exists()
+            and Path(monitoring_directory).resolve().exists()
         ):
-            monitoring_directory = pathlib.Path.resolve(monitoring_directory)
+            monitoring_directory = Path(monitoring_directory).resolve()
         else:
-            monitoring_directory = pathlib.Path.resolve(self.workspace.h5file).parent
+            monitoring_directory = Path(self.workspace.h5file).resolve().parent
 
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{out_group}_{time():.0f}.geoh5"
@@ -1632,19 +1645,18 @@ class InversionApp(BaseDashApplication):
 
             if (
                 self._run_params.monitoring_directory is not None
-                and pathlib.Path.resolve(self._run_params.monitoring_directory).exists()
+                and Path(self._run_params.monitoring_directory).resolve().exists()
             ):
                 for obj in ws.objects:
                     monitored_directory_copy(
-                        pathlib.Path.resolve(self._run_params.monitoring_directory),
+                        Path(self._run_params.monitoring_directory).resolve(),
                         obj,
                     )
-
         if live_link:
             print("Live link active. Check your ANALYST session for new mesh.")
             return [True]
         else:
-            print("Saved to " + pathlib.Path.resolve(monitoring_directory))
+            print("Saved to " + str(Path(monitoring_directory).resolve()))
             return []
 
     def trigger_click(self, _):
