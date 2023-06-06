@@ -45,7 +45,7 @@ def test_gravity_fwr_run(
     )
     params = GravityParams(
         forward_only=True,
-        geoh5=geoh5,
+        geoh5=Path(geoh5.h5file),
         mesh=model.parent.uid,
         topography_object=topography.uid,
         resolution=0.0,
