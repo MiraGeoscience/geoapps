@@ -46,7 +46,7 @@ class Clustering(ScatterPlots):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json.path).is_file():
+        if ui_json is not None and Path(ui_json.path).is_dir():
             self.params = self._param_class(ui_json)
         else:
             self.params = self._param_class(**app_initializer)
