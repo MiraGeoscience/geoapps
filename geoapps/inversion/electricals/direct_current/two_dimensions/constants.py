@@ -413,8 +413,6 @@ default_ui_json = {
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-for key in ["resolution", "detrend_order", "detrend_type", "y_norm", "length_scale_y"]:
-    del default_ui_json[key]
 
 ################ Validations #################
 
@@ -445,7 +443,6 @@ app_initializer = {
     "window_azimuth": None,
     "s_norm": 0.0,
     "x_norm": 2.0,
-    "y_norm": 2.0,
     "z_norm": 2.0,
     "upper_bound": 100.0,
     "lower_bound": 1e-5,

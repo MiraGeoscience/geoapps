@@ -68,7 +68,6 @@ inversion_defaults = {
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
     "length_scale_x": 1.0,
-    "length_scale_y": 1.0,
     "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,

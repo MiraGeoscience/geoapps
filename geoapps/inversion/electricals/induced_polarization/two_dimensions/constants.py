@@ -447,8 +447,6 @@ default_ui_json = {
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-for key in ["resolution", "detrend_order", "detrend_type", "y_norm", "length_scale_y"]:
-    del default_ui_json[key]
 
 ################ Validations #################
 
