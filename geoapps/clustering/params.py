@@ -104,9 +104,9 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("full_upper_bounds", val)
 
     @property
-    def color_pickers(self) -> str | None:
+    def color_pickers(self) -> list | None:
         """
-        Upper bounds for all channels.
+        Colors corresponding to each cluster.
         """
         return self._color_pickers
 
