@@ -205,11 +205,10 @@ default_ui_json = {
         "group": "Update sensitivity weights directive",
         "tooltip": "Update sensitivity weight threshold",
         "label": "Threshold (%)",
-        "value": 30.0,
-        "max": 99.9,
+        "value": 0.001,
+        "max": 1.0,
         "min": 0.0,
-        "precision": 1,
-        "lineEdit": False,
+        "precision": 5,
         "verbose": 2,
     },
     "every_iteration_bool": {
@@ -337,6 +336,7 @@ default_ui_json = {
     "initial_beta": {
         "min": 0.0,
         "group": "Optimization",
+        "optional": True,
         "enabled": False,
         "dependency": "initial_beta_ratio",
         "dependencyType": "disabled",
@@ -360,7 +360,7 @@ default_ui_json = {
         "tooltip": "Constant ratio compared to other weights. Larger values result in models that remain close to the reference model",
         "enabled": True,
     },
-    "alpha_x": {
+    "length_scale_x": {
         "min": 0.0,
         "group": "Regularization",
         "label": "X-smoothness weight",
@@ -368,7 +368,7 @@ default_ui_json = {
         "value": 1.0,
         "enabled": True,
     },
-    "alpha_y": {
+    "length_scale_y": {
         "min": 0.0,
         "group": "Regularization",
         "label": "Y-smoothness weight",
@@ -376,7 +376,7 @@ default_ui_json = {
         "value": 1.0,
         "enabled": True,
     },
-    "alpha_z": {
+    "length_scale_z": {
         "min": 0.0,
         "group": "Regularization",
         "label": "Z-smoothness weight",
@@ -529,9 +529,9 @@ validations = {
         "types": [str, UUID, Surface, Points, Grid2D, Curve],
     },
     "alpha_s": {"types": [int, float]},
-    "alpha_x": {"types": [int, float]},
-    "alpha_y": {"types": [int, float]},
-    "alpha_z": {"types": [int, float]},
+    "length_scale_x": {"types": [int, float]},
+    "length_scale_y": {"types": [int, float]},
+    "length_scale_z": {"types": [int, float]},
     "norm_s": {"types": [int, float]},
     "norm_x": {"types": [int, float]},
     "norm_y": {"types": [int, float]},

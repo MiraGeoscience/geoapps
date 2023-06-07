@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: 954354e18d30299c48fe07db5a5acd0f439be1c8b6c8f3de89f2d8d93908c8c2
-    osx-64: 5177cd22bcb65742670525ad36335f58c72d94b987b5db6286506b03d8b6e090
-    win-64: ef7deb91a223dce68810bded237458971c4f040f3dba90c49f43ddcf543f9c00
+    linux-64: 85b9a66f4fc3d283e9655bf8f2fa0d528fe5f80131489fa30bf22dfbe72ba759
+    osx-64: 3364486d7540ca0316edd6efc9ddb459e5cfd2a032b798621f2869c6f4db1f93
+    win-64: 69bd12ceccb15cadcc8eb502aed53328f8120bb7af72994ff1cde771e7e81436
   platforms:
   - win-64
   - osx-64
@@ -671,16 +671,16 @@ package:
   version: 1.31.3
 - category: main
   dependencies:
-    libgcc-ng: '>=10.3.0'
+    libgcc-ng: '>=12'
   hash:
-    md5: 4acfc691e64342b9dae57cf2adc63238
-    sha256: b801e8cf4b2c9a30bce5616746c6c2a4e36427f045b46d9fc08a4ed40a9f7065
+    md5: 681105bccc2a3f7f1a837d47d39c9179
+    sha256: ccf61e61d58a8a7b2d66822d5568e2dc9387883dd9b2da61e1d787ece4c4979a
   manager: conda
   name: ncurses
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.3-h27087fc_1.tar.bz2
-  version: '6.3'
+  url: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.4-hcb278e6_0.conda
+  version: '6.4'
 - category: main
   dependencies:
     libgcc-ng: '>=12'
@@ -2096,18 +2096,6 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/fsspec-2022.11.0-pyhd8ed1ab_0.tar.bz2
   version: 2022.11.0
-- category: core
-  dependencies:
-    python: '>=3.8'
-  hash:
-    md5: fec8329fc739090f26a7d7803db254f1
-    sha256: b3d34bf4924cb80363c1ab57ac821393f118ffaa94f05368bf4044941163b65e
-  manager: conda
-  name: future
-  optional: true
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/future-0.18.3-pyhd8ed1ab_0.conda
-  version: 0.18.3
 - category: main
   dependencies:
     libgcc-ng: '>=12'
@@ -3798,14 +3786,14 @@ package:
     pysocks: '>=1.5.6,<2.0,!=1.5.7'
     python: '>=3.7'
   hash:
-    md5: 81a763f3c64fe6d5f32e033b0325265d
-    sha256: e6a70b1bb3fe6b15b11cb93322f29b40fd276dfb853f550d1898af848f36eb5e
+    md5: ae465d0fbf9f1979cb2d8d4043d885e2
+    sha256: 91d999539132f4b04091642df62b51c63c8a1fd61ecdff1ed704fc11405f9a34
   manager: conda
   name: urllib3
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.0.2-pyhd8ed1ab_0.conda
-  version: 2.0.2
+  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.0.3-pyhd8ed1ab_0.conda
+  version: 2.0.3
 - category: apps
   dependencies:
     markupsafe: '>=2.1.1'
@@ -4999,21 +4987,21 @@ package:
   version: 0.2.2
 - category: core
   dependencies:
-    libgcc-ng: '>=10.3.0'
-    libstdcxx-ng: '>=10.3.0'
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
     numpy: '>=1.21.6,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
     scipy: '>=0.13'
   hash:
-    md5: f97c620a5ab8cf3b34cbb10907b2f571
-    sha256: b35b4b58fde74fc7afdcb61b96f933719e7f92136068f3ff4f3010dd817cf611
+    md5: e99dbe732683f3bbee6b866e15364f32
+    sha256: 68602e2e77296cd339dc7bd4b73806f4c4667f23cb71ba51cfc680c97cb7e5b0
   manager: conda
   name: discretize
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/discretize-0.7.4-py310hc4a4660_0.tar.bz2
-  version: 0.7.4
+  url: https://conda.anaconda.org/conda-forge/linux-64/discretize-0.8.3-py310h5a539fb_0.conda
+  version: 0.8.3
 - category: core
   dependencies:
     numba: '>=0.47'
@@ -5135,21 +5123,6 @@ package:
   platform: linux-64
   url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-core-7.4.0-pyhd8ed1ab_0.conda
   version: 7.4.0
-- category: main
-  dependencies:
-    numpy: '>=1.7'
-    python: ''
-    six: ''
-    vectormath: '>=0.1.4'
-  hash:
-    md5: 62052fa8409d12536ff149e25b0e9905
-    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
-  manager: conda
-  name: properties
-  optional: false
-  platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
-  version: 0.6.1
 - category: core
   dependencies:
     libgcc-ng: '>=12'
@@ -5238,23 +5211,24 @@ package:
   version: 2.14.2
 - category: core
   dependencies:
-    future: ''
+    empymod: ''
+    libgcc-ng: '>=12'
+    libstdcxx-ng: '>=12'
     matplotlib-base: ''
-    numpy: '>=1.7'
-    properties: ''
-    python: ''
+    numpy: '>=1.23.4,<2.0a0'
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.* *_cp310
     scipy: '>=0.13'
     utm: ''
-    vectormath: ''
   hash:
-    md5: 940c153c790eec5801d26ad7115d69bf
-    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
+    md5: 1bd40020a2aa8efd348d0a7c051d3f22
+    sha256: 08a3bdd30b685bcacc097611495175d0b6994f56484a174dc85a0b61945b939c
   manager: conda
   name: geoana
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
-  version: 0.0.6
+  url: https://conda.anaconda.org/conda-forge/linux-64/geoana-0.4.0-py310hbf28c38_1.tar.bz2
+  version: 0.4.0
 - category: apps
   dependencies:
     ansi2html: ''
@@ -5501,21 +5475,19 @@ package:
     url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   version: 0.8.0-alpha.2
-- category: core
+- category: main
   dependencies:
-    discretize: '*'
     numpy: '>=1.7'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
-    scipy: '>=0.13'
+    six: '>=1.7.3'
+    vectormath: '>=0.1.4'
   hash:
-    sha256: 44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
+    sha256: b119ce4c53f4717fa29371c1bb929f422dda7ed90a4559b3583ea77389177263
   manager: pip
-  name: simpeg-archive
-  optional: true
+  name: properties
+  optional: false
   platform: linux-64
-  url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
-  version: 0.9.1.dev5
+  url: https://files.pythonhosted.org/packages/c0/9a/cd2def3421cd077d80d4973c802d29dcb3fba625190b3678480f228a85bf/properties-0.6.1.tar.gz
+  version: 0.6.1
 - category: main
   dependencies:
     geoh5py: '>=0.5.0'
@@ -5534,17 +5506,14 @@ package:
   version: 3.0.0
 - category: core
   dependencies:
-    discretize: '>=0.7.0'
-    empymod: '*'
+    discretize: '>=0.8.0'
+    empymod: '>=2.0.0'
     geoh5py: '*'
-    numpy: '>=1.7'
+    numpy: '>=1.20'
     pandas: '*'
-    properties: '>=0.5.2'
-    pymatsolver: '>=0.1.1'
-    scikit-learn: '>=0.22'
-    scipy: '>=1.0.0'
-    utm: '*'
-    vectormath: '>=0.2.0'
+    pymatsolver: '>=0.2'
+    scikit-learn: '>=1.2'
+    scipy: '>=1.8.0'
   hash:
     sha256: ''
   manager: pip
@@ -5553,9 +5522,9 @@ package:
   platform: linux-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
-  version: 0.15.1.dev10
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev1+geoapps.0.11.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev1+geoapps.0.11.0.zip
+  version: 0.19.0.dev1
 - category: main
   dependencies:
     geoh5py: '>=0.8.0a2,<0.9.0'
@@ -5571,6 +5540,21 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip
   version: 0.1.6a1
+- category: core
+  dependencies:
+    discretize: '*'
+    numpy: '>=1.7'
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  hash:
+    sha256: 44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
+  manager: pip
+  name: simpeg-archive
+  optional: true
+  platform: linux-64
+  url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
+  version: 0.9.1.dev5
 - category: main
   dependencies: {}
   hash:
@@ -5871,14 +5855,14 @@ package:
 - category: main
   dependencies: {}
   hash:
-    md5: 76217ebfbb163ff2770a261f955a5861
-    sha256: 9794a23d03586c99cac49d4ae3d5337faaa6bfc256b31d2662ff4ad5972be143
+    md5: c3dbae2411164d9b02c69090a9a91857
+    sha256: 7841b1fce1ffb0bfb038f9687b92f04d64acab1f7cb96431972386ea98c7b2fd
   manager: conda
   name: ncurses
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/ncurses-6.3-h96cf925_1.tar.bz2
-  version: '6.3'
+  url: https://conda.anaconda.org/conda-forge/osx-64/ncurses-6.4-hf0c8a7f_0.conda
+  version: '6.4'
 - category: apps
   dependencies: {}
   hash:
@@ -7053,18 +7037,6 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/noarch/fsspec-2022.11.0-pyhd8ed1ab_0.tar.bz2
   version: 2022.11.0
-- category: core
-  dependencies:
-    python: '>=3.8'
-  hash:
-    md5: fec8329fc739090f26a7d7803db254f1
-    sha256: b3d34bf4924cb80363c1ab57ac821393f118ffaa94f05368bf4044941163b65e
-  manager: conda
-  name: future
-  optional: true
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/future-0.18.3-pyhd8ed1ab_0.conda
-  version: 0.18.3
 - category: main
   dependencies:
     libcxx: '>=15.0.7'
@@ -8525,14 +8497,14 @@ package:
     python_abi: 3.10.* *_cp310
     setuptools: ''
   hash:
-    md5: 8f850119688de310515512ac755f720e
-    sha256: 6d0e105d3d52edb61fd936912a66a00173fe1be6a0edb7b0dc0168360df537e6
+    md5: e1ab355e10f9fc8995371072a2e0fa29
+    sha256: 74755edaa8f76b6a597a306e5eafc027f06a87d73c3a20f92c68845b8cc7dcf4
   manager: conda
   name: pyobjc-core
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-9.1.1-py310h4f19300_0.conda
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-core-9.2-py310hef2d279_0.conda
+  version: '9.2'
 - category: core
   dependencies:
     python: '>=3.6'
@@ -8635,14 +8607,14 @@ package:
     pysocks: '>=1.5.6,<2.0,!=1.5.7'
     python: '>=3.7'
   hash:
-    md5: 81a763f3c64fe6d5f32e033b0325265d
-    sha256: e6a70b1bb3fe6b15b11cb93322f29b40fd276dfb853f550d1898af848f36eb5e
+    md5: ae465d0fbf9f1979cb2d8d4043d885e2
+    sha256: 91d999539132f4b04091642df62b51c63c8a1fd61ecdff1ed704fc11405f9a34
   manager: conda
   name: urllib3
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.0.2-pyhd8ed1ab_0.conda
-  version: 2.0.2
+  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.0.3-pyhd8ed1ab_0.conda
+  version: 2.0.3
 - category: apps
   dependencies:
     markupsafe: '>=2.1.1'
@@ -8905,18 +8877,18 @@ package:
 - category: apps
   dependencies:
     libffi: '>=3.4,<4.0a0'
-    pyobjc-core: 9.1.1.*
+    pyobjc-core: 9.2.*
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: b4555db62c31780328d13f9353721891
-    sha256: c2914f8ba269108ba67ec26c0e1964ff56b69c117cf181c0e4a8bbfcb598a0ff
+    md5: 0874355241e82a01cd15c6e6b28c7187
+    sha256: c9f10735105782a85b077d30cf5933eff7821bf70a806526b8bca3077c5ae057
   manager: conda
   name: pyobjc-framework-cocoa
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-9.1.1-py310h4f19300_0.conda
-  version: 9.1.1
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyobjc-framework-cocoa-9.2-py310hef2d279_0.conda
+  version: '9.2'
 - category: main
   dependencies:
     libcxx: '>=14.0.6'
@@ -9522,21 +9494,6 @@ package:
   version: 3.0.38
 - category: main
   dependencies:
-    numpy: '>=1.7'
-    python: ''
-    six: ''
-    vectormath: '>=0.1.4'
-  hash:
-    md5: 62052fa8409d12536ff149e25b0e9905
-    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
-  manager: conda
-  name: properties
-  optional: false
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
-  version: 0.6.1
-- category: main
-  dependencies:
     gst-plugins-base: '>=1.22.3,<1.23.0a0'
     gstreamer: '>=1.22.3,<1.23.0a0'
     icu: '>=72.1,<73.0a0'
@@ -9616,20 +9573,20 @@ package:
   version: 2.14.2
 - category: core
   dependencies:
-    libcxx: '>=12.0.1'
+    libcxx: '>=14.0.6'
     numpy: '>=1.21.6,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
     scipy: '>=0.13'
   hash:
-    md5: 8826e7ecec17230deda042508d85bdc9
-    sha256: 2001aefaa61324bdb0b0dd797e19b1765428e9601deb9974c52d809d84d6bed1
+    md5: 21a0671c4d78e77259bf3d8ef127f2c3
+    sha256: 61aee7d065a734ba17b2bd4b6f12468e0cabd4fc79da272797c8e528635c3d35
   manager: conda
   name: discretize
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/discretize-0.7.4-py310h84c6d00_0.tar.bz2
-  version: 0.7.4
+  url: https://conda.anaconda.org/conda-forge/osx-64/discretize-0.8.3-py310h3e792ce_0.conda
+  version: 0.8.3
 - category: core
   dependencies:
     numba: '>=0.47'
@@ -9670,25 +9627,6 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/osx-64/fiona-1.9.3-py310h3963e5c_0.conda
   version: 1.9.3
-- category: core
-  dependencies:
-    future: ''
-    matplotlib-base: ''
-    numpy: '>=1.7'
-    properties: ''
-    python: ''
-    scipy: '>=0.13'
-    utm: ''
-    vectormath: ''
-  hash:
-    md5: 940c153c790eec5801d26ad7115d69bf
-    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
-  manager: conda
-  name: geoana
-  optional: true
-  platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
-  version: 0.0.6
 - category: apps
   dependencies:
     __osx: ''
@@ -9850,6 +9788,25 @@ package:
   platform: osx-64
   url: https://conda.anaconda.org/conda-forge/osx-64/scikit-learn-1.2.2-py310hd2c063c_2.conda
   version: 1.2.2
+- category: core
+  dependencies:
+    empymod: ''
+    libcxx: '>=14.0.4'
+    matplotlib-base: ''
+    numpy: '>=1.23.4,<2.0a0'
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.* *_cp310
+    scipy: '>=0.13'
+    utm: ''
+  hash:
+    md5: a2045d7a327807c593b4eb66878726cb
+    sha256: 7a469a45948969c16a01f2fa6dc7b67898ba53ebff64fd7530193249db525bed
+  manager: conda
+  name: geoana
+  optional: true
+  platform: osx-64
+  url: https://conda.anaconda.org/conda-forge/osx-64/geoana-0.4.0-py310ha23aa8a_1.tar.bz2
+  version: 0.4.0
 - category: apps
   dependencies:
     __osx: ''
@@ -10141,21 +10098,19 @@ package:
     url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   version: 0.8.0-alpha.2
-- category: core
+- category: main
   dependencies:
-    discretize: '*'
     numpy: '>=1.7'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
-    scipy: '>=0.13'
+    six: '>=1.7.3'
+    vectormath: '>=0.1.4'
   hash:
-    sha256: 44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
+    sha256: b119ce4c53f4717fa29371c1bb929f422dda7ed90a4559b3583ea77389177263
   manager: pip
-  name: simpeg-archive
-  optional: true
+  name: properties
+  optional: false
   platform: osx-64
-  url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
-  version: 0.9.1.dev5
+  url: https://files.pythonhosted.org/packages/c0/9a/cd2def3421cd077d80d4973c802d29dcb3fba625190b3678480f228a85bf/properties-0.6.1.tar.gz
+  version: 0.6.1
 - category: main
   dependencies:
     geoh5py: '>=0.5.0'
@@ -10174,17 +10129,14 @@ package:
   version: 3.0.0
 - category: core
   dependencies:
-    discretize: '>=0.7.0'
-    empymod: '*'
+    discretize: '>=0.8.0'
+    empymod: '>=2.0.0'
     geoh5py: '*'
-    numpy: '>=1.7'
+    numpy: '>=1.20'
     pandas: '*'
-    properties: '>=0.5.2'
-    pymatsolver: '>=0.1.1'
-    scikit-learn: '>=0.22'
-    scipy: '>=1.0.0'
-    utm: '*'
-    vectormath: '>=0.2.0'
+    pymatsolver: '>=0.2'
+    scikit-learn: '>=1.2'
+    scipy: '>=1.8.0'
   hash:
     sha256: ''
   manager: pip
@@ -10193,9 +10145,9 @@ package:
   platform: osx-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
-  version: 0.15.1.dev10
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev1+geoapps.0.11.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev1+geoapps.0.11.0.zip
+  version: 0.19.0.dev1
 - category: main
   dependencies:
     geoh5py: '>=0.8.0a2,<0.9.0'
@@ -10211,6 +10163,21 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip
   version: 0.1.6a1
+- category: core
+  dependencies:
+    discretize: '*'
+    numpy: '>=1.7'
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  hash:
+    sha256: 44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
+  manager: pip
+  name: simpeg-archive
+  optional: true
+  platform: osx-64
+  url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
+  version: 0.9.1.dev5
 - category: main
   dependencies: {}
   hash:
@@ -11601,18 +11568,6 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/fsspec-2022.11.0-pyhd8ed1ab_0.tar.bz2
   version: 2022.11.0
-- category: core
-  dependencies:
-    python: '>=3.8'
-  hash:
-    md5: fec8329fc739090f26a7d7803db254f1
-    sha256: b3d34bf4924cb80363c1ab57ac821393f118ffaa94f05368bf4044941163b65e
-  manager: conda
-  name: future
-  optional: true
-  platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/future-0.18.3-pyhd8ed1ab_0.conda
-  version: 0.18.3
 - category: core
   dependencies:
     python: '>=3.6'
@@ -13645,14 +13600,14 @@ package:
     pysocks: '>=1.5.6,<2.0,!=1.5.7'
     python: '>=3.7'
   hash:
-    md5: 81a763f3c64fe6d5f32e033b0325265d
-    sha256: e6a70b1bb3fe6b15b11cb93322f29b40fd276dfb853f550d1898af848f36eb5e
+    md5: ae465d0fbf9f1979cb2d8d4043d885e2
+    sha256: 91d999539132f4b04091642df62b51c63c8a1fd61ecdff1ed704fc11405f9a34
   manager: conda
   name: urllib3
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.0.2-pyhd8ed1ab_0.conda
-  version: 2.0.2
+  url: https://conda.anaconda.org/conda-forge/noarch/urllib3-2.0.3-pyhd8ed1ab_0.conda
+  version: 2.0.3
 - category: apps
   dependencies:
     backports.functools_lru_cache: ''
@@ -14479,17 +14434,18 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
     scipy: '>=0.13'
-    vc: '>=14.1,<15'
-    vs2015_runtime: '>=14.16.27033'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: 7f313a70e136066343932415dcaa64b4
-    sha256: 531719da40ada6e54d86ec2437172a687ddb52034e85063bd2f03540fc0bb9c0
+    md5: eb163df36e7c567ec372f4af8f305e6e
+    sha256: 0e12ec04d5fa226fcfc724344c74b526dd3c4222de9bd6f5fc9da88d65a61969
   manager: conda
   name: discretize
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/discretize-0.7.4-py310hc781a3c_0.tar.bz2
-  version: 0.7.4
+  url: https://conda.anaconda.org/conda-forge/win-64/discretize-0.8.3-py310h220cb41_0.conda
+  version: 0.8.3
 - category: core
   dependencies:
     numba: '>=0.47'
@@ -14620,21 +14576,6 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/noarch/nbconvert-pandoc-7.4.0-pyhd8ed1ab_0.conda
   version: 7.4.0
-- category: main
-  dependencies:
-    numpy: '>=1.7'
-    python: ''
-    six: ''
-    vectormath: '>=0.1.4'
-  hash:
-    md5: 62052fa8409d12536ff149e25b0e9905
-    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
-  manager: conda
-  name: properties
-  optional: false
-  platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
-  version: 0.6.1
 - category: core
   dependencies:
     mkl: '>=2022.1.0,<2023.0a0'
@@ -14726,23 +14667,25 @@ package:
   version: 2.14.2
 - category: core
   dependencies:
-    future: ''
+    empymod: ''
     matplotlib-base: ''
-    numpy: '>=1.7'
-    properties: ''
-    python: ''
+    numpy: '>=1.23.4,<2.0a0'
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.* *_cp310
     scipy: '>=0.13'
+    ucrt: '>=10.0.20348.0'
     utm: ''
-    vectormath: ''
+    vc: '>=14.2,<15'
+    vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: 940c153c790eec5801d26ad7115d69bf
-    sha256: 6ef4cb86ab786166d39b6a55f2b5b9027f298d4aa7ba676d587b31cf80053ae5
+    md5: dc83eae4fe4c634d111e066e13bada84
+    sha256: e67adde2539020fa905a169ad4e06a5d39b6fa94ba87de279e7547c1f7742971
   manager: conda
   name: geoana
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/noarch/geoana-0.0.6-py_1.tar.bz2
-  version: 0.0.6
+  url: https://conda.anaconda.org/conda-forge/win-64/geoana-0.4.0-py310h232114e_1.tar.bz2
+  version: 0.4.0
 - category: apps
   dependencies:
     nbconvert-core: 7.4.0 pyhd8ed1ab_0
@@ -14929,21 +14872,19 @@ package:
     url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   version: 0.8.0-alpha.2
-- category: core
+- category: main
   dependencies:
-    discretize: '*'
     numpy: '>=1.7'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
-    scipy: '>=0.13'
+    six: '>=1.7.3'
+    vectormath: '>=0.1.4'
   hash:
-    sha256: 44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
+    sha256: b119ce4c53f4717fa29371c1bb929f422dda7ed90a4559b3583ea77389177263
   manager: pip
-  name: simpeg-archive
-  optional: true
+  name: properties
+  optional: false
   platform: win-64
-  url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
-  version: 0.9.1.dev5
+  url: https://files.pythonhosted.org/packages/c0/9a/cd2def3421cd077d80d4973c802d29dcb3fba625190b3678480f228a85bf/properties-0.6.1.tar.gz
+  version: 0.6.1
 - category: main
   dependencies:
     geoh5py: '>=0.5.0'
@@ -14962,17 +14903,14 @@ package:
   version: 3.0.0
 - category: core
   dependencies:
-    discretize: '>=0.7.0'
-    empymod: '*'
+    discretize: '>=0.8.0'
+    empymod: '>=2.0.0'
     geoh5py: '*'
-    numpy: '>=1.7'
+    numpy: '>=1.20'
     pandas: '*'
-    properties: '>=0.5.2'
-    pymatsolver: '>=0.1.1'
-    scikit-learn: '>=0.22'
-    scipy: '>=1.0.0'
-    utm: '*'
-    vectormath: '>=0.2.0'
+    pymatsolver: '>=0.2'
+    scikit-learn: '>=1.2'
+    scipy: '>=1.8.0'
   hash:
     sha256: ''
   manager: pip
@@ -14981,9 +14919,9 @@ package:
   platform: win-64
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip#sha256=
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.15.1.dev10+geoapps.0.10.0.zip
-  version: 0.15.1.dev10
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev1+geoapps.0.11.0.zip#sha256=
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev1+geoapps.0.11.0.zip
+  version: 0.19.0.dev1
 - category: main
   dependencies:
     geoh5py: '>=0.8.0a2,<0.9.0'
@@ -14999,4 +14937,19 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip
   version: 0.1.6a1
+- category: core
+  dependencies:
+    discretize: '*'
+    numpy: '>=1.7'
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  hash:
+    sha256: 44fb910c849577dd892f40b39289d26f14c3c5bd50467ed1b41b7841b66d4403
+  manager: pip
+  name: simpeg-archive
+  optional: true
+  platform: win-64
+  url: https://files.pythonhosted.org/packages/f1/f5/98abe04dcad2c89a6385919492a8c696e8e73194cdf416076001530530ed/simpeg_archive-0.9.1.dev5-py2.py3-none-any.whl
+  version: 0.9.1.dev5
 version: 1

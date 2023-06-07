@@ -21,9 +21,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.008729,
-    "phi_d": 2.195,
-    "phi_m": 0.4823,
+    "data_norm": 0.008731,
+    "phi_d": 2.213,
+    "phi_m": 0.1786,
 }
 
 np.random.seed(0)
@@ -139,7 +139,6 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             upper_bound=0.75,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e4,
-            sens_wts_threshold=60.0,
             prctile=100,
             store_sensitivities="ram",
             **data_kwargs,
@@ -163,10 +162,10 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_tipper_fwr_run("./", n_grid_points=8, refinement=(4, 8))
+    mstart = test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
 
     m_rec = test_tipper_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

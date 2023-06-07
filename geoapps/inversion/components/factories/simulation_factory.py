@@ -77,11 +77,11 @@ class SimulationFactory(SimPEGFactory):
             return simulation.Simulation3DNodal
 
         if self.factory_type == "induced polarization 2d":
-            from SimPEG.electromagnetics.static.induced_polarization import (
-                simulation_2d,
+            from SimPEG.electromagnetics.static.induced_polarization.simulation import (
+                Simulation2DNodal,
             )
 
-            return simulation_2d.Simulation2DNodal
+            return Simulation2DNodal
 
         if self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import simulation
@@ -125,9 +125,7 @@ class SimulationFactory(SimPEGFactory):
         kwargs["max_chunk_size"] = self.params.max_chunk_size
         # kwargs["n_cpu"] = self.params.n_cpu
         kwargs["store_sensitivities"] = (
-            "forward_only"
-            if self.params.forward_only
-            else self.params.store_sensitivities
+            None if self.params.forward_only else self.params.store_sensitivities
         )
         if self.factory_type == "magnetic vector":
             return self._magnetic_vector_keywords(kwargs, active_cells=active_cells)
@@ -153,7 +151,7 @@ class SimulationFactory(SimPEGFactory):
             )
 
     def _magnetic_vector_keywords(self, kwargs, active_cells=None):
-        kwargs["actInd"] = active_cells
+        kwargs["ind_active"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
         kwargs["model_type"] = "vector"
         kwargs["chunk_format"] = "row"
@@ -161,14 +159,14 @@ class SimulationFactory(SimPEGFactory):
         return kwargs
 
     def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
-        kwargs["actInd"] = active_cells
+        kwargs["ind_active"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["chunk_format"] = "row"
 
         return kwargs
 
     def _gravity_keywords(self, kwargs, active_cells=None):
-        kwargs["actInd"] = active_cells
+        kwargs["ind_active"] = active_cells
         kwargs["rhoMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["chunk_format"] = "row"
 
@@ -186,12 +184,9 @@ class SimulationFactory(SimPEGFactory):
         mesh,
         active_cells=None,
     ):
-        actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
         etamap = maps.InjectActiveCells(mesh, indActive=active_cells, valInactive=0)
         kwargs["etaMap"] = etamap
-        kwargs["sigmaMap"] = actmap
         kwargs["solver"] = self.solver
-        kwargs["max_ram"] = 1
 
         return kwargs
 

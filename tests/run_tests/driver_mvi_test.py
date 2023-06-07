@@ -26,8 +26,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_mvi_run = {
     "data_norm": 8.9433,
-    "phi_d": 0.02951,
-    "phi_m": 4.164e-6,
+    "phi_d": 0.02647,
+    "phi_m": 4.297e-6,
 }
 
 
@@ -140,8 +140,10 @@ def test_magnetic_vector_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_magnetic_vector_fwr_run("./", n_grid_points=20, refinement=(4, 8))
-    m_rec = test_magnetic_vector_run("./", max_iterations=30, pytest=False)
+    m_start = test_magnetic_vector_fwr_run(
+        Path("./"), n_grid_points=20, refinement=(4, 8)
+    )
+    m_rec = test_magnetic_vector_run(Path("./"), max_iterations=30, pytest=False)
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
         residual < 50.0

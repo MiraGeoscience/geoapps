@@ -112,8 +112,10 @@ class InversionDriver(BaseDriver):
                 self.data_misfit,
                 self.regularization,
                 self.optimization,
-                beta=self.params.initial_beta,
             )
+
+            if self.params.initial_beta:
+                self._inverse_problem.beta = self.params.initial_beta
 
         return self._inverse_problem
 
@@ -294,59 +296,69 @@ class InversionDriver(BaseDriver):
 
             reg_p = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=wires.p,  # pylint: disable=no-member
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
             reg_s = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=wires.s,  # pylint: disable=no-member
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
 
             reg_t = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=wires.t,  # pylint: disable=no-member
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
 
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
-            reg.mref = self.models.reference
+            reg.reference_model = self.models.reference
 
         else:
             reg = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=maps.IdentityMap(nP=n_cells),
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
-                norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
+
+            norms = [self.params.s_norm]
+            for comp in ["x", "y", "z"]:
+                if getattr(self.params, f"length_scale_{comp}") is not None:
+                    setattr(
+                        reg,
+                        f"length_scale_{comp}",
+                        getattr(self.params, f"length_scale_{comp}"),
+                    )
+
+                if getattr(self.params, f"{comp}_norm") is not None:
+                    norms.append(getattr(self.params, f"{comp}_norm"))
+
+            reg.norms = norms
 
         return reg
 

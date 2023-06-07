@@ -29,7 +29,6 @@ inversion_defaults = {
     "z_from_topo": True,
     "line_object": None,
     "line_id": 1,
-    "resolution": None,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
@@ -48,8 +47,6 @@ inversion_defaults = {
     "upper_bound": None,
     "output_tile_files": False,
     "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -66,12 +63,10 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
-    "y_norm": 2.0,
     "z_norm": 2.0,
     "gradient_type": "total",
     "max_irls_iterations": 25,
@@ -82,7 +77,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 30.0,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
@@ -113,7 +108,6 @@ forward_defaults = {
     "z_from_topo": True,
     "line_object": None,
     "line_id": 1,
-    "resolution": None,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
@@ -144,6 +138,7 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "gradient_type": "total",
 }
 
 inversion_ui_json = {
@@ -192,15 +187,6 @@ forward_ui_json = {
         "label": "Line number",
         "value": 1,
     },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
@@ -422,15 +408,11 @@ default_ui_json = {
         "value": 0.0,
         "visible": False,
     },
-    "resolution": None,
-    "detrend_order": None,
-    "detrend_type": None,
     "tile_spatial": 1,
     "out_group": {"label": "Results group name", "value": "DirectCurrentInversion"},
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
 
 ################ Validations #################
 
@@ -454,7 +436,6 @@ app_initializer = {
     "mesh": UUID("{537cdf17-28c9-4baa-a1ac-07c37662583d}"),
     "starting_model": 1e-1,
     "reference_model": 1e-1,
-    "resolution": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -462,7 +443,6 @@ app_initializer = {
     "window_azimuth": None,
     "s_norm": 0.0,
     "x_norm": 2.0,
-    "y_norm": 2.0,
     "z_norm": 2.0,
     "upper_bound": 100.0,
     "lower_bound": 1e-5,
