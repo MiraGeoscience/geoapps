@@ -145,7 +145,7 @@ class Base2DParams(InversionBaseParams):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
 
     @property
-    def alpha_y(self):
+    def length_scale_y(self):
         return None
 
     @property

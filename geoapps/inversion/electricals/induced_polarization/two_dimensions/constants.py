@@ -64,8 +64,8 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "z_norm": 2.0,
@@ -447,7 +447,7 @@ default_ui_json = {
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-for key in ["resolution", "detrend_order", "detrend_type", "y_norm", "alpha_y"]:
+for key in ["resolution", "detrend_order", "detrend_type", "y_norm", "length_scale_y"]:
     del default_ui_json[key]
 
 ################ Validations #################

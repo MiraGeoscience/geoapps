@@ -300,9 +300,9 @@ class InversionDriver(BaseDriver):
                 mapping=wires.p,  # pylint: disable=no-member
                 gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.alpha_x,
-                length_scale_y=self.params.alpha_y,
-                length_scale_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
                 reference_model=self.models.reference,
             )
@@ -312,9 +312,9 @@ class InversionDriver(BaseDriver):
                 mapping=wires.s,  # pylint: disable=no-member
                 gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.alpha_x,
-                length_scale_y=self.params.alpha_y,
-                length_scale_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
                 reference_model=self.models.reference,
             )
@@ -325,9 +325,9 @@ class InversionDriver(BaseDriver):
                 mapping=wires.t,  # pylint: disable=no-member
                 gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.alpha_x,
-                length_scale_y=self.params.alpha_y,
-                length_scale_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
                 reference_model=self.models.reference,
             )
@@ -348,11 +348,11 @@ class InversionDriver(BaseDriver):
 
             norms = [self.params.s_norm]
             for comp in ["x", "y", "z"]:
-                if getattr(self.params, f"alpha_{comp}") is not None:
+                if getattr(self.params, f"length_scale_{comp}") is not None:
                     setattr(
                         reg,
                         f"length_scale_{comp}",
-                        getattr(self.params, f"alpha_{comp}"),
+                        getattr(self.params, f"length_scale_{comp}"),
                     )
 
                 if getattr(self.params, f"{comp}_norm") is not None:
