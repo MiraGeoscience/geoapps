@@ -145,7 +145,7 @@ class BaseParams:
             getattr(self, "_workpath", None) is None
             and getattr(self, "_geoh5", None) is not None
         ):
-            self._workpath = str(Path(self.geoh5.h5file).parent)
+            self._workpath = Path(self.geoh5.h5file).parent
         return self._workpath
 
     @workpath.setter
@@ -153,7 +153,7 @@ class BaseParams:
         if val is not None:
             if not Path(val).is_dir():
                 raise ValueError("Provided 'workpath' is not a valid path.")
-            val = str(Path(val).resolve())
+            val = Path(val).resolve()
 
         self._workpath = val
 
@@ -277,7 +277,9 @@ class BaseParams:
             self._geoh5 = val
             return
         self.setter_validator(
-            "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+            "geoh5",
+            val,
+            fun=lambda x: Workspace(x) if isinstance(val, (str, Path)) else x,
         )
 
     @property
