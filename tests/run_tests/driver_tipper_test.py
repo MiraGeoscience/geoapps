@@ -69,9 +69,9 @@ def test_tipper_fwr_run(
 
 
 def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
-    workpath = tmp_path / "inversion_test.geoh5"
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = tmp_path.parent / "test_tipper_fwr_run0" / "inversion_test.geoh5"
+        workpath = tmp_path.parent / "test_tipper_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]

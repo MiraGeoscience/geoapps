@@ -74,9 +74,9 @@ def test_ip_3d_run(
     pytest=True,
     n_lines=3,
 ):
-    workpath = tmp_path / "inversion_test.geoh5"
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = tmp_path.parent / "test_ip_3d_fwr_run0" / "inversion_test.geoh5"
+        workpath = tmp_path.parent / "test_ip_3d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_ip")[0]
