@@ -49,7 +49,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                     path=h5_file_path.parent,
                 )
         generate(
-            h5_file_path.parent / ui_json_path,
+            ui_json_path,
             parameters=["line_id"],
             update_values={"conda_environment": "geoapps"},
         )
