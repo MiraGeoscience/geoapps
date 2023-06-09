@@ -45,7 +45,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         if not (ui_json_path).is_file():
             with self.workspace.open():
                 self.pseudo3d_params.write_input_file(
-                    name=ui_json_path,
+                    name=ui_json_path.name,
                     path=h5_file_path.parent,
                 )
         generate(
