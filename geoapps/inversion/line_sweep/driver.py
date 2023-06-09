@@ -39,7 +39,9 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
     def setup_params(self):
         h5_file_path = Path(self.workspace.h5file).resolve()
-        ui_json_path = h5_file_path.parent / h5_file_path.stem.replace(".ui", ".ui.json")
+        ui_json_path = h5_file_path.parent / h5_file_path.stem.replace(
+            ".ui", ".ui.json"
+        )
         if not (ui_json_path).is_file():
             with self.workspace.open():
                 self.pseudo3d_params.write_input_file(
