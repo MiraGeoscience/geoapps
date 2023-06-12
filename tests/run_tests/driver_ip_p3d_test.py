@@ -169,14 +169,14 @@ def test_ip_p3d_run(
 if __name__ == "__main__":
     # Full run
     m_start = test_ip_p3d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
 
     m_rec = test_ip_p3d_run(
-        "./",
+        Path("./"),
         max_iterations=20,
         pytest=False,
     )

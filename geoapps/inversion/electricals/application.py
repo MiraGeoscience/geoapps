@@ -166,7 +166,7 @@ class InversionApp(PlotSelection2D):
         self._coolingFactor = FloatText(value=2, description="Beta cooling factor")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._sens_wts_threshold = FloatText(
-            value=80, description="Threshold sensitivity weights", max=100, min=0
+            value=0.001, description="Threshold sensitivity weights", max=100, min=0
         )
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
         self._n_cpu = IntText(
@@ -231,17 +231,17 @@ class InversionApp(PlotSelection2D):
             value=1,
             description="Reference Model (s)",
         )
-        self._alpha_x = widgets.FloatText(
+        self._length_scale_x = widgets.FloatText(
             min=0,
             value=1,
             description="EW-gradient (x)",
         )
-        self._alpha_y = widgets.FloatText(
+        self._length_scale_y = widgets.FloatText(
             min=0,
             value=1,
             description="NS-gradient (y)",
         )
-        self._alpha_z = widgets.FloatText(
+        self._length_scale_z = widgets.FloatText(
             min=0,
             value=1,
             description="Vertical-gradient (z)",
@@ -279,9 +279,9 @@ class InversionApp(PlotSelection2D):
             [
                 Label("Scaling (alphas)"),
                 self._alpha_s,
-                self._alpha_x,
-                self._alpha_y,
-                self._alpha_z,
+                self._length_scale_x,
+                self._length_scale_y,
+                self._length_scale_z,
             ]
         )
         self.bound_panel = HBox(
@@ -350,16 +350,16 @@ class InversionApp(PlotSelection2D):
         return self._alpha_s
 
     @property
-    def alpha_x(self):
-        return self._alpha_x
+    def length_scale_x(self):
+        return self._length_scale_x
 
     @property
-    def alpha_y(self):
-        return self._alpha_y
+    def length_scale_y(self):
+        return self._length_scale_y
 
     @property
-    def alpha_z(self):
-        return self._alpha_z
+    def length_scale_z(self):
+        return self._length_scale_z
 
     # @property
     # def initial_beta(self):

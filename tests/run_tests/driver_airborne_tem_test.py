@@ -26,8 +26,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 3.6444e-11,
-    "phi_d": 0.007553,
-    "phi_m": 0.2285,
+    "phi_d": 0.001958,
+    "phi_m": 0.003213,
 }
 
 np.random.seed(0)
@@ -146,7 +146,6 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
             initial_beta_ratio=1e2,
             coolingRate=4,
             max_cg_iterations=200,
-            sens_wts_threshold=1.0,
             prctile=5,
             store_sensitivities="ram",
             **data_kwargs,
@@ -171,10 +170,12 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_airborne_tem_fwr_run("./", n_grid_points=5, refinement=(0, 0, 4))
+    mstart = test_airborne_tem_fwr_run(
+        Path("./"), n_grid_points=5, refinement=(0, 0, 4)
+    )
 
     m_rec = test_airborne_tem_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

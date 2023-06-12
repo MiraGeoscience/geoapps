@@ -200,10 +200,12 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_magnetotellurics_fwr_run("./", n_grid_points=8, refinement=(4, 8))
+    mstart = test_magnetotellurics_fwr_run(
+        Path("./"), n_grid_points=8, refinement=(4, 8)
+    )
 
     m_rec = test_magnetotellurics_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

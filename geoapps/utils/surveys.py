@@ -20,6 +20,7 @@ from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
+from geoapps.inversion.utils import get_unique_locations
 from geoapps.utils.statistics import is_outlier
 
 
@@ -38,7 +39,7 @@ def get_containing_cells(
         )
 
     elif isinstance(mesh, TensorMesh):
-        locations = data.drape_locations(data.survey.unique_locations)
+        locations = data.drape_locations(get_unique_locations(data.survey))
         xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
         yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
         inds = xi + yi * mesh.shape_cells[0]

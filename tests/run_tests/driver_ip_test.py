@@ -26,8 +26,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.00797,
-    "phi_d": 5.524,
-    "phi_m": 0.1174,
+    "phi_d": 4.667,
+    "phi_m": 0.1133,
 }
 
 np.random.seed(0)
@@ -128,14 +128,14 @@ def test_ip_3d_run(
 if __name__ == "__main__":
     # Full run
     mstart = test_ip_3d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
     m_rec = test_ip_3d_run(
-        "./",
+        Path("./"),
         n_lines=5,
         max_iterations=15,
         pytest=False,

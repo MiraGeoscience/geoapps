@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+from pathlib import Path
 
 import numpy as np
 from geoh5py.objects import Octree
@@ -169,13 +170,13 @@ def test_joint_surveys_inv_run(
 if __name__ == "__main__":
     # Full run
     m_start = test_joint_surveys_fwr_run(
-        "./",
+        Path("./"),
         n_grid_points=20,
         refinement=(4, 8),
     )
 
     m_rec = test_joint_surveys_inv_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

@@ -646,22 +646,22 @@ def test_validate_alpha_s():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_x():
-    param = "alpha_x"
+def test_validate_length_scale_x():
+    param = "length_scale_x"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_y():
-    param = "alpha_y"
+def test_validate_length_scale_y():
+    param = "length_scale_y"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_z():
-    param = "alpha_z"
+def test_validate_length_scale_z():
+    param = "length_scale_z"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
