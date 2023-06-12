@@ -451,6 +451,21 @@ class InversionLogger:
             f"Total runtime: {days} days, {hours} hours, {minutes} minutes, and {seconds} seconds.\n"
         )
 
+        file_path = Path(self.driver.workspace.h5file).parent / "SimPEG.log"
+
+        if file_path.is_file():
+            with open(file_path, "rb") as f:
+                raw_file = f.read()
+
+            with self.driver.workspace.open(mode="r+"):
+                child_names = {k.name: k for k in self.driver.out_group.children}
+                if "SimPEG.log" in child_names:
+                    file_entity = child_names["SimPEG.log"]
+                else:
+                    file_entity = self.driver.out_group.add_file(file_path)
+
+                file_entity.values = raw_file
+
     def write(self, message):
         self.terminal.write(message)
         self.log.write(message)
