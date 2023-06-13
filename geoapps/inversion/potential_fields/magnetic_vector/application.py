@@ -80,14 +80,12 @@ class MagneticVectorApp(InversionApp):
             State(component_id="forward_only", component_property="value"),
             # Starting Model
             State(component_id="starting_model_options", component_property="value"),
-            State(component_id="starting_model_object", component_property="value"),
             State(component_id="starting_model_data", component_property="value"),
             State(component_id="starting_model_const", component_property="value"),
             # Mesh
             State(component_id="mesh", component_property="value"),
             # Reference Model
             State(component_id="reference_model_options", component_property="value"),
-            State(component_id="reference_model_object", component_property="value"),
             State(component_id="reference_model_data", component_property="value"),
             State(component_id="reference_model_const", component_property="value"),
             # Regularization
@@ -101,11 +99,9 @@ class MagneticVectorApp(InversionApp):
             State(component_id="z_norm", component_property="value"),
             # Upper-Lower Bounds
             State(component_id="lower_bound_options", component_property="value"),
-            State(component_id="lower_bound_object", component_property="value"),
             State(component_id="lower_bound_data", component_property="value"),
             State(component_id="lower_bound_const", component_property="value"),
             State(component_id="upper_bound_options", component_property="value"),
-            State(component_id="upper_bound_object", component_property="value"),
             State(component_id="upper_bound_data", component_property="value"),
             State(component_id="upper_bound_const", component_property="value"),
             # Detrend
@@ -140,18 +136,12 @@ class MagneticVectorApp(InversionApp):
             State(
                 component_id="starting_inclination_options", component_property="value"
             ),
-            State(
-                component_id="starting_inclination_object", component_property="value"
-            ),
             State(component_id="starting_inclination_data", component_property="value"),
             State(
                 component_id="starting_inclination_const", component_property="value"
             ),
             State(
                 component_id="reference_inclination_options", component_property="value"
-            ),
-            State(
-                component_id="reference_inclination_object", component_property="value"
             ),
             State(
                 component_id="reference_inclination_data", component_property="value"
@@ -162,18 +152,12 @@ class MagneticVectorApp(InversionApp):
             State(
                 component_id="starting_declination_options", component_property="value"
             ),
-            State(
-                component_id="starting_declination_object", component_property="value"
-            ),
             State(component_id="starting_declination_data", component_property="value"),
             State(
                 component_id="starting_declination_const", component_property="value"
             ),
             State(
                 component_id="reference_declination_options", component_property="value"
-            ),
-            State(
-                component_id="reference_declination_object", component_property="value"
             ),
             State(
                 component_id="reference_declination_data", component_property="value"

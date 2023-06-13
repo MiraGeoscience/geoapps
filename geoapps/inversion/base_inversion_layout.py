@@ -125,22 +125,6 @@ def generate_model_component(
             html.Div(
                 id=param_prefix + param_name + "_mod_div",
                 children=[
-                    dcc.Markdown(
-                        "Object",
-                        style={
-                            "display": "inline-block",
-                            "margin-right": "5%",
-                            "vertical-align": "bottom",
-                        },
-                    ),
-                    dcc.Dropdown(
-                        id=param_prefix + param_name + "_object",
-                        style={
-                            "display": "inline-block",
-                            "width": "70%",
-                            "vertical-align": "bottom",
-                        },
-                    ),
                     html.Div(
                         [
                             dcc.Markdown(
@@ -314,7 +298,7 @@ plot_layout = html.Div(
                         dcc.Input(
                             id="resolution",
                             type="number",
-                            debounce=True,
+                            debounce=False,
                             min=1,
                             style={
                                 "display": "inline-block",
@@ -544,6 +528,7 @@ def get_input_data_layout(component_list):
                                 [
                                     dcc.Input(
                                         id="uncertainty_floor",
+                                        type="number",
                                     ),
                                     dcc.Dropdown(
                                         id="uncertainty_channel",

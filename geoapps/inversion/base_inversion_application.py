@@ -21,7 +21,7 @@ import scipy
 from dash import Input, Output, State, callback_context, no_update
 from flask import Flask
 from geoh5py.data import Data
-from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
+from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import monitored_directory_copy
 from geoh5py.workspace import Workspace
@@ -137,7 +137,7 @@ class InversionApp(BaseDashApplication):
         self.app.callback(
             Output(component_id="mesh", component_property="options"),
             Input(component_id="data_object", component_property="options"),
-        )(InversionApp.update_mesh_options)
+        )(self.update_mesh_options)
 
         # Update radar data options
         self.app.callback(
@@ -183,14 +183,6 @@ class InversionApp(BaseDashApplication):
                         component_property="value",
                     ),
                     Output(
-                        component_id=model_type + "_" + param + "_object",
-                        component_property="value",
-                    ),
-                    Output(
-                        component_id=model_type + "_" + param + "_object",
-                        component_property="options",
-                    ),
-                    Output(
                         component_id=model_type + "_" + param + "_data",
                         component_property="value",
                     ),
@@ -201,25 +193,35 @@ class InversionApp(BaseDashApplication):
                     Input(component_id="ui_json_data", component_property="data"),
                     Input(component_id="data_object", component_property="options"),
                     Input(
-                        component_id=model_type + "_" + param + "_object",
+                        component_id="mesh",
                         component_property="value",
                     ),
                     Input(component_id="forward_only", component_property="value"),
                 )(self.update_models_from_ui_json)
 
         # Update bounds dropdown options and values
-        for param in ["lower_bound", "upper_bound", "topography"]:
+        for param in ["lower_bound", "upper_bound"]:
             self.app.callback(
                 Output(component_id=param + "_options", component_property="value"),
                 Output(component_id=param + "_const", component_property="value"),
-                Output(component_id=param + "_object", component_property="value"),
-                Output(component_id=param + "_object", component_property="options"),
                 Output(component_id=param + "_data", component_property="value"),
                 Output(component_id=param + "_data", component_property="options"),
                 Input(component_id="ui_json_data", component_property="data"),
-                Input(component_id="data_object", component_property="options"),
-                Input(component_id=param + "_object", component_property="value"),
-            )(self.update_general_inversion_params_from_ui_json)
+                Input(component_id="mesh", component_property="value"),
+            )(self.update_bounds_from_ui_json)
+
+        # Update topography dropdown options and values
+        self.app.callback(
+            Output(component_id="topography_options", component_property="value"),
+            Output(component_id="topography_const", component_property="value"),
+            Output(component_id="topography_object", component_property="value"),
+            Output(component_id="topography_object", component_property="options"),
+            Output(component_id="topography_data", component_property="value"),
+            Output(component_id="topography_data", component_property="options"),
+            Input(component_id="ui_json_data", component_property="data"),
+            Input(component_id="data_object", component_property="options"),
+            Input(component_id="topography_object", component_property="value"),
+        )(self.update_topography_from_ui_json)
 
         # Update from ui.json
         self.app.callback(
@@ -489,7 +491,7 @@ class InversionApp(BaseDashApplication):
         self,
         ui_json_data: dict,
         data_object_options: list,
-        object_uid: str,
+        mesh_object_uid: str,
         forward_only: list,
     ) -> (str, float | int, str, list, str, list):
         """
@@ -497,19 +499,15 @@ class InversionApp(BaseDashApplication):
 
         :param ui_json_data: Uploaded ui.json data.
         :param data_object_options: List of dropdown options for main input object.
-        :param object_uid: Selected object for the model.
+        :param mesh_object_uid: Selected object for the model.
         :param forward_only: Checkbox for performing forward inversion.
 
         :return options: Selected option for radio button.
         :return const: Value of constant for model.
-        :return obj: Value of object for model.
-        :return obj_options: Dropdown options for model object. Same as data_object_options.
         :return data: Value of data for model.
         :return data_options: Dropdown options for model data.
         """
-        options, const, obj, obj_options, data, data_options = (
-            no_update,
-            no_update,
+        options, const, data, data_options = (
             no_update,
             no_update,
             no_update,
@@ -528,10 +526,10 @@ class InversionApp(BaseDashApplication):
             if param in self._inversion_params.keys():
                 # Read in from ui.json using dict of inversion params.
                 if prefix + "_" + param in ui_json_data:
-                    obj = str(ui_json_data[prefix + "_" + param + "_object"])
+                    obj = str(ui_json_data["mesh"])
                     val = ui_json_data[prefix + "_" + param]
                 elif prefix + "_model" in ui_json_data:
-                    obj = str(ui_json_data[prefix + "_model_object"])
+                    obj = str(ui_json_data["mesh"])
                     val = ui_json_data[prefix + "_model"]
                 else:
                     obj = None
@@ -539,11 +537,8 @@ class InversionApp(BaseDashApplication):
 
                 options, data, const = InversionApp.unpack_val(val)
                 data_options = self.get_data_options(ui_json_data, obj)
-                obj_options = data_object_options
         elif "data_object" in triggers:
             # Clear object value and data dropdown on workspace change.
-            obj_options = data_object_options
-            obj = None
             data_options = []
             data = None
         elif "forward_only" in triggers and forward_only:
@@ -553,19 +548,57 @@ class InversionApp(BaseDashApplication):
         else:
             # Update data options and clear data value on object change.
             data = None
-            data_options = self.get_data_options(ui_json_data, object_uid)
+            data_options = self.get_data_options(ui_json_data, mesh_object_uid)
 
-        return options, const, obj, obj_options, data, data_options
+        return options, const, data, data_options
 
-    def update_general_inversion_params_from_ui_json(
-        self, ui_json_data, data_object_options, param_object_uid
+    def update_bounds_from_ui_json(
+        self, ui_json_data, mesh_object_uid
     ) -> (str, float | int, str, list, str, list):
         """
-        Update topography and bounds from ui.json data. Update dropdown options and values.
+        Update upper and lower bounds from ui.json data. Update dropdown options and values.
+
+        :param ui_json_data: Uploaded ui.json data.
+        :param mesh_object_uid: Selected object for the mesh.
+
+        :return options: Selected option for radio button.
+        :return const: Value of constant for param.
+        :return data: Value of data for param.
+        :return data_options: Dropdown options for param data.
+        """
+        options, const, data, data_options = (
+            no_update,
+            no_update,
+            no_update,
+            no_update,
+        )
+        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
+
+        if "ui_json_data" in triggers:
+            param = callback_context.outputs_list[0]["id"].removesuffix("_options")
+            if param in ui_json_data:
+                obj = str(ui_json_data["mesh"])
+                val = ui_json_data[param]
+                options, data, const = InversionApp.unpack_val(val)
+                data_options = self.get_data_options(ui_json_data, obj)
+        elif "data_object" in triggers:
+            data_options = []
+            data = None
+        else:
+            data = None
+            data_options = self.get_data_options(ui_json_data, mesh_object_uid)
+
+        return options, const, data, data_options
+
+    def update_topography_from_ui_json(
+        self, ui_json_data, data_object_options, topography_object_uid
+    ) -> (str, float | int, str, list, str, list):
+        """
+        Update topography from ui.json data. Update dropdown options and values.
 
         :param ui_json_data: Uploaded ui.json data.
         :param data_object_options: List of dropdown options for main input object.
-        :param param_object_uid: Selected object for the param.
+        :param topography_object_uid: Selected object for topography.
 
         :return options: Selected option for radio button.
         :return const: Value of constant for param.
@@ -589,12 +622,7 @@ class InversionApp(BaseDashApplication):
             if param in ui_json_data:
                 obj = str(ui_json_data[param + "_object"])
                 val = ui_json_data[param]
-
-                if param == "topography":
-                    options, data, const = InversionApp.unpack_val(val, topography=True)
-                else:
-                    options, data, const = InversionApp.unpack_val(val)
-
+                options, data, const = InversionApp.unpack_val(val, topography=True)
                 data_options = self.get_data_options(ui_json_data, obj)
                 obj_options = data_object_options
         elif "data_object" in triggers:
@@ -604,20 +632,25 @@ class InversionApp(BaseDashApplication):
             data = None
         else:
             data = None
-            data_options = self.get_data_options(ui_json_data, param_object_uid)
+            data_options = self.get_data_options(ui_json_data, topography_object_uid)
 
         return options, const, obj, obj_options, data, data_options
 
-    @staticmethod
-    def update_mesh_options(obj_options: list) -> list:
+    def update_mesh_options(self, full_obj_options: list) -> list:
         """
         Update mesh dropdown options from the main input object options.
 
-        :param obj_options: Main input object options.
+        :param full_obj_options: Main input object options.
 
         :return obj_options: Mesh dropdown options.
         """
-        return obj_options
+        mesh_obj_options = []
+        for i in full_obj_options:
+            obj = self.workspace.get_entity(uuid.UUID(i["value"]))[0]
+            if isinstance(obj, Octree):
+                mesh_obj_options.append(i)
+
+        return mesh_obj_options
 
     def update_radar_options(self, ui_json_data: dict, object_uid: str) -> (list, str):
         """
@@ -720,7 +753,6 @@ class InversionApp(BaseDashApplication):
                     uncertainty_channel = str(ui_json_data[comp + "_uncertainty"])
                 else:
                     # Default uncertainty value
-                    uncertainty_type = "Floor"
                     uncertainty_type = "Floor"
                     uncertainty_floor = None
                     uncertainty_channel = None
@@ -1212,9 +1244,9 @@ class InversionApp(BaseDashApplication):
         """
         param_dict = {}
         for key, value in inversion_params_dict.items():
-            param_dict[key + "_object"] = None
             param_dict[key] = None
             if value["options"] == "Model" or key == "topography":
+                param_dict[key + "_object"] = None
                 # Topography always saves an object and only saves data if the radio button is selected.
                 if is_uuid(value["object"]):
                     obj = self.workspace.get_entity(uuid.UUID(value["object"]))[0]
@@ -1332,10 +1364,13 @@ class InversionApp(BaseDashApplication):
             if param + "_options" in update_dict:
                 input_param_dict[param] = {
                     "options": update_dict[param + "_options"],
-                    "object": update_dict[param + "_object"],
                     "data": update_dict[param + "_data"],
                     "const": update_dict[param + "_const"],
                 }
+                if param == "topography":
+                    input_param_dict[param]["object"] = update_dict[param + "_object"]
+                else:
+                    input_param_dict[param]["object"] = update_dict["mesh"]
 
         param_dict = {}
         # Update topography, bounds, models
@@ -1375,12 +1410,10 @@ class InversionApp(BaseDashApplication):
         receivers_radar_drape: str,
         forward_only: list,
         starting_model_options: list,
-        starting_model_object: str,
         starting_model_data: str,
         starting_model_const: float,
         mesh: str,
         reference_model_options: str,
-        reference_model_object: str,
         reference_model_data: str,
         reference_model_const: float,
         alpha_s: float,
@@ -1392,11 +1425,9 @@ class InversionApp(BaseDashApplication):
         y_norm: float,
         z_norm: float,
         lower_bound_options: str,
-        lower_bound_object: str,
         lower_bound_data: str,
         lower_bound_const: float,
         upper_bound_options: str,
-        upper_bound_object: str,
         upper_bound_data: str,
         upper_bound_const: float,
         detrend_type: str,
@@ -1419,24 +1450,20 @@ class InversionApp(BaseDashApplication):
         inducing_field_inclination: float = None,
         inducing_field_declination: float = None,
         starting_inclination_options: str = None,
-        starting_inclination_object: str = None,
         starting_inclination_data: str = None,
         starting_inclination_const: float = None,
         reference_inclination_options: str = None,
-        reference_inclination_object: str = None,
         reference_inclination_data: str = None,
         reference_inclination_const: float = None,
         starting_declination_options: str = None,
-        starting_declination_object: str = None,
         starting_declination_data: str = None,
         starting_declination_const: float = None,
         reference_declination_options: str = None,
-        reference_declination_object: str = None,
         reference_declination_data: str = None,
         reference_declination_const: float = None,
     ) -> (list, bool):
         """
-        Update self.params and write out.
+        Update self.params and write out ui.json.
 
         :param n_clicks: Trigger for calling write_params.
         :param live_link: Checkbox showing whether monitoring directory is enabled.
@@ -1457,12 +1484,10 @@ class InversionApp(BaseDashApplication):
         :param receivers_radar_drape: Radar.
         :param forward_only: Checkbox for performing forward inversion.
         :param starting_model_options: Type of starting model selected (Model, Constant).
-        :param starting_model_object: Starting model object uuid.
         :param starting_model_data: Starting model data uuid.
         :param starting_model_const: Starting model constant.
         :param mesh: Mesh object uuid.
         :param reference_model_options: Type of reference model selected (Model, Constant, None).
-        :param reference_model_object: Reference model object uuid.
         :param reference_model_data: Reference model data uuid.
         :param reference_model_const: Reference model constant uuid.
         :param alpha_s: Scaling for reference model.
@@ -1474,46 +1499,40 @@ class InversionApp(BaseDashApplication):
         :param y_norm: Lp-norm for NS gradient.
         :param z_norm: Lp-norm for vertical gradient.
         :param lower_bound_options: Type of lower bound selected (Model, Constant, None).
-        :param lower_bound_object: Lower bound object uuid.
         :param lower_bound_data: Lower bound data uuid.
         :param lower_bound_const: Lower bound constant.
         :param upper_bound_options: Type of upper bound selected (Model, Constant, None).
-        :param upper_bound_object: Upper bound object uuid.
         :param upper_bound_data: Upper bound data uuid.
         :param upper_bound_const: Upper bound constant.
         :param detrend_type: Detrend method (all, perimeter).
         :param detrend_order: Detrend order.
         :param ignore_values: Specified values to ignore.
-        :param max_global_iterations:
-        :param max_irls_iterations:
-        :param cooling_rate:
-        :param cooling_factor:
-        :param chi_factor:
-        :param initial_beta_ratio:
-        :param max_cg_iterations:
-        :param tol_cg:
-        :param n_cpu:
-        :param store_sensitivities:
-        :param tile_spatial:
+        :param max_global_iterations: Number of L2 and IRLS iterations combined.
+        :param max_irls_iterations: Incomplete Re-weighted Least Squares iterations for non-L2 problems.
+        :param cooling_rate: Iterations per beta.
+        :param cooling_factor: Beta cooling factor.
+        :param chi_factor: Chi factor.
+        :param initial_beta_ratio: Initial beta ratio.
+        :param max_cg_iterations: Maximum conjugate gradient iterations.
+        :param tol_cg: Conjugate gradient tolerance.
+        :param n_cpu: Number of CPUs.
+        :param store_sensitivities: Use disk on a fast local SSD, and RAM elsewhere.
+        :param tile_spatial: Number of tiles.
         :param out_group: GA group name.
         :param monitoring_directory: Export path.
         :param inducing_field_strength: (Magnetic specific.) Inducing field strength (nT).
         :param inducing_field_inclination: (Magnetic specific.) Inducing field inclination.
         :param inducing_field_declination: (Magnetic specific.) Inducing field declination.
         :param starting_inclination_options: (Magnetic vector specific.) Type of starting inclination selected.
-        :param starting_inclination_object: (Magnetic vector specific.) Starting model inclination object uuid.
         :param starting_inclination_data: (Magnetic vector specific.) Starting model inclination data uuid.
         :param starting_inclination_const: (Magnetic vector specific.) Starting model inclination constant.
         :param reference_inclination_options: (Magnetic vector specific.) Type of reference inclination selected.
-        :param reference_inclination_object: (Magnetic vector specific.) Reference model inclination object uuid.
         :param reference_inclination_data: (Magnetic vector specific.) Reference model inclination data uuid.
         :param reference_inclination_const: (Magnetic vector specific.) Reference model inclination constant.
         :param starting_declination_options: (Magnetic vector specific.) Type of starting declination selected.
-        :param starting_declination_object: (Magnetic vector specific.) Starting model declination object uuid.
         :param starting_declination_data: (Magnetic vector specific.) Starting model declination data uuid.
         :param starting_declination_const: (Magnetic vector specific.) Starting model declination constant.
         :param reference_declination_options: (Magnetic vector specific.) Type of Reference declination selected.
-        :param reference_declination_object: (Magnetic vector specific.) Reference model declination object uuid.
         :param reference_declination_data: (Magnetic vector specific.) Reference model declination data uuid.
         :param reference_declination_const: (Magnetic vector specific.) Reference model declination constant.
 
@@ -1636,7 +1655,6 @@ class InversionApp(BaseDashApplication):
 
             if self._inversion_type == "dcip":
                 param_dict["resolution"] = None  # No downsampling for dcip
-
             self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),

@@ -102,14 +102,6 @@ class BaseDashApplication:
                     self.driver.params = self.params
                 ui_json_data = no_update
             elif trigger == "":
-                if "topography" in self.params.input_file.ui_json:
-                    topography_data = self.params.input_file.ui_json["topography"][
-                        "property"
-                    ]
-                    if isinstance(topography_data, Entity):
-                        self.params.input_file.ui_json["topography"][
-                            "property"
-                        ] = topography_data.uid
                 # Initialization of app from self.params.
                 ifile = InputFile(
                     ui_json=self.params.input_file.ui_json,
