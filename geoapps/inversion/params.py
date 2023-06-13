@@ -738,28 +738,13 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("store_sensitivities", val)
 
     @property
-    def out_group(self):
-        if self._out_group is None and self.geoh5 is not None:
-            name = self.inversion_type.capitalize()
-            if self.forward_only:
-                name += "Forward"
-            else:
-                name += "Inversion"
-
-            self.out_group = SimPEGGroup.create(self.geoh5, name=name)
-            self.update_group_options()
+    def out_group(self) -> SimPEGGroup | None:
+        """Return the SimPEGGroup object."""
         return self._out_group
 
     @out_group.setter
     def out_group(self, val):
-        if val is None:
-            self._out_group = val
-            return
-
-        self.setter_validator(
-            "out_group",
-            val,
-        )
+        self.setter_validator("out_group", val)
 
     @property
     def distributed_workers(self):

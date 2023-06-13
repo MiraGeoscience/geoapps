@@ -98,11 +98,7 @@ class InversionApp(PlotSelection2D):
     _topography = None
     inversion_parameters = None
 
-    def __init__(self, ui_json: str | Path | None = None, **kwargs):
-        if "plot_result" in kwargs:
-            self.plot_result = kwargs["plot_result"]
-            kwargs.pop("plot_result")
-
+    def __init__(self, ui_json: str | Path | None = None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
             ifile = InputFile.read_ui_json(ui_json)
@@ -376,7 +372,7 @@ class InversionApp(PlotSelection2D):
             self.data_channel_choices_observer, names="value"
         )
         self.plotting_data = None
-        super().__init__(**self.defaults)
+        super().__init__(plot_result=plot_result, **self.defaults)
         self.write.on_click(self.write_trigger)
 
     @property
