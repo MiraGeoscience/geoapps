@@ -79,7 +79,7 @@ class JointSurveyDriver(InversionDriver):
                 module = __import__(mod_name, fromlist=[class_name])
                 inversion_driver = getattr(module, class_name)
                 params = inversion_driver._params_class(  # pylint: disable=W0212
-                    ifile, ga_group=group
+                    ifile, out_group=group
                 )
                 driver = inversion_driver(params)
 
@@ -91,7 +91,7 @@ class JointSurveyDriver(InversionDriver):
                         f"Provided SimPEG groups for {physical_property} and {params.PHYSICAL_PROPERTY}."
                     )
 
-                group.parent = self.params.ga_group
+                group.parent = self.params.out_group
                 drivers.append(driver)
 
             self.params.PHYSICAL_PROPERTY = physical_property

@@ -63,7 +63,7 @@ def test_susceptibility_fwr_run(
 
     fwr_driver = MagneticScalarDriver(params)
 
-    assert params.ga_group.options, "Error adding metadata on creation."
+    assert params.out_group.options, "Error adding metadata on creation."
 
     fwr_driver.run()
 
@@ -120,7 +120,7 @@ def test_susceptibility_run(
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tmi
         if pytest:

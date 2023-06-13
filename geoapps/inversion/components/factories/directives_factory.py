@@ -428,7 +428,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
             def transform_2d(x):
                 expanded_data = np.array([np.nan] * len(inversion_object.indices))
-                expanded_data[inversion_object.global_map] = x
+                expanded_data[inversion_object.global_map] = x[sorting]
                 return expanded_data
 
             kwargs["transforms"].insert(0, transform_2d)
