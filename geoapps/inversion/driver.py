@@ -60,8 +60,7 @@ class InversionDriver(BaseDriver):
     def __init__(self, params: InversionBaseParams):
         super().__init__(params)
 
-        self.params = params
-        self.inversion_type = params.inversion_type
+        self.inversion_type = self.params.inversion_type
         self._data_misfit: objective_function.ComboObjectiveFunction | None = None
         self._directives: list[directives.InversionDirective] | None = None
         self._inverse_problem: inverse_problem.BaseInvProblem | None = None
@@ -214,6 +213,22 @@ class InversionDriver(BaseDriver):
         return self._ordering
 
     @property
+    def out_group(self):
+        """The SimPEGGroup"""
+        if self._out_group is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                name = self.params.inversion_type.capitalize()
+                if self.params.forward_only:
+                    name += "Forward"
+                else:
+                    name += "Inversion"
+
+                # with fetch_active_workspace(self.geoh5, mode="r+"):
+                self._out_group = SimPEGGroup.create(self.params.geoh5, name=name)
+
+        return self._out_group
+
+    @property
     def regularization(self):
         if getattr(self, "_regularization", None) is None:
             self._regularization = self.get_regularization()
@@ -237,18 +252,6 @@ class InversionDriver(BaseDriver):
         sys.stdout = self.logger
         self.logger.start()
         self.configure_dask()
-
-        if self.params.out_group is None:
-            with fetch_active_workspace(self.workspace, mode="r+"):
-                name = self.params.inversion_type.capitalize()
-                if self.params.forward_only:
-                    name += "Forward"
-                else:
-                    name += "Inversion"
-
-                # with fetch_active_workspace(self.geoh5, mode="r+"):
-                self.params.out_group = SimPEGGroup.create(self.params.geoh5, name=name)
-                self.params.update_group_options()
 
         if self.params.forward_only:
             print("Running the forward simulation ...")

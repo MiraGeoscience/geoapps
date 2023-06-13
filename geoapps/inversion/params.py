@@ -13,6 +13,7 @@ from uuid import UUID
 import numpy as np
 from geoh5py.data import NumericData
 from geoh5py.groups import SimPEGGroup
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.driver_base.params import BaseParams
@@ -106,7 +107,6 @@ class InversionBaseParams(BaseParams):
         self._defaults = (
             self._forward_defaults if self.forward_only else self._inversion_defaults
         )
-        self.out_group = out_group
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
@@ -124,6 +124,8 @@ class InversionBaseParams(BaseParams):
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+        self.out_group = out_group
 
         if not self.forward_only:
             for key in self.__dict__:
@@ -745,6 +747,7 @@ class InversionBaseParams(BaseParams):
     @out_group.setter
     def out_group(self, val):
         self.setter_validator("out_group", val)
+        self.update_group_options()
 
     @property
     def distributed_workers(self):
@@ -764,6 +767,7 @@ class InversionBaseParams(BaseParams):
         Add options to the SimPEGGroup inversion using input file class.
         """
         if self._input_file is not None and self._out_group is not None:
-            ui_json = self.to_dict(ui_json_format=True)
-            self._out_group.options = ui_json
-            self._out_group.metadata = None
+            with fetch_active_workspace(self.geoh5, mode="r+"):
+                ui_json = self.to_dict(ui_json_format=True)
+                self._out_group.options = ui_json
+                self._out_group.metadata = None

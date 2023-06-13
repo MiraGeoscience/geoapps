@@ -13,6 +13,8 @@ from pathlib import Path
 
 import numpy as np
 from geoh5py.data import FilenameData
+from geoh5py.groups import SimPEGGroup
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
@@ -25,10 +27,36 @@ from geoapps.utils.models import drape_to_octree
 
 class LineSweepDriver(SweepDriver, InversionDriver):
     def __init__(self, params):
+        self._out_group = None
         self.workspace = params.geoh5
         self.pseudo3d_params = params
         self.cleanup = params.cleanup
+
+        if (
+            hasattr(self.pseudo3d_params, "out_group")
+            and self.pseudo3d_params.out_group is None
+        ):
+            self.pseudo3d_params.out_group = self.out_group
+
         super().__init__(self.setup_params())
+
+    @property
+    def out_group(self):
+        """The SimPEGGroup"""
+        if self._out_group is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                name = self.pseudo3d_params.inversion_type.capitalize()
+                if self.pseudo3d_params.forward_only:
+                    name += "Forward"
+                else:
+                    name += "Inversion"
+
+                # with fetch_active_workspace(self.geoh5, mode="r+"):
+                self._out_group = SimPEGGroup.create(
+                    self.pseudo3d_params.geoh5, name=name
+                )
+
+        return self._out_group
 
     def run(self):  # pylint: disable=W0221
         super().run()  # pylint: disable=W0221
