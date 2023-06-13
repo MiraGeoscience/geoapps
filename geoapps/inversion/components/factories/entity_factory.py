@@ -93,7 +93,7 @@ class EntityFactory(AbstractFactory):
         entity = PotentialElectrode.create(
             workspace,
             name="Data",
-            parent=self.params.ga_group,
+            parent=self.params.out_group,
             vertices=inversion_data.apply_transformations(rcv_locations),
             cells=rcv_cells,
         )
@@ -107,7 +107,7 @@ class EntityFactory(AbstractFactory):
         new_currents = CurrentElectrode.create(
             workspace,
             name="Data (currents)",
-            parent=self.params.ga_group,
+            parent=self.params.out_group,
             vertices=inversion_data.apply_transformations(src_locations),
             cells=src_cells,
         )
@@ -124,7 +124,7 @@ class EntityFactory(AbstractFactory):
 
         else:
             entity = self.params.data_object.copy(
-                parent=self.params.ga_group,
+                parent=self.params.out_group,
                 copy_children=False,
                 vertices=inversion_data.locations,
             )

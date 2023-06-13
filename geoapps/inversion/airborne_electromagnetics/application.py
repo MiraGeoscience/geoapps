@@ -729,7 +729,7 @@ class InversionApp(PlotSelection2D):
     _topography = None
     _inversion_parameters = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, plot_result=True, **kwargs):
         self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self._uncertainties = Dropdown(
@@ -765,7 +765,7 @@ class InversionApp(PlotSelection2D):
             self.data_channel_choices_observer, names="value"
         )
         self.plotting_data = None
-        super().__init__(**self.defaults)
+        super().__init__(plot_result=plot_result, **self.defaults)
 
         if "lines" in app_initializer:
             self.lines.__populate__(**self.defaults["lines"])

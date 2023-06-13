@@ -120,7 +120,7 @@ def test_ip_2d_run(
     driver = InducedPolarization2DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = chargeability.values[np.isfinite(chargeability.values)]

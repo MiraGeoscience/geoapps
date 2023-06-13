@@ -38,6 +38,8 @@ variables:
 
 _environments_folder = Path("environments")
 
+_python_versions = ["3.10", "3.9"]
+
 
 @contextmanager
 def print_execution_time(name: str = "") -> Generator:
@@ -70,7 +72,11 @@ def create_multi_platform_lock(py_ver: str, platform: str | None = None) -> None
         patch_absolute_path(Path(f"conda-py-{py_ver}-lock.yml"))
 
 
-def per_platform_env(py_ver: str, extras=[], dev=False, suffix="") -> None:
+def per_platform_env(
+    py_ver: str, extras: list[str] | None = None, dev=False, suffix=""
+) -> None:
+    if extras is None:
+        extras = []
     print(
         f"# Creating per platform Conda env files for Python {py_ver} ({'WITH' if dev else 'NO'} dev dependencies) ... "
     )
@@ -107,8 +113,8 @@ def patch_absolute_path(file: Path) -> None:
 
     with tempfile.TemporaryDirectory(dir=str(file.parent)) as tmpdirname:
         patched_file = Path(tmpdirname) / file.name
-        with open(patched_file, "w") as patched:
-            with open(file) as f:
+        with open(patched_file, mode="w", encoding="utf-8") as patched:
+            with open(file, encoding="utf-8") as f:
                 for line in f:
                     patched.write(
                         line.replace(abs_path_base, "").replace(
@@ -136,7 +142,7 @@ class LockFilePatcher:
         Add the variables section to the lock file.
         """
 
-        with open(self.lock_file, "a") as f:
+        with open(self.lock_file, mode="a", encoding="utf-8") as f:
             f.write(env_file_variables_section_)
 
     def patch_none_hash(self) -> None:
@@ -152,7 +158,9 @@ class LockFilePatcher:
         )
         with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
             patched_file = Path(tmpdirname) / self.lock_file.name
-            with open(patched_file, "w") as patched, open(self.lock_file) as f:
+            with open(patched_file, mode="w", encoding="utf-8") as patched, open(
+                self.lock_file, encoding="utf-8"
+            ) as f:
                 for line in f:
                     match = none_hash_re.match(line)
                     if not match:
@@ -167,7 +175,7 @@ class LockFilePatcher:
         """
 
         pip_dependency_re = re.compile(r"^\s*- (\S+) (@|===) .*")
-        with open(self.lock_file) as file:
+        with open(self.lock_file, encoding="utf-8") as file:
             while not self.pip_section_re.match(file.readline()):
                 pass
 
@@ -183,7 +191,9 @@ class LockFilePatcher:
 
         with tempfile.TemporaryDirectory(dir=str(self.lock_file.parent)) as tmpdirname:
             patched_file = Path(tmpdirname) / self.lock_file.name
-            with open(patched_file, "w") as patched, open(self.lock_file) as f:
+            with open(patched_file, mode="w", encoding="utf-8") as patched, open(
+                self.lock_file, encoding="utf-8"
+            ) as f:
                 for line in f:
                     patched_line = self.sha_re.sub(r"\1", line)
                     patched.write(patched_line)
@@ -209,26 +219,44 @@ def config_conda() -> None:
     )
 
 
-def delete_existing_files() -> None:
-    if _environments_folder.exists():
-        for f in _environments_folder.glob("*.lock.yml"):
-            f.unlink()
-
+def delete_multiplatform_lock_files() -> None:
     for f in Path().glob("*-lock.yml"):
         f.unlink()
 
 
-if __name__ == "__main__":
-    assert _environments_folder.is_dir()
-    delete_existing_files()
+def recreate_multiplatform_lock_files() -> None:
+    delete_multiplatform_lock_files()
 
-    config_conda()
+    # also delete per-platform lock files to make it obvious that
+    # they must be cre-created after the multi-platform files were updated
+    delete_per_platform_lock_files()
 
-    patch_pyproject_toml()
-    with print_execution_time("run_conda_lock"):
-        for py_ver in ["3.10", "3.9"]:
+    with print_execution_time("create_multi_platform_lock"):
+        for py_ver in _python_versions:
             create_multi_platform_lock(py_ver)
+
+
+def delete_per_platform_lock_files() -> None:
+    if _environments_folder.exists():
+        for f in _environments_folder.glob("*.lock.yml"):
+            f.unlink()
+
+
+def recreate_per_platform_lock_files() -> None:
+    delete_per_platform_lock_files()
+    with print_execution_time("create_per_platform_lock"):
+        for py_ver in _python_versions:
             per_platform_env(py_ver, ["core", "apps"], dev=False)
             finalize_per_platform_envs(py_ver, dev=False)
             per_platform_env(py_ver, ["core", "apps"], dev=True)
             finalize_per_platform_envs(py_ver, dev=True)
+
+
+if __name__ == "__main__":
+    assert _environments_folder.is_dir()
+
+    config_conda()
+    patch_pyproject_toml()
+
+    recreate_multiplatform_lock_files()
+    recreate_per_platform_lock_files()

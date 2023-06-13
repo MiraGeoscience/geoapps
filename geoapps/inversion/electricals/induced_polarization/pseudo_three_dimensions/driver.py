@@ -144,6 +144,7 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
                                 "geoh5": iter_workspace,
                                 "mesh": mesh,
                                 "line_id": trial["line_id"],
+                                "out_group": None,
                             },
                             **model_uids,
                         )
