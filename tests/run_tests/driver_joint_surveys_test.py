@@ -4,6 +4,7 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+from pathlib import Path
 
 import numpy as np
 from geoh5py.objects import Octree
@@ -83,8 +84,8 @@ def test_joint_surveys_fwr_run(
         forward_only=True,
         geoh5=geoh5,
         topography_object=topography.uid,
-        group_a=fwr_driver_a.params.ga_group,
-        group_b=fwr_driver_b.params.ga_group,
+        group_a=fwr_driver_a.params.out_group,
+        group_b=fwr_driver_b.params.out_group,
     )
 
     fwr_driver = JointSurveyDriver(joint_params)
@@ -135,8 +136,8 @@ def test_joint_surveys_inv_run(
             geoh5=geoh5,
             topography_object=topography.uid,
             mesh=geoh5.get_entity("Octree")[0].uid,
-            group_a=drivers[0].params.ga_group,
-            group_b=drivers[1].params.ga_group,
+            group_a=drivers[0].params.out_group,
+            group_b=drivers[1].params.out_group,
             starting_model=1e-4,
             reference_model=0.0,
             s_norm=0.0,
@@ -156,7 +157,7 @@ def test_joint_surveys_inv_run(
 
     with Workspace(driver.params.geoh5.h5file):
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
 
         output["data"] = np.hstack(orig_data)
@@ -169,13 +170,13 @@ def test_joint_surveys_inv_run(
 if __name__ == "__main__":
     # Full run
     m_start = test_joint_surveys_fwr_run(
-        "./",
+        Path("./"),
         n_grid_points=20,
         refinement=(4, 8),
     )
 
     m_rec = test_joint_surveys_inv_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

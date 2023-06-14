@@ -12,6 +12,7 @@ import warnings
 import numpy as np
 from discretize import TreeMesh
 from scipy.spatial import ConvexHull, Delaunay, cKDTree, qhull
+from SimPEG.survey import BaseSurvey
 from SimPEG.utils import mkvc
 
 
@@ -105,7 +106,7 @@ def calculate_2D_trend(
 
 
 def create_nested_mesh(
-    locations: np.ndarray,
+    survey: BaseSurvey,
     base_mesh: TreeMesh,
     method: str = "padding_cells",
     padding_cells: int = 8,
@@ -128,6 +129,7 @@ def create_nested_mesh(
     minimum_level: Minimum octree level to preserve everywhere outside the local survey area.
     finalize: Return a finalized local treemesh.
     """
+    locations = get_unique_locations(survey)
     nested_mesh = TreeMesh(
         [base_mesh.h[0], base_mesh.h[1], base_mesh.h[2]], x0=base_mesh.x0
     )
@@ -348,3 +350,21 @@ def tile_locations(
     if len(out) == 1:
         return out[0]
     return tuple(out)
+
+
+def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
+    if survey.source_list:
+        locations = []
+        for source in survey.source_list:
+            source_location = source.location
+            if source_location is not None:
+                if not isinstance(source_location, list):
+                    locations += [[source_location]]
+                else:
+                    locations += [source_location]
+            locations += [receiver.locations for receiver in source.receiver_list]
+        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
+    else:
+        locations = survey.receiver_locations
+
+    return np.unique(locations, axis=0)

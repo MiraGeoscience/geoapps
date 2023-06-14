@@ -78,10 +78,9 @@ def test_ip_p3d_fwr_run(
     fwr_driver = InducedPolarizationPseudo3DDriver(params)
     fwr_driver.run()
 
-    drape_model = geoh5.get_entity("Line 2")[0]
-    starting_model = [c for c in drape_model.children if c.name == "starting_model"][
-        0
-    ].values
+    local_simpeg_group = geoh5.get_entity("Line 2")[0]
+    drape_model = local_simpeg_group.get_entity("models")[0]
+    starting_model = drape_model.get_data("starting_model")[0].values
 
     return starting_model
 
@@ -97,8 +96,8 @@ def test_ip_p3d_run(
 
     with Workspace(workpath) as geoh5:
         chargeability = geoh5.get_entity("Iteration_0_ip")[0]
-        models = geoh5.get_entity("Models")[0]
-        mesh = models.get_entity("mesh")[0]  # Finds the octree mesh
+        out_group = geoh5.get_entity("Line 1")[0].parent
+        mesh = out_group.get_entity("mesh")[0]  # Finds the octree mesh
         topography = geoh5.get_entity("topography")[0]
         _ = survey_lines(chargeability.parent, [-100, 100], save="line_IDs")
 
@@ -152,11 +151,11 @@ def test_ip_p3d_run(
             k for k in middle_inversion_group.children if isinstance(k, FilenameData)
         ][0]
 
-        with driver.pseudo3d_params.ga_group.workspace.open(mode="r+"):
-            filedata.copy(parent=driver.pseudo3d_params.ga_group)
+        with driver.pseudo3d_params.out_group.workspace.open(mode="r+"):
+            filedata.copy(parent=driver.pseudo3d_params.out_group)
 
     output = get_inversion_output(
-        driver.pseudo3d_params.geoh5.h5file, driver.pseudo3d_params.ga_group.uid
+        driver.pseudo3d_params.geoh5.h5file, driver.pseudo3d_params.out_group.uid
     )
     if geoh5.open():
         output["data"] = chargeability.values
@@ -169,14 +168,14 @@ def test_ip_p3d_run(
 if __name__ == "__main__":
     # Full run
     m_start = test_ip_p3d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
 
     m_rec = test_ip_p3d_run(
-        "./",
+        Path("./"),
         max_iterations=20,
         pytest=False,
     )

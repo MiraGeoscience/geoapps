@@ -191,6 +191,7 @@ def test_clustering(tmp_path: Path):
     with Workspace(temp_workspace) as workspace:
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+
     app = Clustering(geoh5=str(temp_workspace), output_path=str(tmp_path))
 
     # Set test variables
@@ -243,145 +244,148 @@ def test_clustering(tmp_path: Path):
     trigger = "export"
     clusters = {}
 
-    dataframe_dict, mapping, indices = app.update_dataframe(downsampling, data_subset)
-
-    # Set a callback since callback_context is used by run_clustering
-    context_value.set(
-        AttributeDict(
-            **{"triggered_inputs": [{"prop_id": "n_clusters.value", "value": 3}]}
+    with app.workspace.open():
+        dataframe_dict, mapping, indices = app.update_dataframe(
+            downsampling, data_subset
         )
-    )
-    kmeans, clusters = app.run_clustering(
-        dataframe_dict,
-        n_clusters,
-        full_scales,
-        clusters,
-        mapping,
-    )
-    color_maps = "kmeans"
 
-    # Set a callback since callback_context is used by scatter plot
-    context_value.set(
-        AttributeDict(
-            **{"triggered_inputs": [{"prop_id": "downsampling.value", "value": 80}]}
+        # Set a callback since callback_context is used by run_clustering
+        context_value.set(
+            AttributeDict(
+                **{"triggered_inputs": [{"prop_id": "n_clusters.value", "value": 3}]}
+            )
         )
-    )
+        kmeans, clusters = app.run_clustering(
+            dataframe_dict,
+            n_clusters,
+            full_scales,
+            clusters,
+            mapping,
+        )
+        color_maps = "kmeans"
 
-    # Test scatter plot output
-    figure = app.make_scatter_plot(
-        n_clusters,
-        dataframe_dict,
-        kmeans,
-        indices,
-        color_pickers,
-        channel_options,
-        x,
-        x_log,
-        x_thresh,
-        x_min,
-        x_max,
-        y,
-        y_log,
-        y_thresh,
-        y_min,
-        y_max,
-        z,
-        z_log,
-        z_thresh,
-        z_min,
-        z_max,
-        color,
-        color_log,
-        color_thresh,
-        color_min,
-        color_max,
-        color_maps,
-        size,
-        size_log,
-        size_thresh,
-        size_min,
-        size_max,
-        size_markers,
-    )
-    assert len(figure["data"]) != 0
+        # Set a callback since callback_context is used by scatter plot
+        context_value.set(
+            AttributeDict(
+                **{"triggered_inputs": [{"prop_id": "downsampling.value", "value": 80}]}
+            )
+        )
 
-    # Test inertia plot
-    figure = app.make_inertia_plot(n_clusters, clusters)
-    assert len(figure["data"]) != 0
+        # Test scatter plot output
+        figure = app.make_scatter_plot(
+            n_clusters,
+            dataframe_dict,
+            kmeans,
+            indices,
+            color_pickers,
+            channel_options,
+            x,
+            x_log,
+            x_thresh,
+            x_min,
+            x_max,
+            y,
+            y_log,
+            y_thresh,
+            y_min,
+            y_max,
+            z,
+            z_log,
+            z_thresh,
+            z_min,
+            z_max,
+            color,
+            color_log,
+            color_thresh,
+            color_min,
+            color_max,
+            color_maps,
+            size,
+            size_log,
+            size_thresh,
+            size_min,
+            size_max,
+            size_markers,
+        )
+        assert len(figure["data"]) != 0
 
-    # Test histogram
-    figure = app.make_hist_plot(
-        dataframe_dict,
-        channel,
-        channel_options,
-        lower_bounds=x_min,
-        upper_bounds=x_max,
-    )
-    assert len(figure["data"]) != 0
+        # Test inertia plot
+        figure = app.make_inertia_plot(n_clusters, clusters)
+        assert len(figure["data"]) != 0
 
-    # Test boxplot
-    figure = app.make_boxplot(
-        n_clusters,
-        channel,
-        channel_options,
-        color_pickers,
-        kmeans,
-        indices,
-    )
-    assert len(figure["data"]) != 0
+        # Test histogram
+        figure = app.make_hist_plot(
+            dataframe_dict,
+            channel,
+            channel_options,
+            lower_bounds=x_min,
+            upper_bounds=x_max,
+        )
+        assert len(figure["data"]) != 0
 
-    # Test stats table
-    table = app.make_stats_table(dataframe_dict)
-    assert table is not None
+        # Test boxplot
+        figure = app.make_boxplot(
+            n_clusters,
+            channel,
+            channel_options,
+            color_pickers,
+            kmeans,
+            indices,
+        )
+        assert len(figure["data"]) != 0
 
-    # Test heatmap
-    figure = app.make_heatmap(dataframe_dict)
-    assert len(figure["data"]) != 0
+        # Test stats table
+        table = app.make_stats_table(dataframe_dict)
+        assert table is not None
 
-    # Test export
-    app.trigger_click(
-        n_clicks,
-        monitoring_directory,
-        live_link,
-        n_clusters,
-        objects,
-        data_subset,
-        color_pickers,
-        downsampling,
-        full_scales,
-        full_lower_bounds,
-        full_upper_bounds,
-        x,
-        x_log,
-        x_thresh,
-        x_min,
-        x_max,
-        y,
-        y_log,
-        y_thresh,
-        y_min,
-        y_max,
-        z,
-        z_log,
-        z_thresh,
-        z_min,
-        z_max,
-        color,
-        color_log,
-        color_thresh,
-        color_min,
-        color_max,
-        color_maps,
-        size,
-        size_log,
-        size_thresh,
-        size_min,
-        size_max,
-        size_markers,
-        channel,
-        ga_group_name,
-        trigger,
-    )
+        # Test heatmap
+        figure = app.make_heatmap(dataframe_dict)
+        assert len(figure["data"]) != 0
+
+        # Test export
+        app.trigger_click(
+            n_clicks,
+            monitoring_directory,
+            live_link,
+            n_clusters,
+            objects,
+            data_subset,
+            color_pickers,
+            downsampling,
+            full_scales,
+            full_lower_bounds,
+            full_upper_bounds,
+            x,
+            x_log,
+            x_thresh,
+            x_min,
+            x_max,
+            y,
+            y_log,
+            y_thresh,
+            y_min,
+            y_max,
+            z,
+            z_log,
+            z_thresh,
+            z_min,
+            z_max,
+            color,
+            color_log,
+            color_thresh,
+            color_min,
+            color_max,
+            color_maps,
+            size,
+            size_log,
+            size_thresh,
+            size_min,
+            size_max,
+            size_markers,
+            channel,
+            ga_group_name,
+            trigger,
+        )
 
     filename = next(tmp_path.glob("Clustering_*.geoh5"))
     with Workspace(filename) as workspace:

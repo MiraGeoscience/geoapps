@@ -422,10 +422,10 @@
         "group": "Update sensitivity weights directive",
         "tooltip": "Update sensitivity weight threshold",
         "label": "Threshold (%)",
-        "value": 60.0,
-        "max": 99.9,
+        "value": 0.001,
+        "max": 1.0,
         "min": 0.0,
-        "precision": 1,
+        "precision": 5,
         "lineEdit": false
     },
     "every_iteration_bool": {

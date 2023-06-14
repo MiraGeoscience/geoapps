@@ -24,8 +24,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 11.707134,
-    "phi_d": 1.598,
-    "phi_m": 8.824e-6,
+    "phi_d": 34.68,
+    "phi_m": 4.946e-6,
 }
 
 
@@ -63,9 +63,9 @@ def test_susceptibility_fwr_run(
 
     fwr_driver = MagneticScalarDriver(params)
 
-    assert params.ga_group.options, "Error adding metadata on creation."
-
     fwr_driver.run()
+
+    assert params.out_group.options, "Error adding metadata on creation."
 
     return fwr_driver.models.starting
 
@@ -110,9 +110,8 @@ def test_susceptibility_run(
             tmi_channel_bool=True,
             z_from_topo=False,
             tmi_channel=tmi.uid,
-            tmi_uncertainty=4.0,
+            tmi_uncertainty=1.0,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e0,
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
@@ -121,7 +120,7 @@ def test_susceptibility_run(
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tmi
         if pytest:
@@ -135,8 +134,10 @@ def test_susceptibility_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_susceptibility_fwr_run("./", n_grid_points=20, refinement=(4, 8))
-    m_rec = test_susceptibility_run("./", max_iterations=30, pytest=False)
+    m_start = test_susceptibility_fwr_run(
+        Path("./"), n_grid_points=20, refinement=(4, 8)
+    )
+    m_rec = test_susceptibility_run(Path("./"), max_iterations=30, pytest=False)
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
         residual < 15.0

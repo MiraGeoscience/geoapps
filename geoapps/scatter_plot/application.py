@@ -17,7 +17,7 @@ from time import time
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import callback_context, no_update
+from dash import callback_context, dcc, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
@@ -26,7 +26,7 @@ from geoh5py.ui_json import InputFile
 from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
-from geoapps.base.dash_application import BaseDashApplication
+from geoapps.base.dash_application import BaseDashApplication, ObjectSelection
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.layout import scatter_layout
@@ -41,15 +41,21 @@ class ScatterPlots(BaseDashApplication):
     _param_class = ScatterPlotParams
     _driver_class = ScatterPlotDriver
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json=None, ui_json_data=None, params=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json.path).is_file():
+
+        if params is not None:
+            # Launched from ObjectSelection, with default ui.json
+            self.params = params
+        elif ui_json is not None and Path(ui_json.path).is_dir():
             self.params = self._param_class(ui_json)
+            ui_json_data = ui_json.demote(ui_json.data.copy())
         else:
             self.params = self._param_class(**app_initializer)
-
+            ui_json_data = app_initializer
         super().__init__()
 
+        # Start flask server
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
         self.app = JupyterDash(
@@ -58,9 +64,17 @@ class ScatterPlots(BaseDashApplication):
             external_stylesheets=external_stylesheets,
         )
 
+        # Getting app layout
         self.app.layout = scatter_layout
+        # Adding ui_json_data to layout here, so it can be initialized properly
+        scatter_layout.children.append(dcc.Store(id="ui_json_data", data=ui_json_data))
 
         # Set up callbacks
+        self.app.callback(
+            Output(component_id="objects", component_property="data"),
+            Output(component_id="ui_json_data", component_property="data"),
+            Input(component_id="ui_json_data", component_property="data"),
+        )(self.set_objects_value)
         self.app.callback(
             Output(component_id="x_div", component_property="style"),
             Output(component_id="y_div", component_property="style"),
@@ -69,15 +83,6 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="size_div", component_property="style"),
             Input(component_id="axes_panels", component_property="value"),
         )(ScatterPlots.update_visibility)
-        self.app.callback(
-            Output(component_id="objects", component_property="options"),
-            Output(component_id="objects", component_property="value"),
-            Output(component_id="ui_json_data", component_property="data"),
-            Output(component_id="upload", component_property="filename"),
-            Output(component_id="upload", component_property="contents"),
-            Input(component_id="upload", component_property="filename"),
-            Input(component_id="upload", component_property="contents"),
-        )(self.update_object_options)
         self.app.callback(
             Output(component_id="x", component_property="options"),
             Output(component_id="y", component_property="options"),
@@ -90,7 +95,6 @@ class ScatterPlots(BaseDashApplication):
             Output(component_id="color", component_property="value"),
             Output(component_id="size", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
-            Input(component_id="objects", component_property="value"),
         )(self.update_data_options)
         self.app.callback(
             Output(component_id="x_min", component_property="value"),
@@ -130,7 +134,7 @@ class ScatterPlots(BaseDashApplication):
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
             Input(component_id="downsampling", component_property="value"),
-            Input(component_id="objects", component_property="value"),
+            Input(component_id="objects", component_property="data"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -165,6 +169,15 @@ class ScatterPlots(BaseDashApplication):
             Input(component_id="monitoring_directory", component_property="value"),
             Input(component_id="crossplot", component_property="figure"),
         )(self.trigger_click)
+
+    def set_objects_value(self, ui_json_data: dict):
+        """
+        Initializing objects from the ObjectSelection ui_json_data. Setting ui_json_data to trigger the other functions'
+        initialization.
+
+        :param ui_json_data: Dict of input ui.json params.
+        """
+        return ui_json_data.get("objects", None), ui_json_data
 
     @staticmethod
     def update_visibility(axis: str) -> (dict, dict, dict, dict, dict):
@@ -220,12 +233,11 @@ class ScatterPlots(BaseDashApplication):
                 {"display": "block"},
             )
 
-    def update_data_options(self, ui_json_data: dict, object_uid: str):
+    def update_data_options(self, ui_json_data: dict):
         """
         Get data dropdown options from a given object.
 
         :param ui_json_data: Uploaded ui.json data to read object from.
-        :param object_uid: Selected object in object dropdown.
 
         :return options: Data dropdown options for x-axis of scatter plot.
         :return options: Data dropdown options for y-axis of scatter plot.
@@ -238,26 +250,14 @@ class ScatterPlots(BaseDashApplication):
         :return color_value: Data dropdown options for color-axis of scatter plot.
         :return size_value: Data dropdown options for size-axis of scatter plot.
         """
-        triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if "ui_json_data" in triggers:
-            x_value = ui_json_data.get("x", None)
-            y_value = ui_json_data.get("y", None)
-            z_value = ui_json_data.get("z", None)
-            color_value = ui_json_data.get("color", None)
-            size_value = ui_json_data.get("size", None)
-            trigger = "ui_json"
-        else:
-            x_value, y_value, z_value, color_value, size_value = (
-                None,
-                None,
-                None,
-                None,
-                None,
-            )
-            trigger = "objects"
+        x_value = ui_json_data.get("x", None)
+        y_value = ui_json_data.get("y", None)
+        z_value = ui_json_data.get("z", None)
+        color_value = ui_json_data.get("color", None)
+        size_value = ui_json_data.get("size", None)
 
-        options = self.get_data_options(ui_json_data, object_uid, trigger=trigger)
+        options = self.get_data_options(ui_json_data, None, trigger="ui_json_data")
 
         return (
             options,
@@ -357,7 +357,8 @@ class ScatterPlots(BaseDashApplication):
         )
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "ui_json_data":
+
+        if trigger == "ui_json_data" or trigger == "":
             x_min, x_max = ui_json_data.get("x_min", None), ui_json_data.get(
                 "x_max", None
             )
@@ -555,7 +556,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     ifile.workspace.open("r")
-    app = ScatterPlots(ui_json=ifile)
     print("Loaded. Building the plotly scatterplot . . .")
-    app.run()
+    ObjectSelection.run("Scatter Plots", ScatterPlots, ifile)
     print("Done")

@@ -103,7 +103,6 @@ def test_ip_2d_run(
             conductivity_model=1e-2,
             s_norm=0.0,
             x_norm=0.0,
-            y_norm=0.0,
             z_norm=0.0,
             gradient_type="components",
             chargeability_channel_bool=True,
@@ -121,7 +120,7 @@ def test_ip_2d_run(
     driver = InducedPolarization2DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = chargeability.values[np.isfinite(chargeability.values)]
@@ -134,14 +133,14 @@ def test_ip_2d_run(
 if __name__ == "__main__":
     # Full run
     mstart = test_ip_2d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
 
     m_rec = test_ip_2d_run(
-        "./",
+        Path("./"),
         max_iterations=20,
         pytest=False,
     )

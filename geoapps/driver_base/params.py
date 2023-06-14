@@ -63,6 +63,9 @@ class BaseParams:
         self._title = None
         self._conda_environment: str = None
         self._conda_environment_boolean: bool = None
+        self._generate_sweep: bool = False
+        self._workspace = None
+        self._run_command_boolean: bool = False
         self.workpath = workpath
         self.input_file = input_file
         self.validate = validate
@@ -145,7 +148,7 @@ class BaseParams:
             getattr(self, "_workpath", None) is None
             and getattr(self, "_geoh5", None) is not None
         ):
-            self._workpath = str(Path(self.geoh5.h5file).parent)
+            self._workpath = Path(self.geoh5.h5file).parent
         return self._workpath
 
     @workpath.setter
@@ -153,7 +156,7 @@ class BaseParams:
         if val is not None:
             if not Path(val).is_dir():
                 raise ValueError("Provided 'workpath' is not a valid path.")
-            val = str(Path(val).resolve())
+            val = Path(val).resolve()
 
         self._workpath = val
 
@@ -192,6 +195,7 @@ class BaseParams:
 
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
+
         if ui_json_format:
             return self.input_file.stringify(
                 self.input_file.demote(self.input_file.ui_json)
@@ -277,7 +281,9 @@ class BaseParams:
             self._geoh5 = val
             return
         self.setter_validator(
-            "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+            "geoh5",
+            val,
+            fun=lambda x: Workspace(x) if isinstance(val, (str, Path)) else x,
         )
 
     @property

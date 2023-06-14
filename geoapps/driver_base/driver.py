@@ -19,13 +19,22 @@ from geoapps.driver_base.params import BaseParams
 
 
 class BaseDriver(ABC):
-    _workspace: Workspace | None = None
     _params: BaseParams
     _params_class = BaseParams
-    _validations = None
 
     def __init__(self, params: BaseParams):
+        self._workspace: Workspace | None = None
+        self._out_group = None
+        self._validations = None
         self.params = params
+
+        if hasattr(self.params, "out_group") and self.params.out_group is None:
+            self.params.out_group = self.out_group
+
+    @property
+    def out_group(self):
+        """Output group."""
+        return self._out_group
 
     @property
     def params(self):

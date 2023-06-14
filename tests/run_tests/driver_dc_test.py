@@ -26,8 +26,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.14308,
-    "phi_d": 36.06,
-    "phi_m": 241.1,
+    "phi_d": 134.2,
+    "phi_m": 85.05,
 }
 
 np.random.seed(0)
@@ -116,7 +116,7 @@ def test_dc_3d_run(
     driver = DirectCurrent3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = potential.values
@@ -163,14 +163,14 @@ if __name__ == "__main__":
     # Full run
 
     m_start = test_dc_3d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
     m_rec = test_dc_3d_run(
-        "./",
+        Path("./"),
         n_lines=5,
         max_iterations=15,
         pytest=False,

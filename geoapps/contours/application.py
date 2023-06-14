@@ -29,7 +29,7 @@ class ContourValues(PlotSelection2D):
 
     _param_class = ContoursParams
 
-    def __init__(self, ui_json=None, **kwargs):
+    def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
@@ -50,7 +50,7 @@ class ContourValues(PlotSelection2D):
             value=False, indent=False, description="Assign Z from values"
         )
         self.data.observe(self.update_name, names="value")
-        super().__init__(**self.defaults)
+        super().__init__(plot_result=plot_result, **self.defaults)
 
         self.contours = VBox(
             [

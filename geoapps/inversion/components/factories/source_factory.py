@@ -34,7 +34,7 @@ class SourcesFactory(SimPEGFactory):
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import sources
 
-            return sources.SourceField
+            return sources.UniformBackgroundField
 
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import sources
@@ -59,7 +59,7 @@ class SourcesFactory(SimPEGFactory):
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import sources
 
-            return sources.Planewave_xy_1Dprimary
+            return sources.PlanewaveXYPrimary
 
     def assemble_arguments(
         self,

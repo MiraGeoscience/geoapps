@@ -21,6 +21,7 @@ from time import time
 
 import numpy as np
 from dask import config as dconf
+from geoh5py.groups import SimPEGGroup
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from SimPEG import (
@@ -59,8 +60,7 @@ class InversionDriver(BaseDriver):
     def __init__(self, params: InversionBaseParams):
         super().__init__(params)
 
-        self.params = params
-        self.inversion_type = params.inversion_type
+        self.inversion_type = self.params.inversion_type
         self._data_misfit: objective_function.ComboObjectiveFunction | None = None
         self._directives: list[directives.InversionDirective] | None = None
         self._inverse_problem: inverse_problem.BaseInvProblem | None = None
@@ -112,8 +112,10 @@ class InversionDriver(BaseDriver):
                 self.data_misfit,
                 self.regularization,
                 self.optimization,
-                beta=self.params.initial_beta,
             )
+
+            if self.params.initial_beta:
+                self._inverse_problem.beta = self.params.initial_beta
 
         return self._inverse_problem
 
@@ -211,6 +213,22 @@ class InversionDriver(BaseDriver):
         return self._ordering
 
     @property
+    def out_group(self):
+        """The SimPEGGroup"""
+        if self._out_group is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                name = self.params.inversion_type.capitalize()
+                if self.params.forward_only:
+                    name += "Forward"
+                else:
+                    name += "Inversion"
+
+                # with fetch_active_workspace(self.geoh5, mode="r+"):
+                self._out_group = SimPEGGroup.create(self.params.geoh5, name=name)
+
+        return self._out_group
+
+    @property
     def regularization(self):
         if getattr(self, "_regularization", None) is None:
             self._regularization = self.get_regularization()
@@ -294,59 +312,69 @@ class InversionDriver(BaseDriver):
 
             reg_p = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=wires.p,  # pylint: disable=no-member
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
             reg_s = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=wires.s,  # pylint: disable=no-member
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
 
             reg_t = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=wires.t,  # pylint: disable=no-member
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
+                length_scale_x=self.params.length_scale_x,
+                length_scale_y=self.params.length_scale_y,
+                length_scale_z=self.params.length_scale_z,
                 norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
 
             # Assemble the 3-component regularizations
             reg = reg_p + reg_s + reg_t
-            reg.mref = self.models.reference
+            reg.reference_model = self.models.reference
 
         else:
             reg = regularization.Sparse(
                 self.inversion_mesh.mesh,
-                indActive=self.models.active_cells,
+                active_cells=self.models.active_cells,
                 mapping=maps.IdentityMap(nP=n_cells),
-                gradientType=self.params.gradient_type,
+                gradient_type=self.params.gradient_type,
                 alpha_s=self.params.alpha_s,
-                alpha_x=self.params.alpha_x,
-                alpha_y=self.params.alpha_y,
-                alpha_z=self.params.alpha_z,
-                norms=self.params.model_norms(),
-                mref=self.models.reference,
+                reference_model=self.models.reference,
             )
+
+            norms = [self.params.s_norm]
+            for comp in ["x", "y", "z"]:
+                if getattr(self.params, f"length_scale_{comp}") is not None:
+                    setattr(
+                        reg,
+                        f"length_scale_{comp}",
+                        getattr(self.params, f"length_scale_{comp}"),
+                    )
+
+                if getattr(self.params, f"{comp}_norm") is not None:
+                    norms.append(getattr(self.params, f"{comp}_norm"))
+
+            reg.norms = norms
 
         return reg
 
