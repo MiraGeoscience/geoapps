@@ -63,7 +63,7 @@ libhwloc = {version = "2.9.0"}
 
 simpeg_archive = {version = "~0.9.1.dev5", source = "pypi", optional = true}
 #mira-simpeg = {version = "~0.15.1.dev9", source = "pypi", optional = true}
-mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev1+geoapps.0.11.0.zip#sha256=", optional = true}
+mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-267.zip#sha256=", optional = true}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = {version = "~2.2.1", optional = true} # from simpeg and geoana
