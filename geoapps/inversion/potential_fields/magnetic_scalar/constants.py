@@ -76,8 +76,8 @@ inversion_defaults = {
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
     "initial_beta": None,
-    "cooling_rate": 1,
-    "cooling_factor": 2.0,
+    "coolingRate": 1,
+    "coolingFactor": 2.0,
     "max_global_iterations": 100,
     "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
@@ -126,6 +126,7 @@ inversion_defaults = {
     "by_channel_bool": False,
     "bz_channel_bool": False,
     "fix_aspect_ratio": True,
+    "colorbar": False,
 }
 forward_defaults = {
     "version": geoapps.__version__,
@@ -186,6 +187,7 @@ forward_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "fix_aspect_ratio": True,
+    "colorbar": False,
 }
 
 inversion_ui_json = {
@@ -655,7 +657,6 @@ default_ui_json = {
         "label": "Results group name",
         "value": "MagneticSusceptibilityInversion",
     },
-    "fix_aspect_ratio": True,
     "reference_model": {
         "association": ["Cell", "Vertex"],
         "main": True,
@@ -729,6 +730,7 @@ validations = {
     "bz_channel": {"one_of": "data channel"},
     "bz_uncertainty": {"one_of": "uncertainty channel"},
     "fix_aspect_ratio": {"types": [bool]},
+    "colorbar": {"types": [bool]},
 }
 
 validations = dict(base_validations, **validations)
@@ -765,5 +767,6 @@ app_initializer = {
     "receivers_offset_z": 60.0,
     "out_group": "ScalarInversion",
     "fix_aspect_ratio": True,
+    "colorbar": False,
     "n_cpu": int(multiprocessing.cpu_count() / 2),
 }

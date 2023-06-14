@@ -252,6 +252,7 @@ inducing_params_div = html.Div(
                 ),
                 dcc.Input(
                     id="inducing_field_strength",
+                    type="number",
                     style={"display": "inline-block", "width": "60%"},
                 ),
             ]
@@ -264,6 +265,7 @@ inducing_params_div = html.Div(
                 ),
                 dcc.Input(
                     id="inducing_field_inclination",
+                    type="number",
                     style={"display": "inline-block", "width": "60%"},
                 ),
             ]
@@ -276,6 +278,7 @@ inducing_params_div = html.Div(
                 ),
                 dcc.Input(
                     id="inducing_field_declination",
+                    type="number",
                     style={"display": "inline-block", "width": "60%"},
                 ),
             ]
@@ -563,85 +566,11 @@ def get_input_data_layout(component_list):
     return input_data_layout
 
 
-topography_object = html.Div(
-    id="topography_object_div",
-    children=[
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Data:",
-                    style={
-                        "display": "inline-block",
-                        "width": "25%",
-                        "vertical-align": "bottom",
-                    },
-                ),
-                dcc.Dropdown(
-                    id="topography_data",
-                    style={
-                        "display": "inline-block",
-                        "width": "75%",
-                        "vertical-align": "bottom",
-                    },
-                ),
-            ]
-        ),
-    ],
-)
-topography_constant = html.Div(
-    id="topography_constant_div",
-    children=[
-        html.Div(
-            [
-                dcc.Markdown(
-                    "Elevation (m)", style={"display": "inline-block", "width": "25%"}
-                ),
-                dcc.Input(
-                    id="topography_const",
-                    type="number",
-                    style={"display": "inline-block", "width": "60%"},
-                ),
-            ]
-        ),
-    ],
-)
-
 topography_layout = html.Div(
     [
         dcc.Markdown("###### **Topography**"),
         html.Div(
             [
-                html.Div(
-                    [
-                        dcc.Markdown(
-                            "Define by:",
-                            style={
-                                "display": "inline-block",
-                                "vertical-align": "top",
-                                "width": "50%",
-                            },
-                        ),
-                        dcc.RadioItems(
-                            id="topography_options",
-                            options=[
-                                "None",
-                                "Data",
-                                "Constant",
-                            ],
-                            value="None",
-                            style={
-                                "display": "inline-block",
-                                "vertical-align": "top",
-                                "width": "50%",
-                            },
-                        ),
-                    ],
-                    style={
-                        "display": "inline-block",
-                        "width": "40%",
-                        "vertical-align": "top",
-                    },
-                ),
                 html.Div(
                     [
                         html.Div(
@@ -650,7 +579,7 @@ topography_layout = html.Div(
                                     "Object:",
                                     style={
                                         "display": "inline-block",
-                                        "width": "25%",
+                                        "width": "30%",
                                         "vertical-align": "bottom",
                                     },
                                 ),
@@ -658,18 +587,40 @@ topography_layout = html.Div(
                                     id="topography_object",
                                     style={
                                         "display": "inline-block",
-                                        "width": "75%",
+                                        "width": "70%",
                                         "vertical-align": "bottom",
                                     },
                                 ),
                             ]
                         ),
-                        topography_object,
-                        topography_constant,
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    [
+                                        dcc.Markdown(
+                                            "Data (Optional):",
+                                            style={
+                                                "display": "inline-block",
+                                                "width": "30%",
+                                                "vertical-align": "bottom",
+                                            },
+                                        ),
+                                        dcc.Dropdown(
+                                            id="topography",
+                                            style={
+                                                "display": "inline-block",
+                                                "width": "70%",
+                                                "vertical-align": "bottom",
+                                            },
+                                        ),
+                                    ]
+                                ),
+                            ],
+                        ),
                     ],
                     style={
                         "display": "inline-block",
-                        "width": "60%",
+                        "width": "80%",
                         "vertical-align": "top",
                     },
                 ),
@@ -921,7 +872,7 @@ optimization = html.Div(
                     style={"display": "inline-block", "width": "50%"},
                 ),
                 dcc.Input(
-                    id="cooling_rate",
+                    id="coolingRate",
                     type="number",
                     step=1,
                     style={"display": "inline-block", "width": "50%"},
@@ -935,7 +886,7 @@ optimization = html.Div(
                     style={"display": "inline-block", "width": "50%"},
                 ),
                 dcc.Input(
-                    id="cooling_factor",
+                    id="coolingFactor",
                     type="number",
                     step=1,
                     style={"display": "inline-block", "width": "50%"},

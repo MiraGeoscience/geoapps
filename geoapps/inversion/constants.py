@@ -287,7 +287,7 @@ default_ui_json = {
         "enabled": True,
         "verbose": 2,
     },
-    "cooling_rate": {
+    "coolingRate": {
         "group": "Optimization",
         "label": "Iterations per beta",
         "value": 2,
@@ -297,7 +297,7 @@ default_ui_json = {
         "precision": 1,
         "verbose": 2,
     },
-    "cooling_factor": {
+    "coolingFactor": {
         "group": "Optimization",
         "label": "Beta cooling factor",
         "tooltip": "Each beta cooling step will be calculated by dividing the current beta by this factor.",
@@ -514,6 +514,8 @@ default_ui_json = {
         "main": True,
         "value": False,
     },
+    "fix_aspect_ratio": True,
+    "colorbar": False,
     "max_ram": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,

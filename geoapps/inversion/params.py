@@ -99,6 +99,8 @@ class InversionBaseParams(BaseParams):
         self._parallelized: bool = None
         self._n_cpu: int = None
         self._max_ram: float = None
+        self._fix_aspect_ratio = None
+        self._colorbar = None
         self._store_sensitivities: str = None
         self._out_group = None
         self._no_data_value: float = None
@@ -705,6 +707,22 @@ class InversionBaseParams(BaseParams):
     @n_cpu.setter
     def n_cpu(self, val):
         self.setter_validator("n_cpu", val)
+
+    @property
+    def fix_aspect_ratio(self):
+        return self._fix_aspect_ratio
+
+    @fix_aspect_ratio.setter
+    def fix_aspect_ratio(self, val):
+        self.setter_validator("fix_aspect_ratio", val)
+
+    @property
+    def colorbar(self):
+        return self._colorbar
+
+    @colorbar.setter
+    def colorbar(self, val):
+        self.setter_validator("colorbar", val)
 
     @property
     def max_ram(self):

@@ -73,8 +73,8 @@ inversion_defaults = {
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
     "initial_beta": None,
-    "cooling_rate": 1,
-    "cooling_factor": 2.0,
+    "coolingRate": 1,
+    "coolingFactor": 2.0,
     "max_global_iterations": 100,
     "max_line_search_iterations": 20,
     "max_cg_iterations": 30,
@@ -123,6 +123,7 @@ inversion_defaults = {
     "gx_channel_bool": False,
     "gy_channel_bool": False,
     "fix_aspect_ratio": True,
+    "colorbar": False,
 }
 forward_defaults = {
     "version": geoapps.__version__,
@@ -180,6 +181,7 @@ forward_defaults = {
     "y_norm": 2.0,
     "z_norm": 2.0,
     "fix_aspect_ratio": True,
+    "colorbar": False,
 }
 
 inversion_ui_json = {
@@ -629,7 +631,6 @@ default_ui_json = {
         "value": 0.0,
     },
     "out_group": {"label": "Results group name", "value": "GravityInversion"},
-    "fix_aspect_ratio": True,
     "lower_bound": {
         "association": ["Cell", "Vertex"],
         "main": True,
@@ -690,6 +691,7 @@ validations = {
     "gy_channel": {"one_of": "data channel"},
     "gy_uncertainty": {"one_of": "uncertainty channel"},
     "fix_aspect_ratio": {"types": [bool]},
+    "colorbar": {"types": [bool]},
 }
 
 validations = dict(base_validations, **validations)
@@ -703,7 +705,7 @@ app_initializer = {
     "gz_channel": UUID("{6de9177a-8277-4e17-b76c-2b8b05dcf23c}"),
     "gz_uncertainty": 0.05,
     "gxx_channel": UUID("{53e59b2b-c2ae-4b77-923b-23e06d874e62}"),
-    "gxx_uncertainty": 10.0,
+    "gxx_uncertainty": 1.0,
     "gyy_channel": UUID("{51c0acd7-84b8-421f-a66b-fdc15c826a47}"),
     "gyy_uncertainty": 1.0,
     "gzz_channel": UUID("{f450906d-80e2-4c50-ab27-6da5cf0906af}"),
@@ -735,5 +737,6 @@ app_initializer = {
     "detrend_type": None,
     "out_group": "GravityInversion",
     "fix_aspect_ratio": True,
+    "colorbar": False,
     "n_cpu": int(multiprocessing.cpu_count() / 2),
 }

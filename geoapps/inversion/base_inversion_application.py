@@ -65,11 +65,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="uncertainty_channel", component_property="style"),
             Input(component_id="uncertainty_options", component_property="value"),
         )(InversionApp.update_uncertainty_visibility)
-        self.app.callback(
-            Output(component_id="topography_object_div", component_property="style"),
-            Output(component_id="topography_constant_div", component_property="style"),
-            Input(component_id="topography_options", component_property="value"),
-        )(InversionApp.update_topography_visibility)
         for model_type in ["starting", "reference"]:
             for param in self._inversion_params:
                 self.app.callback(
@@ -191,7 +186,6 @@ class InversionApp(BaseDashApplication):
                         component_property="options",
                     ),
                     Input(component_id="ui_json_data", component_property="data"),
-                    Input(component_id="data_object", component_property="options"),
                     Input(
                         component_id="mesh",
                         component_property="value",
@@ -212,12 +206,10 @@ class InversionApp(BaseDashApplication):
 
         # Update topography dropdown options and values
         self.app.callback(
-            Output(component_id="topography_options", component_property="value"),
-            Output(component_id="topography_const", component_property="value"),
             Output(component_id="topography_object", component_property="value"),
             Output(component_id="topography_object", component_property="options"),
-            Output(component_id="topography_data", component_property="value"),
-            Output(component_id="topography_data", component_property="options"),
+            Output(component_id="topography", component_property="value"),
+            Output(component_id="topography", component_property="options"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="data_object", component_property="options"),
             Input(component_id="topography_object", component_property="value"),
@@ -225,6 +217,8 @@ class InversionApp(BaseDashApplication):
 
         # Update from ui.json
         self.app.callback(
+            # Window Data
+            Output(component_id="colorbar", component_property="value"),
             # Input Data
             Output(component_id="resolution", component_property="value"),
             # Topography
@@ -249,8 +243,8 @@ class InversionApp(BaseDashApplication):
             # Inversion - optimization
             Output(component_id="max_global_iterations", component_property="value"),
             Output(component_id="max_irls_iterations", component_property="value"),
-            Output(component_id="cooling_rate", component_property="value"),
-            Output(component_id="cooling_factor", component_property="value"),
+            Output(component_id="coolingRate", component_property="value"),
+            Output(component_id="coolingFactor", component_property="value"),
             Output(component_id="chi_factor", component_property="value"),
             Output(component_id="initial_beta_ratio", component_property="value"),
             Output(component_id="max_cg_iterations", component_property="value"),
@@ -327,32 +321,6 @@ class InversionApp(BaseDashApplication):
                 {"display": "none"},
             )
         elif selection == "Channel":
-            return (
-                {"display": "none"},
-                {"display": "block"},
-            )
-
-    @staticmethod
-    def update_topography_visibility(selection: str) -> (dict, dict):
-        """
-        Update visibility of topography data and constant input boxes from radio buttons.
-
-        :param selection: Radio button selection.
-
-        :return data_style: Visibility for topography data dropdown.
-        :return constant_style: Visibility for topography constant input box.
-        """
-        if selection == "None":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif selection == "Data":
-            return (
-                {"display": "block"},
-                {"display": "none"},
-            )
-        elif selection == "Constant":
             return (
                 {"display": "none"},
                 {"display": "block"},
@@ -456,25 +424,18 @@ class InversionApp(BaseDashApplication):
         return None
 
     @staticmethod
-    def unpack_val(
-        val: float | int | str, topography: bool = False
-    ) -> (str, str, float | int):
+    def unpack_val(val: float | int | str) -> (str, str, float | int):
         """
         Determine if input value is a constant or data, and determine the corresponding radio button value.
 
         :param val: Input value. Either constant, data, or None.
-        :param topography: Whether the parameter is topography, since the topography radio buttons are slightly
-        different.
 
         :return options: Radio button selection.
         :return data: Data value.
         :return const: Constant value.
         """
         if is_uuid(val):
-            if topography:
-                options = "Data"
-            else:
-                options = "Model"
+            options = "Model"
             data = str(val)
             const = None
         elif (type(val) == float) or (type(val) == int):
@@ -490,7 +451,6 @@ class InversionApp(BaseDashApplication):
     def update_models_from_ui_json(
         self,
         ui_json_data: dict,
-        data_object_options: list,
         mesh_object_uid: str,
         forward_only: list,
     ) -> (str, float | int, str, list, str, list):
@@ -498,7 +458,6 @@ class InversionApp(BaseDashApplication):
         Update starting and reference models from ui.json data. Update dropdown options and values.
 
         :param ui_json_data: Uploaded ui.json data.
-        :param data_object_options: List of dropdown options for main input object.
         :param mesh_object_uid: Selected object for the model.
         :param forward_only: Checkbox for performing forward inversion.
 
@@ -534,18 +493,13 @@ class InversionApp(BaseDashApplication):
                 else:
                     obj = None
                     val = None
-
                 options, data, const = InversionApp.unpack_val(val)
                 data_options = self.get_data_options(ui_json_data, obj)
-        elif "data_object" in triggers:
-            # Clear object value and data dropdown on workspace change.
-            data_options = []
-            data = None
         elif "forward_only" in triggers and forward_only:
             # Set the reference model to none for forward inversion.
             if prefix == "reference":
                 options = "None"
-        else:
+        elif "mesh" in triggers:
             # Update data options and clear data value on object change.
             data = None
             data_options = self.get_data_options(ui_json_data, mesh_object_uid)
@@ -581,7 +535,7 @@ class InversionApp(BaseDashApplication):
                 val = ui_json_data[param]
                 options, data, const = InversionApp.unpack_val(val)
                 data_options = self.get_data_options(ui_json_data, obj)
-        elif "data_object" in triggers:
+        elif "mesh" in triggers:
             data_options = []
             data = None
         else:
@@ -600,16 +554,12 @@ class InversionApp(BaseDashApplication):
         :param data_object_options: List of dropdown options for main input object.
         :param topography_object_uid: Selected object for topography.
 
-        :return options: Selected option for radio button.
-        :return const: Value of constant for param.
         :return obj: Value of object for param.
         :return obj_options: Dropdown options for param object. Same as data_object_options.
         :return data: Value of data for param.
         :return data_options: Dropdown options for param data.
         """
-        options, const, obj, obj_options, data, data_options = (
-            no_update,
-            no_update,
+        obj, obj_options, data, data_options = (
             no_update,
             no_update,
             no_update,
@@ -618,23 +568,24 @@ class InversionApp(BaseDashApplication):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
-            param = callback_context.outputs_list[0]["id"].removesuffix("_options")
-            if param in ui_json_data:
-                obj = str(ui_json_data[param + "_object"])
-                val = ui_json_data[param]
-                options, data, const = InversionApp.unpack_val(val, topography=True)
+            if "topography" in ui_json_data:
+                obj = str(ui_json_data["topography_object"])
+                data = str(ui_json_data["topography"])
                 data_options = self.get_data_options(ui_json_data, obj)
                 obj_options = data_object_options
         elif "data_object" in triggers:
+            # Update on workspace change
             obj_options = data_object_options
             obj = None
             data_options = []
             data = None
         else:
+            # Update on object change
             data = None
             data_options = self.get_data_options(ui_json_data, topography_object_uid)
 
-        return options, const, obj, obj_options, data, data_options
+        data_options.insert(0, {"label": "", "value": ""})
+        return obj, obj_options, data, data_options
 
     def update_mesh_options(self, full_obj_options: list) -> list:
         """
@@ -1231,7 +1182,10 @@ class InversionApp(BaseDashApplication):
         return figure, data_count, center_x, center_y, width, height, fix_aspect_ratio
 
     def get_general_inversion_params(
-        self, new_workspace: Workspace, inversion_params_dict: dict
+        self,
+        new_workspace: Workspace,
+        inversion_params_dict: dict,
+        mesh_object: ObjectBase,
     ) -> dict:
         """
         Get topography, bounds, and models to add to self.params.
@@ -1239,24 +1193,15 @@ class InversionApp(BaseDashApplication):
         :param new_workspace: New workspace to copy objects and data to.
         :param inversion_params_dict: Dictionary of params with radio button selection, data, constant, and object for
         each.
+        :param mesh_object: Parent object for bounds, models.
 
         :return param_dict: Dictionary with params to update self.params.
         """
         param_dict = {}
         for key, value in inversion_params_dict.items():
             param_dict[key] = None
-            if value["options"] == "Model" or key == "topography":
-                param_dict[key + "_object"] = None
-                # Topography always saves an object and only saves data if the radio button is selected.
-                if is_uuid(value["object"]):
-                    obj = self.workspace.get_entity(uuid.UUID(value["object"]))[0]
-                    param_dict[key + "_object"] = new_workspace.get_entity(obj.uid)[0]
-                    if param_dict[key + "_object"] is None:
-                        param_dict[key + "_object"] = obj.copy(
-                            parent=new_workspace, copy_children=False
-                        )
-            if value["options"] in ["Model", "Data"]:
-                if is_uuid(value["data"]) and param_dict[key + "_object"]:
+            if value["options"] == "Model":
+                if is_uuid(value["data"]) and mesh_object is not None:
                     param_dict[key] = self.workspace.get_entity(
                         uuid.UUID(value["data"])
                     )[0]
@@ -1264,7 +1209,7 @@ class InversionApp(BaseDashApplication):
                         param_dict[key] is not None
                         and new_workspace.get_entity(param_dict[key].uid)[0] is None
                     ):
-                        param_dict[key].copy(parent=param_dict[key + "_object"])
+                        param_dict[key].copy(parent=mesh_object)
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
 
@@ -1336,7 +1281,11 @@ class InversionApp(BaseDashApplication):
         return param_dict
 
     def get_inversion_params_dict(
-        self, new_workspace: Workspace, update_dict: dict, data_object: ObjectBase
+        self,
+        new_workspace: Workspace,
+        update_dict: dict,
+        data_object: ObjectBase,
+        mesh_object: ObjectBase,
     ) -> dict:
         """
         Get parameters that are specific to inversion, that will be used to update self.params.
@@ -1344,6 +1293,7 @@ class InversionApp(BaseDashApplication):
         :param new_workspace: New workspace to copy objects and data to.
         :param update_dict: Dictionary of new parameters and values from dash callback.
         :param data_object: Parent for channel data when copying to new workspace.
+        :param mesh_object: Parent for bounds and model data.
 
         :return param_dict: Dictionary of parameters ready to update self.params.
         """
@@ -1351,14 +1301,13 @@ class InversionApp(BaseDashApplication):
         # Put together dict of needed params for the get_general_inversion_params function
         input_param_dict = {}
         for param in [
-            "topography",
             "lower_bound",
             "upper_bound",
             "starting_model",
             "reference_model",
-            "starting_inclination"
-            "reference_inclination"
-            "starting_declination"
+            "starting_inclination",
+            "reference_inclination",
+            "starting_declination",
             "reference_declination",
         ]:
             if param + "_options" in update_dict:
@@ -1367,15 +1316,13 @@ class InversionApp(BaseDashApplication):
                     "data": update_dict[param + "_data"],
                     "const": update_dict[param + "_const"],
                 }
-                if param == "topography":
-                    input_param_dict[param]["object"] = update_dict[param + "_object"]
-                else:
-                    input_param_dict[param]["object"] = update_dict["mesh"]
 
         param_dict = {}
-        # Update topography, bounds, models
+        # Update bounds, models
         param_dict.update(
-            self.get_general_inversion_params(new_workspace, input_param_dict)
+            self.get_general_inversion_params(
+                new_workspace, input_param_dict, mesh_object
+            )
         )
         # Update channel params
         param_dict.update(
@@ -1386,6 +1333,42 @@ class InversionApp(BaseDashApplication):
                 update_dict["forward_only"],
             )
         )
+
+        # Move radar data to current workspace
+        print("radar")
+        print(type(update_dict["receivers_radar_drape"]))
+        print(update_dict["receivers_radar_drape"])
+        print(is_uuid(update_dict["receivers_radar_drape"]))
+        if is_uuid(update_dict["receivers_radar_drape"]):
+            param_dict["receivers_radar_drape"] = self.workspace.get_entity(
+                uuid.UUID(update_dict["receivers_radar_drape"])
+            )[0]
+            if (
+                param_dict["receivers_radar_drape"] is not None
+                and new_workspace.get_entity(param_dict["receivers_radar_drape"].uid)[0]
+                is None
+            ):
+                param_dict["receivers_radar_drape"].copy(parent=data_object)
+
+        # Move topography object and data into current workspace
+        obj = self.workspace.get_entity(uuid.UUID(update_dict["topography_object"]))[0]
+        param_dict["topography_object"] = new_workspace.get_entity(obj.uid)[0]
+        if param_dict["topography_object"] is None:
+            param_dict["topography_object"] = obj.copy(
+                parent=new_workspace, copy_children=False
+            )
+        if is_uuid(update_dict["topography"]):
+            param_dict["topography"] = self.workspace.get_entity(
+                uuid.UUID(update_dict["topography"])
+            )[0]
+            if (
+                param_dict["topography"] is not None
+                and new_workspace.get_entity(param_dict["topography"].uid)[0] is None
+            ):
+                param_dict["topography"].copy(parent=param_dict["topography_object"])
+        else:
+            param_dict["topography"] = None
+
         param_dict["window_azimuth"] = 0.0
         return param_dict
 
@@ -1401,10 +1384,9 @@ class InversionApp(BaseDashApplication):
         window_width: float,
         window_height: float,
         fix_aspect_ratio: list,
-        topography_options: str,
+        colorbar: list,
         topography_object: str,
-        topography_data: str,
-        topography_const: float,
+        topography: str,
         z_from_topo: list,
         receivers_offset_z: float,
         receivers_radar_drape: str,
@@ -1435,8 +1417,8 @@ class InversionApp(BaseDashApplication):
         ignore_values: str,
         max_global_iterations: int,
         max_irls_iterations: int,
-        cooling_rate: int,
-        cooling_factor: int,
+        coolingRate: int,
+        coolingFactor: int,
         chi_factor: float,
         initial_beta_ratio: float,
         max_cg_iterations: int,
@@ -1475,10 +1457,9 @@ class InversionApp(BaseDashApplication):
         :param window_width: Window width.
         :param window_height: Window height
         :param fix_aspect_ratio: Checkbox for plotting with fixed aspect ratio.
-        :param topography_options: Type of topography selected (None, Data, Constant).
+        :param colorbar: Checkbox for displaying colorbar.
         :param topography_object: Topography object uuid.
-        :param topography_data: Topography data uuid.
-        :param topography_const: Topography constant.
+        :param topography: Topography data uuid.
         :param z_from_topo: Checkbox for getting z from topography.
         :param receivers_offset_z: Sensor offset up.
         :param receivers_radar_drape: Radar.
@@ -1509,8 +1490,8 @@ class InversionApp(BaseDashApplication):
         :param ignore_values: Specified values to ignore.
         :param max_global_iterations: Number of L2 and IRLS iterations combined.
         :param max_irls_iterations: Incomplete Re-weighted Least Squares iterations for non-L2 problems.
-        :param cooling_rate: Iterations per beta.
-        :param cooling_factor: Beta cooling factor.
+        :param coolingRate: Iterations per beta.
+        :param coolingFactor: Beta cooling factor.
         :param chi_factor: Chi factor.
         :param initial_beta_ratio: Initial beta ratio.
         :param max_cg_iterations: Maximum conjugate gradient iterations.
@@ -1557,6 +1538,7 @@ class InversionApp(BaseDashApplication):
             "window_width": window_width,
             "window_height": window_height,
             "fix_aspect_ratio": fix_aspect_ratio,
+            "colorbar": colorbar,
             "z_from_topo": z_from_topo,
             "receivers_offset_z": receivers_offset_z,
             "receivers_radar_drape": receivers_radar_drape,
@@ -1574,8 +1556,8 @@ class InversionApp(BaseDashApplication):
             "ignore_values": ignore_values,
             "max_global_iterations": max_global_iterations,
             "max_irls_iterations": max_irls_iterations,
-            "cooling_rate": cooling_rate,
-            "cooling_factor": cooling_factor,
+            "coolingRate": coolingRate,
+            "coolingFactor": coolingFactor,
             "chi_factor": chi_factor,
             "initial_beta_ratio": initial_beta_ratio,
             "max_cg_iterations": max_cg_iterations,
@@ -1636,22 +1618,9 @@ class InversionApp(BaseDashApplication):
             # Add inversion specific params to param_dict
             param_dict.update(
                 self.get_inversion_params_dict(
-                    workspace, locals(), param_dict["data_object"]
+                    workspace, locals(), param_dict["data_object"], param_dict["mesh"]
                 )
             )
-
-            if is_uuid(receivers_radar_drape):
-                param_dict["receivers_radar_drape"] = self.workspace.get_entity(
-                    uuid.UUID(receivers_radar_drape)
-                )[0]
-                if (
-                    param_dict["receivers_radar_drape"] is not None
-                    and workspace.get_entity(param_dict["receivers_radar_drape"].uid)[0]
-                    is None
-                ):
-                    param_dict["receivers_radar_drape"].copy(
-                        parent=param_dict["data_object"]
-                    )
 
             if self._inversion_type == "dcip":
                 param_dict["resolution"] = None  # No downsampling for dcip
