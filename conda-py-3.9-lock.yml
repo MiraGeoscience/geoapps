@@ -19,9 +19,9 @@ metadata:
   - url: conda-forge
     used_env_vars: []
   content_hash:
-    linux-64: ca4dd5e4f6183ab1a60a56ae8f029119d20cbaf42b7479c9c64aae2027204e6c
-    osx-64: e44b6cb88b83ad0abaccf7ef82f52baf5ce6cf3c65c91a17744b4b2a690d3b43
-    win-64: 7adfa5de506acfcdc07a4806ab981122f384470366ac232cb1bcbb9ce4badb49
+    linux-64: 0711e99fbdbddc2d2b54bd8956c5b9b9de436b10a08f046fa2556fb5125dcc3d
+    osx-64: 160ac68059236319f88582f593ded0592df5ddbb7c99d5a7f7458ce81496ea81
+    win-64: 731602a97bdbc6846a5a2d816ee38e75fc48a51915cbe3966cfdb99b36f215d8
   platforms:
   - win-64
   - osx-64
@@ -4880,7 +4880,7 @@ package:
 - category: main
   dependencies:
     __glibc: '>=2.17,<3.0.a0'
-    libclang13: '>=14.0.6'
+    libclang13: '>=15.0.6'
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     libxml2: '>=2.10.3,<2.11.0a0'
@@ -4889,14 +4889,14 @@ package:
     python_abi: 3.9.* *_cp39
     qt-main: '>=5.15.6,<5.16.0a0'
   hash:
-    md5: e8ebb5b3b6bbbcc11d0b8b360c883d98
-    sha256: 806a58445327dfd6c129d5c7cbce21da45610cfb79ea3cf99c8b75b8f2c1c8a3
+    md5: dcce7105fa5cf517f82be2d0fbd1c761
+    sha256: d7ea0d2e4670b3b837018add9870a68ea25d5754ddf0eb1a07b48b0bddc90354
   manager: conda
   name: pyside2
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/pyside2-5.15.7-py39h36db9bd_0.conda
-  version: 5.15.7
+  url: https://conda.anaconda.org/conda-forge/linux-64/pyside2-5.15.8-py39hc68acd0_2.conda
+  version: 5.15.8
 - category: apps
   dependencies:
     libgcc-ng: '>=12'
@@ -9743,7 +9743,7 @@ package:
   version: 5.15.7
 - category: main
   dependencies:
-    libclang13: '>=14.0.6'
+    libclang13: '>=15.0.6'
     libcxx: '>=14.0.6'
     libxml2: '>=2.10.3,<2.11.0a0'
     libxslt: '>=1.1.37,<2.0a0'
@@ -9751,14 +9751,14 @@ package:
     python_abi: 3.9.* *_cp39
     qt-main: '>=5.15.6,<5.16.0a0'
   hash:
-    md5: cf23ca23aaa22d3396feb0541ab681a2
-    sha256: 678fa7c79e289f152dba6548e484b3719ffbaee4f9230b9b7b3638f86d24d4b9
+    md5: 8914b96abb5089422b6bb1267f657669
+    sha256: 1f1f765fa932959bb2eb3d292cb07cff011bed319e718822b116d3fef66df941
   manager: conda
   name: pyside2
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyside2-5.15.7-py39heedc0ee_0.conda
-  version: 5.15.7
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyside2-5.15.8-py39heedc0ee_2.conda
+  version: 5.15.8
 - category: main
   dependencies:
     gst-plugins-base: '>=1.22.0,<1.23.0a0'
@@ -11038,6 +11038,21 @@ package:
     libzlib: '>=1.2.13,<1.3.0a0'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
+    vc14_runtime: '>=14.29.30139'
+  hash:
+    md5: c2e1def32a19610ac26db453501760b6
+    sha256: 0be9e57f50f33c813df6e1ad65b8bf8ccf1c23f734785236146b56b9078e7c7b
+  manager: conda
+  name: libclang13
+  optional: false
+  platform: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/libclang13-15.0.7-default_h77d9078_2.conda
+  version: 15.0.7
+- category: main
+  dependencies:
+    libzlib: '>=1.2.13,<1.3.0a0'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
     md5: ab6febdb2dbd9c00803609079db4de71
@@ -11685,20 +11700,20 @@ package:
   version: 1.9.0
 - category: main
   dependencies:
+    libclang13: 15.0.7 default_h77d9078_2
     libzlib: '>=1.2.13,<1.3.0a0'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-    zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 163cb4cd07d14d30e1d4c601c510ca4a
-    sha256: 3ab568c5eadb0d59b769e26f4980a9ca97317f497338b4c91cd928a3d3f53394
+    md5: 70188b1b3e0b1716405adab9050894d1
+    sha256: af265f9358565c650ec3f09557d47c6ced441164d10cd500b74651513f61be46
   manager: conda
-  name: libclang13
+  name: libclang
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libclang13-16.0.3-default_h45d3cf4_1.conda
-  version: 16.0.3
+  url: https://conda.anaconda.org/conda-forge/win-64/libclang-15.0.7-default_h77d9078_2.conda
+  version: 15.0.7
 - category: main
   dependencies:
     krb5: '>=1.20.1,<1.21.0a0'
@@ -12929,24 +12944,6 @@ package:
   platform: win-64
   url: https://conda.anaconda.org/conda-forge/win-64/lcms2-2.15-h3e3b177_1.conda
   version: '2.15'
-- category: main
-  dependencies:
-    libclang13: 16.0.3 default_h45d3cf4_1
-    libxml2: '>=2.10.4,<2.11.0a0'
-    libzlib: '>=1.2.13,<1.3.0a0'
-    ucrt: '>=10.0.20348.0'
-    vc: '>=14.2,<15'
-    vc14_runtime: '>=14.29.30139'
-    zstd: '>=1.5.2,<1.6.0a0'
-  hash:
-    md5: e4290f800ec6b20725c47bf03a4b0b0d
-    sha256: 99490f98e1120b72525d308e93766b3599fd8615fdc8a6879714b4bb87e8c89e
-  manager: conda
-  name: libclang
-  optional: false
-  platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libclang-16.0.3-default_h8b4101f_1.conda
-  version: 16.0.3
 - category: apps
   dependencies:
     boost-cpp: '>=1.78.0,<1.78.1.0a0'
@@ -14100,16 +14097,16 @@ package:
   version: 1.23.5
 - category: main
   dependencies:
-    gst-plugins-base: '>=1.22.0,<1.23.0a0'
-    gstreamer: '>=1.22.0,<1.23.0a0'
+    gst-plugins-base: '>=1.22.3,<1.23.0a0'
+    gstreamer: '>=1.22.3,<1.23.0a0'
     icu: '>=72.1,<73.0a0'
     krb5: '>=1.20.1,<1.21.0a0'
-    libclang: '>=16.0.3,<17.0a0'
-    libclang13: '>=16.0.3'
-    libglib: '>=2.76.2,<3.0a0'
+    libclang: '>=15.0.7,<16.0a0'
+    libclang13: '>=15.0.7'
+    libglib: '>=2.76.3,<3.0a0'
     libjpeg-turbo: '>=2.1.5.1,<3.0a0'
     libpng: '>=1.6.39,<1.7.0a0'
-    libsqlite: '>=3.41.2,<4.0a0'
+    libsqlite: '>=3.42.0,<4.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.0,<4.0a0'
     ucrt: '>=10.0.20348.0'
@@ -14117,13 +14114,13 @@ package:
     vc14_runtime: '>=14.29.30139'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 5af5618d771743567cc9cc93a72da71d
-    sha256: 2a77102cf8c7512e0286a78f340c17c53310afb66b3473282551e8dd64585405
+    md5: b00e4814feb5fa92b864ef031130c2cf
+    sha256: 9f638055e92c8faf4d52511a14f01accc801b293e70565d284f2522d94ec71b0
   manager: conda
   name: qt-main
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/qt-main-5.15.8-h2c8576c_11.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/qt-main-5.15.8-h2c8576c_13.conda
   version: 5.15.8
 - category: core
   dependencies:
@@ -14369,7 +14366,7 @@ package:
   version: 5.15.7
 - category: main
   dependencies:
-    libclang13: '>=14.0.6'
+    libclang13: '>=15.0.6'
     libxml2: '>=2.10.3,<2.11.0a0'
     libxslt: '>=1.1.37,<2.0a0'
     python: '>=3.9,<3.10.0a0'
@@ -14379,14 +14376,14 @@ package:
     vc: '>=14.2,<15'
     vs2015_runtime: '>=14.29.30139'
   hash:
-    md5: 8d1d89f8f2a2f175d02670db82b822c9
-    sha256: 5d22fb5bbc571095af8982d05f08468c519f773295882762a8bbedc37e16f748
+    md5: 880a9576f0b6e296c39c23e8df9d3af5
+    sha256: cd13f090ca22e1b075b0b84d91f69d9ddb0b309cf1dd41954d834e3ebd3d36ca
   manager: conda
   name: pyside2
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/pyside2-5.15.7-py39h56cbfbc_0.conda
-  version: 5.15.7
+  url: https://conda.anaconda.org/conda-forge/win-64/pyside2-5.15.8-py39h56cbfbc_2.conda
+  version: 5.15.8
 - category: apps
   dependencies:
     numpy: '>=1.20.3,<2.0a0'
