@@ -102,6 +102,7 @@ class InversionBaseParams(BaseParams):
         self._colorbar = None
         self._store_sensitivities: str = None
         self._out_group = None
+        self._ga_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
         self._documentation: str = ""
@@ -766,6 +767,15 @@ class InversionBaseParams(BaseParams):
     def out_group(self, val):
         self.setter_validator("out_group", val)
         self.update_group_options()
+
+    @property
+    def ga_group(self) -> str:
+        """GA group name."""
+        return self._ga_group
+
+    @ga_group.setter
+    def ga_group(self, val):
+        self.setter_validator("ga_group", val)
 
     @property
     def distributed_workers(self):

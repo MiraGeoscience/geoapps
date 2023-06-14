@@ -49,6 +49,13 @@ class InversionApp(BaseDashApplication):
     def __init__(self):
         super().__init__()
 
+        if getattr(self.params, "_out_group", None) is not None:
+            self.params._ga_group = self.params.out_group.name
+        else:
+            self.params._ga_group = (
+                self.params.inversion_type.capitalize() + "Inversion"
+            )
+
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
         self.app = JupyterDash(
@@ -253,7 +260,7 @@ class InversionApp(BaseDashApplication):
             Output(component_id="store_sensitivities", component_property="value"),
             Output(component_id="tile_spatial", component_property="value"),
             # Output
-            Output(component_id="out_group", component_property="value"),
+            Output(component_id="ga_group", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
             Output(component_id="forward_only", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
@@ -1422,7 +1429,7 @@ class InversionApp(BaseDashApplication):
         n_cpu: int,
         store_sensitivities: str,
         tile_spatial: int,
-        out_group: str,
+        ga_group: str,
         monitoring_directory: str,
         inducing_field_strength: float = None,
         inducing_field_inclination: float = None,
@@ -1495,7 +1502,7 @@ class InversionApp(BaseDashApplication):
         :param n_cpu: Number of CPUs.
         :param store_sensitivities: Use disk on a fast local SSD, and RAM elsewhere.
         :param tile_spatial: Number of tiles.
-        :param out_group: GA group name.
+        :param ga_group: GA group name.
         :param monitoring_directory: Export path.
         :param inducing_field_strength: (Magnetic specific.) Inducing field strength (nT).
         :param inducing_field_inclination: (Magnetic specific.) Inducing field inclination.
@@ -1561,7 +1568,7 @@ class InversionApp(BaseDashApplication):
             "n_cpu": n_cpu,
             "store_sensitivities": store_sensitivities,
             "tile_spatial": tile_spatial,
-            "out_group": out_group,
+            "ga_group": ga_group,
             "monitoring_directory": monitoring_directory,
             "inducing_field_strength": inducing_field_strength,
             "inducing_field_inclination": inducing_field_inclination,
@@ -1586,7 +1593,7 @@ class InversionApp(BaseDashApplication):
             monitoring_directory = Path(self.workspace.h5file).resolve().parent
 
         # Create a new workspace and copy objects into it
-        temp_geoh5 = f"{out_group}_{time():.0f}.geoh5"
+        temp_geoh5 = f"{ga_group}_{time():.0f}.geoh5"
         ws, live_link = BaseApplication.get_output_workspace(
             live_link, monitoring_directory, temp_geoh5
         )

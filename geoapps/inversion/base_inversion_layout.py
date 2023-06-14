@@ -1068,7 +1068,7 @@ output_layout = html.Div(
                     "Save as:", style={"display": "inline-block", "width": "10%"}
                 ),
                 dcc.Input(
-                    id="out_group",
+                    id="ga_group",
                     style={"display": "inline-block", "width": "10%"},
                 ),
             ]

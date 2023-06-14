@@ -107,7 +107,7 @@ class GravityApp(InversionApp):
             State(component_id="store_sensitivities", component_property="value"),
             State(component_id="tile_spatial", component_property="value"),
             # Output
-            State(component_id="out_group", component_property="value"),
+            State(component_id="ga_group", component_property="value"),
             State(component_id="monitoring_directory", component_property="value"),
             prevent_initial_call=True,
         )(self.write_trigger)

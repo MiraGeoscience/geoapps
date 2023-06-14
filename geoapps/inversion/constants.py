@@ -524,6 +524,7 @@ default_ui_json = {
     },
     "fix_aspect_ratio": True,
     "colorbar": False,
+    "ga_group": None,
     "max_ram": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -550,6 +551,7 @@ validations = {
     "norm_y": {"types": [int, float]},
     "norm_z": {"types": [int, float]},
     "distributed_workers": {"types": [str, type(None)]},
+    "ga_group": {"types": [str, type(None)]},
     "version": {
         "types": [
             str,
