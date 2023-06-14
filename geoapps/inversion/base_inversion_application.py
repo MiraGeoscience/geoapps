@@ -1335,10 +1335,6 @@ class InversionApp(BaseDashApplication):
         )
 
         # Move radar data to current workspace
-        print("radar")
-        print(type(update_dict["receivers_radar_drape"]))
-        print(update_dict["receivers_radar_drape"])
-        print(is_uuid(update_dict["receivers_radar_drape"]))
         if is_uuid(update_dict["receivers_radar_drape"]):
             param_dict["receivers_radar_drape"] = self.workspace.get_entity(
                 uuid.UUID(update_dict["receivers_radar_drape"])
