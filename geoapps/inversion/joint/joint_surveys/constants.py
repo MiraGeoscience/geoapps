@@ -63,7 +63,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "JointInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -89,7 +89,7 @@ forward_defaults = {
     "n_cpu": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "JointForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -188,7 +188,6 @@ default_ui_json = {
         "enabled": False,
         "value": "",
     },
-    "out_group": {"label": "Results group name", "value": "Joint Surveys Inversion"},
     "tile_spatial": None,
 }
 

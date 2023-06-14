@@ -124,7 +124,7 @@ def test_magnetic_vector_run(
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         # Re-open the workspace and get iterations
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tmi
         if pytest:

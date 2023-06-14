@@ -107,7 +107,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagneticSusceptibilityInversion",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -167,7 +167,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "MagneticScalarForward",
+    "out_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -675,10 +675,6 @@ default_ui_json = {
         "optional": True,
         "value": 1.0,
         "enabled": False,
-    },
-    "out_group": {
-        "label": "Results group name",
-        "value": "MagneticSusceptibilityInversion",
     },
 }
 
