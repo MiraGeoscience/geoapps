@@ -100,11 +100,7 @@ class InversionApp(PlotSelection2D):
     _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, **kwargs):
-        if "plot_result" in kwargs:
-            self.plot_result = kwargs["plot_result"]
-            kwargs.pop("plot_result")
-
+    def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
@@ -337,7 +333,7 @@ class InversionApp(PlotSelection2D):
         self._detrend_type = None
         self._detrend_order = None
         self._initial_beta_options = None
-        super().__init__(**self.defaults)
+        super().__init__(plot_result=plot_result, **self.defaults)
 
         self.write.on_click(self.write_trigger)
 
@@ -786,7 +782,12 @@ class InversionApp(PlotSelection2D):
         else:
             data_type_list = ["chargeability"]
 
-        self.ga_group_name.value = self.params.defaults["out_group"]
+        if getattr(self.params, "_out_group", None) is not None:
+            self.ga_group_name.value = self.params.out_group.name
+        else:
+            self.ga_group_name.value = (
+                self.params.inversion_type.capitalize() + "Inversion"
+            )
 
         flag = self.inversion_type.value
         self._reference_model_group.units = inversion_defaults()["units"][flag]

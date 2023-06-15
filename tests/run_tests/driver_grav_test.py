@@ -111,7 +111,7 @@ def test_gravity_run(
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
 
         residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
@@ -126,6 +126,9 @@ def test_gravity_run(
             np.isnan(predicted.values)
         ), "Predicted data should not have nans."
         output["data"] = orig_gz
+
+        assert len(run_ws.get_entity("SimPEG.log")) == 2
+
         if pytest:
             check_target(output, target_run)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)

@@ -148,7 +148,7 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tyz_real_1
         if pytest:
