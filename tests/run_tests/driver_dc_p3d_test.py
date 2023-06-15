@@ -88,9 +88,9 @@ def test_dc_p3d_run(
     max_iterations=1,
     pytest=True,
 ):
-    workpath = tmp_path / "inversion_test.geoh5"
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = tmp_path.parent / "test_dc_p3d_fwr_run0" / "inversion_test.geoh5"
+        workpath = tmp_path.parent / "test_dc_p3d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
