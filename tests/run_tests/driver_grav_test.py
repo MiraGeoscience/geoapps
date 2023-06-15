@@ -126,6 +126,9 @@ def test_gravity_run(
             np.isnan(predicted.values)
         ), "Predicted data should not have nans."
         output["data"] = orig_gz
+
+        assert len(run_ws.get_entity("SimPEG.log")) == 2
+
         if pytest:
             check_target(output, target_run)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
