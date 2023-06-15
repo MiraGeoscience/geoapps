@@ -750,7 +750,7 @@ regularization = html.Div(
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(
-                            id="alpha_x",
+                            id="length_scale_x",
                             type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
@@ -768,7 +768,7 @@ regularization = html.Div(
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(
-                            id="alpha_y",
+                            id="length_scale_y",
                             type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
@@ -786,7 +786,7 @@ regularization = html.Div(
                             style={"display": "inline-block", "width": "30%"},
                         ),
                         dcc.Input(
-                            id="alpha_z",
+                            id="length_scale_z",
                             type="number",
                             style={"display": "inline-block", "width": "30%"},
                         ),
