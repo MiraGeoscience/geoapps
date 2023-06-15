@@ -258,11 +258,6 @@ class InversionDriver(BaseDriver):
             dpred = self.inversion.invProb.get_dpred(
                 self.models.starting, compute_J=False
             )
-            SaveIterationGeoh5Factory(self.params).build(
-                inversion_object=self.inversion_data,
-                sorting=np.argsort(np.hstack(self.sorting)),
-                ordering=self.ordering,
-            ).save_components(0, dpred)
         else:
             # Run the inversion
             self.start_inversion_message()
@@ -271,6 +266,22 @@ class InversionDriver(BaseDriver):
         self.logger.end()
         sys.stdout = self.logger.terminal
         self.logger.log.close()
+
+        if self.params.forward_only:
+            directive = SaveIterationGeoh5Factory(self.params).build(
+                inversion_object=self.inversion_data,
+                sorting=np.argsort(np.hstack(self.sorting)),
+                ordering=self.ordering,
+            )
+            directive.save_components(0, dpred)
+            directive.save_log()
+        else:
+            for directive in self.directives:
+                if (
+                    isinstance(directive, directives.SaveIterationsGeoH5)
+                    and directive.save_objective_function
+                ):
+                    directive.save_log()
 
     def start_inversion_message(self):
         # SimPEG reports half phi_d, so we scale to match
