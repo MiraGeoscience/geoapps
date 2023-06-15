@@ -53,7 +53,7 @@ class InversionApp(BaseDashApplication):
             self.params._ga_group = self.params.out_group.name
         else:
             self.params._ga_group = (
-                self.params.inversion_type.capitalize().replace(" ", "") + "Inversion"
+                self.params.inversion_type.title().replace(" ", "") + "Inversion"
             )
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]

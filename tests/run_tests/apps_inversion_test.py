@@ -39,7 +39,7 @@ from .. import PROJECT, PROJECT_DCIP
 
 def test_mag_inversion(tmp_path: Path):
     """Tests the jupyter application for mag-mvi"""
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / "mag_inversion.geoh5"
 
     with Workspace(PROJECT) as ws:
         with Workspace(temp_workspace) as new_geoh5:
