@@ -53,7 +53,7 @@ class InversionApp(BaseDashApplication):
             self.params._ga_group = self.params.out_group.name
         else:
             self.params._ga_group = (
-                self.params.inversion_type.capitalize() + "Inversion"
+                self.params.inversion_type.capitalize().replace(" ", "") + "Inversion"
             )
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -235,9 +235,9 @@ class InversionApp(BaseDashApplication):
             Output(component_id="mesh", component_property="value"),
             # Inversion - regularization
             Output(component_id="alpha_s", component_property="value"),
-            Output(component_id="alpha_x", component_property="value"),
-            Output(component_id="alpha_y", component_property="value"),
-            Output(component_id="alpha_z", component_property="value"),
+            Output(component_id="length_scale_x", component_property="value"),
+            Output(component_id="length_scale_y", component_property="value"),
+            Output(component_id="length_scale_z", component_property="value"),
             Output(component_id="s_norm", component_property="value"),
             Output(component_id="x_norm", component_property="value"),
             Output(component_id="y_norm", component_property="value"),
@@ -1402,9 +1402,9 @@ class InversionApp(BaseDashApplication):
         reference_model_data: str,
         reference_model_const: float,
         alpha_s: float,
-        alpha_x: float,
-        alpha_y: float,
-        alpha_z: float,
+        length_scale_x: float,
+        length_scale_y: float,
+        length_scale_z: float,
         s_norm: float,
         x_norm: float,
         y_norm: float,
@@ -1475,9 +1475,9 @@ class InversionApp(BaseDashApplication):
         :param reference_model_data: Reference model data uuid.
         :param reference_model_const: Reference model constant uuid.
         :param alpha_s: Scaling for reference model.
-        :param alpha_x: Scaling for EW gradient.
-        :param alpha_y: Scaling for NS gradient.
-        :param alpha_z: Scaling for vertical gradient.
+        :param length_scale_x: Scaling for EW gradient.
+        :param length_scale_y: Scaling for NS gradient.
+        :param length_scale_z: Scaling for vertical gradient.
         :param s_norm: Lp-norm for reference model.
         :param x_norm: Lp-norm for EW gradient.
         :param y_norm: Lp-norm for NS gradient.
@@ -1547,9 +1547,9 @@ class InversionApp(BaseDashApplication):
             "receivers_radar_drape": receivers_radar_drape,
             "forward_only": forward_only,
             "alpha_s": alpha_s,
-            "alpha_x": alpha_x,
-            "alpha_y": alpha_y,
-            "alpha_z": alpha_z,
+            "length_scale_x": length_scale_x,
+            "length_scale_y": length_scale_y,
+            "length_scale_z": length_scale_z,
             "s_norm": s_norm,
             "x_norm": x_norm,
             "y_norm": y_norm,

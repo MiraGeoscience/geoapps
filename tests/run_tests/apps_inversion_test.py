@@ -112,9 +112,9 @@ def test_mag_inversion(tmp_path: Path):
                 reference_model_data="{44822654-b6ae-45b0-8886-2d845f80f422}",
                 reference_model_const=None,
                 alpha_s=app.params.alpha_s,
-                alpha_x=app.params.alpha_x,
-                alpha_y=app.params.alpha_y,
-                alpha_z=app.params.alpha_z,
+                length_scale_x=app.params.length_scale_x,
+                length_scale_y=app.params.length_scale_y,
+                length_scale_z=app.params.length_scale_z,
                 s_norm=app.params.s_norm,
                 x_norm=app.params.x_norm,
                 y_norm=app.params.y_norm,
@@ -139,7 +139,7 @@ def test_mag_inversion(tmp_path: Path):
                 n_cpu=app.params.n_cpu,
                 store_sensitivities=app.params.store_sensitivities,
                 tile_spatial=app.params.tile_spatial,
-                out_group=app.params.out_group,
+                ga_group=app.params.ga_group,
                 monitoring_directory=monitoring_directory,
                 inducing_field_strength=app.params.inducing_field_strength,
                 inducing_field_inclination=app.params.inducing_field_inclination,
@@ -158,7 +158,7 @@ def test_mag_inversion(tmp_path: Path):
                 reference_declination_const=None,
             )
 
-    filename = next(tmp_path.glob("VectorInversion_*.geoh5"))
+    filename = next(tmp_path.glob("MagneticVectorInversion_*.geoh5"))
     with Workspace(filename) as workspace:
         assert len(workspace.get_entity(app.params.data_object)) == 1
         assert len(workspace.get_entity(app.params.mesh)) == 1

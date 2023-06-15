@@ -89,9 +89,9 @@ class MagneticScalarApp(InversionApp):
             State(component_id="reference_model_const", component_property="value"),
             # Regularization
             State(component_id="alpha_s", component_property="value"),
-            State(component_id="alpha_x", component_property="value"),
-            State(component_id="alpha_y", component_property="value"),
-            State(component_id="alpha_z", component_property="value"),
+            State(component_id="length_scale_x", component_property="value"),
+            State(component_id="length_scale_y", component_property="value"),
+            State(component_id="length_scale_xz", component_property="value"),
             State(component_id="s_norm", component_property="value"),
             State(component_id="x_norm", component_property="value"),
             State(component_id="y_norm", component_property="value"),
