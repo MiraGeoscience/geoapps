@@ -1285,15 +1285,15 @@ package:
   dependencies:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-    openssl: '>=3.1.0,<4.0a0'
+    openssl: '>=3.1.1,<4.0a0'
   hash:
-    md5: cf4a8f520fdad3a63bb2bce74576cd2d
-    sha256: a7cae69838df2f7b2f094cfa8e21f73102cbcedd17e08d07197af5529c11ab02
+    md5: 3cbb1d20331e8b1f170de5cef410cd80
+    sha256: 783a6a260d538881ac2ac8487d3562c85158981440e9fd188566a6f1bdd15577
   manager: conda
   name: mysql-common
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-common-8.0.32-hf1915f5_2.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-common-8.0.32-hf1915f5_3.conda
   version: 8.0.32
 - category: main
   dependencies:
@@ -1590,14 +1590,14 @@ package:
     xz: '>=5.2.6,<6.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 4e5ee4b062c21519efbee7e2ae608748
-    sha256: caacb23e1b95fbdd8115be69228f9c82068ed87bf57f055027e31d093ae6a1a2
+    md5: 8ad377fb60abab446a9f02c62b3c2190
+    sha256: 920943ad46869938bd070ccd4c0117594e07538bc6b27b75462594c67b6f215d
   manager: conda
   name: libtiff
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/libtiff-4.5.0-ha587672_6.conda
-  version: 4.5.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/libtiff-4.5.1-h8b53f26_0.conda
+  version: 4.5.1
 - category: main
   dependencies:
     libgcc-ng: '>=12'
@@ -1645,17 +1645,17 @@ package:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
-    mysql-common: 8.0.32 hf1915f5_2
-    openssl: '>=3.1.0,<4.0a0'
+    mysql-common: 8.0.32 hf1915f5_3
+    openssl: '>=3.1.1,<4.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 20b4708cd04bdc8138d03314ddd97885
-    sha256: 4b1178a7b21b634d417684a3dc96816ae5fe277ade5008c1c634a41d0dd614f6
+    md5: 247055daf6d75d72ac0e94de151e8ab0
+    sha256: e7972e0544ec399665c634dcaddab1b60260d5573baa5cdef5f1d8929e728770
   manager: conda
   name: mysql-libs
   optional: false
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-libs-8.0.32-hca2cd23_2.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-libs-8.0.32-hca2cd23_3.conda
   version: 8.0.32
 - category: main
   dependencies:
@@ -4377,14 +4377,14 @@ package:
     python_abi: 3.10.* *_cp310
     traitlets: '>=5.3'
   hash:
-    md5: 49428e10aae69baa6b34cb7e275f1ae9
-    sha256: e683c10d89530e067e3be791d8a232c0a84dd3c8790657b0f815f798b08bdd1c
+    md5: 63264f5a6dd5483475968016b614f525
+    sha256: ef2758f0f0ee5e31df2122280eeb9aa2a44abffe2b583654ed0c343d65bb7f3e
   manager: conda
   name: jupyter_core
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/jupyter_core-5.3.0-py310hff52083_0.conda
-  version: 5.3.0
+  url: https://conda.anaconda.org/conda-forge/linux-64/jupyter_core-5.3.1-py310hff52083_0.conda
+  version: 5.3.1
 - category: main
   dependencies:
     libblas: 3.9.0 16_linux64_mkl
@@ -4651,14 +4651,14 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: 7bf9d8c765b6b04882c719509652c6d6
-    sha256: 670b736e895ed1b37187e0cbc73fd528414076f370068975135db2420af8663d
+    md5: 684399f9ddc0b9d6f3b6164f6107098e
+    sha256: 709dae7fbfdb1ab7aeeb060bae9095e5a18bd3849fd3afbf618a7be3a4117e76
   manager: conda
   name: contourpy
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.0.7-py310hdf3cbec_0.conda
-  version: 1.0.7
+  url: https://conda.anaconda.org/conda-forge/linux-64/contourpy-1.1.0-py310hd41b1e2_0.conda
+  version: 1.1.0
 - category: apps
   dependencies:
     hdf5: '>=1.14.0,<1.14.1.0a0'
@@ -4802,13 +4802,13 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: 8156d69b54e3db50465485b28847487e
-    sha256: a180cfa7883c7ce0e6ad4f8b2744d9c639c1c129e068f0553326e206fea92818
+    md5: 1b20d0aed2e180809ba7df2983834da2
+    sha256: 035e35a6d9454b1661709e176a228176fdd80cc69638bd73a99976f050a285bf
   manager: conda
   name: numba
   optional: true
   platform: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/numba-0.57.0-py310h0f6aa51_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/numba-0.57.0-py310h0f6aa51_2.conda
   version: 0.57.0
 - category: core
   dependencies:
@@ -6623,7 +6623,7 @@ package:
 - category: main
   dependencies:
     lerc: '>=4.0.0,<5.0a0'
-    libcxx: '>=14.0.6'
+    libcxx: '>=15.0.7'
     libdeflate: '>=1.18,<1.19.0a0'
     libjpeg-turbo: '>=2.1.5.1,<3.0a0'
     libwebp-base: '>=1.3.0,<2.0a0'
@@ -6631,14 +6631,14 @@ package:
     xz: '>=5.2.6,<6.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 800b810c1aa3eb4a08106698441871bb
-    sha256: ef38081f3523bb5c1c0bd1aaceb3137f2201ae9400cd888575f798adf03e46d6
+    md5: 56523ed556e3a44c0fd55bcf17045892
+    sha256: 0526690c890b53419e6bbbe17dfc456789897ce9d7d79db3c4ea6568848bf6d0
   manager: conda
   name: libtiff
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/libtiff-4.5.0-hedf67fa_6.conda
-  version: 4.5.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/libtiff-4.5.1-hf955e92_0.conda
+  version: 4.5.1
 - category: main
   dependencies:
     libxml2: '>=2.10.3,<2.11.0a0'
@@ -6681,15 +6681,15 @@ package:
 - category: main
   dependencies:
     libcxx: '>=15.0.7'
-    openssl: '>=3.1.0,<4.0a0'
+    openssl: '>=3.1.1,<4.0a0'
   hash:
-    md5: 38b224e417c1d468fd5b6dcfde230df1
-    sha256: c1b149a4773893ca21140ecd57a25f816debba4c430d382567970c7e0903a056
+    md5: 70ef5000aaac74c6034e005e50a11ed9
+    sha256: e911acc3552f0c75b5b7d1d916871702d61e939333beb9b6cc98822161ada978
   manager: conda
   name: mysql-common
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-common-8.0.32-hc6116ba_2.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-common-8.0.32-hc6116ba_3.conda
   version: 8.0.32
 - category: main
   dependencies:
@@ -7347,17 +7347,17 @@ package:
   dependencies:
     libcxx: '>=15.0.7'
     libzlib: '>=1.2.13,<1.3.0a0'
-    mysql-common: 8.0.32 hc6116ba_2
-    openssl: '>=3.1.0,<4.0a0'
+    mysql-common: 8.0.32 hc6116ba_3
+    openssl: '>=3.1.1,<4.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: acbd0e3f6c018725d27832bcfb82c17f
-    sha256: f14dfcfb543534eb1abf7c78d9e4918638a9a0abc47c951f6d21f980bb8f8213
+    md5: 03ae9b907eab6466ad6f705891b9fd4c
+    sha256: c45d592049e7cc9e4aca9007bea5bcec56a076e9ca5fae9842a60ec17136a3c9
   manager: conda
   name: mysql-libs
   optional: false
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-libs-8.0.32-haa61052_2.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-libs-8.0.32-haa61052_3.conda
   version: 8.0.32
 - category: apps
   dependencies:
@@ -9031,19 +9031,19 @@ package:
   version: 21.3.0
 - category: core
   dependencies:
-    libcxx: '>=14.0.6'
+    libcxx: '>=15.0.7'
     numpy: '>=1.16'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: bc714cc57ec6422105ed991167987a9d
-    sha256: 81cc479e4411d5833ed5798145c64490ccee6ad998c0712e57686d369ce90ba7
+    md5: 0cfd4a8d0f1d785675d5e41e17c8b122
+    sha256: 24d649ccfeeb6b0ffff6fb315a8794ccedba2b0d6fbc8a3f80aeb99cdbad7d00
   manager: conda
   name: contourpy
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/contourpy-1.0.7-py310ha23aa8a_0.conda
-  version: 1.0.7
+  url: https://conda.anaconda.org/conda-forge/osx-64/contourpy-1.1.0-py310h88cfcbd_0.conda
+  version: 1.1.0
 - category: apps
   dependencies:
     flask: '>=1.0.4'
@@ -9186,14 +9186,14 @@ package:
     python_abi: 3.10.* *_cp310
     traitlets: '>=5.3'
   hash:
-    md5: f73c532855154e9f4abcd5b9ce2a1860
-    sha256: fd7d66d638e7c50b37fbea3ac0ae59e3714b9db0e0d3080d2c496f2ea5b520af
+    md5: 2df6b800f29e805b1453a5a32981b873
+    sha256: 181e309a5731f376af89574a3328779a61144e064a30eabaf32f5a81261920f1
   manager: conda
   name: jupyter_core
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/jupyter_core-5.3.0-py310h2ec42d9_0.conda
-  version: 5.3.0
+  url: https://conda.anaconda.org/conda-forge/osx-64/jupyter_core-5.3.1-py310h2ec42d9_0.conda
+  version: 5.3.1
 - category: apps
   dependencies:
     blosc: '>=1.21.2,<2.0a0'
@@ -9247,19 +9247,19 @@ package:
 - category: core
   dependencies:
     libcxx: '>=15.0.7'
-    llvm-openmp: '>=16.0.4'
+    llvm-openmp: '>=16.0.5'
     llvmlite: '>=0.40.0,<0.41.0a0'
     numpy: '>=1.21.6,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.* *_cp310
   hash:
-    md5: c221a1b64a432c6d96932f230241ae22
-    sha256: f15f0320e9b8b8dfe8b1fae38011ee2598f0265d3e66523d28dea69485d44bd8
+    md5: 03141bd51d8edf9423c26a27cc61438f
+    sha256: adf7797fe9a94a34cb561c07d793535013ce28e0cfb8411613d03f10223a2942
   manager: conda
   name: numba
   optional: true
   platform: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/numba-0.57.0-py310he09a53b_1.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/numba-0.57.0-py310he09a53b_2.conda
   version: 0.57.0
 - category: core
   dependencies:
@@ -11763,18 +11763,18 @@ package:
     libzlib: '>=1.2.13,<1.3.0a0'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
+    vc14_runtime: '>=14.29.30139'
     xz: '>=5.2.6,<6.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
   hash:
-    md5: 12628df645fcf0f74922138858724831
-    sha256: 854c90084d43a8c5e3a41c0e698ee579257d8e3eacbed73b61728501e4f6bcc5
+    md5: cc46fe88f82f9c98bd6858b3f6efb4e0
+    sha256: 688e813d61e0d5dff284ef95c53b5c0acf950bbc1df97def4a4a33bbf1bb2fab
   manager: conda
   name: libtiff
   optional: false
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/libtiff-4.5.0-h6c8260b_6.conda
-  version: 4.5.0
+  url: https://conda.anaconda.org/conda-forge/win-64/libtiff-4.5.1-h6c8260b_0.conda
+  version: 4.5.1
 - category: main
   dependencies:
     libxml2: '>=2.10.3,<2.11.0a0'
@@ -13727,14 +13727,14 @@ package:
     pywin32: '>=300'
     traitlets: '>=5.3'
   hash:
-    md5: 637134be9eeb27207be68efa21e841cc
-    sha256: f0795c8d06583a6bf38c6a7105b11d1314775d2e322d742029f2faee1dfe4672
+    md5: 39614170bdabdaa7531cb1dc2846c37c
+    sha256: c3033cfa560405eefae24a340ee4bf8ad68b6ce965e286532625875b6da5e9a4
   manager: conda
   name: jupyter_core
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/jupyter_core-5.3.0-py310h5588dad_0.conda
-  version: 5.3.0
+  url: https://conda.anaconda.org/conda-forge/win-64/jupyter_core-5.3.1-py310h5588dad_0.conda
+  version: 5.3.1
 - category: main
   dependencies:
     mkl: 2022.1.0 h6a75c08_874
@@ -14088,16 +14088,16 @@ package:
     python_abi: 3.10.* *_cp310
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
+    vc14_runtime: '>=14.29.30139'
   hash:
-    md5: 357f1ccd3fa2bbf3661146467f7afd44
-    sha256: c2d32b16fedb41b184729fd87c5b61f69f6a4e5f331955e231b83d30aac99a61
+    md5: 4079a644cfc3b1fbd72571dc0a87ea33
+    sha256: a91440fb9f7a0e1e08ab1f7aca87c62e53b0ebdd0de4639990acb1427c379684
   manager: conda
   name: contourpy
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/contourpy-1.0.7-py310h232114e_0.conda
-  version: 1.0.7
+  url: https://conda.anaconda.org/conda-forge/win-64/contourpy-1.1.0-py310h232114e_0.conda
+  version: 1.1.0
 - category: apps
   dependencies:
     hdf5: '>=1.14.0,<1.14.1.0a0'
@@ -14258,13 +14258,13 @@ package:
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
   hash:
-    md5: 61b55b6b3d49da6ef7795a6276761a65
-    sha256: 7b4780214d9e4f6548b58eea76f154c0df0dbe866b05b5a688feb1dea97531a7
+    md5: c4c0e8acfee0e400c02fa7dcb30b9b06
+    sha256: 651f7708293d2c31dd59f59cd31b2f4ed9b3fab7db7830f5ce9cc24f301acb34
   manager: conda
   name: numba
   optional: true
   platform: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/numba-0.57.0-py310h19bcfe9_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/numba-0.57.0-py310h19bcfe9_2.conda
   version: 0.57.0
 - category: core
   dependencies:
