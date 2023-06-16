@@ -6,6 +6,10 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
+from pathlib import Path
+
 from discretize import TreeMesh
 from geoh5py.workspace import Workspace
 
@@ -13,7 +17,6 @@ from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
     InversionTopography,
-    InversionWindow,
 )
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
@@ -31,16 +34,12 @@ def setup_params(tmp):
     geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
-    geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
 
 
-def test_initialize(tmp_path):
+def test_initialize(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    inversion_window = InversionWindow(ws, params)
-    inversion_data = InversionData(ws, params, inversion_window.window)
-    inversion_topography = InversionTopography(
-        ws, params, inversion_data, inversion_window.window
-    )
+    inversion_data = InversionData(ws, params)
+    inversion_topography = InversionTopography(ws, params)
     inversion_mesh = InversionMesh(ws, params, inversion_data, inversion_topography)
     assert isinstance(inversion_mesh.mesh, TreeMesh)

@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -24,15 +26,15 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.00797,
-    "phi_d": 5.524,
-    "phi_m": 0.1174,
+    "phi_d": 4.667,
+    "phi_m": 0.1133,
 }
 
 np.random.seed(0)
 
 
 def test_ip_3d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=4,
     n_lines=3,
     refinement=(4, 6),
@@ -63,18 +65,18 @@ def test_ip_3d_fwr_run(
     fwr_driver = InducedPolarization3DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_ip_3d_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
     n_lines=3,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_ip_3d_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_ip_3d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_ip")[0]
@@ -110,12 +112,10 @@ def test_ip_3d_run(
             coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = InducedPolarization3DDriver.start(
-        os.path.join(tmp_path, "Inv_run.ui.json")
-    )
+    driver = InducedPolarization3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = potential.values
@@ -128,14 +128,14 @@ def test_ip_3d_run(
 if __name__ == "__main__":
     # Full run
     mstart = test_ip_3d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
     m_rec = test_ip_3d_run(
-        "./",
+        Path("./"),
         n_lines=5,
         max_iterations=15,
         pytest=False,

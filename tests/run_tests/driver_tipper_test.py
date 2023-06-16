@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -19,16 +21,16 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.00877,
-    "phi_d": 2.396,
-    "phi_m": 0.3094,
+    "data_norm": 0.008731,
+    "phi_d": 2.213,
+    "phi_m": 0.1786,
 }
 
 np.random.seed(0)
 
 
 def test_tipper_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -60,16 +62,16 @@ def test_tipper_fwr_run(
         tyz_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = TipperDriver(params, warmstart=False)
+    fwr_driver = TipperDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
-def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_tipper_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_tipper_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
@@ -137,17 +139,16 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             upper_bound=0.75,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e4,
-            sens_wts_threshold=60.0,
             prctile=100,
             store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = TipperDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = TipperDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tyz_real_1
         if pytest:
@@ -161,10 +162,10 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_tipper_fwr_run("./", n_grid_points=8, refinement=(4, 8))
+    mstart = test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
 
     m_rec = test_tipper_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

@@ -231,7 +231,9 @@ class ObjectDataSelection(BaseApplication):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -275,6 +277,7 @@ class ObjectDataSelection(BaseApplication):
         if getattr(self, "_workspace", None) is not None:
             obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
             if obj is None or getattr(obj, "get_data_list", None) is None:
+                self.data.options = [["", None]]
                 self.refresh.value = refresh
                 return
 
@@ -343,6 +346,10 @@ class ObjectDataSelection(BaseApplication):
 
             if value in dict(self.objects.options).values():
                 self.objects.value = value
+
+            self.update_data_list(None)
+
+            if data in dict(self.data.options).values():
                 self.data.value = data
 
     def update_uid_name_map(self):

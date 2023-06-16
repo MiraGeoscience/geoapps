@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import os.path as path
 import uuid
 import warnings
+from pathlib import Path
 from time import time
 
 import numpy as np
@@ -100,19 +100,15 @@ class InversionApp(PlotSelection2D):
     _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, **kwargs):
-        if "plot_result" in kwargs:
-            self.plot_result = kwargs["plot_result"]
-            kwargs.pop("plot_result")
-
+    def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
 
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
 
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -129,7 +125,7 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
@@ -166,7 +162,7 @@ class InversionApp(PlotSelection2D):
         self._coolingFactor = FloatText(value=2, description="Beta cooling factor")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._sens_wts_threshold = FloatText(
-            value=80, description="Threshold sensitivity weights", max=100, min=0
+            value=0.001, description="Threshold sensitivity weights", max=100, min=0
         )
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
         self._n_cpu = IntText(
@@ -231,17 +227,17 @@ class InversionApp(PlotSelection2D):
             value=1,
             description="Reference Model (s)",
         )
-        self._alpha_x = widgets.FloatText(
+        self._length_scale_x = widgets.FloatText(
             min=0,
             value=1,
             description="EW-gradient (x)",
         )
-        self._alpha_y = widgets.FloatText(
+        self._length_scale_y = widgets.FloatText(
             min=0,
             value=1,
             description="NS-gradient (y)",
         )
-        self._alpha_z = widgets.FloatText(
+        self._length_scale_z = widgets.FloatText(
             min=0,
             value=1,
             description="Vertical-gradient (z)",
@@ -279,9 +275,9 @@ class InversionApp(PlotSelection2D):
             [
                 Label("Scaling (alphas)"),
                 self._alpha_s,
-                self._alpha_x,
-                self._alpha_y,
-                self._alpha_z,
+                self._length_scale_x,
+                self._length_scale_y,
+                self._length_scale_z,
             ]
         )
         self.bound_panel = HBox(
@@ -337,7 +333,7 @@ class InversionApp(PlotSelection2D):
         self._detrend_type = None
         self._detrend_order = None
         self._initial_beta_options = None
-        super().__init__(**self.defaults)
+        super().__init__(plot_result=plot_result, **self.defaults)
 
         self.write.on_click(self.write_trigger)
 
@@ -350,16 +346,16 @@ class InversionApp(PlotSelection2D):
         return self._alpha_s
 
     @property
-    def alpha_x(self):
-        return self._alpha_x
+    def length_scale_x(self):
+        return self._length_scale_x
 
     @property
-    def alpha_y(self):
-        return self._alpha_y
+    def length_scale_y(self):
+        return self._length_scale_y
 
     @property
-    def alpha_z(self):
-        return self._alpha_z
+    def length_scale_z(self):
+        return self._length_scale_z
 
     # @property
     # def initial_beta(self):
@@ -713,7 +709,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace
@@ -758,7 +756,7 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict(ui_json_format=False)
+        params = self.params.to_dict()
         if self.inversion_type.value == "direct current 3d" and not isinstance(
             self.params, DirectCurrent3DParams
         ):
@@ -784,7 +782,12 @@ class InversionApp(PlotSelection2D):
         else:
             data_type_list = ["chargeability"]
 
-        self.ga_group_name.value = self.params.defaults["out_group"]
+        if getattr(self.params, "_out_group", None) is not None:
+            self.ga_group_name.value = self.params.out_group.name
+        else:
+            self.ga_group_name.value = (
+                self.params.inversion_type.capitalize() + "Inversion"
+            )
 
         flag = self.inversion_type.value
         self._reference_model_group.units = inversion_defaults()["units"][flag]
@@ -1137,7 +1140,7 @@ class InversionApp(PlotSelection2D):
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
 
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()
@@ -1158,7 +1161,7 @@ class InversionApp(PlotSelection2D):
                 )
                 self.params.geoh5.open(mode="r")
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**self.params.to_dict())
                 self.refresh.value = True
 
             elif extension == ".geoh5":

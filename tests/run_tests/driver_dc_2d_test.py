@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -24,16 +26,16 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.6326,
-    "phi_d": 740,
-    "phi_m": 2.87,
+    "data_norm": 0.621741,
+    "phi_d": 799.5,
+    "phi_m": 2.885,
 }
 
 np.random.seed(0)
 
 
 def test_dc_2d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=10,
     n_lines=3,
     refinement=(4, 6),
@@ -54,7 +56,12 @@ def test_dc_2d_fwr_run(
     params = DirectCurrent2DParams(
         forward_only=True,
         geoh5=geoh5,
-        mesh=model.parent.uid,
+        u_cell_size=5.0,
+        v_cell_size=5.0,
+        depth_core=100.0,
+        horizontal_padding=100.0,
+        vertical_padding=100.0,
+        expansion_factor=1.1,
         topography_object=topography.uid,
         z_from_topo=False,
         data_object=survey.uid,
@@ -66,13 +73,13 @@ def test_dc_2d_fwr_run(
     fwr_driver = DirectCurrent2DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
-def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+def test_dc_2d_run(tmp_path: Path, max_iterations=1, pytest=True):
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_dc_2d_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_dc_2d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
@@ -113,10 +120,10 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = DirectCurrent2DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = DirectCurrent2DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = potential.values[np.isfinite(potential.values)]
@@ -129,14 +136,14 @@ def test_dc_2d_run(tmp_path, max_iterations=1, pytest=True):
 if __name__ == "__main__":
     # Full run
     m_start = test_dc_2d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
 
     m_rec = test_dc_2d_run(
-        "./",
+        Path("./"),
         max_iterations=20,
         pytest=False,
     )

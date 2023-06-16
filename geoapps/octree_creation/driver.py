@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import sys
-from os import path
+from pathlib import Path
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import ObjectBase, Octree
@@ -37,8 +37,9 @@ class OctreeDriver(BaseDriver):
         with fetch_active_workspace(self.params.geoh5, mode="r+"):
             octree = self.octree_from_params(self.params)
 
-            if self.params.monitoring_directory is not None and path.exists(
-                self.params.monitoring_directory
+            if (
+                self.params.monitoring_directory is not None
+                and Path(self.params.monitoring_directory).is_dir()
             ):
                 monitored_directory_copy(self.params.monitoring_directory, octree)
 

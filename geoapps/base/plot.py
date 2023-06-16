@@ -11,6 +11,7 @@ from uuid import UUID
 
 import numpy as np
 from geoh5py.objects import Curve, Grid2D, Points, Surface
+from geoh5py.shared.utils import fetch_active_workspace
 
 from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
@@ -45,9 +46,8 @@ class PlotSelection2D(ObjectDataSelection):
     Application for selecting data in 2D plan map view
     """
 
-    plot_result = True
-
-    def __init__(self, **kwargs):
+    def __init__(self, plot_result=True, **kwargs):
+        self.plot_result = plot_result
         self.defaults.update(**app_initializer)
         self.defaults.update(**kwargs)
         self.axis = None
@@ -302,11 +302,6 @@ class PlotSelection2D(ObjectDataSelection):
             else:
                 data_channel = data_name
 
-        if isinstance(data_channel, str) and (data_channel in "XYZ"):
-            data_obj = data_channel
-        elif self.workspace.get_entity(data_channel):
-            data_obj = self.workspace.get_entity(data_channel)[0]
-
         if isinstance(entity, (Grid2D, Surface, Points, Curve)):
             self.figure = plt.figure(figsize=(10, 10))
             self.axis = plt.subplot()
@@ -321,26 +316,33 @@ class PlotSelection2D(ObjectDataSelection):
             corners[:, 1] *= height / 2
             corners = rotate_xyz(corners, [0, 0], -azimuth)
             self.axis.plot(corners[:, 0] + center_x, corners[:, 1] + center_y, "k")
-            self.axis, _, ind_filter, _, _ = plot_plan_data_selection(
-                entity,
-                data_obj,
-                **{
-                    "axis": self.axis,
-                    "resolution": resolution,
-                    "window": {
-                        "center": [center_x, center_y],
-                        "size": [width, height],
-                        "azimuth": azimuth,
+
+            with fetch_active_workspace(self.workspace):
+                if isinstance(data_channel, str) and (data_channel in "XYZ"):
+                    data_obj = data_channel
+                elif self.workspace.get_entity(data_channel):
+                    data_obj = self.workspace.get_entity(data_channel)[0]
+
+                self.axis, _, ind_filter, _, _ = plot_plan_data_selection(
+                    entity,
+                    data_obj,
+                    **{
+                        "axis": self.axis,
+                        "resolution": resolution,
+                        "window": {
+                            "center": [center_x, center_y],
+                            "size": [width, height],
+                            "azimuth": azimuth,
+                        },
+                        "zoom_extent": zoom_extent,
+                        "resize": True,
+                        "contours": contours,
+                        "highlight_selection": self.highlight_selection,
+                        "collections": self.collections,
+                        "colorbar": colorbar,
                     },
-                    "zoom_extent": zoom_extent,
-                    "resize": True,
-                    "contours": contours,
-                    "highlight_selection": self.highlight_selection,
-                    "collections": self.collections,
-                    "colorbar": colorbar,
-                },
-            )
-            plt.show()
+                )
+                plt.show()
             self.indices = ind_filter
             self.data_count.value = f"Data Count: {ind_filter.sum()}"
 

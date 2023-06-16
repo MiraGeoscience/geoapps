@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -20,13 +22,13 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 0.0071214,
-    "phi_d": 0.0002049,
-    "phi_m": 0.00936,
+    "phi_d": 0.0002005,
+    "phi_m": 0.009362,
 }
 
 
 def test_gravity_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -43,7 +45,7 @@ def test_gravity_fwr_run(
     )
     params = GravityParams(
         forward_only=True,
-        geoh5=geoh5,
+        geoh5=Path(geoh5.h5file),
         mesh=model.parent.uid,
         topography_object=topography.uid,
         resolution=0.0,
@@ -54,17 +56,17 @@ def test_gravity_fwr_run(
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_gravity_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_gravity_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_gravity_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         gz = geoh5.get_entity("Iteration_0_gz")[0]
@@ -97,6 +99,7 @@ def test_gravity_run(
             gz_channel=gz.uid,
             gz_uncertainty=2e-3,
             lower_bound=0.0,
+            upper_bound=1.0,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
@@ -104,11 +107,11 @@ def test_gravity_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = GravityDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = GravityDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
 
         residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
@@ -123,6 +126,9 @@ def test_gravity_run(
             np.isnan(predicted.values)
         ), "Predicted data should not have nans."
         output["data"] = orig_gz
+
+        assert len(run_ws.get_entity("SimPEG.log")) == 2
+
         if pytest:
             check_target(output, target_run)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
@@ -135,13 +141,13 @@ def test_gravity_run(
 if __name__ == "__main__":
     # Full run
     m_start = test_gravity_fwr_run(
-        "./",
+        Path("./"),
         n_grid_points=20,
         refinement=(4, 8),
     )
 
     m_rec = test_gravity_run(
-        "./",
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )

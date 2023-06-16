@@ -51,6 +51,7 @@ class SimPEGFactory:
         "tdem",
         "magnetotellurics",
         "tipper",
+        "joint surveys",
     ]
 
     def __init__(self, params: BaseParams):

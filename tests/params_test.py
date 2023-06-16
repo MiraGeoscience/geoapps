@@ -5,8 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
-import os
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
@@ -56,10 +58,7 @@ from geoapps.peak_finder.params import PeakFinderParams
 
 from . import PROJECT, PROJECT_DCIP
 
-geoh5 = Workspace(PROJECT)
-
 # Setup
-tmpfile = lambda path: os.path.join(path, "test.ui.json")
 geoh5 = Workspace(PROJECT)
 
 
@@ -70,6 +69,7 @@ def tmp_input_file(filepath, idict):
 
 mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
+mvi_params.input_file.geoh5.open()
 
 
 def catch_invalid_generator(param, invalid_value, validation_type):
@@ -99,7 +99,7 @@ def param_test_generator(param, value):
     assert pval == value
 
 
-def test_write_input_file_validation(tmp_path):
+def test_write_input_file_validation(tmp_path: Path):
     grav_init["geoh5"] = str(PROJECT)
     params = GravityParams(validate=False, **grav_init)
     params.validate = True
@@ -140,7 +140,7 @@ def test_params_initialize():
     assert params.center == 1000.0
 
 
-def test_input_file_construction(tmp_path):
+def test_input_file_construction(tmp_path: Path):
     params_classes = [
         GravityParams,
         MagneticScalarParams,
@@ -155,12 +155,8 @@ def test_input_file_construction(tmp_path):
         filename = "test.ui.json"
         for forward_only in [True, False]:
             params = params_class(forward_only=forward_only)
-            params.write_input_file(
-                name=filename, path=tmp_path, validation_options={"disabled": True}
-            )
-            ifile = InputFile.read_ui_json(
-                os.path.join(tmp_path, filename), validation_options={"disabled": True}
-            )
+            params.write_input_file(name=filename, path=tmp_path, validate=False)
+            ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
             params = params_class(input_file=ifile)
 
             check = []
@@ -178,7 +174,7 @@ def test_input_file_construction(tmp_path):
             assert all(check)
 
 
-def test_default_input_file(tmp_path):
+def test_default_input_file(tmp_path: Path):
     for params_class in [
         MagneticScalarParams,
         MagneticVectorParams,
@@ -186,12 +182,10 @@ def test_default_input_file(tmp_path):
         DirectCurrent3DParams,
         InducedPolarization3DParams,
     ]:
-        filename = os.path.join(tmp_path, "test.ui.json")
+        filename = "test.ui.json"
         params = params_class()
-        params.write_input_file(
-            name=filename, path=tmp_path, validation_options={"disabled": True}
-        )
-        ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
+        params.write_input_file(name=filename, path=tmp_path, validate=False)
+        ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
 
         # check that reads back into input file with defaults
         check = []
@@ -220,7 +214,7 @@ def test_update():
     assert params.starting_model == 99.0
 
 
-def test_chunk_validation_mvi(tmp_path):
+def test_chunk_validation_mvi(tmp_path: Path):
     test_dict = dict(mvi_init, **{"geoh5": geoh5})
     test_dict.pop("data_object")
     params = MagneticVectorParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -230,7 +224,7 @@ def test_chunk_validation_mvi(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_mag(tmp_path):
+def test_chunk_validation_mag(tmp_path: Path):
     test_dict = dict(mag_initializer, **{"geoh5": geoh5})
     test_dict["inducing_field_strength"] = None
     params = MagneticScalarParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -240,7 +234,7 @@ def test_chunk_validation_mag(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_grav(tmp_path):
+def test_chunk_validation_grav(tmp_path: Path):
     test_dict = dict(grav_init, **{"geoh5": geoh5})
     params = GravityParams(**test_dict)  # pylint: disable=repeated-keyword
     with pytest.raises(OptionalValidationError) as excinfo:
@@ -249,7 +243,7 @@ def test_chunk_validation_grav(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_dc(tmp_path):
+def test_chunk_validation_dc(tmp_path: Path):
     with Workspace(PROJECT_DCIP) as dc_geoh5:
         test_dict = dc_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
@@ -262,7 +256,7 @@ def test_chunk_validation_dc(tmp_path):
             assert a in str(excinfo.value)
 
 
-def test_chunk_validation_ip(tmp_path):
+def test_chunk_validation_ip(tmp_path: Path):
     with Workspace(PROJECT_DCIP) as dc_geoh5:
         test_dict = ip_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
@@ -277,7 +271,7 @@ def test_chunk_validation_ip(tmp_path):
             assert a in str(excinfo.value)
 
 
-def test_chunk_validation_octree(tmp_path):
+def test_chunk_validation_octree(tmp_path: Path):
     test_dict = dict(octree_initializer, **{"geoh5": geoh5})
     test_dict.pop("objects")
     params = OctreeParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -288,7 +282,7 @@ def test_chunk_validation_octree(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_peakfinder(tmp_path):
+def test_chunk_validation_peakfinder(tmp_path: Path):
     test_dict = dict(peak_initializer, **{"geoh5": geoh5})
     test_dict.pop("data")
     params = PeakFinderParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -652,22 +646,22 @@ def test_validate_alpha_s():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_x():
-    param = "alpha_x"
+def test_validate_length_scale_x():
+    param = "length_scale_x"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_y():
-    param = "alpha_y"
+def test_validate_length_scale_y():
+    param = "length_scale_y"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_z():
-    param = "alpha_z"
+def test_validate_length_scale_z():
+    param = "length_scale_z"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
@@ -763,6 +757,7 @@ grav_params = GravityParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+grav_params.input_file.geoh5.open()
 
 
 def test_validate_geoh5():
@@ -777,8 +772,8 @@ def test_validate_geoh5():
 def test_validate_out_group():
     param = "out_group"
     newval = "test_"
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
+    with pytest.raises(UUIDValidationError, match="not a valid uuid string"):
+        param_test_generator(param, newval)
 
 
 def test_validate_distributed_workers():
@@ -807,7 +802,7 @@ def test_gz_channel_bool():
 
 
 def test_gz_channel():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_channel = uuid4()
 
     with pytest.raises(TypeValidationError) as excinfo:
@@ -819,7 +814,7 @@ def test_gz_channel():
 
 
 def test_gz_uncertainty():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_uncertainty = uuid4()
 
     grav_params.gz_uncertainty = 4.0
@@ -1253,6 +1248,7 @@ mag_params = MagneticScalarParams(
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+mag_params.geoh5.open()
 
 
 def test_magnetic_scalar_inversion_type():
@@ -1942,25 +1938,21 @@ def test_conductivity_model():
     )
 
 
-def test_isValue(tmp_path):
+def test_isValue(tmp_path: Path):
     file_name = "test.ui.json"
     mesh = geoh5.get_entity("O2O_Interp_25m")[0]
     mag_params.starting_model = 0.0
-    mag_params.write_input_file(
-        name=file_name, path=tmp_path, validation_options={"disabled": True}
-    )
+    mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
 
-    with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
+    with open(tmp_path / file_name, encoding="utf-8") as f:
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is True, "isValue should be True"
 
     mag_params.starting_model = mesh.get_data("VTEM_model")[0].uid
 
-    mag_params.write_input_file(
-        name=file_name, path=tmp_path, validation_options={"disabled": True}
-    )
-    with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
+    mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
+    with open(tmp_path / file_name, encoding="utf-8") as f:
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is False, "isValue should be False"

@@ -67,9 +67,8 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
@@ -83,7 +82,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 30.0,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
@@ -92,7 +91,7 @@ inversion_defaults = {
     "max_ram": None,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "InducedPolarizationPseudo3DInversion",
+    "out_group": None,
     "generate_sweep": False,
     "files_only": False,
     "cleanup": True,
@@ -142,7 +141,7 @@ forward_defaults = {
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
-    "out_group": "InducedPolarizationPseudo3DForward",
+    "out_group": None,
     "generate_sweep": False,
     "files_only": False,
     "cleanup": False,
@@ -152,15 +151,6 @@ forward_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 inversion_ui_json = {
@@ -196,15 +186,6 @@ forward_ui_json = {
         "property": None,
         "value": 1e-3,
     },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
@@ -368,10 +349,6 @@ default_ui_json = {
     "detrend_order": None,
     "detrend_type": None,
     "tile_spatial": 1,
-    "out_group": {
-        "label": "Results group name",
-        "value": "InducedPolarizationPseudo3DInversion",
-    },
     "files_only": {
         "label": "Generate files only",
         "group": "Python run preferences",
@@ -428,6 +405,5 @@ app_initializer = {
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
     "receivers_offset_z": 0.0,
-    "out_group": "InducedPolarizationPseudo3DInversion",
     "cleanup": True,
 }

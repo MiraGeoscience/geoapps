@@ -5,7 +5,9 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -24,16 +26,16 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.073706,
-    "phi_d": 5086,
-    "phi_m": 0.0704,
+    "data_norm": 0.07722,
+    "phi_d": 6302,
+    "phi_m": 0.05661,
 }
 
 np.random.seed(0)
 
 
 def test_ip_2d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=10,
     n_lines=3,
     refinement=(4, 6),
@@ -67,17 +69,17 @@ def test_ip_2d_fwr_run(
     fwr_driver = InducedPolarization2DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_ip_2d_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_ip_2d_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_ip_2d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         chargeability = geoh5.get_entity("Iteration_0_ip")[0]
@@ -101,7 +103,6 @@ def test_ip_2d_run(
             conductivity_model=1e-2,
             s_norm=0.0,
             x_norm=0.0,
-            y_norm=0.0,
             z_norm=0.0,
             gradient_type="components",
             chargeability_channel_bool=True,
@@ -116,12 +117,10 @@ def test_ip_2d_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = InducedPolarization2DDriver.start(
-        os.path.join(tmp_path, "Inv_run.ui.json")
-    )
+    driver = InducedPolarization2DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
-        driver.params.geoh5.h5file, driver.params.ga_group.uid
+        driver.params.geoh5.h5file, driver.params.out_group.uid
     )
     if geoh5.open():
         output["data"] = chargeability.values[np.isfinite(chargeability.values)]
@@ -134,14 +133,14 @@ def test_ip_2d_run(
 if __name__ == "__main__":
     # Full run
     mstart = test_ip_2d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
 
     m_rec = test_ip_2d_run(
-        "./",
+        Path("./"),
         max_iterations=20,
         pytest=False,
     )

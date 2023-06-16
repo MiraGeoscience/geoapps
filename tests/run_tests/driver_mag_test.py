@@ -5,11 +5,11 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import json
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
-from geoh5py.shared.utils import str2uuid
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.potential_fields import MagneticScalarParams
@@ -24,13 +24,13 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 11.707134,
-    "phi_d": 1.598,
-    "phi_m": 8.824e-6,
+    "phi_d": 34.68,
+    "phi_m": 4.946e-6,
 }
 
 
 def test_susceptibility_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -63,36 +63,22 @@ def test_susceptibility_fwr_run(
 
     fwr_driver = MagneticScalarDriver(params)
 
-    assert params.ga_group.options, "Error adding metadata on creation."
-
     fwr_driver.run()
 
-    with geoh5.open():
-        # Check the inversion output
-        sp_group = geoh5.get_entity("MagneticScalarForward")[0]
+    assert params.out_group.options, "Error adding metadata on creation."
 
-        with open(params.input_file.path_name, encoding="utf-8") as file:
-            ui_json = json.load(file)
-
-        for key, values in sp_group.options.items():
-            if isinstance(values, dict):
-                for elem, value in values.items():
-                    assert str2uuid(ui_json[key][elem]) == value
-            else:
-                assert ui_json[key] == values
-
-    return fwr_driver.starting_model
+    return fwr_driver.models.starting
 
 
 def test_susceptibility_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(
-            tmp_path / "../test_susceptibility_fwr_run0/inversion_test.geoh5"
+        workpath = (
+            tmp_path.parent / "test_susceptibility_fwr_run0" / "inversion_test.ui.geoh5"
         )
 
     with Workspace(workpath) as geoh5:
@@ -124,18 +110,17 @@ def test_susceptibility_run(
             tmi_channel_bool=True,
             z_from_topo=False,
             tmi_channel=tmi.uid,
-            tmi_uncertainty=4.0,
+            tmi_uncertainty=1.0,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e0,
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-        driver = MagneticScalarDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = MagneticScalarDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
-            driver.params.geoh5.h5file, driver.params.ga_group.uid
+            driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tmi
         if pytest:
@@ -149,8 +134,10 @@ def test_susceptibility_run(
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_susceptibility_fwr_run("./", n_grid_points=20, refinement=(4, 8))
-    m_rec = test_susceptibility_run("./", max_iterations=30, pytest=False)
+    m_start = test_susceptibility_fwr_run(
+        Path("./"), n_grid_points=20, refinement=(4, 8)
+    )
+    m_rec = test_susceptibility_run(Path("./"), max_iterations=30, pytest=False)
     residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
         residual < 15.0

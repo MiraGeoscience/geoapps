@@ -5,6 +5,8 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 from geoapps.inversion.driver import InversionDriver
 
 from .constants import validations
@@ -15,5 +17,5 @@ class TimeDomainElectromagneticsDriver(InversionDriver):
     _params_class = TimeDomainElectromagneticsParams
     _validations = validations
 
-    def __init__(self, params: TimeDomainElectromagneticsParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: TimeDomainElectromagneticsParams):
+        super().__init__(params)

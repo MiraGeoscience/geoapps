@@ -7,16 +7,14 @@
 
 from __future__ import annotations
 
-import json
 from copy import deepcopy
-from os import path
 from uuid import UUID
 
 import numpy as np
 from geoh5py.data import NumericData
 from geoh5py.groups import SimPEGGroup
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
-from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.params import BaseParams
 
@@ -26,17 +24,19 @@ class InversionBaseParams(BaseParams):
     Base parameter class for geophysical->property inversion.
     """
 
-    _directive_list = None
     _default_ui_json = None
     _forward_defaults = None
     _forward_ui_json = None
     _inversion_defaults = None
     _inversion_ui_json = None
     _inversion_type = None
-    _ga_group = None
 
     def __init__(
-        self, input_file: InputFile | None = None, forward_only: bool = False, **kwargs
+        self,
+        input_file: InputFile | None = None,
+        forward_only: bool = False,
+        out_group: SimPEGGroup | None = None,
+        **kwargs,
     ):
         self._forward_only: bool = (
             forward_only if input_file is None else input_file.data["forward_only"]
@@ -84,9 +84,9 @@ class InversionBaseParams(BaseParams):
         self._initial_beta_ratio: float = None
         self._tol_cg: float = None
         self._alpha_s: float = None
-        self._alpha_x: float = None
-        self._alpha_y: float = None
-        self._alpha_z: float = None
+        self._length_scale_x: float = None
+        self._length_scale_y: float = None
+        self._length_scale_z: float = None
         self._s_norm: float = None
         self._x_norm: float = None
         self._y_norm: float = None
@@ -102,8 +102,8 @@ class InversionBaseParams(BaseParams):
         self._out_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
-        self._documentation: str = None
-        self._icon: str = None
+        self._documentation: str = ""
+        self._icon: str = ""
         self._defaults = (
             self._forward_defaults if self.forward_only else self._inversion_defaults
         )
@@ -120,10 +120,12 @@ class InversionBaseParams(BaseParams):
                 ui_json=ui_json,
                 data=self.defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+        self.out_group = out_group
 
         if not self.forward_only:
             for key in self.__dict__:
@@ -133,6 +135,22 @@ class InversionBaseParams(BaseParams):
     def data_channel(self, component: str):
         """Return uuid of data channel."""
         return getattr(self, "_".join([component, "channel"]), None)
+
+    @property
+    def documentation(self):
+        return self._documentation
+
+    @documentation.setter
+    def documentation(self, val):
+        self.setter_validator("documentation", val)
+
+    @property
+    def icon(self):
+        return self._icon
+
+    @icon.setter
+    def icon(self, val):
+        self.setter_validator("icon", val)
 
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""
@@ -178,6 +196,7 @@ class InversionBaseParams(BaseParams):
 
         return comps
 
+    @property
     def window(self) -> dict[str, float]:
         """Returns window dictionary"""
         win = {
@@ -219,11 +238,6 @@ class InversionBaseParams(BaseParams):
             self.y_norm,
             self.z_norm,
         ]
-
-    @property
-    def directive_list(self):
-        """List of directives"""
-        return self._directive_list
 
     @property
     def forward_defaults(self):
@@ -274,6 +288,7 @@ class InversionBaseParams(BaseParams):
     @data_object.setter
     def data_object(self, val):
         self.setter_validator("data_object", val, fun=self._uuid_promoter)
+        self.update_group_options()
 
     @property
     def starting_model(self):
@@ -394,6 +409,7 @@ class InversionBaseParams(BaseParams):
     @mesh.setter
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
+        self.update_group_options()
 
     @property
     def window_center_x(self):
@@ -604,28 +620,28 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("alpha_s", val)
 
     @property
-    def alpha_x(self):
-        return self._alpha_x
+    def length_scale_x(self):
+        return self._length_scale_x
 
-    @alpha_x.setter
-    def alpha_x(self, val):
-        self.setter_validator("alpha_x", val)
-
-    @property
-    def alpha_y(self):
-        return self._alpha_y
-
-    @alpha_y.setter
-    def alpha_y(self, val):
-        self.setter_validator("alpha_y", val)
+    @length_scale_x.setter
+    def length_scale_x(self, val):
+        self.setter_validator("length_scale_x", val)
 
     @property
-    def alpha_z(self):
-        return self._alpha_z
+    def length_scale_y(self):
+        return self._length_scale_y
 
-    @alpha_z.setter
-    def alpha_z(self, val):
-        self.setter_validator("alpha_z", val)
+    @length_scale_y.setter
+    def length_scale_y(self, val):
+        self.setter_validator("length_scale_y", val)
+
+    @property
+    def length_scale_z(self):
+        return self._length_scale_z
+
+    @length_scale_z.setter
+    def length_scale_z(self, val):
+        self.setter_validator("length_scale_z", val)
 
     @property
     def s_norm(self):
@@ -724,35 +740,14 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("store_sensitivities", val)
 
     @property
-    def out_group(self):
+    def out_group(self) -> SimPEGGroup | None:
+        """Return the SimPEGGroup object."""
         return self._out_group
 
     @out_group.setter
     def out_group(self, val):
-        if val is None:
-            self._out_group = val
-            return
-
-        self.setter_validator(
-            "out_group",
-            val,
-        )
-
-    @property
-    def ga_group(self) -> SimPEGGroup | None:
-        if (
-            getattr(self, "_ga_group", None) is None
-            and isinstance(self.geoh5, Workspace)
-            and isinstance(self.out_group, str)
-        ):
-            self._ga_group = SimPEGGroup.create(self.geoh5, name=self.out_group)
-        elif isinstance(self.out_group, SimPEGGroup):
-            self._ga_group = self.out_group
-
-        if isinstance(self._ga_group, SimPEGGroup) and not self._ga_group.options:
-            self.update_group_options(self._ga_group)
-
-        return self._ga_group
+        self.setter_validator("out_group", val)
+        self.update_group_options()
 
     @property
     def distributed_workers(self):
@@ -767,19 +762,12 @@ class InversionBaseParams(BaseParams):
         """Return unit conversion factor."""
         return None
 
-    def update_group_options(self, ga_group: SimPEGGroup):
+    def update_group_options(self):
         """
         Add options to the SimPEGGroup inversion using input file class.
-
-        :param ga_group: Inversion group
         """
-        if self.input_file is not None:
-            if not path.exists(self.input_file.path_name):
-                self.write_input_file(self.input_file.name, self.input_file.path)
-
-            with open(self.input_file.path_name, encoding="utf-8") as file:
-                ui_json = json.load(file)
-
-            ga_group.options = ui_json
-
-        ga_group.metadata = None
+        if self._input_file is not None and self._out_group is not None:
+            with fetch_active_workspace(self.geoh5, mode="r+"):
+                ui_json = self.to_dict(ui_json_format=True)
+                self._out_group.options = ui_json
+                self._out_group.metadata = None

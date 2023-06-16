@@ -6,6 +6,8 @@
 #  (see LICENSE file at the root of this source code package).
 
 
+from __future__ import annotations
+
 from geoapps.inversion.driver import InversionDriver
 
 from .constants import validations
@@ -16,5 +18,5 @@ class DirectCurrent2DDriver(InversionDriver):
     _params_class = DirectCurrent2DParams
     _validations = validations
 
-    def __init__(self, params: DirectCurrent2DParams, warmstart=True):
-        super().__init__(params, warmstart)
+    def __init__(self, params: DirectCurrent2DParams):
+        super().__init__(params)

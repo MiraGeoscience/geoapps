@@ -5,7 +5,10 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 import SimPEG
@@ -32,14 +35,13 @@ def setup_params(tmp):
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("gyz_channel", "{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
-    geotest.set_param("out_group", "MVIInversion")
     return geotest.make()
 
 
-def test_survey_data(tmp_path):
+def test_survey_data(tmp_path: Path):
     X, Y, Z = np.meshgrid(np.linspace(0, 100, 3), np.linspace(0, 100, 3), 0)
     verts = np.column_stack([X.ravel(), Y.ravel(), Z.ravel()])
-    with Workspace(os.path.join(tmp_path, "test_workspace.geoh5")) as workspace:
+    with Workspace(tmp_path / "test_workspace.geoh5") as workspace:
         test_data_object = Points.create(
             workspace, vertices=verts, name="test_data_object"
         )
@@ -100,7 +102,7 @@ def test_survey_data(tmp_path):
             resolution=0.0,
         )
 
-        driver = InversionDriver(params, warmstart=False)
+        driver = InversionDriver(params)
 
     local_survey_a = driver.inverse_problem.dmisfit.objfcts[0].simulation.survey
     local_survey_b = driver.inverse_problem.dmisfit.objfcts[1].simulation.survey
@@ -127,7 +129,7 @@ def test_survey_data(tmp_path):
     np.testing.assert_array_equal(expected_dobs, np.hstack(survey_dobs))
 
     # test savegeoh5iteration data
-    driver.directive_list[-2].save_components(99, survey_dobs)
+    driver.directives[-2].save_components(99, survey_dobs)
 
     with workspace.open():
         bxx_test = workspace.get_entity("Iteration_99_bxx")[0].values
@@ -138,7 +140,7 @@ def test_survey_data(tmp_path):
     np.testing.assert_array_equal(byy_test, byy_data.values)
     np.testing.assert_array_equal(bzz_test, bzz_data.values)
 
-    driver.directive_list[-1].save_components(99, survey_dobs)
+    driver.directives[-1].save_components(99, survey_dobs)
 
     with workspace.open():
         assert np.all(
@@ -152,11 +154,18 @@ def test_survey_data(tmp_path):
         ), "Residual data should be zero."
 
 
-def test_save_data(tmp_path):
+def test_save_data(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-    data = InversionData(ws, params, window)
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
+    data = InversionData(ws, params)
 
     assert len(data.entity.vertices) > 0
 
@@ -175,46 +184,67 @@ def test_has_tensor():
     assert not InversionData.check_tensor(["tmi"])
 
 
-def test_get_uncertainty_component(tmp_path):
+def test_get_uncertainty_component(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
     params.tmi_uncertainty = 1.0
-    data = InversionData(ws, params, window)
+    data = InversionData(ws, params)
     unc = data.get_data()[2]["tmi"]
     assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
     assert len(unc) == len(data.mask)
 
 
-def test_parse_ignore_values(tmp_path):
+def test_parse_ignore_values(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
     params.ignore_values = "<99"
-    data = InversionData(ws, params, window)
+    data = InversionData(ws, params)
     val, logic = data.parse_ignore_values()
     assert val == 99
     assert logic == "<"
 
     params.ignore_values = ">99"
-    data = InversionData(ws, params, window)
+    data = InversionData(ws, params)
     val, logic = data.parse_ignore_values()
     assert val == 99
     assert logic == ">"
 
     params.ignore_values = "99"
-    data = InversionData(ws, params, window)
+    data = InversionData(ws, params)
     val, logic = data.parse_ignore_values()
     assert val == 99
     assert logic == "="
 
 
-def test_set_infinity_uncertainties(tmp_path):
+def test_set_infinity_uncertainties(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-    data = InversionData(ws, params, window)
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
+    data = InversionData(ws, params)
     test_data = np.array([0, 1, 2, 3, 4, 5])
     test_unc = np.array([0.1] * 6)
     data.ignore_value = 3
@@ -244,11 +274,18 @@ def test_set_infinity_uncertainties(tmp_path):
     assert np.all(test_unc == unc)
 
 
-def test_displace(tmp_path):
+def test_displace(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-    data = InversionData(ws, params, window)
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
+    data = InversionData(ws, params)
     test_locs = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]])
     test_offset = np.array([[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
     expected_locs = np.array([[2.0, 2.0, 3.0], [5.0, 5.0, 6.0], [8.0, 8.0, 9.0]])
@@ -266,11 +303,18 @@ def test_displace(tmp_path):
     assert np.all(displaced_locs == expected_locs)
 
 
-def test_drape(tmp_path):
+def test_drape(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-    data = InversionData(ws, params, window)
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
+    data = InversionData(ws, params)
     test_locs = np.array([[1.0, 2.0, 1.0], [2.0, 1.0, 1.0], [8.0, 9.0, 1.0]])
     radar_ch = np.array([1.0, 2.0, 3.0])
     expected_locs = np.array([[1.0, 2.0, 2.0], [2.0, 1.0, 3.0], [8.0, 9.0, 4.0]])
@@ -279,11 +323,18 @@ def test_drape(tmp_path):
     assert np.all(draped_locs == expected_locs)
 
 
-def test_normalize(tmp_path):
+def test_normalize(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-    data = InversionData(ws, params, window)
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
+    data = InversionData(ws, params)
     data.observed = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
     data.components = list(data.observed.keys())
     data.normalizations = data.get_normalizations()
@@ -292,10 +343,17 @@ def test_normalize(tmp_path):
     assert all(test_data["gz"] == (-1 * data.observed["gz"]))
 
 
-def test_get_survey(tmp_path):
+def test_get_survey(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locs = params.data_object.centroids
-    window = {"center": [np.mean(locs[:, 0]), np.mean(locs[:, 1])], "size": [100, 100]}
-    data = InversionData(ws, params, window)
+    params.update(
+        {
+            "window_center_x": np.mean(locs[:, 0]),
+            "window_center_y": np.mean(locs[:, 1]),
+            "window_width": 100.0,
+            "window_height": 100.0,
+        }
+    )
+    data = InversionData(ws, params)
     survey = data.create_survey()
     assert isinstance(survey[0], SimPEG.potential_fields.magnetics.Survey)

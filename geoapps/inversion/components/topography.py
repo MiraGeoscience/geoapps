@@ -13,10 +13,8 @@ if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
     from geoapps.driver_base.params import BaseParams
     from . import InversionMesh
-    from typing import Any
 
 import warnings
-from copy import deepcopy
 
 import numpy as np
 from geoh5py.shared import Entity
@@ -52,34 +50,22 @@ class InversionTopography(InversionLocations):
         self,
         workspace: Workspace,
         params: BaseParams,
-        inversion_data: InversionData,
-        window: dict[str, Any],
     ):
         """
-        :param: workspace: Geoh5py workspace object containing location based data.
+        :param: workspace: :obj`geoh5py.workspace.Workspace` object containing location based data.
         :param: params: Params object containing location based data parameters.
-        :param: window: Center and size defining window for data, topography, etc.
         """
-        super().__init__(workspace, params, window)
-        self.inversion_data = inversion_data
-        self.locations: np.ndarray = None
-        self.mask: np.ndarray = None
+        super().__init__(workspace, params)
+        self.locations: np.ndarray | None = None
+        self.mask: np.ndarray | None = None
         self._initialize()
 
     def _initialize(self):
         self.locations = self.get_locations(self.params.topography_object)
-        self.mask = np.ones(len(self.locations), dtype=bool)
-        topo_window = deepcopy(self.window)
-
-        if topo_window is not None:
-            topo_window["size"] = [2 * s for s in topo_window["size"]]
-
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
-            window=topo_window,
             angle=self.angle,
-            mask=self.mask,
         )
 
         self.locations = super().filter(self.locations)
@@ -122,9 +108,6 @@ class InversionTopography(InversionLocations):
                 mesh.entity, self.locations, grid_reference="center"
             )
             active_cells = active_cells[np.argsort(mesh.permutation)]
-
-        ac_model = active_cells[mesh.permutation].astype("float64")
-        mesh.entity.add_data({"active_cells": {"values": ac_model}})
 
         return active_cells
 

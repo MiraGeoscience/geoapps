@@ -44,7 +44,7 @@ class InversionMesh:
         self,
         workspace: Workspace,
         params: OctreeParams,
-        inversion_data: InversionData,
+        inversion_data: InversionData | None,
         inversion_topography: InversionTopography,
     ) -> None:
         """
@@ -57,11 +57,11 @@ class InversionMesh:
         self.params = params
         self.inversion_data = inversion_data
         self.inversion_topography = inversion_topography
-        self.mesh: TreeMesh | TensorMesh = None
-        self.n_cells: int = None
-        self.rotation: dict[str, float] = None
-        self.permutation: np.ndarray = None
-        self.entity: Octree = None
+        self._mesh: TreeMesh | TensorMesh | None = None
+        self.n_cells: int | None = None
+        self.rotation: dict[str, float] | None = None
+        self._permutation: np.ndarray | None = None
+        self.entity: Octree | DrapeModel | None = None
         self._initialize()
 
     def _initialize(self) -> None:
@@ -77,26 +77,45 @@ class InversionMesh:
             raise ValueError("Must pass pre-constructed mesh.")
         else:
             self.entity = self.params.mesh.copy(
-                parent=self.params.ga_group, copy_children=False
+                parent=self.params.out_group, copy_children=False
             )
+            self.params.mesh = self.entity
 
-        if getattr(self.entity, "rotation", None) and self.inversion_data.has_tensor:
+        if (
+            getattr(self.entity, "rotation", None)
+            and self.inversion_data is not None
+            and self.inversion_data.has_tensor
+        ):
             msg = "Cannot use tensor components with rotated mesh."
             raise NotImplementedError(msg)
 
         self.uid = self.entity.uid
         self.n_cells = self.entity.n_cells
 
-        if isinstance(self.entity, Octree):
-            if self.entity.rotation:
-                origin = self.entity.origin.tolist()
-                angle = self.entity.rotation[0]
-                self.rotation = {"origin": origin, "angle": angle}
+    @property
+    def mesh(self) -> TreeMesh | TensorMesh:
+        """"""
+        if self._mesh is None:
+            if isinstance(self.entity, Octree):
+                if self.entity.rotation:
+                    origin = self.entity.origin.tolist()
+                    angle = self.entity.rotation[0]
+                    self.rotation = {"origin": origin, "angle": angle}
 
-            self.mesh = octree_2_treemesh(self.entity)
-            self.permutation = getattr(self.mesh, "_ubc_order")
+                self._mesh = octree_2_treemesh(self.entity)
+                self._permutation = getattr(self.mesh, "_ubc_order")
 
-        if isinstance(self.entity, DrapeModel) and self.mesh is None:
-            self.mesh, self.permutation = drape_2_tensor(
-                self.entity, return_sorting=True
-            )
+            if isinstance(self.entity, DrapeModel) and self._mesh is None:
+                self._mesh, self._permutation = drape_2_tensor(
+                    self.entity, return_sorting=True
+                )
+
+        return self._mesh
+
+    @property
+    def permutation(self) -> np.ndarray:
+        """Permutation vector between discretize and geoh5py ordering."""
+        if self.mesh is None:
+            raise ValueError("A 'mesh' must be assigned before accessing permutation.")
+
+        return self._permutation

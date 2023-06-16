@@ -4,11 +4,13 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
 import json
-import os
+from pathlib import Path
 
 import numpy as np
-from geoh5py.data import FilenameData
 from geoh5py.groups import SimPEGGroup
 from geoh5py.workspace import Workspace
 
@@ -26,16 +28,16 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 1.12515,
-    "phi_d": 759.7,
-    "phi_m": 0.0415,
+    "data_norm": 1.12381,
+    "phi_d": 784.9,
+    "phi_m": 0.0628,
 }
 
 np.random.seed(0)
 
 
 def test_dc_p3d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=10,
     n_lines=3,
     refinement=(4, 6),
@@ -74,29 +76,26 @@ def test_dc_p3d_fwr_run(
     fwr_driver = DirectCurrentPseudo3DDriver(params)
     fwr_driver.run()
 
-    drape_model = geoh5.get_entity("Line 2")[0]
-    starting_model = [c for c in drape_model.children if c.name == "starting_model"][
-        0
-    ].values
+    local_simpeg_group = geoh5.get_entity("Line 2")[0]
+    drape_model = local_simpeg_group.get_entity("models")[0]
+    starting_model = drape_model.get_data("starting_model")[0].values
 
     return starting_model
 
 
 def test_dc_p3d_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = os.path.abspath(
-            tmp_path / "../test_dc_p3d_fwr_run0/inversion_test.geoh5"
-        )
+        workpath = tmp_path.parent / "test_dc_p3d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
-        models = geoh5.get_entity("Models")[0]
-        mesh = models.get_entity("mesh")[0]  # Finds the octree mesh
+        out_group = geoh5.get_entity("Line 1")[0].parent
+        mesh = out_group.get_entity("mesh")[0]  # Finds the octree mesh
         topography = geoh5.get_entity("topography")[0]
         _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
 
@@ -134,30 +133,24 @@ def test_dc_p3d_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = DirectCurrentPseudo3DDriver.start(
-        os.path.join(tmp_path, "Inv_run.ui.json")
-    )
+    driver = DirectCurrentPseudo3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
-    basepath = os.path.dirname(workpath)
-    with open(os.path.join(basepath, "lookup.json"), encoding="utf8") as f:
+    basepath = workpath.parent
+    with open(basepath / "lookup.json", encoding="utf8") as f:
         lookup = json.load(f)
         middle_line_id = [k for k, v in lookup.items() if v["line_id"] == 2][0]
 
-    with Workspace(
-        os.path.join(basepath, f"{middle_line_id}.ui.geoh5"), mode="r"
-    ) as workspace:
+    with Workspace(basepath / f"{middle_line_id}.ui.geoh5", mode="r") as workspace:
         middle_inversion_group = [
             k for k in workspace.groups if isinstance(k, SimPEGGroup)
         ][0]
-        filedata = [
-            k for k in middle_inversion_group.children if isinstance(k, FilenameData)
-        ][0]
+        filedata = middle_inversion_group.get_entity("SimPEG.out")[0]
 
-        with driver.pseudo3d_params.ga_group.workspace.open(mode="r+"):
-            filedata.copy(parent=driver.pseudo3d_params.ga_group)
+        with driver.pseudo3d_params.out_group.workspace.open(mode="r+"):
+            filedata.copy(parent=driver.pseudo3d_params.out_group)
 
     output = get_inversion_output(
-        driver.pseudo3d_params.geoh5.h5file, driver.pseudo3d_params.ga_group.uid
+        driver.pseudo3d_params.geoh5.h5file, driver.pseudo3d_params.out_group.uid
     )
     if geoh5.open():
         output["data"] = potential.values
@@ -170,14 +163,14 @@ def test_dc_p3d_run(
 if __name__ == "__main__":
     # Full run
     m_start = test_dc_p3d_fwr_run(
-        "./",
+        Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
 
     m_rec = test_dc_p3d_run(
-        "./",
+        Path("./"),
         max_iterations=20,
         pytest=False,
     )

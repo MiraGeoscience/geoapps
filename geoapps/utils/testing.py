@@ -12,8 +12,8 @@
 
 from __future__ import annotations
 
-import os
 import warnings
+from pathlib import Path
 from uuid import UUID
 
 import numpy as np
@@ -43,7 +43,7 @@ class Geoh5Tester:
 
     def __init__(self, geoh5, path, name, params_class=None):
         self.geoh5 = geoh5
-        self.tmp_path = os.path.join(path, name)
+        self.tmp_path = Path(path) / name
 
         if params_class is not None:
             self.ws = Workspace(self.tmp_path)
@@ -84,16 +84,20 @@ def setup_inversion_workspace(
     background=None,
     anomaly=None,
     cell_size=(5.0, 5.0, 5.0),
+    center=(0.0, 0.0, 0.0),
     n_electrodes=20,
     n_lines=5,
     refinement=(4, 6),
+    x_limits=(-100.0, 100.0),
+    y_limits=(-100.0, 100.0),
     padding_distance=100,
     drape_height=5.0,
     inversion_type="other",
     flatten=False,
+    geoh5=None,
 ):
-    project = os.path.join(work_dir, "inversion_test.geoh5")
-    geoh5 = Workspace(project)
+    if geoh5 is None:
+        geoh5 = Workspace(Path(work_dir) / "inversion_test.ui.geoh5")
     # Topography
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
     b = 100
@@ -102,7 +106,11 @@ def setup_inversion_workspace(
         zz = np.zeros_like(xx)
     else:
         zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
-    topo = np.c_[utils.mkvc(xx), utils.mkvc(yy), utils.mkvc(zz)]
+    topo = np.c_[
+        utils.mkvc(xx) + center[0],
+        utils.mkvc(yy) + center[1],
+        utils.mkvc(zz) + center[2],
+    ]
     triang = Delaunay(topo[:, :2])
     topography = Surface.create(
         geoh5,
@@ -116,21 +124,29 @@ def setup_inversion_workspace(
         if (inversion_type in ["dcip", "dcip_2d"]) & (n_electrodes < 4)
         else n_electrodes
     )
-    xr = np.linspace(-100.0, 100.0, n_electrodes)
-    yr = np.linspace(-100.0, 100.0, n_lines)
+    xr = np.linspace(x_limits[0], x_limits[1], int(n_electrodes))
+    yr = np.linspace(y_limits[0], y_limits[1], int(n_lines))
     X, Y = np.meshgrid(xr, yr)
     if flatten:
         Z = np.ones_like(X) * drape_height
     else:
         Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
 
-    vertices = np.c_[utils.mkvc(X.T), utils.mkvc(Y.T), utils.mkvc(Z.T)]
+    vertices = np.c_[
+        utils.mkvc(X.T) + center[0],
+        utils.mkvc(Y.T) + center[1],
+        utils.mkvc(Z.T) + center[2],
+    ]
 
     if inversion_type in ["dcip", "dcip_2d"]:
         ab_vertices = np.c_[
             X[:, :-2].flatten(), Y[:, :-2].flatten(), Z[:, :-2].flatten()
         ]
-        mn_vertices = np.c_[X[:, 2:].flatten(), Y[:, 2:].flatten(), Z[:, 2:].flatten()]
+        mn_vertices = np.c_[
+            X[:, 2:].flatten() + center[0],
+            Y[:, 2:].flatten() + center[1],
+            Z[:, 2:].flatten() + center[2],
+        ]
 
         parts = np.repeat(np.arange(n_lines), n_electrodes - 2).astype("int32")
         currents = CurrentElectrode.create(
@@ -353,15 +369,11 @@ def check_target(output: dict, target: dict, tolerance=0.1):
     )
 
 
-def get_output_workspace(tmp_dir):
+def get_output_workspace(tmp_dir: Path):
     """
     Extract the output geoh5 from the 'Temp' directory.
     """
-    files = [
-        file
-        for file in os.listdir(os.path.join(tmp_dir, "Temp"))
-        if file.endswith("geoh5")
-    ]
+    files = list((tmp_dir / "Temp").glob("*.geoh5"))
     if len(files) != 1:
         raise UserWarning("Could not find a unique output workspace.")
-    return os.path.join(tmp_dir, "Temp", files[0])
+    return str(files[0])

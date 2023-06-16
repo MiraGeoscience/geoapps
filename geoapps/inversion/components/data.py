@@ -14,17 +14,18 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.driver_base.params import BaseParams
+    from geoapps.inversion.params import InversionBaseParams
 
 from copy import deepcopy
 
 import numpy as np
 from discretize import TreeMesh
+from scipy.spatial import cKDTree
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 
 from geoapps.inversion.utils import calculate_2D_trend, create_nested_mesh
-from geoapps.shared_utils.utils import filter_xy
+from geoapps.shared_utils.utils import drape_2_tensor, filter_xy
 
 from .factories import (
     EntityFactory,
@@ -87,16 +88,12 @@ class InversionData(InversionLocations):
 
     """
 
-    def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
-    ):
+    def __init__(self, workspace: Workspace, params: InversionBaseParams):
         """
-        :param: workspace: Geoh5py workspace object containing location based data.
+        :param: workspace: :obj`geoh5py.workspace.Workspace` workspace object containing location based data.
         :param: params: Params object containing location based data parameters.
-        :param: window: Center and size defining window for data, topography, etc.
         """
-        super().__init__(workspace, params, window)
-
+        super().__init__(workspace, params)
         self.resolution: int | None = None
         self.offset: list[float] | None = None
         self.radar: np.ndarray | None = None
@@ -105,7 +102,6 @@ class InversionData(InversionLocations):
         self.detrend_order: float | None = None
         self.detrend_type: str | None = None
         self.locations: np.ndarray | None = None
-        self.has_pseudo: bool = False
         self.mask: np.ndarray | None = None
         self.global_map: np.ndarray | None = None
         self.indices: np.ndarray | None = None
@@ -135,7 +131,7 @@ class InversionData(InversionLocations):
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
-            window=self.window,
+            window=self.params.window,
             angle=self.angle,
             distance=self.params.resolution,
         )
@@ -160,6 +156,28 @@ class InversionData(InversionLocations):
         self.locations = super().get_locations(self.entity)
         self.survey, _, _ = self.create_survey()
         self.save_data(self.entity)
+
+    def drape_locations(self, locations: np.ndarray) -> np.ndarray:
+        """
+        Return pseudo locations along line in distance, depth.
+
+        The horizontal distance is referenced to first node of the core mesh.
+
+        """
+        local_tensor = drape_2_tensor(self.params.mesh)
+
+        # Interpolate distance assuming always inside the mesh trace
+        tree = cKDTree(self.params.mesh.prisms[:, :2])
+        rad, ind = tree.query(locations[:, :2], k=2)
+        distance_interp = 0.0
+        for ii in range(2):
+            distance_interp += local_tensor.cell_centers_x[ind[:, ii]] / (
+                rad[:, ii] + 1e-8
+            )
+
+        distance_interp /= ((rad + 1e-8) ** -1.0).sum(axis=1)
+
+        return np.c_[distance_interp, locations[:, 2:]]
 
     def filter(self, a):
         """Remove vertices based on mask property."""
@@ -454,6 +472,7 @@ class InversionData(InversionLocations):
         mesh: TreeMesh,
         active_cells: np.ndarray,
         survey,
+        models,
         tile_id: int | None = None,
         padding_cells: int = 6,
     ):
@@ -486,7 +505,7 @@ class InversionData(InversionLocations):
 
         else:
             nested_mesh = create_nested_mesh(
-                survey.unique_locations,
+                survey,
                 mesh,
                 method="padding_cells",
                 minimum_level=3,
@@ -506,6 +525,18 @@ class InversionData(InversionLocations):
                 mapping=mapping,
                 tile_id=tile_id,
             )
+
+        if "induced polarization" in self.params.inversion_type:
+            if "2d" in self.params.inversion_type:
+                proj = maps.InjectActiveCells(mesh, active_cells, valInactive=1e-8)
+            else:
+                proj = maps.InjectActiveCells(
+                    nested_mesh, mapping.local_active, valInactive=1e-8
+                )
+
+            # TODO this should be done in the simulation factory
+            sim.sigma = proj * mapping * models.conductivity
+
         return sim, mapping
 
     def simulate(self, model, inverse_problem, sorting, ordering):

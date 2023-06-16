@@ -7,9 +7,9 @@
 
 from __future__ import annotations
 
-import os
 import re
 import uuid
+from pathlib import Path
 from time import time
 
 import numpy
@@ -150,12 +150,8 @@ class CoordinateTransformation(ObjectDataSelection):
                                     )
 
                                 del grid
-                                if os.path.exists(temp_file):
-                                    os.remove(temp_file)
-
-                                if os.path.exists(temp_file_out):
-                                    os.remove(temp_file_out)
-
+                                Path(temp_file).unlink(missing_ok=True)
+                                Path(temp_file_out).unlink(missing_ok=True)
                                 count += 1
                     else:
                         if not hasattr(obj, "vertices"):
