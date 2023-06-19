@@ -179,17 +179,6 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "length_scale_x": 1.0,
-    "length_scale_y": 1.0,
-    "length_scale_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-    "fix_aspect_ratio": True,
-    "colorbar": False,
 }
 
 inversion_ui_json = {
@@ -727,8 +716,6 @@ validations = {
     "by_uncertainty": {"one_of": "uncertainty channel"},
     "bz_channel": {"one_of": "data channel"},
     "bz_uncertainty": {"one_of": "uncertainty channel"},
-    "fix_aspect_ratio": {"types": [bool]},
-    "colorbar": {"types": [bool]},
 }
 
 validations = dict(base_validations, **validations)

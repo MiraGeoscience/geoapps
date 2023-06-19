@@ -54,76 +54,7 @@ class MagneticScalarApp(InversionApp):
             Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
 
-        # Write params
-        self.app.callback(
-            Output(component_id="live_link", component_property="value"),
-            Input(component_id="write_input", component_property="n_clicks"),
-            State(component_id="live_link", component_property="value"),
-            # Data Selection
-            State(component_id="data_object", component_property="value"),
-            State(component_id="full_components", component_property="data"),
-            State(component_id="resolution", component_property="value"),
-            State(component_id="window_center_x", component_property="value"),
-            State(component_id="window_center_y", component_property="value"),
-            State(component_id="window_width", component_property="value"),
-            State(component_id="window_height", component_property="value"),
-            State(component_id="fix_aspect_ratio", component_property="value"),
-            State(component_id="colorbar", component_property="value"),
-            # Topography
-            State(component_id="topography_object", component_property="value"),
-            State(component_id="topography", component_property="value"),
-            State(component_id="z_from_topo", component_property="value"),
-            State(component_id="receivers_offset_z", component_property="value"),
-            State(component_id="receivers_radar_drape", component_property="value"),
-            # Inversion Parameters
-            State(component_id="forward_only", component_property="value"),
-            # Starting Model
-            State(component_id="starting_model_options", component_property="value"),
-            State(component_id="starting_model_data", component_property="value"),
-            State(component_id="starting_model_const", component_property="value"),
-            # Mesh
-            State(component_id="mesh", component_property="value"),
-            # Reference Model
-            State(component_id="reference_model_options", component_property="value"),
-            State(component_id="reference_model_data", component_property="value"),
-            State(component_id="reference_model_const", component_property="value"),
-            # Regularization
-            State(component_id="alpha_s", component_property="value"),
-            State(component_id="length_scale_x", component_property="value"),
-            State(component_id="length_scale_y", component_property="value"),
-            State(component_id="length_scale_xz", component_property="value"),
-            State(component_id="s_norm", component_property="value"),
-            State(component_id="x_norm", component_property="value"),
-            State(component_id="y_norm", component_property="value"),
-            State(component_id="z_norm", component_property="value"),
-            # Upper-Lower Bounds
-            State(component_id="lower_bound_options", component_property="value"),
-            State(component_id="lower_bound_data", component_property="value"),
-            State(component_id="lower_bound_const", component_property="value"),
-            State(component_id="upper_bound_options", component_property="value"),
-            State(component_id="upper_bound_data", component_property="value"),
-            State(component_id="upper_bound_const", component_property="value"),
-            # Detrend
-            State(component_id="detrend_type", component_property="value"),
-            State(component_id="detrend_order", component_property="value"),
-            # Ignore Values
-            State(component_id="ignore_values", component_property="value"),
-            # Optimization
-            State(component_id="max_global_iterations", component_property="value"),
-            State(component_id="max_irls_iterations", component_property="value"),
-            State(component_id="coolingRate", component_property="value"),
-            State(component_id="coolingFactor", component_property="value"),
-            State(component_id="chi_factor", component_property="value"),
-            State(component_id="initial_beta_ratio", component_property="value"),
-            State(component_id="max_cg_iterations", component_property="value"),
-            State(component_id="tol_cg", component_property="value"),
-            State(component_id="n_cpu", component_property="value"),
-            State(component_id="store_sensitivities", component_property="value"),
-            State(component_id="tile_spatial", component_property="value"),
-            # Output
-            State(component_id="ga_group", component_property="value"),
-            State(component_id="monitoring_directory", component_property="value"),
-            # Magnetic specific
+        trigger_args = [
             State(component_id="inducing_field_strength", component_property="value"),
             State(
                 component_id="inducing_field_inclination", component_property="value"
@@ -131,5 +62,9 @@ class MagneticScalarApp(InversionApp):
             State(
                 component_id="inducing_field_declination", component_property="value"
             ),
+        ]
+
+        self.app.callback(
+            *(self.default_trigger_args + trigger_args),
             prevent_initial_call=True,
         )(self.write_trigger)

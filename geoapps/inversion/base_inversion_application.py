@@ -66,6 +66,76 @@ class InversionApp(BaseDashApplication):
 
         self.app.layout = self._layout
 
+        self.default_trigger_args = [
+            Output(component_id="live_link", component_property="value"),
+            Input(component_id="write_input", component_property="n_clicks"),
+            State(component_id="live_link", component_property="value"),
+            # Data Selection
+            State(component_id="data_object", component_property="value"),
+            State(component_id="full_components", component_property="data"),
+            State(component_id="resolution", component_property="value"),
+            State(component_id="window_center_x", component_property="value"),
+            State(component_id="window_center_y", component_property="value"),
+            State(component_id="window_width", component_property="value"),
+            State(component_id="window_height", component_property="value"),
+            State(component_id="fix_aspect_ratio", component_property="value"),
+            State(component_id="colorbar", component_property="value"),
+            # Topography
+            State(component_id="topography_object", component_property="value"),
+            State(component_id="topography", component_property="value"),
+            State(component_id="z_from_topo", component_property="value"),
+            State(component_id="receivers_offset_z", component_property="value"),
+            State(component_id="receivers_radar_drape", component_property="value"),
+            # Inversion Parameters
+            State(component_id="forward_only", component_property="value"),
+            # Starting Model
+            State(component_id="starting_model_options", component_property="value"),
+            State(component_id="starting_model_data", component_property="value"),
+            State(component_id="starting_model_const", component_property="value"),
+            # Mesh
+            State(component_id="mesh", component_property="value"),
+            # Reference Model
+            State(component_id="reference_model_options", component_property="value"),
+            State(component_id="reference_model_data", component_property="value"),
+            State(component_id="reference_model_const", component_property="value"),
+            # Regularization
+            State(component_id="alpha_s", component_property="value"),
+            State(component_id="length_scale_x", component_property="value"),
+            State(component_id="length_scale_y", component_property="value"),
+            State(component_id="length_scale_z", component_property="value"),
+            State(component_id="s_norm", component_property="value"),
+            State(component_id="x_norm", component_property="value"),
+            State(component_id="y_norm", component_property="value"),
+            State(component_id="z_norm", component_property="value"),
+            # Upper-Lower Bounds
+            State(component_id="lower_bound_options", component_property="value"),
+            State(component_id="lower_bound_data", component_property="value"),
+            State(component_id="lower_bound_const", component_property="value"),
+            State(component_id="upper_bound_options", component_property="value"),
+            State(component_id="upper_bound_data", component_property="value"),
+            State(component_id="upper_bound_const", component_property="value"),
+            # Detrend
+            State(component_id="detrend_type", component_property="value"),
+            State(component_id="detrend_order", component_property="value"),
+            # Ignore Values
+            State(component_id="ignore_values", component_property="value"),
+            # Optimization
+            State(component_id="max_global_iterations", component_property="value"),
+            State(component_id="max_irls_iterations", component_property="value"),
+            State(component_id="coolingRate", component_property="value"),
+            State(component_id="coolingFactor", component_property="value"),
+            State(component_id="chi_factor", component_property="value"),
+            State(component_id="initial_beta_ratio", component_property="value"),
+            State(component_id="max_cg_iterations", component_property="value"),
+            State(component_id="tol_cg", component_property="value"),
+            State(component_id="n_cpu", component_property="value"),
+            State(component_id="store_sensitivities", component_property="value"),
+            State(component_id="tile_spatial", component_property="value"),
+            # Output
+            State(component_id="ga_group", component_property="value"),
+            State(component_id="monitoring_directory", component_property="value"),
+        ]
+
         # Callbacks relating to layout
         self.app.callback(
             Output(component_id="uncertainty_floor", component_property="style"),
@@ -488,7 +558,7 @@ class InversionApp(BaseDashApplication):
         # Get callback triggers
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
-        if "ui_json_data" in triggers:
+        if "ui_json_data" in triggers or ("" in triggers and ui_json_data is not None):
             if param in self._inversion_params.keys():
                 # Read in from ui.json using dict of inversion params.
                 if prefix + "_" + param in ui_json_data:
@@ -925,6 +995,36 @@ class InversionApp(BaseDashApplication):
         if values is not None and (values.shape[0] != locations.shape[0]):
             values = None
 
+        # Make colorscale from GA color_map
+        if data.entity_type.color_map is not None:
+            color_map_vals = data.entity_type.color_map._values  # pylint: disable=W0212
+            colorscale = []
+            min_val = np.nanmin(data.values)
+            max_val = np.nanmax(data.values)
+            span = max_val - min_val
+
+            for v in color_map_vals:
+                normalized_val = (v[0] - min_val) / span
+                if 0 <= normalized_val <= 1:
+                    colorscale.append(
+                        [
+                            normalized_val,
+                            "rgba("
+                            + str(v[1])
+                            + ", "
+                            + str(v[2])
+                            + ", "
+                            + str(v[3])
+                            + ", "
+                            + str(v[4])
+                            + ")",
+                        ]
+                    )
+            colorscale.insert(0, [0, colorscale[0][1]])
+            colorscale.append([1, colorscale[-1][1]])
+        else:
+            colorscale = "rainbow"
+
         if isinstance(entity, Grid2D):
             # Plot heatmap
             x = entity.centroids[:, 0].reshape(entity.shape, order="F")
@@ -976,6 +1076,7 @@ class InversionApp(BaseDashApplication):
                     figure.update_traces(showscale=True)
                 else:
                     figure.update_traces(showscale=False)
+            figure.update_traces(colorscale=colorscale)
 
         else:
             # Plot scatter plot
@@ -1010,6 +1111,7 @@ class InversionApp(BaseDashApplication):
                     figure.update_traces(marker_showscale=True)
                 else:
                     figure.update_traces(marker_showscale=False)
+            figure.update_traces(marker={"colorscale": colorscale})
 
         return figure, data_count
 
@@ -1073,11 +1175,9 @@ class InversionApp(BaseDashApplication):
         if "data_object" in triggers or channel is None or reinitialize:
             # If object changes, update plot type based on object type.
             if isinstance(obj, Grid2D):
-                figure = go.Figure(go.Heatmap(colorscale="rainbow"))
+                figure = go.Figure(go.Heatmap())
             else:
-                figure = go.Figure(
-                    go.Scatter(mode="markers", marker={"colorscale": "rainbow"})
-                )
+                figure = go.Figure(go.Scatter(mode="markers"))
             figure.update_layout(
                 plot_bgcolor="rgba(0,0,0,0)",
                 xaxis_title="Easting (m)",
@@ -1522,7 +1622,6 @@ class InversionApp(BaseDashApplication):
 
         :return live_link: Checkbox showing whether monitoring directory is enabled.
         """
-
         if mesh is None:
             print("A mesh must be selected to write the input file.")
             return no_update
