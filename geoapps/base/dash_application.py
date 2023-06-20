@@ -33,7 +33,7 @@ from geoh5py.shared.utils import fetch_active_workspace, is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from jupyter_dash import JupyterDash
-from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets
+from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets  # pylint: disable=E0401
 
 from geoapps.base.layout import object_selection_layout
 from geoapps.driver_base.params import BaseParams
@@ -51,11 +51,14 @@ class BaseDashApplication:
 
     def __init__(self):
         self.workspace = self.params.geoh5
-        self.driver = self._driver_class(self.params)  # pylint: disable=E1102
+        self.workspace.open()
+        if self._driver_class is not None:
+            self.driver = self._driver_class(self.params)  # pylint: disable=E1102
+
         self.app = None
 
     def update_object_options(
-        self, filename: str, contents: str, trigger: str | None = None
+        self, filename: str, contents: str, param_name: str = None, trigger: str = None
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
@@ -63,6 +66,7 @@ class BaseDashApplication:
 
         :param filename: Uploaded filename. Workspace or ui.json.
         :param contents: Uploaded file contents. Workspace or ui.json.
+        :param param_name: Name of object param to get from ui.json.
         :param trigger: Dash component which triggered the callback.
 
         :return object_options: New object dropdown options.
@@ -73,6 +77,9 @@ class BaseDashApplication:
         """
         ui_json_data, object_options, object_value = no_update, no_update, None
 
+        if param_name is None:
+            # Get id from output variable names
+            param_name = callback_context.outputs_list[0]["id"]
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if contents is not None or trigger == "":
@@ -83,13 +90,14 @@ class BaseDashApplication:
                 ui_json = json.loads(decoded)
                 self.workspace = Workspace(ui_json["geoh5"], mode="r")
                 self.params = self._param_class(**{"geoh5": self.workspace})
-                self.driver.params = self.params
+                if hasattr(self, "driver"):
+                    self.driver.params = self.params
                 # Create ifile from ui.json
                 ifile = InputFile(ui_json=ui_json)
                 # Demote ifile data so it can be stored as a string
                 ui_json_data = ifile.demote(ifile.data)
                 # Get new object value for dropdown from ui.json
-                object_value = ui_json_data["objects"]
+                object_value = ui_json_data[param_name]
             elif filename is not None and filename.endswith(".geoh5"):
                 # Uploaded workspace
                 _, content_string = contents.split(",")
@@ -102,7 +110,8 @@ class BaseDashApplication:
                         new_params[key] = None
                 new_params["geoh5"] = self.workspace
                 self.params = self._param_class(**new_params)
-                self.driver.params = self.params
+                if hasattr(self, "driver"):
+                    self.driver.params = self.params
                 ui_json_data = no_update
             elif trigger == "":
                 # Initialization of app from self.params.
@@ -111,8 +120,8 @@ class BaseDashApplication:
                     validate=False,
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json_data = ifile.demote(ifile.data)
-                object_value = ui_json_data["objects"]
+                ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
+                object_value = ui_json_data[param_name]
 
             self.workspace.open()
             # Get new options for object dropdown
@@ -123,29 +132,33 @@ class BaseDashApplication:
                 }
                 for obj in self.workspace.objects
             ]
-
         return object_options, object_value, ui_json_data, None, None
 
     def get_data_options(
-        self, trigger: str, ui_json_data: dict, object_uid: str
+        self,
+        ui_json_data: dict,
+        object_uid: str | None,
+        object_name: str = "objects",
+        trigger: str = None,
     ) -> list:
         """
         Get data dropdown options from a given object.
 
-        :param trigger: Callback trigger.
         :param ui_json_data: Uploaded ui.json data to read object from.
         :param object_uid: Selected object in object dropdown.
+        :param object_name: Object parameter name in ui.json.
+        :param trigger: Callback trigger.
 
         :return options: Data dropdown options.
         """
         obj = None
-        if trigger == "ui_json_data" and "objects" in ui_json_data:
-            if is_uuid(ui_json_data["objects"]):
-                object_uid = ui_json_data["objects"]
-            elif self.workspace.get_entity(ui_json_data["objects"])[0] is not None:
-                object_uid = self.workspace.get_entity(ui_json_data["objects"])[0].uid
+        if trigger == "ui_json_data" and object_name in ui_json_data:
+            if is_uuid(ui_json_data[object_name]):
+                object_uid = ui_json_data[object_name]
+            elif self.workspace.get_entity(ui_json_data[object_name])[0] is not None:
+                object_uid = self.workspace.get_entity(ui_json_data[object_name])[0].uid
 
-        if object_uid is not None:
+        if object_uid is not None and is_uuid(object_uid):
             for entity in self.workspace.get_entity(uuid.UUID(object_uid)):
                 if isinstance(entity, ObjectBase):
                     obj = entity
@@ -186,7 +199,9 @@ class BaseDashApplication:
                     else:
                         output_dict[key] = True
                 elif (
-                    float in validations[key]["types"] and type(update_dict[key]) == int
+                    float in validations[key]["types"]
+                    and int not in validations[key]["types"]
+                    and type(update_dict[key]) == int
                 ):
                     # Checking for values that Dash has given as int when they should be floats.
                     output_dict[key] = float(update_dict[key])
