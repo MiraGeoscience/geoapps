@@ -35,7 +35,7 @@ np.random.seed(0)
 
 def test_airborne_tem_fwr_run(
     tmp_path: Path,
-    n_grid_points=2,
+    n_grid_points=4,
     refinement=(2,),
 ):
     # Run the forward
@@ -46,8 +46,8 @@ def test_airborne_tem_fwr_run(
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
         refinement=refinement,
-        inversion_type="airborne_tem",
-        drape_height=10.0,
+        inversion_type="ground_tem",
+        drape_height=0.0,
         padding_distance=400.0,
         flatten=False,
     )

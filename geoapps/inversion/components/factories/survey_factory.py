@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
+import SimPEG.electromagnetics.time_domain as tdem
 from scipy.interpolate import interp1d
 
 from geoapps.utils.surveys import extract_dcip_survey
@@ -374,17 +375,17 @@ class SurveyFactory(SimPEGFactory):
         else:
             rx_lookup = {k: [k] for k in self.local_index}
             tx_locs_lookup = {k: transmitters.vertices[k, :] for k in self.local_index}
-            wave_function = interp1d(
-                (receivers.waveform[:, 0] - receivers.timing_mark)
-                * self.params.unit_conversion,
-                receivers.waveform[:, 1],
-                fill_value="extrapolate",
-            )
-            import SimPEG.electromagnetics.time_domain as tdem
 
-            waveform = tdem.sources.RawWaveform(
-                waveform_function=wave_function, offTime=0.0
-            )
+        wave_function = interp1d(
+            (receivers.waveform[:, 0] - receivers.timing_mark)
+            * self.params.unit_conversion,
+            receivers.waveform[:, 1],
+            fill_value="extrapolate",
+        )
+
+        waveform = tdem.sources.RawWaveform(
+            waveform_function=wave_function, offTime=0.0
+        )
 
         self.ordering = []
         rx_factory = ReceiversFactory(self.params)

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from geoh5py.objects.surveys.electromagnetics.airborne_tem import AirborneTEMReceivers
+from geoh5py.objects import AirborneTEMReceivers, LargeLoopGroundTEMReceivers
 
 import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
@@ -95,9 +95,6 @@ inversion_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "z_channel_bool": False,
-    "x_channel_bool": False,
-    "y_channel_bool": False,
 }
 
 forward_defaults = {
@@ -139,146 +136,6 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
     "gradient_type": "total",
-    "alpha_s": 1.0,
-    "length_scale_x": 1.0,
-    "length_scale_y": 1.0,
-    "length_scale_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
-
-inversion_ui_json = {
-    "z_channel_bool": False,
-    "x_channel_bool": False,
-    "y_channel_bool": False,
-    "detrend_type": None,
-    "detrend_order": None,
-}
-
-forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": [
-            "{19730589-fd28-4649-9de0-ad47249d9aba}",
-            "{deebe11a-b57b-4a03-99d6-8f27b25eb2a8}",
-            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
-        ],
-        "value": None,
-    },
-    "z_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Z component",
-        "value": False,
-    },
-    "z_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "z-component",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "z_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "z_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "x_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "X component",
-        "value": False,
-    },
-    "x_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "x-component",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "x_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "x_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "y_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Y component",
-        "value": False,
-    },
-    "y_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "y-component",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "y_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "y_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "starting_model": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-3,
-    },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "length_scale_x": 1.0,
-    "length_scale_y": 1.0,
-    "length_scale_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
@@ -292,7 +149,6 @@ default_ui_json = {
         "meshType": [
             "{19730589-fd28-4649-9de0-ad47249d9aba}",
             "{deebe11a-b57b-4a03-99d6-8f27b25eb2a8}",
-            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
         ],
         "value": None,
     },
@@ -409,7 +265,7 @@ default_ui_json = {
         "value": 1e-3,
     },
     "lower_bound": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "main": True,
         "dataType": "Float",
         "group": "Mesh and models",
@@ -422,7 +278,7 @@ default_ui_json = {
         "enabled": False,
     },
     "upper_bound": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "main": True,
         "dataType": "Float",
         "group": "Mesh and models",
@@ -446,7 +302,9 @@ validations = {
         "required": True,
         "values": ["tdem"],
     },
-    "data_object": {"types": [str, UUID, AirborneTEMReceivers]},
+    "data_object": {
+        "types": [str, UUID, AirborneTEMReceivers, LargeLoopGroundTEMReceivers]
+    },
     "z_channel": {"one_of": "data_channel"},
     "z_uncertainty": {"one_of": "uncertainty_channel"},
     "x_channel": {"one_of": "data_channel"},

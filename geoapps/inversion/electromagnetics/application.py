@@ -942,7 +942,7 @@ class InversionApp(PlotSelection2D):
         """"""
         os.system(
             "start cmd.exe @cmd /k "
-            + 'python -m geoapps.inversion.airborne_electromagnetics.driver "'
+            + 'python -m geoapps.inversion.electromagnetics.driver "'
             + f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
         )
         self.trigger.button_style = ""

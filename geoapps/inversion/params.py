@@ -110,9 +110,6 @@ class InversionBaseParams(BaseParams):
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
-            ui_json.update(
-                self._forward_ui_json if self.forward_only else self._inversion_ui_json
-            )
             ui_json = {
                 k: ui_json[k] for k in list(self.defaults)
             }  # Re-order using defaults
