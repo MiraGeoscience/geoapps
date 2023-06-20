@@ -13,11 +13,11 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.natural_sources.magnetotellurics.driver import (
-    MagnetotelluricsDriver,
+from geoapps.inversion.airborne_electromagnetics.frequency_domain.driver import (
+    FrequencyDomainElectromagneticsDriver,
 )
-from geoapps.inversion.natural_sources.magnetotellurics.params import (
-    MagnetotelluricsParams,
+from geoapps.inversion.airborne_electromagnetics.frequency_domain.params import (
+    FrequencyDomainElectromagneticsParams,
 )
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
@@ -33,7 +33,7 @@ target_run = {
 np.random.seed(0)
 
 
-def test_magnetotellurics_fwr_run(
+def test_fem_fwr_run(
     tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
@@ -47,10 +47,10 @@ def test_magnetotellurics_fwr_run(
         n_lines=n_grid_points,
         refinement=refinement,
         drape_height=0.0,
-        inversion_type="magnetotellurics",
+        inversion_type="fem",
         flatten=False,
     )
-    params = MagnetotelluricsParams(
+    params = FrequencyDomainElectromagneticsParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
@@ -60,52 +60,35 @@ def test_magnetotellurics_fwr_run(
         data_object=survey.uid,
         starting_model=model.uid,
         conductivity_model=1e-2,
-        zxx_real_channel_bool=True,
-        zxx_imag_channel_bool=True,
-        zxy_real_channel_bool=True,
-        zxy_imag_channel_bool=True,
-        zyx_real_channel_bool=True,
-        zyx_imag_channel_bool=True,
-        zyy_real_channel_bool=True,
-        zyy_imag_channel_bool=True,
+        z_real_channel_bool=True,
+        z_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = MagnetotelluricsDriver(params)
+    fwr_driver = FrequencyDomainElectromagneticsDriver(params)
     fwr_driver.run()
 
     return fwr_driver.models.starting
 
 
-def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
+def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
     workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = (
-            tmp_path.parent
-            / "test_magnetotellurics_fwr_run0"
-            / "inversion_test.ui.geoh5"
-        )
+        workpath = tmp_path.parent / "test_fem_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
-        survey = geoh5.get_entity("survey")[0]
+        survey = geoh5.get_entity("Airborne_rx")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
 
         data = {}
         uncertainties = {}
         components = {
-            "zxx_real": "Zxx (real)",
-            "zxx_imag": "Zxx (imag)",
-            "zxy_real": "Zxy (real)",
-            "zxy_imag": "Zxy (imag)",
-            "zyx_real": "Zyx (real)",
-            "zyx_imag": "Zyx (imag)",
-            "zyy_real": "Zyy (real)",
-            "zyy_imag": "Zyy (imag)",
+            "z_real": "z_real",
+            "z_imag": "z_imag",
         }
 
         for comp, cname in components.items():
             data[cname] = []
-            # uncertainties[f"{cname} uncertainties"] = {}
             uncertainties[f"{cname} uncertainties"] = []
             for ind in range(len(survey.channels)):
                 data_entity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
@@ -135,11 +118,11 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
             data_kwargs[f"{comp}_channel"] = data_group.uid
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
 
-        orig_zyy_real_1 = geoh5.get_entity("Iteration_0_zyy_real_[0]")[0].values
+        orig_z_real_1 = geoh5.get_entity("Iteration_0_z_real_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
-        params = MagnetotelluricsParams(
+        params = FrequencyDomainElectromagneticsParams(
             geoh5=geoh5,
             mesh=mesh.uid,
             topography_object=topography.uid,
@@ -163,13 +146,15 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = MagnetotelluricsDriver.start(str(tmp_path / "Inv_run.ui.json"))
+        driver = FrequencyDomainElectromagneticsDriver.start(
+            str(tmp_path / "Inv_run.ui.json")
+        )
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
-        output["data"] = orig_zyy_real_1
+        output["data"] = orig_z_real_1
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
@@ -181,7 +166,7 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
     # test that one channel works
     data_kwargs = {k: v for k, v in data_kwargs.items() if "zxx_real" in k}
     geoh5.open()
-    params = MagnetotelluricsParams(
+    params = FrequencyDomainElectromagneticsParams(
         geoh5=geoh5,
         mesh=geoh5.get_entity("mesh")[0].uid,
         topography_object=topography.uid,
@@ -193,18 +178,18 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = MagnetotelluricsDriver.start(str(tmp_path / "Inv_run.ui.json"))
+    driver = FrequencyDomainElectromagneticsDriver.start(
+        str(tmp_path / "Inv_run.ui.json")
+    )
 
     return driver
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_magnetotellurics_fwr_run(
-        Path("./"), n_grid_points=8, refinement=(4, 8)
-    )
+    mstart = test_fem_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
 
-    m_rec = test_magnetotellurics_run(
+    m_rec = test_fem_run(
         Path("./"),
         max_iterations=15,
         pytest=False,

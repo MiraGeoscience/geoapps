@@ -243,7 +243,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         object_type = "mesh" if hasattr(inversion_object, "mesh") else "data"
 
         if object_type == "data":
-            if self.factory_type in ["magnetotellurics", "tipper"]:
+            if self.factory_type in ["fem", "magnetotellurics", "tipper"]:
                 kwargs = self.assemble_data_keywords_naturalsource(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
@@ -326,6 +326,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "magnetotellurics",
                 "tipper",
                 "tdem",
+                "fem",
             ]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]

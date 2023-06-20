@@ -19,6 +19,8 @@ from uuid import UUID
 import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import (
+    AirborneFEMReceivers,
+    AirborneFEMTransmitters,
     AirborneTEMReceivers,
     AirborneTEMTransmitters,
     CurrentElectrode,
@@ -226,6 +228,24 @@ def setup_inversion_workspace(
         # survey.cells = survey.cells[dist < 100.0, :]
         survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
 
+    elif inversion_type == "fem":
+        survey = AirborneFEMReceivers.create(
+            geoh5, vertices=vertices, name="Airborne_rx"
+        )
+        transmitters = AirborneFEMTransmitters.create(
+            geoh5, vertices=vertices, name="Airborne_tx"
+        )
+        survey.transmitters = transmitters
+        survey.channels = [10.0, 100.0, 1000.0]
+
+        dist = np.linalg.norm(
+            survey.vertices[survey.cells[:, 0], :]
+            - survey.vertices[survey.cells[:, 1], :],
+            axis=1,
+        )
+        survey.remove_cells(np.where(dist > 200.0)[0])
+        transmitters.remove_cells(np.where(dist > 200.0)[0])
+
     elif inversion_type == "airborne_tem":
         survey = AirborneTEMReceivers.create(
             geoh5, vertices=vertices, name="Airborne_rx"
@@ -301,7 +321,7 @@ def setup_inversion_workspace(
             finalize=False,
         )
 
-        if inversion_type == "airborne_tem":
+        if inversion_type in ["fem", "airborne_tem"]:
             mesh = refine_tree_xyz(
                 mesh,
                 vertices,

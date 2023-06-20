@@ -86,6 +86,9 @@ class SurveyFactory(SimPEGFactory):
         elif "induced polarization" in self.factory_type:
             from SimPEG.electromagnetics.static.induced_polarization import survey
 
+        elif "fem" in self.factory_type:
+            from SimPEG.electromagnetics.frequency_domain import survey
+
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import survey
 
@@ -108,7 +111,7 @@ class SurveyFactory(SimPEGFactory):
                 "induced polarization pseudo 3d",
             ]:
                 n_data = receiver_entity.n_cells
-            elif self.factory_type in ["tdem"]:
+            elif self.factory_type in ["fem", "tdem"]:
                 transmitter_id = data.entity.get_data("Transmitter ID")
                 if transmitter_id:
                     n_data = len(np.unique(transmitter_id[0].values))
@@ -133,8 +136,8 @@ class SurveyFactory(SimPEGFactory):
 
         elif self.factory_type in ["tdem"]:
             return self._tdem_arguments(data=data, mesh=mesh, local_index=local_index)
-        elif self.factory_type in ["magnetotellurics", "tipper"]:
-            return self._naturalsource_arguments(
+        elif self.factory_type in ["fem", "magnetotellurics", "tipper"]:
+            return self._frequency_domain_arguments(
                 data=data, mesh=mesh, frequency=channel
             )
         else:
@@ -215,7 +218,7 @@ class SurveyFactory(SimPEGFactory):
             survey.dobs = np.vstack([dobs]).flatten()
             survey.std = np.vstack([uncerts]).flatten()
 
-        elif self.factory_type in ["magnetotellurics", "tipper"]:
+        elif self.factory_type in ["fem", "magnetotellurics", "tipper"]:
             local_data = {}
             local_uncertainties = {}
 
@@ -415,7 +418,7 @@ class SurveyFactory(SimPEGFactory):
 
         return [tx_list]
 
-    def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
+    def _frequency_domain_arguments(self, data=None, mesh=None, frequency=None):
         receivers = []
         sources = []
         rx_factory = ReceiversFactory(self.params)

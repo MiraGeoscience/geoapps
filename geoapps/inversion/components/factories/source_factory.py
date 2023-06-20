@@ -51,6 +51,11 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.Dipole
 
+        elif "fem" in self.factory_type:
+            from SimPEG.electromagnetics.frequency_domain import sources
+
+            return sources.MagDipole
+
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import sources
 
@@ -93,7 +98,7 @@ class SourcesFactory(SimPEGFactory):
                 locations=locations,
             )
 
-        elif self.factory_type in ["magnetotellurics", "tipper"]:
+        elif self.factory_type in ["fem", "magnetotellurics", "tipper"]:
             args.append(receivers)
             args.append(frequency)
 
@@ -115,6 +120,8 @@ class SourcesFactory(SimPEGFactory):
             kwargs["parameters"] = self.params.inducing_field_aid()
         if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["sigma_primary"] = [self.params.background_conductivity]
+        if self.factory_type in ["fem"]:
+            kwargs["location"] = locations
         if self.factory_type in ["tdem"]:
             kwargs["location"] = locations
             kwargs["waveform"] = waveform
