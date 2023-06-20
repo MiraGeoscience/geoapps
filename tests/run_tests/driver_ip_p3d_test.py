@@ -11,7 +11,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-from geoh5py.data import FilenameData
 from geoh5py.groups import SimPEGGroup
 from geoh5py.workspace import Workspace
 
@@ -147,9 +146,7 @@ def test_ip_p3d_run(
         middle_inversion_group = [
             k for k in workspace.groups if isinstance(k, SimPEGGroup)
         ][0]
-        filedata = [
-            k for k in middle_inversion_group.children if isinstance(k, FilenameData)
-        ][0]
+        filedata = middle_inversion_group.get_entity("SimPEG.out")[0]
 
         with driver.pseudo3d_params.out_group.workspace.open(mode="r+"):
             filedata.copy(parent=driver.pseudo3d_params.out_group)

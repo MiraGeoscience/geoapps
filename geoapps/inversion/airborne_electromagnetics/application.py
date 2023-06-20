@@ -618,38 +618,40 @@ def get_inversion_output(h5file, group_name):
     """
     Recover an inversion iterations from a ContainerGroup comments.
     """
-    workspace = Workspace(h5file)
-    out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
+    with Workspace(h5file) as workspace:
+        out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
 
-    if workspace.get_entity(group_name):
-        group = workspace.get_entity(group_name)[0]
+        if workspace.get_entity(group_name):
+            group = workspace.get_entity(group_name)[0]
 
-        for comment in group.comments.values:
-            if "Iteration" in comment["Author"]:
-                out["iteration"] += [np.int(comment["Author"].split("_")[1])]
-                out["time"] += [comment["Date"]]
-                values = json.loads(comment["Text"])
-                out["phi_d"] += [float(values["phi_d"])]
-                out["phi_m"] += [float(values["phi_m"])]
-                out["beta"] += [float(values["beta"])]
+            for comment in group.comments.values:
+                if "Iteration" in comment["Author"]:
+                    out["iteration"] += [np.int(comment["Author"].split("_")[1])]
+                    out["time"] += [comment["Date"]]
+                    values = json.loads(comment["Text"])
+                    out["phi_d"] += [float(values["phi_d"])]
+                    out["phi_m"] += [float(values["phi_m"])]
+                    out["beta"] += [float(values["beta"])]
 
-        if len(out["iteration"]) > 0:
-            out["iteration"] = np.hstack(out["iteration"])
-            ind = np.argsort(out["iteration"])
-            out["iteration"] = out["iteration"][ind]
-            out["phi_d"] = np.hstack(out["phi_d"])[ind]
-            out["phi_m"] = np.hstack(out["phi_m"])[ind]
-            out["time"] = np.hstack(out["time"])[ind]
+            if len(out["iteration"]) > 0:
+                out["iteration"] = np.hstack(out["iteration"])
+                ind = np.argsort(out["iteration"])
+                out["iteration"] = out["iteration"][ind]
+                out["phi_d"] = np.hstack(out["phi_d"])[ind]
+                out["phi_m"] = np.hstack(out["phi_m"])[ind]
+                out["time"] = np.hstack(out["time"])[ind]
 
     return out
 
 
 def plot_convergence_curve(h5file):
     """"""
-    workspace = Workspace(h5file)
-    names = [
-        group.name for group in workspace.groups if isinstance(group, ContainerGroup)
-    ]
+    with Workspace(h5file, mode="r") as workspace:
+        names = [
+            group.name
+            for group in workspace.groups
+            if isinstance(group, ContainerGroup)
+        ]
     objects = widgets.Dropdown(
         options=names,
         value=names[0],
@@ -657,22 +659,23 @@ def plot_convergence_curve(h5file):
     )
 
     def plot_curve(objects):
-        inversion = workspace.get_entity(objects)[0]
-        result = None
-        if getattr(inversion, "comments", None) is not None:
-            if inversion.comments.values is not None:
-                result = get_inversion_output(workspace.h5file, objects)
-                iterations = result["iteration"]
-                phi_d = result["phi_d"]
-                phi_m = result["phi_m"]
+        with Workspace(h5file, mode="r") as workspace:
+            inversion = workspace.get_entity(objects)[0]
+            result = None
+            if getattr(inversion, "comments", None) is not None:
+                if inversion.comments.values is not None:
+                    result = get_inversion_output(workspace.h5file, objects)
+                    iterations = result["iteration"]
+                    phi_d = result["phi_d"]
+                    phi_m = result["phi_m"]
 
-                ax1 = plt.subplot()
-                ax2 = ax1.twinx()
-                ax1.plot(iterations, phi_d, linewidth=3, c="k")
-                ax1.set_xlabel("Iterations")
-                ax1.set_ylabel(r"$\phi_d$", size=16)
-                ax2.plot(iterations, phi_m, linewidth=3, c="r")
-                ax2.set_ylabel(r"$\phi_m$", size=16)
+                    ax1 = plt.subplot()
+                    ax2 = ax1.twinx()
+                    ax1.plot(iterations, phi_d, linewidth=3, c="k")
+                    ax1.set_xlabel("Iterations")
+                    ax1.set_ylabel(r"$\phi_d$", size=16)
+                    ax2.plot(iterations, phi_m, linewidth=3, c="r")
+                    ax2.set_ylabel(r"$\phi_m$", size=16)
 
         return result
 
