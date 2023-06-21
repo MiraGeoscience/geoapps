@@ -132,8 +132,8 @@ class SurveyFactory(SimPEGFactory):
             sources = SourcesFactory(self.params).build(receivers)
             return [sources]
 
-    def assemble_keyword_arguments(self, _):
-        """Provides implementations to assemble keyword arguments for receivers object."""
+    def assemble_keyword_arguments(self, **_):
+        """Implementation of abstract method from SimPEGFactory."""
         return {}
 
     def build(

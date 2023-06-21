@@ -84,7 +84,7 @@ class SimPEGFactory(ABC):
         """To be over-ridden in factory implementations."""
 
     @abstractmethod
-    def assemble_keyword_arguments(self, _) -> dict:
+    def assemble_keyword_arguments(self, **_) -> dict:
         """To be over-ridden in factory implementations."""
 
     def build(self, **kwargs):
