@@ -58,9 +58,6 @@ class SimPEGFactory(ABC):
     def __init__(self, params: BaseParams):
         """
         :param params: Driver parameters object.
-        :param factory_type: Concrete factory type.
-        :param simpeg_object: Abstract SimPEG object.
-
         """
         self.params = params
         self.factory_type: str = params.inversion_type
@@ -83,11 +80,11 @@ class SimPEGFactory(ABC):
         """To be over-ridden in factory implementations."""
 
     @abstractmethod
-    def assemble_arguments(self, _):
+    def assemble_arguments(self, _) -> list:
         """To be over-ridden in factory implementations."""
 
     @abstractmethod
-    def assemble_keyword_arguments(self, _):
+    def assemble_keyword_arguments(self, _) -> dict:
         """To be over-ridden in factory implementations."""
 
     def build(self, **kwargs):

@@ -100,21 +100,14 @@ class SurveyFactory(SimPEGFactory):
         receiver_entity = data.entity
 
         if local_index is None:
-            if self.factory_type in [
-                "direct current pseudo 3d",
-                "direct current 3d",
-                "direct current 2d",
-                "induced polarization 3d",
-                "induced polarization 2d",
-                "induced polarization pseudo 3d",
-            ]:
+            if "current" in self.factory_type or "polarization" in self.factory_type:
                 n_data = receiver_entity.n_cells
             elif self.factory_type in ["tdem"]:
                 transmitter_id = data.entity.get_data("Transmitter ID")
                 if transmitter_id:
                     n_data = len(np.unique(transmitter_id[0].values))
                 else:
-                    n_data = receiver_entity.transmitters.n_vertices
+                    n_data = receiver_entity.n_vertices
             else:
                 n_data = receiver_entity.n_vertices
 
@@ -122,16 +115,8 @@ class SurveyFactory(SimPEGFactory):
         else:
             self.local_index = local_index
 
-        if self.factory_type in [
-            "direct current pseudo 3d",
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-            "induced polarization pseudo 3d",
-        ]:
+        if "current" in self.factory_type or "polarization" in self.factory_type:
             return self._dcip_arguments(data=data, local_index=local_index)
-
         elif self.factory_type in ["tdem"]:
             return self._tdem_arguments(data=data, mesh=mesh, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
@@ -146,6 +131,10 @@ class SurveyFactory(SimPEGFactory):
             )
             sources = SourcesFactory(self.params).build(receivers)
             return [sources]
+
+    def assemble_keyword_arguments(self, _):
+        """Provides implementations to assemble keyword arguments for receivers object."""
+        return {}
 
     def build(
         self,
