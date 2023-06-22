@@ -33,7 +33,7 @@ target_run = {
 np.random.seed(0)
 
 
-def test_airborne_tem_fwr_run(
+def test_ground_tem_fwr_run(
     tmp_path: Path,
     n_grid_points=4,
     refinement=(2,),
@@ -47,9 +47,9 @@ def test_airborne_tem_fwr_run(
         n_lines=n_grid_points,
         refinement=refinement,
         inversion_type="ground_tem",
-        drape_height=0.0,
-        padding_distance=400.0,
-        flatten=False,
+        drape_height=5.0,
+        padding_distance=1000.0,
+        flatten=True,
     )
     params = TimeDomainElectromagneticsParams(
         forward_only=True,
@@ -71,15 +71,16 @@ def test_airborne_tem_fwr_run(
     return fwr_driver.models.starting
 
 
-def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
+def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
     workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
         workpath = (
-            tmp_path.parent / "test_airborne_tem_fwr_run0" / "inversion_test.ui.geoh5"
+            tmp_path.parent / "test_ground_tem_fwr_run0" / "inversion_test.ui.geoh5"
         )
 
     with Workspace(workpath) as geoh5:
-        survey = geoh5.get_entity("Airborne_rx")[0]
+        simpeg_group = geoh5.get_entity("TdemForward")[0]
+        survey = simpeg_group.get_entity("Ground TEM Rx")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
 
@@ -102,7 +103,7 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
                     {
                         f"uncertainty_{comp}_[{ii}]": {
                             "values": np.ones_like(data_entity.values)
-                            * (np.median(np.abs(data_entity.values)))
+                            * np.median(np.abs(data_entity.values))
                         }
                     }
                 )
@@ -132,21 +133,22 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
             data_object=survey.uid,
             starting_model=1e-3,
             reference_model=1e-3,
-            chi_factor=1.0,
+            chi_factor=0.1,
             s_norm=2.0,
             x_norm=2.0,
             y_norm=2.0,
             z_norm=2.0,
-            alpha_s=1e-4,
+            # alpha_s=1e-1,
             gradient_type="total",
             z_from_topo=False,
             lower_bound=2e-6,
             upper_bound=1e2,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e2,
-            coolingRate=4,
+            initial_beta_ratio=1e4,
+            coolingRate=1,
             max_cg_iterations=200,
-            prctile=5,
+            prctile=100,
+            # sens_wts_threshold=1.,
             store_sensitivities="ram",
             **data_kwargs,
         )
@@ -170,11 +172,9 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_airborne_tem_fwr_run(
-        Path("./"), n_grid_points=5, refinement=(0, 0, 4)
-    )
+    mstart = test_ground_tem_fwr_run(Path("./"), n_grid_points=5, refinement=(2, 2, 2))
 
-    m_rec = test_airborne_tem_run(
+    m_rec = test_ground_tem_run(
         Path("./"),
         max_iterations=15,
         pytest=False,

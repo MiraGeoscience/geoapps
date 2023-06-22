@@ -107,13 +107,12 @@ def setup_inversion_workspace(
         """Topography Gaussian function"""
         b = 100
         A = 50
-        return A * np.exp(-0.5 * ((x / b) ** 2.0 + (y / b) ** 2.0))
+        if flatten:
+            return np.zeros_like(x)
+        else:
+            return A * np.exp(-0.5 * ((x / b) ** 2.0 + (y / b) ** 2.0))
 
-    if flatten:
-        zz = np.zeros_like(xx)
-    else:
-        zz = topo_drape(xx, yy)
-
+    zz = topo_drape(xx, yy)
     topo = np.c_[
         utils.mkvc(xx) + center[0],
         utils.mkvc(yy) + center[1],
@@ -135,11 +134,7 @@ def setup_inversion_workspace(
     xr = np.linspace(x_limits[0], x_limits[1], int(n_electrodes))
     yr = np.linspace(y_limits[0], y_limits[1], int(n_lines))
     X, Y = np.meshgrid(xr, yr)
-
-    if flatten:
-        Z = np.ones_like(X) * drape_height
-    else:
-        Z = topo_drape(X, Y) + drape_height
+    Z = topo_drape(X, Y) + drape_height
 
     vertices = np.c_[
         utils.mkvc(X.T) + center[0],
@@ -275,18 +270,30 @@ def setup_inversion_workspace(
                 max_loc = np.max(array, axis=0)
                 loop = np.vstack(
                     [
-                        [min_loc[0], min_loc[1]],
-                        [min_loc[0], max_loc[1]],
-                        [max_loc[0], max_loc[1]],
-                        [max_loc[0], min_loc[1]],
+                        np.c_[
+                            np.ones(5) * min_loc[0],
+                            np.linspace(min_loc[1], max_loc[1], 5),
+                        ],
+                        np.c_[
+                            np.linspace(min_loc[0], max_loc[0], 5)[1:],
+                            np.ones(4) * max_loc[1],
+                        ],
+                        np.c_[
+                            np.ones(4) * max_loc[0],
+                            np.linspace(max_loc[1], min_loc[1], 5)[1:],
+                        ],
+                        np.c_[
+                            np.linspace(max_loc[0], min_loc[0], 5)[1:-1],
+                            np.ones(3) * min_loc[1],
+                        ],
                     ]
                 )
-                loop = (loop - np.mean(loop, axis=0)) * 1.5 - np.mean(loop, axis=0)
-                loop = np.c_[loop, topo_drape(loop[:, 0], loop[:, 1])]
+                loop = (loop - np.mean(loop, axis=0)) * 1.5 + np.mean(loop, axis=0)
+                loop = np.c_[loop, topo_drape(loop[:, 0], loop[:, 1]) + drape_height]
                 loops += [loop + np.asarray(center)]
-                loop_cells += [np.c_[np.arange(3) + count, np.arange(3) + count + 1]]
-                loop_cells += [np.c_[count + 3, count]]
-                count += 4
+                loop_cells += [np.c_[np.arange(15) + count, np.arange(15) + count + 1]]
+                loop_cells += [np.c_[count + 15, count]]
+                count += 16
 
             transmitters = LargeLoopGroundTEMTransmitters.create(
                 geoh5,
@@ -299,6 +306,7 @@ def setup_inversion_workspace(
             )
             survey.transmitters = transmitters
             survey.tx_id_property = np.hstack(loop_id)
+            # survey.parts = np.repeat(np.arange(n_lines), n_electrodes)
 
         survey.channels = np.r_[3e-04, 6e-04, 1.2e-03]
         waveform = np.c_[
