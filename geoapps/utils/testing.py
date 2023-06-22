@@ -95,7 +95,7 @@ def setup_inversion_workspace(
     geoh5=None,
 ):
     if geoh5 is None:
-        geoh5 = Workspace(Path(work_dir) / "inversion_test.geoh5")
+        geoh5 = Workspace(Path(work_dir) / "inversion_test.ui.geoh5")
     # Topography
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
     b = 100
