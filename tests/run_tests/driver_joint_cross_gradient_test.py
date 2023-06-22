@@ -10,11 +10,13 @@ import numpy as np
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.joint.joint_surveys import JointSingleParams
-from geoapps.inversion.joint.joint_surveys.driver import JointSurveyDriver
+from geoapps.inversion.joint.joint_cross_gradient import JointCrossGradientParams
+from geoapps.inversion.joint.joint_cross_gradient.driver import JointCrossGradientDriver
 from geoapps.inversion.potential_fields import GravityParams, MagneticScalarParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
-from geoapps.inversion.potential_fields.magnetic_scalar.driver import MagneticScalarDriver
+from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
+    MagneticScalarDriver,
+)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -80,34 +82,9 @@ def test_joint_cross_gradient_fwr_run(
     )
     params.workpath = tmp_path
 
-    fwr_driver = MagneticScalarDriver(params)
+    fwr_driver_b = MagneticScalarDriver(params)
 
-    # Create local problem B
-    _, _, model, survey, _ = setup_inversion_workspace(
-        tmp_path,
-        background=0.0,
-        anomaly=0.75,
-        refinement=[0, 2],
-        n_electrodes=int(n_grid_points / 2),
-        n_lines=int(n_grid_points / 2),
-        flatten=False,
-        geoh5=geoh5,
-        drape_height=10.0,
-    )
-
-    params = GravityParams(
-        forward_only=True,
-        geoh5=geoh5,
-        mesh=model.parent.uid,
-        topography_object=topography.uid,
-        resolution=0.0,
-        z_from_topo=False,
-        data_object=survey.uid,
-        starting_model=model.uid,
-    )
-    fwr_driver_b = GravityDriver(params)
-
-    joint_params = JointSingleParams(
+    joint_params = JointCrossGradientParams(
         forward_only=True,
         geoh5=geoh5,
         topography_object=topography.uid,
@@ -115,7 +92,7 @@ def test_joint_cross_gradient_fwr_run(
         group_b=fwr_driver_b.params.out_group,
     )
 
-    fwr_driver = JointSurveyDriver(joint_params)
+    fwr_driver = JointCrossGradientDriver(joint_params)
     fwr_driver.run()
     geoh5.close()
     return fwr_driver.models.starting
@@ -129,7 +106,9 @@ def test_joint_cross_gradient_inv_run(
     workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
         workpath = (
-            tmp_path.parent / "test_joint_cross_gradient_fwr_run0" / "inversion_test.ui.geoh5"
+            tmp_path.parent
+            / "test_joint_cross_gradient_fwr_run0"
+            / "inversion_test.ui.geoh5"
         )
 
     with Workspace(workpath) as geoh5:
@@ -159,7 +138,7 @@ def test_joint_cross_gradient_inv_run(
 
         # Run the inverse
         np.random.seed(0)
-        joint_params = JointSingleParams(
+        joint_params = JointCrossGradientParams(
             geoh5=geoh5,
             topography_object=topography.uid,
             mesh=geoh5.get_entity("Octree")[0].uid,
@@ -179,7 +158,7 @@ def test_joint_cross_gradient_inv_run(
             store_sensitivities="ram",
         )
 
-    driver = JointSurveyDriver(joint_params)
+    driver = JointCrossGradientDriver(joint_params)
     driver.run()
 
     with Workspace(driver.params.geoh5.h5file):

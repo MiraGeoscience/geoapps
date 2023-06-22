@@ -37,7 +37,7 @@ from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
 from geoapps.inversion.electromagnetics.time_domain import (
     TimeDomainElectromagneticsParams,
 )
-from geoapps.inversion.joint.joint_surveys import JointSingleParams
+from geoapps.inversion.joint.joint_surveys import JointSurveysParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
@@ -250,10 +250,10 @@ def write_default_uijson(path: str | Path, use_initializers=False):
             forward_only=False, validate=False, **tipper_init
         ),
         "tipper_forward.ui.json": TipperParams(forward_only=True, validate=False),
-        "joint_surveys_inversion.ui.json": JointSingleParams(
+        "joint_surveys_inversion.ui.json": JointSurveysParams(
             forward_only=False, validate=False, **joint_surveys_init
         ),
-        "joint_surveys_forward.ui.json": JointSingleParams(
+        "joint_surveys_forward.ui.json": JointSurveysParams(
             forward_only=True, validate=False, **joint_surveys_init
         ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),

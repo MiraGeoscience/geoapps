@@ -29,15 +29,15 @@ from geoapps.inversion.driver import InversionDriver
 from geoapps.utils.models import create_octree_from_octrees, get_octree_attributes
 
 from .constants import validations
-from .params import JointSurveysParams
+from .params import JointCrossGradientParams
 
 
-class JointSurveyDriver(InversionDriver):
-    _params_class = JointSurveysParams
+class JointCrossGradientDriver(InversionDriver):
+    _params_class = JointCrossGradientParams
     _validations = validations
     _drivers = None
 
-    def __init__(self, params: JointSurveysParams):
+    def __init__(self, params: JointCrossGradientParams):
         super().__init__(params)
 
         with fetch_active_workspace(self.workspace, mode="r+"):
@@ -61,16 +61,12 @@ class JointSurveyDriver(InversionDriver):
         """List of inversion drivers."""
         if self._drivers is None:
             drivers = []
-            physical_property = None
+            physical_property = []
             # Create sub-drivers
             for group in [
                 self.params.group_a,
                 self.params.group_b,
-                self.params.group_c,
             ]:
-                if group is None:
-                    continue
-
                 ui_json = group.options
                 ui_json["geoh5"] = self.workspace
 
@@ -82,15 +78,7 @@ class JointSurveyDriver(InversionDriver):
                     ifile, out_group=group
                 )
                 driver = inversion_driver(params)
-
-                if physical_property is None:
-                    physical_property = params.PHYSICAL_PROPERTY
-                elif params.PHYSICAL_PROPERTY != physical_property:
-                    raise ValueError(
-                        "All physical properties must be the same. "
-                        f"Provided SimPEG groups for {physical_property} and {params.PHYSICAL_PROPERTY}."
-                    )
-
+                physical_property.append(params.PHYSICAL_PROPERTY)
                 group.parent = self.params.out_group
                 drivers.append(driver)
 

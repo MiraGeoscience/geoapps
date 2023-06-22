@@ -10,7 +10,7 @@ import numpy as np
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.joint.joint_surveys import JointSingleParams
+from geoapps.inversion.joint.joint_surveys import JointSurveysParams
 from geoapps.inversion.joint.joint_surveys.driver import JointSurveyDriver
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
@@ -80,7 +80,7 @@ def test_joint_surveys_fwr_run(
     )
     fwr_driver_b = GravityDriver(params)
 
-    joint_params = JointSingleParams(
+    joint_params = JointSurveysParams(
         forward_only=True,
         geoh5=geoh5,
         topography_object=topography.uid,
@@ -132,7 +132,7 @@ def test_joint_surveys_inv_run(
 
         # Run the inverse
         np.random.seed(0)
-        joint_params = JointSingleParams(
+        joint_params = JointSurveysParams(
             geoh5=geoh5,
             topography_object=topography.uid,
             mesh=geoh5.get_entity("Octree")[0].uid,
