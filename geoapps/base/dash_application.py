@@ -532,7 +532,7 @@ class ObjectSelection:
             temp_geoh5 = self.workspace.name + "_" + f"{time():.0f}.geoh5"
             temp_dir = tempfile.TemporaryDirectory().name
             os.mkdir(temp_dir)
-            temp_workspace = Workspace(Path(temp_dir) / temp_geoh5)
+            temp_workspace = Workspace.create(Path(temp_dir) / temp_geoh5)
 
             # Update ui.json with temp_workspace to pass initialize scatter plot app
             param_dict = self.params.to_dict()
