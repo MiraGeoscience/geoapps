@@ -138,7 +138,7 @@ def test_calculator(tmp_path: Path):
 
 def test_coordinate_transformation(tmp_path: Path):
     temp_workspace = tmp_path / "contour.geoh5"
-    with Workspace().save(temp_workspace) as workspace:
+    with Workspace.create(temp_workspace) as workspace:
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
 

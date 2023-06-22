@@ -44,7 +44,7 @@ class Geoh5Tester:
     def __init__(self, geoh5, path, name, params_class=None):
         self.geoh5 = geoh5
         self.tmp_path = Path(path) / name
-        self.ws = Workspace().save(self.tmp_path)
+        self.ws = Workspace.create(self.tmp_path)
 
         if params_class is not None:
             self.params = params_class(validate=False, geoh5=self.ws)

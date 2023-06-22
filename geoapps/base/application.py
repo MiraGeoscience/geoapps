@@ -311,7 +311,7 @@ class BaseApplication:
         """
         if Path(name).suffix != ".geoh5":
             name += ".geoh5"
-        workspace = Workspace().save(Path(workpath) / name)
+        workspace = Workspace.create(Path(workpath) / name)
         workspace.close()
         new_live_link = False
         time.sleep(1)
@@ -319,7 +319,7 @@ class BaseApplication:
         if not Path(workspace.h5file).is_file():
             workpath = Path(workpath) / ".working"
             workpath.mkdir(parents=True, exist_ok=True)
-            workspace = Workspace().save(workpath / name)
+            workspace = Workspace.create(workpath / name)
             workspace.close()
             new_live_link = True
             if not live_link:
