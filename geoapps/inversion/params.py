@@ -98,8 +98,11 @@ class InversionBaseParams(BaseParams):
         self._parallelized: bool = None
         self._n_cpu: int = None
         self._max_ram: float = None
+        self._fix_aspect_ratio = None
+        self._colorbar = None
         self._store_sensitivities: str = None
         self._out_group = None
+        self._ga_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
         self._documentation: str = ""
@@ -721,6 +724,22 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("n_cpu", val)
 
     @property
+    def fix_aspect_ratio(self):
+        return self._fix_aspect_ratio
+
+    @fix_aspect_ratio.setter
+    def fix_aspect_ratio(self, val):
+        self.setter_validator("fix_aspect_ratio", val)
+
+    @property
+    def colorbar(self):
+        return self._colorbar
+
+    @colorbar.setter
+    def colorbar(self, val):
+        self.setter_validator("colorbar", val)
+
+    @property
     def max_ram(self):
         return self._max_ram
 
@@ -745,6 +764,15 @@ class InversionBaseParams(BaseParams):
     def out_group(self, val):
         self.setter_validator("out_group", val)
         self.update_group_options()
+
+    @property
+    def ga_group(self) -> str:
+        """GA group name."""
+        return self._ga_group
+
+    @ga_group.setter
+    def ga_group(self, val):
+        self.setter_validator("ga_group", val)
 
     @property
     def distributed_workers(self):

@@ -46,14 +46,12 @@ class Geoh5Tester:
     def __init__(self, geoh5, path, name, params_class=None):
         self.geoh5 = geoh5
         self.tmp_path = Path(path) / name
+        self.ws = Workspace.create(self.tmp_path)
 
         if params_class is not None:
-            self.ws = Workspace(self.tmp_path)
             self.params = params_class(validate=False, geoh5=self.ws)
             self.has_params = True
-
         else:
-            self.ws = Workspace(self.tmp_path)
             self.has_params = False
 
     def copy_entity(self, uid):
