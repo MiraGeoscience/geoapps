@@ -312,37 +312,45 @@ class InversionDriver(BaseDriver):
             )
         )
 
-    def get_regularization(self):
-        if self.params.forward_only:
+    def get_regularization(
+        self, params: InversionBaseParams | None = None, mapping=None
+    ):
+        if params is None:
+            params = self.params
+
+        if params.forward_only:
             return regularization.BaseRegularization(mesh=self.inversion_mesh.mesh)
 
         n_cells = int(np.sum(self.models.active_cells))
 
-        if self.inversion_type == "magnetic vector":
+        if mapping is None:
+            mapping = maps.IdentityMap(nP=n_cells)
+
+        if params.inversion_type == "magnetic vector":
             wires = maps.Wires(("p", n_cells), ("s", n_cells), ("t", n_cells))
 
             reg_p = regularization.Sparse(
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
                 mapping=wires.p,  # pylint: disable=no-member
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.length_scale_x,
-                length_scale_y=self.params.length_scale_y,
-                length_scale_z=self.params.length_scale_z,
-                norms=self.params.model_norms(),
+                gradient_type=params.gradient_type,
+                alpha_s=params.alpha_s,
+                length_scale_x=params.length_scale_x,
+                length_scale_y=params.length_scale_y,
+                length_scale_z=params.length_scale_z,
+                norms=params.model_norms(),
                 reference_model=self.models.reference,
             )
             reg_s = regularization.Sparse(
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
                 mapping=wires.s,  # pylint: disable=no-member
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.length_scale_x,
-                length_scale_y=self.params.length_scale_y,
-                length_scale_z=self.params.length_scale_z,
-                norms=self.params.model_norms(),
+                gradient_type=params.gradient_type,
+                alpha_s=params.alpha_s,
+                length_scale_x=params.length_scale_x,
+                length_scale_y=params.length_scale_y,
+                length_scale_z=params.length_scale_z,
+                norms=params.model_norms(),
                 reference_model=self.models.reference,
             )
 
@@ -350,12 +358,12 @@ class InversionDriver(BaseDriver):
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
                 mapping=wires.t,  # pylint: disable=no-member
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.length_scale_x,
-                length_scale_y=self.params.length_scale_y,
-                length_scale_z=self.params.length_scale_z,
-                norms=self.params.model_norms(),
+                gradient_type=params.gradient_type,
+                alpha_s=params.alpha_s,
+                length_scale_x=params.length_scale_x,
+                length_scale_y=params.length_scale_y,
+                length_scale_z=params.length_scale_z,
+                norms=params.model_norms(),
                 reference_model=self.models.reference,
             )
 
@@ -367,23 +375,23 @@ class InversionDriver(BaseDriver):
             reg = regularization.Sparse(
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
-                mapping=maps.IdentityMap(nP=n_cells),
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
+                mapping=mapping,
+                gradient_type=params.gradient_type,
+                alpha_s=params.alpha_s,
                 reference_model=self.models.reference,
             )
 
-            norms = [self.params.s_norm]
+            norms = [params.s_norm]
             for comp in ["x", "y", "z"]:
-                if getattr(self.params, f"length_scale_{comp}") is not None:
+                if getattr(params, f"length_scale_{comp}") is not None:
                     setattr(
                         reg,
                         f"length_scale_{comp}",
-                        getattr(self.params, f"length_scale_{comp}"),
+                        getattr(params, f"length_scale_{comp}"),
                     )
 
-                if getattr(self.params, f"{comp}_norm") is not None:
-                    norms.append(getattr(self.params, f"{comp}_norm"))
+                if getattr(params, f"{comp}_norm") is not None:
+                    norms.append(getattr(params, f"{comp}_norm"))
 
             reg.norms = norms
 

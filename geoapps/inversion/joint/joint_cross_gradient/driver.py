@@ -17,9 +17,10 @@ from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from SimPEG import maps
 from SimPEG.objective_function import ComboObjectiveFunction
+from SimPEG.regularization import BaseRegularization, CrossGradient
 
 from geoapps.driver_base.utils import treemesh_2_octree
-from geoapps.inversion import DRIVER_MAP
+from geoapps.inversion import DRIVER_MAP, InversionBaseParams
 from geoapps.inversion.components import InversionMesh
 from geoapps.inversion.components.factories import (
     DirectivesFactory,
@@ -38,6 +39,8 @@ class JointCrossGradientDriver(InversionDriver):
     _drivers = None
 
     def __init__(self, params: JointCrossGradientParams):
+        self._wires = None
+
         super().__init__(params)
 
         with fetch_active_workspace(self.workspace, mode="r+"):
@@ -114,8 +117,13 @@ class JointCrossGradientDriver(InversionDriver):
             global_actives |= local_actives
 
         self.models.active_cells = global_actives
+        collection = {
+            name: int(global_actives.sum())
+            for name, child_driver in zip("abc", self.drivers)
+        }
+        self._wires = maps.Wires(*list(collection.items()))
 
-        for driver in self.drivers:
+        for driver, wire in zip(self.drivers, self._wires.maps):
             projection = maps.TileMap(
                 self.inversion_mesh.mesh,
                 global_actives,
@@ -123,10 +131,10 @@ class JointCrossGradientDriver(InversionDriver):
                 enforce_active=True,
             )
             driver.models.active_cells = projection.local_active
-            driver.data_misfit.model_map = projection
+            driver.data_misfit.model_map = projection * wire[1]
 
             for func in driver.data_misfit.objfcts:
-                func.model_map = func.model_map * projection
+                func.model_map = func.model_map * projection * wire[1]
 
         self.validate_create_models()
         #
@@ -205,20 +213,24 @@ class JointCrossGradientDriver(InversionDriver):
                 setattr(driver.inversion_mesh, "_mesh", None)
 
     def validate_create_models(self):
-        """Check if all models were provided."""
-        child_driver = self.drivers[0]
+        """Create stacked model vectors from all drivers provided."""
         for model_type in self.models.model_types:
-            model_class = getattr(self.models, model_type)
-            if (
-                model_class is None
-                and getattr(child_driver.models, model_type) is not None
-            ):
+            model = np.zeros(int(self.models.active_cells.sum()) * len(self.drivers))
+
+            for child_driver in self.drivers:
                 model_local_values = getattr(child_driver.models, model_type)
+
+                if model_local_values is not None:
+                    model += (
+                        child_driver.data_misfit.model_map.deriv(model).T
+                        * model_local_values
+                    )
+
+            if model is not None:
                 setattr(
                     getattr(self.models, f"_{model_type}"),
                     "model",
-                    child_driver.data_misfit.model_map.projection.T
-                    * model_local_values,
+                    model,
                 )
 
     @property
@@ -248,11 +260,15 @@ class JointCrossGradientDriver(InversionDriver):
                                 getattr(driver_directives, directive)
                             )
 
+                for driver, wire in zip(self.drivers, self._wires.maps):
+                    model_directive = DirectivesFactory(
+                        self
+                    ).save_iteration_model_directive
+                    model_directive.transforms = [wire[1]] + model_directive.transforms
+                    directives_list.append(model_directive)
                 global_directives = DirectivesFactory(self)
                 self._directives = (
-                    global_directives.inversion_directives
-                    + [global_directives.save_iteration_model_directive]
-                    + directives_list
+                    global_directives.inversion_directives + directives_list
                 )
         return self._directives
 
@@ -282,3 +298,25 @@ class JointCrossGradientDriver(InversionDriver):
         self.logger.end()
         sys.stdout = self.logger.terminal
         self.logger.log.close()
+
+    def get_regularization(
+        self, params: InversionBaseParams | None = None, mapping=None
+    ):
+        if self.params.forward_only:
+            return BaseRegularization(mesh=self.inversion_mesh.mesh)
+
+        reg_list = []
+
+        for driver, wire in zip(self.drivers, self._wires.maps):
+            reg = super().get_regularization(params=driver.params, mapping=wire[1])
+            reg_list.append(reg)
+
+        reg_list.append(
+            CrossGradient(
+                self.inversion_mesh.mesh,
+                self._wires,
+                active_cells=self.models.active_cells,
+            )
+        )
+
+        return ComboObjectiveFunction(reg_list)

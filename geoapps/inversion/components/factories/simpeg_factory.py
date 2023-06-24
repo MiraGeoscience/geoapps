@@ -53,6 +53,7 @@ class SimPEGFactory(ABC):
         "magnetotellurics",
         "tipper",
         "joint surveys",
+        "joint cross gradient",
     ]
 
     def __init__(self, params: BaseParams):

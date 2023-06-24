@@ -7,6 +7,7 @@
 from pathlib import Path
 
 import numpy as np
+from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
@@ -107,7 +108,7 @@ def test_joint_cross_gradient_inv_run(
     if pytest:
         workpath = (
             tmp_path.parent
-            / "test_joint_cross_gradient_fwr_run0"
+            / "test_joint_cross_gradient_fwr_0"
             / "inversion_test.ui.geoh5"
         )
 
@@ -115,26 +116,53 @@ def test_joint_cross_gradient_inv_run(
         topography = geoh5.get_entity("topography")[0]
         drivers = []
         orig_data = []
-        for group in geoh5.get_entity("GravityForward"):
-            survey = geoh5.get_entity(group.options["data_object"]["value"])[0]
+        joint_group = geoh5.get_entity("Joint cross gradientForward")[0]
+        for group in joint_group.children:
+            if not isinstance(group, SimPEGGroup):
+                continue
+
             for child in group.children:
                 if isinstance(child, Octree):
                     mesh = child
                 else:
                     survey = child
 
-            gz = survey.get_data("Iteration_0_gz")[0]
-            orig_data.append(gz.values)
-            params = GravityParams(
-                geoh5=geoh5,
-                mesh=mesh.uid,
-                topography_object=topography.uid,
-                data_object=survey.uid,
-                gz_channel=gz.uid,
-                gz_uncertainty=1e-3,
-                starting_model=0.0,
-            )
-            drivers.append(GravityDriver(params))
+            data = survey.children[0]
+            orig_data.append(data.values)
+
+            if group.options["inversion_type"] == "gravity":
+                params = GravityParams(
+                    geoh5=geoh5,
+                    mesh=mesh.uid,
+                    topography_object=topography.uid,
+                    data_object=survey.uid,
+                    gz_channel=data.uid,
+                    gz_uncertainty=1e-3,
+                    starting_model=0.0,
+                )
+                drivers.append(GravityDriver(params))
+            else:
+                params = MagneticScalarParams(
+                    geoh5=geoh5,
+                    mesh=mesh.uid,
+                    topography_object=topography.uid,
+                    inducing_field_strength=group.options["inducing_field_strength"][
+                        "value"
+                    ],
+                    inducing_field_inclination=group.options[
+                        "inducing_field_inclination"
+                    ]["value"],
+                    inducing_field_declination=group.options[
+                        "inducing_field_declination"
+                    ]["value"],
+                    data_object=survey.uid,
+                    starting_model=1e-4,
+                    reference_model=0.0,
+                    lower_bound=0.0,
+                    tmi_channel=data.uid,
+                    tmi_uncertainty=1.0,
+                )
+                drivers.append(MagneticScalarDriver(params))
 
         # Run the inverse
         np.random.seed(0)
@@ -144,14 +172,6 @@ def test_joint_cross_gradient_inv_run(
             mesh=geoh5.get_entity("Octree")[0].uid,
             group_a=drivers[0].params.out_group,
             group_b=drivers[1].params.out_group,
-            starting_model=1e-4,
-            reference_model=0.0,
-            s_norm=0.0,
-            x_norm=0.0,
-            y_norm=0.0,
-            z_norm=0.0,
-            gradient_type="components",
-            lower_bound=0.0,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,

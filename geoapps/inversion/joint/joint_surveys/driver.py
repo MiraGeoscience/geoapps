@@ -217,19 +217,18 @@ class JointSurveyDriver(InversionDriver):
                 setattr(driver.inversion_mesh, "_mesh", None)
 
     def validate_create_models(self):
-        """Check if all models were provided."""
-        child_driver = self.drivers[0]
+        """Check if all models were provided, otherwise use the first driver models."""
         for model_type in self.models.model_types:
             model_class = getattr(self.models, model_type)
             if (
                 model_class is None
-                and getattr(child_driver.models, model_type) is not None
+                and getattr(self.drivers[0].models, model_type) is not None
             ):
-                model_local_values = getattr(child_driver.models, model_type)
+                model_local_values = getattr(self.drivers[0].models, model_type)
                 setattr(
                     getattr(self.models, f"_{model_type}"),
                     "model",
-                    child_driver.data_misfit.model_map.projection.T
+                    self.drivers[0].data_misfit.model_map.projection.T
                     * model_local_values,
                 )
 
