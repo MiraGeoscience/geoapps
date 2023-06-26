@@ -16,11 +16,9 @@ from geoh5py.workspace import Workspace
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from geoh5py.ui_json import monitored_directory_copy
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
@@ -249,11 +247,4 @@ class ClusteringDriver(BaseDriver):
                 "values": color_map,
             }
 
-            if (
-                self.params.monitoring_directory is not None
-                and Path(self.params.monitoring_directory).is_dir()
-            ):
-                monitored_directory_copy(
-                    str(Path(self.params.monitoring_directory).resolve()),
-                    self.params.objects,
-                )
+            self.update_monitoring_directory(self.params.objects)
