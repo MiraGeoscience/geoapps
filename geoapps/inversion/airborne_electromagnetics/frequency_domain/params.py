@@ -37,6 +37,7 @@ class FrequencyDomainElectromagneticsParams(InversionBaseParams):
         self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "fem"
         self._validations = validations
+        self._tx_offsets = None
         self._z_real_channel_bool = None
         self._z_real_channel = None
         self._z_real_uncertainty = None
@@ -97,6 +98,20 @@ class FrequencyDomainElectromagneticsParams(InversionBaseParams):
         """Returns uncertainty for chosen data component."""
         uid = self.uncertainty_channel(component)
         return self.property_group_data(uid)
+
+    @property
+    def tx_offsets(self):
+        if self._tx_offsets is None and self.data_object is not None:
+            try:
+                offset_data = self.data_object.metadata["EM Dataset"][
+                    "Frequency configurations"
+                ]
+                self._tx_offsets = {k["Frequency"]: k["Offset"] for k in offset_data}
+            except KeyError:
+                msg = "Metadata must contain 'Frequency configurations' dictionary with 'Offset' data."
+                raise KeyError(msg)
+
+        return self._tx_offsets
 
     @property
     def z_real_channel_bool(self):

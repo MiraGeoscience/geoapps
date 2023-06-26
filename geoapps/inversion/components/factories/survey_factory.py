@@ -116,7 +116,7 @@ class SurveyFactory(SimPEGFactory):
                 if transmitter_id:
                     n_data = len(np.unique(transmitter_id[0].values))
                 else:
-                    n_data = receiver_entity.transmitters.n_vertices
+                    n_data = receiver_entity.n_vertices
             else:
                 n_data = receiver_entity.n_vertices
 
@@ -136,10 +136,12 @@ class SurveyFactory(SimPEGFactory):
 
         elif self.factory_type in ["tdem"]:
             return self._tdem_arguments(data=data, mesh=mesh, local_index=local_index)
-        elif self.factory_type in ["fem", "magnetotellurics", "tipper"]:
-            return self._frequency_domain_arguments(
+        elif self.factory_type in ["magnetotellurics", "tipper"]:
+            return self._natural_source_arguments(
                 data=data, mesh=mesh, frequency=channel
             )
+        elif self.factory_type in ["fem"]:
+            return self._fem_arguments(data=data, mesh=mesh, frequency=channel)
         else:
             receivers = ReceiversFactory(self.params).build(
                 locations=data.locations,
@@ -434,10 +436,54 @@ class SurveyFactory(SimPEGFactory):
             )
 
         if frequency is None:
-            frequencies = np.unique([list(v.keys()) for v in data.observed.values()])
+            frequencies = np.unique([list(v) for v in data.observed.values()])
             for frequency in frequencies:
                 sources.append(tx_factory.build(receivers, frequency=frequency))
         else:
             sources.append(tx_factory.build(receivers, frequency=frequency))
+
+        return [sources]
+
+    def _fem_arguments(self, data=None, mesh=None, frequency=None):
+        receivers = []
+        sources = []
+        rx_factory = ReceiversFactory(self.params)
+        tx_factory = SourcesFactory(self.params)
+        for k, v in data.observed.items():
+            receivers.append(
+                rx_factory.build(
+                    locations=data.locations,
+                    local_index=self.local_index,
+                    data={k: v},
+                    mesh=mesh,
+                )
+            )
+
+        if frequency is None:
+            locs = data.entity.transmitters.vertices
+            freqs = data.entity.transmitters.workspace.get_entity("Tx frequency")[0]
+            freqs = np.array([int(freqs.value_map[f]) for f in freqs.values])
+            for frequency in data.entity.channels:
+                for i, receiver in enumerate(receivers):
+                    ind = freqs == frequency
+                    locations = locs[ind, :]
+                    sources.append(
+                        tx_factory.build(
+                            [receiver], locations=locations[i, :], frequency=frequency
+                        )
+                    )
+
+        else:
+            locs = data.entity.transmitters.vertices
+            freqs = data.entity.transmitters.workspace.get_entity("Tx frequency")[0]
+            freqs = np.array([int(freqs.value_map[f]) for f in freqs.values])
+            for i, receiver in enumerate(receivers):
+                ind = freqs == frequency
+                locations = locs[ind, :]
+                sources.append(
+                    tx_factory.build(
+                        [receiver], locations=locations[i, :], frequency=frequency
+                    )
+                )
 
         return [sources]

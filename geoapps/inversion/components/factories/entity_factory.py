@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 
 import numpy as np
 from geoh5py.objects import Curve, Grid2D
+from geoh5py.objects.surveys.electromagnetics.airborne_fem import AirborneFEMReceivers
 
 from geoapps.inversion.components.factories.abstract_factory import AbstractFactory
 
@@ -74,9 +75,11 @@ class EntityFactory(AbstractFactory):
             "induced polarization 2d",
             "induced polarization pseudo 3d",
         ]:
-            return self._build_dcip(inversion_data)
+            entity = self._build_dcip(inversion_data)
         else:
-            return self._build(inversion_data)
+            entity = self._build(inversion_data)
+
+        return entity
 
     def _build_dcip(self, inversion_data: InversionData):
         PotentialElectrode, CurrentElectrode = self.concrete_object

@@ -344,7 +344,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         name=None,
     ):
         components = list(inversion_object.observed)
-        channels = [""]
+        channels = [None]
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",
@@ -353,12 +353,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 for comp, dtype in inversion_object.observed_data_types.items()
             },
             "transforms": [
-                np.tile(
-                    np.repeat(
-                        [inversion_object.normalizations[c] for c in components],
-                        inversion_object.locations.shape[0],
-                    ),
-                    len(channels),
+                np.hstack(
+                    [
+                        inversion_object.normalizations[chan][comp]
+                        for chan in channels
+                        for comp in components
+                    ]
                 )
             ],
             "channels": channels,
@@ -407,11 +407,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             },
             "transforms": [
                 np.hstack(
-                    [
-                        inversion_object.normalizations[c]
-                        * np.ones_like(inversion_object.observed[c])
-                        for c in components
-                    ]
+                    [inversion_object.normalizations[None][c] for c in components]
                 )
             ],
             "channels": channels,
@@ -478,14 +474,23 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "data_type": inversion_object.observed_data_types,
             "association": "VERTEX",
             "transforms": [
-                np.tile(
-                    np.repeat(
-                        [inversion_object.normalizations[c] for c in components],
-                        inversion_object.locations.shape[0],
-                    ),
-                    len(channels),
+                np.hstack(
+                    [
+                        1 / inversion_object.normalizations[chan][comp]
+                        for chan in channels
+                        for comp in components
+                    ]
                 )
             ],
+            # [
+            #     np.tile(
+            #         np.repeat(
+            #             [1/inversion_object.normalizations[c] for c in components],
+            #             inversion_object.locations.shape[0],
+            #         ),
+            #         len(channels),
+            #     )
+            # ],
             "channels": [f"[{ind}]" for ind in range(len(channels))],
             "components": components,
             "reshape": lambda x: x.reshape((len(channels), len(components), -1)),
@@ -541,15 +546,22 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "attribute_type": "predicted",
             "save_objective_function": save_objective_function,
             "association": "VERTEX",
-            "transforms": [
-                np.tile(
-                    np.repeat(
-                        [inversion_object.normalizations[c] for c in components],
-                        inversion_object.locations.shape[0],
-                    ),
-                    len(channels),
-                )
-            ],
+            "transforms": np.hstack(
+                [
+                    inversion_object.normalizations[chan][comp]
+                    for chan in time_channels
+                    for comp in components
+                ]
+            ),
+            # [
+            #     np.tile(
+            #         np.repeat(
+            #             [inversion_object.normalizations[c] for c in components],
+            #             inversion_object.locations.shape[0],
+            #         ),
+            #         len(channels),
+            #     )
+            # ],
             "channels": [f"[{ind}]" for ind in range(len(channels))],
             "components": components,
             "sorting": sorting,
