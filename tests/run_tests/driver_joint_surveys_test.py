@@ -7,13 +7,17 @@
 from pathlib import Path
 
 import numpy as np
+import pytest
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.joint.joint_surveys import JointSurveysParams
 from geoapps.inversion.joint.joint_surveys.driver import JointSurveyDriver
-from geoapps.inversion.potential_fields import GravityParams
+from geoapps.inversion.potential_fields import GravityParams, MagneticScalarParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
+from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
+    MagneticScalarDriver,
+)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -80,6 +84,27 @@ def test_joint_surveys_fwr_run(
     )
     fwr_driver_b = GravityDriver(params)
 
+    bogus_params = MagneticScalarParams(
+        forward_only=True,
+        geoh5=geoh5,
+        mesh=model.parent.uid,
+        topography_object=topography.uid,
+        resolution=0.0,
+        data_object=survey.uid,
+        starting_model=model.uid,
+    )
+    bogus_driver_b = MagneticScalarDriver(bogus_params)
+
+    with pytest.raises(ValueError, match="All physical properties must be the same"):
+        joint_params = JointSurveysParams(
+            forward_only=True,
+            geoh5=geoh5,
+            topography_object=topography.uid,
+            group_a=fwr_driver_a.params.out_group,
+            group_b=bogus_driver_b.params.out_group,
+        )
+        JointSurveyDriver(joint_params)
+
     joint_params = JointSurveysParams(
         forward_only=True,
         geoh5=geoh5,
@@ -97,10 +122,10 @@ def test_joint_surveys_fwr_run(
 def test_joint_surveys_inv_run(
     tmp_path,
     max_iterations=1,
-    pytest=True,
+    unittest=True,
 ):
     workpath = tmp_path / "inversion_test.ui.geoh5"
-    if pytest:
+    if unittest:
         workpath = (
             tmp_path.parent / "test_joint_surveys_fwr_run0" / "inversion_test.ui.geoh5"
         )
@@ -161,7 +186,7 @@ def test_joint_surveys_inv_run(
         )
 
         output["data"] = np.hstack(orig_data)
-        if pytest:
+        if unittest:
             check_target(output, target_run)
         else:
             return driver.inverse_problem.model
@@ -178,7 +203,7 @@ if __name__ == "__main__":
     m_rec = test_joint_surveys_inv_run(
         Path("./"),
         max_iterations=15,
-        pytest=False,
+        unittest=False,
     )
     model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
     assert (
