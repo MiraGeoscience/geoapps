@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
@@ -77,7 +78,7 @@ inversion_defaults = {
     "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "initial_beta_ratio": 10.0,
+    "initial_beta_ratio": 100.0,
     "initial_beta": None,
     "coolingRate": 1,
     "coolingFactor": 2.0,
@@ -112,6 +113,7 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": None,
+    "ga_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -128,6 +130,8 @@ inversion_defaults = {
     "bx_channel_bool": False,
     "by_channel_bool": False,
     "bz_channel_bool": False,
+    "fix_aspect_ratio": True,
+    "colorbar": False,
 }
 
 forward_defaults = {
@@ -175,6 +179,7 @@ forward_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": None,
+    "ga_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -182,6 +187,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
+
 
 inversion_ui_json = {
     "tmi_channel_bool": False,
@@ -685,6 +691,22 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
+    "starting_inclination_object": {
+        "group": "Mesh and models",
+        "main": True,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "optional": True,
+        "enabled": False,
+        "label": "Object",
+        "value": None,
+    },
     "starting_declination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
@@ -704,6 +726,8 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Mesh and models",
         "isValue": True,
+        "optional": True,
+        "enabled": False,
         "parent": "mesh",
         "label": "Reference susceptibility (SI)",
         "property": None,
@@ -801,10 +825,12 @@ validations = dict(base_validations, **validations)
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "tmi_uncertainty": 10.0,
+    "tmi_channel_bool": True,
     "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
     "inducing_field_strength": 60000.0,
     "inducing_field_inclination": 79.0,
@@ -834,4 +860,7 @@ app_initializer = {
     "detrend_order": 0,
     "detrend_type": None,
     "receivers_offset_z": 60.0,
+    "fix_aspect_ratio": True,
+    "colorbar": False,
+    "n_cpu": int(multiprocessing.cpu_count() / 2),
 }

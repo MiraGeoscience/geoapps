@@ -257,7 +257,7 @@ class ScatterPlots(BaseDashApplication):
         color_value = ui_json_data.get("color", None)
         size_value = ui_json_data.get("size", None)
 
-        options = self.get_data_options("ui_json_data", ui_json_data, None)
+        options = self.get_data_options(ui_json_data, None, trigger="ui_json_data")
 
         return (
             options,
