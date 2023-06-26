@@ -37,6 +37,7 @@ from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
 from geoapps.inversion.electromagnetics.time_domain import (
     TimeDomainElectromagneticsParams,
 )
+from geoapps.inversion.joint.joint_cross_gradient import JointCrossGradientParams
 from geoapps.inversion.joint.joint_surveys import JointSurveysParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
@@ -183,6 +184,13 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     joint_surveys_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     joint_surveys_init = joint_surveys_init if use_initializers else {}
 
+    from geoapps.inversion.joint.joint_cross_gradient.constants import (
+        app_initializer as joint_cross_gradient_init,
+    )
+
+    joint_cross_gradient_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
+    joint_cross_gradient_init = joint_cross_gradient_init if use_initializers else {}
+
     filedict = {
         "gravity_inversion.ui.json": GravityParams(validate=False, **grav_init),
         "gravity_forward.ui.json": GravityParams(forward_only=True, validate=False),
@@ -255,6 +263,12 @@ def write_default_uijson(path: str | Path, use_initializers=False):
         ),
         "joint_surveys_forward.ui.json": JointSurveysParams(
             forward_only=True, validate=False, **joint_surveys_init
+        ),
+        "joint_cross_gradient_inversion.ui.json": JointCrossGradientParams(
+            forward_only=False, validate=False, **joint_cross_gradient_init
+        ),
+        "joint_cross_gradient_forward.ui.json": JointCrossGradientParams(
+            forward_only=True, validate=False, **joint_cross_gradient_init
         ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
