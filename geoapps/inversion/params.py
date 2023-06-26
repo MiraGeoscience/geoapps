@@ -30,6 +30,7 @@ class InversionBaseParams(BaseParams):
     _inversion_defaults = None
     _inversion_ui_json = None
     _inversion_type = None
+    _physical_property = None
 
     def __init__(
         self,
@@ -714,6 +715,11 @@ class InversionBaseParams(BaseParams):
     @parallelized.setter
     def parallelized(self, val):
         self.setter_validator("parallelized", val)
+
+    @property
+    def physical_property(self):
+        """Physical property to invert."""
+        return self._physical_property
 
     @property
     def n_cpu(self):

@@ -27,7 +27,7 @@ class MagnetotelluricsParams(InversionBaseParams):
     Parameter class for magnetotelluric->conductivity inversion.
     """
 
-    PHYSICAL_PROPERTY = "conductivity"
+    _physical_property = "conductivity"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
