@@ -1073,11 +1073,6 @@ output_layout = html.Div(
                 ),
             ]
         ),
-        dcc.Checklist(
-            id="live_link",
-            options=[{"label": "Geoscience ANALYST Pro - Live link", "value": True}],
-            value=[],
-        ),
         html.Div(
             [
                 dcc.Markdown(
@@ -1097,6 +1092,7 @@ output_layout = html.Div(
         html.Button(
             "Compute", id="compute", style={"width": "15%", "margin-right": "85%"}
         ),
+        dcc.Markdown(id="output_message"),
     ],
     style={
         "border": "2px black solid",
