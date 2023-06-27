@@ -32,6 +32,7 @@ inversion_defaults = {
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
+    "dbdt_bool": True,
     "z_channel": None,
     "z_uncertainty": None,
     "x_channel": None,
@@ -107,6 +108,7 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
+    "dbdt_bool": True,
     "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
@@ -151,6 +153,12 @@ default_ui_json = {
             "{deebe11a-b57b-4a03-99d6-8f27b25eb2a8}",
         ],
         "value": None,
+    },
+    "dbdt_bool": {
+        "group": "Data",
+        "main": True,
+        "label": "dB/dt data",
+        "value": True,
     },
     "z_channel_bool": {
         "group": "Data",
