@@ -62,7 +62,6 @@ class ReceiversFactory(SimPEGFactory):
             elif self.params.data_units == "B (T)":
                 return receivers.PointMagneticFluxDensity
             else:
-                print("Point magnetic field")
                 return receivers.PointMagneticField
 
         elif self.factory_type == "magnetotellurics":
