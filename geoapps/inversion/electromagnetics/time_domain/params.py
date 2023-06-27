@@ -33,7 +33,7 @@ class TimeDomainElectromagneticsParams(InversionBaseParams):
         self._inversion_defaults = deepcopy(inversion_defaults)
         self._inversion_type = "tdem"
         self._validations = validations
-        self._dbdt_bool = None
+        self._data_units = "dB/dt (T/s)"
         self._z_channel_bool = None
         self._z_channel = None
         self._z_uncertainty = None
@@ -51,12 +51,12 @@ class TimeDomainElectromagneticsParams(InversionBaseParams):
         return getattr(self, "_".join([component, "channel"]), None)
 
     @property
-    def dbdt_bool(self):
-        return self._dbdt_bool
+    def data_units(self):
+        return self._data_units
 
-    @dbdt_bool.setter
-    def dbdt_bool(self, val):
-        self.setter_validator("dbdt_bool", val)
+    @data_units.setter
+    def data_units(self, val):
+        self.setter_validator("data_units", val)
 
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""

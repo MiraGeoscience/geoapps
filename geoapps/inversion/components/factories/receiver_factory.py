@@ -57,10 +57,13 @@ class ReceiversFactory(SimPEGFactory):
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import receivers
 
-            if self.params.dbdt_bool:
+            if self.params.data_units == "dB/dt (T/s)":
                 return receivers.PointMagneticFluxTimeDerivative
-            else:
+            elif self.params.data_units == "B (T)":
                 return receivers.PointMagneticFluxDensity
+            else:
+                print("Point magnetic field")
+                return receivers.PointMagneticField
 
         elif self.factory_type == "magnetotellurics":
             from SimPEG.electromagnetics.natural_source import receivers
