@@ -128,11 +128,11 @@ class BaseDriver(ABC):
 
         :param entity: Object being added to monitoring directory.
         """
+        self.add_ui_json(entity)
         if (
             self.params.monitoring_directory is not None
             and Path(self.params.monitoring_directory).is_dir()
         ):
-            self.add_ui_json(entity)
             monitored_directory_copy(
                 str(Path(self.params.monitoring_directory).resolve()), entity
             )

@@ -25,7 +25,6 @@ from geoapps.block_model_creation.application import BlockModelCreation
 from geoapps.calculator import Calculator
 from geoapps.clustering.application import Clustering
 from geoapps.contours.application import ContourValues
-from geoapps.contours.driver import ContoursDriver
 from geoapps.coordinate_transformation import CoordinateTransformation
 from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
@@ -124,8 +123,7 @@ def test_block_model(tmp_path: Path):
     with Workspace(filename) as workspace:
         ent = workspace.get_entity("BlockModel")
         assert (len(ent) == 1) and (ent[0] is not None)
-        block_model.driver.add_ui_json(ent)
-        assert np.sum([isinstance(c, FilenameData) for c in ent[0].children] == 1)
+        assert np.sum([isinstance(c, FilenameData) for c in ent[0].children]) == 1
 
 
 def test_calculator(tmp_path: Path):
@@ -167,8 +165,8 @@ def test_contour_values(tmp_path: Path):
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = workspace.get_entity("contours")[0]
         assert output.n_vertices == 2655, "Change in output. Need to verify."
-        ContoursDriver(app.params).add_ui_json(output)
-        assert np.sum([isinstance(c, FilenameData) for c in output.children] == 1)
+        output = workspace.get_entity("Contours")[0]
+        assert np.sum([isinstance(c, FilenameData) for c in output.children]) == 1
 
 
 def test_create_surface(tmp_path: Path):
@@ -475,7 +473,7 @@ def test_iso_surface(tmp_path: Path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("Isosurface")[0]
-        assert len(group.children) == 4
+        assert len(group.children) == 5
 
     app.fixed_contours.value = "1000."
 
