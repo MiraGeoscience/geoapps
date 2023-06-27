@@ -9,7 +9,6 @@
 
 from __future__ import annotations
 
-import sys
 
 import numpy as np
 from geoh5py.shared.utils import fetch_active_workspace
@@ -30,41 +29,10 @@ class JointSurveyDriver(BaseJointDriver):
     _validations = validations
 
     def __init__(self, params: JointSurveysParams):
-        self._directives = None
-
         super().__init__(params)
 
         with fetch_active_workspace(self.workspace, mode="r+"):
             self.initialize()
-
-    def initialize(self):
-        """Generate sub drivers."""
-
-        self.validate_create_mesh()
-
-        # # Add re-projection to the global mesh
-        global_actives = np.zeros(self.inversion_mesh.mesh.nC, dtype=bool)
-        for driver in self.drivers:
-            local_actives = self.get_local_actives(driver)
-            global_actives |= local_actives
-
-        self.models.active_cells = global_actives
-
-        for driver in self.drivers:
-            projection = maps.TileMap(
-                self.inversion_mesh.mesh,
-                global_actives,
-                driver.inversion_mesh.mesh,
-                enforce_active=True,
-            )
-            driver.models.active_cells = projection.local_active
-            driver.data_misfit.model_map = projection
-
-            for func in driver.data_misfit.objfcts:
-                func.model_map = func.model_map * projection
-
-        self.validate_create_models()
-        #
 
     def validate_create_models(self):
         """Check if all models were provided, otherwise use the first driver models."""
@@ -81,6 +49,18 @@ class JointSurveyDriver(BaseJointDriver):
                     self.drivers[0].data_misfit.model_map.projection.T
                     * model_local_values,
                 )
+
+    @property
+    def wires(self):
+        """Model projections"""
+        if self._wires is None:
+            wires = []
+            for _ in self.drivers:
+                wires.append(maps.IdentityMap(nP=int(self.models.actives.sum())))
+
+            self._wires = wires
+
+        return self._wires
 
     @property
     def directives(self):
@@ -116,30 +96,3 @@ class JointSurveyDriver(BaseJointDriver):
                     + directives_list
                 )
         return self._directives
-
-    def run(self):
-        """Run inversion from params"""
-        sys.stdout = self.logger
-        self.logger.start()
-        self.configure_dask()
-
-        if self.params.forward_only:
-            print("Running the forward simulation ...")
-            predicted = self.inverse_problem.get_dpred(
-                self.models.starting, compute_J=False
-            )
-
-            for sub, driver in zip(predicted, self.drivers):
-                SaveIterationGeoh5Factory(driver.params).build(
-                    inversion_object=driver.inversion_data,
-                    sorting=np.argsort(np.hstack(driver.sorting)),
-                    ordering=driver.ordering,
-                ).save_components(0, sub)
-        else:
-            # Run the inversion
-            self.start_inversion_message()
-            self.inversion.run(self.models.starting)
-
-        self.logger.end()
-        sys.stdout = self.logger.terminal
-        self.logger.log.close()

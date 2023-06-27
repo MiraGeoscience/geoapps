@@ -26,9 +26,11 @@ from geoapps.utils.models import create_octree_from_octrees, get_octree_attribut
 
 
 class BaseJointDriver(InversionDriver):
-    _drivers = None
-
     def __init__(self, params: BaseJointParams):
+        self._directives = None
+        self._drivers = None
+        self._wires = None
+
         super().__init__(params)
 
     @property
@@ -96,7 +98,31 @@ class BaseJointDriver(InversionDriver):
 
     def initialize(self):
         """Generate sub drivers."""
-        raise NotImplementedError("Must be implemented by subclass.")
+
+        self.validate_create_mesh()
+
+        # Add re-projection to the global mesh
+        global_actives = np.zeros(self.inversion_mesh.mesh.nC, dtype=bool)
+        for driver in self.drivers:
+            local_actives = self.get_local_actives(driver)
+            global_actives |= local_actives
+
+        self.models.active_cells = global_actives
+
+        for driver, wire in zip(self.drivers, self.wires):
+            projection = maps.TileMap(
+                self.inversion_mesh.mesh,
+                global_actives,
+                driver.inversion_mesh.mesh,
+                enforce_active=True,
+            )
+            driver.models.active_cells = projection.local_active
+            driver.data_misfit.model_map = projection * wire
+
+            for func in driver.data_misfit.objfcts:
+                func.model_map = func.model_map * projection * wire
+
+        self.validate_create_models()
 
     @property
     def inversion_data(self):
@@ -170,6 +196,11 @@ class BaseJointDriver(InversionDriver):
                     driver.inversion_mesh.entity.origin["z"] - shift[2],
                 ]
                 setattr(driver.inversion_mesh, "_mesh", None)
+
+    @property
+    def wires(self):
+        """Model projections."""
+        raise NotImplementedError("Must be implemented by subclass.")
 
     def run(self):
         """Run inversion from params"""

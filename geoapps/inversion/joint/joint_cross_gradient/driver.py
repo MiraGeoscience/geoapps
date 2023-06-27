@@ -35,39 +35,6 @@ class JointCrossGradientDriver(BaseJointDriver):
 
         with fetch_active_workspace(self.workspace, mode="r+"):
             self.initialize()
-
-    def initialize(self):
-        """Generate sub drivers."""
-
-        self.validate_create_mesh()
-
-        # # Add re-projection to the global mesh
-        global_actives = np.zeros(self.inversion_mesh.mesh.nC, dtype=bool)
-        for driver in self.drivers:
-            local_actives = self.get_local_actives(driver)
-            global_actives |= local_actives
-
-        self.models.active_cells = global_actives
-        collection = {
-            name: int(global_actives.sum())
-            for name, child_driver in zip("abc", self.drivers)
-        }
-        self._wires = maps.Wires(*list(collection.items()))
-
-        for driver, wire in zip(self.drivers, self._wires.maps):
-            projection = maps.TileMap(
-                self.inversion_mesh.mesh,
-                global_actives,
-                driver.inversion_mesh.mesh,
-                enforce_active=True,
-            )
-            driver.models.active_cells = projection.local_active
-            driver.data_misfit.model_map = projection * wire[1]
-
-            for func in driver.data_misfit.objfcts:
-                func.model_map = func.model_map * projection * wire[1]
-
-        self.validate_create_models()
         #
 
     def validate_create_models(self):
@@ -151,3 +118,16 @@ class JointCrossGradientDriver(BaseJointDriver):
         )
 
         return ComboObjectiveFunction(reg_list)
+
+    @property
+    def wires(self):
+        """Model projections"""
+        if self._wires is None:
+            collection = {
+                name: int(self.models.actives.sum())
+                for name, child_driver in zip("abc", self.drivers)
+            }
+            wires = maps.Wires(*list(collection.items()))
+            self._wires = [wire[1] for wire in wires.maps]
+
+        return self._wires
