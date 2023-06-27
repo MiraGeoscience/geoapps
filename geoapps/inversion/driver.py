@@ -223,7 +223,6 @@ class InversionDriver(BaseDriver):
                 else:
                     name += "Inversion"
 
-                # with fetch_active_workspace(self.geoh5, mode="r+"):
                 self._out_group = SimPEGGroup.create(self.params.geoh5, name=name)
 
         return self._out_group

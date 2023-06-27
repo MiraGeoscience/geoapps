@@ -444,7 +444,7 @@ class InversionData(InversionLocations):
                         k: v * np.ones(len(self.locations)) for k, v in offsets.items()
                     }
                     normalizations[chan][comp] = (
-                        mu0 * (1 / offsets[chan] ** 3 / (4 * np.pi)) / 1e6
+                        mu0 * (-1 / offsets[chan] ** 3 / (4 * np.pi)) / 1e6
                     )
                 elif self.params.inversion_type in ["tdem"]:
                     if comp in ["x", "z"]:

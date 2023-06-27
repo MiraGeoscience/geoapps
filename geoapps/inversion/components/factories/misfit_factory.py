@@ -71,7 +71,7 @@ class MisfitFactory(SimPEGFactory):
                 )
 
                 if count == 0:
-                    if self.factory_type in ["tdem"]:
+                    if self.factory_type in ["fem", "tdem"]:
                         self.sorting.append(
                             np.arange(
                                 data_count,
