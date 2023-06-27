@@ -532,18 +532,24 @@ def create_octree_from_octrees(meshes: list[Octree | TreeMesh]) -> TreeMesh:
     cell_size = np.min(np.vstack(cell_size), axis=0)
     extents = np.vstack(extents)
     limits = np.c_[extents[:, :3].min(axis=0), extents[:, 3:].max(axis=0)].T
-    # Re-center the limits
-    limits -= np.mean(extents.reshape((-1, 3)), axis=0) - np.mean(
-        limits.reshape((-1, 3)), axis=0
-    )
     cells = []
     for ind in range(3):
         extent = limits[1, ind] - limits[0, ind]
         maxLevel = int(np.ceil(np.log2(extent / cell_size[ind])))
         cells += [np.ones(2**maxLevel) * cell_size[ind]]
 
+    # Re-center the limits
+    new_extent = np.r_[
+        limits[0, :], limits[0, :] + np.asarray([cell.sum() for cell in cells])
+    ]
+    origin = (
+        limits[0, :]
+        - np.mean(extents.reshape((-1, 3)), axis=0)
+        - np.mean(new_extent.reshape((-1, 3)), axis=0)
+    )
+
     # Define the mesh and origin
-    treemesh = TreeMesh(cells, origin=limits[0, :])
+    treemesh = TreeMesh(cells, origin=origin)
 
     for mesh in meshes:
         if isinstance(mesh, Octree):
