@@ -532,6 +532,10 @@ def create_octree_from_octrees(meshes: list[Octree | TreeMesh]) -> TreeMesh:
     cell_size = np.min(np.vstack(cell_size), axis=0)
     extents = np.vstack(extents)
     limits = np.c_[extents[:, :3].min(axis=0), extents[:, 3:].max(axis=0)].T
+    # Re-center the limits
+    limits -= np.mean(extents.reshape((-1, 3)), axis=0) - np.mean(
+        limits.reshape((-1, 3)), axis=0
+    )
     cells = []
     for ind in range(3):
         extent = limits[1, ind] - limits[0, ind]

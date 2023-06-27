@@ -40,7 +40,7 @@ class JointCrossGradientDriver(BaseJointDriver):
     def validate_create_models(self):
         """Create stacked model vectors from all drivers provided."""
         for model_type in self.models.model_types:
-            model = np.zeros(int(self.models.active_cells.sum()) * len(self.drivers))
+            model = np.zeros(self.models.n_active * len(self.drivers))
 
             for child_driver in self.drivers:
                 model_local_values = getattr(child_driver.models, model_type)
@@ -124,7 +124,7 @@ class JointCrossGradientDriver(BaseJointDriver):
         """Model projections"""
         if self._wires is None:
             collection = {
-                name: int(self.models.actives.sum())
+                name: self.models.n_active
                 for name, child_driver in zip("abc", self.drivers)
             }
             wires = maps.Wires(*list(collection.items()))

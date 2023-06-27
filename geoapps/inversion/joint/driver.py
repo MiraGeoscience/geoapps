@@ -14,6 +14,7 @@ from warnings import warn
 
 import numpy as np
 from geoh5py.ui_json import InputFile
+from SimPEG.maps import TileMap
 from SimPEG.objective_function import ComboObjectiveFunction
 
 from geoapps.driver_base.utils import treemesh_2_octree
@@ -110,7 +111,7 @@ class BaseJointDriver(InversionDriver):
         self.models.active_cells = global_actives
 
         for driver, wire in zip(self.drivers, self.wires):
-            projection = maps.TileMap(
+            projection = TileMap(
                 self.inversion_mesh.mesh,
                 global_actives,
                 driver.inversion_mesh.mesh,
@@ -196,6 +197,10 @@ class BaseJointDriver(InversionDriver):
                     driver.inversion_mesh.entity.origin["z"] - shift[2],
                 ]
                 setattr(driver.inversion_mesh, "_mesh", None)
+
+    def validate_create_models(self):
+        """Construct models from the local drivers."""
+        raise NotImplementedError("Must be implemented by subclass.")
 
     @property
     def wires(self):

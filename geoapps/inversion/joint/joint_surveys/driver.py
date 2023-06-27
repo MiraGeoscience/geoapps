@@ -9,15 +9,11 @@
 
 from __future__ import annotations
 
-
 import numpy as np
 from geoh5py.shared.utils import fetch_active_workspace
 from SimPEG import maps
 
-from geoapps.inversion.components.factories import (
-    DirectivesFactory,
-    SaveIterationGeoh5Factory,
-)
+from geoapps.inversion.components.factories import DirectivesFactory
 from geoapps.inversion.joint.driver import BaseJointDriver
 
 from .constants import validations
@@ -46,7 +42,9 @@ class JointSurveyDriver(BaseJointDriver):
                 setattr(
                     getattr(self.models, f"_{model_type}"),
                     "model",
-                    self.drivers[0].data_misfit.model_map.projection.T
+                    self.drivers[0]
+                    .data_misfit.model_map.deriv(np.ones(self.models.n_active))
+                    .T
                     * model_local_values,
                 )
 
@@ -56,7 +54,7 @@ class JointSurveyDriver(BaseJointDriver):
         if self._wires is None:
             wires = []
             for _ in self.drivers:
-                wires.append(maps.IdentityMap(nP=int(self.models.actives.sum())))
+                wires.append(maps.IdentityMap(nP=self.models.n_active))
 
             self._wires = wires
 

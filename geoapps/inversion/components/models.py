@@ -63,6 +63,11 @@ class InversionModelCollection:
         self._initialize(driver)
 
     @property
+    def n_active(self):
+        """Number of active cells."""
+        return int(self.active_cells.sum())
+
+    @property
     def driver(self):
         return self._driver
 
