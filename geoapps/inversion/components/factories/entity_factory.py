@@ -26,7 +26,6 @@ if TYPE_CHECKING:
 
 import numpy as np
 from geoh5py.objects import Curve, Grid2D
-from geoh5py.objects.surveys.electromagnetics.airborne_fem import AirborneFEMReceivers
 
 from geoapps.inversion.components.factories.abstract_factory import AbstractFactory
 

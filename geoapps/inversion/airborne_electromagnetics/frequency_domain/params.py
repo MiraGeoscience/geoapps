@@ -105,9 +105,9 @@ class FrequencyDomainElectromagneticsParams(InversionBaseParams):
                     "Frequency configurations"
                 ]
                 self._tx_offsets = {k["Frequency"]: k["Offset"] for k in offset_data}
-            except KeyError:
+            except KeyError as exception:
                 msg = "Metadata must contain 'Frequency configurations' dictionary with 'Offset' data."
-                raise KeyError(msg)
+                raise KeyError(msg) from exception
 
         return self._tx_offsets
 

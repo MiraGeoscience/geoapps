@@ -455,7 +455,7 @@ class SurveyFactory(SimPEGFactory):
 
         return [sources]
 
-    def _frequency_domain_arguments(self, data=None, mesh=None, frequency=None):
+    def _natural_source_arguments(self, data=None, mesh=None, frequency=None):
         receivers = []
         sources = []
         rx_factory = ReceiversFactory(self.params)
