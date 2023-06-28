@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
+from geoh5py.objects import LargeLoopGroundTEMReceivers
 
 from geoapps.shared_utils.utils import rotate_xyz
 
@@ -54,7 +55,10 @@ class SourcesFactory(SimPEGFactory):
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import sources
 
-            return sources.MagDipole
+            if isinstance(self.params.data_object, LargeLoopGroundTEMReceivers):
+                return sources.LineCurrent
+            else:
+                return sources.MagDipole
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import sources
