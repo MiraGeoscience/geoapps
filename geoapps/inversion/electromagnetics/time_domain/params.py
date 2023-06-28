@@ -15,9 +15,7 @@ from geoapps.inversion import InversionBaseParams
 from .constants import (
     default_ui_json,
     forward_defaults,
-    forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
@@ -32,11 +30,10 @@ class TimeDomainElectromagneticsParams(InversionBaseParams):
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._forward_defaults = deepcopy(forward_defaults)
-        self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "tdem"
         self._validations = validations
+        self._data_units = "dB/dt (T/s)"
         self._z_channel_bool = None
         self._z_channel = None
         self._z_uncertainty = None
@@ -52,6 +49,14 @@ class TimeDomainElectromagneticsParams(InversionBaseParams):
     def data_channel(self, component: str):
         """Return uuid of data channel."""
         return getattr(self, "_".join([component, "channel"]), None)
+
+    @property
+    def data_units(self):
+        return self._data_units
+
+    @data_units.setter
+    def data_units(self, val):
+        self.setter_validator("data_units", val)
 
     def uncertainty_channel(self, component: str):
         """Return uuid of uncertainty channel."""

@@ -9,8 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from geoapps.inversion.airborne_electromagnetics.application import InversionApp
-from geoapps.inversion.airborne_electromagnetics.driver import inversion
+from geoapps.inversion.electromagnetics.application import InversionApp
+from geoapps.inversion.electromagnetics.driver import inversion
 
 from . import PROJECT
 

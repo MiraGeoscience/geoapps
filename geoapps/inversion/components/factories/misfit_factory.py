@@ -110,3 +110,7 @@ class MisfitFactory(SimPEGFactory):
                 tile_num += 1
 
         return [local_misfits]
+
+    def assemble_keyword_arguments(self, **_):
+        """Implementation of abstract method from SimPEGFactory."""
+        return {}

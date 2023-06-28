@@ -16,9 +16,6 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.airborne_electromagnetics.time_domain import (
-    TimeDomainElectromagneticsParams,
-)
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
     DirectCurrentPseudo3DParams,
 )
@@ -36,6 +33,9 @@ from geoapps.inversion.electricals.induced_polarization.three_dimensions import 
 )
 from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
     InducedPolarization2DParams,
+)
+from geoapps.inversion.electromagnetics.time_domain import (
+    TimeDomainElectromagneticsParams,
 )
 from geoapps.inversion.joint.joint_surveys import JointSingleParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
@@ -114,7 +114,7 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     ip_p3d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
     ip_p3d_init = ip_p3d_init if use_initializers else {}
 
-    from geoapps.inversion.airborne_electromagnetics.time_domain.constants import (
+    from geoapps.inversion.electromagnetics.time_domain.constants import (
         app_initializer as tdem_init,
     )
     from geoapps.inversion.natural_sources.magnetotellurics.constants import (
