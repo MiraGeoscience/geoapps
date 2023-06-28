@@ -38,5 +38,23 @@ class JointCrossGradientParams(BaseJointParams):
 
     @property
     def alpha_j(self):
-        """Constant multiplier for the cross-gradient term."""
         return self._alpha_j
+
+    @alpha_j.setter
+    def alpha_j(self, val):
+        self.setter_validator("alpha_j", val)
+
+    @property
+    def physical_property(self):
+        """Physical property to invert."""
+        return self._physical_property
+
+    @physical_property.setter
+    def physical_property(self, val: list[str]):
+        # unique_properties = list(set(val))
+        # if len(unique_properties) == len(self.):
+        #     raise ValueError(
+        #         "All physical properties must be the same. "
+        #         f"Provided SimPEG groups for {unique_properties}."
+        #     )
+        self._physical_property = val
