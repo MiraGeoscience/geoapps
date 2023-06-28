@@ -339,7 +339,7 @@ def test_normalize(tmp_path: Path):
     data.components = list(data.observed.keys())
     data.normalizations = data.get_normalizations()
     test_data = data.normalize(data.observed)
-    assert list(data.normalizations.values()) == [1, -1]
+    assert np.hstack(data.normalizations[None].values()).tolist() == [1, -1]
     assert all(test_data["gz"] == (-1 * data.observed["gz"]))
 
 

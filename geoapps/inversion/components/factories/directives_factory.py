@@ -362,7 +362,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     ]
                 )
             ],
-            "channels": channels,
+            # "channels": channels,
             "components": components,
             "association": "VERTEX",
             "reshape": lambda x: x.reshape(
@@ -468,7 +468,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         global_misfit=None,
         name=None,
     ):
-        components = inversion_object.components
+        components = list(inversion_object.observed)
         channels = np.unique([list(v) for k, v in inversion_object.observed.items()])
 
         kwargs = {
@@ -477,43 +477,21 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "data_type": inversion_object.observed_data_types,
             "association": "VERTEX",
             "transforms": [
-                np.hstack(
-                    [
-                        1 / inversion_object.normalizations[chan][comp]
-                        for chan in channels
-                        for comp in components
-                    ]
+                np.tile(
+                    np.repeat(
+                        [
+                            inversion_object.normalizations[channels[0]][c]
+                            for c in components
+                        ],
+                        inversion_object.locations.shape[0],
+                    ),
+                    len(channels),
                 )
             ],
-            # [
-            #     np.tile(
-            #         np.repeat(
-            #             [1/inversion_object.normalizations[c] for c in components],
-            #             inversion_object.locations.shape[0],
-            #         ),
-            #         len(channels),
-            #     )
-            # ],
             "channels": [f"[{ind}]" for ind in range(len(channels))],
             "components": components,
-            # "reshape": lambda x: x.reshape((len(channels), len(components), -1)),
+            "reshape": lambda x: x.reshape((len(channels), len(components), -1)),
         }
-
-        if ordering is not None:
-            ordering = np.vstack(ordering)
-            print(ordering)
-            frequency_ids = ordering[:, 0]
-            component_ids = ordering[:, 1]
-            rx_ids = ordering[:, 2]
-
-            def reshape(values):
-                data = np.zeros(
-                    (len(channels), len(components), len(inversion_object.locations))
-                )
-                data[frequency_ids, component_ids, rx_ids] = values
-                return data
-
-            kwargs["_reshape"] = reshape
 
         if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)

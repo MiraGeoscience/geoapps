@@ -145,7 +145,13 @@ class SimulationFactory(SimPEGFactory):
                 mesh,
                 active_cells=active_cells,
             )
-        if self.factory_type in ["direct current", "magnetotellurics", "tipper", "fem"]:
+        if self.factory_type in [
+            "direct current 3d",
+            "direct current 2d",
+            "magnetotellurics",
+            "tipper",
+            "fem",
+        ]:
             return self._conductivity_keywords(kwargs, mesh, active_cells=active_cells)
         if self.factory_type in ["tdem"]:
             return self._tdem_keywords(

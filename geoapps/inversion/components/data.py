@@ -426,17 +426,16 @@ class InversionData(InversionLocations):
         for chan in getattr(self.params.data_object, "channels", [None]):
             normalizations[chan] = {}
             for comp in self.components:
-                if chan is None:
-                    normalizations[chan][comp] = np.ones(len(self.locations))
-                else:
-                    normalizations[chan][comp] = np.ones(len(self.locations))
+                normalizations[chan][comp] = 1
+                if comp in ["potential", "chargeability"]:
+                    normalizations[chan][comp] = 1
                 if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
-                    normalizations[chan][comp] = -1 * np.ones(len(self.locations))
+                    normalizations[chan][comp] = -1
                 elif self.params.inversion_type in ["magnetotellurics"]:
-                    normalizations[chan][comp] = -1 * np.ones(len(self.locations))
+                    normalizations[chan][comp] = -1
                 elif self.params.inversion_type in ["tipper"]:
                     if "imag" in comp:
-                        normalizations[chan][comp] = -1 * np.ones(len(self.locations))
+                        normalizations[chan][comp] = -1
                 elif self.params.inversion_type in ["fem"]:
                     mu0 = 4 * np.pi * 1e-7
                     offsets = self.params.tx_offsets
@@ -448,7 +447,7 @@ class InversionData(InversionLocations):
                     )
                 elif self.params.inversion_type in ["tdem"]:
                     if comp in ["x", "z"]:
-                        normalizations[chan][comp] = -1 * np.ones(len(self.locations))
+                        normalizations[chan][comp] = -1
 
         return normalizations
 
