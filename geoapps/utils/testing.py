@@ -24,6 +24,8 @@ from geoh5py.objects import (
     AirborneTEMReceivers,
     AirborneTEMTransmitters,
     CurrentElectrode,
+    LargeLoopGroundTEMReceivers,
+    LargeLoopGroundTEMTransmitters,
     MTReceivers,
     Points,
     PotentialElectrode,
@@ -100,12 +102,17 @@ def setup_inversion_workspace(
         geoh5 = Workspace(Path(work_dir) / "inversion_test.ui.geoh5")
     # Topography
     xx, yy = np.meshgrid(np.linspace(-200.0, 200.0, 50), np.linspace(-200.0, 200.0, 50))
-    b = 100
-    A = 50
-    if flatten:
-        zz = np.zeros_like(xx)
-    else:
-        zz = A * np.exp(-0.5 * ((xx / b) ** 2.0 + (yy / b) ** 2.0))
+
+    def topo_drape(x, y):
+        """Topography Gaussian function"""
+        b = 100
+        A = 50
+        if flatten:
+            return np.zeros_like(x)
+        else:
+            return A * np.exp(-0.5 * ((x / b) ** 2.0 + (y / b) ** 2.0))
+
+    zz = topo_drape(xx, yy)
     topo = np.c_[
         utils.mkvc(xx) + center[0],
         utils.mkvc(yy) + center[1],
@@ -127,10 +134,7 @@ def setup_inversion_workspace(
     xr = np.linspace(x_limits[0], x_limits[1], int(n_electrodes))
     yr = np.linspace(y_limits[0], y_limits[1], int(n_lines))
     X, Y = np.meshgrid(xr, yr)
-    if flatten:
-        Z = np.ones_like(X) * drape_height
-    else:
-        Z = A * np.exp(-0.5 * ((X / b) ** 2.0 + (Y / b) ** 2.0)) + drape_height
+    Z = topo_drape(X, Y) + drape_height
 
     vertices = np.c_[
         utils.mkvc(X.T) + center[0],
@@ -272,14 +276,84 @@ def setup_inversion_workspace(
         survey.remove_cells(np.where(dist > 200.0)[0])
         transmitters.remove_cells(np.where(dist > 200.0)[0])
 
-    elif inversion_type == "airborne_tem":
-        survey = AirborneTEMReceivers.create(
-            geoh5, vertices=vertices, name="Airborne_rx"
-        )
-        transmitters = AirborneTEMTransmitters.create(
-            geoh5, vertices=vertices, name="Airborne_tx"
-        )
-        survey.transmitters = transmitters
+    elif "tem" in inversion_type:
+        if "airborne" in inversion_type:
+            survey = AirborneTEMReceivers.create(
+                geoh5, vertices=vertices, name="Airborne_rx"
+            )
+            transmitters = AirborneTEMTransmitters.create(
+                geoh5, vertices=vertices, name="Airborne_tx"
+            )
+
+            dist = np.linalg.norm(
+                survey.vertices[survey.cells[:, 0], :]
+                - survey.vertices[survey.cells[:, 1], :],
+                axis=1,
+            )
+            survey.remove_cells(np.where(dist > 200.0)[0])
+            transmitters.remove_cells(np.where(dist > 200.0)[0])
+            survey.transmitters = transmitters
+        else:
+            arrays = [
+                np.c_[
+                    X[: int(n_lines / 2), :].flatten(),
+                    Y[: int(n_lines / 2), :].flatten(),
+                    Z[: int(n_lines / 2), :].flatten(),
+                ],
+                np.c_[
+                    X[int(n_lines / 2) :, :].flatten(),
+                    Y[int(n_lines / 2) :, :].flatten(),
+                    Z[int(n_lines / 2) :, :].flatten(),
+                ],
+            ]
+            loops = []
+            loop_cells = []
+            loop_id = []
+            count = 0
+            for ind, array in enumerate(arrays):
+                loop_id += [np.ones(array.shape[0]) * (ind + 1)]
+                min_loc = np.min(array, axis=0)
+                max_loc = np.max(array, axis=0)
+                loop = np.vstack(
+                    [
+                        np.c_[
+                            np.ones(5) * min_loc[0],
+                            np.linspace(min_loc[1], max_loc[1], 5),
+                        ],
+                        np.c_[
+                            np.linspace(min_loc[0], max_loc[0], 5)[1:],
+                            np.ones(4) * max_loc[1],
+                        ],
+                        np.c_[
+                            np.ones(4) * max_loc[0],
+                            np.linspace(max_loc[1], min_loc[1], 5)[1:],
+                        ],
+                        np.c_[
+                            np.linspace(max_loc[0], min_loc[0], 5)[1:-1],
+                            np.ones(3) * min_loc[1],
+                        ],
+                    ]
+                )
+                loop = (loop - np.mean(loop, axis=0)) * 1.5 + np.mean(loop, axis=0)
+                loop = np.c_[loop, topo_drape(loop[:, 0], loop[:, 1]) + drape_height]
+                loops += [loop + np.asarray(center)]
+                loop_cells += [np.c_[np.arange(15) + count, np.arange(15) + count + 1]]
+                loop_cells += [np.c_[count + 15, count]]
+                count += 16
+
+            transmitters = LargeLoopGroundTEMTransmitters.create(
+                geoh5,
+                vertices=np.vstack(loops),
+                cells=np.vstack(loop_cells),
+            )
+            transmitters.tx_id_property = transmitters.parts + 1
+            survey = LargeLoopGroundTEMReceivers.create(
+                geoh5, vertices=np.vstack(vertices)
+            )
+            survey.transmitters = transmitters
+            survey.tx_id_property = np.hstack(loop_id)
+            # survey.parts = np.repeat(np.arange(n_lines), n_electrodes)
+
         survey.channels = np.r_[3e-04, 6e-04, 1.2e-03]
         waveform = np.c_[
             np.r_[
@@ -293,14 +367,6 @@ def setup_inversion_workspace(
         survey.waveform = waveform
         survey.timing_mark = 2e-3
         survey.unit = "Seconds (s)"
-
-        dist = np.linalg.norm(
-            survey.vertices[survey.cells[:, 0], :]
-            - survey.vertices[survey.cells[:, 1], :],
-            axis=1,
-        )
-        survey.remove_cells(np.where(dist > 200.0)[0])
-        transmitters.remove_cells(np.where(dist > 200.0)[0])
 
     else:
         survey = Points.create(

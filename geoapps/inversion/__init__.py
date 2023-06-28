@@ -49,7 +49,7 @@ DRIVER_MAP = {
         "FrequencyDomainElectromagneticsDriver",
     ),
     "tdem": (
-        "geoapps.inversion.airborne_electromagnetics.time_domain.driver",
+        "geoapps.inversion.electromagnetics.time_domain.driver",
         "TimeDomainElectromagneticsDriver",
     ),
     "magnetotellurics": (

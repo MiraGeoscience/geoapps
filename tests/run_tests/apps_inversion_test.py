@@ -19,13 +19,15 @@ from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 
-from geoapps.inversion.airborne_electromagnetics.application import InversionApp
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
 from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
+)
+from geoapps.inversion.electromagnetics.application import (
+    InversionApp as EMInversionApp,
 )
 from geoapps.inversion.potential_fields.magnetic_vector.application import (
     MagneticVectorApp,
@@ -326,7 +328,7 @@ def test_em1d_inversion(tmp_path: Path):
         "data": prop_group_uid,
     }
     side_effects = {"system": "VTEM (2007)"}
-    app = InversionApp(geoh5=PROJECT, plot_result=False)
+    app = EMInversionApp(geoh5=PROJECT, plot_result=False)
     app.workspace = new_geoh5
 
     for param, value in changes.items():

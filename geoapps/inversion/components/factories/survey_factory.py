@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
+import SimPEG.electromagnetics.time_domain as tdem
 from scipy.interpolate import interp1d
 
 from geoapps.utils.surveys import extract_dcip_survey
@@ -102,21 +103,8 @@ class SurveyFactory(SimPEGFactory):
         receiver_entity = data.entity
 
         if local_index is None:
-            if self.factory_type in [
-                "direct current pseudo 3d",
-                "direct current 3d",
-                "direct current 2d",
-                "induced polarization 3d",
-                "induced polarization 2d",
-                "induced polarization pseudo 3d",
-            ]:
+            if "current" in self.factory_type or "polarization" in self.factory_type:
                 n_data = receiver_entity.n_cells
-            elif self.factory_type in ["tdem"]:
-                transmitter_id = data.entity.get_data("Transmitter ID")
-                if transmitter_id:
-                    n_data = len(np.unique(transmitter_id[0].values))
-                else:
-                    n_data = receiver_entity.n_vertices
             else:
                 n_data = receiver_entity.n_vertices
 
@@ -124,20 +112,12 @@ class SurveyFactory(SimPEGFactory):
         else:
             self.local_index = local_index
 
-        if self.factory_type in [
-            "direct current pseudo 3d",
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-            "induced polarization pseudo 3d",
-        ]:
+        if "current" in self.factory_type or "polarization" in self.factory_type:
             return self._dcip_arguments(data=data, local_index=local_index)
-
         elif self.factory_type in ["tdem"]:
             return self._tdem_arguments(data=data, mesh=mesh, local_index=local_index)
         elif self.factory_type in ["magnetotellurics", "tipper"]:
-            return self._natural_source_arguments(
+            return self._naturalsource_arguments(
                 data=data, mesh=mesh, frequency=channel
             )
         elif self.factory_type in ["fem"]:
@@ -150,6 +130,10 @@ class SurveyFactory(SimPEGFactory):
             )
             sources = SourcesFactory(self.params).build(receivers)
             return [sources]
+
+    def assemble_keyword_arguments(self, **_):
+        """Implementation of abstract method from SimPEGFactory."""
+        return {}
 
     def build(
         self,
@@ -357,18 +341,15 @@ class SurveyFactory(SimPEGFactory):
     def _tdem_arguments(self, data=None, local_index=None, mesh=None):
         receivers = data.entity
         transmitters = receivers.transmitters
-        tx_list = []
-
         transmitter_id = receivers.get_data("Transmitter ID")
+
         if transmitter_id:
             tx_rx = transmitter_id[0].values
             tx_ids = transmitters.get_data("Transmitter ID")[0].values
-            rx_lookup = {
-                k: np.where(tx_rx == k)[0] for k in np.unique(tx_ids)[self.local_index]
-            }
-
+            rx_lookup = {}
             tx_locs_lookup = {}
-            for k in np.unique(tx_ids)[self.local_index]:
+            for k in np.unique(tx_rx[self.local_index]):
+                rx_lookup[k] = np.where(tx_rx == k)[0]
                 tx_ind = tx_ids == k
                 loop_cells = transmitters.cells[
                     np.all(tx_ind[transmitters.cells], axis=1), :
@@ -379,19 +360,20 @@ class SurveyFactory(SimPEGFactory):
         else:
             rx_lookup = {k: [k] for k in self.local_index}
             tx_locs_lookup = {k: transmitters.vertices[k, :] for k in self.local_index}
-            wave_function = interp1d(
-                (receivers.waveform[:, 0] - receivers.timing_mark)
-                * self.params.unit_conversion,
-                receivers.waveform[:, 1],
-                fill_value="extrapolate",
-            )
-            import SimPEG.electromagnetics.time_domain as tdem
 
-            waveform = tdem.sources.RawWaveform(
-                waveform_function=wave_function, offTime=0.0
-            )
+        wave_function = interp1d(
+            (receivers.waveform[:, 0] - receivers.timing_mark)
+            * self.params.unit_conversion,
+            receivers.waveform[:, 1],
+            fill_value="extrapolate",
+        )
+
+        waveform = tdem.sources.RawWaveform(
+            waveform_function=wave_function, offTime=0.0
+        )
 
         self.ordering = []
+        tx_list = []
         rx_factory = ReceiversFactory(self.params)
         tx_factory = SourcesFactory(self.params)
         for tx_id, rx_ids in rx_lookup.items():
@@ -455,7 +437,7 @@ class SurveyFactory(SimPEGFactory):
 
         return [sources]
 
-    def _natural_source_arguments(self, data=None, mesh=None, frequency=None):
+    def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
         receivers = []
         sources = []
         rx_factory = ReceiversFactory(self.params)

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 # TODO Redesign simpeg factory to avoid pylint arguments-differ complaint
 
 
-class SimPEGFactory:
+class SimPEGFactory(ABC):
     """
     Build SimPEG objects based on inversion type.
 
@@ -58,9 +59,6 @@ class SimPEGFactory:
     def __init__(self, params: BaseParams):
         """
         :param params: Driver parameters object.
-        :param factory_type: Concrete factory type.
-        :param simpeg_object: Abstract SimPEG object.
-
         """
         self.params = params
         self.factory_type: str = params.inversion_type
@@ -78,16 +76,17 @@ class SimPEGFactory:
         else:
             self._factory_type = val
 
+    @abstractmethod
     def concrete_object(self):
         """To be over-ridden in factory implementations."""
 
-    def assemble_arguments(self, **kwargs):  # pylint: disable=unused-argument
+    @abstractmethod
+    def assemble_arguments(self, _) -> list:
         """To be over-ridden in factory implementations."""
-        return []
 
-    def assemble_keyword_arguments(self, **kwargs):  # pylint: disable=unused-argument
+    @abstractmethod
+    def assemble_keyword_arguments(self, **_) -> dict:
         """To be over-ridden in factory implementations."""
-        return {}
 
     def build(self, **kwargs):
         """To be over-ridden in factory implementations."""

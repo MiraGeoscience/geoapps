@@ -19,9 +19,6 @@ from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.inversion.airborne_electromagnetics.frequency_domain import (
     FrequencyDomainElectromagneticsParams,
 )
-from geoapps.inversion.airborne_electromagnetics.time_domain import (
-    TimeDomainElectromagneticsParams,
-)
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
     DirectCurrentPseudo3DParams,
 )
@@ -39,6 +36,9 @@ from geoapps.inversion.electricals.induced_polarization.three_dimensions import 
 )
 from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
     InducedPolarization2DParams,
+)
+from geoapps.inversion.electromagnetics.time_domain import (
+    TimeDomainElectromagneticsParams,
 )
 from geoapps.inversion.joint.joint_surveys import JointSingleParams
 from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
@@ -120,13 +120,13 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     from geoapps.inversion.airborne_electromagnetics.frequency_domain.constants import (
         app_initializer as fem_init,
     )
-    from geoapps.inversion.airborne_electromagnetics.time_domain.constants import (
-        app_initializer as tdem_init,
-    )
 
     fem_init["geoh5"] = str(assets_path() / "FlinFlon_natural_sources.geoh5")
     fem_init = fem_init if use_initializers else {}
 
+    from geoapps.inversion.electromagnetics.time_domain.constants import (
+        app_initializer as tdem_init,
+    )
     from geoapps.inversion.natural_sources.magnetotellurics.constants import (
         app_initializer as mt_init,
     )
