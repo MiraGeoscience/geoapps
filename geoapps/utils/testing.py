@@ -230,11 +230,39 @@ def setup_inversion_workspace(
         survey = AirborneFEMReceivers.create(
             geoh5, vertices=vertices, name="Airborne_rx"
         )
+        freq_metadata = [
+            {"Coaxial data": False, "Frequency": 900, "Offset": 7.86},
+            {"Coaxial data": False, "Frequency": 7200, "Offset": 7.86},
+            {"Coaxial data": False, "Frequency": 56000, "Offset": 6.3},
+        ]
+        survey.metadata["EM Dataset"]["Frequency configurations"] = freq_metadata
+
+        tx_locs = []
+        freqs = []
+        for meta in freq_metadata:
+            tx_locs.append(vertices + meta["Offset"])
+            freqs.append([[meta["Frequency"]] * len(vertices)])
+        tx_locs = np.vstack(tx_locs)
+        freqs = np.hstack(freqs).flatten()
+
         transmitters = AirborneFEMTransmitters.create(
-            geoh5, vertices=vertices, name="Airborne_tx"
+            geoh5, vertices=tx_locs, name="Airborne_tx"
         )
         survey.transmitters = transmitters
-        survey.channels = [10.0, 100.0, 1000.0]
+        survey.channels = [900.0, 7200.0, 56000.0]
+
+        transmitters.add_data(
+            {
+                "Tx frequency": {
+                    "values": freqs,
+                    "association": "VERTEX",
+                    "entity_type": {
+                        "primitive_type": "REFERENCED",
+                        "value_map": {k: str(k) for k in freqs},
+                    },
+                }
+            }
+        )
 
         dist = np.linalg.norm(
             survey.vertices[survey.cells[:, 0], :]
