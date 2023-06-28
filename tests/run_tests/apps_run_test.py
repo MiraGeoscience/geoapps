@@ -18,7 +18,7 @@ import pytest
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 from geoh5py.data import FilenameData
-from geoh5py.objects import Curve
+from geoh5py.objects import Curve, Surface
 from geoh5py.workspace import Workspace
 
 from geoapps.block_model_creation.application import BlockModelCreation
@@ -474,6 +474,8 @@ def test_iso_surface(tmp_path: Path):
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         group = workspace.get_entity("Isosurface")[0]
         assert len(group.children) == 5
+        assert np.sum([isinstance(c, FilenameData) for c in group.children]) == 1
+        assert np.sum([isinstance(c, Surface) for c in group.children]) == 4
 
     app.fixed_contours.value = "1000."
 
