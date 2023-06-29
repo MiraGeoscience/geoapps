@@ -213,7 +213,7 @@ forward_ui_json = {
         "label": "Conductivity (S/m)",
         "property": None,
         "value": 1e-3,
-    }
+    },
 }
 
 default_ui_json = {
