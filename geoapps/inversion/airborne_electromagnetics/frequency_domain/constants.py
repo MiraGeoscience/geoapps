@@ -43,8 +43,6 @@ inversion_defaults = {
     "upper_bound": None,
     "output_tile_files": False,
     "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -93,7 +91,6 @@ inversion_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "z_channel_bool": False,
 }
 
 forward_defaults = {
@@ -133,21 +130,6 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "length_scale_x": 1.0,
-    "length_scale_y": 1.0,
-    "length_scale_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
-
-inversion_ui_json = {
-    "z_channel_bool": False,
-    "detrend_type": None,
-    "detrend_order": None,
 }
 
 forward_ui_json = {
@@ -231,16 +213,7 @@ forward_ui_json = {
         "label": "Conductivity (S/m)",
         "property": None,
         "value": 1e-3,
-    },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "length_scale_x": 1.0,
-    "length_scale_y": 1.0,
-    "length_scale_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
+    }
 }
 
 default_ui_json = {
