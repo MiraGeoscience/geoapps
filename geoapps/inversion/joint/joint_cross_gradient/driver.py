@@ -127,7 +127,6 @@ class JointCrossGradientDriver(BaseJointDriver):
                 name: self.models.n_active
                 for name, child_driver in zip("abc", self.drivers)
             }
-            wires = maps.Wires(*list(collection.items()))
-            self._wires = [wire[1] for wire in wires.maps]
+            self._wires = maps.Wires(*list(collection.items()))
 
-        return self._wires
+        return [wire[1] for wire in self._wires.maps]

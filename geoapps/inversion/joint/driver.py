@@ -62,6 +62,7 @@ class BaseJointDriver(InversionDriver):
                 if group is None:
                     continue
 
+                group = self.workspace.get_entity(group.uid)[0]
                 ui_json = group.options
                 ui_json["geoh5"] = self.workspace
 
@@ -77,8 +78,8 @@ class BaseJointDriver(InversionDriver):
                 group.parent = self.params.out_group
                 drivers.append(driver)
 
-            self.params.physical_property = physical_property
             self._drivers = drivers
+            self.params.physical_property = physical_property
 
         return self._drivers
 
@@ -118,6 +119,7 @@ class BaseJointDriver(InversionDriver):
                 enforce_active=True,
             )
             driver.models.active_cells = projection.local_active
+
             driver.data_misfit.model_map = projection * wire
 
             for func in driver.data_misfit.objfcts:

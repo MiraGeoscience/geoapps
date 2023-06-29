@@ -25,9 +25,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.104056,
-    "phi_d": 427,
-    "phi_m": 6.558,
+    "data_norm": 0.013838,
+    "phi_d": 1322000,
+    "phi_m": 0.0009772,
 }
 
 
@@ -150,7 +150,7 @@ def test_joint_surveys_inv_run(
                 topography_object=topography.uid,
                 data_object=survey.uid,
                 gz_channel=gz.uid,
-                gz_uncertainty=1e-3,
+                gz_uncertainty=np.var(gz.values),
                 starting_model=0.0,
             )
             drivers.append(GravityDriver(params))
@@ -165,10 +165,10 @@ def test_joint_surveys_inv_run(
             group_b=drivers[1].params.out_group,
             starting_model=1e-4,
             reference_model=0.0,
-            s_norm=0.0,
-            x_norm=0.0,
-            y_norm=0.0,
-            z_norm=0.0,
+            s_norm=1.0,
+            x_norm=1.0,
+            y_norm=1.0,
+            z_norm=1.0,
             gradient_type="components",
             lower_bound=0.0,
             max_global_iterations=max_iterations,
@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
     m_rec = test_joint_surveys_inv_run(
         Path("./"),
-        max_iterations=15,
+        max_iterations=20,
         unittest=False,
     )
     model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0

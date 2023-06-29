@@ -216,6 +216,10 @@ class InversionDriver(BaseDriver):
     def out_group(self):
         """The SimPEGGroup"""
         if self._out_group is None:
+            if self.params.out_group is not None:
+                self._out_group = self.params.out_group
+                return self._out_group
+
             with fetch_active_workspace(self.workspace, mode="r+"):
                 name = self.params.inversion_type.capitalize()
                 if self.params.forward_only:
