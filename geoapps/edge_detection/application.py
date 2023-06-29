@@ -213,6 +213,7 @@ class EdgeDetectionApp(PlotSelection2D):
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
             new_params = EdgeDetectionParams(**param_dict)
+            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
             driver = EdgeDetectionDriver(new_params)
             driver.run()
 

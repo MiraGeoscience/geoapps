@@ -90,7 +90,6 @@ def test_mag_inversion(tmp_path: Path):
             # Test export
             app.write_trigger(
                 n_clicks=0,
-                live_link=[False],
                 data_object=str(app.params.data_object.uid),
                 full_components=full_components,
                 resolution=app.params.resolution,

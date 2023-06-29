@@ -8,12 +8,10 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel
-from geoh5py.ui_json import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
@@ -187,13 +185,7 @@ class BlockModelDriver(BaseDriver):
 
         object_out.origin = np.r_[object_out.origin.tolist()] - d_xyz
 
-        if (
-            self.params.monitoring_directory is not None
-            and Path(self.params.monitoring_directory).is_dir()
-        ):
-            monitored_directory_copy(
-                str(Path(self.params.monitoring_directory).resolve()), object_out
-            )
+        self.update_monitoring_directory(object_out)
 
 
 if __name__ == "__main__":
