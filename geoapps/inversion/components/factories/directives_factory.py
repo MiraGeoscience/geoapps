@@ -551,16 +551,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     for comp in components
                 ]
             ),
-            # [
-            #     np.tile(
-            #         np.repeat(
-            #             [inversion_object.normalizations[c] for c in components],
-            #             inversion_object.locations.shape[0],
-            #         ),
-            #         len(channels),
-            #     )
-            # ],
-            # "channels": [f"[{n}]" for n in channel_names],
             "channels": [f"[{ind}]" for ind in range(len(channel_names))],
             "components": components,
             "sorting": sorting,

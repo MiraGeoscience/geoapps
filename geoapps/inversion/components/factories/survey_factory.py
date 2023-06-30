@@ -403,7 +403,8 @@ class SurveyFactory(SimPEGFactory):
         return [tx_list]
 
     def _fem_arguments(self, data=None, mesh=None, channel=None):
-        frequencies = data.entity.channels if channel is None else [channel]
+        channels = data.entity.channels
+        frequencies = channels if channel is None else [channel]
         rx_locs = data.entity.vertices
         tx_locs = data.entity.transmitters.vertices
         freqs = data.entity.transmitters.workspace.get_entity("Tx frequency")[0]
@@ -413,17 +414,16 @@ class SurveyFactory(SimPEGFactory):
         sources = []
         rx_factory = ReceiversFactory(self.params)
         tx_factory = SourcesFactory(self.params)
-        for receiver_id in self.local_index:
-            for component_id, component in enumerate(data.components):
-                receiver = rx_factory.build(
-                    locations=rx_locs[receiver_id, :],
-                    data=data,
-                    mesh=mesh,
-                    component=component,
-                )
 
-                for frequency in frequencies:
-                    channels = np.array(data.entity.channels)
+        for frequency in frequencies:
+            for receiver_id in self.local_index:
+                for component_id, component in enumerate(data.components):
+                    receiver = rx_factory.build(
+                        locations=rx_locs[receiver_id, :],
+                        data=data,
+                        mesh=mesh,
+                        component=component,
+                    )
                     frequency_id = np.where(frequency == channels)[0][0]
                     locs = tx_locs[frequency == freqs, :][receiver_id, :]
                     sources.append(

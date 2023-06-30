@@ -17,7 +17,6 @@ from .constants import (
     forward_defaults,
     forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
@@ -34,7 +33,6 @@ class FrequencyDomainElectromagneticsParams(InversionBaseParams):
         self._forward_defaults = deepcopy(forward_defaults)
         self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "fem"
         self._validations = validations
         self._tx_offsets = None
