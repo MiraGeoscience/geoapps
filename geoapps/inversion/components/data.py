@@ -426,7 +426,7 @@ class InversionData(InversionLocations):
         for chan in getattr(self.params.data_object, "channels", [None]):
             normalizations[chan] = {}
             for comp in self.components:
-                normalizations[chan][comp] = 1
+                normalizations[chan][comp] = np.ones(self.mask.sum())
                 if comp in ["potential", "chargeability"]:
                     normalizations[chan][comp] = 1
                 if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:

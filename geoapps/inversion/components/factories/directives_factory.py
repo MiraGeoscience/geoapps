@@ -546,7 +546,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "association": "VERTEX",
             "transforms": np.hstack(
                 [
-                    inversion_object.normalizations[chan][comp]
+                    1 / inversion_object.normalizations[chan][comp]
                     for chan in channels
                     for comp in components
                 ]
