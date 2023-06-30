@@ -403,7 +403,7 @@ class SurveyFactory(SimPEGFactory):
         return [tx_list]
 
     def _fem_arguments(self, data=None, mesh=None, channel=None):
-        channels = data.entity.channels
+        channels = np.array(data.entity.channels)
         frequencies = channels if channel is None else [channel]
         rx_locs = data.entity.vertices
         tx_locs = data.entity.transmitters.vertices
