@@ -528,7 +528,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         channels = np.array(receivers.channels, dtype=float)
         channels *= getattr(self.params, "unit_conversion", 1.0)
 
-        components = inversion_object.components
+        components = list(inversion_object.observed)
         ordering = np.vstack(ordering)
         channel_ids = ordering[:, 0]
         component_ids = ordering[:, 1]
@@ -546,7 +546,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "association": "VERTEX",
             "transforms": np.hstack(
                 [
-                    1 / inversion_object.normalizations[chan][comp]
+                    inversion_object.normalizations[chan][comp]
                     for chan in channels
                     for comp in components
                 ]

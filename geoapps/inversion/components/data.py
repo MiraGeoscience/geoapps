@@ -448,6 +448,7 @@ class InversionData(InversionLocations):
                 elif self.params.inversion_type in ["tdem"]:
                     if comp in ["x", "z"]:
                         normalizations[chan][comp] = -1
+                    normalizations[chan][comp] *= np.ones(self.mask.sum())
 
         return normalizations
 
