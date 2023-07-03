@@ -29,7 +29,7 @@ repos:
 #    hooks:
 #    -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.4.0
+    rev: v3.8.0
     hooks:
     -   id: pyupgrade
         args: [--py39-plus]
@@ -40,7 +40,7 @@ repos:
 #        args: ["--ignore-missing-imports", "--scripts-are-modules", "--show-error-context",
 #               "--show-column-numbers"]
 - repo: https://github.com/codingjoe/relint
-  rev: 3.0.0
+  rev: 3.1.0
   hooks:
     - id: relint
       args: [-W]  # to fail on warnings
@@ -61,7 +61,7 @@ repos:
         types: [text]
         exclude: (^setup.py$|^\.|\b(docs|geoapps-assets)/)
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.2.4
+    rev: v2.2.5
     hooks:
     -   id: codespell
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb|^THIRD_PARTY_SOFTWARE\.rst)$
