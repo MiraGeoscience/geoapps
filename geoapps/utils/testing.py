@@ -221,7 +221,7 @@ def setup_inversion_workspace(
         survey.base_stations = TipperBaseStations.create(
             geoh5, vertices=np.c_[vertices[0, :]].T
         )
-        survey.channels = [900.0, 7200.0, 56000.0]
+        survey.channels = [10.0, 100.0, 1000.0]
         dist = np.linalg.norm(
             survey.vertices[survey.cells[:, 0], :]
             - survey.vertices[survey.cells[:, 1], :],
