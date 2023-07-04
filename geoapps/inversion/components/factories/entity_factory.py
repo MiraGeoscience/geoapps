@@ -121,6 +121,9 @@ class EntityFactory(AbstractFactory):
             entity.transmitters.vertices = inversion_data.apply_transformations(
                 entity.transmitters.vertices
             )
+            tx_freq = self.params.data_object.transmitters.get_data("Tx frequency")
+            if tx_freq:
+                tx_freq[0].copy(parent=entity.transmitters)
 
         if np.any(~inversion_data.mask):
             entity.remove_vertices(~inversion_data.mask)

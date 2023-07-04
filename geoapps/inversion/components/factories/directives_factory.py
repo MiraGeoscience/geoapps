@@ -477,15 +477,12 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "data_type": inversion_object.observed_data_types,
             "association": "VERTEX",
             "transforms": [
-                np.tile(
-                    np.repeat(
-                        [
-                            inversion_object.normalizations[channels[0]][c]
-                            for c in components
-                        ],
-                        inversion_object.locations.shape[0],
-                    ),
-                    len(channels),
+                np.hstack(
+                    [
+                        inversion_object.normalizations[chan][comp]
+                        for chan in channels
+                        for comp in components
+                    ]
                 )
             ],
             "channels": [f"[{ind}]" for ind in range(len(channels))],
