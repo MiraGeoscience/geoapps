@@ -430,7 +430,7 @@ class InversionData(InversionLocations):
                 if comp in ["potential", "chargeability"]:
                     normalizations[chan][comp] = 1
                 if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
-                    normalizations[chan][comp] = -1
+                    normalizations[chan][comp] = -1 * np.ones(self.mask.sum())
                 elif self.params.inversion_type in ["magnetotellurics"]:
                     normalizations[chan][comp] = -1 * np.ones(self.mask.sum())
                 elif self.params.inversion_type in ["tipper"]:
