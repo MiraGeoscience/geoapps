@@ -188,7 +188,6 @@ default_ui_json = {
         "enabled": False,
         "value": "",
     },
-    "tile_spatial": None,
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
