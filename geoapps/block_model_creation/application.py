@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from time import time
 
-from dash import callback_context, Dash, no_update
+from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from flask import Flask

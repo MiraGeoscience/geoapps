@@ -17,7 +17,7 @@ from time import time
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import callback_context, Dash, dcc, no_update
+from dash import Dash, callback_context, dcc, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase

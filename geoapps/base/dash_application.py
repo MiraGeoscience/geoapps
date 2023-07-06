@@ -23,7 +23,7 @@ from pathlib import Path
 from time import time
 
 import numpy as np
-from dash import callback_context, Dash, no_update
+from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.data import Data
