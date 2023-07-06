@@ -23,7 +23,7 @@ from pathlib import Path
 from time import time
 
 import numpy as np
-from dash import callback_context, no_update
+from dash import callback_context, Dash, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.data import Data
@@ -32,7 +32,6 @@ from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace, is_uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from jupyter_dash import JupyterDash
 from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets  # pylint: disable=E0401
 
 from geoapps.base.layout import object_selection_layout
@@ -361,7 +360,7 @@ class ObjectSelection:
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,

@@ -14,12 +14,11 @@ import os
 from pathlib import Path
 from time import time
 
-from dash import callback_context, no_update
+from dash import callback_context, Dash, no_update
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from flask import Flask
 from geoh5py.objects.object_base import ObjectBase
-from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -48,7 +47,7 @@ class BlockModelCreation(BaseDashApplication):
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,

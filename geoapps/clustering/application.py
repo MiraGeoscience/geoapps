@@ -21,13 +21,12 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import callback_context, no_update
+from dash import callback_context, Dash, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
-from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
 from geoapps.clustering.constants import app_initializer
@@ -59,7 +58,7 @@ class Clustering(ScatterPlots):
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
