@@ -8,6 +8,8 @@
 
 from __future__ import annotations
 
+from warnings import warn
+
 import numpy as np
 from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
@@ -523,30 +525,30 @@ def create_octree_from_octrees(meshes: list[Octree | TreeMesh]) -> TreeMesh:
     :return octree: A global Octree.
     """
     cell_size = []
-    extents = []
+    dimensions = None
+    origin = None
+
     for mesh in meshes:
         attributes = get_octree_attributes(mesh)
-        extents.append(attributes["extent"])
+
+        if dimensions is None:
+            dimensions = attributes["dimensions"]
+            origin = attributes["origin"]
+        else:
+            if not np.allclose(dimensions, attributes["dimensions"]):
+                raise ValueError("Meshes must have same dimensions")
+
+            if not np.allclose(origin, attributes["origin"]):
+                raise ValueError("Meshes must have same origin")
+
         cell_size.append(attributes["cell_size"])
 
     cell_size = np.min(np.vstack(cell_size), axis=0)
-    extents = np.vstack(extents)
-    limits = np.c_[extents[:, :3].min(axis=0), extents[:, 3:].max(axis=0)].T
     cells = []
     for ind in range(3):
-        extent = limits[1, ind] - limits[0, ind]
+        extent = dimensions[ind]
         maxLevel = int(np.ceil(np.log2(extent / cell_size[ind])))
         cells += [np.ones(2**maxLevel) * cell_size[ind]]
-
-    # Re-center the limits
-    new_extent = np.r_[
-        limits[0, :], limits[0, :] + np.asarray([cell.sum() for cell in cells])
-    ]
-    origin = (
-        limits[0, :]
-        - np.mean(extents.reshape((-1, 3)), axis=0)
-        - np.mean(new_extent.reshape((-1, 3)), axis=0)
-    )
 
     # Define the mesh and origin
     treemesh = TreeMesh(cells, origin=origin)
@@ -568,6 +570,43 @@ def create_octree_from_octrees(meshes: list[Octree | TreeMesh]) -> TreeMesh:
     treemesh.finalize()
 
     return treemesh
+
+
+def collocate_octrees(global_mesh: Octree, local_meshes: list[Octree]):
+    """
+    Collocate a list of octree meshes into a global octree mesh.
+
+    :param global_mesh: Global octree mesh.
+    :param local_meshes: List of local octree meshes.
+    """
+    attributes = get_octree_attributes(global_mesh)
+    cell_size = attributes["cell_size"]
+
+    u_grid = global_mesh.octree_cells["I"] * global_mesh.u_cell_size
+    v_grid = global_mesh.octree_cells["J"] * global_mesh.v_cell_size
+    w_grid = global_mesh.octree_cells["K"] * global_mesh.w_cell_size
+
+    xyz = np.c_[u_grid, v_grid, w_grid] + attributes["origin"]
+    tree = cKDTree(xyz)
+
+    for local_mesh in local_meshes:
+        attributes = get_octree_attributes(local_mesh)
+
+        if cell_size and not cell_size == attributes["cell_size"]:
+            raise ValueError(
+                f"Cell size mismatch in dimension {cell_size} != {attributes['cell_size']}"
+            )
+
+        _, closest = tree.query(attributes["origin"])
+        shift = xyz[closest, :] - attributes["origin"]
+
+        if np.any(shift != 0.0):
+            with fetch_active_workspace(local_mesh.workspace) as workspace:
+                warn(
+                    f"Shifting {local_mesh.name} mesh origin by {shift} m to match inversion mesh."
+                )
+                local_mesh.origin = attributes["origin"] + shift
+                workspace.update_attribute(local_mesh, "attributes")
 
 
 def get_octree_attributes(mesh: Octree | TreeMesh) -> dict[str, list]:

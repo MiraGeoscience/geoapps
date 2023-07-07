@@ -10,7 +10,6 @@
 from __future__ import annotations
 
 import sys
-from warnings import warn
 
 import numpy as np
 from geoh5py.ui_json import InputFile
@@ -23,7 +22,7 @@ from geoapps.inversion.components import InversionMesh
 from geoapps.inversion.components.factories import SaveIterationGeoh5Factory
 from geoapps.inversion.driver import InversionDriver
 from geoapps.inversion.joint.params import BaseJointParams
-from geoapps.utils.models import create_octree_from_octrees, get_octree_attributes
+from geoapps.utils.models import collocate_octrees, create_octree_from_octrees
 
 
 class BaseJointDriver(InversionDriver):
@@ -156,48 +155,12 @@ class BaseJointDriver(InversionDriver):
             )
             self.params.mesh = treemesh_2_octree(self.workspace, tree)
 
-        cell_size = []
-        base_nodes = []  # Use the third octree level as base
-        for dim in range(self.inversion_mesh.mesh.dim):
-            base_cells = self.inversion_mesh.mesh.h[dim]
-            base_nodes.append(
-                self.inversion_mesh.mesh.origin[dim]
-                + np.cumsum(
-                    np.r_[0, np.ones(int(len(base_cells) / 4)) * base_cells[0] * 4]
-                )
-            )
-
+        collocate_octrees(
+            self.inversion_mesh.entity,
+            [driver.inversion_mesh.entity for driver in self.drivers],
+        )
         for driver in self.drivers:
-            attributes = get_octree_attributes(driver.params.mesh)
-
-            if cell_size and not cell_size == attributes["cell_size"]:
-                raise ValueError(
-                    f"Cell size mismatch in dimension {cell_size} != {attributes['cell_size']}"
-                )
-            else:
-                cell_size = attributes["cell_size"]
-
-            local_mesh = driver.inversion_mesh.mesh
-            origin = local_mesh.origin
-
-            shift = np.zeros(3)
-            for dim in range(self.inversion_mesh.mesh.dim):
-                closest = np.argmin(np.abs(base_nodes[dim] - origin[dim]))
-                shift[dim] = base_nodes[dim][closest] - origin[dim]
-
-            if np.any(shift != 0.0):
-                warn(
-                    f"Shifting {driver} mesh origin by {shift} m to match inversion mesh."
-                )
-                driver.inversion_mesh.entity.origin = np.r_[
-                    driver.inversion_mesh.entity.origin["x"] + shift[0],
-                    driver.inversion_mesh.entity.origin["y"] + shift[1],
-                    driver.inversion_mesh.entity.origin["z"] + shift[2],
-                ]
-                self.workspace.update_attribute(
-                    driver.inversion_mesh.entity, "attributes"
-                )
-                setattr(driver.inversion_mesh, "_mesh", None)
+            setattr(driver.inversion_mesh, "_mesh", None)
 
     def validate_create_models(self):
         """Construct models from the local drivers."""
