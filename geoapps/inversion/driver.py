@@ -69,7 +69,9 @@ class InversionDriver(BaseDriver):
         self._inversion_mesh: InversionMesh | None = None
         self._inversion_topography: InversionTopography | None = None
         self._logger: InversionLogger | None = None
+        self._mapping: list[maps.IdentityMap] | None = None
         self._models: InversionModelCollection | None = None
+        self._n_values:  int | None = None
         self._optimization: optimization.ProjectedGNCG | None = None
         self._regularization: None = None
         self._sorting: list[np.ndarray] | None = None
@@ -190,6 +192,14 @@ class InversionDriver(BaseDriver):
         return self._models
 
     @property
+    def n_values(self):
+        """Number of values in the model"""
+        if self._n_values is None:
+            self._n_values = int(np.sum(self.models.active_cells))
+
+        return self._n_values
+
+    @property
     def optimization(self):
         if getattr(self, "_optimization", None) is None:
             if self.params.forward_only:
@@ -223,9 +233,9 @@ class InversionDriver(BaseDriver):
             with fetch_active_workspace(self.workspace, mode="r+"):
                 name = self.params.inversion_type.capitalize()
                 if self.params.forward_only:
-                    name += "Forward"
+                    name += " Forward"
                 else:
-                    name += "Inversion"
+                    name += " Inversion"
 
                 # with fetch_active_workspace(self.geoh5, mode="r+"):
                 self._out_group = SimPEGGroup.create(self.params.geoh5, name=name)
@@ -316,90 +326,58 @@ class InversionDriver(BaseDriver):
             )
         )
 
-    def get_regularization(
-        self, params: InversionBaseParams | None = None, mapping=None
-    ):
-        if params is None:
-            params = self.params
+    @property
+    def mapping(self) -> list[maps.IdentityMap] | None:
+        """Model mapping for the inversion."""
+        if self._mapping is None:
+            self.mapping = maps.IdentityMap(nP=self.n_values)
 
-        if params.forward_only:
+        return self._mapping
+
+    @mapping.setter
+    def mapping(self, value: maps.IdentityMap | list[maps.IdentityMap]):
+        if not isinstance(value, list):
+            value = [value]
+
+        if not all(isinstance(val, maps.IdentityMap) and val.shape[0] == self.n_values for val in value):
+            raise TypeError(
+                "'mapping' must be an instance of maps.IdentityMap with shape (n_values, *). "
+                f"Provided {value}"
+            )
+
+        self._mapping = value
+
+    def get_regularization(self):
+        if self.params.forward_only:
             return regularization.BaseRegularization(mesh=self.inversion_mesh.mesh)
 
-        n_cells = int(np.sum(self.models.active_cells))
-
-        if mapping is None:
-            mapping = maps.IdentityMap(nP=n_cells)
-
-        if params.inversion_type == "magnetic vector":
-            wires = maps.Wires(("p", n_cells), ("s", n_cells), ("t", n_cells))
-
-            reg_p = regularization.Sparse(
-                self.inversion_mesh.mesh,
-                active_cells=self.models.active_cells,
-                mapping=wires.p,  # pylint: disable=no-member
-                gradient_type=params.gradient_type,
-                alpha_s=params.alpha_s,
-                length_scale_x=params.length_scale_x,
-                length_scale_y=params.length_scale_y,
-                length_scale_z=params.length_scale_z,
-                norms=params.model_norms(),
-                reference_model=self.models.reference,
-            )
-            reg_s = regularization.Sparse(
-                self.inversion_mesh.mesh,
-                active_cells=self.models.active_cells,
-                mapping=wires.s,  # pylint: disable=no-member
-                gradient_type=params.gradient_type,
-                alpha_s=params.alpha_s,
-                length_scale_x=params.length_scale_x,
-                length_scale_y=params.length_scale_y,
-                length_scale_z=params.length_scale_z,
-                norms=params.model_norms(),
-                reference_model=self.models.reference,
-            )
-
-            reg_t = regularization.Sparse(
-                self.inversion_mesh.mesh,
-                active_cells=self.models.active_cells,
-                mapping=wires.t,  # pylint: disable=no-member
-                gradient_type=params.gradient_type,
-                alpha_s=params.alpha_s,
-                length_scale_x=params.length_scale_x,
-                length_scale_y=params.length_scale_y,
-                length_scale_z=params.length_scale_z,
-                norms=params.model_norms(),
-                reference_model=self.models.reference,
-            )
-
-            # Assemble the 3-component regularizations
-            reg = reg_p + reg_s + reg_t
-            reg.reference_model = self.models.reference
-
-        else:
+        reg_funcs = []
+        for mapping in self.mapping:
             reg = regularization.Sparse(
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
                 mapping=mapping,
-                gradient_type=params.gradient_type,
-                alpha_s=params.alpha_s,
+                gradient_type=self.params.gradient_type,
+                alpha_s=self.params.alpha_s,
                 reference_model=self.models.reference,
             )
-
-            norms = [params.s_norm]
+            norms = [self.params.s_norm]
+            # Adjustment for 2D versus 3D problems
             for comp in ["x", "y", "z"]:
-                if getattr(params, f"length_scale_{comp}") is not None:
+                if getattr(self.params, f"length_scale_{comp}") is not None:
                     setattr(
                         reg,
                         f"length_scale_{comp}",
-                        getattr(params, f"length_scale_{comp}"),
+                        getattr(self.params, f"length_scale_{comp}"),
                     )
 
-                if getattr(params, f"{comp}_norm") is not None:
-                    norms.append(getattr(params, f"{comp}_norm"))
+                if getattr(self.params, f"{comp}_norm") is not None:
+                    norms.append(getattr(self.params, f"{comp}_norm"))
 
             reg.norms = norms
+            reg_funcs.append(reg)
 
-        return reg
+        return objective_function.ComboObjectiveFunction(objfcts=reg_funcs)
 
     def get_tiles(self):
         if self.params.inversion_type in [

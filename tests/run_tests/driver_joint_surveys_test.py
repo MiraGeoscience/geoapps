@@ -57,9 +57,9 @@ def test_joint_surveys_fwr_run(
         starting_model=model.uid,
     )
     fwr_driver_a = GravityDriver(params)
+    fwr_driver_a.run()
 
     # Create local problem B
-
     _, _, model, survey, _ = setup_inversion_workspace(
         tmp_path,
         background=0.0,
@@ -83,40 +83,9 @@ def test_joint_surveys_fwr_run(
         starting_model=model.uid,
     )
     fwr_driver_b = GravityDriver(params)
-
-    bogus_params = MagneticScalarParams(
-        forward_only=True,
-        geoh5=geoh5,
-        mesh=model.parent.uid,
-        topography_object=topography.uid,
-        resolution=0.0,
-        data_object=survey.uid,
-        starting_model=model.uid,
-    )
-    bogus_driver_b = MagneticScalarDriver(bogus_params)
-
-    with pytest.raises(ValueError, match="All physical properties must be the same"):
-        joint_params = JointSurveysParams(
-            forward_only=True,
-            geoh5=geoh5,
-            topography_object=topography.uid,
-            group_a=fwr_driver_a.params.out_group,
-            group_b=bogus_driver_b.params.out_group,
-        )
-        JointSurveyDriver(joint_params)
-
-    joint_params = JointSurveysParams(
-        forward_only=True,
-        geoh5=geoh5,
-        topography_object=topography.uid,
-        group_a=fwr_driver_a.params.out_group,
-        group_b=fwr_driver_b.params.out_group,
-    )
-
-    fwr_driver = JointSurveyDriver(joint_params)
-    fwr_driver.run()
+    fwr_driver_b.run()
     geoh5.close()
-    return fwr_driver.models.starting
+    return np.r_[fwr_driver_a.models.starting, fwr_driver_b.models.starting]
 
 
 def test_joint_surveys_inv_run(
@@ -134,7 +103,7 @@ def test_joint_surveys_inv_run(
         topography = geoh5.get_entity("topography")[0]
         drivers = []
         orig_data = []
-        for group in geoh5.get_entity("GravityForward"):
+        for group in geoh5.get_entity("Gravity Forward"):
             survey = geoh5.get_entity(group.options["data_object"]["value"])[0]
             for child in group.children:
                 if isinstance(child, Octree):
@@ -150,7 +119,7 @@ def test_joint_surveys_inv_run(
                 topography_object=topography.uid,
                 data_object=survey.uid,
                 gz_channel=gz.uid,
-                gz_uncertainty=np.var(gz.values),
+                gz_uncertainty=np.var(gz.values) * 2.,
                 starting_model=0.0,
             )
             drivers.append(GravityDriver(params))
@@ -160,7 +129,6 @@ def test_joint_surveys_inv_run(
         joint_params = JointSurveysParams(
             geoh5=geoh5,
             topography_object=topography.uid,
-            mesh=geoh5.get_entity("Octree")[0].uid,
             group_a=drivers[0].params.out_group,
             group_b=drivers[1].params.out_group,
             starting_model=1e-4,

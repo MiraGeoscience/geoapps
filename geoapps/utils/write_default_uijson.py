@@ -261,14 +261,8 @@ def write_default_uijson(path: str | Path, use_initializers=False):
         "joint_surveys_inversion.ui.json": JointSurveysParams(
             forward_only=False, validate=False, **joint_surveys_init
         ),
-        "joint_surveys_forward.ui.json": JointSurveysParams(
-            forward_only=True, validate=False, **joint_surveys_init
-        ),
         "joint_cross_gradient_inversion.ui.json": JointCrossGradientParams(
             forward_only=False, validate=False, **joint_cross_gradient_init
-        ),
-        "joint_cross_gradient_forward.ui.json": JointCrossGradientParams(
-            forward_only=True, validate=False, **joint_cross_gradient_init
         ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
         "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),

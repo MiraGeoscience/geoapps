@@ -36,6 +36,15 @@ class BaseJointParams(InversionBaseParams):
         self.setter_validator("group_a", val, fun=self._uuid_promoter)
 
     @property
+    def group_a_multiplier(self):
+        """Multiplier for the first SimPEGGroup inversion."""
+        return self._group_a_multiplier
+
+    @group_a_multiplier.setter
+    def group_a_multiplier(self, value):
+        self.setter_validator("group_a_multiplier", value)
+
+    @property
     def group_b(self):
         """Second SimPEGGroup inversion."""
         return self._group_b
@@ -45,6 +54,15 @@ class BaseJointParams(InversionBaseParams):
         self.setter_validator("group_b", val, fun=self._uuid_promoter)
 
     @property
+    def group_b_multiplier(self):
+        """Multiplier for the second SimPEGGroup inversion."""
+        return self._group_b_multiplier
+
+    @group_a_multiplier.setter
+    def group_b_multiplier(self, value):
+        self.setter_validator("group_b_multiplier", value)
+
+    @property
     def group_c(self):
         """Third SimPEGGroup inversion."""
         return self._group_c
@@ -52,3 +70,23 @@ class BaseJointParams(InversionBaseParams):
     @group_c.setter
     def group_c(self, val: SimPEGGroup):
         self.setter_validator("group_c", val, fun=self._uuid_promoter)
+
+    @property
+    def group_c_multiplier(self):
+        """Multiplier for the third SimPEGGroup inversion."""
+        return self._group_c_multiplier
+
+    @group_c_multiplier.setter
+    def group_c_multiplier(self, value):
+        self.setter_validator("group_c_multiplier", value)
+
+    @property
+    def forward_only(self):
+        return self._forward_only
+
+    @forward_only.setter
+    def forward_only(self, val: bool):
+        if val:
+            raise ValueError("Joint inversion does not support forward only.")
+
+        self.setter_validator("forward_only", val)

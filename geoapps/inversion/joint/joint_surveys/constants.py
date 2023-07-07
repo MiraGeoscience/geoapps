@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
+from geoapps.inversion.joint.constants import default_ui_json as joint_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 ################# defaults ##################
@@ -20,8 +21,11 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "group_a": None,
+    "group_a_multiplier": 1.0,
     "group_b": None,
+    "group_b_multiplier": 1.0,
     "group_c": None,
+    "group_c_multiplier": 1.0,
     "mesh": None,
     "starting_model": None,
     "reference_model": None,
@@ -71,48 +75,12 @@ inversion_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-forward_defaults = {
-    "title": "Joint Forward",
-    "inversion_type": "joint surveys",
-    "geoh5": None,  # Must remain at top of list for notebook app initialization
-    "forward_only": True,
-    "topography_object": None,
-    "topography": None,
-    "group_a": None,
-    "group_b": None,
-    "group_c": None,
-    "gps_receivers_offset": None,
-    "mesh": None,
-    "starting_model": None,
-    "output_tile_files": False,
-    "parallelized": True,
-    "n_cpu": None,
-    "max_chunk_size": 128,
-    "chunk_by_rows": True,
-    "out_group": None,
-    "generate_sweep": False,
-    "monitoring_directory": None,
-    "workspace_geoh5": None,
-    "run_command": "geoapps.inversion.driver",
-    "conda_environment": "geoapps",
-    "distributed_workers": None,
-}
-
 forward_ui_json = {}
 inversion_ui_json = {}
 
 default_ui_json = {
     "title": "SimPEG Joint Surveys Inversion",
     "inversion_type": "joint surveys",
-    "mesh": {
-        "group": "Mesh and Models",
-        "main": True,
-        "label": "Mesh",
-        "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
-        "value": None,
-        "enabled": False,
-        "optional": True,
-    },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
@@ -165,32 +133,9 @@ default_ui_json = {
         "value": 1e-4,
         "enabled": False,
     },
-    "group_a": {
-        "main": True,
-        "group": "Data",
-        "label": "Group A",
-        "groupType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
-        "value": "",
-    },
-    "group_b": {
-        "main": True,
-        "group": "Data",
-        "label": "Group B",
-        "groupType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
-        "value": "",
-    },
-    "group_c": {
-        "main": True,
-        "group": "Data",
-        "label": "Group C",
-        "groupType": "{55ed3daf-c192-4d4b-a439-60fa987fe2b8}",
-        "optional": True,
-        "enabled": False,
-        "value": "",
-    },
 }
 
-default_ui_json = dict(base_default_ui_json, **default_ui_json)
+default_ui_json = dict(joint_default_ui_json, **default_ui_json)
 
 ################ Validations #################
 

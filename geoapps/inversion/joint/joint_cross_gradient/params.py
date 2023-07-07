@@ -13,7 +13,6 @@ from geoapps.inversion.joint.params import BaseJointParams
 
 from .constants import (
     default_ui_json,
-    forward_defaults,
     inversion_defaults,
     validations,
 )
@@ -28,21 +27,20 @@ class JointCrossGradientParams(BaseJointParams):
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
-        self._forward_defaults = deepcopy(forward_defaults)
         self._inversion_defaults = deepcopy(inversion_defaults)
         self._inversion_type = "joint cross gradient"
         self._validations = validations
-        self._alpha_j = 1.0
+        self._cross_gradient_weight = 1.0
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     @property
-    def alpha_j(self):
-        return self._alpha_j
+    def cross_gradient_weight(self):
+        return self._cross_gradient_weight
 
-    @alpha_j.setter
-    def alpha_j(self, val):
-        self.setter_validator("alpha_j", val)
+    @cross_gradient_weight.setter
+    def cross_gradient_weight(self, val):
+        self.setter_validator("cross_gradient_weight", val)
 
     @property
     def physical_property(self):

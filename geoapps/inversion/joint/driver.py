@@ -38,12 +38,15 @@ class BaseJointDriver(InversionDriver):
     def data_misfit(self):
         if getattr(self, "_data_misfit", None) is None and self.drivers is not None:
             objective_functions = []
-
-            for driver in self.drivers:
+            multipliers = []
+            for label, driver in zip("abc", self.drivers):
                 if driver.data_misfit is not None:
                     objective_functions += driver.data_misfit.objfcts
+                    multipliers += [getattr(self.params, f"group_{label}_multiplier")]
 
-            self._data_misfit = ComboObjectiveFunction(objective_functions)
+            self._data_misfit = ComboObjectiveFunction(
+                objfcts=objective_functions, multipliers=multipliers
+            )
 
         return self._data_misfit
 
@@ -110,20 +113,19 @@ class BaseJointDriver(InversionDriver):
             global_actives |= local_actives
 
         self.models.active_cells = global_actives
-
         for driver, wire in zip(self.drivers, self.wires):
             projection = TileMap(
                 self.inversion_mesh.mesh,
                 global_actives,
                 driver.inversion_mesh.mesh,
                 enforce_active=True,
+                components=3 if driver.inversion_data.vector else 1,
             )
             driver.models.active_cells = projection.local_active
-
             driver.data_misfit.model_map = projection * wire
 
             for func in driver.data_misfit.objfcts:
-                func.model_map = func.model_map * projection * wire
+                func.model_map = func.model_map * driver.data_misfit.model_map
 
         self.validate_create_models()
 
