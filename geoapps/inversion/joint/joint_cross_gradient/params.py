@@ -11,11 +11,7 @@ from copy import deepcopy
 
 from geoapps.inversion.joint.params import BaseJointParams
 
-from .constants import (
-    default_ui_json,
-    inversion_defaults,
-    validations,
-)
+from .constants import default_ui_json, inversion_defaults, validations
 
 
 class JointCrossGradientParams(BaseJointParams):

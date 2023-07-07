@@ -516,7 +516,7 @@ class InversionData(InversionLocations):
                 active_cells,
                 nested_mesh,
                 enforce_active=True,
-                components=3 if self.vector else 1
+                components=3 if self.vector else 1,
             )
             sim = simulation_factory.build(
                 survey=survey,

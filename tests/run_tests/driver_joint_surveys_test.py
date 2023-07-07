@@ -119,7 +119,7 @@ def test_joint_surveys_inv_run(
                 topography_object=topography.uid,
                 data_object=survey.uid,
                 gz_channel=gz.uid,
-                gz_uncertainty=np.var(gz.values) * 2.,
+                gz_uncertainty=np.var(gz.values) * 2.0,
                 starting_model=0.0,
             )
             drivers.append(GravityDriver(params))

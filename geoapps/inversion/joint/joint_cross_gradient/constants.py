@@ -8,8 +8,8 @@
 from __future__ import annotations
 
 from geoapps.inversion import default_ui_json as base_default_ui_json
-from geoapps.inversion.joint.constants import default_ui_json as joint_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
+from geoapps.inversion.joint.constants import default_ui_json as joint_default_ui_json
 
 ################# defaults ##################
 
@@ -26,7 +26,7 @@ inversion_defaults = {
     "group_b_multiplier": 1.0,
     "group_c": None,
     "group_c_multiplier": 1.0,
-    "cross_gradient_weight": 1e+6,
+    "cross_gradient_weight": 1e6,
     "mesh": None,
     "output_tile_files": False,
     "inversion_style": "voxel",

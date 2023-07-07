@@ -8,8 +8,10 @@
 from __future__ import annotations
 
 import numpy as np
-from geoapps.inversion.driver import InversionDriver
 from SimPEG import maps
+
+from geoapps.inversion.driver import InversionDriver
+
 from .constants import validations
 from .params import MagneticVectorParams
 
@@ -30,8 +32,8 @@ class MagneticVectorDriver(InversionDriver):
             for ind in range(3):
                 mapping.append(
                     maps.Projection(
-                        self.n_values * 3,
-                        slice(start, start + self.n_values))
+                        self.n_values * 3, slice(start, start + self.n_values)
+                    )
                 )
                 start += self.n_values
 
@@ -47,7 +49,11 @@ class MagneticVectorDriver(InversionDriver):
                 f"Provided {value}"
             )
 
-        if not all(isinstance(val, maps.Projection) and val.shape == (self.n_values, 3 * self.n_values) for val in value):
+        if not all(
+            isinstance(val, maps.Projection)
+            and val.shape == (self.n_values, 3 * self.n_values)
+            for val in value
+        ):
             raise TypeError(
                 "'mapping' must be an instance of maps.Projection with shape (n_values, 3 * self.n_values). "
                 f"Provided {value}"

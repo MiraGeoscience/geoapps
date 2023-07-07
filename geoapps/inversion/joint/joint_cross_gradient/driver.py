@@ -17,7 +17,10 @@ from SimPEG import maps
 from SimPEG.objective_function import ComboObjectiveFunction
 from SimPEG.regularization import CrossGradient
 
-from geoapps.inversion.components.factories import DirectivesFactory, SaveIterationGeoh5Factory
+from geoapps.inversion.components.factories import (
+    DirectivesFactory,
+    SaveIterationGeoh5Factory,
+)
 from geoapps.inversion.joint.driver import BaseJointDriver
 
 from .constants import validations
@@ -88,9 +91,7 @@ class JointCrossGradientDriver(BaseJointDriver):
                             )
 
                 for driver, wire in zip(self.drivers, self.wires):
-                    factory = SaveIterationGeoh5Factory(
-                        self.params
-                    )
+                    factory = SaveIterationGeoh5Factory(self.params)
                     factory.factory_type = driver.params.inversion_type
                     model_directive = factory.build(
                         inversion_object=self.inversion_mesh,
@@ -118,8 +119,15 @@ class JointCrossGradientDriver(BaseJointDriver):
         multipliers += reg.multipliers
 
         for param in [
-            "alpha_s", "length_scale_x", "length_scale_y", "length_scale_z",
-            "s_norm", "x_norm", "y_norm", "z_norm", "gradient_type"
+            "alpha_s",
+            "length_scale_x",
+            "length_scale_y",
+            "length_scale_z",
+            "s_norm",
+            "x_norm",
+            "y_norm",
+            "z_norm",
+            "gradient_type",
         ]:
             if getattr(self.params, param) is not None:
                 for reg in reg_list:
@@ -153,8 +161,8 @@ class JointCrossGradientDriver(BaseJointDriver):
             for n_values in self.n_values:
                 collection.append(
                     maps.Projection(
-                        int(np.sum(self.n_values)),
-                        slice(start, start + n_values))
+                        int(np.sum(self.n_values)), slice(start, start + n_values)
+                    )
                 )
                 start += n_values
 
@@ -172,8 +180,7 @@ class JointCrossGradientDriver(BaseJointDriver):
             for driver in self.drivers:
                 for mapping in driver.mapping:
                     mappings[driver, mapping] = maps.Projection(
-                        int(np.sum(self.n_values)),
-                        slice(start, start + n_values)
+                        int(np.sum(self.n_values)), slice(start, start + n_values)
                     )
                     start += n_values
 

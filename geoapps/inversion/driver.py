@@ -71,7 +71,7 @@ class InversionDriver(BaseDriver):
         self._logger: InversionLogger | None = None
         self._mapping: list[maps.IdentityMap] | None = None
         self._models: InversionModelCollection | None = None
-        self._n_values:  int | None = None
+        self._n_values: int | None = None
         self._optimization: optimization.ProjectedGNCG | None = None
         self._regularization: None = None
         self._sorting: list[np.ndarray] | None = None
@@ -339,7 +339,10 @@ class InversionDriver(BaseDriver):
         if not isinstance(value, list):
             value = [value]
 
-        if not all(isinstance(val, maps.IdentityMap) and val.shape[0] == self.n_values for val in value):
+        if not all(
+            isinstance(val, maps.IdentityMap) and val.shape[0] == self.n_values
+            for val in value
+        ):
             raise TypeError(
                 "'mapping' must be an instance of maps.IdentityMap with shape (n_values, *). "
                 f"Provided {value}"
