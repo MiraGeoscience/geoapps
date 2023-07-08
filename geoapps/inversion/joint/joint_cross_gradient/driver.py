@@ -76,6 +76,7 @@ class JointCrossGradientDriver(BaseJointDriver):
                     save_model.transforms = [
                         driver.data_misfit.model_map
                     ] + save_model.transforms
+                    save_model._reshape = lambda x: x
                     directives_list += [
                         save_data,
                         save_model,
@@ -99,6 +100,7 @@ class JointCrossGradientDriver(BaseJointDriver):
                         save_objective_function=True,
                         name="Model",
                     )
+                    model_directive._reshape = lambda x: x
                     model_directive.label = driver.params.physical_property
                     model_directive.transforms = [wire] + model_directive.transforms
                     directives_list.append(model_directive)
