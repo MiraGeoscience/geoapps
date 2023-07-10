@@ -120,7 +120,7 @@ def test_gravity_run(
         predicted = [
             pred
             for pred in run_ws.get_entity("Iteration_0_gz")
-            if pred.parent.parent.name == "GravityInversion"
+            if pred.parent.parent.name == "Gravity Inversion"
         ][0]
         assert not any(
             np.isnan(predicted.values)
