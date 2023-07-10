@@ -123,8 +123,14 @@ class BaseJointDriver(InversionDriver):
             driver.models.active_cells = projection.local_active
             driver.data_misfit.model_map = projection * wire
 
-            for func in driver.data_misfit.objfcts:
+            multipliers = []
+            for mult, func in driver.data_misfit:
                 func.model_map = func.model_map * driver.data_misfit.model_map
+                multipliers.append(
+                    mult * (func.model_map.shape[0] / projection.shape[1])
+                )
+
+            driver.data_misfit.multipliers = multipliers
 
         self.validate_create_models()
 
