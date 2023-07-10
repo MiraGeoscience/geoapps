@@ -68,7 +68,7 @@ class JointCrossGradientDriver(BaseJointDriver):
             with fetch_active_workspace(self.workspace, mode="r+"):
                 directives_list = []
                 for ind, driver in enumerate(self.drivers):
-                    driver_directives = DirectivesFactory(driver)
+                    driver_directives = driver.directives
                     save_data = driver_directives.save_iteration_data_directive
                     save_data.joint_index = ind
                     save_model = driver_directives.save_iteration_model_directive
@@ -76,7 +76,7 @@ class JointCrossGradientDriver(BaseJointDriver):
                     save_model.transforms = [
                         driver.data_misfit.model_map
                     ] + save_model.transforms
-                    save_model._reshape = lambda x: x
+
                     directives_list += [
                         save_data,
                         save_model,
@@ -100,14 +100,14 @@ class JointCrossGradientDriver(BaseJointDriver):
                         save_objective_function=True,
                         name="Model",
                     )
-                    model_directive._reshape = lambda x: x
+
                     model_directive.label = driver.params.physical_property
                     model_directive.transforms = [wire] + model_directive.transforms
                     directives_list.append(model_directive)
 
-                global_directives = DirectivesFactory(self)
-                self._directives = (
-                    global_directives.inversion_directives + directives_list
+                self._directives = DirectivesFactory(self)
+                self._directives.directive_list = (
+                    self._directives.inversion_directives + directives_list
                 )
         return self._directives
 
