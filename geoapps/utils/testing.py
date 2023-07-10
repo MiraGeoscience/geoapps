@@ -391,8 +391,8 @@ def setup_inversion_workspace(
             anomaly,
         )
     else:
-        p0 = np.r_[-20, -20, -20]
-        p1 = np.r_[20, 20, 25]
+        p0 = np.r_[-20, -20, -10]
+        p1 = np.r_[20, 20, 30]
 
         model = utils.model_builder.addBlock(
             entity.centroids,
