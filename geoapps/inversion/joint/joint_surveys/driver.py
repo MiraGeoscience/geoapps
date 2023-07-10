@@ -84,10 +84,10 @@ class JointSurveyDriver(BaseJointDriver):
                                 getattr(driver_directives, directive)
                             )
 
-                global_directives = DirectivesFactory(self)
-                self._directives = (
-                    global_directives.inversion_directives
-                    + [global_directives.save_iteration_model_directive]
+                self._directives = DirectivesFactory(self)
+                self._directives.directive_list = (
+                    self._directives.inversion_directives
+                    + [self._directives.save_iteration_model_directive]
                     + directives_list
                 )
         return self._directives

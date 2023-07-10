@@ -43,11 +43,7 @@ from geoapps.inversion.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.inversion.components.factories import (
-    DirectivesFactory,
-    MisfitFactory,
-    SaveIterationGeoh5Factory,
-)
+from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 from geoapps.inversion.utils import tile_locations
 
@@ -111,9 +107,9 @@ class InversionDriver(BaseDriver):
 
     @property
     def directives(self):
-        if getattr(self, "_directives", None) is None and not self.params.forward_only:
+        if getattr(self, "_directives", None) is None:
             with fetch_active_workspace(self.workspace, mode="r+"):
-                self._directives = DirectivesFactory(self).directive_list
+                self._directives = DirectivesFactory(self)
         return self._directives
 
     @property
@@ -134,7 +130,7 @@ class InversionDriver(BaseDriver):
     def inversion(self):
         if getattr(self, "_inversion", None) is None:
             self._inversion = inversion.BaseInversion(
-                self.inverse_problem, directiveList=self.directives
+                self.inverse_problem, directiveList=self.directives.directive_list
             )
         return self._inversion
 
@@ -291,15 +287,10 @@ class InversionDriver(BaseDriver):
         self.logger.log.close()
 
         if self.params.forward_only:
-            directive = SaveIterationGeoh5Factory(self.params).build(
-                inversion_object=self.inversion_data,
-                sorting=np.argsort(np.hstack(self.sorting)),
-                ordering=self.ordering,
-            )
-            directive.save_components(0, dpred)
-            directive.save_log()
+            self.directives.save_directives[1].save_components(0, dpred)
+            self.directives.save_directives[1].save_log()
         else:
-            for directive in self.directives:
+            for directive in self.directives.save_directives:
                 if (
                     isinstance(directive, directives.SaveIterationsGeoH5)
                     and directive.save_objective_function

@@ -27,6 +27,7 @@ class DirectivesFactory:
         self.driver = driver
         self.params = driver.params
         self.factory_type = self.driver.params.inversion_type
+        self._directive_list: list[directives.InversionDirective] | None = None
         self._vector_inversion_directive = None
         self._update_sensitivity_weights_directive = None
         self._update_irls_directive = None
@@ -55,9 +56,24 @@ class DirectivesFactory:
     @property
     def directive_list(self):
         """List of directives to be used in inversion."""
+        if self._directive_list is None:
+            self._directive_list = self.save_directives
 
-        # print(f"Generated directive list: {self.directive_list}")
-        return self.inversion_directives + self.save_directives
+            if not self.params.forward_only:
+                self._directive_list += self.inversion_directives
+
+        return self._directive_list
+
+    @directive_list.setter
+    def directive_list(self, value):
+        if not all(
+            isinstance(directive, directives.InversionDirective) for directive in value
+        ):
+            raise TypeError(
+                "All directives must be of type SimPEG.directives.InversionDirective"
+            )
+
+        self._directive_list = value
 
     @property
     def inversion_directives(self):
