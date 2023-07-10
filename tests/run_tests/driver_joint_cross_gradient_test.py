@@ -13,10 +13,17 @@ from geoh5py.workspace import Workspace
 
 from geoapps.inversion.joint.joint_cross_gradient import JointCrossGradientParams
 from geoapps.inversion.joint.joint_cross_gradient.driver import JointCrossGradientDriver
-from geoapps.inversion.potential_fields import GravityParams, MagneticScalarParams
+from geoapps.inversion.potential_fields import (
+    GravityParams,
+    MagneticScalarParams,
+    MagneticVectorParams,
+)
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
     MagneticScalarDriver,
+)
+from geoapps.inversion.potential_fields.magnetic_vector.driver import (
+    MagneticVectorDriver,
 )
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
@@ -82,21 +89,21 @@ def test_joint_cross_gradient_fwr_run(
         starting_model=model.uid,
     )
     params.workpath = tmp_path
-
     fwr_driver_b = MagneticScalarDriver(params)
 
-    joint_params = JointCrossGradientParams(
-        forward_only=True,
-        geoh5=geoh5,
-        topography_object=topography.uid,
-        group_a=fwr_driver_a.params.out_group,
-        group_b=fwr_driver_b.params.out_group,
+    # Force co-location of meshes
+    fwr_driver_b.inversion_mesh.entity.origin = (
+        fwr_driver_a.inversion_mesh.entity.origin
     )
+    fwr_driver_b.workspace.update_attribute(
+        fwr_driver_b.inversion_mesh.entity, "attributes"
+    )
+    fwr_driver_b.inversion_mesh._mesh = None  # pylint: disable=protected-access
 
-    fwr_driver = JointCrossGradientDriver(joint_params)
-    fwr_driver.run()
+    fwr_driver_a.run()
+    fwr_driver_b.run()
     geoh5.close()
-    return fwr_driver.models.starting
+    return np.r_[fwr_driver_a.models.starting, fwr_driver_b.models.starting]
 
 
 def test_joint_cross_gradient_inv_run(
@@ -116,8 +123,8 @@ def test_joint_cross_gradient_inv_run(
         topography = geoh5.get_entity("topography")[0]
         drivers = []
         orig_data = []
-        joint_group = geoh5.get_entity("Joint cross gradientForward")[0]
-        for group in joint_group.children:
+
+        for group in geoh5.groups:
             if not isinstance(group, SimPEGGroup):
                 continue
 
@@ -142,7 +149,7 @@ def test_joint_cross_gradient_inv_run(
                 )
                 drivers.append(GravityDriver(params))
             else:
-                params = MagneticScalarParams(
+                params = MagneticVectorParams(
                     geoh5=geoh5,
                     mesh=mesh.uid,
                     topography_object=topography.uid,
@@ -162,19 +169,19 @@ def test_joint_cross_gradient_inv_run(
                     tmi_channel=data.uid,
                     tmi_uncertainty=1.0,
                 )
-                drivers.append(MagneticScalarDriver(params))
+                drivers.append(MagneticVectorDriver(params))
 
         # Run the inverse
         np.random.seed(0)
         joint_params = JointCrossGradientParams(
             geoh5=geoh5,
             topography_object=topography.uid,
-            mesh=geoh5.get_entity("Octree")[0].uid,
             group_a=drivers[0].params.out_group,
             group_b=drivers[1].params.out_group,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
+            gradient_type="components",
             store_sensitivities="ram",
         )
 
@@ -210,4 +217,4 @@ if __name__ == "__main__":
     assert (
         model_residual < 75.0
     ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"
-    print("Density model is within 15% of the answer. Let's go!!")
+    print("Recovered model is within 15% of the answer. Let's go!!")

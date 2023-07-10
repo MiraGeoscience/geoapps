@@ -7,17 +7,13 @@
 from pathlib import Path
 
 import numpy as np
-import pytest
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.joint.joint_surveys import JointSurveysParams
 from geoapps.inversion.joint.joint_surveys.driver import JointSurveyDriver
-from geoapps.inversion.potential_fields import GravityParams, MagneticScalarParams
+from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
-from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
-    MagneticScalarDriver,
-)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
@@ -57,7 +53,7 @@ def test_joint_surveys_fwr_run(
         starting_model=model.uid,
     )
     fwr_driver_a = GravityDriver(params)
-    fwr_driver_a.run()
+    fwr_driver_a.out_group.name = "Gravity Forward [0]"
 
     # Create local problem B
     _, _, model, survey, _ = setup_inversion_workspace(
@@ -71,7 +67,6 @@ def test_joint_surveys_fwr_run(
         geoh5=geoh5,
         drape_height=10.0,
     )
-
     params = GravityParams(
         forward_only=True,
         geoh5=geoh5,
@@ -83,9 +78,24 @@ def test_joint_surveys_fwr_run(
         starting_model=model.uid,
     )
     fwr_driver_b = GravityDriver(params)
+    fwr_driver_b.out_group.name = "Gravity Forward [1]"
+
+    # Force co-location of meshes
+    fwr_driver_b.inversion_mesh.entity.origin = (
+        fwr_driver_a.inversion_mesh.entity.origin
+    )
+    fwr_driver_b.workspace.update_attribute(
+        fwr_driver_b.inversion_mesh.entity, "attributes"
+    )
+    fwr_driver_b.inversion_mesh._mesh = None  # pylint: disable=protected-access
+    fwr_driver_a.run()
     fwr_driver_b.run()
     geoh5.close()
-    return np.r_[fwr_driver_a.models.starting, fwr_driver_b.models.starting]
+
+    return (
+        fwr_driver_a.directives.save_directives[0].transforms[0]
+        * fwr_driver_a.models.starting
+    )
 
 
 def test_joint_surveys_inv_run(
@@ -103,7 +113,8 @@ def test_joint_surveys_inv_run(
         topography = geoh5.get_entity("topography")[0]
         drivers = []
         orig_data = []
-        for group in geoh5.get_entity("Gravity Forward"):
+        for ind in range(2):
+            group = geoh5.get_entity(f"Gravity Forward [{ind}]")[0]
             survey = geoh5.get_entity(group.options["data_object"]["value"])[0]
             for child in group.children:
                 if isinstance(child, Octree):
@@ -129,14 +140,15 @@ def test_joint_surveys_inv_run(
         joint_params = JointSurveysParams(
             geoh5=geoh5,
             topography_object=topography.uid,
+            mesh=drivers[0].params.mesh,
             group_a=drivers[0].params.out_group,
             group_b=drivers[1].params.out_group,
             starting_model=1e-4,
             reference_model=0.0,
-            s_norm=1.0,
-            x_norm=1.0,
-            y_norm=1.0,
-            z_norm=1.0,
+            s_norm=0.0,
+            x_norm=0.0,
+            y_norm=0.0,
+            z_norm=0.0,
             gradient_type="components",
             lower_bound=0.0,
             max_global_iterations=max_iterations,
@@ -152,12 +164,15 @@ def test_joint_surveys_inv_run(
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
-
         output["data"] = np.hstack(orig_data)
+
         if unittest:
             check_target(output, target_run)
         else:
-            return driver.inverse_problem.model
+            return (
+                driver.drivers[0].directives.save_directives[0].transforms[0]
+                * driver.inverse_problem.model
+            )
 
 
 if __name__ == "__main__":
@@ -173,7 +188,11 @@ if __name__ == "__main__":
         max_iterations=20,
         unittest=False,
     )
-    model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    model_residual = (
+        np.nansum((m_rec - m_start) ** 2.0) ** 0.5
+        / np.nansum(m_start**2.0) ** 0.5
+        * 100.0
+    )
     assert (
         model_residual < 75.0
     ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"

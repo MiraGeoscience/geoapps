@@ -79,7 +79,7 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
         )
 
     with Workspace(workpath) as geoh5:
-        simpeg_group = geoh5.get_entity("TdemForward")[0]
+        simpeg_group = geoh5.get_entity("Tdem Forward")[0]
         survey = simpeg_group.get_entity("Ground TEM Rx")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
