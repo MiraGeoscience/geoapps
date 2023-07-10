@@ -23,6 +23,9 @@ class BaseJointParams(InversionBaseParams):
         self._group_a = None
         self._group_b = None
         self._group_c = None
+        self._group_a_multiplier = None
+        self._group_b_multiplier = None
+        self._group_c_multiplier = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
@@ -58,7 +61,7 @@ class BaseJointParams(InversionBaseParams):
         """Multiplier for the second SimPEGGroup inversion."""
         return self._group_b_multiplier
 
-    @group_a_multiplier.setter
+    @group_b_multiplier.setter
     def group_b_multiplier(self, value):
         self.setter_validator("group_b_multiplier", value)
 
