@@ -217,7 +217,7 @@ class DirectivesFactory:
         """Directive to update vector model."""
         if self._vector_inversion_directive is None and "vector" in self.factory_type:
             self._vector_inversion_directive = directives.VectorInversion(
-                [local.simulation for local in self.driver.data_misfit.objfcts],
+                [objective.simulation for objective in self.driver.data_misfit.objfcts],
                 self.driver.regularization,
                 chifact_target=self.driver.params.chi_factor * 2,
             )
