@@ -347,7 +347,7 @@ default_ui_json = {
         "label": "TMI (nT)",
         "parent": "data_object",
         "optional": True,
-        "enabled": False,
+        "enabled": True,
         "value": None,
     },
     "tmi_uncertainty": {

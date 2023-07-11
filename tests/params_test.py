@@ -102,12 +102,11 @@ def param_test_generator(param, value):
 def test_write_input_file_validation(tmp_path: Path):
     grav_init["geoh5"] = str(PROJECT)
     params = GravityParams(validate=False, **grav_init)
-    params.topography_object = None
     params.validate = True
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
 
-    assert "topography_object" in str(excinfo.value)
+    assert "gz_channel" in str(excinfo.value)
 
 
 def test_params_initialize():
@@ -238,10 +237,9 @@ def test_chunk_validation_mag(tmp_path: Path):
 def test_chunk_validation_grav(tmp_path: Path):
     test_dict = dict(grav_init, **{"geoh5": geoh5})
     params = GravityParams(**test_dict)  # pylint: disable=repeated-keyword
-    params.topography_object = None
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Cannot set a None", "topography_object"]:
+    for a in ["Cannot set a None", "gz_channel"]:
         assert a in str(excinfo.value)
 
 
