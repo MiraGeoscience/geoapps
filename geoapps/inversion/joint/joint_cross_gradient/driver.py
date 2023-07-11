@@ -120,8 +120,8 @@ class JointCrossGradientDriver(BaseJointDriver):
         multipliers = []
         for driver in self.drivers:
             reg = driver.regularization
-            for objective in reg.objfcts:
-                objective.mapping = objective.mapping * driver.data_misfit.model_map
+            for objective, mapping in zip(reg.objfcts, driver.mapping):
+                objective.mapping = self._mapping[driver, mapping]
                 objective.reference_model = self.models.reference
 
             reg_list += reg.objfcts
