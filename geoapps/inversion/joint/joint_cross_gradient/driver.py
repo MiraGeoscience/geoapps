@@ -67,10 +67,15 @@ class JointCrossGradientDriver(BaseJointDriver):
         if getattr(self, "_directives", None) is None and not self.params.forward_only:
             with fetch_active_workspace(self.workspace, mode="r+"):
                 directives_list = []
-                for ind, driver in enumerate(self.drivers):
+                count = 0
+                for driver in self.drivers:
                     driver_directives = driver.directives
                     save_data = driver_directives.save_iteration_data_directive
-                    save_data.joint_index = ind
+
+                    n_tiles = len(driver.data_misfit.objfcts)
+                    save_data.joint_index = [count + ii for ii in range(n_tiles)]
+                    count += n_tiles
+
                     save_model = driver_directives.save_iteration_model_directive
                     save_model.label = driver.params.physical_property
                     save_model.transforms = [
@@ -116,34 +121,37 @@ class JointCrossGradientDriver(BaseJointDriver):
         Create a flat ComboObjectiveFunction from all drivers provided and
         add cross-gradient regularization for all combinations of model parameters.
         """
-        reg_list = []
-        multipliers = []
+        regularizations = super().get_regularization()
+        reg_list = regularizations.objfcts
+        multipliers = regularizations.multipliers
+        reg_dict = {reg.mapping: reg for reg in reg_list}
         for driver in self.drivers:
-            reg = driver.regularization
-            for objective, mapping in zip(reg.objfcts, driver.mapping):
-                objective.mapping = self._mapping[driver, mapping]
-                objective.reference_model = self.models.reference
+            reg_block = []
+            for mapping in driver.mapping:
+                reg_block.append(reg_dict[self._mapping[driver, mapping]])
 
-            reg_list += reg.objfcts
-            multipliers += reg.multipliers
+            # Pass down regularization parameters from driver.
+            for param in [
+                "alpha_s",
+                "length_scale_x",
+                "length_scale_y",
+                "length_scale_z",
+                "s_norm",
+                "x_norm",
+                "y_norm",
+                "z_norm",
+                "gradient_type",
+            ]:
+                if getattr(self.params, param) is None:
+                    for reg in reg_block:
+                        print(param, getattr(driver.params, param))
+                        setattr(reg, param, getattr(driver.params, param))
 
-        # Pass down regularization parameters to sub-regularization functions.
-        for param in [
-            "alpha_s",
-            "length_scale_x",
-            "length_scale_y",
-            "length_scale_z",
-            "s_norm",
-            "x_norm",
-            "y_norm",
-            "z_norm",
-            "gradient_type",
-        ]:
-            if getattr(self.params, param) is not None:
-                for reg in reg_list:
-                    setattr(reg, param, getattr(self.params, param))
+            driver.regularization = ComboObjectiveFunction(objfcts=reg_block)
 
-        for driver_pairs in combinations(self.drivers, 2):
+        for label, driver_pairs in zip(
+            ["a_b", "c_a", "c_b"], combinations(self.drivers, 2)
+        ):
             # Deal with MVI components
             for mapping_a in driver_pairs[0].mapping:
                 for mapping_b in driver_pairs[1].mapping:
@@ -158,7 +166,9 @@ class JointCrossGradientDriver(BaseJointDriver):
                             active_cells=self.models.active_cells,
                         )
                     )
-                    multipliers.append(self.params.cross_gradient_weight)
+                    multipliers.append(
+                        getattr(self.params, f"cross_gradient_weight_{label}")
+                    )
 
         return ComboObjectiveFunction(objfcts=reg_list, multipliers=multipliers)
 

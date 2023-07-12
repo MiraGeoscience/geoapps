@@ -10,6 +10,7 @@ import numpy as np
 from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
+from SimPEG.maps import IdentityMap
 
 from geoapps.inversion.joint.joint_cross_gradient import JointCrossGradientParams
 from geoapps.inversion.joint.joint_cross_gradient.driver import JointCrossGradientDriver
@@ -75,7 +76,7 @@ def test_joint_cross_gradient_fwr_run(
         flatten=False,
     )
     inducing_field = (50000.0, 90.0, 0.0)
-    params = MagneticScalarParams(
+    params = MagneticVectorParams(
         forward_only=True,
         geoh5=geoh5,
         mesh=model.parent.uid,
@@ -89,7 +90,7 @@ def test_joint_cross_gradient_fwr_run(
         starting_model=model.uid,
     )
     params.workpath = tmp_path
-    fwr_driver_b = MagneticScalarDriver(params)
+    fwr_driver_b = MagneticVectorDriver(params)
 
     # Force co-location of meshes
     fwr_driver_b.inversion_mesh.entity.origin = (
@@ -102,8 +103,20 @@ def test_joint_cross_gradient_fwr_run(
 
     fwr_driver_a.run()
     fwr_driver_b.run()
+
+    vector_model = fwr_driver_b.directives.save_directives[0].transforms[0](
+        fwr_driver_b.models.starting
+    )
+    vector_model = (
+        fwr_driver_b.directives.save_directives[0].transforms[1] * vector_model
+    )
+
     geoh5.close()
-    return np.r_[fwr_driver_a.models.starting, fwr_driver_b.models.starting]
+    return np.r_[
+        fwr_driver_a.directives.save_directives[0].transforms[0]
+        * fwr_driver_a.models.starting,
+        vector_model.flatten(),
+    ]
 
 
 def test_joint_cross_gradient_inv_run(
@@ -124,7 +137,9 @@ def test_joint_cross_gradient_inv_run(
         drivers = []
         orig_data = []
 
-        for group in geoh5.groups:
+        for group_name in ["Gravity Forward", "Magnetic vector Forward"]:
+            group = geoh5.get_entity(group_name)[0]
+
             if not isinstance(group, SimPEGGroup):
                 continue
 
@@ -165,11 +180,34 @@ def test_joint_cross_gradient_inv_run(
                     data_object=survey.uid,
                     starting_model=1e-4,
                     reference_model=0.0,
-                    lower_bound=0.0,
+                    tile_spatial=2,
                     tmi_channel=data.uid,
-                    tmi_uncertainty=1.0,
+                    tmi_uncertainty=2.0,
                 )
                 drivers.append(MagneticVectorDriver(params))
+
+                params = MagneticScalarParams(
+                    geoh5=geoh5,
+                    mesh=mesh.uid,
+                    topography_object=topography.uid,
+                    inducing_field_strength=group.options["inducing_field_strength"][
+                        "value"
+                    ],
+                    inducing_field_inclination=group.options[
+                        "inducing_field_inclination"
+                    ]["value"],
+                    inducing_field_declination=group.options[
+                        "inducing_field_declination"
+                    ]["value"],
+                    data_object=survey.uid,
+                    starting_model=1e-4,
+                    reference_model=0.0,
+                    alpha_s=0.0,
+                    tile_spatial=2,
+                    tmi_channel=data.uid,
+                    tmi_uncertainty=2.0,
+                )
+                drivers.append(MagneticScalarDriver(params))
 
         # Run the inverse
         np.random.seed(0)
@@ -178,10 +216,16 @@ def test_joint_cross_gradient_inv_run(
             topography_object=topography.uid,
             group_a=drivers[0].params.out_group,
             group_b=drivers[1].params.out_group,
+            group_c=drivers[2].params.out_group,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e-2,
-            prctile=100,
+            initial_beta_ratio=1e0,
+            cross_gradient_weight_a_b=1e3,
+            s_norm=0.0,
+            x_norm=0.0,
+            y_norm=0.0,
+            z_norm=0.0,
             gradient_type="components",
+            prctile=100,
             store_sensitivities="ram",
         )
 
@@ -197,7 +241,20 @@ def test_joint_cross_gradient_inv_run(
         if pytest:
             check_target(output, target_run)
         else:
-            return driver.inverse_problem.model
+            out_model = []
+            for sub_driver in driver.drivers:
+                save_directive = sub_driver.directives.directive_list[0]
+
+                model = driver.inverse_problem.model
+                for fun in save_directive.transforms:
+                    if isinstance(fun, (IdentityMap, np.ndarray, float)):
+                        model = fun * model
+                    else:
+                        model = fun(model)
+
+                out_model.append(model.flatten())
+
+            return np.hstack(out_model)
 
 
 if __name__ == "__main__":
@@ -210,10 +267,15 @@ if __name__ == "__main__":
 
     m_rec = test_joint_cross_gradient_inv_run(
         Path("./"),
-        max_iterations=15,
+        max_iterations=20,
         pytest=False,
     )
-    model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    nC = int(m_rec.size / 4)
+    model_residual = (
+        np.nansum((m_rec[: 2 * nC] - m_start[: 2 * nC]) ** 2.0) ** 0.5
+        / np.nansum(m_start[: 2 * nC] ** 2.0) ** 0.5
+        * 100.0
+    )
     assert (
         model_residual < 75.0
     ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"

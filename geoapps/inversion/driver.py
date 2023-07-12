@@ -31,8 +31,8 @@ from SimPEG import (
     maps,
     objective_function,
     optimization,
-    regularization,
 )
+from SimPEG.regularization import BaseRegularization, Sparse
 
 from geoapps.driver_base.driver import BaseDriver
 from geoapps.inversion import DRIVER_MAP
@@ -254,6 +254,14 @@ class InversionDriver(BaseDriver):
 
         return self._regularization
 
+    @regularization.setter
+    def regularization(self, regularization: objective_function.ComboObjectiveFunction):
+        if not isinstance(regularization, objective_function.ComboObjectiveFunction):
+            raise TypeError(
+                f"Regularization must be a ComboObjectiveFunction, not {type(regularization)}."
+            )
+        self._regularization = regularization
+
     @property
     def sorting(self):
         """List of arrays for sorting of data from tiles."""
@@ -352,22 +360,20 @@ class InversionDriver(BaseDriver):
 
     def get_regularization(self):
         if self.params.forward_only:
-            return regularization.BaseRegularization(mesh=self.inversion_mesh.mesh)
+            return BaseRegularization(mesh=self.inversion_mesh.mesh)
 
         reg_funcs = []
         for mapping in self.mapping:
-            reg = regularization.Sparse(
+            reg = Sparse(
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
                 mapping=mapping,
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
                 reference_model=self.models.reference,
             )
-            norms = [self.params.s_norm]
+            norms = []
             # Adjustment for 2D versus 3D problems
-            for comp in ["x", "y", "z"]:
-                if getattr(self.params, f"length_scale_{comp}") is not None:
+            for comp in ["s", "x", "y", "z"]:
+                if getattr(self.params, f"length_scale_{comp}", None) is not None:
                     setattr(
                         reg,
                         f"length_scale_{comp}",
@@ -377,7 +383,16 @@ class InversionDriver(BaseDriver):
                 if getattr(self.params, f"{comp}_norm") is not None:
                     norms.append(getattr(self.params, f"{comp}_norm"))
 
-            reg.norms = norms
+            if norms:
+                reg.norms = norms
+
+            if getattr(self.params, "gradient_type") is not None:
+                setattr(
+                    reg,
+                    "gradient_type",
+                    getattr(self.params, "gradient_type"),
+                )
+
             reg_funcs.append(reg)
 
         return objective_function.ComboObjectiveFunction(objfcts=reg_funcs)
@@ -498,6 +513,7 @@ class InversionLogger:
 
 
 if __name__ == "__main__":
-    file = str(Path(sys.argv[1]).resolve())
+    # file = str(Path(sys.argv[1]).resolve())
+    file = r"C:\Users\dominiquef\Desktop\Vale_FNO\joint_mag_grav_v3.ui.json"
     InversionDriver.start(file)
     sys.stdout.close()
