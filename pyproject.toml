@@ -87,7 +87,6 @@ plotly = {version = "~5.13.1", optional = true}
 pyqtwebengine = {version = "~5.15"}
 pyside2 = {version = "~5.15"}
 scikit-image = {version = "~0.19.2", optional = true}
-jupyter-dash = {version = "~0.4.2", optional = true}
 dash-daq = {version = "~0.5.0", optional = true}
 
 ## about pip dependencies
@@ -135,7 +134,6 @@ apps = [
     "gdal",
     "ipyfilechooser",
     "ipywidgets",
-    "jupyter-dash",
     "plotly",
     "scikit-image",
 ]
