@@ -60,7 +60,7 @@ class DirectivesFactory:
             self._directive_list = self.save_directives
 
             if not self.params.forward_only:
-                self._directive_list = self.inversion_directives + self.save_directives
+                self._directive_list += self.inversion_directives
 
         return self._directive_list
 
