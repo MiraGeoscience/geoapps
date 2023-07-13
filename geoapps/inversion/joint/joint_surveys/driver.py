@@ -62,10 +62,15 @@ class JointSurveyDriver(BaseJointDriver):
         if getattr(self, "_directives", None) is None and not self.params.forward_only:
             with fetch_active_workspace(self.workspace, mode="r+"):
                 directives_list = []
-                for ind, driver in enumerate(self.drivers):
+                count = 0
+                for driver in self.drivers:
                     driver_directives = DirectivesFactory(driver)
                     save_data = driver_directives.save_iteration_data_directive
-                    save_data.joint_index = ind
+
+                    n_tiles = len(driver.data_misfit.objfcts)
+                    save_data.joint_index = [count + ii for ii in range(n_tiles)]
+                    count += n_tiles
+
                     save_model = driver_directives.save_iteration_model_directive
                     save_model.transforms = [
                         driver.data_misfit.model_map

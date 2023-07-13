@@ -21,15 +21,15 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.013838,
-    "phi_d": 1322000,
-    "phi_m": 0.0009772,
+    "data_norm": 0.29978,
+    "phi_d": 663.9,
+    "phi_m": 25.47,
 }
 
 
 def test_joint_surveys_fwr_run(
     tmp_path,
-    n_grid_points=4,
+    n_grid_points=6,
     refinement=(2,),
 ):
     np.random.seed(0)
