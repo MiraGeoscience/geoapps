@@ -368,6 +368,7 @@ class InversionDriver(BaseDriver):
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
                 mapping=mapping,
+                alpha_s=self.params.alpha_s,
                 reference_model=self.models.reference,
             )
             norms = []
