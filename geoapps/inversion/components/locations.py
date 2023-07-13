@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.driver_base.params import BaseParams
+    from geoapps.inversion.params import InversionBaseParams
 
 
 import numpy as np
@@ -53,13 +53,13 @@ class InversionLocations:
 
     """
 
-    def __init__(self, workspace: Workspace, params: BaseParams):
+    def __init__(self, workspace: Workspace, params: InversionBaseParams):
         """
         :param workspace: Geoh5py workspace object containing location based data.
         :param params: Params object containing location based data parameters.
         """
         self.workspace = workspace
-        self.params = params
+        self._params: InversionBaseParams = params
         self.mask: np.ndarray = None
         self.origin: list[float] = None
         self.angle: float = None
@@ -209,3 +209,8 @@ class InversionLocations:
         xyz[:, 2] = z_topo
 
         return xyz
+
+    @property
+    def params(self):
+        """Associated parameters."""
+        return self._params

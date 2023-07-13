@@ -60,7 +60,7 @@ class DirectivesFactory:
             self._directive_list = self.save_directives
 
             if not self.params.forward_only:
-                self._directive_list += self.inversion_directives
+                self._directive_list = self.inversion_directives + self.save_directives
 
         return self._directive_list
 
@@ -450,16 +450,14 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].insert(
-                0, inversion_object.transformations["potential"]
+                0, inversion_object.transformations["apparent resistivity"]
             )
-            phys_prop = "resistivity"
-            kwargs["channels"] = [f"apparent_{phys_prop}"]
-            apparent_measurement_entity_type = self.params.geoh5.get_entity(
-                f"Observed_apparent_{phys_prop}"
-            )[0].entity_type
-            kwargs["data_type"] = {
-                component: {f"apparent_{phys_prop}": apparent_measurement_entity_type}
-            }
+            kwargs["channels"] = ["apparent_resistivity"]
+            observed = self.params.geoh5.get_entity("Observed_apparent_resistivity")[0]
+            if observed is not None:
+                kwargs["data_type"] = {
+                    component: {"apparent_resistivity": observed.entity_type}
+                }
 
         if name == "Residual":
             kwargs["label"] = name
