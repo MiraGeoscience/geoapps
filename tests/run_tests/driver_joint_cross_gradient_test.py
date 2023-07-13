@@ -33,9 +33,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.104056,
-    "phi_d": 427,
-    "phi_m": 6.558,
+    "data_norm": 51.20747,
+    "phi_d": 2061,
+    "phi_m": 0.02767,
 }
 
 
@@ -185,7 +185,6 @@ def test_joint_cross_gradient_inv_run(
                     tmi_uncertainty=2.0,
                 )
                 drivers.append(MagneticVectorDriver(params))
-
                 params = MagneticScalarParams(
                     geoh5=geoh5,
                     mesh=mesh.uid,
@@ -203,6 +202,7 @@ def test_joint_cross_gradient_inv_run(
                     starting_model=1e-4,
                     reference_model=0.0,
                     alpha_s=0.0,
+                    lower_bound=0.0,
                     tile_spatial=2,
                     tmi_channel=data.uid,
                     tmi_uncertainty=2.0,
