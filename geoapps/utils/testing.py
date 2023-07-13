@@ -226,7 +226,7 @@ def setup_inversion_workspace(
             axis=1,
         )
         # survey.cells = survey.cells[dist < 100.0, :]
-        survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
+        survey.remove_cells(np.where(dist > 100)[0])
 
     elif "tem" in inversion_type:
         if "airborne" in inversion_type:
