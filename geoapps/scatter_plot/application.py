@@ -17,13 +17,12 @@ from time import time
 
 import numpy as np
 import plotly.graph_objects as go
-from dash import callback_context, dcc, no_update
+from dash import Dash, callback_context, dcc, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
-from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication, ObjectSelection
@@ -58,7 +57,7 @@ class ScatterPlots(BaseDashApplication):
         # Start flask server
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
