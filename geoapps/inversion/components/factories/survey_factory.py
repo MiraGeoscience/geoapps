@@ -105,9 +105,9 @@ class SurveyFactory(SimPEGFactory):
             else:
                 n_data = receiver_entity.n_vertices
 
-            local_index = np.arange(n_data)
-
-        self.local_index = local_index
+            self.local_index = np.arange(n_data)
+        else:
+            self.local_index = local_index
 
         if "current" in self.factory_type or "polarization" in self.factory_type:
             return self._dcip_arguments(data=data, local_index=local_index)

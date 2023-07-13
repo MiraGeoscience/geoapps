@@ -11,7 +11,8 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 
 from geoh5py import Workspace
-from geoh5py.ui_json import InputFile
+from geoh5py.objects import ObjectBase
+from geoh5py.ui_json import InputFile, monitored_directory_copy
 from param_sweeps.driver import SweepParams
 from param_sweeps.generate import generate
 
@@ -115,3 +116,26 @@ class BaseDriver(ABC):
             print(f"Results saved to {params.geoh5.h5file}")
 
             return driver
+
+    def add_ui_json(self, entity: ObjectBase):
+        """
+        Add ui.json file to entity.
+
+        :param entity: Object to add ui.json file to.
+        """
+        entity.add_file(Path(self.params.input_file.path) / self.params.input_file.name)
+
+    def update_monitoring_directory(self, entity: ObjectBase):
+        """
+        If monitoring directory is active, copy entity to monitoring directory.
+
+        :param entity: Object being added to monitoring directory.
+        """
+        self.add_ui_json(entity)
+        if (
+            self.params.monitoring_directory is not None
+            and Path(self.params.monitoring_directory).is_dir()
+        ):
+            monitored_directory_copy(
+                str(Path(self.params.monitoring_directory).resolve()), entity
+            )

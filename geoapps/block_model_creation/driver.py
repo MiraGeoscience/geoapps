@@ -8,12 +8,11 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 
 import numpy as np
 from discretize.utils import mesh_utils
 from geoh5py.objects import BlockModel
-from geoh5py.ui_json import monitored_directory_copy
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
@@ -145,55 +144,50 @@ class BlockModelDriver(BaseDriver):
         """
         Create block model and add to self.params.geoh5.
         """
-        xyz = get_locations(self.params.geoh5, self.params.objects)
-        if xyz is None:
-            raise ValueError("Input object has no centroids or vertices.")
+        with fetch_active_workspace(self.params.geoh5, mode="r+"):
+            xyz = get_locations(self.params.geoh5, self.params.objects)
+            if xyz is None:
+                raise ValueError("Input object has no centroids or vertices.")
 
-        tree = cKDTree(xyz)
+            tree = cKDTree(xyz)
 
-        # Find extent of grid
-        h = [
-            self.params.cell_size_x,
-            self.params.cell_size_y,
-            self.params.cell_size_z,
-        ]
-        # pads: W, E, S, N, D, U
-        pads = [
-            self.params.horizontal_padding,
-            self.params.horizontal_padding,
-            self.params.horizontal_padding,
-            self.params.horizontal_padding,
-            self.params.bottom_padding,
-            0.0,
-        ]
+            # Find extent of grid
+            h = [
+                self.params.cell_size_x,
+                self.params.cell_size_y,
+                self.params.cell_size_z,
+            ]
+            # pads: W, E, S, N, D, U
+            pads = [
+                self.params.horizontal_padding,
+                self.params.horizontal_padding,
+                self.params.horizontal_padding,
+                self.params.horizontal_padding,
+                self.params.bottom_padding,
+                0.0,
+            ]
 
-        print("Creating block model . . .")
-        object_out = BlockModelDriver.get_block_model(
-            self.params.geoh5,
-            self.params.new_grid,
-            xyz,
-            h,
-            self.params.depth_core,
-            pads,
-            self.params.expansion_fact,
-        )
-
-        # Try to recenter on nearest
-        # Find nearest cells
-        rad, ind = tree.query(object_out.centroids)
-        ind_nn = np.argmin(rad)
-
-        d_xyz = object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
-
-        object_out.origin = np.r_[object_out.origin.tolist()] - d_xyz
-
-        if (
-            self.params.monitoring_directory is not None
-            and Path(self.params.monitoring_directory).is_dir()
-        ):
-            monitored_directory_copy(
-                str(Path(self.params.monitoring_directory).resolve()), object_out
+            print("Creating block model . . .")
+            object_out = BlockModelDriver.get_block_model(
+                self.params.geoh5,
+                self.params.new_grid,
+                xyz,
+                h,
+                self.params.depth_core,
+                pads,
+                self.params.expansion_fact,
             )
+
+            # Try to recenter on nearest
+            # Find nearest cells
+            rad, ind = tree.query(object_out.centroids)
+            ind_nn = np.argmin(rad)
+
+            d_xyz = object_out.centroids[ind_nn, :] - xyz[ind[ind_nn], :]
+
+            object_out.origin = np.r_[object_out.origin.tolist()] - d_xyz
+
+            self.update_monitoring_directory(object_out)
 
 
 if __name__ == "__main__":

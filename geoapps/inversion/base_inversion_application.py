@@ -18,14 +18,12 @@ from time import time
 
 import numpy as np
 import scipy
-from dash import Input, Output, State, callback_context, no_update
+from dash import Dash, Input, Output, State, callback_context, no_update
 from flask import Flask
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
 from geoh5py.shared.utils import is_uuid
-from geoh5py.ui_json import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from jupyter_dash import JupyterDash
 from notebook import notebookapp
 from plotly import graph_objects as go
 
@@ -58,7 +56,7 @@ class InversionApp(BaseDashApplication):
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
@@ -67,9 +65,8 @@ class InversionApp(BaseDashApplication):
         self.app.layout = self._layout
 
         self.default_trigger_args = [
-            Output(component_id="live_link", component_property="value"),
+            Output(component_id="output_message", component_property="children"),
             Input(component_id="write_input", component_property="n_clicks"),
-            State(component_id="live_link", component_property="value"),
             # Data Selection
             State(component_id="data_object", component_property="value"),
             State(component_id="full_components", component_property="data"),
@@ -1478,7 +1475,6 @@ class InversionApp(BaseDashApplication):
     def write_trigger(
         self,
         n_clicks: int,
-        live_link: list,
         data_object: str,
         full_components: dict,
         resolution: float,
@@ -1546,12 +1542,11 @@ class InversionApp(BaseDashApplication):
         reference_declination_options: str = None,
         reference_declination_data: str = None,
         reference_declination_const: float = None,
-    ) -> (list, bool):
+    ):
         """
         Update self.params and write out ui.json.
 
         :param n_clicks: Trigger for calling write_params.
-        :param live_link: Checkbox showing whether monitoring directory is enabled.
         :param data_object: Input object uuid.
         :param full_components: Dictionary of components and corresponding channels, uncertainties, active.
         :param resolution: Resolution distance.
@@ -1620,7 +1615,7 @@ class InversionApp(BaseDashApplication):
         :param reference_declination_data: (Magnetic vector specific.) Reference model declination data uuid.
         :param reference_declination_const: (Magnetic vector specific.) Reference model declination constant.
 
-        :return live_link: Checkbox showing whether monitoring directory is enabled.
+        :return: Output message with save location.
         """
         if mesh is None:
             print("A mesh must be selected to write the input file.")
@@ -1676,11 +1671,6 @@ class InversionApp(BaseDashApplication):
 
         param_dict = self.get_params_dict(update_dict)
 
-        if not live_link:
-            live_link = False
-        else:
-            live_link = True
-
         # Get output path
         if (
             monitoring_directory is not None
@@ -1693,11 +1683,9 @@ class InversionApp(BaseDashApplication):
 
         # Create a new workspace and copy objects into it
         temp_geoh5 = f"{ga_group}_{time():.0f}.geoh5"
-        ws, live_link = BaseApplication.get_output_workspace(
-            live_link, monitoring_directory, temp_geoh5
+        ws, _ = BaseApplication.get_output_workspace(
+            live_link=False, workpath=monitoring_directory, name=temp_geoh5
         )
-        if not live_link:
-            param_dict["monitoring_directory"] = ""
 
         with ws as workspace:
             # Put entities in output workspace.
@@ -1732,21 +1720,7 @@ class InversionApp(BaseDashApplication):
                 path=monitoring_directory,
             )
 
-            if (
-                self._run_params.monitoring_directory is not None
-                and Path(self._run_params.monitoring_directory).resolve().exists()
-            ):
-                for obj in ws.objects:
-                    monitored_directory_copy(
-                        Path(self._run_params.monitoring_directory).resolve(),
-                        obj,
-                    )
-        if live_link:
-            print("Live link active. Check your ANALYST session for new mesh.")
-            return [True]
-        else:
-            print("Saved to " + str(Path(monitoring_directory).resolve()))
-            return []
+        return ["\nSaved to " + str(Path(monitoring_directory).resolve())]
 
     def trigger_click(self, _):
         """

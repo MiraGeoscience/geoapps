@@ -10,13 +10,11 @@ from __future__ import annotations
 
 import sys
 import warnings
-from pathlib import Path
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, ObjectBase, Surface
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 from tqdm import tqdm
@@ -73,11 +71,7 @@ class IsoSurfacesDriver(BaseDriver):
                             parent=container,
                         )
                     ]
-            if (
-                self.params.monitoring_directory is not None
-                and Path(self.params.monitoring_directory).is_dir()
-            ):
-                monitored_directory_copy(self.params.monitoring_directory, container)
+            self.update_monitoring_directory(container)
 
         print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
 

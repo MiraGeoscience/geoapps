@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: f7bd7351dd910a463f8c0bd3719361da956a96dbcaae5650ee2dde0c137f039f
-    osx-64: 67772f3b5ff3336949c965ef8599b164fd9378bfef3ecea4a23581886cebc9e0
-    linux-64: 70e6047e307f0cf07214491444fb566d2753c995b1062653b204497e6f1b9272
+    win-64: 814f715bf75429533ae3677dcf28735030dd7b6a0388c0df6e09494cc8b286a5
+    osx-64: b2b36c646bacffaeb3d53dadc77398af53f87aa18321cd5a0731309dbc17d660
+    linux-64: beceb204467412ebcfc29e56f5d45e9c033c5f6d60115f8f2898bfda694ed9da
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -2882,15 +2882,15 @@ package:
   category: apps
   optional: true
 - name: threadpoolctl
-  version: 3.1.0
+  version: 3.2.0
   manager: conda
   platform: linux-64
   dependencies:
-    python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.1.0-pyh8a188c0_0.tar.bz2
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.2.0-pyha21a80b_0.conda
   hash:
-    md5: a2995ee828f65687ac5b1e71a2ab1e0c
-    sha256: c7a964811ba49c545236f7d6c2486b2ed493931660048a06fe94ecc851dd0b82
+    md5: 978d03388b62173b8e6f79162cf52b86
+    sha256: 15e2f916fbfe3cc480160aa99eb6ba3edc183fceb234f10151d63870fdc4eccd
   category: core
   optional: true
 - name: toml
@@ -3396,7 +3396,7 @@ package:
   category: core
   optional: true
 - name: fonttools
-  version: 4.40.0
+  version: 4.41.0
   manager: conda
   platform: linux-64
   dependencies:
@@ -3406,10 +3406,10 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     unicodedata2: '>=14.0.0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.40.0-py310h2372a71_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.41.0-py310h2372a71_0.conda
   hash:
-    md5: d3d83b419c81ac718a9221442707882b
-    sha256: e5d22bcf75a4414d84000a3d905c70d4d2a1db96c0dfbf5a89169817351b2bb7
+    md5: 606aea800172f81896b21cabc5575206
+    sha256: b9e1a3b84c670fab1c491b29c6b36f630aa520f45f08a44440851f46750d85c1
   category: core
   optional: true
 - name: glib
@@ -4402,7 +4402,7 @@ package:
   category: main
   optional: false
 - name: jsonschema
-  version: 4.18.0
+  version: 4.18.2
   manager: conda
   platform: linux-64
   dependencies:
@@ -4413,10 +4413,10 @@ package:
     python: '>=3.8'
     referencing: '>=0.28.4'
     rpds-py: '>=0.7.1'
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.18.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.18.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5c4e43c06a01637c67df037093722b68
-    sha256: 3b1f66845abe02094e36e8013f92633ae4ab36997dea22a9c144111eecfb7dae
+    md5: 71274b4369ed6b65cad006d39698cf1e
+    sha256: c2db7a6c4322d03acdfe3f4d4b840dd4c8c254609cc47ec725ad0518c80bb2de
   category: apps
   optional: true
 - name: jupyter_core
@@ -5292,26 +5292,6 @@ package:
     sha256: 08a3bdd30b685bcacc097611495175d0b6994f56484a174dc85a0b61945b939c
   category: core
   optional: true
-- name: jupyter-dash
-  version: 0.4.2
-  manager: conda
-  platform: linux-64
-  dependencies:
-    ansi2html: ''
-    dash: ''
-    flask: ''
-    ipykernel: ''
-    ipython: ''
-    nest-asyncio: ''
-    python: '>=3.5'
-    requests: ''
-    retrying: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/jupyter-dash-0.4.2-pyhd8ed1ab_1.tar.bz2
-  hash:
-    md5: 9c77330b235666f244a7b8dcc7c0955a
-    sha256: 1b664f4776f45c897bb783fbfae19c400d58b1e68bdd1942da2c95a4e7f50091
-  category: apps
-  optional: true
 - name: jupyter_server
   version: 1.23.6
   manager: conda
@@ -5570,14 +5550,14 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pymatsolver: '>=0.2'
-    pandas: '*'
+    discretize: '>=0.8.0'
     geoh5py: '*'
     scipy: '>=1.8.0'
-    numpy: '>=1.20'
-    discretize: '>=0.8.0'
-    empymod: '>=2.0.0'
+    pandas: '*'
     scikit-learn: '>=1.2'
+    empymod: '>=2.0.0'
+    pymatsolver: '>=0.2'
+    numpy: '>=1.20'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -7818,15 +7798,15 @@ package:
   category: apps
   optional: true
 - name: threadpoolctl
-  version: 3.1.0
+  version: 3.2.0
   manager: conda
   platform: osx-64
   dependencies:
-    python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.1.0-pyh8a188c0_0.tar.bz2
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.2.0-pyha21a80b_0.conda
   hash:
-    md5: a2995ee828f65687ac5b1e71a2ab1e0c
-    sha256: c7a964811ba49c545236f7d6c2486b2ed493931660048a06fe94ecc851dd0b82
+    md5: 978d03388b62173b8e6f79162cf52b86
+    sha256: 15e2f916fbfe3cc480160aa99eb6ba3edc183fceb234f10151d63870fdc4eccd
   category: core
   optional: true
 - name: toml
@@ -8260,7 +8240,7 @@ package:
   category: core
   optional: true
 - name: fonttools
-  version: 4.40.0
+  version: 4.41.0
   manager: conda
   platform: osx-64
   dependencies:
@@ -8269,10 +8249,10 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     unicodedata2: '>=14.0.0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.40.0-py310h6729b98_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.41.0-py310h6729b98_0.conda
   hash:
-    md5: 15dcc729f2102b4b64e0e6f53f2fb377
-    sha256: 92888a43be0f94b7110a73c1b2852119cd709c7b61196376dd82da8e48d9262f
+    md5: 2de0c6bd77a2ea8aa4e82943273c5dd3
+    sha256: 76ae3255902589a8076f76b4821c3e47e6622af9b2a8aba5ce432da5bc848632
   category: core
   optional: true
 - name: glib
@@ -9259,7 +9239,7 @@ package:
   category: apps
   optional: true
 - name: jsonschema
-  version: 4.18.0
+  version: 4.18.2
   manager: conda
   platform: osx-64
   dependencies:
@@ -9270,10 +9250,10 @@ package:
     jsonschema-specifications: '>=2023.03.6'
     referencing: '>=0.28.4'
     rpds-py: '>=0.7.1'
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.18.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.18.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5c4e43c06a01637c67df037093722b68
-    sha256: 3b1f66845abe02094e36e8013f92633ae4ab36997dea22a9c144111eecfb7dae
+    md5: 71274b4369ed6b65cad006d39698cf1e
+    sha256: c2db7a6c4322d03acdfe3f4d4b840dd4c8c254609cc47ec725ad0518c80bb2de
   category: apps
   optional: true
 - name: jupyter_core
@@ -9429,8 +9409,8 @@ package:
     tomli: '>=1.1.0'
     tomlkit: '>=0.10.1'
     isort: '>=4.2.5,<6'
-    platformdirs: '>=2.2.0'
     typing_extensions: '>=3.10.0'
+    platformdirs: '>=2.2.0'
     dill: '>=0.3.6'
     colorama: '>=0.4.5'
     mccabe: '>=0.6,<0.8'
@@ -10003,26 +9983,6 @@ package:
     sha256: 916645013363bfdb7d72d32f88b79de3fffb5b7c188af84d18380be9b604e4b0
   category: main
   optional: false
-- name: jupyter-dash
-  version: 0.4.2
-  manager: conda
-  platform: osx-64
-  dependencies:
-    requests: ''
-    ipython: ''
-    flask: ''
-    dash: ''
-    ipykernel: ''
-    nest-asyncio: ''
-    retrying: ''
-    ansi2html: ''
-    python: '>=3.5'
-  url: https://conda.anaconda.org/conda-forge/noarch/jupyter-dash-0.4.2-pyhd8ed1ab_1.tar.bz2
-  hash:
-    md5: 9c77330b235666f244a7b8dcc7c0955a
-    sha256: 1b664f4776f45c897bb783fbfae19c400d58b1e68bdd1942da2c95a4e7f50091
-  category: apps
-  optional: true
 - name: jupyter_server
   version: 1.23.6
   manager: conda
@@ -10239,14 +10199,14 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    pymatsolver: '>=0.2'
-    pandas: '*'
+    discretize: '>=0.8.0'
     geoh5py: '*'
     scipy: '>=1.8.0'
-    numpy: '>=1.20'
-    discretize: '>=0.8.0'
-    empymod: '>=2.0.0'
+    pandas: '*'
     scikit-learn: '>=1.2'
+    empymod: '>=2.0.0'
+    pymatsolver: '>=0.2'
+    numpy: '>=1.20'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -12414,15 +12374,15 @@ package:
   category: apps
   optional: true
 - name: threadpoolctl
-  version: 3.1.0
+  version: 3.2.0
   manager: conda
   platform: win-64
   dependencies:
-    python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.1.0-pyh8a188c0_0.tar.bz2
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/threadpoolctl-3.2.0-pyha21a80b_0.conda
   hash:
-    md5: a2995ee828f65687ac5b1e71a2ab1e0c
-    sha256: c7a964811ba49c545236f7d6c2486b2ed493931660048a06fe94ecc851dd0b82
+    md5: 978d03388b62173b8e6f79162cf52b86
+    sha256: 15e2f916fbfe3cc480160aa99eb6ba3edc183fceb234f10151d63870fdc4eccd
   category: core
   optional: true
 - name: toml
@@ -13487,7 +13447,7 @@ package:
   category: apps
   optional: true
 - name: fonttools
-  version: 4.40.0
+  version: 4.41.0
   manager: conda
   platform: win-64
   dependencies:
@@ -13499,10 +13459,10 @@ package:
     unicodedata2: '>=14.0.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.40.0-py310h8d17308_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.41.0-py310h8d17308_0.conda
   hash:
-    md5: a18e1160ee09a9f5ac26b2ce965832f7
-    sha256: 417cbde320ed8a56796aac0913abb19c67156fb2429fa6b237a84591ff0a74a9
+    md5: 496704d1b32153ed96e60de270a3e2f4
+    sha256: 484cccfac21ddb4eef4daded8e95df485ee525fcc38f27efdafeb5d48c330cc9
   category: core
   optional: true
 - name: geotiff
@@ -13828,7 +13788,7 @@ package:
   category: main
   optional: false
 - name: jsonschema
-  version: 4.18.0
+  version: 4.18.2
   manager: conda
   platform: win-64
   dependencies:
@@ -13839,10 +13799,10 @@ package:
     jsonschema-specifications: '>=2023.03.6'
     referencing: '>=0.28.4'
     rpds-py: '>=0.7.1'
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.18.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.18.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5c4e43c06a01637c67df037093722b68
-    sha256: 3b1f66845abe02094e36e8013f92633ae4ab36997dea22a9c144111eecfb7dae
+    md5: 71274b4369ed6b65cad006d39698cf1e
+    sha256: c2db7a6c4322d03acdfe3f4d4b840dd4c8c254609cc47ec725ad0518c80bb2de
   category: apps
   optional: true
 - name: jupyter_core
@@ -13925,8 +13885,8 @@ package:
     tomli: '>=1.1.0'
     tomlkit: '>=0.10.1'
     isort: '>=4.2.5,<6'
-    platformdirs: '>=2.2.0'
     typing_extensions: '>=3.10.0'
+    platformdirs: '>=2.2.0'
     dill: '>=0.3.6'
     colorama: '>=0.4.5'
     mccabe: '>=0.6,<0.8'
@@ -14645,26 +14605,6 @@ package:
     sha256: 41cd6c9d20f5b4391c83e1e9a40a0d811dde39e8724084c3a79a61b30261e7db
   category: apps
   optional: true
-- name: jupyter-dash
-  version: 0.4.2
-  manager: conda
-  platform: win-64
-  dependencies:
-    requests: ''
-    ipython: ''
-    flask: ''
-    dash: ''
-    ipykernel: ''
-    nest-asyncio: ''
-    retrying: ''
-    ansi2html: ''
-    python: '>=3.5'
-  url: https://conda.anaconda.org/conda-forge/noarch/jupyter-dash-0.4.2-pyhd8ed1ab_1.tar.bz2
-  hash:
-    md5: 9c77330b235666f244a7b8dcc7c0955a
-    sha256: 1b664f4776f45c897bb783fbfae19c400d58b1e68bdd1942da2c95a4e7f50091
-  category: apps
-  optional: true
 - name: jupyter_server
   version: 1.23.6
   manager: conda
@@ -15061,14 +15001,14 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    pymatsolver: '>=0.2'
-    pandas: '*'
+    discretize: '>=0.8.0'
     geoh5py: '*'
     scipy: '>=1.8.0'
-    numpy: '>=1.20'
-    discretize: '>=0.8.0'
-    empymod: '>=2.0.0'
+    pandas: '*'
     scikit-learn: '>=1.2'
+    empymod: '>=2.0.0'
+    pymatsolver: '>=0.2'
+    numpy: '>=1.20'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
