@@ -16,7 +16,7 @@ from .constants import default_ui_json, inversion_defaults, validations
 
 class JointCrossGradientParams(BaseJointParams):
     """
-    Parameter class for gravity->density inversion.
+    Parameter class for joint cross-gradient inversion.
     """
 
     _physical_property = [""]
@@ -45,10 +45,4 @@ class JointCrossGradientParams(BaseJointParams):
 
     @physical_property.setter
     def physical_property(self, val: list[str]):
-        # unique_properties = list(set(val))
-        # if len(unique_properties) == len(self.):
-        #     raise ValueError(
-        #         "All physical properties must be the same. "
-        #         f"Provided SimPEG groups for {unique_properties}."
-        #     )
         self._physical_property = val

@@ -200,7 +200,7 @@ class InversionDriver(BaseDriver):
     def n_values(self):
         """Number of values in the model"""
         if self._n_values is None:
-            self._n_values = int(np.sum(self.models.active_cells))
+            self._n_values = self.models.n_active
 
         return self._n_values
 
@@ -514,7 +514,6 @@ class InversionLogger:
 
 
 if __name__ == "__main__":
-    # file = str(Path(sys.argv[1]).resolve())
-    file = r"C:\Users\dominiquef\Desktop\Vale_FNO\joint_mag_grav_v3.ui.json"
+    file = str(Path(sys.argv[1]).resolve())
     InversionDriver.start(file)
     sys.stdout.close()

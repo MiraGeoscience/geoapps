@@ -39,7 +39,6 @@ class JointCrossGradientDriver(BaseJointDriver):
 
         with fetch_active_workspace(self.workspace, mode="r+"):
             self.initialize()
-        #
 
     def validate_create_models(self):
         """Create stacked model vectors from all drivers provided."""
@@ -144,7 +143,6 @@ class JointCrossGradientDriver(BaseJointDriver):
             ]:
                 if getattr(self.params, param) is None:
                     for reg in reg_block:
-                        print(param, getattr(driver.params, param))
                         setattr(reg, param, getattr(driver.params, param))
 
             driver.regularization = ComboObjectiveFunction(objfcts=reg_block)
@@ -212,7 +210,7 @@ class JointCrossGradientDriver(BaseJointDriver):
     def n_values(self):
         """Number of values in the model"""
         if self._n_values is None:
-            n_values = int(np.sum(self.models.active_cells))
+            n_values = self.models.n_active
             count = []
             for driver in self.drivers:
                 n_comp = 3 if driver.inversion_data.vector else 1
