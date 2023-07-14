@@ -482,7 +482,7 @@ class InversionApp(BaseDashApplication):
         nb_port = None
         servers = list(notebookapp.list_running_servers())
         for s in servers:
-            if s["notebook_dir"] == Path("../../../").resolve():
+            if s["notebook_dir"] == str(Path("../../../").resolve()):
                 nb_port = s["port"]
                 break
 
