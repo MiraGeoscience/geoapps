@@ -35,7 +35,7 @@ np.random.seed(0)
 
 def test_fem_fwr_run(
     tmp_path: Path,
-    n_grid_points=2,
+    n_grid_points=3,
     refinement=(2,),
 ):
     # Run the forward
@@ -66,7 +66,7 @@ def test_fem_fwr_run(
     params.workpath = tmp_path
     fwr_driver = FrequencyDomainElectromagneticsDriver(params)
     fwr_driver.run()
-
+    geoh5.close()
     return fwr_driver.models.starting
 
 
