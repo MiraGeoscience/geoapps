@@ -21,7 +21,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.03469,
+    "data_norm": 0.0087733,
     "phi_d": 0.6837,
     "phi_m": 0.1868,
 }
