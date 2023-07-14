@@ -40,7 +40,7 @@ from .. import PROJECT, PROJECT_DCIP
 
 
 def test_mag_inversion(tmp_path: Path):
-    """Tests the jupyter application for mag-mvi"""
+    """Tests the dash application for mag-mvi"""
     temp_workspace = tmp_path / "mag_inversion.geoh5"
 
     with Workspace(PROJECT) as ws:
@@ -99,7 +99,9 @@ def test_mag_inversion(tmp_path: Path):
                 window_height=app.params.window_height,
                 fix_aspect_ratio=[app.params.fix_aspect_ratio],
                 colorbar=[app.params.colorbar],
-                topography_object=str(app.params.topography_object.uid),
+                topography_object=str(
+                    app.params.topography_object.uid  # pylint: disable=no-member
+                ),
                 topography=app.params.topography,
                 z_from_topo=[app.params.z_from_topo],
                 receivers_offset_z=app.params.receivers_offset_z,
