@@ -25,9 +25,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 3.6444e-11,
-    "phi_d": 0.001958,
-    "phi_m": 0.003213,
+    "data_norm": 2.8079e-10,
+    "phi_d": 6007,
+    "phi_m": 33.84,
 }
 
 np.random.seed(0)
@@ -35,7 +35,7 @@ np.random.seed(0)
 
 def test_airborne_tem_fwr_run(
     tmp_path: Path,
-    n_grid_points=2,
+    n_grid_points=3,
     refinement=(2,),
 ):
     # Run the forward

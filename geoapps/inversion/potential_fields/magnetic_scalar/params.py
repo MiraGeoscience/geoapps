@@ -30,7 +30,7 @@ class MagneticScalarParams(InversionBaseParams):
     Parameter class for magnetics->susceptibility inversion.
     """
 
-    PHYSICAL_PROPERTY = "susceptibility"
+    _physical_property = "susceptibility"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
