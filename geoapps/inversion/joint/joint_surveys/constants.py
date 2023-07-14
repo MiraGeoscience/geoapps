@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 from geoapps.inversion.joint.constants import default_ui_json as joint_default_ui_json
 

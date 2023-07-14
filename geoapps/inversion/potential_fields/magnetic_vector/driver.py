@@ -7,7 +7,6 @@
 
 from __future__ import annotations
 
-import numpy as np
 from SimPEG import maps
 
 from geoapps.inversion.driver import InversionDriver
@@ -29,7 +28,7 @@ class MagneticVectorDriver(InversionDriver):
         if self._mapping is None:
             mapping = []
             start = 0
-            for ind in range(3):
+            for _ in range(3):
                 mapping.append(
                     maps.Projection(
                         self.n_values * 3, slice(start, start + self.n_values)
