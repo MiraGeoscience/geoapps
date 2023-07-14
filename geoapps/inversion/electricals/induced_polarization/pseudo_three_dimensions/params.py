@@ -25,7 +25,7 @@ class InducedPolarizationPseudo3DParams(InversionBaseParams):
     Parameter class for electrical->chargeability inversion.
     """
 
-    PHYSICAL_PROPERTY = "chargeability"
+    _physical_property = "chargeability"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)

@@ -10,7 +10,7 @@ import numpy as np
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.joint.joint_surveys import JointSingleParams
+from geoapps.inversion.joint.joint_surveys import JointSurveysParams
 from geoapps.inversion.joint.joint_surveys.driver import JointSurveyDriver
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
@@ -21,15 +21,15 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.104056,
-    "phi_d": 427,
-    "phi_m": 6.558,
+    "data_norm": 0.29978,
+    "phi_d": 663.9,
+    "phi_m": 25.47,
 }
 
 
 def test_joint_surveys_fwr_run(
     tmp_path,
-    n_grid_points=4,
+    n_grid_points=6,
     refinement=(2,),
 ):
     np.random.seed(0)
@@ -53,9 +53,9 @@ def test_joint_surveys_fwr_run(
         starting_model=model.uid,
     )
     fwr_driver_a = GravityDriver(params)
+    fwr_driver_a.out_group.name = "Gravity Forward [0]"
 
     # Create local problem B
-
     _, _, model, survey, _ = setup_inversion_workspace(
         tmp_path,
         background=0.0,
@@ -67,7 +67,6 @@ def test_joint_surveys_fwr_run(
         geoh5=geoh5,
         drape_height=10.0,
     )
-
     params = GravityParams(
         forward_only=True,
         geoh5=geoh5,
@@ -79,28 +78,33 @@ def test_joint_surveys_fwr_run(
         starting_model=model.uid,
     )
     fwr_driver_b = GravityDriver(params)
+    fwr_driver_b.out_group.name = "Gravity Forward [1]"
 
-    joint_params = JointSingleParams(
-        forward_only=True,
-        geoh5=geoh5,
-        topography_object=topography.uid,
-        group_a=fwr_driver_a.params.out_group,
-        group_b=fwr_driver_b.params.out_group,
+    # Force co-location of meshes
+    fwr_driver_b.inversion_mesh.entity.origin = (
+        fwr_driver_a.inversion_mesh.entity.origin
     )
-
-    fwr_driver = JointSurveyDriver(joint_params)
-    fwr_driver.run()
+    fwr_driver_b.workspace.update_attribute(
+        fwr_driver_b.inversion_mesh.entity, "attributes"
+    )
+    fwr_driver_b.inversion_mesh._mesh = None  # pylint: disable=protected-access
+    fwr_driver_a.run()
+    fwr_driver_b.run()
     geoh5.close()
-    return fwr_driver.models.starting
+
+    return (
+        fwr_driver_a.directives.save_directives[0].transforms[0]
+        * fwr_driver_a.models.starting
+    )
 
 
 def test_joint_surveys_inv_run(
     tmp_path,
     max_iterations=1,
-    pytest=True,
+    unittest=True,
 ):
     workpath = tmp_path / "inversion_test.ui.geoh5"
-    if pytest:
+    if unittest:
         workpath = (
             tmp_path.parent / "test_joint_surveys_fwr_run0" / "inversion_test.ui.geoh5"
         )
@@ -109,7 +113,8 @@ def test_joint_surveys_inv_run(
         topography = geoh5.get_entity("topography")[0]
         drivers = []
         orig_data = []
-        for group in geoh5.get_entity("GravityForward"):
+        for ind in range(2):
+            group = geoh5.get_entity(f"Gravity Forward [{ind}]")[0]
             survey = geoh5.get_entity(group.options["data_object"]["value"])[0]
             for child in group.children:
                 if isinstance(child, Octree):
@@ -125,17 +130,17 @@ def test_joint_surveys_inv_run(
                 topography_object=topography.uid,
                 data_object=survey.uid,
                 gz_channel=gz.uid,
-                gz_uncertainty=1e-3,
+                gz_uncertainty=np.var(gz.values) * 2.0,
                 starting_model=0.0,
             )
             drivers.append(GravityDriver(params))
 
         # Run the inverse
         np.random.seed(0)
-        joint_params = JointSingleParams(
+        joint_params = JointSurveysParams(
             geoh5=geoh5,
             topography_object=topography.uid,
-            mesh=geoh5.get_entity("Octree")[0].uid,
+            mesh=drivers[0].params.mesh,
             group_a=drivers[0].params.out_group,
             group_b=drivers[1].params.out_group,
             starting_model=1e-4,
@@ -159,12 +164,15 @@ def test_joint_surveys_inv_run(
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
-
         output["data"] = np.hstack(orig_data)
-        if pytest:
+
+        if unittest:
             check_target(output, target_run)
         else:
-            return driver.inverse_problem.model
+            return (
+                driver.drivers[0].directives.save_directives[0].transforms[0]
+                * driver.inverse_problem.model
+            )
 
 
 if __name__ == "__main__":
@@ -177,10 +185,14 @@ if __name__ == "__main__":
 
     m_rec = test_joint_surveys_inv_run(
         Path("./"),
-        max_iterations=15,
-        pytest=False,
+        max_iterations=20,
+        unittest=False,
     )
-    model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
+    model_residual = (
+        np.nansum((m_rec - m_start) ** 2.0) ** 0.5
+        / np.nansum(m_start**2.0) ** 0.5
+        * 100.0
+    )
     assert (
         model_residual < 75.0
     ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"

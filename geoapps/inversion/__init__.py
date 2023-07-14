@@ -44,6 +44,10 @@ DRIVER_MAP = {
         "geoapps.inversion.joint.joint_surveys.driver",
         "JointSurveyDriver",
     ),
+    "joint cross gradient": (
+        "geoapps.inversion.joint.joint_cross_gradient.driver",
+        "JointCrossGradientDriver",
+    ),
     "tdem": (
         "geoapps.inversion.electromagnetics.time_domain.driver",
         "TimeDomainElectromagneticsDriver",

@@ -26,7 +26,7 @@ class GravityParams(InversionBaseParams):
     Parameter class for gravity->density inversion.
     """
 
-    PHYSICAL_PROPERTY = "density"
+    _physical_property = "density"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
