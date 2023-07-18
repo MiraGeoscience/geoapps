@@ -154,7 +154,7 @@ class InversionData(InversionLocations):
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
-        self.survey, _, _ = self.create_survey()
+        self.survey, self.local_index, _ = self.create_survey()
         self.save_data(self.entity)
 
     def drape_locations(self, locations: np.ndarray) -> np.ndarray:
@@ -293,7 +293,7 @@ class InversionData(InversionLocations):
                     apparent_property = data[component].copy()
                     apparent_property[self.global_map] *= self.transformations[
                         component
-                    ]
+                    ][np.argsort(self.local_index)]
                     if "2d" in self.params.inversion_type:
                         apparent_property = self._embed_2d(apparent_property)
 

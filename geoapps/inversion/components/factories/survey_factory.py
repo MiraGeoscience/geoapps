@@ -148,10 +148,7 @@ class SurveyFactory(SimPEGFactory):
         )
 
         if not self.params.forward_only:
-            if local_index is None or "2d" in self.factory_type:
-                self._add_data(survey, data, self.local_index, channel)
-            else:
-                self._add_data(survey, data, local_index, channel)
+            self._add_data(survey, data, self.local_index, channel)
 
         survey.dummy = self.dummy
 
