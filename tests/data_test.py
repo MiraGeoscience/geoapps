@@ -18,8 +18,10 @@ from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.inversion.components import InversionData
-from geoapps.inversion.driver import InversionDriver
-from geoapps.inversion.potential_fields import MagneticVectorParams
+from geoapps.inversion.potential_fields.magnetic_vector.driver import (
+    MagneticVectorDriver,
+    MagneticVectorParams,
+)
 from geoapps.utils.testing import Geoh5Tester
 
 from . import PROJECT
@@ -102,7 +104,7 @@ def test_survey_data(tmp_path: Path):
             resolution=0.0,
         )
 
-        driver = InversionDriver(params)
+        driver = MagneticVectorDriver(params)
 
     local_survey_a = driver.inverse_problem.dmisfit.objfcts[0].simulation.survey
     local_survey_b = driver.inverse_problem.dmisfit.objfcts[1].simulation.survey
@@ -129,7 +131,7 @@ def test_survey_data(tmp_path: Path):
     np.testing.assert_array_equal(expected_dobs, np.hstack(survey_dobs))
 
     # test savegeoh5iteration data
-    driver.directives[-2].save_components(99, survey_dobs)
+    driver.directives.directive_list[1].save_components(99, survey_dobs)
 
     with workspace.open():
         bxx_test = workspace.get_entity("Iteration_99_bxx")[0].values
@@ -140,7 +142,7 @@ def test_survey_data(tmp_path: Path):
     np.testing.assert_array_equal(byy_test, byy_data.values)
     np.testing.assert_array_equal(bzz_test, bzz_data.values)
 
-    driver.directives[-1].save_components(99, survey_dobs)
+    driver.directives.directive_list[2].save_components(99, survey_dobs)
 
     with workspace.open():
         assert np.all(

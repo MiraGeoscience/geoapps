@@ -155,6 +155,12 @@ class InversionData(InversionLocations):
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
         self.survey, self.local_index, _ = self.create_survey()
+
+        if "direct current" in self.params.inversion_type:
+            self.transformations["apparent resistivity"] = 1 / (
+                geometric_factor(self.survey)[np.argsort(self.local_index)] + 1e-10
+            )
+
         self.save_data(self.entity)
 
     def drape_locations(self, locations: np.ndarray) -> np.ndarray:
@@ -286,14 +292,11 @@ class InversionData(InversionLocations):
                     entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
 
                 if "direct current" in self.params.inversion_type:
-                    self.transformations[component] = 1 / (
-                        geometric_factor(self.survey) + 1e-10
-                    )
-
                     apparent_property = data[component].copy()
                     apparent_property[self.global_map] *= self.transformations[
-                        component
-                    ][np.argsort(self.local_index)]
+                        "apparent resistivity"
+                    ]
+
                     if "2d" in self.params.inversion_type:
                         apparent_property = self._embed_2d(apparent_property)
 
@@ -511,10 +514,12 @@ class InversionData(InversionLocations):
                 minimum_level=3,
                 padding_cells=padding_cells,
             )
-
-            kwargs = {"components": 3} if self.vector else {}
             mapping = maps.TileMap(
-                mesh, active_cells, nested_mesh, enforce_active=True, **kwargs
+                mesh,
+                active_cells,
+                nested_mesh,
+                enforce_active=True,
+                components=3 if self.vector else 1,
             )
             sim = simulation_factory.build(
                 survey=survey,

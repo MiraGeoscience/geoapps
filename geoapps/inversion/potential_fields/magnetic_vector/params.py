@@ -26,7 +26,7 @@ class MagneticVectorParams(InversionBaseParams):
     Parameter class for magnetics->vector magnetization inversion.
     """
 
-    PHYSICAL_PROPERTY = "magnetization"
+    _physical_property = "magnetization"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)

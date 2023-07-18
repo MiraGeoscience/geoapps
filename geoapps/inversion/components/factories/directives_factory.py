@@ -27,6 +27,7 @@ class DirectivesFactory:
         self.driver = driver
         self.params = driver.params
         self.factory_type = self.driver.params.inversion_type
+        self._directive_list: list[directives.InversionDirective] | None = None
         self._vector_inversion_directive = None
         self._update_sensitivity_weights_directive = None
         self._update_irls_directive = None
@@ -55,9 +56,24 @@ class DirectivesFactory:
     @property
     def directive_list(self):
         """List of directives to be used in inversion."""
+        if self._directive_list is None:
+            self._directive_list = self.save_directives
 
-        # print(f"Generated directive list: {self.directive_list}")
-        return self.inversion_directives + self.save_directives
+            if not self.params.forward_only:
+                self._directive_list += self.inversion_directives
+
+        return self._directive_list
+
+    @directive_list.setter
+    def directive_list(self, value):
+        if not all(
+            isinstance(directive, directives.InversionDirective) for directive in value
+        ):
+            raise TypeError(
+                "All directives must be of type SimPEG.directives.InversionDirective"
+            )
+
+        self._directive_list = value
 
     @property
     def inversion_directives(self):
@@ -201,7 +217,7 @@ class DirectivesFactory:
         """Directive to update vector model."""
         if self._vector_inversion_directive is None and "vector" in self.factory_type:
             self._vector_inversion_directive = directives.VectorInversion(
-                [local.simulation for local in self.driver.data_misfit.objfcts],
+                [objective.simulation for objective in self.driver.data_misfit.objfcts],
                 self.driver.regularization,
                 chifact_target=self.driver.params.chi_factor * 2,
             )
@@ -314,7 +330,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
             if self.factory_type == "magnetic vector":
                 kwargs["channels"] = ["amplitude", "inclination", "declination"]
-                kwargs["reshape"] = lambda x: x.reshape((3, -1))
                 kwargs["transforms"] = [
                     cartesian2amplitude_dip_azimuth,
                     active_cells_map,
@@ -435,16 +450,14 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].insert(
-                0, inversion_object.transformations["potential"]
+                0, inversion_object.transformations["apparent resistivity"]
             )
-            phys_prop = "resistivity"
-            kwargs["channels"] = [f"apparent_{phys_prop}"]
-            apparent_measurement_entity_type = self.params.geoh5.get_entity(
-                f"Observed_apparent_{phys_prop}"
-            )[0].entity_type
-            kwargs["data_type"] = {
-                component: {f"apparent_{phys_prop}": apparent_measurement_entity_type}
-            }
+            kwargs["channels"] = ["apparent_resistivity"]
+            observed = self.params.geoh5.get_entity("Observed_apparent_resistivity")[0]
+            if observed is not None:
+                kwargs["data_type"] = {
+                    component: {"apparent_resistivity": observed.entity_type}
+                }
 
         if name == "Residual":
             kwargs["label"] = name
