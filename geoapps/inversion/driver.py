@@ -31,8 +31,8 @@ from SimPEG import (
     maps,
     objective_function,
     optimization,
-    regularization,
 )
+from SimPEG.regularization import BaseRegularization, Sparse
 
 from geoapps.driver_base.driver import BaseDriver
 from geoapps.inversion import DRIVER_MAP
@@ -43,11 +43,7 @@ from geoapps.inversion.components import (
     InversionTopography,
     InversionWindow,
 )
-from geoapps.inversion.components.factories import (
-    DirectivesFactory,
-    MisfitFactory,
-    SaveIterationGeoh5Factory,
-)
+from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 from geoapps.inversion.utils import tile_locations
 
@@ -69,7 +65,9 @@ class InversionDriver(BaseDriver):
         self._inversion_mesh: InversionMesh | None = None
         self._inversion_topography: InversionTopography | None = None
         self._logger: InversionLogger | None = None
+        self._mapping: list[maps.IdentityMap] | None = None
         self._models: InversionModelCollection | None = None
+        self._n_values: int | None = None
         self._optimization: optimization.ProjectedGNCG | None = None
         self._regularization: None = None
         self._sorting: list[np.ndarray] | None = None
@@ -96,13 +94,22 @@ class InversionDriver(BaseDriver):
                 )
                 print("Done.")
 
+                # Re-scale misfits by problem size
+                multipliers = []
+                for mult, func in self._data_misfit:
+                    multipliers.append(
+                        mult * (func.model_map.shape[0] / func.model_map.shape[1])
+                    )
+
+                self._data_misfit.multipliers = multipliers
+
         return self._data_misfit
 
     @property
     def directives(self):
-        if getattr(self, "_directives", None) is None and not self.params.forward_only:
+        if getattr(self, "_directives", None) is None:
             with fetch_active_workspace(self.workspace, mode="r+"):
-                self._directives = DirectivesFactory(self).directive_list
+                self._directives = DirectivesFactory(self)
         return self._directives
 
     @property
@@ -123,7 +130,7 @@ class InversionDriver(BaseDriver):
     def inversion(self):
         if getattr(self, "_inversion", None) is None:
             self._inversion = inversion.BaseInversion(
-                self.inverse_problem, directiveList=self.directives
+                self.inverse_problem, directiveList=self.directives.directive_list
             )
         return self._inversion
 
@@ -190,6 +197,14 @@ class InversionDriver(BaseDriver):
         return self._models
 
     @property
+    def n_values(self):
+        """Number of values in the model"""
+        if self._n_values is None:
+            self._n_values = self.models.n_active
+
+        return self._n_values
+
+    @property
     def optimization(self):
         if getattr(self, "_optimization", None) is None:
             if self.params.forward_only:
@@ -216,12 +231,16 @@ class InversionDriver(BaseDriver):
     def out_group(self):
         """The SimPEGGroup"""
         if self._out_group is None:
+            if self.params.out_group is not None:
+                self._out_group = self.params.out_group
+                return self._out_group
+
             with fetch_active_workspace(self.workspace, mode="r+"):
                 name = self.params.inversion_type.capitalize()
                 if self.params.forward_only:
-                    name += "Forward"
+                    name += " Forward"
                 else:
-                    name += "Inversion"
+                    name += " Inversion"
 
                 self._out_group = SimPEGGroup.create(self.params.geoh5, name=name)
 
@@ -233,6 +252,14 @@ class InversionDriver(BaseDriver):
             self._regularization = self.get_regularization()
 
         return self._regularization
+
+    @regularization.setter
+    def regularization(self, regularization: objective_function.ComboObjectiveFunction):
+        if not isinstance(regularization, objective_function.ComboObjectiveFunction):
+            raise TypeError(
+                f"Regularization must be a ComboObjectiveFunction, not {type(regularization)}."
+            )
+        self._regularization = regularization
 
     @property
     def sorting(self):
@@ -267,15 +294,10 @@ class InversionDriver(BaseDriver):
         self.logger.log.close()
 
         if self.params.forward_only:
-            directive = SaveIterationGeoh5Factory(self.params).build(
-                inversion_object=self.inversion_data,
-                sorting=np.argsort(np.hstack(self.sorting)),
-                ordering=self.ordering,
-            )
-            directive.save_components(0, dpred)
-            directive.save_log()
+            self.directives.save_directives[1].save_components(0, dpred)
+            self.directives.save_directives[1].save_log()
         else:
-            for directive in self.directives:
+            for directive in self.directives.save_directives:
                 if (
                     isinstance(directive, directives.SaveIterationsGeoH5)
                     and directive.save_objective_function
@@ -311,70 +333,47 @@ class InversionDriver(BaseDriver):
             )
         )
 
+    @property
+    def mapping(self) -> list[maps.IdentityMap] | None:
+        """Model mapping for the inversion."""
+        if self._mapping is None:
+            self.mapping = maps.IdentityMap(nP=self.n_values)
+
+        return self._mapping
+
+    @mapping.setter
+    def mapping(self, value: maps.IdentityMap | list[maps.IdentityMap]):
+        if not isinstance(value, list):
+            value = [value]
+
+        if not all(
+            isinstance(val, maps.IdentityMap) and val.shape[0] == self.n_values
+            for val in value
+        ):
+            raise TypeError(
+                "'mapping' must be an instance of maps.IdentityMap with shape (n_values, *). "
+                f"Provided {value}"
+            )
+
+        self._mapping = value
+
     def get_regularization(self):
         if self.params.forward_only:
-            return regularization.BaseRegularization(mesh=self.inversion_mesh.mesh)
+            return BaseRegularization(mesh=self.inversion_mesh.mesh)
 
-        n_cells = int(np.sum(self.models.active_cells))
-
-        if self.inversion_type == "magnetic vector":
-            wires = maps.Wires(("p", n_cells), ("s", n_cells), ("t", n_cells))
-
-            reg_p = regularization.Sparse(
+        reg_funcs = []
+        for mapping in self.mapping:
+            reg = Sparse(
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
-                mapping=wires.p,  # pylint: disable=no-member
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.length_scale_x,
-                length_scale_y=self.params.length_scale_y,
-                length_scale_z=self.params.length_scale_z,
-                norms=self.params.model_norms(),
-                reference_model=self.models.reference,
-            )
-            reg_s = regularization.Sparse(
-                self.inversion_mesh.mesh,
-                active_cells=self.models.active_cells,
-                mapping=wires.s,  # pylint: disable=no-member
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.length_scale_x,
-                length_scale_y=self.params.length_scale_y,
-                length_scale_z=self.params.length_scale_z,
-                norms=self.params.model_norms(),
-                reference_model=self.models.reference,
-            )
-
-            reg_t = regularization.Sparse(
-                self.inversion_mesh.mesh,
-                active_cells=self.models.active_cells,
-                mapping=wires.t,  # pylint: disable=no-member
-                gradient_type=self.params.gradient_type,
-                alpha_s=self.params.alpha_s,
-                length_scale_x=self.params.length_scale_x,
-                length_scale_y=self.params.length_scale_y,
-                length_scale_z=self.params.length_scale_z,
-                norms=self.params.model_norms(),
-                reference_model=self.models.reference,
-            )
-
-            # Assemble the 3-component regularizations
-            reg = reg_p + reg_s + reg_t
-            reg.reference_model = self.models.reference
-
-        else:
-            reg = regularization.Sparse(
-                self.inversion_mesh.mesh,
-                active_cells=self.models.active_cells,
-                mapping=maps.IdentityMap(nP=n_cells),
-                gradient_type=self.params.gradient_type,
+                mapping=mapping,
                 alpha_s=self.params.alpha_s,
                 reference_model=self.models.reference,
             )
-
-            norms = [self.params.s_norm]
-            for comp in ["x", "y", "z"]:
-                if getattr(self.params, f"length_scale_{comp}") is not None:
+            norms = []
+            # Adjustment for 2D versus 3D problems
+            for comp in ["s", "x", "y", "z"]:
+                if getattr(self.params, f"length_scale_{comp}", None) is not None:
                     setattr(
                         reg,
                         f"length_scale_{comp}",
@@ -384,9 +383,19 @@ class InversionDriver(BaseDriver):
                 if getattr(self.params, f"{comp}_norm") is not None:
                     norms.append(getattr(self.params, f"{comp}_norm"))
 
-            reg.norms = norms
+            if norms:
+                reg.norms = norms
 
-        return reg
+            if getattr(self.params, "gradient_type") is not None:
+                setattr(
+                    reg,
+                    "gradient_type",
+                    getattr(self.params, "gradient_type"),
+                )
+
+            reg_funcs.append(reg)
+
+        return objective_function.ComboObjectiveFunction(objfcts=reg_funcs)
 
     def get_tiles(self):
         if self.params.inversion_type in [

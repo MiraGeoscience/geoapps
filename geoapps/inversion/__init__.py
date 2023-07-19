@@ -48,6 +48,10 @@ DRIVER_MAP = {
         "geoapps.inversion.airborne_electromagnetics.frequency_domain.driver",
         "FrequencyDomainElectromagneticsDriver",
     ),
+    "joint cross gradient": (
+        "geoapps.inversion.joint.joint_cross_gradient.driver",
+        "JointCrossGradientDriver",
+    ),
     "tdem": (
         "geoapps.inversion.electromagnetics.time_domain.driver",
         "TimeDomainElectromagneticsDriver",

@@ -311,7 +311,7 @@ default_ui_json = {
         "label": "Gz (mGal)",
         "parent": "data_object",
         "optional": True,
-        "enabled": True,
+        "enabled": False,
         "value": None,
     },
     "gz_uncertainty": {

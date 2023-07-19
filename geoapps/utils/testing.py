@@ -228,7 +228,7 @@ def setup_inversion_workspace(
             axis=1,
         )
         # survey.cells = survey.cells[dist < 100.0, :]
-        survey.remove_cells(np.where(dist > (200.0 / (n_electrodes - 1)))[0])
+        survey.remove_cells(np.where(dist > 100)[0])
 
     elif inversion_type == "fem":
         survey = AirborneFEMReceivers.create(
@@ -439,8 +439,8 @@ def setup_inversion_workspace(
             anomaly,
         )
     else:
-        p0 = np.r_[-20, -20, -20]
-        p1 = np.r_[20, 20, 25]
+        p0 = np.r_[-20, -20, -10]
+        p1 = np.r_[20, 20, 30]
 
         model = utils.model_builder.addBlock(
             entity.centroids,

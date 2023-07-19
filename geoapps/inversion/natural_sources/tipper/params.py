@@ -27,7 +27,7 @@ class TipperParams(InversionBaseParams):
     Parameter class for magnetotelluric->conductivity inversion.
     """
 
-    PHYSICAL_PROPERTY = "conductivity"
+    _physical_property = "conductivity"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
@@ -62,22 +62,30 @@ class TipperParams(InversionBaseParams):
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def property_group_data(self, property_group: UUID):
-        """
-        Return dictionary of channel/data.
-
-        :param property_group: Property group uid
-        """
-        channels = self.data_object.channels
+        data = {}
+        frequencies = self.data_object.channels
         if self.forward_only:
-            out = {k: None for k in channels}
+            return {k: None for k in frequencies}
         else:
-            group = self.data_object.find_or_create_property_group(
-                name=property_group.name
-            )
+            group = [
+                k
+                for k in self.data_object.property_groups
+                if k.uid == property_group.uid
+            ][0]
+            property_names = [
+                self.geoh5.get_entity(p)[0].name for p in group.properties
+            ]
             properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
-            out = {f: properties[i] for i, f in enumerate(channels)}
+            for i, f in enumerate(frequencies):
+                try:
+                    f_ind = property_names.index(
+                        [k for k in property_names if f"{f:.2e}" in k][0]
+                    )  # Safer if data was saved with geoapps naming convention
+                    data[f] = properties[f_ind]
+                except IndexError:
+                    data[f] = properties[i]  # in case of other naming conventions
 
-        return out
+            return data
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""

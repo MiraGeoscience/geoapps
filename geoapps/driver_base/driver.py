@@ -35,6 +35,9 @@ class BaseDriver(ABC):
     @property
     def out_group(self):
         """Output group."""
+        if hasattr(self.params, "out_group"):
+            return self.params.out_group
+
         return self._out_group
 
     @property

@@ -18,13 +18,12 @@ from time import time
 
 import numpy as np
 import scipy
-from dash import Input, Output, State, callback_context, no_update
+from dash import Dash, Input, Output, State, callback_context, no_update
 from flask import Flask
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
-from jupyter_dash import JupyterDash
 from notebook import notebookapp
 from plotly import graph_objects as go
 
@@ -57,7 +56,7 @@ class InversionApp(BaseDashApplication):
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
@@ -483,7 +482,7 @@ class InversionApp(BaseDashApplication):
         nb_port = None
         servers = list(notebookapp.list_running_servers())
         for s in servers:
-            if s["notebook_dir"] == Path("../../../").resolve():
+            if s["notebook_dir"] == str(Path("../../../").resolve()):
                 nb_port = s["port"]
                 break
 
