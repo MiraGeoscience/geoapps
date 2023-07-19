@@ -88,14 +88,10 @@ class ReceiversFactory(SimPEGFactory):
                 -1 * self.params.mesh.rotation[0],
             )
 
-        if self.factory_type in [
-            "direct current pseudo 3d",
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-            "induced polarization pseudo 3d",
-        ]:
+        if (
+            "direct current" in self.factory_type
+            or "induced polarization" in self.factory_type
+        ):
             args += self._dcip_arguments(
                 locations=locations,
                 local_index=local_index,
@@ -135,6 +131,11 @@ class ReceiversFactory(SimPEGFactory):
             kwargs["orientation"] = kwargs["orientation"][::-1]
         if self.factory_type in ["tdem"]:
             kwargs["orientation"] = component
+            kwargs["storeProjections"] = True
+        if (
+            "direct current" in self.factory_type
+            or "induced polarization" in self.factory_type
+        ):
             kwargs["storeProjections"] = True
 
         return kwargs
