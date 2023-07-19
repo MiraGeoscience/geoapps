@@ -18,11 +18,7 @@ from geoapps.inversion.airborne_electromagnetics.frequency_domain.driver import 
 from geoapps.inversion.airborne_electromagnetics.frequency_domain.params import (
     FrequencyDomainElectromagneticsParams,
 )
-# from geoapps.shared_utils.utils import get_inversion_output
-from geoapps.utils.testing import setup_inversion_workspace  # check_target,
-
-# from geoh5py.workspace import Workspace
-
+from geoapps.utils.testing import setup_inversion_workspace
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
