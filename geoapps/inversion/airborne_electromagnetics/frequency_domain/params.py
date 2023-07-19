@@ -54,6 +54,11 @@ class FrequencyDomainElectromagneticsParams(InversionBaseParams):
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def property_group_data(self, property_group: UUID):
+        """
+        Return dictionary of channel/data.
+
+        :param property_group: Property group uid
+        """
         channels = self.data_object.channels
         if self.forward_only:
             out = {k: None for k in channels}

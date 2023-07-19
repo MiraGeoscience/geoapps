@@ -74,30 +74,22 @@ class MagnetotelluricsParams(InversionBaseParams):
         return getattr(self, "_".join([component, "uncertainty"]), None)
 
     def property_group_data(self, property_group: UUID):
-        data = {}
-        frequencies = self.data_object.channels
-        if self.forward_only:
-            return {k: None for k in frequencies}
-        else:
-            group = [
-                k
-                for k in self.data_object.property_groups
-                if k.uid == property_group.uid
-            ][0]
-            property_names = [
-                self.geoh5.get_entity(p)[0].name for p in group.properties
-            ]
-            properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
-            for i, f in enumerate(frequencies):
-                try:
-                    f_ind = property_names.index(
-                        [k for k in property_names if f"{f:.2e}" in k][0]
-                    )  # Safer if data was saved with geoapps naming convention
-                    data[f] = properties[f_ind]
-                except IndexError:
-                    data[f] = properties[i]  # in case of other naming conventions
+        """
+        Return dictionary of channel/data.
 
-            return data
+        :param property_group: Property group uid
+        """
+        channels = self.data_object.channels
+        if self.forward_only:
+            out = {k: None for k in channels}
+        else:
+            group = self.data_object.find_or_create_property_group(
+                name=property_group.name
+            )
+            properties = [self.geoh5.get_entity(p)[0].values for p in group.properties]
+            out = {f: properties[i] for i, f in enumerate(channels)}
+
+        return out
 
     def data(self, component: str):
         """Returns array of data for chosen data component."""
