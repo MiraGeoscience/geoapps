@@ -154,12 +154,13 @@ class InversionData(InversionLocations):
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
-        self.survey, _, _ = self.create_survey()
+        self.survey, self.local_index, _ = self.create_survey()
 
         if "direct current" in self.params.inversion_type:
             self.transformations["apparent resistivity"] = 1 / (
-                geometric_factor(self.survey) + 1e-10
+                geometric_factor(self.survey)[np.argsort(self.local_index)] + 1e-10
             )
+
         self.save_data(self.entity)
 
     def drape_locations(self, locations: np.ndarray) -> np.ndarray:
@@ -295,6 +296,7 @@ class InversionData(InversionLocations):
                     apparent_property[self.global_map] *= self.transformations[
                         "apparent resistivity"
                     ]
+
                     if "2d" in self.params.inversion_type:
                         apparent_property = self._embed_2d(apparent_property)
 
