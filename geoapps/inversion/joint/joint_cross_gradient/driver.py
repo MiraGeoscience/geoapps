@@ -49,10 +49,9 @@ class JointCrossGradientDriver(BaseJointDriver):
                 model_local_values = getattr(child_driver.models, model_type)
 
                 if model_local_values is not None:
-                    model += (
-                        child_driver.data_misfit.model_map.deriv(model).T
-                        * model_local_values
-                    )
+                    projection = child_driver.data_misfit.model_map.deriv(model).T
+                    norm = np.array(np.sum(projection, axis=1)).flatten()
+                    model += (projection * model_local_values) / (norm + 1e-8)
 
             if model is not None:
                 setattr(
