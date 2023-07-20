@@ -26,17 +26,35 @@ class JointCrossGradientParams(BaseJointParams):
         self._inversion_defaults = deepcopy(inversion_defaults)
         self._inversion_type = "joint cross gradient"
         self._validations = validations
-        self._cross_gradient_weight = 1.0
+        self._cross_gradient_weight_a_b = 1.0
+        self._cross_gradient_weight_c_a = 1.0
+        self._cross_gradient_weight_c_b = 1.0
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     @property
-    def cross_gradient_weight(self):
-        return self._cross_gradient_weight
+    def cross_gradient_weight_a_b(self):
+        return self._cross_gradient_weight_a_b
 
-    @cross_gradient_weight.setter
-    def cross_gradient_weight(self, val):
-        self.setter_validator("cross_gradient_weight", val)
+    @cross_gradient_weight_a_b.setter
+    def cross_gradient_weight_a_b(self, val):
+        self.setter_validator("cross_gradient_weight_a_b", val)
+
+    @property
+    def cross_gradient_weight_c_a(self):
+        return self._cross_gradient_weight_c_a
+
+    @cross_gradient_weight_c_a.setter
+    def cross_gradient_weight_c_a(self, val):
+        self.setter_validator("cross_gradient_weight_c_a", val)
+
+    @property
+    def cross_gradient_weight_c_b(self):
+        return self._cross_gradient_weight_c_b
+
+    @cross_gradient_weight_c_b.setter
+    def cross_gradient_weight_c_b(self, val):
+        self.setter_validator("cross_gradient_weight_c_b", val)
 
     @property
     def physical_property(self):
