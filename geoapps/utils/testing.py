@@ -19,6 +19,8 @@ from uuid import UUID
 import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import (
+    AirborneFEMReceivers,
+    AirborneFEMTransmitters,
     AirborneTEMReceivers,
     AirborneTEMTransmitters,
     CurrentElectrode,
@@ -228,6 +230,52 @@ def setup_inversion_workspace(
         # survey.cells = survey.cells[dist < 100.0, :]
         survey.remove_cells(np.where(dist > 100)[0])
 
+    elif inversion_type == "fem":
+        survey = AirborneFEMReceivers.create(
+            geoh5, vertices=vertices, name="Airborne_rx"
+        )
+        freq_metadata = [
+            {"Coaxial data": False, "Frequency": 900, "Offset": 7.86},
+            {"Coaxial data": False, "Frequency": 7200, "Offset": 7.86},
+            {"Coaxial data": False, "Frequency": 56000, "Offset": 6.3},
+        ]
+        survey.metadata["EM Dataset"]["Frequency configurations"] = freq_metadata
+
+        tx_locs = []
+        freqs = []
+        for meta in freq_metadata:
+            tx_locs.append(vertices + meta["Offset"])
+            freqs.append([[meta["Frequency"]] * len(vertices)])
+        tx_locs = np.vstack(tx_locs)
+        freqs = np.hstack(freqs).flatten()
+
+        transmitters = AirborneFEMTransmitters.create(
+            geoh5, vertices=tx_locs, name="Airborne_tx"
+        )
+        survey.transmitters = transmitters
+        survey.channels = [900.0, 7200.0, 56000.0]
+
+        transmitters.add_data(
+            {
+                "Tx frequency": {
+                    "values": freqs,
+                    "association": "VERTEX",
+                    "entity_type": {
+                        "primitive_type": "REFERENCED",
+                        "value_map": {k: str(k) for k in freqs},
+                    },
+                }
+            }
+        )
+
+        dist = np.linalg.norm(
+            survey.vertices[survey.cells[:, 0], :]
+            - survey.vertices[survey.cells[:, 1], :],
+            axis=1,
+        )
+        survey.remove_cells(np.where(dist > 200.0)[0])
+        transmitters.remove_cells(np.where(dist > 200.0)[0])
+
     elif "tem" in inversion_type:
         if "airborne" in inversion_type:
             survey = AirborneTEMReceivers.create(
@@ -365,7 +413,7 @@ def setup_inversion_workspace(
             finalize=False,
         )
 
-        if inversion_type == "airborne_tem":
+        if inversion_type in ["fem", "airborne_tem"]:
             mesh = refine_tree_xyz(
                 mesh,
                 vertices,

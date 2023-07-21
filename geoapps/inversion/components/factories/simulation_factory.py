@@ -41,6 +41,7 @@ class SimulationFactory(SimPEGFactory):
             "induced polarization pseudo 3d",
             "magnetotellurics",
             "tipper",
+            "fem",
             "tdem",
         ]:
             import pymatsolver.direct as solver_module
@@ -88,6 +89,11 @@ class SimulationFactory(SimPEGFactory):
 
             return simulation.Simulation3DPrimarySecondary
 
+        if self.factory_type in ["fem"]:
+            from SimPEG.electromagnetics.frequency_domain import simulation
+
+            return simulation.Simulation3DMagneticFluxDensity
+
         if self.factory_type in ["tdem"]:
             from SimPEG.electromagnetics.time_domain import simulation
 
@@ -123,28 +129,30 @@ class SimulationFactory(SimPEGFactory):
         kwargs["survey"] = survey
         kwargs["sensitivity_path"] = sensitivity_path
         kwargs["max_chunk_size"] = self.params.max_chunk_size
-        # kwargs["n_cpu"] = self.params.n_cpu
         kwargs["store_sensitivities"] = (
             None if self.params.forward_only else self.params.store_sensitivities
         )
+
         if self.factory_type == "magnetic vector":
             return self._magnetic_vector_keywords(kwargs, active_cells=active_cells)
         if self.factory_type == "magnetic scalar":
             return self._magnetic_scalar_keywords(kwargs, active_cells=active_cells)
         if self.factory_type == "gravity":
             return self._gravity_keywords(kwargs, active_cells=active_cells)
-        if "direct current" in self.factory_type:
-            return self._direct_current_keywords(
-                kwargs, mesh, active_cells=active_cells
-            )
         if "induced polarization" in self.factory_type:
             return self._induced_polarization_keywords(
                 kwargs,
                 mesh,
                 active_cells=active_cells,
             )
-        if self.factory_type in ["magnetotellurics", "tipper"]:
-            return self._naturalsource_keywords(kwargs, mesh, active_cells=active_cells)
+        if self.factory_type in [
+            "direct current 3d",
+            "direct current 2d",
+            "magnetotellurics",
+            "tipper",
+            "fem",
+        ]:
+            return self._conductivity_keywords(kwargs, mesh, active_cells=active_cells)
         if self.factory_type in ["tdem"]:
             return self._tdem_keywords(
                 kwargs, receivers, mesh, active_cells=active_cells
@@ -155,27 +163,18 @@ class SimulationFactory(SimPEGFactory):
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()) * 3)
         kwargs["model_type"] = "vector"
         kwargs["chunk_format"] = "row"
-
         return kwargs
 
     def _magnetic_scalar_keywords(self, kwargs, active_cells=None):
         kwargs["ind_active"] = active_cells
         kwargs["chiMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["chunk_format"] = "row"
-
         return kwargs
 
     def _gravity_keywords(self, kwargs, active_cells=None):
         kwargs["ind_active"] = active_cells
         kwargs["rhoMap"] = maps.IdentityMap(nP=int(active_cells.sum()))
         kwargs["chunk_format"] = "row"
-
-        return kwargs
-
-    def _direct_current_keywords(self, kwargs, mesh, active_cells=None):
-        actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
-        kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
-        kwargs["solver"] = self.solver
         return kwargs
 
     def _induced_polarization_keywords(
@@ -187,23 +186,18 @@ class SimulationFactory(SimPEGFactory):
         etamap = maps.InjectActiveCells(mesh, indActive=active_cells, valInactive=0)
         kwargs["etaMap"] = etamap
         kwargs["solver"] = self.solver
-
         return kwargs
 
-    def _naturalsource_keywords(self, kwargs, mesh, active_cells=None):
+    def _conductivity_keywords(self, kwargs, mesh, active_cells=None):
         actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
         kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
         kwargs["solver"] = self.solver
-
         return kwargs
 
     def _tdem_keywords(self, kwargs, receivers, mesh, active_cells=None):
-        actmap = maps.InjectActiveCells(mesh, active_cells, valInactive=np.log(1e-8))
-        kwargs["sigmaMap"] = maps.ExpMap(mesh) * actmap
-        kwargs["solver"] = self.solver
+        kwargs = self._conductivity_keywords(kwargs, mesh, active_cells=active_cells)
         kwargs["t0"] = -receivers.timing_mark * self.params.unit_conversion
         kwargs["time_steps"] = np.round((np.diff(receivers.waveform[:, 0])), decimals=6)
-
         return kwargs
 
     def _get_sensitivity_path(self, tile_id: int) -> str:

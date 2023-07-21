@@ -7,22 +7,21 @@
 from pathlib import Path
 
 import numpy as np
+from geoh5py.data import FloatData
 from geoh5py.groups import SimPEGGroup
-from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
 from SimPEG.maps import IdentityMap
 
+from geoapps.inversion.electricals.direct_current.three_dimensions import (
+    DirectCurrent3DParams,
+)
+from geoapps.inversion.electricals.direct_current.three_dimensions.driver import (
+    DirectCurrent3DDriver,
+)
 from geoapps.inversion.joint.joint_cross_gradient import JointCrossGradientParams
 from geoapps.inversion.joint.joint_cross_gradient.driver import JointCrossGradientDriver
-from geoapps.inversion.potential_fields import (
-    GravityParams,
-    MagneticScalarParams,
-    MagneticVectorParams,
-)
+from geoapps.inversion.potential_fields import GravityParams, MagneticVectorParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
-from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
-    MagneticScalarDriver,
-)
 from geoapps.inversion.potential_fields.magnetic_vector.driver import (
     MagneticVectorDriver,
 )
@@ -33,9 +32,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 51.20747,
-    "phi_d": 2061,
-    "phi_m": 0.02767,
+    "data_norm": 51.20773,
+    "phi_d": 1201,
+    "phi_m": 0.1817,
 }
 
 
@@ -92,17 +91,37 @@ def test_joint_cross_gradient_fwr_run(
     params.workpath = tmp_path
     fwr_driver_b = MagneticVectorDriver(params)
 
+    _, _, model, survey, _ = setup_inversion_workspace(
+        tmp_path,
+        background=0.01,
+        anomaly=10,
+        n_electrodes=n_grid_points,
+        n_lines=n_grid_points,
+        refinement=refinement,
+        drape_height=0.0,
+        inversion_type="dcip",
+        flatten=False,
+    )
+    params = DirectCurrent3DParams(
+        forward_only=True,
+        geoh5=geoh5,
+        mesh=model.parent.uid,
+        topography_object=topography.uid,
+        data_object=survey.uid,
+        starting_model=model.uid,
+    )
+    fwr_driver_c = DirectCurrent3DDriver(params)
+    fwr_driver_c.inversion_data.entity.name = "survey"
+
     # Force co-location of meshes
-    fwr_driver_b.inversion_mesh.entity.origin = (
-        fwr_driver_a.inversion_mesh.entity.origin
-    )
-    fwr_driver_b.workspace.update_attribute(
-        fwr_driver_b.inversion_mesh.entity, "attributes"
-    )
-    fwr_driver_b.inversion_mesh._mesh = None  # pylint: disable=protected-access
+    for driver in [fwr_driver_b, fwr_driver_c]:
+        driver.inversion_mesh.entity.origin = fwr_driver_a.inversion_mesh.entity.origin
+        driver.workspace.update_attribute(driver.inversion_mesh.entity, "attributes")
+        driver.inversion_mesh._mesh = None  # pylint: disable=protected-access
 
     fwr_driver_a.run()
     fwr_driver_b.run()
+    fwr_driver_c.run()
 
     vector_model = fwr_driver_b.directives.save_directives[0].transforms[0](
         fwr_driver_b.models.starting
@@ -116,6 +135,8 @@ def test_joint_cross_gradient_fwr_run(
         fwr_driver_a.directives.save_directives[0].transforms[0]
         * fwr_driver_a.models.starting,
         vector_model.flatten(),
+        fwr_driver_c.directives.save_directives[0].transforms[0]
+        * fwr_driver_c.models.starting,
     ]
 
 
@@ -137,19 +158,23 @@ def test_joint_cross_gradient_inv_run(
         drivers = []
         orig_data = []
 
-        for group_name in ["Gravity Forward", "Magnetic vector Forward"]:
+        for group_name in [
+            "Gravity Forward",
+            "Magnetic vector Forward",
+            "Direct current 3d Forward",
+        ]:
             group = geoh5.get_entity(group_name)[0]
 
             if not isinstance(group, SimPEGGroup):
                 continue
 
-            for child in group.children:
-                if isinstance(child, Octree):
-                    mesh = child
-                else:
-                    survey = child
+            mesh = group.get_entity("mesh")[0]
+            survey = group.get_entity("survey")[0]
 
-            data = survey.children[0]
+            for child in survey.children:
+                if isinstance(child, FloatData):
+                    data = child
+
             orig_data.append(data.values)
 
             if group.options["inversion_type"] == "gravity":
@@ -163,6 +188,19 @@ def test_joint_cross_gradient_inv_run(
                     starting_model=0.0,
                 )
                 drivers.append(GravityDriver(params))
+            elif group.options["inversion_type"] == "direct current 3d":
+                params = DirectCurrent3DParams(
+                    geoh5=geoh5,
+                    mesh=mesh.uid,
+                    topography_object=topography.uid,
+                    data_object=survey.uid,
+                    potential_channel=data.uid,
+                    potential_uncertainty=1e-3,
+                    tile_spatial=4,
+                    starting_model=1e-2,
+                    reference_model=1e-2,
+                )
+                drivers.append(DirectCurrent3DDriver(params))
             else:
                 params = MagneticVectorParams(
                     geoh5=geoh5,
@@ -185,29 +223,6 @@ def test_joint_cross_gradient_inv_run(
                     tmi_uncertainty=2.0,
                 )
                 drivers.append(MagneticVectorDriver(params))
-                params = MagneticScalarParams(
-                    geoh5=geoh5,
-                    mesh=mesh.uid,
-                    topography_object=topography.uid,
-                    inducing_field_strength=group.options["inducing_field_strength"][
-                        "value"
-                    ],
-                    inducing_field_inclination=group.options[
-                        "inducing_field_inclination"
-                    ]["value"],
-                    inducing_field_declination=group.options[
-                        "inducing_field_declination"
-                    ]["value"],
-                    data_object=survey.uid,
-                    starting_model=1e-4,
-                    reference_model=0.0,
-                    alpha_s=0.0,
-                    lower_bound=0.0,
-                    tile_spatial=2,
-                    tmi_channel=data.uid,
-                    tmi_uncertainty=2.0,
-                )
-                drivers.append(MagneticScalarDriver(params))
 
         # Run the inverse
         np.random.seed(0)

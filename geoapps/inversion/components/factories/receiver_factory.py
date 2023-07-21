@@ -54,6 +54,11 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Dipole
 
+        elif "fem" in self.factory_type:
+            from SimPEG.electromagnetics.frequency_domain import receivers
+
+            return receivers.PointMagneticFluxDensitySecondary
+
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import receivers
 
@@ -88,14 +93,10 @@ class ReceiversFactory(SimPEGFactory):
                 -1 * self.params.mesh.rotation[0],
             )
 
-        if self.factory_type in [
-            "direct current pseudo 3d",
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-            "induced polarization pseudo 3d",
-        ]:
+        if (
+            "direct current" in self.factory_type
+            or "induced polarization" in self.factory_type
+        ):
             args += self._dcip_arguments(
                 locations=locations,
                 local_index=local_index,
@@ -128,13 +129,19 @@ class ReceiversFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data)
-        if self.factory_type in ["magnetotellurics", "tipper"]:
-            kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
-            kwargs["component"] = list(data.keys())[0].split("_")[1]
+        if self.factory_type in ["fem", "magnetotellurics", "tipper"]:
+            comp = component.split("_")[0]
+            kwargs["orientation"] = comp[0] if self.factory_type == "fem" else comp[1:]
+            kwargs["component"] = component.split("_")[1]
         if self.factory_type in ["tipper"]:
             kwargs["orientation"] = kwargs["orientation"][::-1]
         if self.factory_type in ["tdem"]:
             kwargs["orientation"] = component
+            kwargs["storeProjections"] = True
+        if (
+            "direct current" in self.factory_type
+            or "induced polarization" in self.factory_type
+        ):
             kwargs["storeProjections"] = True
 
         return kwargs

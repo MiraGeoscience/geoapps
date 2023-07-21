@@ -51,6 +51,18 @@ def test_dc_3d_fwr_run(
         inversion_type="dcip",
         flatten=False,
     )
+
+    # Randomly flip order of receivers
+    old = np.random.randint(0, survey.cells.shape[0], n_electrodes)
+    indices = np.ones(survey.cells.shape[0], dtype=bool)
+    indices[old] = False
+
+    tx_id = np.r_[survey.ab_cell_id.values[indices], survey.ab_cell_id.values[~indices]]
+    cells = np.vstack([survey.cells[indices, :], survey.cells[~indices, :]])
+
+    survey.ab_cell_id = tx_id
+    survey.cells = cells
+
     params = DirectCurrent3DParams(
         forward_only=True,
         geoh5=geoh5,

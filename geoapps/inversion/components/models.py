@@ -116,7 +116,10 @@ class InversionModelCollection:
     @property
     def starting(self):
         mstart = self._starting.model
-        mstart = np.log(mstart) if self.is_sigma else mstart
+
+        if mstart is not None and self.is_sigma:
+            mstart = np.log(mstart)
+
         return mstart
 
     @property
@@ -155,7 +158,10 @@ class InversionModelCollection:
     @property
     def conductivity(self):
         mstart = self._conductivity.model
-        mstart = np.log(mstart) if self.is_sigma else mstart
+
+        if mstart is not None and self.is_sigma:
+            mstart = np.log(mstart)
+
         return mstart
 
     def _initialize(self, driver):

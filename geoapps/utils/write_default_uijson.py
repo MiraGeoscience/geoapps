@@ -16,6 +16,9 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
+from geoapps.inversion.airborne_electromagnetics.frequency_domain import (
+    FrequencyDomainElectromagneticsParams,
+)
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
     DirectCurrentPseudo3DParams,
 )
@@ -114,6 +117,13 @@ def write_default_uijson(path: str | Path, use_initializers=False):
 
     ip_p3d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
     ip_p3d_init = ip_p3d_init if use_initializers else {}
+
+    from geoapps.inversion.airborne_electromagnetics.frequency_domain.constants import (
+        app_initializer as fem_init,
+    )
+
+    fem_init["geoh5"] = str(assets_path() / "FlinFlon_natural_sources.geoh5")
+    fem_init = fem_init if use_initializers else {}
 
     from geoapps.inversion.electromagnetics.time_domain.constants import (
         app_initializer as tdem_init,
@@ -240,6 +250,12 @@ def write_default_uijson(path: str | Path, use_initializers=False):
             validate=False, **ip_p3d_init
         ),
         "induced_polarization_forward_pseudo3d.ui.json": InducedPolarizationPseudo3DParams(
+            forward_only=True, validate=False
+        ),
+        "fem_inversion.ui.json": FrequencyDomainElectromagneticsParams(
+            forward_only=False, validate=False, **fem_init
+        ),
+        "fem_forward.ui.json": FrequencyDomainElectromagneticsParams(
             forward_only=True, validate=False
         ),
         "tdem_inversion.ui.json": TimeDomainElectromagneticsParams(

@@ -264,14 +264,15 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     inversion_object=inversion_object,
                     active_cells=active_cells,
                     sorting=sorting,
+                    ordering=ordering,
                     transform=transform,
                     save_objective_function=save_objective_function,
                     global_misfit=global_misfit,
                     name=name,
                 )
 
-            elif self.factory_type in ["tdem"]:
-                kwargs = self.assemble_data_keywords_tdem(
+            elif self.factory_type in ["fem", "tdem"]:
+                kwargs = self.assemble_data_keywords_em(
                     inversion_object=inversion_object,
                     active_cells=active_cells,
                     sorting=sorting,
@@ -341,6 +342,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 "magnetotellurics",
                 "tipper",
                 "tdem",
+                "fem",
             ]:
                 expmap = maps.ExpMap(inversion_object.mesh)
                 kwargs["transforms"] = [expmap * active_cells_map]
@@ -358,7 +360,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         name=None,
     ):
         components = list(inversion_object.observed)
-        channels = [""]
+        channels = [None]
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",
@@ -367,15 +369,15 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 for comp, dtype in inversion_object.observed_data_types.items()
             },
             "transforms": [
-                np.tile(
-                    np.repeat(
-                        [inversion_object.normalizations[c] for c in components],
-                        inversion_object.locations.shape[0],
-                    ),
-                    len(channels),
+                np.hstack(
+                    [
+                        inversion_object.normalizations[chan][comp]
+                        for chan in channels
+                        for comp in components
+                    ]
                 )
             ],
-            "channels": channels,
+            # "channels": channels,
             "components": components,
             "association": "VERTEX",
             "reshape": lambda x: x.reshape(
@@ -421,11 +423,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             },
             "transforms": [
                 np.hstack(
-                    [
-                        inversion_object.normalizations[c]
-                        * np.ones_like(inversion_object.observed[c])
-                        for c in components
-                    ]
+                    [inversion_object.normalizations[None][c] for c in components]
                 )
             ],
             "channels": channels,
@@ -450,7 +448,10 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].insert(
-                0, inversion_object.transformations["apparent resistivity"]
+                0,
+                inversion_object.transformations["apparent resistivity"][
+                    np.argsort(sorting)
+                ],
             )
             kwargs["channels"] = ["apparent_resistivity"]
             observed = self.params.geoh5.get_entity("Observed_apparent_resistivity")[0]
@@ -477,6 +478,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         inversion_object=None,
         active_cells=None,
         sorting=None,
+        ordering=None,
         transform=None,
         save_objective_function=False,
         global_misfit=None,
@@ -484,18 +486,19 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
     ):
         components = list(inversion_object.observed)
         channels = np.unique([list(v) for k, v in inversion_object.observed.items()])
+
         kwargs = {
             "save_objective_function": save_objective_function,
             "attribute_type": "predicted",
             "data_type": inversion_object.observed_data_types,
             "association": "VERTEX",
             "transforms": [
-                np.tile(
-                    np.repeat(
-                        [inversion_object.normalizations[c] for c in components],
-                        inversion_object.locations.shape[0],
-                    ),
-                    len(channels),
+                np.hstack(
+                    [
+                        inversion_object.normalizations[chan][comp]
+                        for chan in channels
+                        for comp in components
+                    ]
                 )
             ],
             "channels": [f"[{ind}]" for ind in range(len(channels))],
@@ -523,7 +526,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         return kwargs
 
-    def assemble_data_keywords_tdem(
+    def assemble_data_keywords_em(
         self,
         inversion_object=None,
         active_cells=None,
@@ -535,34 +538,33 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
         name=None,
     ):
         receivers = inversion_object.entity
-        time_channels = np.r_[receivers.channels] * self.params.unit_conversion
+        channels = np.array(receivers.channels, dtype=float)
+        channels *= getattr(self.params, "unit_conversion", 1.0)
 
         components = list(inversion_object.observed)
         ordering = np.vstack(ordering)
-        time_ids = ordering[:, 0]
+        channel_ids = ordering[:, 0]
         component_ids = ordering[:, 1]
-        rx_ids = ordering[:, 3]
+        rx_ids = ordering[:, 2]
 
         def reshape(values):
-            data = np.zeros((len(time_channels), len(components), receivers.n_vertices))
-            data[time_ids, component_ids, rx_ids] = values
+            data = np.zeros((len(channels), len(components), receivers.n_vertices))
+            data[channel_ids, component_ids, rx_ids] = values
             return data
 
-        channels = [f"{val:.2e}" for val in time_channels]
+        channel_names = [f"{val:.2e}" for val in channels]
         kwargs = {
             "attribute_type": "predicted",
             "save_objective_function": save_objective_function,
             "association": "VERTEX",
-            "transforms": [
-                np.tile(
-                    np.repeat(
-                        [inversion_object.normalizations[c] for c in components],
-                        inversion_object.locations.shape[0],
-                    ),
-                    len(channels),
-                )
-            ],
-            "channels": [f"[{ind}]" for ind in range(len(channels))],
+            "transforms": np.hstack(
+                [
+                    1 / inversion_object.normalizations[chan][comp]
+                    for chan in channels
+                    for comp in components
+                ]
+            ),
+            "channels": [f"[{ind}]" for ind in range(len(channel_names))],
             "components": components,
             "sorting": sorting,
             "_reshape": reshape,
