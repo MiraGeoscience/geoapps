@@ -247,10 +247,10 @@ class InversionData(InversionLocations):
         self._observed_data_types = {c: {} for c in data.keys()}
         data_entity = {c: {} for c in data.keys()}
 
-        if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem"]:
+        if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem", "fem"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
-                    dnorm = self.normalizations[component] * values
+                    dnorm = self.normalizations[channel][component] * values
                     data_entity[component][channel] = entity.add_data(
                         {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
@@ -275,7 +275,7 @@ class InversionData(InversionLocations):
                         )
         else:
             for component in data:
-                dnorm = self.normalizations[component] * data[component]
+                dnorm = self.normalizations[None][component] * data[component]
                 if "2d" in self.params.inversion_type:
                     dnorm = self._embed_2d(dnorm)
                 data_entity[component] = entity.add_data(
@@ -413,33 +413,45 @@ class InversionData(InversionLocations):
         :return: d: Normalized data.
         """
         d = deepcopy(data)
-        for comp in self.components:
-            if isinstance(d[comp], dict):
-                new_dict = {}
-                for k, v in d[comp].items():
-                    new_dict[k] = (
-                        v * self.normalizations[comp] if v is not None else None
-                    )
-                d[comp] = new_dict
-            elif d[comp] is not None:
-                d[comp] *= self.normalizations[comp]
+        for chan in getattr(self.params.data_object, "channels", [None]):
+            for comp in self.components:
+                if isinstance(d[comp], dict):
+                    if d[comp][chan] is not None:
+                        d[comp][chan] *= self.normalizations[chan][comp]
+                elif d[comp] is not None:
+                    d[comp] *= self.normalizations[chan][comp]
+
         return d
 
     def get_normalizations(self):
         """Create normalizations dictionary."""
         normalizations = {}
-        for comp in self.components:
-            normalizations[comp] = 1.0
-            if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
-                normalizations[comp] = -1.0
-            elif self.params.inversion_type in ["magnetotellurics"]:
-                normalizations[comp] = -1.0
-            elif self.params.inversion_type in ["tipper"]:
-                if "imag" in comp:
-                    normalizations[comp] = -1.0
-            elif self.params.inversion_type in ["tdem"]:
-                if comp in ["x", "z"]:
-                    normalizations[comp] = -1.0
+        for chan in getattr(self.params.data_object, "channels", [None]):
+            normalizations[chan] = {}
+            for comp in self.components:
+                normalizations[chan][comp] = np.ones(self.mask.sum())
+                if comp in ["potential", "chargeability"]:
+                    normalizations[chan][comp] = 1
+                if comp in ["gz", "bz", "gxz", "gyz", "bxz", "byz"]:
+                    normalizations[chan][comp] = -1 * np.ones(self.mask.sum())
+                elif self.params.inversion_type in ["magnetotellurics"]:
+                    normalizations[chan][comp] = -1 * np.ones(self.mask.sum())
+                elif self.params.inversion_type in ["tipper"]:
+                    if "imag" in comp:
+                        normalizations[chan][comp] = -1 * np.ones(self.mask.sum())
+                elif self.params.inversion_type in ["fem"]:
+                    mu0 = 4 * np.pi * 1e-7
+                    offsets = self.params.tx_offsets
+                    offsets = {
+                        k: v * np.ones(len(self.locations)) for k, v in offsets.items()
+                    }
+                    normalizations[chan][comp] = (
+                        mu0 * (-1 / offsets[chan] ** 3 / (4 * np.pi)) / 1e6
+                    )
+                elif self.params.inversion_type in ["tdem"]:
+                    if comp in ["x", "z"]:
+                        normalizations[chan][comp] = -1
+                    normalizations[chan][comp] *= np.ones(self.mask.sum())
 
         return normalizations
 

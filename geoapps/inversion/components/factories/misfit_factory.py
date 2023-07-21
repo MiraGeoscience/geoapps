@@ -54,7 +54,7 @@ class MisfitFactory(SimPEGFactory):
         active_cells,
     ):
         # Base slice over frequencies
-        if self.factory_type in ["magnetotellurics", "tipper"]:
+        if self.factory_type in ["magnetotellurics", "tipper", "fem"]:
             channels = np.unique([list(v) for v in inversion_data.observed.values()])
         else:
             channels = [None]
@@ -71,7 +71,7 @@ class MisfitFactory(SimPEGFactory):
                 )
 
                 if count == 0:
-                    if self.factory_type in ["tdem"]:
+                    if self.factory_type in ["fem", "tdem"]:
                         self.sorting.append(
                             np.arange(
                                 data_count,

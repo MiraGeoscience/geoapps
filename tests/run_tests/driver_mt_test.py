@@ -108,16 +108,16 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
             # uncertainties[f"{cname} uncertainties"] = {}
             uncertainties[f"{cname} uncertainties"] = []
             for ind in range(len(survey.channels)):
-                data_envity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
+                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
                     parent=survey
                 )
-                data[cname].append(data_envity)
+                data[cname].append(data_entity)
 
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_[{ind}]": {
-                            "values": np.ones_like(data_envity.values)
-                            * np.percentile(np.abs(data_envity.values), 10)
+                            "values": np.ones_like(data_entity.values)
+                            * np.percentile(np.abs(data_entity.values), 10)
                         }
                     }
                 )

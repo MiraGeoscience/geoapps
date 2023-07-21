@@ -60,9 +60,11 @@ class EntityFactory(AbstractFactory):
         """Constructs geoh5py object for provided inversion type."""
 
         if "current" in self.factory_type or "polarization" in self.factory_type:
-            return self._build_dcip(inversion_data)
+            entity = self._build_dcip(inversion_data)
         else:
-            return self._build(inversion_data)
+            entity = self._build(inversion_data)
+
+        return entity
 
     def _build_dcip(self, inversion_data: InversionData):
         PotentialElectrode, CurrentElectrode = self.concrete_object
@@ -119,6 +121,9 @@ class EntityFactory(AbstractFactory):
             entity.transmitters.vertices = inversion_data.apply_transformations(
                 entity.transmitters.vertices
             )
+            tx_freq = self.params.data_object.transmitters.get_data("Tx frequency")
+            if tx_freq:
+                tx_freq[0].copy(parent=entity.transmitters)
 
         if np.any(~inversion_data.mask):
             entity.remove_vertices(~inversion_data.mask)

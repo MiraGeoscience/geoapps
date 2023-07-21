@@ -44,6 +44,10 @@ DRIVER_MAP = {
         "geoapps.inversion.joint.joint_surveys.driver",
         "JointSurveyDriver",
     ),
+    "fem": (
+        "geoapps.inversion.airborne_electromagnetics.frequency_domain.driver",
+        "FrequencyDomainElectromagneticsDriver",
+    ),
     "joint cross gradient": (
         "geoapps.inversion.joint.joint_cross_gradient.driver",
         "JointCrossGradientDriver",

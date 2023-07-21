@@ -54,6 +54,11 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Dipole
 
+        elif "fem" in self.factory_type:
+            from SimPEG.electromagnetics.frequency_domain import receivers
+
+            return receivers.PointMagneticFluxDensitySecondary
+
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import receivers
 
@@ -124,9 +129,10 @@ class ReceiversFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data)
-        if self.factory_type in ["magnetotellurics", "tipper"]:
-            kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
-            kwargs["component"] = list(data.keys())[0].split("_")[1]
+        if self.factory_type in ["fem", "magnetotellurics", "tipper"]:
+            comp = component.split("_")[0]
+            kwargs["orientation"] = comp[0] if self.factory_type == "fem" else comp[1:]
+            kwargs["component"] = component.split("_")[1]
         if self.factory_type in ["tipper"]:
             kwargs["orientation"] = kwargs["orientation"][::-1]
         if self.factory_type in ["tdem"]:

@@ -87,6 +87,9 @@ class SurveyFactory(SimPEGFactory):
         elif "induced polarization" in self.factory_type:
             from SimPEG.electromagnetics.static.induced_polarization import survey
 
+        elif "fem" in self.factory_type:
+            from SimPEG.electromagnetics.frequency_domain import survey
+
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import survey
 
@@ -117,6 +120,8 @@ class SurveyFactory(SimPEGFactory):
             return self._naturalsource_arguments(
                 data=data, mesh=mesh, frequency=channel
             )
+        elif self.factory_type in ["fem"]:
+            return self._fem_arguments(data=data, mesh=mesh, channel=channel)
         else:
             receivers = ReceiversFactory(self.params).build(
                 locations=data.locations,
@@ -180,7 +185,7 @@ class SurveyFactory(SimPEGFactory):
         return local_data, local_uncertainties
 
     def _add_data(self, survey, data, local_index, channel):
-        if self.factory_type in ["tdem"]:
+        if self.factory_type in ["fem", "tdem"]:
             dobs = []
             uncerts = []
 
@@ -189,9 +194,9 @@ class SurveyFactory(SimPEGFactory):
                 np.vstack(list(k.values())) for k in data.uncertainties.values()
             ]
             for order in self.ordering:
-                time_id, component_id, _, rx_id = order
-                dobs.append(data_stack[component_id][time_id, rx_id])
-                uncerts.append(uncert_stack[component_id][time_id, rx_id])
+                channel_id, component_id, rx_id = order
+                dobs.append(data_stack[component_id][channel_id, rx_id])
+                uncerts.append(uncert_stack[component_id][channel_id, rx_id])
 
             survey.dobs = np.vstack([dobs]).flatten()
             survey.std = np.vstack([uncerts]).flatten()
@@ -384,7 +389,7 @@ class SurveyFactory(SimPEGFactory):
 
                 for time_id in range(len(receivers.channels)):
                     for rx_id in rx_ids:
-                        self.ordering.append([time_id, component_id, tx_id, rx_id])
+                        self.ordering.append([time_id, component_id, rx_id])
 
             tx_list.append(
                 tx_factory.build(
@@ -394,23 +399,59 @@ class SurveyFactory(SimPEGFactory):
 
         return [tx_list]
 
+    def _fem_arguments(self, data=None, mesh=None, channel=None):
+        channels = np.array(data.entity.channels)
+        frequencies = channels if channel is None else [channel]
+        rx_locs = data.entity.vertices
+        tx_locs = data.entity.transmitters.vertices
+        freqs = data.entity.transmitters.workspace.get_entity("Tx frequency")[0]
+        freqs = np.array([int(freqs.value_map[f]) for f in freqs.values])
+
+        self.ordering = []
+        sources = []
+        rx_factory = ReceiversFactory(self.params)
+        tx_factory = SourcesFactory(self.params)
+
+        for frequency in frequencies:
+            for receiver_id in self.local_index:
+                for component_id, component in enumerate(data.components):
+                    receiver = rx_factory.build(
+                        locations=rx_locs[receiver_id, :],
+                        data=data,
+                        mesh=mesh,
+                        component=component,
+                    )
+                    frequency_id = np.where(frequency == channels)[0][0]
+                    locs = tx_locs[frequency == freqs, :][receiver_id, :]
+                    sources.append(
+                        tx_factory.build(
+                            [receiver],
+                            locations=locs,
+                            frequency=frequency,
+                        )
+                    )
+                    self.ordering.append([frequency_id, component_id, receiver_id])
+
+        return [sources]
+
     def _naturalsource_arguments(self, data=None, mesh=None, frequency=None):
         receivers = []
         sources = []
         rx_factory = ReceiversFactory(self.params)
         tx_factory = SourcesFactory(self.params)
-        for k, v in data.observed.items():
+        for comp in data.components:
             receivers.append(
                 rx_factory.build(
                     locations=data.locations,
                     local_index=self.local_index,
-                    data={k: v},
+                    data=data,
                     mesh=mesh,
+                    component=comp,
                 )
             )
 
         if frequency is None:
-            frequencies = np.unique([list(v.keys()) for v in data.observed.values()])
+            frequencies = np.unique([list(v) for v in data.observed.values()])
             for frequency in frequencies:
                 sources.append(tx_factory.build(receivers, frequency=frequency))
         else:

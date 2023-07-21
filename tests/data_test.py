@@ -337,11 +337,16 @@ def test_normalize(tmp_path: Path):
         }
     )
     data = InversionData(ws, params)
-    data.observed = {"tmi": np.array([1.0, 2.0, 3.0]), "gz": np.array([1.0, 2.0, 3.0])}
+    data.observed = {
+        "tmi": np.arange(12, dtype=float),
+        "gz": np.arange(12, dtype=float),
+    }
     data.components = list(data.observed.keys())
     data.normalizations = data.get_normalizations()
     test_data = data.normalize(data.observed)
-    assert list(data.normalizations.values()) == [1, -1]
+    assert np.all(
+        np.hstack(data.normalizations[None].values()).tolist() == np.repeat([1, -1], 12)
+    )
     assert all(test_data["gz"] == (-1 * data.observed["gz"]))
 
 
