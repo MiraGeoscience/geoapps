@@ -39,13 +39,18 @@ class JointSurveyDriver(BaseJointDriver):
                 and getattr(self.drivers[0].models, model_type) is not None
             ):
                 model_local_values = getattr(self.drivers[0].models, model_type)
-                setattr(
-                    getattr(self.models, f"_{model_type}"),
-                    "model",
+                projection = (
                     self.drivers[0]
                     .data_misfit.model_map.deriv(np.ones(self.models.n_active))
                     .T
-                    * model_local_values,
+                )
+                norm = np.array(np.sum(projection, axis=1)).flatten()
+                model = (projection * model_local_values) / (norm + 1e-8)
+
+                setattr(
+                    getattr(self.models, f"_{model_type}"),
+                    "model",
+                    model,
                 )
 
     @property

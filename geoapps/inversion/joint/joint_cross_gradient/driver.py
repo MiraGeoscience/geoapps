@@ -49,10 +49,9 @@ class JointCrossGradientDriver(BaseJointDriver):
                 model_local_values = getattr(child_driver.models, model_type)
 
                 if model_local_values is not None:
-                    model += (
-                        child_driver.data_misfit.model_map.deriv(model).T
-                        * model_local_values
-                    )
+                    projection = child_driver.data_misfit.model_map.deriv(model).T
+                    norm = np.array(np.sum(projection, axis=1)).flatten()
+                    model += (projection * model_local_values) / (norm + 1e-8)
 
             if model is not None:
                 setattr(
@@ -69,11 +68,19 @@ class JointCrossGradientDriver(BaseJointDriver):
                 count = 0
                 for driver in self.drivers:
                     driver_directives = driver.directives
-                    save_data = driver_directives.save_iteration_data_directive
-
                     n_tiles = len(driver.data_misfit.objfcts)
-                    save_data.joint_index = [count + ii for ii in range(n_tiles)]
-                    count += n_tiles
+
+                    for name in [
+                        "save_iteration_data_directive",
+                        "save_iteration_residual_directive",
+                        "save_iteration_apparent_resistivity_directive",
+                    ]:
+                        directive = getattr(driver_directives, name)
+                        if directive is not None:
+                            directive.joint_index = [
+                                count + ii for ii in range(n_tiles)
+                            ]
+                            directives_list.append(directive)
 
                     save_model = driver_directives.save_iteration_model_directive
                     save_model.label = driver.params.physical_property
@@ -81,19 +88,17 @@ class JointCrossGradientDriver(BaseJointDriver):
                         driver.data_misfit.model_map
                     ] + save_model.transforms
 
-                    directives_list += [
-                        save_data,
-                        save_model,
-                    ]
+                    directives_list.append(save_model)
 
-                    for directive in [
-                        "save_iteration_apparent_resistivity_directive",
-                        "vector_inversion_directive",
-                    ]:
-                        if getattr(driver_directives, directive) is not None:
-                            directives_list.append(
-                                getattr(driver_directives, directive)
-                            )
+                    if (
+                        getattr(driver_directives, "vector_inversion_directive")
+                        is not None
+                    ):
+                        directives_list.append(
+                            getattr(driver_directives, "vector_inversion_directive")
+                        )
+
+                    count += n_tiles
 
                 for driver, wire in zip(self.drivers, self.wires):
                     factory = SaveIterationGeoh5Factory(self.params)
