@@ -151,6 +151,7 @@ class InversionData(InversionLocations):
 
         self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
+        self.uncertainties = self.normalize(self.uncertainties, absolute=True)
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
@@ -401,7 +402,9 @@ class InversionData(InversionLocations):
             d[comp] -= data_trend
         return d, trend
 
-    def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def normalize(
+        self, data: dict[str, np.ndarray], absolute=False
+    ) -> dict[str, np.ndarray]:
         """
         Apply data type specific normalizations to data.
 
@@ -418,6 +421,8 @@ class InversionData(InversionLocations):
                 if isinstance(d[comp], dict):
                     if d[comp][chan] is not None:
                         d[comp][chan] *= self.normalizations[chan][comp]
+                        if absolute:
+                            d[comp][chan] = np.abs(d[comp][chan])
                 elif d[comp] is not None:
                     d[comp] *= self.normalizations[chan][comp]
 
