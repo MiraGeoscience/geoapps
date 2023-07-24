@@ -251,7 +251,7 @@ class InversionData(InversionLocations):
         if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem", "fem"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
-                    dnorm = self.normalizations[channel][component] * values
+                    dnorm = values / self.normalizations[channel][component]
                     data_entity[component][channel] = entity.add_data(
                         {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
@@ -262,7 +262,10 @@ class InversionData(InversionLocations):
                         self._observed_data_types[component][
                             f"{channel:.2e}"
                         ] = data_entity[component][channel].entity_type
-                        uncerts = self.uncertainties[component][channel].copy()
+                        uncerts = np.abs(
+                            self.uncertainties[component][channel].copy()
+                            / self.normalizations[channel][component]
+                        )
                         uncerts[np.isinf(uncerts)] = np.nan
                         uncert_entity = entity.add_data(
                             {
@@ -276,7 +279,7 @@ class InversionData(InversionLocations):
                         )
         else:
             for component in data:
-                dnorm = self.normalizations[None][component] * data[component]
+                dnorm = data[component] / self.normalizations[None][component]
                 if "2d" in self.params.inversion_type:
                     dnorm = self._embed_2d(dnorm)
                 data_entity[component] = entity.add_data(
@@ -286,7 +289,10 @@ class InversionData(InversionLocations):
                     self._observed_data_types[component] = data_entity[
                         component
                     ].entity_type
-                    uncerts = self.uncertainties[component].copy()
+                    uncerts = np.abs(
+                        self.uncertainties[component].copy()
+                        / self.normalizations[None][component]
+                    )
                     uncerts[np.isinf(uncerts)] = np.nan
                     if "2d" in self.params.inversion_type:
                         uncerts = self._embed_2d(uncerts)
