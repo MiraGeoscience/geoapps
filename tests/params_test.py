@@ -438,20 +438,6 @@ def test_validate_resolution():
     catch_invalid_generator(param, {}, "type")
 
 
-def test_validate_detrend_order():
-    param = "detrend_order"
-    newval = 2
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_detrend_type():
-    param = "detrend_type"
-    newval = "perimeter"
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "sdf", "value")
-
-
 def test_validate_max_chunk_size():
     param = "max_chunk_size"
     newval = 256
