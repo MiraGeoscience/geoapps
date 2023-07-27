@@ -73,6 +73,8 @@ class MagneticVectorParams(InversionBaseParams):
         self._starting_declination = None
         self._reference_inclination = None
         self._reference_declination = None
+        self._detrend_type = None
+        self._detrend_order = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
@@ -394,3 +396,19 @@ class MagneticVectorParams(InversionBaseParams):
     @reference_declination.setter
     def reference_declination(self, val):
         self.setter_validator("reference_declination", val, fun=self._uuid_promoter)
+
+    @property
+    def detrend_type(self):
+        return self._detrend_type
+
+    @detrend_type.setter
+    def detrend_type(self, val):
+        self.setter_validator("detrend_type", val)
+
+    @property
+    def detrend_order(self):
+        return self._detrend_order
+
+    @detrend_order.setter
+    def detrend_order(self, val):
+        self.setter_validator("detrend_order", val)

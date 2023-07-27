@@ -44,6 +44,7 @@ class InversionApp(BaseDashApplication):
     _inversion_params = {}
     _run_params = None
     _layout = None
+    _components = None
 
     def __init__(self):
         super().__init__()
@@ -1347,15 +1348,9 @@ class InversionApp(BaseDashApplication):
                     if is_uuid(value["channel"]):
                         param_dict[comp + "_channel"] = self.workspace.get_entity(
                             uuid.UUID(value["channel"])
-                        )[0]
-                        if (
-                            param_dict[comp + "_channel"] is not None
-                            and new_workspace.get_entity(
-                                param_dict[comp + "_channel"].uid
-                            )[0]
-                            is None
-                        ):
-                            param_dict[comp + "_channel"].copy(parent=data_object)
+                        )[0].copy(parent=data_object)
+                    else:
+                        param_dict[comp + "_channel"] = None
 
                     # Determine whether to save uncertainty as floor or channel
                     param_dict[comp + "_uncertainty"] = 1.0
@@ -1367,19 +1362,7 @@ class InversionApp(BaseDashApplication):
                                 comp + "_uncertainty"
                             ] = self.workspace.get_entity(
                                 uuid.UUID(value["uncertainty_channel"])
-                            )[
-                                0
-                            ]
-                            if (
-                                param_dict[comp + "_uncertainty"] is not None
-                                and new_workspace.get_entity(
-                                    param_dict[comp + "_uncertainty"].uid
-                                )[0]
-                                is None
-                            ):
-                                param_dict[comp + "_uncertainty"].copy(
-                                    parent=data_object
-                                )
+                            )[0].copy(parent=data_object, copy_children=False)
             else:
                 param_dict[comp + "_channel_bool"] = False
 
@@ -1473,31 +1456,38 @@ class InversionApp(BaseDashApplication):
         param_dict["window_azimuth"] = 0.0
         return param_dict
 
-    def detrend_data(self, detrend_order, detrend_type):
-        if detrend_type is not None and detrend_order is not None:
-            params = self._run_params
-            components = params.components()
+    def detrend_data(
+            self,
+            param_dict: dict,
+            workspace: Workspace,
+            detrend_order: int,
+            detrend_type: str
+    ) -> dict:
+        if detrend_type != "none" and detrend_order is not None:
+            locations = get_locations(workspace, param_dict["data_object"])
 
-            data = {}
-            uncertainties = {}
-            for comp in components:
-                data.update({comp: params.data(comp)})
-                uncertainties.update({comp: params.uncertainty(comp)})
+            for comp in self._components:
+                if comp + "_channel_bool" in param_dict and param_dict[comp + "_channel_bool"]:
+                    data = param_dict[comp + "_channel"]
 
-            locations = get_locations(params.geoh5, params.data_object)
-            trend = data.copy()
-            # for comp in self._component_list:
-            for comp in components:
-                data_trend, _ = calculate_2D_trend(
-                    locations,
-                    data[comp],
-                    detrend_order,
-                    detrend_type,
-                )
-                trend[comp] = data_trend
-                data[comp] -= data_trend
+                    inp_values = data.values
+                    data_trend, _ = calculate_2D_trend(
+                        locations,
+                        inp_values,
+                        detrend_order,
+                        detrend_type,
+                    )
 
-        return data
+                    name = data.name + "_detrended"
+                    values = inp_values - data_trend
+                    param_dict["data_object"].add_data({
+                        name: {
+                            "values": values
+                        }
+                    })
+                    param_dict[comp + "_channel"] = param_dict["data_object"].get_data(name)[0].uid
+
+        return param_dict
 
     def write_trigger(
         self,
@@ -1741,8 +1731,9 @@ class InversionApp(BaseDashApplication):
 
             if self._inversion_type == "dcip":
                 param_dict["resolution"] = None  # No downsampling for dcip
+            param_dict = self.detrend_data(param_dict, workspace, detrend_order, detrend_type)
+
             self._run_params = self.params.__class__(**param_dict)
-            self.detrend_data(detrend_order, detrend_type)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=monitoring_directory,

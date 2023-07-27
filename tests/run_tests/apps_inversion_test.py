@@ -106,7 +106,7 @@ def test_mag_inversion(tmp_path: Path):
                 z_from_topo=[app.params.z_from_topo],
                 receivers_offset_z=app.params.receivers_offset_z,
                 receivers_radar_drape=app.params.receivers_radar_drape,
-                forward_only=[app.params.forward_only],
+                forward_only=[],
                 starting_model_options="Constant",
                 starting_model_data=None,
                 starting_model_const=4.5,

@@ -67,6 +67,8 @@ class GravityParams(InversionBaseParams):
         self._gy_channel = None
         self._gy_uncertainty = None
         self._out_group = None
+        self._detrend_type = None
+        self._detrend_order = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
@@ -317,3 +319,19 @@ class GravityParams(InversionBaseParams):
     @gy_uncertainty.setter
     def gy_uncertainty(self, val):
         self.setter_validator("gy_uncertainty", val, fun=self._uuid_promoter)
+
+    @property
+    def detrend_type(self):
+        return self._detrend_type
+
+    @detrend_type.setter
+    def detrend_type(self, val):
+        self.setter_validator("detrend_type", val)
+
+    @property
+    def detrend_order(self):
+        return self._detrend_order
+
+    @detrend_order.setter
+    def detrend_order(self, val):
+        self.setter_validator("detrend_order", val)

@@ -130,6 +130,8 @@ inversion_defaults = {
     "bz_channel_bool": False,
     "fix_aspect_ratio": True,
     "colorbar": False,
+    "detrend_type": "none",
+    "detrend_order": 0,
 }
 
 forward_defaults = {
@@ -783,6 +785,8 @@ default_ui_json = {
         "value": 1.0,
         "enabled": False,
     },
+    "detrend_type": "none",
+    "detrend_order": 0,
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
