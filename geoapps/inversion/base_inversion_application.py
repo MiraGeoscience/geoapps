@@ -1467,6 +1467,18 @@ class InversionApp(BaseDashApplication):
         detrend_order: int,
         detrend_type: str,
     ) -> dict:
+        """
+        Detrend data and update data values in param_dict.
+
+        :param param_dict: Dictionary of params to create self._run_params.
+        :param workspace: Output workspace.
+        :param detrend_order: Order of the polynomial to be used.
+        :param detrend_type: Method to be used for the detrending.
+            "all": Use all points.
+            "perimeter": Only use points on the convex hull .
+
+        :return: Updated param_dict with updated data.
+        """
         if detrend_type != "none" and detrend_order is not None:
             locations = get_locations(workspace, param_dict["data_object"])
 
