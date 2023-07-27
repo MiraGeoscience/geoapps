@@ -20,7 +20,7 @@ import numpy as np
 import scipy
 from dash import Dash, Input, Output, State, callback_context, no_update
 from flask import Flask
-from geoh5py.data import Data
+from geoh5py.data import Data, NumericData
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
@@ -30,7 +30,8 @@ from plotly import graph_objects as go
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
-from geoapps.shared_utils.utils import downsample_grid, downsample_xy
+from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.shared_utils.utils import downsample_grid, downsample_xy, get_locations
 
 
 class InversionApp(BaseDashApplication):
@@ -1472,6 +1473,32 @@ class InversionApp(BaseDashApplication):
         param_dict["window_azimuth"] = 0.0
         return param_dict
 
+    def detrend_data(self, detrend_order, detrend_type):
+        if detrend_type is not None and detrend_order is not None:
+            params = self._run_params
+            components = params.components()
+
+            data = {}
+            uncertainties = {}
+            for comp in components:
+                data.update({comp: params.data(comp)})
+                uncertainties.update({comp: params.uncertainty(comp)})
+
+            locations = get_locations(params.geoh5, params.data_object)
+            trend = data.copy()
+            # for comp in self._component_list:
+            for comp in components:
+                data_trend, _ = calculate_2D_trend(
+                    locations,
+                    data[comp],
+                    detrend_order,
+                    detrend_type,
+                )
+                trend[comp] = data_trend
+                data[comp] -= data_trend
+
+        return data
+
     def write_trigger(
         self,
         n_clicks: int,
@@ -1715,6 +1742,7 @@ class InversionApp(BaseDashApplication):
             if self._inversion_type == "dcip":
                 param_dict["resolution"] = None  # No downsampling for dcip
             self._run_params = self.params.__class__(**param_dict)
+            self.detrend_data(detrend_order, detrend_type)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
                 path=monitoring_directory,

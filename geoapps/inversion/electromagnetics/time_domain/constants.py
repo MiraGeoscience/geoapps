@@ -41,8 +41,6 @@ inversion_defaults = {
     "upper_bound": None,
     "output_tile_files": False,
     "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,

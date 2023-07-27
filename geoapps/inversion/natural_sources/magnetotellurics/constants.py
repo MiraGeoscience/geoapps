@@ -57,8 +57,6 @@ inversion_defaults = {
     "upper_bound": None,
     "output_tile_files": False,
     "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
     "window_center_x": None,
     "window_center_y": None,
     "window_width": None,
@@ -172,8 +170,6 @@ inversion_ui_json = {
     "zyx_imag_channel_bool": False,
     "zyy_real_channel_bool": False,
     "zyy_imag_channel_bool": False,
-    "detrend_type": None,
-    "detrend_order": None,
 }
 
 forward_ui_json = {
