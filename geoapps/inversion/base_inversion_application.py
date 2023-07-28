@@ -311,9 +311,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="x_norm", component_property="value"),
             Output(component_id="y_norm", component_property="value"),
             Output(component_id="z_norm", component_property="value"),
-            # Inversion - detrend
-            Output(component_id="detrend_type", component_property="value"),
-            Output(component_id="detrend_order", component_property="value"),
             # Inversion - ignore values
             Output(component_id="ignore_values", component_property="value"),
             # Inversion - optimization
@@ -1479,30 +1476,31 @@ class InversionApp(BaseDashApplication):
 
         :return: Updated param_dict with updated data.
         """
-        if detrend_type != "none" and detrend_order is not None:
-            locations = get_locations(workspace, param_dict["data_object"])
+        if detrend_type == "none" or detrend_type is None or detrend_order is None:
+            return param_dict
 
-            for comp in self._components:  # pylint: disable=E1133
-                if (
-                    comp + "_channel_bool" in param_dict
-                    and param_dict[comp + "_channel_bool"]
-                ):
-                    data = param_dict[comp + "_channel"]
+        locations = get_locations(workspace, param_dict["data_object"])
+        for comp in self._components:  # pylint: disable=E1133
+            if (
+                comp + "_channel_bool" in param_dict
+                and param_dict[comp + "_channel_bool"]
+            ):
+                data = param_dict[comp + "_channel"]
 
-                    inp_values = data.values
-                    data_trend, _ = calculate_2D_trend(
-                        locations,
-                        inp_values,
-                        detrend_order,
-                        detrend_type,
-                    )
+                inp_values = data.values
+                data_trend, _ = calculate_2D_trend(
+                    locations,
+                    inp_values,
+                    detrend_order,
+                    detrend_type,
+                )
 
-                    name = data.name + "_detrended"
-                    values = inp_values - data_trend
-                    param_dict["data_object"].add_data({name: {"values": values}})
-                    param_dict[comp + "_channel"] = (
-                        param_dict["data_object"].get_data(name)[0].uid
-                    )
+                name = data.name + "_detrended"
+                values = inp_values - data_trend
+                param_dict["data_object"].add_data({name: {"values": values}})
+                param_dict[comp + "_channel"] = (
+                    param_dict["data_object"].get_data(name)[0].uid
+                )
 
         return param_dict
 
@@ -1682,8 +1680,6 @@ class InversionApp(BaseDashApplication):
             "x_norm": x_norm,
             "y_norm": y_norm,
             "z_norm": z_norm,
-            "detrend_type": detrend_type,
-            "detrend_order": detrend_order,
             "ignore_values": ignore_values,
             "max_global_iterations": max_global_iterations,
             "max_irls_iterations": max_irls_iterations,
