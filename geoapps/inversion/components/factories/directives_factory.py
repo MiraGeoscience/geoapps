@@ -396,6 +396,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 data_stack = data_stack[:, np.argsort(sorting)]
                 return data_stack.ravel() - x
 
+            kwargs.pop("data_type")
             kwargs["transforms"].append(potfield_transform)
 
         return kwargs
@@ -470,6 +471,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 return data_stack[sorting_stack] - x
 
             kwargs["transforms"].insert(0, dcip_transform)
+            kwargs.pop("data_type")
 
         return kwargs
 
@@ -522,6 +524,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                 data_stack = data_stack[:, np.argsort(sorting)]
                 return data_stack.ravel() - x
 
+            kwargs.pop("data_type")
             kwargs["transforms"].append(natsource_transform)
 
         return kwargs
