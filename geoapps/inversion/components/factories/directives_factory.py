@@ -156,7 +156,7 @@ class DirectivesFactory:
         """"""
         if (
             self._save_iteration_residual_directive is None
-            and self.factory_type not in ["tdem"]
+            and self.factory_type not in ["tdem", "fem"]
         ):
             self._save_iteration_residual_directive = SaveIterationGeoh5Factory(
                 self.params
