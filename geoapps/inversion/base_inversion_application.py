@@ -1462,8 +1462,8 @@ class InversionApp(BaseDashApplication):
         param_dict["window_azimuth"] = 0.0
         return param_dict
 
+    @staticmethod
     def get_locations(
-        self,
         workspace,
         param_dict,
     ) -> (np.ndarray, np.ndarray):
@@ -1505,7 +1505,6 @@ class InversionApp(BaseDashApplication):
         )
 
         # Get radar mask
-        radar = None
         if param_dict["receivers_radar_drape"] is not None:
             radar = param_dict["receivers_radar_drape"].values
             if any(np.isnan(radar)):
@@ -1535,7 +1534,7 @@ class InversionApp(BaseDashApplication):
         if detrend_type == "none" or detrend_type is None or detrend_order is None:
             return param_dict
 
-        locations, mask = self.get_locations(workspace, param_dict)
+        locations, mask = InversionApp.get_locations(workspace, param_dict)
         for comp in self._components:  # pylint: disable=E1133
             if (
                 comp + "_channel_bool" in param_dict
