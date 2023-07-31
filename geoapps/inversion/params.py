@@ -53,8 +53,6 @@ class InversionBaseParams(BaseParams):
         self._gps_receivers_offset = None
         self._ignore_values: str = None
         self._resolution: float = None
-        self._detrend_order: int = None
-        self._detrend_type: str = None
         self._max_chunk_size: int = None
         self._chunk_by_rows: bool = None
         self._output_tile_files: bool = None
@@ -362,22 +360,6 @@ class InversionBaseParams(BaseParams):
     @resolution.setter
     def resolution(self, val):
         self.setter_validator("resolution", val)
-
-    @property
-    def detrend_order(self):
-        return self._detrend_order
-
-    @detrend_order.setter
-    def detrend_order(self, val):
-        self.setter_validator("detrend_order", val)
-
-    @property
-    def detrend_type(self):
-        return self._detrend_type
-
-    @detrend_type.setter
-    def detrend_type(self, val):
-        self.setter_validator("detrend_type", val)
 
     @property
     def max_chunk_size(self):

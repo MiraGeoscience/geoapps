@@ -24,7 +24,7 @@ from scipy.spatial import cKDTree
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 
-from geoapps.inversion.utils import calculate_2D_trend, create_nested_mesh
+from geoapps.inversion.utils import create_nested_mesh
 from geoapps.shared_utils.utils import drape_2_tensor, filter_xy
 
 from .factories import (
@@ -53,11 +53,6 @@ class InversionData(InversionLocations):
         Data value to ignore (infinity uncertainty).
     ignore_type :
         Type of ignore value (<, >, =).
-    detrend_order :
-        Polynomial degree for detrending (0, 1, or 2).
-    detrend_type :
-        Detrend type option. 'all': use all data, 'perimeter': use the convex
-        hull only.
     locations :
         Data locations.
     mask :
@@ -99,8 +94,6 @@ class InversionData(InversionLocations):
         self.radar: np.ndarray | None = None
         self.ignore_value: float | None = None
         self.ignore_type: str | None = None
-        self.detrend_order: float | None = None
-        self.detrend_type: str | None = None
         self.locations: np.ndarray | None = None
         self.mask: np.ndarray | None = None
         self.global_map: np.ndarray | None = None
@@ -117,6 +110,7 @@ class InversionData(InversionLocations):
         self.data_entity = None
         self._observed_data_types = {}
         self.survey = None
+
         self._initialize()
 
     def _initialize(self) -> None:
@@ -143,11 +137,6 @@ class InversionData(InversionLocations):
         self.observed = self.filter(self.observed)
         self.radar = self.filter(self.radar)
         self.uncertainties = self.filter(self.uncertainties)
-
-        if self.params.detrend_type is not None:
-            self.detrend_order = self.params.detrend_order
-            self.detrend_type = self.params.detrend_type
-            self.observed, self.trend = self.detrend(self.observed)
 
         self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
@@ -227,6 +216,7 @@ class InversionData(InversionLocations):
         components = self.params.components()
         data = {}
         uncertainties = {}
+
         for comp in components:
             data.update({comp: self.params.data(comp)})
             uncertainties.update({comp: self.params.uncertainty(comp)})
@@ -385,21 +375,6 @@ class InversionData(InversionLocations):
         radar_offset_pad[:, 2] = radar_offset
 
         return self.displace(locs, radar_offset_pad)
-
-    def detrend(self, data) -> np.ndarray:
-        """Remove trend from data."""
-        d = data.copy()
-        trend = data.copy()
-        for comp in self.components:
-            data_trend, _ = calculate_2D_trend(
-                self.locations,
-                d[comp],
-                self.params.detrend_order,
-                self.params.detrend_type,
-            )
-            trend[comp] = data_trend
-            d[comp] -= data_trend
-        return d, trend
 
     def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         """

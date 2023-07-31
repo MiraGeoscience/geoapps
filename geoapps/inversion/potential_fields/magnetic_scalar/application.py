@@ -15,6 +15,7 @@ from dash import Input, Output, State
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.magnetic_scalar.constants import app_initializer
 from geoapps.inversion.potential_fields.magnetic_scalar.layout import (
+    component_list,
     magnetic_scalar_inversion_params,
     magnetic_scalar_layout,
 )
@@ -32,6 +33,7 @@ class MagneticScalarApp(InversionApp):
     _inversion_type = "magnetic scalar"
     _inversion_params = magnetic_scalar_inversion_params
     _layout = magnetic_scalar_layout
+    _components = component_list
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)

@@ -73,6 +73,8 @@ class MagneticScalarParams(InversionBaseParams):
         self._bz_channel_bool = None
         self._bz_channel = None
         self._bz_uncertainty = None
+        self._detrend_type = None
+        self._detrend_order = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
