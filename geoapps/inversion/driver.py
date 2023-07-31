@@ -211,12 +211,8 @@ class InversionDriver(BaseDriver):
 
             self._optimization = optimization.ProjectedGNCG(
                 maxIter=self.params.max_global_iterations,
-                lower=self.models.lower_bound
-                if self.models.lower_bound is not None
-                else -np.inf,
-                upper=self.models.upper_bound
-                if self.models.upper_bound is not None
-                else np.inf,
+                lower=self.models.lower_bound,
+                upper=self.models.upper_bound,
                 maxIterLS=self.params.max_line_search_iterations,
                 maxIterCG=self.params.max_cg_iterations,
                 tolCG=self.params.tol_cg,

@@ -142,17 +142,26 @@ class InversionModelCollection:
     @property
     def lower_bound(self):
         lbound = self._lower_bound.model
+
+        if lbound is None:
+            return -np.inf
+
         if self.is_sigma:
-            for i in range(len(lbound)):
-                lbound[i] = np.log(lbound[i]) if np.isfinite(lbound[i]) else lbound[i]
+            is_finite = np.isfinite(lbound)
+            lbound[is_finite] = np.log(lbound[is_finite])
         return lbound
 
     @property
     def upper_bound(self):
         ubound = self._upper_bound.model
+
+        if ubound is None:
+            return np.inf
+
         if self.is_sigma:
-            for i in range(len(ubound)):
-                ubound[i] = np.log(ubound[i]) if np.isfinite(ubound[i]) else ubound[i]
+            is_finite = np.isfinite(ubound)
+            ubound[is_finite] = np.log(ubound[is_finite])
+
         return ubound
 
     @property
