@@ -26,9 +26,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.01577,
-    "phi_d": 11.52,
-    "phi_m": 0.4048,
+    "data_norm": 35.9341,
+    "phi_d": 669.2,
+    "phi_m": 69.26,
 }
 np.random.seed(0)
 
@@ -41,14 +41,15 @@ def test_fem_fwr_run(
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
-        background=0.01,
+        background=1e-3,
         anomaly=1.0,
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
         refinement=refinement,
-        drape_height=0.0,
+        drape_height=15.0,
+        padding_distance=400,
         inversion_type="fem",
-        flatten=False,
+        flatten=True,
     )
     params = FrequencyDomainElectromagneticsParams(
         forward_only=True,
@@ -59,7 +60,6 @@ def test_fem_fwr_run(
         z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
-        conductivity_model=1e-2,
         z_real_channel_bool=True,
         z_imag_channel_bool=True,
     )
@@ -95,12 +95,12 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
                     parent=survey
                 )
                 data[cname].append(data_entity)
-
+                abs_val = np.abs(data_entity.values)
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_[{ind}]": {
-                            "values": np.ones_like(data_entity.values)
-                            * np.percentile(np.abs(data_entity.values), 10)
+                            "values": np.ones_like(abs_val)
+                            * 4  # 8. * 2**(np.abs(ind-1))
                         }
                     }
                 )
@@ -128,27 +128,28 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             topography_object=topography.uid,
             resolution=0.0,
             data_object=survey.uid,
-            starting_model=0.01,
-            reference_model=0.01,
-            alpha_s=1.0,
-            s_norm=1.0,
-            x_norm=1.0,
-            y_norm=1.0,
-            z_norm=1.0,
+            starting_model=2e-3,
+            reference_model=2e-3,
+            alpha_s=0.0,
+            s_norm=0.0,
+            x_norm=0.0,
+            y_norm=0.0,
+            z_norm=0.0,
             gradient_type="components",
             z_from_topo=False,
             upper_bound=0.75,
-            conductivity_model=1e-2,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e2,
+            initial_beta_ratio=1e1,
             prctile=100,
+            coolingRate=2,
+            chi_factor=0.1,
             store_sensitivities="ram",
+            sens_wts_threshold=30.0,
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = FrequencyDomainElectromagneticsDriver.start(
-            str(tmp_path / "Inv_run.ui.json")
-        )
+        driver = FrequencyDomainElectromagneticsDriver(params)
+        driver.run()
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
@@ -163,31 +164,12 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         else:
             return driver.inverse_problem.model
 
-    # test that one channel works
-    data_kwargs = {k: v for k, v in data_kwargs.items() if "zxx_real" in k}
-    geoh5.open()
-    params = FrequencyDomainElectromagneticsParams(
-        geoh5=geoh5,
-        mesh=geoh5.get_entity("mesh")[0].uid,
-        topography_object=topography.uid,
-        data_object=survey.uid,
-        starting_model=0.01,
-        conductivity_model=1e-2,
-        max_global_iterations=0,
-        # store_sensitivities="ram",
-        **data_kwargs,
-    )
-    params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = FrequencyDomainElectromagneticsDriver.start(
-        str(tmp_path / "Inv_run.ui.json")
-    )
-
     return driver
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_fem_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
+    mstart = test_fem_fwr_run(Path("./"), n_grid_points=5, refinement=(4, 4, 4))
 
     m_rec = test_fem_run(
         Path("./"),
