@@ -245,7 +245,7 @@ class InversionData(InversionLocations):
                     data_channel = entity.add_data(
                         {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
-                    data_dict[component][channel] = entity.add_data_to_group(
+                    data_dict[component] = entity.add_data_to_group(
                         data_channel, f"{basename}_{component}"
                     )
                     if not self.params.forward_only:
@@ -261,7 +261,7 @@ class InversionData(InversionLocations):
                                 }
                             }
                         )
-                        uncert_dict[component][channel] = entity.add_data_to_group(
+                        uncert_dict[component] = entity.add_data_to_group(
                             uncert_entity, f"Uncertainties_{component}"
                         )
         else:
