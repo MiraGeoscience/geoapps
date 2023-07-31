@@ -320,11 +320,11 @@ class InversionModel:
         else:
             model = self._get(self.model_type)
 
-            if model is None:
-                bound = -np.inf if self.model_type == "lower_bound" else np.inf
-                model = np.full(self.driver.inversion_mesh.n_cells, bound)
-
-            if self.is_vector and model.shape[0] == self.driver.inversion_mesh.n_cells:
+            if (
+                model is not None
+                and self.is_vector
+                and model.shape[0] == self.driver.inversion_mesh.n_cells
+            ):
                 model = np.tile(model, self.n_blocks)
 
         if model is not None:
@@ -368,21 +368,30 @@ class InversionModel:
             if self.model_type in ["starting", "reference"]:
                 aid = cartesian2amplitude_dip_azimuth(remapped_model)
                 aid[np.isnan(aid[:, 0]), 1:] = np.nan
-                self.driver.inversion_mesh.entity.add_data(
+                entity = self.driver.inversion_mesh.entity.add_data(
                     {f"{self.model_type}_inclination": {"values": aid[:, 1]}}
                 )
-                self.driver.inversion_mesh.entity.add_data(
+                setattr(self.driver.params, f"{self.model_type}_inclination", entity)
+                entity = self.driver.inversion_mesh.entity.add_data(
                     {f"{self.model_type}_declination": {"values": aid[:, 2]}}
                 )
+                setattr(self.driver.params, f"{self.model_type}_declination", entity)
                 remapped_model = aid[:, 0]
             else:
                 remapped_model = np.linalg.norm(
                     remapped_model.reshape((-1, 3), order="F"), axis=1
                 )
 
-        self.driver.inversion_mesh.entity.add_data(
+        entity = self.driver.inversion_mesh.entity.add_data(
             {f"{self.model_type}_model": {"values": remapped_model}}
         )
+        model_type = self.model_type
+
+        # TODO: Standardize names for upper_model and lower_model
+        if model_type in ["starting", "reference", "conductivity"]:
+            model_type += "_model"
+
+        setattr(self.driver.params, model_type, entity)
 
     def edit_ndv_model(self, model):
         """Change values to NDV on models and save to workspace."""
