@@ -10,7 +10,6 @@ from __future__ import annotations
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
 default_ui_json = {
     "title": "SimPEG Joint Surveys Inversion",
     "inversion_type": "joint surveys",
@@ -73,12 +72,7 @@ default_ui_json = {
         "tooltip": "Constant multiplier for the data misfit function for Group C.",
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
