@@ -37,6 +37,7 @@ from geoapps.inversion.potential_fields.application import (
     MeshOctreeOptions,
     ModelOptions,
 )
+from geoapps.inversion.utils import preprocess_data
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 
@@ -1112,6 +1113,20 @@ class InversionApp(PlotSelection2D):
 
             # Create new params object and write
             param_dict["resolution"] = None  # No downsampling for dcip
+
+            # Pre-processing
+            update_dict = preprocess_data(
+                workspace=ws,
+                param_dict=param_dict,
+                resolution=None,
+                window_center_x=self.window_center_x.value,
+                window_center_y=self.window_center_y.value,
+                window_width=self.window_width.value,
+                window_height=self.window_height.value,
+                window_azimuth=self.window_azimuth.value,
+            )
+            param_dict.update(update_dict)
+
             self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),

@@ -295,8 +295,6 @@ class InversionApp(BaseDashApplication):
         self.app.callback(
             # Window Data
             Output(component_id="colorbar", component_property="value"),
-            # Input Data
-            Output(component_id="resolution", component_property="value"),
             # Topography
             Output(component_id="z_from_topo", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
@@ -311,8 +309,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="x_norm", component_property="value"),
             Output(component_id="y_norm", component_property="value"),
             Output(component_id="z_norm", component_property="value"),
-            # Inversion - ignore values
-            Output(component_id="ignore_values", component_property="value"),
             # Inversion - optimization
             Output(component_id="max_global_iterations", component_property="value"),
             Output(component_id="max_irls_iterations", component_property="value"),
@@ -1034,6 +1030,7 @@ class InversionApp(BaseDashApplication):
 
                 # Rotate plot to match object rotation.
                 new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
+
                 rot_x = np.linspace(x.min(), x.max(), new_values.shape[0])
                 rot_y = np.linspace(y.min(), y.max(), new_values.shape[1])
 
@@ -1206,11 +1203,6 @@ class InversionApp(BaseDashApplication):
                 else:
                     fix_aspect_ratio = []
 
-                center_x = ui_json_data["window_center_x"]
-                center_y = ui_json_data["window_center_y"]
-                width = ui_json_data["window_width"]
-                height = ui_json_data["window_height"]
-
                 window = {
                     "center": [
                         center_x,
@@ -1221,6 +1213,12 @@ class InversionApp(BaseDashApplication):
                         height,
                     ],
                 }
+
+                center_x = no_update
+                center_y = no_update
+                width = no_update
+                height = no_update
+
             elif any(
                 elem
                 in [
@@ -1456,62 +1454,6 @@ class InversionApp(BaseDashApplication):
 
         param_dict["window_azimuth"] = 0.0
         return param_dict
-
-    def get_processing_params(
-        self,
-        param_dict,
-        ignore_values,
-        resolution,
-        window_center_x,
-        window_center_y,
-        window_width,
-        window_height,
-        detrend_type,
-        detrend_order,
-    ):
-        """ """
-        # Get data dict
-        components = []
-        data_dict = {}
-        for key, value in param_dict.items():
-            if key.endswith("_channel_bool") and value:
-                comp = key.replace("_channel_bool", "")
-                components.append(comp)
-                data_dict[comp + "_channel"] = {
-                    "name": param_dict[comp + "_channel"].name,
-                    "values": param_dict[comp + "_channel"].values,
-                }
-                if hasattr(param_dict[comp + "_uncertainty"], "copy"):
-                    data_dict[comp + "_uncertainty"] = {
-                        "name": param_dict[comp + "_uncertainty"].name,
-                        "values": param_dict[comp + "_uncertainty"].values,
-                    }
-
-        ignore_values_params = {
-            "forward_only": param_dict["forward_only"],
-            "ignore_values": ignore_values,
-        }
-        windowing_params = {
-            "window_azimuth": None,
-            "window_center_x": window_center_x,
-            "window_center_y": window_center_y,
-            "window_width": window_width,
-            "window_height": window_height,
-            "mesh": param_dict["mesh"],
-            "resolution": resolution,
-            "receivers_radar_drape": param_dict["receivers_radar_drape"],
-        }
-        detrend_params = {
-            "detrend_type": detrend_type,
-            "detrend_order": detrend_order,
-        }
-        return (
-            components,
-            data_dict,
-            ignore_values_params,
-            windowing_params,
-            detrend_params,
-        )
 
     def write_trigger(
         self,
@@ -1749,31 +1691,18 @@ class InversionApp(BaseDashApplication):
                 resolution = None  # No downsampling for dcip
 
             # Pre-processing
-            (
-                components,
-                data_dict,
-                ignore_values_params,
-                windowing_params,
-                detrend_params,
-            ) = self.get_processing_params(
-                param_dict,
-                ignore_values,
-                resolution,
-                window_center_x,
-                window_center_y,
-                window_width,
-                window_height,
-                detrend_type,
-                detrend_order,
-            )
             update_dict = preprocess_data(
-                workspace,
-                param_dict["data_object"],
-                components,
-                data_dict,
-                ignore_values_params,
-                windowing_params,
-                detrend_params,
+                workspace=workspace,
+                param_dict=param_dict,
+                resolution=resolution,
+                window_center_x=window_center_x,
+                window_center_y=window_center_y,
+                window_width=window_width,
+                window_height=window_height,
+                window_azimuth=None,
+                ignore_values=ignore_values,
+                detrend_type=detrend_type,
+                detrend_order=detrend_order,
             )
             param_dict.update(update_dict)
 

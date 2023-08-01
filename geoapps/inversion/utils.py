@@ -13,7 +13,6 @@ import numpy as np
 from discretize import TreeMesh
 from geoh5py import Workspace
 from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
 from scipy.spatial import ConvexHull, Delaunay, cKDTree, qhull
 from SimPEG.survey import BaseSurvey
 from SimPEG.utils import mkvc
@@ -195,12 +194,18 @@ def create_nested_mesh(
 
 
 def window_data(
-    windowing_params,
+    data_object,
     components,
     data_dict,
-    data_object,
     workspace,
-) -> (np.ndarray, np.ndarray):
+    window_azimuth,
+    window_center_x,
+    window_center_y,
+    window_width,
+    window_height,
+    mesh,
+    resolution,
+) -> (np.ndarray, dict, np.ndarray):
     """
     Get locations and mask for detrending data.
 
@@ -214,51 +219,65 @@ def window_data(
     locations = get_locations(workspace, data_object)
     # Get window
     window = {
-        "azimuth": windowing_params["window_azimuth"],
-        "center_x": windowing_params["window_center_x"],
-        "center_y": windowing_params["window_center_y"],
-        "width": windowing_params["window_width"],
-        "height": windowing_params["window_height"],
+        "azimuth": window_azimuth,
+        "center_x": window_center_x,
+        "center_y": window_center_y,
+        "width": window_width,
+        "height": window_height,
         "center": [
-            windowing_params["window_center_x"],
-            windowing_params["window_center_y"],
+            window_center_x,
+            window_center_y,
         ],
-        "size": [windowing_params["window_width"], windowing_params["window_height"]],
+        "size": [window_width, window_height],
     }
     # Get angle
     angle = None
-    if windowing_params["mesh"] is not None:
-        if hasattr(windowing_params["mesh"], "rotation"):
-            angle = -1 * windowing_params["mesh"].rotation
+    if mesh is not None:
+        if hasattr(mesh, "rotation"):
+            angle = -1 * mesh.rotation
     # Get mask
     mask = filter_xy(
         locations[:, 0],
         locations[:, 1],
         window=window,
         angle=angle,
-        distance=windowing_params["resolution"],
+        distance=resolution,
     )
-    # Get radar mask
-    if windowing_params["receivers_radar_drape"] is not None:
-        radar = windowing_params["receivers_radar_drape"].values
-        if any(np.isnan(radar)):
-            mask[np.isnan(radar)] = False
 
-    # Apply mask to data
+    # Apply mask to data object
+    west = window["center_x"] - window["width"] / 2
+    east = window["center_x"] + window["width"] / 2
+    south = window["center_y"] - window["height"] / 2
+    north = window["center_y"] + window["height"] / 2
+
+    new_data_object = data_object.copy_from_extent(
+        np.array([[west, south], [east, north]]),
+        name=data_object.name + "_processed",
+        # rotation=0.0,
+    )
+
+    # Update data dict
     for comp in components:
-        data_dict[comp + "_channel"]["values"] = data_dict[comp + "_channel"]["values"][
-            mask
-        ]
+        data_dict[comp + "_channel"]["values"] = new_data_object.get_entity(
+            data_dict[comp + "_channel"]["name"]
+        )[0].values
         if comp + "_uncertainty" in data_dict:
-            data_dict[comp + "_uncertainty"]["values"] = data_dict[
-                comp + "_uncertainty"
-            ]["values"][mask]
+            data_dict[comp + "_uncertainty"] = new_data_object.get_entity(
+                data_dict[comp + "_uncertainty"]["name"]
+            )[0].values
 
-    return data_dict, locations[mask]
+    # Get new locations
+    if hasattr(new_data_object, "centroids"):
+        locations = new_data_object.centroids
+    elif hasattr(new_data_object, "vertices"):
+        locations = new_data_object.vertices
+
+    return new_data_object, data_dict, locations
 
 
 def detrend_data(
-    detrend_params,
+    detrend_type,
+    detrend_order,
     components,
     data_dict,
     locations,
@@ -275,11 +294,8 @@ def detrend_data(
 
     :return: Updated param_dict with updated data.
     """
-    detrend_order = detrend_params["detrend_order"]
-    detrend_type = detrend_params["detrend_type"]
-
     if detrend_type == "none" or detrend_type is None or detrend_order is None:
-        return None
+        return data_dict
 
     for comp in components:
         data = data_dict[comp + "_channel"]
@@ -293,21 +309,19 @@ def detrend_data(
         )
         # Update data values and add to object
         data["values"] -= data_trend
-
     return data_dict
 
 
 def set_infinity_uncertainties(
-    ignore_values_params,
+    ignore_values,
+    forward_only,
     components,
     data_dict,
 ) -> np.ndarray:
     """
     Use ignore_value ignore_type to set uncertainties to infinity.
     """
-    ignore_value, ignore_type = parse_ignore_values(
-        ignore_values_params,
-    )
+    ignore_value, ignore_type = parse_ignore_values(ignore_values, forward_only)
 
     for comp in components:
         if comp + "_uncertainty" not in data_dict:
@@ -333,16 +347,13 @@ def set_infinity_uncertainties(
     return data_dict
 
 
-def parse_ignore_values(
-    ignore_values_params,
-) -> tuple[float, str]:
+def parse_ignore_values(ignore_values, forward_only) -> tuple[float, str]:
     """
     Returns an ignore value and type ('<', '>', or '=') from params data.
     """
-    if ignore_values_params["forward_only"]:
+    if forward_only:
         return None, None
 
-    ignore_values = ignore_values_params["ignore_values"]
     if ignore_values is None:
         return None, None
     ignore_type = [k for k in ignore_values if k in ["<", ">"]]
@@ -358,49 +369,88 @@ def parse_ignore_values(
     return ignore_value, ignore_type
 
 
+def get_data_dict(param_dict):
+    """ """
+    # Get components
+    components = []
+    data_dict = {}
+    for key, value in param_dict.items():
+        if key.endswith("_channel_bool") and value:
+            comp = key.replace("_channel_bool", "")
+            components.append(comp)
+            data_dict[comp + "_channel"] = {
+                "name": param_dict[comp + "_channel"].name,
+            }
+            if isinstance(param_dict[comp + "_uncertainty"], Data):
+                data_dict[comp + "_uncertainty"] = {
+                    "name": param_dict[comp + "_uncertainty"].name,
+                }
+
+    return components, data_dict
+
+
 def preprocess_data(
     workspace: Workspace,
-    data_object: ObjectBase,
-    components: list,
-    data_dict: dict,
-    ignore_values_params: dict,
-    windowing_params: dict,
-    detrend_params: dict = None,
+    param_dict,
+    resolution,
+    window_center_x,
+    window_center_y,
+    window_width,
+    window_height,
+    window_azimuth=None,
+    ignore_values=None,
+    detrend_type=None,
+    detrend_order=None,
 ):
     """ """
-    # Ignore values
-    data_dict = set_infinity_uncertainties(
-        ignore_values_params,
-        components,
-        data_dict,
-    )
+    data_object = param_dict["data_object"]
+    components, data_dict = get_data_dict(param_dict)
+
     # Windowing
-    data_dict, locations = window_data(
-        windowing_params,
+    new_data_object, data_dict, locations = window_data(
+        data_object,
         components,
         data_dict,
-        data_object,
         workspace,
+        window_azimuth,
+        window_center_x,
+        window_center_y,
+        window_width,
+        window_height,
+        param_dict["mesh"],
+        resolution,
     )
+
+    # Ignore values
+    if ignore_values is not None:
+        data_dict = set_infinity_uncertainties(
+            ignore_values,
+            param_dict["forward_only"],
+            components,
+            data_dict,
+        )
     # Detrending
-    if detrend_params:
+    if detrend_type is not None and detrend_order is not None:
         data_dict = detrend_data(
-            detrend_params,
+            detrend_type,
+            detrend_order,
             components,
             data_dict,
             locations,
         )
+
     # Add processed data to data object
     update_dict = {}
+    update_dict["data_object"] = new_data_object.uid
     for comp in components:
         for key in [comp + "_channel", comp + "_uncertainty"]:
-            if key not in data_dict:
+            if key not in data_dict.keys():
                 continue
             data = data_dict[key]
-            if key in data_dict:
-                data["name"] += "_processed"
-                data_object.add_data({data["name"]: {"values": data["values"]}})
-                update_dict[key] = data_object.get_data(data["name"])[0].uid
+            if key in data_dict.keys():
+                print(key)
+                update_dict[key] = new_data_object.get_entity(data["name"])[0].uid
+                print(update_dict[key])
 
     return update_dict
 

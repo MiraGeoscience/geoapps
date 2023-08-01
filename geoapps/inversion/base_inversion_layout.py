@@ -308,6 +308,7 @@ plot_layout = html.Div(
                                 "width": "35%",
                                 "margin-right": "3%",
                             },
+                            value=50.0,
                         ),
                     ],
                     style={"width": "60%"},
@@ -357,6 +358,7 @@ plot_layout = html.Div(
                                         "always_visible": True,
                                     },
                                     marks=None,
+                                    value=314600.0,
                                 ),
                             ],
                             style={
@@ -388,6 +390,7 @@ plot_layout = html.Div(
                                         "always_visible": True,
                                     },
                                     marks=None,
+                                    value=1000.0,
                                 ),
                             ],
                             style={
@@ -411,6 +414,7 @@ plot_layout = html.Div(
                             tooltip={"placement": "left", "always_visible": True},
                             marks=None,
                             vertical=True,
+                            value=6072300.0,
                         ),
                     ],
                     style={
@@ -429,6 +433,7 @@ plot_layout = html.Div(
                             tooltip={"placement": "left", "always_visible": True},
                             marks=None,
                             vertical=True,
+                            value=1500.0,
                         ),
                     ],
                     style={
@@ -1011,6 +1016,7 @@ detrend = html.Div(
                                 "width": "60%",
                                 "vertical-align": "bottom",
                             },
+                            value="none",
                         ),
                     ]
                 ),
@@ -1025,6 +1031,7 @@ detrend = html.Div(
                             step=1,
                             min=0,
                             style={"display": "inline-block", "width": "30%"},
+                            value=0,
                         ),
                     ]
                 ),

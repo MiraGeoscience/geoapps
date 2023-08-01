@@ -15,6 +15,7 @@ from uuid import UUID
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
@@ -282,7 +283,12 @@ def test_ip_inversion(tmp_path: Path):
     for param, value in changes.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert p_value == value, f"Parameter {param} not saved and loaded correctly."
+        if param == "chargeability_channel":
+            assert p_value != value and is_uuid(p_value)
+        else:
+            assert (
+                p_value == value
+            ), f"Parameter {param} not saved and loaded correctly."
 
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)

@@ -29,6 +29,7 @@ from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
+from geoapps.inversion.utils import preprocess_data
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
@@ -1427,6 +1428,19 @@ class InversionApp(PlotSelection2D):
                         if d is None:
                             continue
                         d.copy(parent=new_obj)
+
+            # Pre-processing
+            update_dict = preprocess_data(
+                workspace=new_workspace,
+                param_dict=input_dict,
+                resolution=self.resolution.value,
+                window_center_x=self.window_center_x.value,
+                window_center_y=self.window_center_y.value,
+                window_width=self.window_width.value,
+                window_height=self.window_height.value,
+                window_azimuth=self.window_azimuth.value,
+            )
+            input_dict.update(update_dict)
 
         input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
             Path(new_workspace.h5file).resolve()
