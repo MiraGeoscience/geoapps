@@ -27,8 +27,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 35.9341,
-    "phi_d": 669.2,
-    "phi_m": 69.26,
+    "phi_d": 30.2,
+    "phi_m": 869.4,
 }
 np.random.seed(0)
 
@@ -79,7 +79,6 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         survey = geoh5.get_entity("Airborne_rx")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
-
         data = {}
         uncertainties = {}
         components = {
@@ -90,7 +89,7 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         for comp, cname in components.items():
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
-            for ind in range(len(survey.channels)):
+            for ind, freq in enumerate(survey.channels):
                 data_entity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
                     parent=survey
                 )
@@ -100,7 +99,8 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
                     {
                         f"uncertainty_{comp}_[{ind}]": {
                             "values": np.ones_like(abs_val)
-                            * 4  # 8. * 2**(np.abs(ind-1))
+                            * freq
+                            / 200.0  # * 2**(np.abs(ind-1))
                         }
                     }
                 )
@@ -128,8 +128,8 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             topography_object=topography.uid,
             resolution=0.0,
             data_object=survey.uid,
-            starting_model=2e-3,
-            reference_model=2e-3,
+            starting_model=1e-3,
+            reference_model=1e-3,
             alpha_s=0.0,
             s_norm=0.0,
             x_norm=0.0,
@@ -141,10 +141,10 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e1,
             prctile=100,
-            coolingRate=2,
-            chi_factor=0.1,
+            coolingRate=3,
+            chi_factor=0.25,
             store_sensitivities="ram",
-            sens_wts_threshold=30.0,
+            sens_wts_threshold=1.0,
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
