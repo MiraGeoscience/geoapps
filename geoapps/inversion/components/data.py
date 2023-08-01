@@ -583,3 +583,7 @@ class InversionData(InversionLocations):
 
             setattr(self.params, f"{comp}_channel", data_dict[comp])
             setattr(self.params, f"{comp}_uncertainty", uncert_dict[comp])
+
+        if getattr(self.params, "line_object", None) is not None:
+            new_line = self.params.line_object.copy(parent=self.entity)
+            self.params.line_object = new_line

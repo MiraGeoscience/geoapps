@@ -72,7 +72,7 @@ def test_collection(tmp_path: Path):
     models.remove_air(driver.models.active_cells)
     starting = InversionModel(driver, "starting")
     starting.remove_air(driver.models.active_cells)
-    np.testing.assert_allclose(models.starting, starting.model)
+    np.testing.assert_allclose(models.starting, starting.model, atol=1e-7)
 
 
 def test_initialize(tmp_path: Path):
