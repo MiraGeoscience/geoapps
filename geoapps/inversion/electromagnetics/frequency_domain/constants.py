@@ -71,7 +71,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 0.001,
+    "sens_wts_threshold": 1.0,
     "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
@@ -347,5 +347,4 @@ validations = {
     "z_imag_uncertainty": {"one_of": "uncertainty_channel"},
 }
 validations = dict(base_validations, **validations)
-
 app_initializer = {}
