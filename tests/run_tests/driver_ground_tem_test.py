@@ -103,7 +103,8 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
                     {
                         f"uncertainty_{comp}_[{ii}]": {
                             "values": np.ones_like(data_entity.values)
-                            * np.median(np.abs(data_entity.values)) /2.
+                            * np.median(np.abs(data_entity.values))
+                            / 2.0
                         }
                     }
                 )
