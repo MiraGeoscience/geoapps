@@ -19,8 +19,8 @@ from geoh5py.data import FloatData
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
+from SimPEG.survey import BaseSurvey
 
-from geoapps.inversion.utils import get_unique_locations
 from geoapps.utils.statistics import is_outlier
 
 
@@ -48,6 +48,24 @@ def get_containing_cells(
         raise TypeError("Mesh must be 'TreeMesh' or 'TensorMesh'")
 
     return inds
+
+
+def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
+    if survey.source_list:
+        locations = []
+        for source in survey.source_list:
+            source_location = source.location
+            if source_location is not None:
+                if not isinstance(source_location, list):
+                    locations += [[source_location]]
+                else:
+                    locations += [source_location]
+            locations += [receiver.locations for receiver in source.receiver_list]
+        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
+    else:
+        locations = survey.receiver_locations
+
+    return np.unique(locations, axis=0)
 
 
 def new_neighbors(distances: np.ndarray, neighbors: np.ndarray, nodes: list[int]):

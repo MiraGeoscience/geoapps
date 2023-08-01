@@ -11,9 +11,15 @@ import warnings
 
 import numpy as np
 from discretize import TreeMesh
+from geoh5py import Workspace
+from geoh5py.data import Data
+from geoh5py.objects import ObjectBase
 from scipy.spatial import ConvexHull, Delaunay, cKDTree, qhull
 from SimPEG.survey import BaseSurvey
 from SimPEG.utils import mkvc
+
+from geoapps.shared_utils.utils import filter_xy, get_locations
+from geoapps.utils.surveys import get_unique_locations
 
 
 def calculate_2D_trend(
@@ -188,6 +194,217 @@ def create_nested_mesh(
     return nested_mesh
 
 
+def window_data(
+    windowing_params,
+    components,
+    data_dict,
+    data_object,
+    workspace,
+) -> (np.ndarray, np.ndarray):
+    """
+    Get locations and mask for detrending data.
+
+    :param workspace: New workspace.
+    :param param_dict: Dictionary of params to give to _run_params.
+
+    :return locations: Data object locations.
+    :return mask: Mask for windowing data.
+    """
+    # Get locations
+    locations = get_locations(workspace, data_object)
+    # Get window
+    window = {
+        "azimuth": windowing_params["window_azimuth"],
+        "center_x": windowing_params["window_center_x"],
+        "center_y": windowing_params["window_center_y"],
+        "width": windowing_params["window_width"],
+        "height": windowing_params["window_height"],
+        "center": [
+            windowing_params["window_center_x"],
+            windowing_params["window_center_y"],
+        ],
+        "size": [windowing_params["window_width"], windowing_params["window_height"]],
+    }
+    # Get angle
+    angle = None
+    if windowing_params["mesh"] is not None:
+        if hasattr(windowing_params["mesh"], "rotation"):
+            angle = -1 * windowing_params["mesh"].rotation
+    # Get mask
+    mask = filter_xy(
+        locations[:, 0],
+        locations[:, 1],
+        window=window,
+        angle=angle,
+        distance=windowing_params["resolution"],
+    )
+    # Get radar mask
+    if windowing_params["receivers_radar_drape"] is not None:
+        radar = windowing_params["receivers_radar_drape"].values
+        if any(np.isnan(radar)):
+            mask[np.isnan(radar)] = False
+
+    # Apply mask to data
+    for comp in components:
+        data_dict[comp + "_channel"]["values"] = data_dict[comp + "_channel"]["values"][
+            mask
+        ]
+        if comp + "_uncertainty" in data_dict:
+            data_dict[comp + "_uncertainty"]["values"] = data_dict[
+                comp + "_uncertainty"
+            ]["values"][mask]
+
+    return data_dict, locations[mask]
+
+
+def detrend_data(
+    detrend_params,
+    components,
+    data_dict,
+    locations,
+):
+    """
+    Detrend data and update data values in param_dict.
+
+    :param param_dict: Dictionary of params to create self._run_params.
+    :param workspace: Output workspace.
+    :param detrend_order: Order of the polynomial to be used.
+    :param detrend_type: Method to be used for the detrending.
+        "all": Use all points.
+        "perimeter": Only use points on the convex hull .
+
+    :return: Updated param_dict with updated data.
+    """
+    detrend_order = detrend_params["detrend_order"]
+    detrend_type = detrend_params["detrend_type"]
+
+    if detrend_type == "none" or detrend_type is None or detrend_order is None:
+        return None
+
+    for comp in components:
+        data = data_dict[comp + "_channel"]
+        # Get data trend
+        values = data["values"]
+        data_trend, _ = calculate_2D_trend(
+            locations,
+            values,
+            detrend_order,
+            detrend_type,
+        )
+        # Update data values and add to object
+        data["values"] -= data_trend
+
+    return data_dict
+
+
+def set_infinity_uncertainties(
+    ignore_values_params,
+    components,
+    data_dict,
+) -> np.ndarray:
+    """
+    Use ignore_value ignore_type to set uncertainties to infinity.
+    """
+    ignore_value, ignore_type = parse_ignore_values(
+        ignore_values_params,
+    )
+
+    for comp in components:
+        if comp + "_uncertainty" not in data_dict:
+            continue
+        data = data_dict[comp + "_channel"]["values"]
+        uncertainty = data_dict[comp + "_uncertainty"]["values"]
+        uncertainty[np.isnan(data)] = np.inf
+
+        if ignore_value is None:
+            continue
+        elif ignore_type == "<":
+            uncertainty[data <= ignore_value] = np.inf
+        elif ignore_type == ">":
+            uncertainty[data >= ignore_value] = np.inf
+        elif ignore_type == "=":
+            uncertainty[data == ignore_value] = np.inf
+        else:
+            msg = f"Unrecognized ignore type: {ignore_type}."
+            raise (ValueError(msg))
+
+        data_dict[comp + "_uncertainty"]["values"] = uncertainty
+
+    return data_dict
+
+
+def parse_ignore_values(
+    ignore_values_params,
+) -> tuple[float, str]:
+    """
+    Returns an ignore value and type ('<', '>', or '=') from params data.
+    """
+    if ignore_values_params["forward_only"]:
+        return None, None
+
+    ignore_values = ignore_values_params["ignore_values"]
+    if ignore_values is None:
+        return None, None
+    ignore_type = [k for k in ignore_values if k in ["<", ">"]]
+    ignore_type = "=" if not ignore_type else ignore_type[0]
+    if ignore_type in ["<", ">"]:
+        ignore_value = float(ignore_values.split(ignore_type)[1])
+    else:
+        try:
+            ignore_value = float(ignore_values)
+        except ValueError:
+            return None, None
+
+    return ignore_value, ignore_type
+
+
+def preprocess_data(
+    workspace: Workspace,
+    data_object: ObjectBase,
+    components: list,
+    data_dict: dict,
+    ignore_values_params: dict,
+    windowing_params: dict,
+    detrend_params: dict = None,
+):
+    """ """
+    # Ignore values
+    data_dict = set_infinity_uncertainties(
+        ignore_values_params,
+        components,
+        data_dict,
+    )
+    # Windowing
+    data_dict, locations = window_data(
+        windowing_params,
+        components,
+        data_dict,
+        data_object,
+        workspace,
+    )
+    # Detrending
+    if detrend_params:
+        data_dict = detrend_data(
+            detrend_params,
+            components,
+            data_dict,
+            locations,
+        )
+    # Add processed data to data object
+    update_dict = {}
+    for comp in components:
+        for key in [comp + "_channel", comp + "_uncertainty"]:
+            if key not in data_dict:
+                continue
+            data = data_dict[key]
+            if key in data_dict:
+                data["name"] += "_processed"
+                data_object.add_data({data["name"]: {"values": data["values"]}})
+                update_dict[key] = data_object.get_data(data["name"])[0].uid
+
+    return update_dict
+
+
 def tile_locations(
     locations,
     n_tiles,
@@ -198,7 +415,7 @@ def tile_locations(
     unique_id=False,
 ):
     """
-    Function to tile an survey points into smaller square subsets of points
+    Function to tile a survey points into smaller square subsets of points
 
     :param numpy.ndarray locations: n x 2 array of locations [x,y]
     :param integer n_tiles: number of tiles (for 'cluster'), or number of
@@ -350,21 +567,3 @@ def tile_locations(
     if len(out) == 1:
         return out[0]
     return tuple(out)
-
-
-def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
-    if survey.source_list:
-        locations = []
-        for source in survey.source_list:
-            source_location = source.location
-            if source_location is not None:
-                if not isinstance(source_location, list):
-                    locations += [[source_location]]
-                else:
-                    locations += [source_location]
-            locations += [receiver.locations for receiver in source.receiver_list]
-        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
-    else:
-        locations = survey.receiver_locations
-
-    return np.unique(locations, axis=0)
