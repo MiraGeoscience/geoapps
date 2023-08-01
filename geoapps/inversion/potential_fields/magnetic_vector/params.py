@@ -73,6 +73,8 @@ class MagneticVectorParams(InversionBaseParams):
         self._starting_declination = None
         self._reference_inclination = None
         self._reference_declination = None
+        self._detrend_type = None
+        self._detrend_order = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 

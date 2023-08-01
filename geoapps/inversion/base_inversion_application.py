@@ -30,7 +30,13 @@ from plotly import graph_objects as go
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
-from geoapps.shared_utils.utils import downsample_grid, downsample_xy
+from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.shared_utils.utils import (
+    downsample_grid,
+    downsample_xy,
+    filter_xy,
+    get_locations,
+)
 
 
 class InversionApp(BaseDashApplication):
@@ -43,6 +49,7 @@ class InversionApp(BaseDashApplication):
     _inversion_params = {}
     _run_params = None
     _layout = None
+    _components = None
 
     def __init__(self):
         super().__init__()
@@ -309,9 +316,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="x_norm", component_property="value"),
             Output(component_id="y_norm", component_property="value"),
             Output(component_id="z_norm", component_property="value"),
-            # Inversion - detrend
-            Output(component_id="detrend_type", component_property="value"),
-            Output(component_id="detrend_order", component_property="value"),
             # Inversion - ignore values
             Output(component_id="ignore_values", component_property="value"),
             # Inversion - optimization
@@ -1346,15 +1350,9 @@ class InversionApp(BaseDashApplication):
                     if is_uuid(value["channel"]):
                         param_dict[comp + "_channel"] = self.workspace.get_entity(
                             uuid.UUID(value["channel"])
-                        )[0]
-                        if (
-                            param_dict[comp + "_channel"] is not None
-                            and new_workspace.get_entity(
-                                param_dict[comp + "_channel"].uid
-                            )[0]
-                            is None
-                        ):
-                            param_dict[comp + "_channel"].copy(parent=data_object)
+                        )[0].copy(parent=data_object)
+                    else:
+                        param_dict[comp + "_channel"] = None
 
                     # Determine whether to save uncertainty as floor or channel
                     param_dict[comp + "_uncertainty"] = 1.0
@@ -1368,17 +1366,9 @@ class InversionApp(BaseDashApplication):
                                 uuid.UUID(value["uncertainty_channel"])
                             )[
                                 0
-                            ]
-                            if (
-                                param_dict[comp + "_uncertainty"] is not None
-                                and new_workspace.get_entity(
-                                    param_dict[comp + "_uncertainty"].uid
-                                )[0]
-                                is None
-                            ):
-                                param_dict[comp + "_uncertainty"].copy(
-                                    parent=data_object
-                                )
+                            ].copy(
+                                parent=data_object, copy_children=False
+                            )
             else:
                 param_dict[comp + "_channel_bool"] = False
 
@@ -1470,6 +1460,104 @@ class InversionApp(BaseDashApplication):
             param_dict["topography"] = None
 
         param_dict["window_azimuth"] = 0.0
+        return param_dict
+
+    @staticmethod
+    def get_locations(
+        workspace,
+        param_dict,
+    ) -> (np.ndarray, np.ndarray):
+        """
+        Get locations and mask for detrending data.
+
+        :param workspace: New workspace.
+        :param param_dict: Dictionary of params to give to _run_params.
+
+        :return locations: Data object locations.
+        :return mask: Mask for windowing data.
+        """
+        # Get locations
+        locations = get_locations(workspace, param_dict["data_object"])
+
+        # Get window
+        window = {
+            "azimuth": param_dict["window_azimuth"],
+            "center_x": param_dict["window_center_x"],
+            "center_y": param_dict["window_center_y"],
+            "width": param_dict["window_width"],
+            "height": param_dict["window_height"],
+            "center": [param_dict["window_center_x"], param_dict["window_center_y"]],
+            "size": [param_dict["window_width"], param_dict["window_height"]],
+        }
+        # Get angle
+        angle = None
+        if param_dict["mesh"] is not None:
+            if hasattr(param_dict["mesh"], "rotation"):
+                angle = -1 * param_dict["mesh"].rotation
+
+        # Get mask
+        mask = filter_xy(
+            locations[:, 0],
+            locations[:, 1],
+            window=window,
+            angle=angle,
+            distance=param_dict["resolution"],
+        )
+
+        # Get radar mask
+        if param_dict["receivers_radar_drape"] is not None:
+            radar = param_dict["receivers_radar_drape"].values
+            if any(np.isnan(radar)):
+                mask[np.isnan(radar)] = False
+
+        return locations, mask
+
+    def detrend_data(
+        self,
+        param_dict: dict,
+        workspace: Workspace,
+        detrend_order: int,
+        detrend_type: str,
+    ) -> dict:
+        """
+        Detrend data and update data values in param_dict.
+
+        :param param_dict: Dictionary of params to create self._run_params.
+        :param workspace: Output workspace.
+        :param detrend_order: Order of the polynomial to be used.
+        :param detrend_type: Method to be used for the detrending.
+            "all": Use all points.
+            "perimeter": Only use points on the convex hull .
+
+        :return: Updated param_dict with updated data.
+        """
+        if detrend_type == "none" or detrend_type is None or detrend_order is None:
+            return param_dict
+
+        locations, mask = InversionApp.get_locations(workspace, param_dict)
+        for comp in self._components:  # pylint: disable=E1133
+            if (
+                comp + "_channel_bool" in param_dict
+                and param_dict[comp + "_channel_bool"]
+            ):
+                data = param_dict[comp + "_channel"]
+
+                inp_values = data.values
+                data_trend, _ = calculate_2D_trend(
+                    locations[mask],
+                    inp_values[mask],
+                    detrend_order,
+                    detrend_type,
+                )
+
+                name = data.name + "_detrended"
+                values = inp_values
+                values[mask] -= data_trend
+                param_dict["data_object"].add_data({name: {"values": values}})
+                param_dict[comp + "_channel"] = (
+                    param_dict["data_object"].get_data(name)[0].uid
+                )
+
         return param_dict
 
     def write_trigger(
@@ -1648,8 +1736,6 @@ class InversionApp(BaseDashApplication):
             "x_norm": x_norm,
             "y_norm": y_norm,
             "z_norm": z_norm,
-            "detrend_type": detrend_type,
-            "detrend_order": detrend_order,
             "ignore_values": ignore_values,
             "max_global_iterations": max_global_iterations,
             "max_irls_iterations": max_irls_iterations,
@@ -1714,6 +1800,10 @@ class InversionApp(BaseDashApplication):
 
             if self._inversion_type == "dcip":
                 param_dict["resolution"] = None  # No downsampling for dcip
+            param_dict = self.detrend_data(
+                param_dict, workspace, detrend_order, detrend_type
+            )
+
             self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),

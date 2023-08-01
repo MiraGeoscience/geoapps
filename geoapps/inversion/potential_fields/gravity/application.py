@@ -13,6 +13,7 @@ import pathlib
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.gravity.constants import app_initializer
 from geoapps.inversion.potential_fields.gravity.layout import (
+    component_list,
     gravity_inversion_params,
     gravity_layout,
 )
@@ -28,6 +29,7 @@ class GravityApp(InversionApp):
     _inversion_type = "gravity"
     _inversion_params = gravity_inversion_params
     _layout = gravity_layout
+    _components = component_list
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)

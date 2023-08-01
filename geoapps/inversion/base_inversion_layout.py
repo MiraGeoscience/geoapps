@@ -1005,7 +1005,7 @@ detrend = html.Div(
                         ),
                         dcc.Dropdown(
                             id="detrend_type",
-                            options=["all", "perimeter"],
+                            options=["none", "all", "perimeter"],
                             style={
                                 "display": "inline-block",
                                 "width": "60%",
