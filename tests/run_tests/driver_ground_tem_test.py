@@ -26,8 +26,8 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 5.95181e-7,
-    "phi_d": 14.12,
-    "phi_m": 0.01006,
+    "phi_d": 53.94,
+    "phi_m": 241.1,
 }
 
 np.random.seed(0)
@@ -103,7 +103,7 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
                     {
                         f"uncertainty_{comp}_[{ii}]": {
                             "values": np.ones_like(data_entity.values)
-                            * np.median(np.abs(data_entity.values))
+                            * np.median(np.abs(data_entity.values)) /2.
                         }
                     }
                 )
@@ -138,14 +138,14 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
             x_norm=2.0,
             y_norm=2.0,
             z_norm=2.0,
-            # alpha_s=1e-1,
+            alpha_s=0e-1,
             gradient_type="total",
             z_from_topo=False,
             lower_bound=2e-6,
             upper_bound=1e2,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e4,
-            coolingRate=1,
+            initial_beta_ratio=1e1,
+            coolingRate=2,
             max_cg_iterations=200,
             prctile=100,
             # sens_wts_threshold=1.,
