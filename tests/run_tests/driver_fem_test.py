@@ -13,10 +13,10 @@ from pathlib import Path
 import numpy as np
 from geoh5py import Workspace
 
-from geoapps.inversion.airborne_electromagnetics.frequency_domain.driver import (
+from geoapps.inversion.electromagnetics.frequency_domain.driver import (
     FrequencyDomainElectromagneticsDriver,
 )
-from geoapps.inversion.airborne_electromagnetics.frequency_domain.params import (
+from geoapps.inversion.electromagnetics.frequency_domain.params import (
     FrequencyDomainElectromagneticsParams,
 )
 from geoapps.shared_utils.utils import get_inversion_output
