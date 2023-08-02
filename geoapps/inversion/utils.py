@@ -11,14 +11,9 @@ import warnings
 
 import numpy as np
 from discretize import TreeMesh
-from geoh5py import Workspace
-from geoh5py.data import Data
 from scipy.spatial import ConvexHull, Delaunay, cKDTree, qhull
 from SimPEG.survey import BaseSurvey
 from SimPEG.utils import mkvc
-
-from geoapps.shared_utils.utils import filter_xy, get_locations
-from geoapps.utils.surveys import get_unique_locations
 
 
 def calculate_2D_trend(
@@ -193,268 +188,6 @@ def create_nested_mesh(
     return nested_mesh
 
 
-def window_data(
-    data_object,
-    components,
-    data_dict,
-    workspace,
-    window_azimuth,
-    window_center_x,
-    window_center_y,
-    window_width,
-    window_height,
-    mesh,
-    resolution,
-) -> (np.ndarray, dict, np.ndarray):
-    """
-    Get locations and mask for detrending data.
-
-    :param workspace: New workspace.
-    :param param_dict: Dictionary of params to give to _run_params.
-
-    :return locations: Data object locations.
-    :return mask: Mask for windowing data.
-    """
-    # Get locations
-    locations = get_locations(workspace, data_object)
-    # Get window
-    window = {
-        "azimuth": window_azimuth,
-        "center_x": window_center_x,
-        "center_y": window_center_y,
-        "width": window_width,
-        "height": window_height,
-        "center": [
-            window_center_x,
-            window_center_y,
-        ],
-        "size": [window_width, window_height],
-    }
-    # Get angle
-    angle = None
-    if mesh is not None:
-        if hasattr(mesh, "rotation"):
-            angle = -1 * mesh.rotation
-    # Get mask
-    mask = filter_xy(
-        locations[:, 0],
-        locations[:, 1],
-        window=window,
-        angle=angle,
-        distance=resolution,
-    )
-
-    # Apply mask to data object
-    west = window["center_x"] - window["width"] / 2
-    east = window["center_x"] + window["width"] / 2
-    south = window["center_y"] - window["height"] / 2
-    north = window["center_y"] + window["height"] / 2
-
-    new_data_object = data_object.copy_from_extent(
-        np.array([[west, south], [east, north]]),
-        name=data_object.name + "_processed",
-        # rotation=0.0,
-    )
-
-    # Update data dict
-    for comp in components:
-        data_dict[comp + "_channel"]["values"] = new_data_object.get_entity(
-            data_dict[comp + "_channel"]["name"]
-        )[0].values
-        if comp + "_uncertainty" in data_dict:
-            data_dict[comp + "_uncertainty"] = new_data_object.get_entity(
-                data_dict[comp + "_uncertainty"]["name"]
-            )[0].values
-
-    # Get new locations
-    if hasattr(new_data_object, "centroids"):
-        locations = new_data_object.centroids
-    elif hasattr(new_data_object, "vertices"):
-        locations = new_data_object.vertices
-
-    return new_data_object, data_dict, locations
-
-
-def detrend_data(
-    detrend_type,
-    detrend_order,
-    components,
-    data_dict,
-    locations,
-):
-    """
-    Detrend data and update data values in param_dict.
-
-    :param param_dict: Dictionary of params to create self._run_params.
-    :param workspace: Output workspace.
-    :param detrend_order: Order of the polynomial to be used.
-    :param detrend_type: Method to be used for the detrending.
-        "all": Use all points.
-        "perimeter": Only use points on the convex hull .
-
-    :return: Updated param_dict with updated data.
-    """
-    if detrend_type == "none" or detrend_type is None or detrend_order is None:
-        return data_dict
-
-    for comp in components:
-        data = data_dict[comp + "_channel"]
-        # Get data trend
-        values = data["values"]
-        data_trend, _ = calculate_2D_trend(
-            locations,
-            values,
-            detrend_order,
-            detrend_type,
-        )
-        # Update data values and add to object
-        data["values"] -= data_trend
-    return data_dict
-
-
-def set_infinity_uncertainties(
-    ignore_values,
-    forward_only,
-    components,
-    data_dict,
-) -> np.ndarray:
-    """
-    Use ignore_value ignore_type to set uncertainties to infinity.
-    """
-    ignore_value, ignore_type = parse_ignore_values(ignore_values, forward_only)
-
-    for comp in components:
-        if comp + "_uncertainty" not in data_dict:
-            continue
-        data = data_dict[comp + "_channel"]["values"]
-        uncertainty = data_dict[comp + "_uncertainty"]["values"]
-        uncertainty[np.isnan(data)] = np.inf
-
-        if ignore_value is None:
-            continue
-        elif ignore_type == "<":
-            uncertainty[data <= ignore_value] = np.inf
-        elif ignore_type == ">":
-            uncertainty[data >= ignore_value] = np.inf
-        elif ignore_type == "=":
-            uncertainty[data == ignore_value] = np.inf
-        else:
-            msg = f"Unrecognized ignore type: {ignore_type}."
-            raise (ValueError(msg))
-
-        data_dict[comp + "_uncertainty"]["values"] = uncertainty
-
-    return data_dict
-
-
-def parse_ignore_values(ignore_values, forward_only) -> tuple[float, str]:
-    """
-    Returns an ignore value and type ('<', '>', or '=') from params data.
-    """
-    if forward_only:
-        return None, None
-
-    if ignore_values is None:
-        return None, None
-    ignore_type = [k for k in ignore_values if k in ["<", ">"]]
-    ignore_type = "=" if not ignore_type else ignore_type[0]
-    if ignore_type in ["<", ">"]:
-        ignore_value = float(ignore_values.split(ignore_type)[1])
-    else:
-        try:
-            ignore_value = float(ignore_values)
-        except ValueError:
-            return None, None
-
-    return ignore_value, ignore_type
-
-
-def get_data_dict(param_dict):
-    """ """
-    # Get components
-    components = []
-    data_dict = {}
-    for key, value in param_dict.items():
-        if key.endswith("_channel_bool") and value:
-            comp = key.replace("_channel_bool", "")
-            components.append(comp)
-            data_dict[comp + "_channel"] = {
-                "name": param_dict[comp + "_channel"].name,
-            }
-            if isinstance(param_dict[comp + "_uncertainty"], Data):
-                data_dict[comp + "_uncertainty"] = {
-                    "name": param_dict[comp + "_uncertainty"].name,
-                }
-
-    return components, data_dict
-
-
-def preprocess_data(
-    workspace: Workspace,
-    param_dict,
-    resolution,
-    window_center_x,
-    window_center_y,
-    window_width,
-    window_height,
-    window_azimuth=None,
-    ignore_values=None,
-    detrend_type=None,
-    detrend_order=None,
-):
-    """ """
-    data_object = param_dict["data_object"]
-    components, data_dict = get_data_dict(param_dict)
-
-    # Windowing
-    new_data_object, data_dict, locations = window_data(
-        data_object,
-        components,
-        data_dict,
-        workspace,
-        window_azimuth,
-        window_center_x,
-        window_center_y,
-        window_width,
-        window_height,
-        param_dict["mesh"],
-        resolution,
-    )
-
-    # Ignore values
-    if ignore_values is not None:
-        data_dict = set_infinity_uncertainties(
-            ignore_values,
-            param_dict["forward_only"],
-            components,
-            data_dict,
-        )
-    # Detrending
-    if detrend_type is not None and detrend_order is not None:
-        data_dict = detrend_data(
-            detrend_type,
-            detrend_order,
-            components,
-            data_dict,
-            locations,
-        )
-
-    # Add processed data to data object
-    update_dict = {}
-    update_dict["data_object"] = new_data_object.uid
-    for comp in components:
-        for key in [comp + "_channel", comp + "_uncertainty"]:
-            if key not in data_dict.keys():
-                continue
-            data = data_dict[key]
-            if key in data_dict.keys():
-                print(key)
-                update_dict[key] = new_data_object.get_entity(data["name"])[0].uid
-                print(update_dict[key])
-
-    return update_dict
-
-
 def tile_locations(
     locations,
     n_tiles,
@@ -617,3 +350,21 @@ def tile_locations(
     if len(out) == 1:
         return out[0]
     return tuple(out)
+
+
+def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
+    if survey.source_list:
+        locations = []
+        for source in survey.source_list:
+            source_location = source.location
+            if source_location is not None:
+                if not isinstance(source_location, list):
+                    locations += [[source_location]]
+                else:
+                    locations += [source_location]
+            locations += [receiver.locations for receiver in source.receiver_list]
+        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
+    else:
+        locations = survey.receiver_locations
+
+    return np.unique(locations, axis=0)

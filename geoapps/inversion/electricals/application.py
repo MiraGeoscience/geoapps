@@ -24,6 +24,7 @@ from geoh5py.workspace import Workspace
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
+from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer,
 )
@@ -37,7 +38,6 @@ from geoapps.inversion.potential_fields.application import (
     MeshOctreeOptions,
     ModelOptions,
 )
-from geoapps.inversion.utils import preprocess_data
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 
