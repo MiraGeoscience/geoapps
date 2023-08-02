@@ -9,38 +9,53 @@
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
 import uuid
 
 import numpy as np
 from geoh5py import Workspace
 from geoh5py.data import Data
+from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import is_uuid
 
 from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.octree_creation.application import OctreeMesh
 from geoapps.shared_utils.utils import filter_xy, get_locations
 
 
 def window_data(
-    data_object,
-    components,
-    data_dict,
-    workspace,
-    window_azimuth,
-    window_center_x,
-    window_center_y,
-    window_width,
-    window_height,
-    mesh,
-    resolution,
-) -> (np.ndarray, dict, np.ndarray):
+    data_object: ObjectBase,
+    components: list[str],
+    data_dict: dict,
+    workspace: Workspace,
+    window_azimuth: float,
+    window_center_x: float,
+    window_center_y: float,
+    window_width: float,
+    window_height: float,
+    mesh: OctreeMesh,
+    resolution: float,
+) -> (ObjectBase, dict, np.ndarray):
     """
-    Get locations and mask for detrending data.
+    Window, downsample, and rotate data_object. Update data_dict with new data uids.
 
-    :param workspace: New workspace.
-    :param param_dict: Dictionary of params to give to _run_params.
+    :param data_object: Data object to be windowed.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
+    :param workspace: Output workspace.
+    :param window_azimuth: Azimuth of the window.
+    :param window_center_x: X center of the window.
+    :param window_center_y: Y center of the window.
+    :param window_width: Width of the window.
+    :param window_height: Height of the window.
+    :param mesh: Mesh object.
+    :param resolution: Resolution for downsampling.
 
-    :return locations: Data object locations.
-    :return mask: Mask for windowing data.
+    :return: Windowed data object.
+    :return: Updated data dict.
+    :return: Vertices or centroids of the windowed data object.
     """
     # Get locations
     locations = get_locations(workspace, data_object)
@@ -100,23 +115,24 @@ def window_data(
 
 
 def detrend_data(
-    detrend_type,
-    detrend_order,
-    components,
-    data_dict,
-    locations,
-):
+    detrend_type: str,
+    detrend_order: int,
+    components: list[str],
+    data_dict: dict,
+    locations: np.ndarray,
+) -> dict:
     """
-    Detrend data and update data values in param_dict.
+    Detrend data in data_dict.
 
-    :param param_dict: Dictionary of params to create self._run_params.
-    :param workspace: Output workspace.
-    :param detrend_order: Order of the polynomial to be used.
     :param detrend_type: Method to be used for the detrending.
         "all": Use all points.
         "perimeter": Only use points on the convex hull .
+    :param detrend_order: Order of the polynomial to be used.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
+    :param locations: Vertices of the data object.
 
-    :return: Updated param_dict with updated data.
+    :return: Updated data_dict with detrended data values.
     """
     if detrend_type == "none" or detrend_type is None or detrend_order is None:
         return data_dict
@@ -137,13 +153,20 @@ def detrend_data(
 
 
 def set_infinity_uncertainties(
-    ignore_values,
-    forward_only,
-    components,
-    data_dict,
-) -> np.ndarray:
+    ignore_values: str,
+    forward_only: bool,
+    components: list[str],
+    data_dict: dict,
+) -> dict:
     """
     Use ignore_value ignore_type to set uncertainties to infinity.
+
+    :param ignore_values: Values to be set to infinity.
+    :param forward_only: Forward inversion only.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
+
+    :return: Updated data_dict with uncertainties set to infinity.
     """
     ignore_value, ignore_type = parse_ignore_values(ignore_values, forward_only)
 
@@ -171,9 +194,15 @@ def set_infinity_uncertainties(
     return data_dict
 
 
-def parse_ignore_values(ignore_values, forward_only) -> tuple[float, str]:
+def parse_ignore_values(ignore_values: str, forward_only: bool) -> tuple[float, str]:
     """
     Returns an ignore value and type ('<', '>', or '=') from params data.
+
+    :param ignore_values: Values to be ignored.
+    :param forward_only: Forward inversion only.
+
+    :return: Float value to be ignored.
+    :return: Ignore type ('<', '>', or '=').
     """
     if forward_only:
         return None, None
@@ -193,8 +222,16 @@ def parse_ignore_values(ignore_values, forward_only) -> tuple[float, str]:
     return ignore_value, ignore_type
 
 
-def get_data_dict(workspace, param_dict):
-    """ """
+def get_data_dict(workspace: Workspace, param_dict: dict) -> (list[str], dict):
+    """
+    Get dictionary of active components from param_dict.
+
+    :param workspace: Workspace that the data belong to.
+    :param param_dict: Dictionary of params to run the inversion.
+
+    :return: List of active components.
+    :return: Dictionary of active channels and uncertainties.
+    """
     # Get components
     components = []
     data_dict = {}
@@ -226,21 +263,40 @@ def get_data_dict(workspace, param_dict):
 
 def preprocess_data(
     workspace: Workspace,
-    param_dict,
-    data_object,
-    resolution,
-    window_center_x,
-    window_center_y,
-    window_width,
-    window_height,
-    window_azimuth=None,
-    ignore_values=None,
-    detrend_type=None,
-    detrend_order=None,
-    components=None,
-    data_dict=None,
-):
-    """ """
+    param_dict: dict,
+    data_object: ObjectBase,
+    resolution: float,
+    window_center_x: float,
+    window_center_y: float,
+    window_width: float,
+    window_height: float,
+    window_azimuth: float | None = None,
+    ignore_values: str | None = None,
+    detrend_type: str | None = None,
+    detrend_order: int | None = None,
+    components: list | None = None,
+    data_dict: dict | None = None,
+) -> dict:
+    """
+    Window, detrend, and ignore values in data_object. Update data_dict with new data uids.
+
+    :param workspace: Parent workspace for data_object and data components.
+    :param param_dict: Dictionary of params to run the inversion.
+    :param data_object: Parent object for data components.
+    :param resolution: Resolution for downsampling.
+    :param window_center_x: X center of the window.
+    :param window_center_y: Y center of the window.
+    :param window_width: Width of the window.
+    :param window_height: Height of the window.
+    :param window_azimuth: Azimuth of the window.
+    :param ignore_values: Values to be ignored.
+    :param detrend_type: Method to be used for the detrending.
+    :param detrend_order: Order of the polynomial to be used for detrend.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
+
+    :return: Updated data_dict with processed data.
+    """
     if data_dict is None:
         components, data_dict = get_data_dict(workspace, param_dict)
 
@@ -287,6 +343,7 @@ def preprocess_data(
             data = data_dict[key]
             if key in data_dict.keys():
                 update_dict[key] = new_data_object.get_entity(data["name"])[0].uid
+    # Update update_dict with new radar uid
     if "receivers_radar_drape" in param_dict:
         radar = param_dict["receivers_radar_drape"]
         if radar is not None:
