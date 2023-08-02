@@ -739,11 +739,19 @@ def test_validate_n_cpu():
     catch_invalid_generator(param, "test", "type")
 
 
+grav_params_fwr = GravityParams(
+    **{
+        "geoh5": str(PROJECT),
+        "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    },
+    forward_only=True,
+)
+grav_params_fwr.input_file.geoh5.open()
 grav_params = GravityParams(
     **{
         "geoh5": str(PROJECT),
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-    }
+    },
 )
 grav_params.input_file.geoh5.open()
 
@@ -782,7 +790,7 @@ def test_gravity_inversion_type():
 
 def test_gz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gz_channel_bool = "alskdj"
+        grav_params_fwr.gz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gz_channel_bool", "Type", "str", "bool"]]
@@ -827,7 +835,7 @@ def test_gz_uncertainty():
 
 def test_guv_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.guv_channel_bool = "alskdj"
+        grav_params_fwr.guv_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["guv_channel_bool", "Type", "str", "bool"]]
@@ -872,7 +880,7 @@ def test_guv_uncertainty():
 
 def test_gxy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gxy_channel_bool = "alskdj"
+        grav_params_fwr.gxy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gxy_channel_bool", "Type", "str", "bool"]]
@@ -917,7 +925,7 @@ def test_gxy_uncertainty():
 
 def test_gxx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gxx_channel_bool = "alskdj"
+        grav_params_fwr.gxx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gxx_channel_bool", "Type", "str", "bool"]]
@@ -962,7 +970,7 @@ def test_gxx_uncertainty():
 
 def test_gyy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gyy_channel_bool = "alskdj"
+        grav_params_fwr.gyy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gyy_channel_bool", "Type", "str", "bool"]]
@@ -1007,7 +1015,7 @@ def test_gyy_uncertainty():
 
 def test_gzz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gzz_channel_bool = "alskdj"
+        grav_params_fwr.gzz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gzz_channel_bool", "Type", "str", "bool"]]
@@ -1052,7 +1060,7 @@ def test_gzz_uncertainty():
 
 def test_gxz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gxz_channel_bool = "alskdj"
+        grav_params_fwr.gxz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gxz_channel_bool", "Type", "str", "bool"]]
@@ -1097,7 +1105,7 @@ def test_gxz_uncertainty():
 
 def test_gyz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gyz_channel_bool = "alskdj"
+        grav_params_fwr.gyz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gyz_channel_bool", "Type", "str", "bool"]]
@@ -1142,7 +1150,7 @@ def test_gyz_uncertainty():
 
 def test_gx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gx_channel_bool = "alskdj"
+        grav_params_fwr.gx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gx_channel_bool", "Type", "str", "bool"]]
@@ -1187,7 +1195,7 @@ def test_gx_uncertainty():
 
 def test_gy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gy_channel_bool = "alskdj"
+        grav_params_fwr.gy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gy_channel_bool", "Type", "str", "bool"]]
@@ -1230,6 +1238,13 @@ def test_gy_uncertainty():
     )
 
 
+mag_params_fwr = MagneticScalarParams(
+    **{
+        "geoh5": str(PROJECT),
+        "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    },
+    forward_only=True,
+)
 mag_params = MagneticScalarParams(
     **{
         "geoh5": str(PROJECT),
@@ -1289,7 +1304,7 @@ def test_inducing_field_declination():
 
 def test_tmi_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.tmi_channel_bool = "alskdj"
+        mag_params_fwr.tmi_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["tmi_channel_bool", "Type", "str", "bool"]]
@@ -1334,7 +1349,7 @@ def test_tmi_uncertainty():
 
 def test_bxx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bxx_channel_bool = "alskdj"
+        mag_params_fwr.bxx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bxx_channel_bool", "Type", "str", "bool"]]
@@ -1379,7 +1394,7 @@ def test_bxx_uncertainty():
 
 def test_bxy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bxy_channel_bool = "alskdj"
+        mag_params_fwr.bxy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bxy_channel_bool", "Type", "str", "bool"]]
@@ -1424,7 +1439,7 @@ def test_bxy_uncertainty():
 
 def test_bxz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bxz_channel_bool = "alskdj"
+        mag_params_fwr.bxz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bxz_channel_bool", "Type", "str", "bool"]]
@@ -1469,7 +1484,7 @@ def test_bxz_uncertainty():
 
 def test_byy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.byy_channel_bool = "alskdj"
+        mag_params_fwr.byy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["byy_channel_bool", "Type", "str", "bool"]]
@@ -1514,7 +1529,7 @@ def test_byy_uncertainty():
 
 def test_byz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.byz_channel_bool = "alskdj"
+        mag_params_fwr.byz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["byz_channel_bool", "Type", "str", "bool"]]
@@ -1559,7 +1574,7 @@ def test_byz_uncertainty():
 
 def test_bzz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bzz_channel_bool = "alskdj"
+        mag_params_fwr.bzz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bzz_channel_bool", "Type", "str", "bool"]]
@@ -1604,7 +1619,7 @@ def test_bzz_uncertainty():
 
 def test_bx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bx_channel_bool = "alskdj"
+        mag_params_fwr.bx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bx_channel_bool", "Type", "str", "bool"]]
@@ -1648,7 +1663,7 @@ def test_bx_uncertainty():
 
 def test_by_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.by_channel_bool = "alskdj"
+        mag_params_fwr.by_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["by_channel_bool", "Type", "str", "bool"]]
@@ -1693,7 +1708,7 @@ def test_by_uncertainty():
 
 def test_bz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bz_channel_bool = "alskdj"
+        mag_params_fwr.bz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bz_channel_bool", "Type", "str", "bool"]]
