@@ -14,8 +14,6 @@ from geoh5py.objects.surveys.electromagnetics.tipper import TipperReceivers
 import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
-################# defaults ##################
-
 inversion_defaults = {
     "version": geoapps.__version__,
     "title": "Tipper Inversion",
@@ -88,12 +86,7 @@ inversion_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "txz_real_channel_bool": False,
-    "txz_imag_channel_bool": False,
-    "tyz_real_channel_bool": False,
-    "tyz_imag_channel_bool": False,
 }
-
 forward_defaults = {
     "version": geoapps.__version__,
     "title": "Tipper Forward",
@@ -129,142 +122,8 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
-inversion_ui_json = {
-    "txz_real_channel_bool": False,
-    "txz_imag_channel_bool": False,
-    "tyz_real_channel_bool": False,
-    "tyz_imag_channel_bool": False,
-}
-
+inversion_ui_json = {}
 forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
-        "value": None,
-    },
-    "txz_real_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Txz real",
-        "value": False,
-    },
-    "txz_real_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Txz real",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "txz_real_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "txz_real_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "txz_imag_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Txz imaginary",
-        "value": False,
-    },
-    "txz_imag_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Txz imaginary",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "txz_imag_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "txz_imag_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "tyz_real_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Tyz real",
-        "value": False,
-    },
-    "tyz_real_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Tyz real",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "tyz_real_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "tyz_real_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "tyz_imag_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Tyz imaginary",
-        "value": False,
-    },
-    "tyz_imag_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Tyz imaginary",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "tyz_imag_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "tyz_imag_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
@@ -275,9 +134,8 @@ forward_ui_json = {
         "label": "Conductivity (S/m)",
         "property": None,
         "value": 1e-3,
-    },
+    }
 }
-
 default_ui_json = {
     "title": "Tipper Inversion",
     "icon": "surveyztem",
@@ -469,13 +327,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
@@ -483,5 +335,4 @@ validations = {
     },
     "data_object": {"required": True, "types": [str, UUID, TipperReceivers]},
 }
-
 app_initializer = {}

@@ -15,8 +15,6 @@ import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
     "version": geoapps.__version__,
     "title": "Time-domain EM (TEM) Inversion",
@@ -84,7 +82,6 @@ inversion_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
 forward_defaults = {
     "version": geoapps.__version__,
     "title": "Time-domain EM (TEM) Forward",
@@ -115,7 +112,6 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
 default_ui_json = {
     "title": "Time Domain Electromagnetic Inversion",
     "icon": "surveyairborneem",
@@ -277,11 +273,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-
-################ Validations #################
 validations = {
     "inversion_type": {
         "types": [str],
@@ -299,31 +291,4 @@ validations = {
     "y_uncertainty": {"one_of": "uncertainty_channel"},
 }
 validations = dict(base_validations, **validations)
-
 app_initializer = {}
-#     "geoh5": str(assets_path() / "FlinFlon_natural_sources.geoh5"),
-#     "topography_object": UUID("{cfabb8dd-d1ad-4c4e-a87c-7b3dd224c3f5}"),
-#     "data_object": UUID("{9664afc1-cbda-4955-b936-526ca771f517}"),
-#     "z_channel": UUID("{a73159fc-8c1b-411a-b435-12a5dac4a209}"),
-#     "z_uncertainty": UUID("{e752e8d8-e8e3-4575-b20c-bc2d37cbd269}"),
-#     "x_channel": UUID("{a73159fc-8c1b-411a-b435-12a5dac4a209}"),
-#     "x_uncertainty": UUID("{e752e8d8-e8e3-4575-b20c-bc2d37cbd269}"),
-#     "y_channel": UUID("{a73159fc-8c1b-411a-b435-12a5dac4a209}"),
-#     "y_uncertainty": UUID("{e752e8d8-e8e3-4575-b20c-bc2d37cbd269}"),
-#     "mesh": UUID("{1200396b-bc4a-4519-85e1-558c2dcac1dd}"),
-#     "starting_model": 0.0003,
-#     "reference_model": 0.0003,
-#     "background_conductivity": 0.0003,
-#     "octree_levels_topo": [0, 0, 4, 4],
-#     "octree_levels_obs": [4, 4, 4, 4],
-#     "depth_core": 500.0,
-#     "horizontal_padding": 1000.0,
-#     "vertical_padding": 1000.0,
-#     "s_norm": 0.0,
-#     "x_norm": 2.0,
-#     "y_norm": 2.0,
-#     "z_norm": 2.0,
-#     "upper_bound": 100.0,
-#     "lower_bound": 1e-5,
-#     "max_global_iterations": 50,
-# }

@@ -10,8 +10,6 @@ from __future__ import annotations
 from geoapps.inversion.constants import validations as base_validations
 from geoapps.inversion.joint.constants import default_ui_json as joint_default_ui_json
 
-################# defaults ##################
-
 inversion_defaults = {
     "title": "SimPEG Joint Cross Gradient Inversion",
     "inversion_type": "joint cross gradient",
@@ -73,7 +71,6 @@ inversion_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
 default_ui_json = {
     "title": "SimPEG Joint Cross Gradient Inversion",
     "inversion_type": "joint surveys",
@@ -190,18 +187,12 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(joint_default_ui_json, **default_ui_json)
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
         "values": ["joint cross gradient"],
     },
 }
-
 validations = dict(base_validations, **validations)
 app_initializer = {}
