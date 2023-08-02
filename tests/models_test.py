@@ -34,7 +34,6 @@ geoh5 = Workspace(PROJECT)
 def setup_params(path):
     geotest = Geoh5Tester(geoh5, path, "test.geoh5", MagneticVectorParams)
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
-    geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
     geotest.set_param("window_center_x", 314183.0)
     geotest.set_param("window_center_y", 6071014.0)

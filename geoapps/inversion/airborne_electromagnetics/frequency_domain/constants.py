@@ -15,8 +15,6 @@ import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
     "version": geoapps.__version__,
     "title": "Frequency-domain EM (FEM) Inversion",
@@ -88,7 +86,6 @@ inversion_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
 forward_defaults = {
     "version": geoapps.__version__,
     "title": "Frequency-domain EM (FEM) Forward",
@@ -123,77 +120,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
 forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": [
-            "{b3a47539-0301-4b27-922e-1dde9d882c60}",  # AirborneFEMReceivers
-        ],
-        "value": None,
-    },
-    "z_real_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Z real component",
-        "value": False,
-    },
-    "z_real_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "z-real component",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "z_real_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "z_real_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "z_imag_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Z imag component",
-        "value": False,
-    },
-    "z_imag_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "z-imag component",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "z_imag_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "z_imag_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
@@ -206,7 +133,6 @@ forward_ui_json = {
         "value": 1e-3,
     },
 }
-
 default_ui_json = {
     "title": "Frequency Domain Electromagnetic Inversion",
     "icon": "surveyairborneem",
@@ -329,11 +255,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-
-################ Validations #################
 validations = {
     "inversion_type": {
         "types": [str],
@@ -347,5 +269,4 @@ validations = {
     "z_imag_uncertainty": {"one_of": "uncertainty_channel"},
 }
 validations = dict(base_validations, **validations)
-
 app_initializer = {}

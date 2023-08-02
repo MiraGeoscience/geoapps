@@ -17,8 +17,6 @@ from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
     "version": geoapps.__version__,
     "title": "Magnetic Inversion",
@@ -114,18 +112,6 @@ inversion_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "tmi_channel_bool": False,
-    "bxx_channel_bool": False,
-    "bxy_channel_bool": False,
-    "bxz_channel_bool": False,
-    "byy_channel_bool": False,
-    "byz_channel_bool": False,
-    "bzz_channel_bool": False,
-    "bx_channel_bool": False,
-    "by_channel_bool": False,
-    "bz_channel_bool": False,
-    "fix_aspect_ratio": True,
-    "colorbar": False,
 }
 forward_defaults = {
     "version": geoapps.__version__,
@@ -178,20 +164,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
-inversion_ui_json = {
-    "tmi_channel_bool": False,
-    "bx_channel_bool": False,
-    "by_channel_bool": False,
-    "bz_channel_bool": False,
-    "bxx_channel_bool": False,
-    "bxy_channel_bool": False,
-    "bxz_channel_bool": False,
-    "byy_channel_bool": False,
-    "byz_channel_bool": False,
-    "bzz_channel_bool": False,
-}
-
+inversion_ui_json = {}
 forward_ui_json = {
     "starting_model": {
         "association": "Cell",
@@ -203,84 +176,8 @@ forward_ui_json = {
         "label": "Susceptibility (SI)",
         "property": None,
         "value": 1e-4,
-    },
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": [
-            "{202c5db1-a56d-4004-9cad-baafd8899406}",
-            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
-            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
-            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4b99204c-d133-4579-a916-a9c8b98cfccb}",
-            "{028e4905-cc97-4dab-b1bf-d76f58b501b5}",
-        ],
-        "value": None,
-    },
-    "tmi_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "TMI (nT)",
-        "value": True,
-    },
-    "bx_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bx (nT)",
-        "value": False,
-    },
-    "by_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "By (nT)",
-        "value": False,
-    },
-    "bz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bz (nT)",
-        "value": False,
-    },
-    "bxx_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bxx (nT/m)",
-        "value": False,
-    },
-    "bxy_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bxy (nT/m)",
-        "value": False,
-    },
-    "bxz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bxz (nT/m)",
-        "value": False,
-    },
-    "byy_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Byy (nT/m)",
-        "value": False,
-    },
-    "byz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Byz (nT/m)",
-        "value": False,
-    },
-    "bzz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bzz (nT/m)",
-        "value": False,
-    },
+    }
 }
-
 default_ui_json = {
     "title": "Magnetic Susceptibility Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
@@ -682,12 +579,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-
-################ Validations #################
-
 validations = {
     "inversion_type": {
         "required": True,
