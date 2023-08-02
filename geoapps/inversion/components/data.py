@@ -25,7 +25,7 @@ from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 
 from geoapps.inversion.utils import create_nested_mesh
-from geoapps.shared_utils.utils import drape_2_tensor, filter_xy
+from geoapps.shared_utils.utils import drape_2_tensor
 
 from .factories import (
     EntityFactory,
@@ -113,7 +113,7 @@ class InversionData(InversionLocations):
         self.offset, self.radar = self.params.offset()
         self.locations = super().get_locations(self.params.data_object)
 
-        self.mask = np.ones(self.locations.shape, dtype=bool)
+        self.mask = np.ones(len(self.locations), dtype=bool)
         if self.radar is not None:
             if any(np.isnan(self.radar)):
                 self.mask[np.isnan(self.radar)] = False

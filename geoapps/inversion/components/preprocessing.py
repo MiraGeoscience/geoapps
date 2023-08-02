@@ -44,6 +44,7 @@ def window_data(
     """
     # Get locations
     locations = get_locations(workspace, data_object)
+
     # Get window
     window = {
         "azimuth": window_azimuth,
@@ -71,16 +72,12 @@ def window_data(
         distance=resolution,
     )
 
-    # Apply mask to data object
-    west = window["center_x"] - window["width"] / 2
-    east = window["center_x"] + window["width"] / 2
-    south = window["center_y"] - window["height"] / 2
-    north = window["center_y"] + window["height"] / 2
-
-    new_data_object = data_object.copy_from_extent(
-        np.array([[west, south], [east, north]]),
+    new_data_object = data_object.copy(
+        parent=None,
+        copy_children=True,
+        clear_cache=False,
+        mask=mask,
         name=data_object.name + "_processed",
-        # rotation=0.0,
     )
 
     # Update data dict
@@ -205,10 +202,13 @@ def get_data_dict(workspace, param_dict):
         if key.endswith("_channel_bool") and value:
             comp = key.replace("_channel_bool", "")
             components.append(comp)
+
             # Add data to data dict
+            data = param_dict[comp + "_channel"]
             data_dict[comp + "_channel"] = {
-                "name": param_dict[comp + "_channel"].name,
+                "name": data.name,
             }
+
             # Add uncertainties to data dict
             if comp + "_uncertainty" in param_dict:
                 unc = param_dict[comp + "_uncertainty"]
@@ -227,6 +227,7 @@ def get_data_dict(workspace, param_dict):
 def preprocess_data(
     workspace: Workspace,
     param_dict,
+    data_object,
     resolution,
     window_center_x,
     window_center_y,
@@ -236,10 +237,12 @@ def preprocess_data(
     ignore_values=None,
     detrend_type=None,
     detrend_order=None,
+    components=None,
+    data_dict=None,
 ):
     """ """
-    data_object = param_dict["data_object"]
-    components, data_dict = get_data_dict(workspace, param_dict)
+    if data_dict is None:
+        components, data_dict = get_data_dict(workspace, param_dict)
 
     # Windowing
     new_data_object, data_dict, locations = window_data(
@@ -284,5 +287,11 @@ def preprocess_data(
             data = data_dict[key]
             if key in data_dict.keys():
                 update_dict[key] = new_data_object.get_entity(data["name"])[0].uid
+    if "receivers_radar_drape" in param_dict:
+        radar = param_dict["receivers_radar_drape"]
+        if radar is not None:
+            update_dict["receivers_radar_drape"] = new_data_object.get_entity(
+                radar.name
+            )[0].uid
 
     return update_dict

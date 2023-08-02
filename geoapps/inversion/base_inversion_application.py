@@ -30,7 +30,7 @@ from plotly import graph_objects as go
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
-from geoapps.inversion.utils import preprocess_data
+from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
 
@@ -1028,11 +1028,16 @@ class InversionApp(BaseDashApplication):
                     values.reshape(entity.shape, order="F"), dtype=float
                 )
 
-                # Rotate plot to match object rotation.
-                new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
+                if np.isnan(values).any():
+                    new_values = scipy.ndimage.rotate(values, rot, cval=np.nan, order=0)
+                    new_values = new_values[:, ~np.isnan(new_values).all(axis=0)]
+                    new_values = new_values[~np.isnan(new_values).all(axis=1), :]
+                else:
+                    # Rotate plot to match object rotation.
+                    new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
 
-                rot_x = np.linspace(x.min(), x.max(), new_values.shape[0])
-                rot_y = np.linspace(y.min(), y.max(), new_values.shape[1])
+                rot_x = np.linspace(np.nanmin(x), np.nanmax(x), new_values.shape[0])
+                rot_y = np.linspace(np.nanmin(y), np.nanmax(y), new_values.shape[1])
 
                 X, Y = np.meshgrid(rot_x, rot_y)
 
@@ -1695,11 +1700,12 @@ class InversionApp(BaseDashApplication):
                 workspace=workspace,
                 param_dict=param_dict,
                 resolution=resolution,
+                data_object=param_dict["data_object"],
                 window_center_x=window_center_x,
                 window_center_y=window_center_y,
                 window_width=window_width,
                 window_height=window_height,
-                window_azimuth=None,
+                window_azimuth=0.0,
                 ignore_values=ignore_values,
                 detrend_type=detrend_type,
                 detrend_order=detrend_order,

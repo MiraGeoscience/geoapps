@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
+import uuid
 from pathlib import Path
 
 import numpy as np
@@ -23,6 +24,7 @@ from geoh5py.objects import (
     Points,
     Surface,
 )
+from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
 
 from geoapps import assets_path
@@ -1429,18 +1431,62 @@ class InversionApp(PlotSelection2D):
                             continue
                         d.copy(parent=new_obj)
 
+            # Get data_dict for pre-processing
+            data_object = new_workspace.get_entity(
+                uuid.UUID(input_dict["data"]["name"])
+            )[0]
+            components = []
+            data_dict = {}
+            for key, value in input_dict["data"]["channels"].items():
+                comp = key
+                components.append(comp)
+                data_dict[comp + "_channel"] = {
+                    "name": new_workspace.get_entity(uuid.UUID(value["name"]))[0].name
+                }
+                if is_uuid(value["uncertainties"]):
+                    data_dict[comp + "_uncertainty"] = {
+                        "name": new_workspace.get_entity(
+                            uuid.UUID(value["uncertainties"])
+                        )[0].name
+                    }
+            # Add lines to data_dict
+            components.append("lines")
+            line_data = list(input_dict["lines"].keys())[0]
+            data_dict["lines_channel"] = {
+                "name": new_workspace.get_entity(uuid.UUID(line_data))[0].name
+            }
             # Pre-processing
             update_dict = preprocess_data(
                 workspace=new_workspace,
                 param_dict=input_dict,
                 resolution=self.resolution.value,
+                data_object=data_object,
                 window_center_x=self.window_center_x.value,
                 window_center_y=self.window_center_y.value,
                 window_width=self.window_width.value,
                 window_height=self.window_height.value,
                 window_azimuth=self.window_azimuth.value,
+                components=components,
+                data_dict=data_dict,
             )
-            input_dict.update(update_dict)
+            # Update input dict from pre-processing
+            input_dict["data"]["name"] = str(update_dict["data_object"])
+            for comp in components:
+                if comp == "lines":
+                    input_dict["lines"] = {
+                        str(update_dict["lines_channel"]): list(
+                            input_dict["lines"].values()
+                        )[0]
+                    }
+                    continue
+                if comp + "_channel" in update_dict:
+                    input_dict["data"]["channels"][comp]["name"] = str(
+                        update_dict[comp + "_channel"]
+                    )
+                if comp + "_uncertainty" in update_dict:
+                    input_dict["data"]["channels"][comp]["uncertainties"] = str(
+                        update_dict[comp + "_uncertainty"]
+                    )
 
         input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
             Path(new_workspace.h5file).resolve()
