@@ -358,7 +358,6 @@ plot_layout = html.Div(
                                         "always_visible": True,
                                     },
                                     marks=None,
-                                    value=314600.0,
                                 ),
                             ],
                             style={
@@ -390,7 +389,6 @@ plot_layout = html.Div(
                                         "always_visible": True,
                                     },
                                     marks=None,
-                                    value=1000.0,
                                 ),
                             ],
                             style={
@@ -414,7 +412,6 @@ plot_layout = html.Div(
                             tooltip={"placement": "left", "always_visible": True},
                             marks=None,
                             vertical=True,
-                            value=6072300.0,
                         ),
                     ],
                     style={
@@ -433,7 +430,6 @@ plot_layout = html.Div(
                             tooltip={"placement": "left", "always_visible": True},
                             marks=None,
                             vertical=True,
-                            value=1500.0,
                         ),
                     ],
                     style={

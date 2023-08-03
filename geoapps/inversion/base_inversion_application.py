@@ -77,8 +77,6 @@ class InversionApp(BaseDashApplication):
             State(component_id="window_center_y", component_property="value"),
             State(component_id="window_width", component_property="value"),
             State(component_id="window_height", component_property="value"),
-            State(component_id="fix_aspect_ratio", component_property="value"),
-            State(component_id="colorbar", component_property="value"),
             # Topography
             State(component_id="topography_object", component_property="value"),
             State(component_id="topography", component_property="value"),
@@ -293,8 +291,6 @@ class InversionApp(BaseDashApplication):
 
         # Update from ui.json
         self.app.callback(
-            # Window Data
-            Output(component_id="colorbar", component_property="value"),
             # Topography
             Output(component_id="z_from_topo", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
@@ -348,7 +344,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="window_width", component_property="value"),
             Output(component_id="window_height", component_property="value"),
             Output(component_id="fix_aspect_ratio", component_property="value"),
-            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
             Input(component_id="plot", component_property="relayoutData"),
             Input(component_id="data_object", component_property="value"),
@@ -747,18 +742,15 @@ class InversionApp(BaseDashApplication):
             # Fill in full_components dict from ui.json.
             full_components = {}
             for comp in component_options:
-                # Get channel_bool value
-                if ui_json_data[comp + "_channel_bool"]:
-                    channel_bool = [True]
-                else:
-                    channel_bool = []
                 # Get channel value
                 if comp + "_channel" in ui_json_data and is_uuid(
                     ui_json_data[comp + "_channel"]
                 ):
                     channel = str(ui_json_data[comp + "_channel"])
+                    channel_bool = [True]
                 else:
                     channel = None
+                    channel_bool = []
                 # Get uncertainty value
                 if comp + "_uncertainty" in ui_json_data and (
                     (type(ui_json_data[comp + "_uncertainty"]) == float)
@@ -986,7 +978,6 @@ class InversionApp(BaseDashApplication):
 
         if values is not None and (values.shape[0] != locations.shape[0]):
             values = None
-
         # Make colorscale from GA color_map
         if data.entity_type.color_map is not None:
             color_map_vals = data.entity_type.color_map._values  # pylint: disable=W0212
@@ -1057,16 +1048,20 @@ class InversionApp(BaseDashApplication):
             downsampled_index, down_x, down_y = downsample_grid(x, y, resolution)
             z = values[downsampled_index]
 
+            data_count = None
             if figure["layout"]["xaxis"]["autorange"]:
                 z_count = z
-            else:
+                data_count = np.sum(~np.isnan(z_count))
+            elif (
+                figure["layout"]["xaxis"]["range"]
+                and figure["layout"]["yaxis"]["range"]
+            ):
                 x_range = figure["layout"]["xaxis"]["range"]
                 x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
                 y_range = figure["layout"]["yaxis"]["range"]
                 y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
                 z_count = z[np.logical_and(x_indices, y_indices)]
-
-            data_count = np.sum(~np.isnan(z_count))
+                data_count = np.sum(~np.isnan(z_count))
 
             # Add colorbar
             if "colorbar" in kwargs.keys():
@@ -1115,7 +1110,6 @@ class InversionApp(BaseDashApplication):
 
     def plot_selection(
         self,
-        ui_json_data: dict,
         figure: dict,
         figure_zoom_trigger: dict,
         object_uid: str,
@@ -1131,7 +1125,6 @@ class InversionApp(BaseDashApplication):
         """
         Dash version of the plot_selection function in base/plot.
 
-        :param ui_json_data: Uploaded ui.json data.
         :param figure: Current displayed figure.
         :param figure_zoom_trigger: Trigger for when zoom on figure.
         :param object_uid: Input object.
@@ -1167,9 +1160,9 @@ class InversionApp(BaseDashApplication):
             )
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
+
         # Error with plot data resetting when switching tabs on initialization. If this happens, need to reinitialize.
         reinitialize = "plot_bgcolor" not in figure["layout"]
-
         if "data_object" in triggers or channel is None or reinitialize:
             # If object changes, update plot type based on object type.
             if isinstance(obj, Grid2D):
@@ -1183,8 +1176,7 @@ class InversionApp(BaseDashApplication):
                 margin=dict(l=20, r=20, t=20, b=20),
             )
 
-            if "ui_json_data" not in triggers and not reinitialize:
-                # If we aren't reading in a ui.json, return the empty plot.
+            if not reinitialize:
                 return (
                     figure,
                     data_count,
@@ -1201,30 +1193,12 @@ class InversionApp(BaseDashApplication):
         if channel is not None:
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
             window = None
-            # Update plot bounds from ui.json.
-            if "ui_json_data" in triggers or reinitialize:
-                if ui_json_data["fix_aspect_ratio"]:
-                    fix_aspect_ratio = [True]
-                else:
-                    fix_aspect_ratio = []
 
-                window = {
-                    "center": [
-                        center_x,
-                        center_y,
-                    ],
-                    "size": [
-                        width,
-                        height,
-                    ],
-                }
+            # Updating figure if sliders are changed.
+            if "window_width" in triggers or "window_height" in triggers:
+                fix_aspect_ratio = []
 
-                center_x = no_update
-                center_y = no_update
-                width = no_update
-                height = no_update
-
-            elif any(
+            if any(
                 elem
                 in [
                     "window_center_x",
@@ -1234,9 +1208,6 @@ class InversionApp(BaseDashApplication):
                 ]
                 for elem in triggers
             ):
-                # Updating figure if sliders are changed.
-                if "window_width" in triggers or "window_height" in triggers:
-                    fix_aspect_ratio = []
                 window = {
                     "center": [
                         center_x,
@@ -1247,6 +1218,7 @@ class InversionApp(BaseDashApplication):
                         height,
                     ],
                 }
+
             # Update plot data.
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
                 figure, count = InversionApp.plot_plan_data_selection(
@@ -1260,7 +1232,6 @@ class InversionApp(BaseDashApplication):
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
-
                 data_count += f"{count}"
 
             if (
@@ -1273,15 +1244,24 @@ class InversionApp(BaseDashApplication):
                 if figure["layout"]["xaxis"]["autorange"]:
                     x = np.array(figure["data"][0]["x"])
                     x_range = [np.amin(x), np.amax(x)]
-                else:
+                elif figure["layout"]["xaxis"]["range"] is not None:
+                    print("plot range")
                     x_range = figure["layout"]["xaxis"]["range"]
+                else:
+                    figure["layout"]["xaxis"]["autorange"] = True
+                    x = np.array(figure["data"][0]["x"])
+                    x_range = [np.amin(x), np.amax(x)]
                 width = x_range[1] - x_range[0]
                 center_x = x_range[0] + (width / 2)
                 if figure["layout"]["yaxis"]["autorange"]:
                     y = np.array(figure["data"][0]["y"])
                     y_range = [np.amin(y), np.amax(y)]
-                else:
+                elif figure["layout"]["yaxis"]["range"] is not None:
                     y_range = figure["layout"]["yaxis"]["range"]
+                else:
+                    figure["layout"]["yaxis"]["autorange"] = True
+                    y = np.array(figure["data"][0]["y"])
+                    y_range = [np.amin(y), np.amax(y)]
                 height = y_range[1] - y_range[0]
                 center_y = y_range[0] + (height / 2)
 
@@ -1323,7 +1303,6 @@ class InversionApp(BaseDashApplication):
 
     def get_full_component_params(
         self,
-        new_workspace: Workspace,
         data_object: ObjectBase,
         full_components: dict,
         forward_only: list,
@@ -1331,7 +1310,6 @@ class InversionApp(BaseDashApplication):
         """
         Get param_dict of values to add to self.params from full_components.
 
-        :param new_workspace: New workspace to copy channel data to.
         :param data_object: Parent object for channel data.
         :param full_components: Dictionary with keys of component_options, and with values channel_bool, channel,
         uncertainty_type, uncertainty_floor, uncertainty_channel for each key.
@@ -1419,7 +1397,6 @@ class InversionApp(BaseDashApplication):
         # Update channel params
         param_dict.update(
             self.get_full_component_params(
-                new_workspace,
                 data_object,
                 update_dict["full_components"],
                 update_dict["forward_only"],
@@ -1470,8 +1447,6 @@ class InversionApp(BaseDashApplication):
         window_center_y: float,
         window_width: float,
         window_height: float,
-        fix_aspect_ratio: list,
-        colorbar: list,
         topography_object: str,
         topography: str,
         z_from_topo: list,
@@ -1542,8 +1517,6 @@ class InversionApp(BaseDashApplication):
         :param window_center_y: Window center y.
         :param window_width: Window width.
         :param window_height: Window height
-        :param fix_aspect_ratio: Checkbox for plotting with fixed aspect ratio.
-        :param colorbar: Checkbox for displaying colorbar.
         :param topography_object: Topography object uuid.
         :param topography: Topography data uuid.
         :param z_from_topo: Checkbox for getting z from topography.
@@ -1617,8 +1590,6 @@ class InversionApp(BaseDashApplication):
 
         # Get dict of params from base dash application
         update_dict = {
-            "fix_aspect_ratio": fix_aspect_ratio,
-            "colorbar": colorbar,
             "z_from_topo": z_from_topo,
             "receivers_offset_z": receivers_offset_z,
             "receivers_radar_drape": receivers_radar_drape,
