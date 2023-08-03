@@ -265,7 +265,7 @@ def preprocess_data(
     workspace: Workspace,
     param_dict: dict,
     data_object: ObjectBase,
-    resolution: float,
+    resolution: float | None,
     window_center_x: float,
     window_center_y: float,
     window_width: float,

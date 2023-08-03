@@ -98,8 +98,6 @@ def test_mag_inversion(tmp_path: Path):
                 window_center_y=6072300.0,
                 window_width=1000.0,
                 window_height=1500.0,
-                fix_aspect_ratio=[app.params.fix_aspect_ratio],
-                colorbar=[app.params.colorbar],
                 topography_object=str(
                     app.params.topography_object.uid  # pylint: disable=no-member
                 ),
@@ -131,7 +129,7 @@ def test_mag_inversion(tmp_path: Path):
                 upper_bound_const=3.5,
                 detrend_type="all",
                 detrend_order=0,
-                ignore_values=app.params.ignore_values,
+                ignore_values="",
                 max_global_iterations=app.params.max_global_iterations,
                 max_irls_iterations=app.params.max_irls_iterations,
                 coolingRate=app.params.coolingRate,
