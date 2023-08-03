@@ -186,22 +186,6 @@ class InversionBaseParams(BaseParams):
 
         return comps
 
-    @property
-    def window(self) -> dict[str, float]:
-        """Returns window dictionary"""
-        win = {
-            "azimuth": self.window_azimuth,
-            "center_x": self.window_center_x,
-            "center_y": self.window_center_y,
-            "width": self.window_width,
-            "height": self.window_height,
-            "center": [self.window_center_x, self.window_center_y],
-            "size": [self.window_width, self.window_height],
-        }
-        check_keys = ["center_x", "center_y", "width", "height"]
-        no_data = all([v is None for k, v in win.items() if k in check_keys])
-        return None if no_data else win
-
     def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
         offsets = [
