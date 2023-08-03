@@ -243,7 +243,7 @@ class InversionData(InversionLocations):
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = values / self.normalizations[channel][component]
-                    data_entity[component][channel] = entity.add_data(
+                    data_channel = entity.add_data(
                         {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
                     data_dict[component] = entity.add_data_to_group(
@@ -252,7 +252,7 @@ class InversionData(InversionLocations):
                     if not self.params.forward_only:
                         self._observed_data_types[component][
                             f"{channel:.2e}"
-                        ] = data_entity[component][channel].entity_type
+                        ] = data_channel.entity_type
                         uncerts = np.abs(
                             self.uncertainties[component][channel].copy()
                             / self.normalizations[channel][component]
