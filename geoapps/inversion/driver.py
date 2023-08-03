@@ -140,7 +140,6 @@ class InversionDriver(BaseDriver):
         if getattr(self, "_inversion_data", None) is None:
             with fetch_active_workspace(self.workspace, mode="r+"):
                 self._inversion_data = InversionData(self.workspace, self.params)
-                self.params.data_object = self._inversion_data.entity
 
         return self._inversion_data
 
@@ -279,22 +278,26 @@ class InversionDriver(BaseDriver):
         self.logger.start()
         self.configure_dask()
 
+        simpeg_inversion = self.inversion
+        self.params.update_group_options()
+
+        predicted = None
         if self.params.forward_only:
             print("Running the forward simulation ...")
-            dpred = self.inversion.invProb.get_dpred(
+            predicted = simpeg_inversion.invProb.get_dpred(
                 self.models.starting, compute_J=False
             )
         else:
             # Run the inversion
             self.start_inversion_message()
-            self.inversion.run(self.models.starting)
+            simpeg_inversion.run(self.models.starting)
 
         self.logger.end()
         sys.stdout = self.logger.terminal
         self.logger.log.close()
 
         if self.params.forward_only:
-            self.directives.save_directives[1].save_components(0, dpred)
+            self.directives.save_directives[1].save_components(0, predicted)
             self.directives.save_directives[1].save_log()
         else:
             for directive in self.directives.save_directives:
