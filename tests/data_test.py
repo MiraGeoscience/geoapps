@@ -202,7 +202,7 @@ def test_get_uncertainty_component(tmp_path: Path):
     unc = data.get_data()[2]["tmi"]
     assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
-    assert len(unc) == len(data.mask)
+    assert len(unc) == data.entity.n_vertices
 
 
 def test_displace(tmp_path: Path):

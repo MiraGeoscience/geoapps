@@ -217,22 +217,23 @@ class InversionData(InversionLocations):
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
         self._observed_data_types = {c: {} for c in data.keys()}
-        data_entity = {c: {} for c in data.keys()}
+        data_dict = {c: {} for c in data.keys()}
+        uncert_dict = {c: {} for c in data.keys()}
 
         if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem", "fem"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
                     dnorm = self.normalizations[channel][component] * values
-                    data_entity[component][channel] = entity.add_data(
+                    data_channel = entity.add_data(
                         {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
-                    entity.add_data_to_group(
-                        data_entity[component][channel], f"{basename}_{component}"
+                    data_dict[component] = entity.add_data_to_group(
+                        data_channel, f"{basename}_{component}"
                     )
                     if not self.params.forward_only:
                         self._observed_data_types[component][
                             f"{channel:.2e}"
-                        ] = data_entity[component][channel].entity_type
+                        ] = data_channel.entity_type
                         uncerts = self.uncertainties[component][channel].copy()
                         uncerts[np.isinf(uncerts)] = np.nan
                         uncert_entity = entity.add_data(
@@ -242,7 +243,7 @@ class InversionData(InversionLocations):
                                 }
                             }
                         )
-                        entity.add_data_to_group(
+                        uncert_dict[component] = entity.add_data_to_group(
                             uncert_entity, f"Uncertainties_{component}"
                         )
         else:
@@ -250,18 +251,20 @@ class InversionData(InversionLocations):
                 dnorm = self.normalizations[None][component] * data[component]
                 if "2d" in self.params.inversion_type:
                     dnorm = self._embed_2d(dnorm)
-                data_entity[component] = entity.add_data(
+                data_dict[component] = entity.add_data(
                     {f"{basename}_{component}": {"values": dnorm}}
                 )
                 if not self.params.forward_only:
-                    self._observed_data_types[component] = data_entity[
+                    self._observed_data_types[component] = data_dict[
                         component
                     ].entity_type
                     uncerts = self.uncertainties[component].copy()
                     uncerts[np.isinf(uncerts)] = np.nan
                     if "2d" in self.params.inversion_type:
                         uncerts = self._embed_2d(uncerts)
-                    entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
+                    uncert_dict[component] = entity.add_data(
+                        {f"Uncertainties_{component}": {"values": uncerts}}
+                    )
 
                 if "direct current" in self.params.inversion_type:
                     apparent_property = data[component].copy()
@@ -272,7 +275,7 @@ class InversionData(InversionLocations):
                     if "2d" in self.params.inversion_type:
                         apparent_property = self._embed_2d(apparent_property)
 
-                    data_entity["apparent_resistivity"] = entity.add_data(
+                    data_dict["apparent_resistivity"] = entity.add_data(
                         {
                             f"{basename}_apparent_resistivity": {
                                 "values": apparent_property,
@@ -280,7 +283,8 @@ class InversionData(InversionLocations):
                             }
                         }
                     )
-        return data_entity
+
+        self.update_params(data_dict, uncert_dict)
 
     def apply_transformations(self, locations: np.ndarray):
         """Apply all coordinate transformations to locations"""
@@ -500,3 +504,22 @@ class InversionData(InversionLocations):
         tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
         has_tensor = lambda c: any(k in c for k in tensor_components)
         return any(has_tensor(c) for c in channels)
+
+    def update_params(self, data_dict, uncert_dict):
+        """
+        Update pointers to newly created object and data.
+        """
+
+        components = self.params.components()
+        self.params.data_object = self.entity
+
+        for comp in components:
+            if getattr(self.params, "_".join([comp, "channel"]), None) is None:
+                continue
+
+            setattr(self.params, f"{comp}_channel", data_dict[comp])
+            setattr(self.params, f"{comp}_uncertainty", uncert_dict[comp])
+
+        if getattr(self.params, "line_object", None) is not None:
+            new_line = self.params.line_object.copy(parent=self.entity)
+            self.params.line_object = new_line

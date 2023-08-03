@@ -99,7 +99,6 @@ def test_gravity_run(
             gz_channel=gz.uid,
             gz_uncertainty=2e-3,
             lower_bound=0.0,
-            upper_bound=1.0,
             max_global_iterations=max_iterations,
             initial_beta_ratio=1e-2,
             prctile=100,
@@ -108,6 +107,9 @@ def test_gravity_run(
         params.write_input_file(path=tmp_path, name="Inv_run")
 
     driver = GravityDriver.start(str(tmp_path / "Inv_run.ui.json"))
+
+    assert driver.params.data_object.uid != gz.parent.uid
+    assert driver.models.upper_bound is np.inf
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
