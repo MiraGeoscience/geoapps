@@ -229,7 +229,7 @@ default_ui_json = {
         "dataType": "Float",
         "group": "Data",
         "main": True,
-        "label": "DC data (V/I)",
+        "label": "Potential (V/I)",
         "tooltip": "Potential: voltage normalized by current",
         "parent": "data_object",
         "value": None,
