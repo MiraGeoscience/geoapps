@@ -377,7 +377,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     ]
                 )
             ],
-            # "channels": channels,
+            "channels": channels,
             "components": components,
             "association": "VERTEX",
             "reshape": lambda x: x.reshape(
@@ -557,6 +557,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
 
         channel_names = [f"{val:.2e}" for val in channels]
         kwargs = {
+            "data_type": inversion_object.observed_data_types,
             "attribute_type": "predicted",
             "save_objective_function": save_objective_function,
             "association": "VERTEX",
