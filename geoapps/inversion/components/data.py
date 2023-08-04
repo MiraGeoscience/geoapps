@@ -124,6 +124,7 @@ class InversionData(InversionLocations):
 
         self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
+        self.uncertainties = self.normalize(self.uncertainties, absolute=True)
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
@@ -223,7 +224,7 @@ class InversionData(InversionLocations):
         if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem", "fem"]:
             for component, channels in data.items():
                 for channel, values in channels.items():
-                    dnorm = self.normalizations[channel][component] * values
+                    dnorm = values / self.normalizations[channel][component]
                     data_channel = entity.add_data(
                         {f"{basename}_{component}_{channel}": {"values": dnorm}}
                     )
@@ -234,7 +235,10 @@ class InversionData(InversionLocations):
                         self._observed_data_types[component][
                             f"{channel:.2e}"
                         ] = data_channel.entity_type
-                        uncerts = self.uncertainties[component][channel].copy()
+                        uncerts = np.abs(
+                            self.uncertainties[component][channel].copy()
+                            / self.normalizations[channel][component]
+                        )
                         uncerts[np.isinf(uncerts)] = np.nan
                         uncert_entity = entity.add_data(
                             {
@@ -248,7 +252,7 @@ class InversionData(InversionLocations):
                         )
         else:
             for component in data:
-                dnorm = self.normalizations[None][component] * data[component]
+                dnorm = data[component] / self.normalizations[None][component]
                 if "2d" in self.params.inversion_type:
                     dnorm = self._embed_2d(dnorm)
                 data_dict[component] = entity.add_data(
@@ -258,7 +262,10 @@ class InversionData(InversionLocations):
                     self._observed_data_types[component] = data_dict[
                         component
                     ].entity_type
-                    uncerts = self.uncertainties[component].copy()
+                    uncerts = np.abs(
+                        self.uncertainties[component].copy()
+                        / self.normalizations[None][component]
+                    )
                     uncerts[np.isinf(uncerts)] = np.nan
                     if "2d" in self.params.inversion_type:
                         uncerts = self._embed_2d(uncerts)
@@ -316,7 +323,9 @@ class InversionData(InversionLocations):
 
         return self.displace(locs, radar_offset_pad)
 
-    def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def normalize(
+        self, data: dict[str, np.ndarray], absolute=False
+    ) -> dict[str, np.ndarray]:
         """
         Apply data type specific normalizations to data.
 
@@ -333,8 +342,12 @@ class InversionData(InversionLocations):
                 if isinstance(d[comp], dict):
                     if d[comp][chan] is not None:
                         d[comp][chan] *= self.normalizations[chan][comp]
+                        if absolute:
+                            d[comp][chan] = np.abs(d[comp][chan])
                 elif d[comp] is not None:
                     d[comp] *= self.normalizations[chan][comp]
+                    if absolute:
+                        d[comp] = np.abs(d[comp])
 
         return d
 

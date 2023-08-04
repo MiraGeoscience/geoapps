@@ -21,9 +21,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.0087733,
-    "phi_d": 0.6837,
-    "phi_m": 0.1868,
+    "data_norm": 0.001855,
+    "phi_d": 0.1323,
+    "phi_m": 3647,
 }
 
 np.random.seed(0)
@@ -37,7 +37,7 @@ def test_tipper_fwr_run(
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
-        background=0.01,
+        background=1e-3,
         anomaly=1.0,
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
@@ -55,7 +55,7 @@ def test_tipper_fwr_run(
         z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
-        conductivity_model=1e-2,
+        conductivity_model=1e-3,
         txz_real_channel_bool=True,
         txz_imag_channel_bool=True,
         tyz_real_channel_bool=True,
@@ -100,7 +100,7 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
                     {
                         f"uncertainty_{comp}_[{ind}]": {
                             "values": np.ones_like(data_entity.values)
-                            * np.percentile(np.abs(data_entity.values), 10)
+                            * np.percentile(np.abs(data_entity.values), 5)
                         }
                     }
                 )
@@ -126,9 +126,9 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             topography_object=topography.uid,
             resolution=0.0,
             data_object=survey.uid,
-            starting_model=0.01,
-            reference_model=0.01,
-            conductivity_model=1e-2,
+            starting_model=0.001,
+            reference_model=0.001,
+            conductivity_model=1e-3,
             s_norm=1.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -138,8 +138,10 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             z_from_topo=False,
             upper_bound=0.75,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e4,
+            initial_beta_ratio=1e2,
+            coolingRate=2,
             prctile=100,
+            chi_factor=0.1,
             store_sensitivities="ram",
             **data_kwargs,
         )
@@ -162,7 +164,7 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
+    mstart = test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 4))
 
     m_rec = test_tipper_run(
         Path("./"),
