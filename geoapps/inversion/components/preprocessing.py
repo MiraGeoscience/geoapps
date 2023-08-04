@@ -21,7 +21,6 @@ from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import is_uuid
 
 from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.octree_creation.application import OctreeMesh
 from geoapps.shared_utils.utils import filter_xy, get_locations
 
 
@@ -35,7 +34,6 @@ def window_data(
     window_center_y: float,
     window_width: float,
     window_height: float,
-    mesh: OctreeMesh,
     resolution: float,
 ) -> (ObjectBase, dict, np.ndarray):
     """
@@ -50,7 +48,6 @@ def window_data(
     :param window_center_y: Y center of the window.
     :param window_width: Width of the window.
     :param window_height: Height of the window.
-    :param mesh: Mesh object.
     :param resolution: Resolution for downsampling.
 
     :return: Windowed data object.
@@ -73,17 +70,12 @@ def window_data(
         ],
         "size": [window_width, window_height],
     }
-    # Get angle
-    angle = None
-    if mesh is not None:
-        if hasattr(mesh, "rotation"):
-            angle = -1 * mesh.rotation
+
     # Get mask
     mask = filter_xy(
         locations[:, 0],
         locations[:, 1],
         window=window,
-        angle=angle,
         distance=resolution,
     )
 
@@ -311,7 +303,6 @@ def preprocess_data(
         window_center_y,
         window_width,
         window_height,
-        param_dict["mesh"],
         resolution,
     )
 
