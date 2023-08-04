@@ -123,6 +123,11 @@ def test_susceptibility_run(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tmi
+        assert (
+            run_ws.get_entity("Iteration_1_tmi")[0].entity_type.uid
+            == run_ws.get_entity("Observed_tmi")[0].entity_type.uid
+        )
+
         if pytest:
             check_target(output, target_run)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
