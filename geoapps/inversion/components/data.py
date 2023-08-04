@@ -113,7 +113,7 @@ class InversionData(InversionLocations):
         self.offset, self.radar = self.params.offset()
         self.locations = super().get_locations(self.params.data_object)
 
-        if self.angle != 0:
+        if self.angle is not None and self.angle != 0:
             raise ValueError("Mesh is rotated.")
         self.mask = np.ones(len(self.locations), dtype=bool)
         if self.radar is not None:
