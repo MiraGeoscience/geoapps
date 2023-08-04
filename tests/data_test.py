@@ -274,15 +274,6 @@ def test_normalize(tmp_path: Path):
 
 def test_get_survey(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    locs = params.data_object.centroids
-    params.update(
-        {
-            "window_center_x": np.mean(locs[:, 0]),
-            "window_center_y": np.mean(locs[:, 1]),
-            "window_width": 100.0,
-            "window_height": 100.0,
-        }
-    )
     data = InversionData(ws, params)
     survey = data.create_survey()
     assert isinstance(survey[0], SimPEG.potential_fields.magnetics.Survey)

@@ -1370,25 +1370,12 @@ class InversionApp(PlotSelection2D):
                 / (self.ga_group_name.value + ".geoh5")
             )
         ) as new_workspace:
-            obj, _ = self.get_selected_entities()
-            new_obj = obj.copy(parent=new_workspace, copy_children=False)
+            with self.workspace.open("r"):
+                obj, _ = self.get_selected_entities()
+                new_obj = obj.copy(parent=new_workspace, copy_children=False)
 
-            prop_group = obj.find_or_create_property_group(
-                name=self.data.uid_name_map[self.data.value]
-            )
-            data_list = []
-            for prop in prop_group.properties:
-                data = self.workspace.get_entity(prop)[0]
-                data_list.append(data.copy(parent=new_obj))
-
-            new_group = new_obj.add_data_to_group(data_list, prop_group.name)
-
-            if isinstance(input_dict["data"]["channels"], str):
-                input_dict["data"]["channels"] = str(new_group.uid)
-
-            if self._uncertainties.value is not None:
                 prop_group = obj.find_or_create_property_group(
-                    name=self.data.uid_name_map[self._uncertainties.value]
+                    name=self.data.uid_name_map[self.data.value]
                 )
                 data_list = []
                 for prop in prop_group.properties:
@@ -1396,40 +1383,56 @@ class InversionApp(PlotSelection2D):
                     data_list.append(data.copy(parent=new_obj))
 
                 new_group = new_obj.add_data_to_group(data_list, prop_group.name)
-                input_dict["uncertainty_channel"] = str(new_group.uid)
-            # if self.system.value == "Airborne TEM Survey":
-            #     prop_group = new_obj.add_data_to_group(data_list, )
-            #
 
-            _, data = self.sensor.get_selected_entities()
-            for d in data:
-                if d is None:
-                    continue
-                d.copy(parent=new_obj)
+                if isinstance(input_dict["data"]["channels"], str):
+                    input_dict["data"]["channels"] = str(new_group.uid)
 
-            _, data = self.lines.get_selected_entities()
-            for d in data:
-                if d is None:
-                    continue
-                d.copy(parent=new_obj)
+                if self._uncertainties.value is not None:
+                    prop_group = obj.find_or_create_property_group(
+                        name=self.data.uid_name_map[self._uncertainties.value]
+                    )
+                    data_list = []
+                    for prop in prop_group.properties:
+                        data = self.workspace.get_entity(prop)[0]
+                        data_list.append(data.copy(parent=new_obj))
 
-            for elem in [
-                self.topography,
-                self.inversion_parameters.starting_model,
-                self.inversion_parameters.reference_model,
-                self.inversion_parameters.susceptibility_model,
-            ]:
-                obj, data = elem.get_selected_entities()
+                    new_group = new_obj.add_data_to_group(data_list, prop_group.name)
+                    input_dict["uncertainty_channel"] = str(new_group.uid)
+                # if self.system.value == "Airborne TEM Survey":
+                #     prop_group = new_obj.add_data_to_group(data_list, )
+                #
 
-                if obj is not None:
-                    new_obj = new_workspace.get_entity(obj.uid)[0]
-                    if new_obj is None:
-                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
+                _, data = self.sensor.get_selected_entities()
+                for d in data:
+                    if d is None:
+                        continue
+                    d.copy(parent=new_obj)
 
-                    for d in data:
-                        if d is None:
-                            continue
-                        d.copy(parent=new_obj)
+                _, data = self.lines.get_selected_entities()
+                for d in data:
+                    if d is None:
+                        continue
+                    d.copy(parent=new_obj)
+
+                for elem in [
+                    self.topography,
+                    self.inversion_parameters.starting_model,
+                    self.inversion_parameters.reference_model,
+                    self.inversion_parameters.susceptibility_model,
+                ]:
+                    obj, data = elem.get_selected_entities()
+
+                    if obj is not None:
+                        new_obj = new_workspace.get_entity(obj.uid)[0]
+                        if new_obj is None:
+                            new_obj = obj.copy(
+                                parent=new_workspace, copy_children=False
+                            )
+
+                        for d in data:
+                            if d is None:
+                                continue
+                            d.copy(parent=new_obj)
 
             # Get data_dict for pre-processing
             data_object = new_workspace.get_entity(
