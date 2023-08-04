@@ -129,6 +129,9 @@ class ReceiversFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data)
+        else:
+            kwargs["storeProjections"] = True
+
         if self.factory_type in ["fem", "magnetotellurics", "tipper"]:
             comp = component.split("_")[0]
             kwargs["orientation"] = comp[0] if self.factory_type == "fem" else comp[1:]
@@ -137,12 +140,6 @@ class ReceiversFactory(SimPEGFactory):
             kwargs["orientation"] = kwargs["orientation"][::-1]
         if self.factory_type in ["tdem"]:
             kwargs["orientation"] = component
-            kwargs["storeProjections"] = True
-        if (
-            "direct current" in self.factory_type
-            or "induced polarization" in self.factory_type
-        ):
-            kwargs["storeProjections"] = True
 
         return kwargs
 

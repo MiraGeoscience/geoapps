@@ -244,7 +244,9 @@ def setup_inversion_workspace(
         tx_locs = []
         freqs = []
         for meta in freq_metadata:
-            tx_locs.append(vertices + meta["Offset"])
+            tx_vertices = vertices.copy()
+            tx_vertices[:, 0] -= meta["Offset"]
+            tx_locs.append(tx_vertices)
             freqs.append([[meta["Frequency"]] * len(vertices)])
         tx_locs = np.vstack(tx_locs)
         freqs = np.hstack(freqs).flatten()
@@ -274,6 +276,11 @@ def setup_inversion_workspace(
             axis=1,
         )
         survey.remove_cells(np.where(dist > 200.0)[0])
+        dist = np.linalg.norm(
+            transmitters.vertices[transmitters.cells[:, 0], :]
+            - transmitters.vertices[transmitters.cells[:, 1], :],
+            axis=1,
+        )
         transmitters.remove_cells(np.where(dist > 200.0)[0])
 
     elif "tem" in inversion_type:
