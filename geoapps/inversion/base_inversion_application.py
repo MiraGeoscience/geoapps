@@ -1245,7 +1245,6 @@ class InversionApp(BaseDashApplication):
                     x = np.array(figure["data"][0]["x"])
                     x_range = [np.amin(x), np.amax(x)]
                 elif figure["layout"]["xaxis"]["range"] is not None:
-                    print("plot range")
                     x_range = figure["layout"]["xaxis"]["range"]
                 else:
                     figure["layout"]["xaxis"]["autorange"] = True
