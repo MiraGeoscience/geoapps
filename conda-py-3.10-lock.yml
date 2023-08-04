@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 814f715bf75429533ae3677dcf28735030dd7b6a0388c0df6e09494cc8b286a5
-    osx-64: b2b36c646bacffaeb3d53dadc77398af53f87aa18321cd5a0731309dbc17d660
-    linux-64: beceb204467412ebcfc29e56f5d45e9c033c5f6d60115f8f2898bfda694ed9da
+    win-64: 1705117305a83e8211ccfe26aaf365363602acd1d0360d60c9fa1dd67dfa90b5
+    osx-64: afc86860f57e4d2d4119c8d267b94982960861dc7fdd9dbf4bb885e1b91c96cc
+    linux-64: 3eff382886c2834265c76b0b4a26fba84d50776acbe29ace5606be883276c6cc
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -5510,10 +5510,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://files.pythonhosted.org/packages/0a/57/978c1dfd112d3ec4b9ec466da4978e42f2c1b4eb0e7c230f34130c23a5f2/geoh5py-0.8.0a3-py3-none-any.whl
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   hash:
-    sha256: 0c612491fff8972882658e5283b649cc4deadb7d83804ea2b5f4969bb05a89be
+    sha256: ''
   category: main
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -5549,14 +5552,14 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    geoh5py: '*'
-    empymod: '>=2.0.0'
-    scikit-learn: '>=1.2'
-    discretize: '>=0.8.0'
-    scipy: '>=1.8.0'
-    pymatsolver: '>=0.2'
-    pandas: '*'
     numpy: '>=1.20'
+    scipy: '>=1.8.0'
+    pandas: '*'
+    pymatsolver: '>=0.2'
+    geoh5py: '*'
+    scikit-learn: '>=1.2'
+    empymod: '>=2.0.0'
+    discretize: '>=0.8.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -10158,10 +10161,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://files.pythonhosted.org/packages/0a/57/978c1dfd112d3ec4b9ec466da4978e42f2c1b4eb0e7c230f34130c23a5f2/geoh5py-0.8.0a3-py3-none-any.whl
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   hash:
-    sha256: 0c612491fff8972882658e5283b649cc4deadb7d83804ea2b5f4969bb05a89be
+    sha256: ''
   category: main
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -10197,14 +10203,14 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    geoh5py: '*'
-    empymod: '>=2.0.0'
-    scikit-learn: '>=1.2'
-    discretize: '>=0.8.0'
-    scipy: '>=1.8.0'
-    pymatsolver: '>=0.2'
-    pandas: '*'
     numpy: '>=1.20'
+    scipy: '>=1.8.0'
+    pandas: '*'
+    pymatsolver: '>=0.2'
+    geoh5py: '*'
+    scikit-learn: '>=1.2'
+    empymod: '>=2.0.0'
+    discretize: '>=0.8.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -14959,10 +14965,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://files.pythonhosted.org/packages/0a/57/978c1dfd112d3ec4b9ec466da4978e42f2c1b4eb0e7c230f34130c23a5f2/geoh5py-0.8.0a3-py3-none-any.whl
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
   hash:
-    sha256: 0c612491fff8972882658e5283b649cc4deadb7d83804ea2b5f4969bb05a89be
+    sha256: ''
   category: main
+  source:
+    type: url
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -14998,14 +15007,14 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    geoh5py: '*'
-    empymod: '>=2.0.0'
-    scikit-learn: '>=1.2'
-    discretize: '>=0.8.0'
-    scipy: '>=1.8.0'
-    pymatsolver: '>=0.2'
-    pandas: '*'
     numpy: '>=1.20'
+    scipy: '>=1.8.0'
+    pandas: '*'
+    pymatsolver: '>=0.2'
+    geoh5py: '*'
+    scikit-learn: '>=1.2'
+    empymod: '>=2.0.0'
+    discretize: '>=0.8.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
