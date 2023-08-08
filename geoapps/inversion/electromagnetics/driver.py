@@ -18,7 +18,7 @@ import numpy as np
 import scipy as sp
 from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D, Surface
+from geoh5py.objects import Curve, DrapeModel, Grid2D, Surface
 from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
@@ -459,6 +459,8 @@ def inversion(input_file):
 
     hz = hz_min * expansion ** np.arange(n_cells)
     CCz = -np.cumsum(hz) + hz / 2.0
+    top_hz = CCz[0]
+    bot_hz = CCz[-1]
     nZ = hz.shape[0]
 
     # Select data and downsample
@@ -468,15 +470,24 @@ def inversion(input_file):
     model_vertices = []
     model_cells = []
     pred_count = 0
-    model_line_ids = []
     line_ids = []
     data_ordering = []
     pred_vertices = []
     pred_cells = []
+
+    out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
+    out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
+
     for key, values in selection.items():
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
-
         for line in values[0]:
+            model_line_ids = []
+            model_x = []
+            model_y = []
+            model_z = []
+            model_top_z = []
+            model_bot_z = []
+
             line_ind = np.where(line_data.values[win_ind] == line)[0]
             n_sounding = len(line_ind)
             if n_sounding < 2:
@@ -484,44 +495,22 @@ def inversion(input_file):
 
             stn_id.append(line_ind)
             xyz = locations[line_ind, :]
-
-            # Create a 2D mesh to store the results
-            dist = np.r_[
-                0, np.cumsum(np.linalg.norm(xyz[1:, :2] - xyz[:-1, :2], axis=1))
-            ]
             z_loc = dem[line_ind, 2]
 
             # Create a grid for the surface
             X = np.kron(np.ones(nZ), xyz[:, 0].reshape((z_loc.shape[0], 1)))
             Y = np.kron(np.ones(nZ), xyz[:, 1].reshape((z_loc.shape[0], 1)))
-            L = np.kron(np.ones(nZ), dist.reshape((z_loc.shape[0], 1)))
             Z = np.kron(np.ones(nZ), z_loc.reshape((z_loc.shape[0], 1))) + np.kron(
                 CCz, np.ones((z_loc.shape[0], 1))
             )
 
-            tri2D = Delaunay(np.c_[np.ravel(L), np.ravel(Z)])
-            topo_top = sp.interpolate.interp1d(dist, z_loc)
+            model_x += list(xyz[:, 0])
+            model_y += list(xyz[:, 1])
+            model_z += list(z_loc)
+            model_top_z += list(z_loc + top_hz)
+            model_bot_z += list(Z.flatten())
 
-            # Remove triangles beyond surface edges
-            indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
-            for i in range(3):
-                x = tri2D.points[tri2D.simplices[:, i], 0]
-                z = tri2D.points[tri2D.simplices[:, i], 1]
-
-                indx *= np.any(
-                    [
-                        np.abs(topo_top(x) - z) < hz_min,
-                        np.abs((topo_top(x) - z) + CCz[-1]) < hz_min,
-                    ],
-                    axis=0,
-                )
-
-            # Remove the simplices too long
-            tri2D.simplices = tri2D.simplices[indx == False, :]
-            temp = np.arange(int(nZ * n_sounding)).reshape((nZ, n_sounding), order="F")
-            model_ordering.append(temp.T.ravel() + model_count)
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
-            model_cells.append(tri2D.simplices + model_count)
             model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
             line_ids.append(np.ones_like(z_loc) * float(line))
             data_ordering.append(np.arange(z_loc.shape[0]) + pred_count)
@@ -531,28 +520,40 @@ def inversion(input_file):
                 + pred_count
             )
 
-            model_count += tri2D.points.shape[0]
             pred_count += z_loc.shape[0]
 
-        out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
-        out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
-        surface = Surface.create(
-            workspace,
-            name=f"{input_param['out_group']}_Model",
-            vertices=np.vstack(model_vertices),
-            cells=np.vstack(model_cells),
-            parent=out_group,
-        )
-        surface.add_data(
-            {
-                "Line": {
-                    "values": np.hstack(model_line_ids).astype("uint32"),
-                    "type": "referenced",
-                    "value_map": line_data.value_map.map,
+            n_row = nZ
+            n_col = len(model_x)
+
+            j, i = np.meshgrid(np.arange(n_row), np.arange(n_col))
+            flattened_rows = i.flatten()
+            flattened_cols = j.flatten()
+
+            layer_first_index = np.arange(n_col) * n_row
+            layer_count = np.repeat(n_row, n_col)
+
+            layers = np.c_[flattened_cols, flattened_rows, model_bot_z]
+            prisms = np.c_[
+                model_x, model_y, model_top_z, layer_first_index, layer_count
+            ]
+
+            model = DrapeModel.create(
+                workspace,
+                layers=layers,
+                name="DrapeModel",
+                prisms=prisms,
+                parent=out_group,
+            )
+            model.add_data(
+                {
+                    "Line": {
+                        "values": np.hstack(model_line_ids).astype("uint32"),
+                        "type": "referenced",
+                        "value_map": line_data.value_map.map,
+                    }
                 }
-            }
-        )
-        model_ordering = np.hstack(model_ordering).astype(int)
+            )
+
         curve = Curve.create(
             workspace,
             name=f"{input_param['out_group']}_Predicted",
