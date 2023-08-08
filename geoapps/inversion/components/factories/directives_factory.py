@@ -555,7 +555,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             data[channel_ids, component_ids, rx_ids] = values
             return data
 
-        channel_names = [f"{val:.2e}" for val in channels]
         kwargs = {
             "data_type": inversion_object.observed_data_types,
             "attribute_type": "predicted",
@@ -568,7 +567,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     for comp in components
                 ]
             ),
-            "channels": [f"[{ind}]" for ind in range(len(channel_names))],
+            "channels": [f"[{ind}]" for ind, _ in enumerate(channels)],
             "components": components,
             "sorting": sorting,
             "_reshape": reshape,
