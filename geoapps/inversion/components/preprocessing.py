@@ -87,6 +87,9 @@ def window_data(
         name=data_object.name + "_processed",
     )
 
+    if getattr(data_object, "parts", None) is not None:
+        new_data_object.parts = data_object.parts[mask]
+
     # Update data dict
     for comp in components:
         data_dict[comp + "_channel"]["values"] = new_data_object.get_entity(
