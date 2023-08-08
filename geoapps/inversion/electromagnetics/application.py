@@ -12,6 +12,7 @@ import multiprocessing
 import os
 import uuid
 from pathlib import Path
+from time import time
 
 import numpy as np
 from geoh5py.data import Data
@@ -949,7 +950,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + 'python -m geoapps.inversion.electromagnetics.driver "'
-            + f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
+            + self.trigger.file_name
         )
         self.trigger.button_style = ""
 
@@ -1041,10 +1042,10 @@ class InversionApp(PlotSelection2D):
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
             uncertainties = self.em_system_specs[self.system.value]["uncertainty"]
             system_specs = {}
-            for key, time in self.em_system_specs[self.system.value][
+            for key, time_gate in self.em_system_specs[self.system.value][
                 "channels"
             ].items():
-                system_specs[key] = f"{time:.5e}"
+                system_specs[key] = f"{time_gate:.5e}"
 
             for ind, (key, channel) in enumerate(system_specs.items()):
                 if ind + 1 < start_channel:
@@ -1364,10 +1365,11 @@ class InversionApp(PlotSelection2D):
             print("TEM survey requires an Uncertainty group.")
             return
 
+        time_stamp = time()
         with Workspace(
             str(
                 Path(self.export_directory.selected_path)
-                / (self.ga_group_name.value + ".geoh5")
+                / (self.ga_group_name.value + f"{time_stamp:.0f}.geoh5")
             )
         ) as new_workspace:
             with self.workspace.open("r"):
@@ -1495,7 +1497,8 @@ class InversionApp(PlotSelection2D):
             Path(new_workspace.h5file).resolve()
         )
 
-        file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
+        file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}{time_stamp:.0f}.json"
+        self.trigger.file_name = file
 
         with open(file, "w", encoding="utf8") as f:
             json.dump(input_dict, f, indent=4)
