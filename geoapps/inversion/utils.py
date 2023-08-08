@@ -198,7 +198,7 @@ def tile_locations(
     unique_id=False,
 ):
     """
-    Function to tile an survey points into smaller square subsets of points
+    Function to tile a survey points into smaller square subsets of points
 
     :param numpy.ndarray locations: n x 2 array of locations [x,y]
     :param integer n_tiles: number of tiles (for 'cluster'), or number of

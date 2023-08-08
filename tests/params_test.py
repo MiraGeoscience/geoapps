@@ -424,20 +424,6 @@ def test_validate_receivers_offset_z():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_ignore_values():
-    param = "ignore_values"
-    newval = "12345"
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_resolution():
-    param = "resolution"
-    newval = 10.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
 def test_validate_max_chunk_size():
     param = "max_chunk_size"
     newval = 256
@@ -462,34 +448,6 @@ def test_validate_output_tile_files():
 def test_validate_mesh():
     param = "mesh"
     newval = UUID("{c02e0470-0c3e-4119-8ac1-0aacba5334af}")
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_center_x():
-    param = "window_center_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_center_y():
-    param = "window_center_y"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_width():
-    param = "window_width"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_height():
-    param = "window_height"
-    newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
 

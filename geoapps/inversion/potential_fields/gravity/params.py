@@ -67,8 +67,6 @@ class GravityParams(InversionBaseParams):
         self._gy_channel = None
         self._gy_uncertainty = None
         self._out_group = None
-        self._detrend_type = None
-        self._detrend_order = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 

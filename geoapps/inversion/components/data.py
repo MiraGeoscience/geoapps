@@ -25,7 +25,7 @@ from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 
 from geoapps.inversion.utils import create_nested_mesh
-from geoapps.shared_utils.utils import drape_2_tensor, filter_xy
+from geoapps.shared_utils.utils import drape_2_tensor
 
 from .factories import (
     EntityFactory,
@@ -43,16 +43,10 @@ class InversionData(InversionLocations):
     Parameters
     ---------
 
-    resolution :
-        Desired data grid spacing.
     offset :
         Static receivers location offsets.
     radar :
         Radar channel address used to drape receiver locations over topography.
-    ignore_value :
-        Data value to ignore (infinity uncertainty).
-    ignore_type :
-        Type of ignore value (<, >, =).
     locations :
         Data locations.
     mask :
@@ -89,11 +83,8 @@ class InversionData(InversionLocations):
         :param: params: Params object containing location based data parameters.
         """
         super().__init__(workspace, params)
-        self.resolution: int | None = None
         self.offset: list[float] | None = None
         self.radar: np.ndarray | None = None
-        self.ignore_value: float | None = None
-        self.ignore_type: str | None = None
         self.locations: np.ndarray | None = None
         self.mask: np.ndarray | None = None
         self.global_map: np.ndarray | None = None
@@ -117,19 +108,14 @@ class InversionData(InversionLocations):
         """Extract data from the workspace using params data."""
         self.vector = True if self.params.inversion_type == "magnetic vector" else False
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
-        self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
         self.has_tensor = InversionData.check_tensor(self.components)
         self.offset, self.radar = self.params.offset()
         self.locations = super().get_locations(self.params.data_object)
-        self.mask = filter_xy(
-            self.locations[:, 0],
-            self.locations[:, 1],
-            window=self.params.window,
-            angle=self.angle,
-            distance=self.params.resolution,
-        )
 
+        if self.angle is not None and self.angle != 0:
+            raise ValueError("Mesh is rotated.")
+        self.mask = np.ones(len(self.locations), dtype=bool)
         if self.radar is not None:
             if any(np.isnan(self.radar)):
                 self.mask[np.isnan(self.radar)] = False
@@ -209,9 +195,7 @@ class InversionData(InversionLocations):
             order of self.observed.keys().
         :return: data: Dictionary of components and associated data
         :return: uncertainties: Dictionary of components and
-            associated uncertainties with infinite uncertainty set on
-            ignored data (specified by self.ignore_type and
-            self.ignore_value).
+            associated uncertainties.
         """
 
         components = self.params.components()
@@ -310,52 +294,6 @@ class InversionData(InversionLocations):
                     )
 
         self.update_params(data_dict, uncert_dict)
-
-    def parse_ignore_values(self) -> tuple[float, str]:
-        """Returns an ignore value and type ('<', '>', or '=') from params data."""
-        if self.params.forward_only:
-            return None, None
-        else:
-            ignore_values = self.params.ignore_values
-            if ignore_values is not None:
-                ignore_type = [k for k in ignore_values if k in ["<", ">"]]
-                ignore_type = "=" if not ignore_type else ignore_type[0]
-                if ignore_type in ["<", ">"]:
-                    ignore_value = float(ignore_values.split(ignore_type)[1])
-                else:
-                    try:
-                        ignore_value = float(ignore_values)
-                    except ValueError:
-                        return None, None
-
-                return ignore_value, ignore_type
-            else:
-                return None, None
-
-    def set_infinity_uncertainties(
-        self, uncertainties: np.ndarray, data: np.ndarray
-    ) -> np.ndarray:
-        """Use self.ignore_value self.ignore_type to set uncertainties to infinity."""
-
-        if uncertainties is None:
-            return None
-
-        unc = uncertainties.copy()
-        unc[np.isnan(data)] = np.inf
-
-        if self.ignore_value is None:
-            return unc
-        elif self.ignore_type == "<":
-            unc[data <= self.ignore_value] = np.inf
-        elif self.ignore_type == ">":
-            unc[data >= self.ignore_value] = np.inf
-        elif self.ignore_type == "=":
-            unc[data == self.ignore_value] = np.inf
-        else:
-            msg = f"Unrecognized ignore type: {self.ignore_type}."
-            raise (ValueError(msg))
-
-        return unc
 
     def apply_transformations(self, locations: np.ndarray):
         """Apply all coordinate transformations to locations"""
