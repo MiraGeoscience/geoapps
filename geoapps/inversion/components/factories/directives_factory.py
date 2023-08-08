@@ -542,8 +542,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
     ):
         receivers = inversion_object.entity
         channels = np.array(receivers.channels, dtype=float)
-        channels *= getattr(self.params, "unit_conversion", 1.0)
-
         components = list(inversion_object.observed)
         ordering = np.vstack(ordering)
         channel_ids = ordering[:, 0]
