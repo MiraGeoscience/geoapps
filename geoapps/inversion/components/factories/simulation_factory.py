@@ -197,7 +197,9 @@ class SimulationFactory(SimPEGFactory):
     def _tdem_keywords(self, kwargs, receivers, mesh, active_cells=None):
         kwargs = self._conductivity_keywords(kwargs, mesh, active_cells=active_cells)
         kwargs["t0"] = -receivers.timing_mark * self.params.unit_conversion
-        kwargs["time_steps"] = np.round((np.diff(receivers.waveform[:, 0])), decimals=6)
+        kwargs["time_steps"] = np.round(
+            (np.diff(np.unique(receivers.waveform[:, 0]))), decimals=6
+        )
         return kwargs
 
     def _get_sensitivity_path(self, tile_id: int) -> str:
