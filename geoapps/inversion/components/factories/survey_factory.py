@@ -306,6 +306,10 @@ class SurveyFactory(SimPEGFactory):
         self.local_index = []
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
             receiver_indices = receiver_group(source_id, receiver_entity)
+
+            if local_index is not None:
+                receiver_indices = list(set(receiver_indices).intersection(local_index))
+
             receivers = ReceiversFactory(self.params).build(
                 locations=receiver_locations,
                 local_index=receiver_entity.cells[receiver_indices],
