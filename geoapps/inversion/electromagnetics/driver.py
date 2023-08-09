@@ -457,27 +457,24 @@ def inversion(input_file):
         else:
             normalization = np.prod(em_specs["normalization"])
 
+    out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
+    out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
+
     hz = hz_min * expansion ** np.arange(n_cells)
     CCz = -np.cumsum(hz) + hz / 2.0
-    top_hz = CCz[0]
-    bot_hz = CCz[-1]
+    top_hz = hz[0] / 2.0
     nZ = hz.shape[0]
 
     # Select data and downsample
     stn_id = []
-    model_count = 0
     model_ordering = []
     model_vertices = []
-    model_cells = []
     pred_count = 0
     line_ids = []
     data_ordering = []
     pred_vertices = []
     pred_cells = []
-
-    out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
-    out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
-
+    drape_models = {}
     for key, values in selection.items():
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
         for line in values[0]:
@@ -507,8 +504,11 @@ def inversion(input_file):
             model_x += list(xyz[:, 0])
             model_y += list(xyz[:, 1])
             model_z += list(z_loc)
-            model_top_z += list(z_loc + top_hz)
-            model_bot_z += list(Z.flatten())
+            model_top_z += list(z_loc - top_hz)
+            z_bot = np.kron(z_loc, np.ones(len(CCz))) + np.kron(
+                np.ones(len(z_loc)), CCz
+            )
+            model_bot_z += list(z_bot)
 
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
             model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
@@ -519,32 +519,27 @@ def inversion(input_file):
                 np.c_[np.arange(z_loc.shape[0] - 1), np.arange(z_loc.shape[0] - 1) + 1]
                 + pred_count
             )
-
             pred_count += z_loc.shape[0]
 
-            n_row = nZ
-            n_col = len(model_x)
+            n_rows = nZ
+            n_cols = n_sounding
+            j, i = np.meshgrid(np.arange(n_rows), np.arange(n_cols))
+            layer_first_index = np.arange(n_cols) * n_rows
+            layer_count = np.repeat(n_rows, n_cols)
 
-            j, i = np.meshgrid(np.arange(n_row), np.arange(n_col))
-            flattened_rows = i.flatten()
-            flattened_cols = j.flatten()
-
-            layer_first_index = np.arange(n_col) * n_row
-            layer_count = np.repeat(n_row, n_col)
-
-            layers = np.c_[flattened_cols, flattened_rows, model_bot_z]
+            layers = np.c_[i.flatten(), j.flatten(), model_bot_z]
             prisms = np.c_[
                 model_x, model_y, model_top_z, layer_first_index, layer_count
             ]
 
-            model = DrapeModel.create(
+            drape_models[line] = DrapeModel.create(
                 workspace,
                 layers=layers,
                 name="DrapeModel",
                 prisms=prisms,
                 parent=out_group,
             )
-            model.add_data(
+            drape_models[line].add_data(
                 {
                     "Line": {
                         "values": np.hstack(model_line_ids).astype("uint32"),
