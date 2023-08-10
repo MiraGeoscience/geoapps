@@ -306,6 +306,10 @@ class SurveyFactory(SimPEGFactory):
         self.local_index = []
         for source_id in source_ids[np.argsort(order)]:  # Cycle in original order
             receiver_indices = receiver_group(source_id, receiver_entity)
+
+            if local_index is not None:
+                receiver_indices = list(set(receiver_indices).intersection(local_index))
+
             receivers = ReceiversFactory(self.params).build(
                 locations=receiver_locations,
                 local_index=receiver_entity.cells[receiver_indices],
@@ -412,25 +416,41 @@ class SurveyFactory(SimPEGFactory):
         rx_factory = ReceiversFactory(self.params)
         tx_factory = SourcesFactory(self.params)
 
-        for frequency in frequencies:
-            for receiver_id in self.local_index:
-                for component_id, component in enumerate(data.components):
-                    receiver = rx_factory.build(
+        receiver_groups = {}
+        ordering = []
+        for receiver_id in self.local_index:
+            receivers = []
+            for component_id, component in enumerate(data.components):
+                receivers.append(
+                    rx_factory.build(
                         locations=rx_locs[receiver_id, :],
                         data=data,
                         mesh=mesh,
                         component=component,
                     )
-                    frequency_id = np.where(frequency == channels)[0][0]
-                    locs = tx_locs[frequency == freqs, :][receiver_id, :]
-                    sources.append(
-                        tx_factory.build(
-                            [receiver],
-                            locations=locs,
-                            frequency=frequency,
-                        )
+                )
+                ordering.append([component_id, receiver_id])
+            receiver_groups[receiver_id] = receivers
+
+        ordering = np.vstack(ordering)
+        for frequency in frequencies:
+            frequency_id = np.where(frequency == channels)[0][0]
+            self.ordering.append(
+                np.hstack([np.ones((ordering.shape[0], 1)) * frequency_id, ordering])
+            )
+
+        self.ordering = np.vstack(self.ordering).astype(int)
+
+        for frequency in frequencies:
+            for receiver_id, receivers in receiver_groups.items():
+                locs = tx_locs[frequency == freqs, :][receiver_id, :]
+                sources.append(
+                    tx_factory.build(
+                        receivers,
+                        locations=locs,
+                        frequency=frequency,
                     )
-                    self.ordering.append([frequency_id, component_id, receiver_id])
+                )
 
         return [sources]
 

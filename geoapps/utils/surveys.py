@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from geoapps.inversion.utils import get_unique_locations
+
 if TYPE_CHECKING:
     from geoapps.inversion.components.data import InversionData
 
@@ -20,7 +22,6 @@ from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
-from geoapps.inversion.utils import get_unique_locations
 from geoapps.utils.statistics import is_outlier
 
 

@@ -51,17 +51,10 @@ class InversionBaseParams(BaseParams):
         self._receivers_radar_drape = None
         self._receivers_offset_z: float = None
         self._gps_receivers_offset = None
-        self._ignore_values: str = None
-        self._resolution: float = None
         self._max_chunk_size: int = None
         self._chunk_by_rows: bool = None
         self._output_tile_files: bool = None
         self._mesh = None
-        self._window_azimuth: float = None
-        self._window_center_x: float = None
-        self._window_center_y: float = None
-        self._window_height: float = None
-        self._window_width: float = None
         self._inversion_style: str = None
         self._chi_factor: float = None
         self._sens_wts_threshold: float = None
@@ -97,8 +90,6 @@ class InversionBaseParams(BaseParams):
         self._parallelized: bool = None
         self._n_cpu: int = None
         self._max_ram: float = None
-        self._fix_aspect_ratio = None
-        self._colorbar = None
         self._store_sensitivities: str = None
         self._out_group = None
         self._ga_group = None
@@ -194,22 +185,6 @@ class InversionBaseParams(BaseParams):
                 comps.append(c)
 
         return comps
-
-    @property
-    def window(self) -> dict[str, float]:
-        """Returns window dictionary"""
-        win = {
-            "azimuth": self.window_azimuth,
-            "center_x": self.window_center_x,
-            "center_y": self.window_center_y,
-            "width": self.window_width,
-            "height": self.window_height,
-            "center": [self.window_center_x, self.window_center_y],
-            "size": [self.window_width, self.window_height],
-        }
-        check_keys = ["center_x", "center_y", "width", "height"]
-        no_data = all([v is None for k, v in win.items() if k in check_keys])
-        return None if no_data else win
 
     def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
@@ -338,28 +313,12 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("gps_receivers_offset", val, fun=self._uuid_promoter)
 
     @property
-    def ignore_values(self):
-        return self._ignore_values
-
-    @ignore_values.setter
-    def ignore_values(self, val):
-        self.setter_validator("ignore_values", val)
-
-    @property
     def inversion_type(self):
         return self._inversion_type
 
     @inversion_type.setter
     def inversion_type(self, val):
         self.setter_validator("inversion_type", val)
-
-    @property
-    def resolution(self):
-        return self._resolution
-
-    @resolution.setter
-    def resolution(self, val):
-        self.setter_validator("resolution", val)
 
     @property
     def max_chunk_size(self):
@@ -393,46 +352,6 @@ class InversionBaseParams(BaseParams):
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
         self.update_group_options()
-
-    @property
-    def window_center_x(self):
-        return self._window_center_x
-
-    @window_center_x.setter
-    def window_center_x(self, val):
-        self.setter_validator("window_center_x", val)
-
-    @property
-    def window_center_y(self):
-        return self._window_center_y
-
-    @window_center_y.setter
-    def window_center_y(self, val):
-        self.setter_validator("window_center_y", val)
-
-    @property
-    def window_width(self):
-        return self._window_width
-
-    @window_width.setter
-    def window_width(self, val):
-        self.setter_validator("window_width", val)
-
-    @property
-    def window_height(self):
-        return self._window_height
-
-    @window_height.setter
-    def window_height(self, val):
-        self.setter_validator("window_height", val)
-
-    @property
-    def window_azimuth(self):
-        return self._window_azimuth
-
-    @window_azimuth.setter
-    def window_azimuth(self, val):
-        self.setter_validator("window_azimuth", val)
 
     @property
     def inversion_style(self):
@@ -710,22 +629,6 @@ class InversionBaseParams(BaseParams):
     @n_cpu.setter
     def n_cpu(self, val):
         self.setter_validator("n_cpu", val)
-
-    @property
-    def fix_aspect_ratio(self):
-        return self._fix_aspect_ratio
-
-    @fix_aspect_ratio.setter
-    def fix_aspect_ratio(self, val):
-        self.setter_validator("fix_aspect_ratio", val)
-
-    @property
-    def colorbar(self):
-        return self._colorbar
-
-    @colorbar.setter
-    def colorbar(self, val):
-        self.setter_validator("colorbar", val)
 
     @property
     def max_ram(self):

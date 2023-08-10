@@ -308,6 +308,7 @@ plot_layout = html.Div(
                                 "width": "35%",
                                 "margin-right": "3%",
                             },
+                            value=50.0,
                         ),
                     ],
                     style={"width": "60%"},
@@ -1011,6 +1012,7 @@ detrend = html.Div(
                                 "width": "60%",
                                 "vertical-align": "bottom",
                             },
+                            value="none",
                         ),
                     ]
                 ),
@@ -1025,6 +1027,7 @@ detrend = html.Div(
                             step=1,
                             min=0,
                             style={"display": "inline-block", "width": "30%"},
+                            value=0,
                         ),
                     ]
                 ),

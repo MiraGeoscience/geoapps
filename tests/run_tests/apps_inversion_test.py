@@ -15,6 +15,7 @@ from uuid import UUID
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
@@ -92,13 +93,11 @@ def test_mag_inversion(tmp_path: Path):
                 n_clicks=0,
                 data_object=str(app.params.data_object.uid),
                 full_components=full_components,
-                resolution=app.params.resolution,
-                window_center_x=app.params.window_center_x,
-                window_center_y=app.params.window_center_y,
-                window_width=app.params.window_width,
-                window_height=app.params.window_height,
-                fix_aspect_ratio=[app.params.fix_aspect_ratio],
-                colorbar=[app.params.colorbar],
+                resolution=50.0,
+                window_center_x=314600.0,
+                window_center_y=6072300.0,
+                window_width=1000.0,
+                window_height=1500.0,
                 topography_object=str(
                     app.params.topography_object.uid  # pylint: disable=no-member
                 ),
@@ -130,7 +129,7 @@ def test_mag_inversion(tmp_path: Path):
                 upper_bound_const=3.5,
                 detrend_type="all",
                 detrend_order=0,
-                ignore_values=app.params.ignore_values,
+                ignore_values="",
                 max_global_iterations=app.params.max_global_iterations,
                 max_irls_iterations=app.params.max_irls_iterations,
                 coolingRate=app.params.coolingRate,
@@ -282,7 +281,12 @@ def test_ip_inversion(tmp_path: Path):
     for param, value in changes.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert p_value == value, f"Parameter {param} not saved and loaded correctly."
+        if param == "chargeability_channel":
+            assert p_value != value and is_uuid(p_value)
+        else:
+            assert (
+                p_value == value
+            ), f"Parameter {param} not saved and loaded correctly."
 
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)
