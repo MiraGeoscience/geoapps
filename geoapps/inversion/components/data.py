@@ -225,17 +225,17 @@ class InversionData(InversionLocations):
 
         if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem", "fem"]:
             for component, channels in data.items():
-                for channel, values in channels.items():
+                for ind, (channel, values) in enumerate(channels.items()):
                     dnorm = values / self.normalizations[channel][component]
                     data_channel = entity.add_data(
-                        {f"{basename}_{component}_{channel}": {"values": dnorm}}
+                        {f"{basename}_{component}_[{ind}]": {"values": dnorm}}
                     )
                     data_dict[component] = entity.add_data_to_group(
                         data_channel, f"{basename}_{component}"
                     )
                     if not self.params.forward_only:
                         self._observed_data_types[component][
-                            f"{channel:.2e}"
+                            f"[{ind}]"
                         ] = data_channel.entity_type
                         uncerts = np.abs(
                             self.uncertainties[component][channel].copy()
@@ -243,11 +243,7 @@ class InversionData(InversionLocations):
                         )
                         uncerts[np.isinf(uncerts)] = np.nan
                         uncert_entity = entity.add_data(
-                            {
-                                f"Uncertainties_{component}_{channel}": {
-                                    "values": uncerts
-                                }
-                            }
+                            {f"Uncertainties_{component}_[{ind}]": {"values": uncerts}}
                         )
                         uncert_dict[component] = entity.add_data_to_group(
                             uncert_entity, f"Uncertainties_{component}"

@@ -76,7 +76,7 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         workpath = tmp_path.parent / "test_fem_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
-        survey = geoh5.get_entity("Airborne_rx")[0]
+        survey = geoh5.get_entity("Airborne_rx")[0].copy(copy_children=False)
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
         data = {}
@@ -156,6 +156,12 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_z_real_1
+
+        assert (
+            run_ws.get_entity("Iteration_1_z_imag_[1]")[0].entity_type.uid
+            == run_ws.get_entity("Observed_z_imag_[1]")[0].entity_type.uid
+        )
+
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)

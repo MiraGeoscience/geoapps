@@ -361,19 +361,20 @@ def setup_inversion_workspace(
             survey.tx_id_property = np.hstack(loop_id)
             # survey.parts = np.repeat(np.arange(n_lines), n_electrodes)
 
-        survey.channels = np.r_[3e-04, 6e-04, 1.2e-03]
+        survey.channels = np.r_[3e-04, 6e-04, 1.2e-03] * 1e3
         waveform = np.c_[
             np.r_[
                 np.arange(-0.002, -0.0001, 5e-4),
                 np.arange(-0.0004, 0.0, 1e-4),
                 np.arange(0.0, 0.002, 5e-4),
             ]
-            + 2e-3,
+            * 1e3
+            + 2.0,
             np.r_[np.linspace(0, 1, 4), np.linspace(0.9, 0.0, 4), np.zeros(4)],
         ]
         survey.waveform = waveform
-        survey.timing_mark = 2e-3
-        survey.unit = "Seconds (s)"
+        survey.timing_mark = 2.0
+        survey.unit = "Milliseconds (ms)"
 
     else:
         survey = Points.create(

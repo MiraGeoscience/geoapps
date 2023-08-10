@@ -377,7 +377,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
                     ]
                 )
             ],
-            # "channels": channels,
+            "channels": channels,
             "components": components,
             "association": "VERTEX",
             "reshape": lambda x: x.reshape(
@@ -542,8 +542,6 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
     ):
         receivers = inversion_object.entity
         channels = np.array(receivers.channels, dtype=float)
-        channels *= getattr(self.params, "unit_conversion", 1.0)
-
         components = list(inversion_object.observed)
         ordering = np.vstack(ordering)
         channel_ids = ordering[:, 0]
@@ -556,6 +554,7 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             return data
 
         kwargs = {
+            "data_type": inversion_object.observed_data_types,
             "attribute_type": "predicted",
             "save_objective_function": save_objective_function,
             "association": "VERTEX",
