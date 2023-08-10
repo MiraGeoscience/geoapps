@@ -130,54 +130,6 @@ forward_defaults = {
     "gradient_type": "total",
 }
 
-inversion_ui_json = {
-    "potential_channel_bool": True,
-}
-
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-3,
-    },
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
-        "value": None,
-    },
-    "z_from_topo": {
-        "group": "Survey",
-        "main": True,
-        "label": "Surface survey",
-        "tooltip": "Uncheck if borehole data is present",
-        "value": True,
-    },
-    "line_object": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Referenced",
-        "group": "Survey",
-        "main": True,
-        "label": "Line ID",
-        "parent": "data_object",
-        "value": None,
-    },
-    "line_id": {
-        "group": "Survey",
-        "main": True,
-        "min": 1,
-        "label": "Line number",
-        "value": 1,
-    },
-}
-
 default_ui_json = {
     "title": "Direct Current (DC) 2D Inversion",
     "icon": "PotentialElectrode",

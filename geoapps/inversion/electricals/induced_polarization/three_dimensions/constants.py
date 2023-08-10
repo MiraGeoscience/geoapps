@@ -118,59 +118,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-inversion_ui_json = {
-    "chargeability_channel_bool": True,
-}
 
-forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
-        "value": None,
-    },
-    "z_from_topo": {
-        "group": "Survey",
-        "main": True,
-        "label": "Surface survey",
-        "tooltip": "Uncheck if borehole data is present",
-        "value": True,
-    },
-    "chargeability_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "main": True,
-        "label": "Chargeability (V/V)",
-        "parent": "data_object",
-        "value": None,
-    },
-    "chargeability_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "main": True,
-        "isValue": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "property": None,
-        "value": 1.0,
-    },
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Chargeability (V/V)",
-        "property": None,
-        "min": 0.0,
-        "max": 10000.0,
-        "value": 0.0,
-    },
-}
 default_ui_json = {
     "title": "Induced Polarization (IP) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",

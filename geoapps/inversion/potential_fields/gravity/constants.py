@@ -145,20 +145,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-inversion_ui_json = {}
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": True,
-        "parent": "mesh",
-        "label": "Density contrast (g/cc)",
-        "property": None,
-        "value": 1e-3,
-    }
-}
+
 default_ui_json = {
     "title": "Gravity Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",

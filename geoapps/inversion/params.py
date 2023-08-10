@@ -26,9 +26,7 @@ class InversionBaseParams(BaseParams):
 
     _default_ui_json = None
     _forward_defaults = None
-    _forward_ui_json = None
     _inversion_defaults = None
-    _inversion_ui_json = None
     _inversion_type = None
     _physical_property = None
 

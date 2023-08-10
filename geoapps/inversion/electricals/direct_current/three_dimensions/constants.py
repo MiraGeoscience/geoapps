@@ -117,38 +117,6 @@ forward_defaults = {
     "distributed_workers": None,
 }
 
-inversion_ui_json = {
-    "potential_channel_bool": True,
-}
-
-forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
-        "value": None,
-    },
-    "z_from_topo": {
-        "group": "Survey",
-        "main": True,
-        "label": "Surface survey",
-        "tooltip": "Uncheck if borehole data is present",
-        "value": True,
-    },
-    "starting_model": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-1,
-    },
-}
-
 default_ui_json = {
     "title": "Direct Current (DC) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",

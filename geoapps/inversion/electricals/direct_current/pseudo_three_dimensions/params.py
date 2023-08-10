@@ -13,9 +13,7 @@ from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.constants import (
     default_ui_json,
     forward_defaults,
-    forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
@@ -30,9 +28,7 @@ class DirectCurrentPseudo3DParams(InversionBaseParams):
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._forward_defaults = deepcopy(forward_defaults)
-        self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "direct current 3d"
         self._validations = validations
         self._potential_channel_bool = None

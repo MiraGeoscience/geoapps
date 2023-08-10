@@ -11,12 +11,7 @@ from copy import deepcopy
 
 from geoapps.inversion.joint.params import BaseJointParams
 
-from .constants import (
-    default_ui_json,
-    inversion_defaults,
-    inversion_ui_json,
-    validations,
-)
+from .constants import default_ui_json, inversion_defaults, validations
 
 
 class JointSurveysParams(BaseJointParams):
@@ -29,7 +24,6 @@ class JointSurveysParams(BaseJointParams):
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "joint surveys"
         self._validations = validations
 
