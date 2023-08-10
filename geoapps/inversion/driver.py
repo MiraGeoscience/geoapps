@@ -401,39 +401,23 @@ class InversionDriver(BaseDriver):
         return objective_function.ComboObjectiveFunction(objfcts=reg_funcs)
 
     def get_tiles(self):
-        if self.params.inversion_type in [
-            "direct current 3d",
-            "induced polarization 3d",
-        ]:
-            tiles = []
-            potential_electrodes = self.inversion_data.entity
-            current_electrodes = potential_electrodes.current_electrodes
-            line_split = np.array_split(
-                current_electrodes.unique_parts, self.params.tile_spatial
-            )
-            for split in line_split:
-                split_ind = []
-                for line in split:
-                    electrode_ind = current_electrodes.parts == line
-                    cells_ind = np.where(
-                        np.any(electrode_ind[current_electrodes.cells], axis=1)
-                    )[0]
-                    split_ind.append(cells_ind)
-                # Fetch all receivers attached to the currents
-                logical = np.zeros(current_electrodes.n_cells, dtype="bool")
-                if len(split_ind) > 0:
-                    logical[np.hstack(split_ind)] = True
-                    tiles.append(
-                        np.where(logical[potential_electrodes.ab_cell_id.values - 1])[0]
-                    )
-
-            # TODO Figure out how to handle a tile_spatial object to replace above
-
-        elif "2d" in self.params.inversion_type:
+        if "2d" in self.params.inversion_type:
             tiles = [self.inversion_data.indices]
         else:
+            locations = self.inversion_data.locations
+
+            # Use mid-point between M-N electrodes
+            if self.params.inversion_type in [
+                "direct current 3d",
+                "induced polarization 3d",
+            ]:
+                cells = self.inversion_data.entity.cells
+                locations = (
+                    locations[cells[:, 0], :] + locations[cells[:, 1], :]
+                ) / 2.0
+
             tiles = tile_locations(
-                self.inversion_data.locations,
+                locations,
                 self.params.tile_spatial,
                 method="kmeans",
             )
