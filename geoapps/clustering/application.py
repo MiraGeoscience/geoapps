@@ -45,12 +45,8 @@ class Clustering(ScatterPlots):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json.path).is_dir():
-            self.params = self._param_class(ui_json)
-        else:
-            self.params = self._param_class(**app_initializer)
 
-        super().__init__(**self.params.to_dict())
+        super().__init__(ui_json=ui_json, **app_initializer)
 
         # Params and driver used for updating scatter plot in make_scatter_plot function.
         self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)

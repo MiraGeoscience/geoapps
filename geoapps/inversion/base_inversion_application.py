@@ -294,6 +294,7 @@ class InversionApp(BaseDashApplication):
             # Topography
             Output(component_id="z_from_topo", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
+            Output(component_id="resolution", component_property="value"),
             # Inversion - mesh
             Output(component_id="mesh", component_property="value"),
             # Inversion - regularization
@@ -344,6 +345,7 @@ class InversionApp(BaseDashApplication):
             Output(component_id="window_width", component_property="value"),
             Output(component_id="window_height", component_property="value"),
             Output(component_id="fix_aspect_ratio", component_property="value"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
             Input(component_id="plot", component_property="relayoutData"),
             Input(component_id="data_object", component_property="value"),
@@ -1114,6 +1116,7 @@ class InversionApp(BaseDashApplication):
 
     def plot_selection(
         self,
+        ui_json_data: dict,
         figure: dict,
         figure_zoom_trigger: dict,
         object_uid: str,
@@ -1180,7 +1183,8 @@ class InversionApp(BaseDashApplication):
                 margin=dict(l=20, r=20, t=20, b=20),
             )
 
-            if not reinitialize:
+            if "ui_json_data" not in triggers and not reinitialize:
+                # If we aren't reading in a ui.json, return the empty plot.
                 return (
                     figure,
                     data_count,
@@ -1197,12 +1201,28 @@ class InversionApp(BaseDashApplication):
         if channel is not None:
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
             window = None
+            if "ui_json_data" in triggers or reinitialize:
+                if ui_json_data["fix_aspect_ratio"]:
+                    fix_aspect_ratio = [True]
+                else:
+                    fix_aspect_ratio = []
 
-            # Updating figure if sliders are changed.
-            if "window_width" in triggers or "window_height" in triggers:
-                fix_aspect_ratio = []
+                center_x = ui_json_data["window_center_x"]
+                center_y = ui_json_data["window_center_y"]
+                width = ui_json_data["window_width"]
+                height = ui_json_data["window_height"]
 
-            if any(
+                window = {
+                    "center": [
+                        center_x,
+                        center_y,
+                    ],
+                    "size": [
+                        width,
+                        height,
+                    ],
+                }
+            elif any(
                 elem
                 in [
                     "window_center_x",
@@ -1212,6 +1232,9 @@ class InversionApp(BaseDashApplication):
                 ]
                 for elem in triggers
             ):
+                # Updating figure if sliders are changed.
+                if "window_width" in triggers or "window_height" in triggers:
+                    fix_aspect_ratio = []
                 window = {
                     "center": [
                         center_x,

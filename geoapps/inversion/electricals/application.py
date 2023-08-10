@@ -102,11 +102,18 @@ class InversionApp(PlotSelection2D):
     inversion_parameters = None
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
+        if ui_json is not None and Path(ui_json.path).exists():
+            self.params = self._param_class(ui_json)
         else:
-            self.params = self._param_class(**app_initializer)
+            self.params = self._param_class()
+            app_initializer.update(kwargs)
+            extras = {
+                key: value
+                for key, value in app_initializer.items()
+                if key not in self.params.param_names
+            }
+            self.params.update(app_initializer)  # ignores all non-param keys
+            self._app_initializer = extras
 
         self.data_object = self.objects
         self.defaults.update(self.params.to_dict())

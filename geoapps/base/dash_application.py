@@ -125,7 +125,6 @@ class BaseDashApplication:
                 if self._app_initializer is not None:
                     ui_json_data.update(self._app_initializer)
 
-                print(ui_json_data)
                 object_value = ui_json_data[param_name]
 
             self.workspace.open()
@@ -452,7 +451,6 @@ class ObjectSelection:
                 if self._app_initializer is not None:
                     ui_json_data.update(self._app_initializer)
 
-                print(ui_json_data)
                 object_value = ui_json_data["objects"]
 
             # Get new options for object dropdown

@@ -25,7 +25,7 @@ from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
-from geoapps.base.dash_application import BaseDashApplication, ObjectSelection
+from geoapps.base.dash_application import BaseDashApplication
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.layout import scatter_layout
@@ -41,17 +41,22 @@ class ScatterPlots(BaseDashApplication):
     _driver_class = ScatterPlotDriver
 
     def __init__(self, ui_json=None, ui_json_data=None, params=None, **kwargs):
-        app_initializer.update(kwargs)
-
         if params is not None:
             # Launched from ObjectSelection, with default ui.json
             self.params = params
-        elif ui_json is not None and Path(ui_json.path).is_dir():
+        elif ui_json is not None and Path(ui_json.path).exists():
             self.params = self._param_class(ui_json)
-            ui_json_data = ui_json.demote(ui_json.data.copy())
         else:
-            self.params = self._param_class(**app_initializer)
-            ui_json_data = app_initializer
+            self.params = self._param_class()
+            app_initializer.update(kwargs)
+            extras = {
+                key: value
+                for key, value in app_initializer.items()
+                if key not in self.params.param_names
+            }
+            self.params.update(app_initializer)  # ignores all non-param keys
+            self._app_initializer = extras
+
         super().__init__()
 
         # Start flask server
@@ -556,5 +561,5 @@ if __name__ == "__main__":
     ifile = InputFile.read_ui_json(file)
     ifile.workspace.open("r")
     print("Loaded. Building the plotly scatterplot . . .")
-    ObjectSelection.run("Scatter Plots", ScatterPlots, ifile)
+    ScatterPlots.run(ifile)
     print("Done")
