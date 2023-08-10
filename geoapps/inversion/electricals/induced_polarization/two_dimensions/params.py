@@ -13,9 +13,7 @@ from ...params import Base2DParams
 from .constants import (
     default_ui_json,
     forward_defaults,
-    forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
@@ -30,9 +28,7 @@ class InducedPolarization2DParams(Base2DParams):
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._forward_defaults = deepcopy(forward_defaults)
-        self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "induced polarization 2d"
         self._validations = validations
         self._chargeability_channel_bool = None

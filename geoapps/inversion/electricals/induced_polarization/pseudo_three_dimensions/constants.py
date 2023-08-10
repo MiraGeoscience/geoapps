@@ -138,41 +138,6 @@ forward_defaults = {
     "distributed_workers": None,
 }
 
-inversion_ui_json = {
-    "chargeability_channel_bool": True,
-}
-
-forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
-        "value": None,
-    },
-    "line_object": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Referenced",
-        "group": "Survey",
-        "main": True,
-        "label": "Line ID",
-        "parent": "data_object",
-        "value": None,
-    },
-    "line_id": 1,
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Chargeability (V/V)",
-        "property": None,
-        "value": 1e-3,
-    },
-}
-
 default_ui_json = {
     "title": "Induced Polarization (IP) 3D Inversion",
     "icon": "PotentialElectrode",

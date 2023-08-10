@@ -139,22 +139,6 @@ forward_defaults = {
     "distributed_workers": None,
 }
 
-inversion_ui_json = {}
-
-forward_ui_json = {
-    "starting_model": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-3,
-    },
-}
-
 default_ui_json = {
     "title": "Magnetotellurics Inversion",
     "icon": "surveymagnetotellurics",
