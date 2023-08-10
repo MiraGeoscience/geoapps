@@ -57,6 +57,11 @@ class ScatterPlots(BaseDashApplication):
             self.params.update(app_initializer)  # ignores all non-param keys
             self._app_initializer = extras
 
+        ui_json_data = self.params.input_file.demote(self.params.to_dict())
+
+        if self._app_initializer is not None:
+            ui_json_data.update(self._app_initializer)
+
         super().__init__()
 
         # Start flask server
