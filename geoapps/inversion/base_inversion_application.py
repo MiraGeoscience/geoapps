@@ -756,18 +756,16 @@ class InversionApp(BaseDashApplication):
             # Fill in full_components dict from ui.json.
             full_components = {}
             for comp in component_options:
-                # Get channel_bool value
-                if ui_json_data.get(comp + "_channel_bool", False):
-                    channel_bool = [True]
-                else:
-                    channel_bool = []
-
                 # Get channel value
                 if is_uuid(ui_json_data.get(comp + "_channel", False)):
                     channel = str(ui_json_data[comp + "_channel"])
                     channel_bool = [True]
                 else:
                     channel = None
+                    if ui_json_data.get(comp + "_channel_bool", False):
+                        channel_bool = [True]
+                    else:
+                        channel_bool = []
 
                 # Get uncertainty value
                 if comp + "_uncertainty" in ui_json_data and (
