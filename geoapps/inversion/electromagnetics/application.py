@@ -10,7 +10,9 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
+import uuid
 from pathlib import Path
+from time import time
 
 import numpy as np
 from geoh5py.data import Data
@@ -23,12 +25,14 @@ from geoh5py.objects import (
     Points,
     Surface,
 )
+from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
 
 from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
+from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
@@ -946,7 +950,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + 'python -m geoapps.inversion.electromagnetics.driver "'
-            + f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
+            + self.trigger.file_name
         )
         self.trigger.button_style = ""
 
@@ -1038,10 +1042,10 @@ class InversionApp(PlotSelection2D):
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
             uncertainties = self.em_system_specs[self.system.value]["uncertainty"]
             system_specs = {}
-            for key, time in self.em_system_specs[self.system.value][
+            for key, time_gate in self.em_system_specs[self.system.value][
                 "channels"
             ].items():
-                system_specs[key] = f"{time:.5e}"
+                system_specs[key] = f"{time_gate:.5e}"
 
             for ind, (key, channel) in enumerate(system_specs.items()):
                 if ind + 1 < start_channel:
@@ -1361,31 +1365,19 @@ class InversionApp(PlotSelection2D):
             print("TEM survey requires an Uncertainty group.")
             return
 
+        time_stamp = time()
         with Workspace(
             str(
                 Path(self.export_directory.selected_path)
-                / (self.ga_group_name.value + ".geoh5")
+                / (self.ga_group_name.value + f"{time_stamp:.0f}.geoh5")
             )
         ) as new_workspace:
-            obj, _ = self.get_selected_entities()
-            new_obj = obj.copy(parent=new_workspace, copy_children=False)
+            with self.workspace.open("r"):
+                obj, _ = self.get_selected_entities()
+                new_obj = obj.copy(parent=new_workspace, copy_children=False)
 
-            prop_group = obj.find_or_create_property_group(
-                name=self.data.uid_name_map[self.data.value]
-            )
-            data_list = []
-            for prop in prop_group.properties:
-                data = self.workspace.get_entity(prop)[0]
-                data_list.append(data.copy(parent=new_obj))
-
-            new_group = new_obj.add_data_to_group(data_list, prop_group.name)
-
-            if isinstance(input_dict["data"]["channels"], str):
-                input_dict["data"]["channels"] = str(new_group.uid)
-
-            if self._uncertainties.value is not None:
                 prop_group = obj.find_or_create_property_group(
-                    name=self.data.uid_name_map[self._uncertainties.value]
+                    name=self.data.uid_name_map[self.data.value]
                 )
                 data_list = []
                 for prop in prop_group.properties:
@@ -1393,46 +1385,120 @@ class InversionApp(PlotSelection2D):
                     data_list.append(data.copy(parent=new_obj))
 
                 new_group = new_obj.add_data_to_group(data_list, prop_group.name)
-                input_dict["uncertainty_channel"] = str(new_group.uid)
-            # if self.system.value == "Airborne TEM Survey":
-            #     prop_group = new_obj.add_data_to_group(data_list, )
-            #
 
-            _, data = self.sensor.get_selected_entities()
-            for d in data:
-                if d is None:
+                if isinstance(input_dict["data"]["channels"], str):
+                    input_dict["data"]["channels"] = str(new_group.uid)
+
+                if self._uncertainties.value is not None:
+                    prop_group = obj.find_or_create_property_group(
+                        name=self.data.uid_name_map[self._uncertainties.value]
+                    )
+                    data_list = []
+                    for prop in prop_group.properties:
+                        data = self.workspace.get_entity(prop)[0]
+                        data_list.append(data.copy(parent=new_obj))
+
+                    new_group = new_obj.add_data_to_group(data_list, prop_group.name)
+                    input_dict["uncertainty_channel"] = str(new_group.uid)
+                # if self.system.value == "Airborne TEM Survey":
+                #     prop_group = new_obj.add_data_to_group(data_list, )
+                #
+
+                _, data = self.sensor.get_selected_entities()
+                for d in data:
+                    if d is None:
+                        continue
+                    d.copy(parent=new_obj)
+
+                _, data = self.lines.get_selected_entities()
+                for d in data:
+                    if d is None:
+                        continue
+                    d.copy(parent=new_obj)
+
+                for elem in [
+                    self.topography,
+                    self.inversion_parameters.starting_model,
+                    self.inversion_parameters.reference_model,
+                    self.inversion_parameters.susceptibility_model,
+                ]:
+                    obj, data = elem.get_selected_entities()
+
+                    if obj is not None:
+                        new_obj = new_workspace.get_entity(obj.uid)[0]
+                        if new_obj is None:
+                            new_obj = obj.copy(
+                                parent=new_workspace, copy_children=False
+                            )
+
+                        for d in data:
+                            if d is None:
+                                continue
+                            d.copy(parent=new_obj)
+
+            # Get data_dict for pre-processing
+            data_object = new_workspace.get_entity(
+                uuid.UUID(input_dict["data"]["name"])
+            )[0]
+            components = []
+            data_dict = {}
+            for key, value in input_dict["data"]["channels"].items():
+                comp = key
+                components.append(comp)
+                data_dict[comp + "_channel"] = {
+                    "name": new_workspace.get_entity(uuid.UUID(value["name"]))[0].name
+                }
+                if is_uuid(value["uncertainties"]):
+                    data_dict[comp + "_uncertainty"] = {
+                        "name": new_workspace.get_entity(
+                            uuid.UUID(value["uncertainties"])
+                        )[0].name
+                    }
+            # Add lines to data_dict
+            components.append("lines")
+            line_data = list(input_dict["lines"].keys())[0]
+            data_dict["lines_channel"] = {
+                "name": new_workspace.get_entity(uuid.UUID(line_data))[0].name
+            }
+            # Pre-processing
+            update_dict = preprocess_data(
+                workspace=new_workspace,
+                param_dict=input_dict,
+                resolution=self.resolution.value,
+                data_object=data_object,
+                window_center_x=self.window_center_x.value,
+                window_center_y=self.window_center_y.value,
+                window_width=self.window_width.value,
+                window_height=self.window_height.value,
+                window_azimuth=self.window_azimuth.value,
+                components=components,
+                data_dict=data_dict,
+            )
+            # Update input dict from pre-processing
+            input_dict["data"]["name"] = str(update_dict["data_object"])
+            for comp in components:
+                if comp == "lines":
+                    input_dict["lines"] = {
+                        str(update_dict["lines_channel"]): list(
+                            input_dict["lines"].values()
+                        )[0]
+                    }
                     continue
-                d.copy(parent=new_obj)
-
-            _, data = self.lines.get_selected_entities()
-            for d in data:
-                if d is None:
-                    continue
-                d.copy(parent=new_obj)
-
-            for elem in [
-                self.topography,
-                self.inversion_parameters.starting_model,
-                self.inversion_parameters.reference_model,
-                self.inversion_parameters.susceptibility_model,
-            ]:
-                obj, data = elem.get_selected_entities()
-
-                if obj is not None:
-                    new_obj = new_workspace.get_entity(obj.uid)[0]
-                    if new_obj is None:
-                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
-
-                    for d in data:
-                        if d is None:
-                            continue
-                        d.copy(parent=new_obj)
+                if comp + "_channel" in update_dict:
+                    input_dict["data"]["channels"][comp]["name"] = str(
+                        update_dict[comp + "_channel"]
+                    )
+                if comp + "_uncertainty" in update_dict:
+                    input_dict["data"]["channels"][comp]["uncertainties"] = str(
+                        update_dict[comp + "_uncertainty"]
+                    )
 
         input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
             Path(new_workspace.h5file).resolve()
         )
 
-        file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}.json"
+        file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}{time_stamp:.0f}.json"
+        self.trigger.file_name = file
 
         with open(file, "w", encoding="utf8") as f:
             json.dump(input_dict, f, indent=4)

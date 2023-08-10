@@ -27,8 +27,4 @@ def test_em1d_inversion(tmp_path: Path):
     app.inversion_parameters.reference_model.options.value = "Value"
     app.monitoring_directory = tmp_path
     app.write_trigger(None)
-
-    input_file = Path(app.export_directory.selected_path) / (
-        app.ga_group_name.value + ".json"
-    )
-    inversion(str(input_file))
+    inversion(app.trigger.file_name)

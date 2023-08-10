@@ -30,13 +30,8 @@ from plotly import graph_objects as go
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion import InversionBaseParams
-from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.shared_utils.utils import (
-    downsample_grid,
-    downsample_xy,
-    filter_xy,
-    get_locations,
-)
+from geoapps.inversion.components.preprocessing import preprocess_data
+from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
 
 class InversionApp(BaseDashApplication):
@@ -82,8 +77,6 @@ class InversionApp(BaseDashApplication):
             State(component_id="window_center_y", component_property="value"),
             State(component_id="window_width", component_property="value"),
             State(component_id="window_height", component_property="value"),
-            State(component_id="fix_aspect_ratio", component_property="value"),
-            State(component_id="colorbar", component_property="value"),
             # Topography
             State(component_id="topography_object", component_property="value"),
             State(component_id="topography", component_property="value"),
@@ -298,10 +291,6 @@ class InversionApp(BaseDashApplication):
 
         # Update from ui.json
         self.app.callback(
-            # Window Data
-            Output(component_id="colorbar", component_property="value"),
-            # Input Data
-            Output(component_id="resolution", component_property="value"),
             # Topography
             Output(component_id="z_from_topo", component_property="value"),
             Output(component_id="receivers_offset_z", component_property="value"),
@@ -316,8 +305,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="x_norm", component_property="value"),
             Output(component_id="y_norm", component_property="value"),
             Output(component_id="z_norm", component_property="value"),
-            # Inversion - ignore values
-            Output(component_id="ignore_values", component_property="value"),
             # Inversion - optimization
             Output(component_id="max_global_iterations", component_property="value"),
             Output(component_id="max_irls_iterations", component_property="value"),
@@ -357,7 +344,6 @@ class InversionApp(BaseDashApplication):
             Output(component_id="window_width", component_property="value"),
             Output(component_id="window_height", component_property="value"),
             Output(component_id="fix_aspect_ratio", component_property="value"),
-            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
             Input(component_id="plot", component_property="relayoutData"),
             Input(component_id="data_object", component_property="value"),
@@ -757,15 +743,17 @@ class InversionApp(BaseDashApplication):
             full_components = {}
             for comp in component_options:
                 # Get channel value
-                if is_uuid(ui_json_data.get(comp + "_channel", False)):
+                if comp + "_channel" in ui_json_data and is_uuid(
+                    ui_json_data[comp + "_channel"]
+                ):
                     channel = str(ui_json_data[comp + "_channel"])
                     channel_bool = [True]
                 else:
                     channel = None
+                    channel_bool = []
+
                     if ui_json_data.get(comp + "_channel_bool", False):
                         channel_bool = [True]
-                    else:
-                        channel_bool = []
 
                 # Get uncertainty value
                 if comp + "_uncertainty" in ui_json_data and (
@@ -994,7 +982,6 @@ class InversionApp(BaseDashApplication):
 
         if values is not None and (values.shape[0] != locations.shape[0]):
             values = None
-
         # Make colorscale from GA color_map
         if data.entity_type.color_map is not None:
             color_map_vals = data.entity_type.color_map._values  # pylint: disable=W0212
@@ -1036,10 +1023,16 @@ class InversionApp(BaseDashApplication):
                     values.reshape(entity.shape, order="F"), dtype=float
                 )
 
-                # Rotate plot to match object rotation.
-                new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
-                rot_x = np.linspace(x.min(), x.max(), new_values.shape[0])
-                rot_y = np.linspace(y.min(), y.max(), new_values.shape[1])
+                if np.isnan(values).any():
+                    new_values = scipy.ndimage.rotate(values, rot, cval=np.nan, order=0)
+                    new_values = new_values[:, ~np.isnan(new_values).all(axis=0)]
+                    new_values = new_values[~np.isnan(new_values).all(axis=1), :]
+                else:
+                    # Rotate plot to match object rotation.
+                    new_values = scipy.ndimage.rotate(values, rot, cval=np.nan)
+
+                rot_x = np.linspace(np.nanmin(x), np.nanmax(x), new_values.shape[0])
+                rot_y = np.linspace(np.nanmin(y), np.nanmax(y), new_values.shape[1])
 
                 X, Y = np.meshgrid(rot_x, rot_y)
 
@@ -1059,16 +1052,20 @@ class InversionApp(BaseDashApplication):
             downsampled_index, down_x, down_y = downsample_grid(x, y, resolution)
             z = values[downsampled_index]
 
+            data_count = None
             if figure["layout"]["xaxis"]["autorange"]:
                 z_count = z
-            else:
+                data_count = np.sum(~np.isnan(z_count))
+            elif (
+                figure["layout"]["xaxis"]["range"]
+                and figure["layout"]["yaxis"]["range"]
+            ):
                 x_range = figure["layout"]["xaxis"]["range"]
                 x_indices = (x_range[0] <= down_x) & (down_x <= x_range[1])
                 y_range = figure["layout"]["yaxis"]["range"]
                 y_indices = (y_range[0] <= down_y) & (down_y <= y_range[1])
                 z_count = z[np.logical_and(x_indices, y_indices)]
-
-            data_count = np.sum(~np.isnan(z_count))
+                data_count = np.sum(~np.isnan(z_count))
 
             # Add colorbar
             if "colorbar" in kwargs.keys():
@@ -1117,7 +1114,6 @@ class InversionApp(BaseDashApplication):
 
     def plot_selection(
         self,
-        ui_json_data: dict,
         figure: dict,
         figure_zoom_trigger: dict,
         object_uid: str,
@@ -1133,7 +1129,6 @@ class InversionApp(BaseDashApplication):
         """
         Dash version of the plot_selection function in base/plot.
 
-        :param ui_json_data: Uploaded ui.json data.
         :param figure: Current displayed figure.
         :param figure_zoom_trigger: Trigger for when zoom on figure.
         :param object_uid: Input object.
@@ -1169,9 +1164,9 @@ class InversionApp(BaseDashApplication):
             )
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
+
         # Error with plot data resetting when switching tabs on initialization. If this happens, need to reinitialize.
         reinitialize = "plot_bgcolor" not in figure["layout"]
-
         if "data_object" in triggers or channel is None or reinitialize:
             # If object changes, update plot type based on object type.
             if isinstance(obj, Grid2D):
@@ -1185,8 +1180,7 @@ class InversionApp(BaseDashApplication):
                 margin=dict(l=20, r=20, t=20, b=20),
             )
 
-            if "ui_json_data" not in triggers and not reinitialize:
-                # If we aren't reading in a ui.json, return the empty plot.
+            if not reinitialize:
                 return (
                     figure,
                     data_count,
@@ -1203,29 +1197,12 @@ class InversionApp(BaseDashApplication):
         if channel is not None:
             data_obj = self.workspace.get_entity(uuid.UUID(channel))[0]
             window = None
-            # Update plot bounds from ui.json.
-            if "ui_json_data" in triggers or reinitialize:
-                if ui_json_data.get("fix_aspect_ratio", False):
-                    fix_aspect_ratio = [True]
-                else:
-                    fix_aspect_ratio = []
 
-                center_x = ui_json_data["window_center_x"]
-                center_y = ui_json_data["window_center_y"]
-                width = ui_json_data["window_width"]
-                height = ui_json_data["window_height"]
+            # Updating figure if sliders are changed.
+            if "window_width" in triggers or "window_height" in triggers:
+                fix_aspect_ratio = []
 
-                window = {
-                    "center": [
-                        center_x,
-                        center_y,
-                    ],
-                    "size": [
-                        width,
-                        height,
-                    ],
-                }
-            elif any(
+            if any(
                 elem
                 in [
                     "window_center_x",
@@ -1235,9 +1212,6 @@ class InversionApp(BaseDashApplication):
                 ]
                 for elem in triggers
             ):
-                # Updating figure if sliders are changed.
-                if "window_width" in triggers or "window_height" in triggers:
-                    fix_aspect_ratio = []
                 window = {
                     "center": [
                         center_x,
@@ -1248,6 +1222,7 @@ class InversionApp(BaseDashApplication):
                         height,
                     ],
                 }
+
             # Update plot data.
             if isinstance(obj, (Grid2D, Surface, Points, Curve)):
                 figure, count = InversionApp.plot_plan_data_selection(
@@ -1261,7 +1236,6 @@ class InversionApp(BaseDashApplication):
                         "fix_aspect_ratio": fix_aspect_ratio,
                     },
                 )
-
                 data_count += f"{count}"
 
             if (
@@ -1274,15 +1248,23 @@ class InversionApp(BaseDashApplication):
                 if figure["layout"]["xaxis"]["autorange"]:
                     x = np.array(figure["data"][0]["x"])
                     x_range = [np.amin(x), np.amax(x)]
-                else:
+                elif figure["layout"]["xaxis"]["range"] is not None:
                     x_range = figure["layout"]["xaxis"]["range"]
+                else:
+                    figure["layout"]["xaxis"]["autorange"] = True
+                    x = np.array(figure["data"][0]["x"])
+                    x_range = [np.amin(x), np.amax(x)]
                 width = x_range[1] - x_range[0]
                 center_x = x_range[0] + (width / 2)
                 if figure["layout"]["yaxis"]["autorange"]:
                     y = np.array(figure["data"][0]["y"])
                     y_range = [np.amin(y), np.amax(y)]
-                else:
+                elif figure["layout"]["yaxis"]["range"] is not None:
                     y_range = figure["layout"]["yaxis"]["range"]
+                else:
+                    figure["layout"]["yaxis"]["autorange"] = True
+                    y = np.array(figure["data"][0]["y"])
+                    y_range = [np.amin(y), np.amax(y)]
                 height = y_range[1] - y_range[0]
                 center_y = y_range[0] + (height / 2)
 
@@ -1324,7 +1306,6 @@ class InversionApp(BaseDashApplication):
 
     def get_full_component_params(
         self,
-        new_workspace: Workspace,
         data_object: ObjectBase,
         full_components: dict,
         forward_only: list,
@@ -1332,7 +1313,6 @@ class InversionApp(BaseDashApplication):
         """
         Get param_dict of values to add to self.params from full_components.
 
-        :param new_workspace: New workspace to copy channel data to.
         :param data_object: Parent object for channel data.
         :param full_components: Dictionary with keys of component_options, and with values channel_bool, channel,
         uncertainty_type, uncertainty_floor, uncertainty_channel for each key.
@@ -1420,7 +1400,6 @@ class InversionApp(BaseDashApplication):
         # Update channel params
         param_dict.update(
             self.get_full_component_params(
-                new_workspace,
                 data_object,
                 update_dict["full_components"],
                 update_dict["forward_only"],
@@ -1461,104 +1440,6 @@ class InversionApp(BaseDashApplication):
         param_dict["window_azimuth"] = 0.0
         return param_dict
 
-    @staticmethod
-    def get_locations(
-        workspace,
-        param_dict,
-    ) -> (np.ndarray, np.ndarray):
-        """
-        Get locations and mask for detrending data.
-
-        :param workspace: New workspace.
-        :param param_dict: Dictionary of params to give to _run_params.
-
-        :return locations: Data object locations.
-        :return mask: Mask for windowing data.
-        """
-        # Get locations
-        locations = get_locations(workspace, param_dict["data_object"])
-
-        # Get window
-        window = {
-            "azimuth": param_dict["window_azimuth"],
-            "center_x": param_dict["window_center_x"],
-            "center_y": param_dict["window_center_y"],
-            "width": param_dict["window_width"],
-            "height": param_dict["window_height"],
-            "center": [param_dict["window_center_x"], param_dict["window_center_y"]],
-            "size": [param_dict["window_width"], param_dict["window_height"]],
-        }
-        # Get angle
-        angle = None
-        if param_dict["mesh"] is not None:
-            if hasattr(param_dict["mesh"], "rotation"):
-                angle = -1 * param_dict["mesh"].rotation
-
-        # Get mask
-        mask = filter_xy(
-            locations[:, 0],
-            locations[:, 1],
-            window=window,
-            angle=angle,
-            distance=param_dict["resolution"],
-        )
-
-        # Get radar mask
-        if param_dict["receivers_radar_drape"] is not None:
-            radar = param_dict["receivers_radar_drape"].values
-            if any(np.isnan(radar)):
-                mask[np.isnan(radar)] = False
-
-        return locations, mask
-
-    def detrend_data(
-        self,
-        param_dict: dict,
-        workspace: Workspace,
-        detrend_order: int,
-        detrend_type: str,
-    ) -> dict:
-        """
-        Detrend data and update data values in param_dict.
-
-        :param param_dict: Dictionary of params to create self._run_params.
-        :param workspace: Output workspace.
-        :param detrend_order: Order of the polynomial to be used.
-        :param detrend_type: Method to be used for the detrending.
-            "all": Use all points.
-            "perimeter": Only use points on the convex hull .
-
-        :return: Updated param_dict with updated data.
-        """
-        if detrend_type == "none" or detrend_type is None or detrend_order is None:
-            return param_dict
-
-        locations, mask = InversionApp.get_locations(workspace, param_dict)
-        for comp in self._components:  # pylint: disable=E1133
-            if (
-                comp + "_channel_bool" in param_dict
-                and param_dict[comp + "_channel_bool"]
-            ):
-                data = param_dict[comp + "_channel"]
-
-                inp_values = data.values
-                data_trend, _ = calculate_2D_trend(
-                    locations[mask],
-                    inp_values[mask],
-                    detrend_order,
-                    detrend_type,
-                )
-
-                name = data.name + "_detrended"
-                values = inp_values
-                values[mask] -= data_trend
-                param_dict["data_object"].add_data({name: {"values": values}})
-                param_dict[comp + "_channel"] = (
-                    param_dict["data_object"].get_data(name)[0].uid
-                )
-
-        return param_dict
-
     def write_trigger(
         self,
         n_clicks: int,
@@ -1569,8 +1450,6 @@ class InversionApp(BaseDashApplication):
         window_center_y: float,
         window_width: float,
         window_height: float,
-        fix_aspect_ratio: list,
-        colorbar: list,
         topography_object: str,
         topography: str,
         z_from_topo: list,
@@ -1641,8 +1520,6 @@ class InversionApp(BaseDashApplication):
         :param window_center_y: Window center y.
         :param window_width: Window width.
         :param window_height: Window height
-        :param fix_aspect_ratio: Checkbox for plotting with fixed aspect ratio.
-        :param colorbar: Checkbox for displaying colorbar.
         :param topography_object: Topography object uuid.
         :param topography: Topography data uuid.
         :param z_from_topo: Checkbox for getting z from topography.
@@ -1716,13 +1593,6 @@ class InversionApp(BaseDashApplication):
 
         # Get dict of params from base dash application
         update_dict = {
-            "resolution": resolution,
-            "window_center_x": window_center_x,
-            "window_center_y": window_center_y,
-            "window_width": window_width,
-            "window_height": window_height,
-            "fix_aspect_ratio": fix_aspect_ratio,
-            "colorbar": colorbar,
             "z_from_topo": z_from_topo,
             "receivers_offset_z": receivers_offset_z,
             "receivers_radar_drape": receivers_radar_drape,
@@ -1735,7 +1605,6 @@ class InversionApp(BaseDashApplication):
             "x_norm": x_norm,
             "y_norm": y_norm,
             "z_norm": z_norm,
-            "ignore_values": ignore_values,
             "max_global_iterations": max_global_iterations,
             "max_irls_iterations": max_irls_iterations,
             "coolingRate": coolingRate,
@@ -1798,10 +1667,24 @@ class InversionApp(BaseDashApplication):
             )
 
             if self._inversion_type == "dcip":
-                param_dict["resolution"] = None  # No downsampling for dcip
-            param_dict = self.detrend_data(
-                param_dict, workspace, detrend_order, detrend_type
+                resolution = None  # No downsampling for dcip
+
+            # Pre-processing
+            update_dict = preprocess_data(
+                workspace=workspace,
+                param_dict=param_dict,
+                resolution=resolution,
+                data_object=param_dict["data_object"],
+                window_center_x=window_center_x,
+                window_center_y=window_center_y,
+                window_width=window_width,
+                window_height=window_height,
+                window_azimuth=0.0,
+                ignore_values=ignore_values,
+                detrend_type=detrend_type,
+                detrend_order=detrend_order,
             )
+            param_dict.update(update_dict)
 
             self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
