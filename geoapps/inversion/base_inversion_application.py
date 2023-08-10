@@ -757,17 +757,18 @@ class InversionApp(BaseDashApplication):
             full_components = {}
             for comp in component_options:
                 # Get channel_bool value
-                if ui_json_data[comp + "_channel_bool"]:
+                if ui_json_data.get(comp + "_channel_bool", False):
                     channel_bool = [True]
                 else:
                     channel_bool = []
+
                 # Get channel value
-                if comp + "_channel" in ui_json_data and is_uuid(
-                    ui_json_data[comp + "_channel"]
-                ):
+                if is_uuid(ui_json_data.get(comp + "_channel", False)):
                     channel = str(ui_json_data[comp + "_channel"])
+                    channel_bool = [True]
                 else:
                     channel = None
+
                 # Get uncertainty value
                 if comp + "_uncertainty" in ui_json_data and (
                     (type(ui_json_data[comp + "_uncertainty"]) == float)
@@ -1206,7 +1207,7 @@ class InversionApp(BaseDashApplication):
             window = None
             # Update plot bounds from ui.json.
             if "ui_json_data" in triggers or reinitialize:
-                if ui_json_data["fix_aspect_ratio"]:
+                if ui_json_data.get("fix_aspect_ratio", False):
                     fix_aspect_ratio = [True]
                 else:
                     fix_aspect_ratio = []
