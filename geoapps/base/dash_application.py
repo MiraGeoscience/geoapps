@@ -47,6 +47,7 @@ class BaseDashApplication:
     _param_class = BaseParams
     _driver_class = None
     _workspace = None
+    _app_initializer: dict | None
 
     def __init__(self):
         self.workspace = self.params.geoh5
@@ -120,6 +121,11 @@ class BaseDashApplication:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
+
+                if self._app_initializer is not None:
+                    ui_json_data.update(self._app_initializer)
+
+                print(ui_json_data)
                 object_value = ui_json_data[param_name]
 
             self.workspace.open()
@@ -131,6 +137,7 @@ class BaseDashApplication:
                 }
                 for obj in self.workspace.objects
             ]
+
         return object_options, object_value, ui_json_data, None, None
 
     def get_data_options(
@@ -337,6 +344,8 @@ class ObjectSelection:
     opens a Qt window to run an app.
     """
 
+    _app_initializer: dict | None
+
     def __init__(
         self,
         app_name: str,
@@ -439,6 +448,11 @@ class ObjectSelection:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json_data = ifile.demote(ifile.data)
+
+                if self._app_initializer is not None:
+                    ui_json_data.update(self._app_initializer)
+
+                print(ui_json_data)
                 object_value = ui_json_data["objects"]
 
             # Get new options for object dropdown
