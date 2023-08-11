@@ -41,6 +41,8 @@ class ScatterPlots(BaseDashApplication):
     _driver_class = ScatterPlotDriver
 
     def __init__(self, ui_json=None, ui_json_data=None, params=None, **kwargs):
+        app_initializer.update(kwargs)
+
         if params is not None:
             # Launched from ObjectSelection, with default ui.json
             self.params = params
