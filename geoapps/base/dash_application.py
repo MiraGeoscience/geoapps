@@ -343,8 +343,6 @@ class ObjectSelection:
     opens a Qt window to run an app.
     """
 
-    _app_initializer: dict | None
-
     def __init__(
         self,
         app_name: str,
@@ -447,10 +445,6 @@ class ObjectSelection:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json_data = ifile.demote(ifile.data)
-
-                if self._app_initializer is not None:
-                    ui_json_data.update(self._app_initializer)
-
                 object_value = ui_json_data["objects"]
 
             # Get new options for object dropdown
@@ -501,7 +495,7 @@ class ObjectSelection:
         """
         app = app_class(ui_json=ui_json, ui_json_data=ui_json_data, params=params)
         if port is not None:
-            app.app.run_server(host="127.0.0.1", port=port)
+            app.app.run(host="127.0.0.1", port=port)
 
     @staticmethod
     def make_qt_window(app_name: str, port: int):

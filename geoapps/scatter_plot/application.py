@@ -25,7 +25,7 @@ from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
-from geoapps.base.dash_application import BaseDashApplication
+from geoapps.base.dash_application import BaseDashApplication, ObjectSelection
 from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.layout import scatter_layout
@@ -46,9 +46,7 @@ class ScatterPlots(BaseDashApplication):
             self.params = params
         elif ui_json is not None and Path(ui_json.path).exists():
             self.params = self._param_class(ui_json)
-        else:
-            self.params = self._param_class()
-            app_initializer.update(kwargs)
+            ui_json_data = self.params.input_file.demote(self.params.to_dict())
             extras = {
                 key: value
                 for key, value in app_initializer.items()
@@ -56,8 +54,9 @@ class ScatterPlots(BaseDashApplication):
             }
             self.params.update(app_initializer)  # ignores all non-param keys
             self._app_initializer = extras
-
-        ui_json_data = self.params.input_file.demote(self.params.to_dict())
+        else:
+            self.params = self._param_class()
+            ui_json_data = app_initializer
 
         if self._app_initializer is not None:
             ui_json_data.update(self._app_initializer)
@@ -566,5 +565,5 @@ if __name__ == "__main__":
     ifile = InputFile.read_ui_json(file)
     ifile.workspace.open("r")
     print("Loaded. Building the plotly scatterplot . . .")
-    ScatterPlots.run(ifile)
+    ObjectSelection.run("Scatter Plots", ScatterPlots, ifile)
     print("Done")
