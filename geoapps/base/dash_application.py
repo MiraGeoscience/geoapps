@@ -47,7 +47,7 @@ class BaseDashApplication:
     _param_class = BaseParams
     _driver_class = None
     _workspace = None
-    _app_initializer: dict | None
+    _app_initializer: dict | None = None
 
     def __init__(self):
         self.workspace = self.params.geoh5

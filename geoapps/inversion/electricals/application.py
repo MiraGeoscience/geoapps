@@ -105,14 +105,13 @@ class InversionApp(PlotSelection2D):
         if ui_json is not None and Path(ui_json.path).exists():
             self.params = self._param_class(ui_json)
         else:
-            self.params = self._param_class()
             app_initializer.update(kwargs)
+            self.params = self._param_class(**app_initializer)
             extras = {
                 key: value
                 for key, value in app_initializer.items()
                 if key not in self.params.param_names
             }
-            self.params.update(app_initializer)  # ignores all non-param keys
             self._app_initializer = extras
 
         self.data_object = self.objects
