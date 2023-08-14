@@ -21,7 +21,7 @@ from geoh5py.objects import Curve, DrapeModel, Grid2D
 from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
-from scipy.sparse import csr_matrix
+from scipy.sparse import diags
 from scipy.spatial import cKDTree
 from simpeg_archive import (
     DataMisfit,
@@ -473,20 +473,12 @@ def inversion(input_file):
     data_ordering = []
     pred_vertices = []
     pred_cells = []
-
-    model_line_ids = []
-    model_x = []
-    model_y = []
-    model_z_top = []
-    model_z_bot = []
-
-    n_rows = []
-    n_cols = []
-    layer_first_index = []
-    layer_count = []
-    cols = []
-    rows = []
-
+    layers = []
+    prisms = []
+    ghost_ind = []
+    column_count = 0
+    cell_count = 0
+    full_model_line_ids = []
     for key, values in selection.items():
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
         for line in values[0]:
@@ -498,20 +490,9 @@ def inversion(input_file):
             stn_id.append(line_ind)
             xyz = locations[line_ind, :]
             z_loc = dem[line_ind, 2]
-
-            X = np.kron(np.ones(nZ), xyz[:, 0].reshape((z_loc.shape[0], 1)))
-            Y = np.kron(np.ones(nZ), xyz[:, 1].reshape((z_loc.shape[0], 1)))
             Z = np.kron(np.ones(nZ), z_loc.reshape((z_loc.shape[0], 1))) + np.kron(
-                CCz, np.ones((z_loc.shape[0], 1))
+                -np.cumsum(hz), np.ones((z_loc.shape[0], 1))
             )
-
-            model_x.append(list(xyz[:, 0]))
-            model_y.append(list(xyz[:, 1]))
-            model_z_top.append(list(z_loc))
-            model_z_bot.append(list(Z.flatten()))
-
-            model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
-            model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
             line_ids.append(np.ones_like(z_loc) * float(line))
             data_ordering.append(np.arange(z_loc.shape[0]) + pred_count)
             pred_vertices.append(xyz)
@@ -521,98 +502,51 @@ def inversion(input_file):
             )
             pred_count += z_loc.shape[0]
 
-            n_rows.append(nZ)
-            n_cols.append(n_sounding)
-            j, i = np.meshgrid(np.arange(nZ), np.arange(n_sounding))
+            if line != values[0][0]:
+                prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
+                    0, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
+                )
 
-            layer_first_index.append(np.arange(n_sounding) * nZ)
-            layer_count.append(np.repeat(nZ, n_sounding))
-            cols.append(i.flatten())
-            rows.append(j.flatten())
+            K, I = np.meshgrid(
+                np.arange(nZ), np.arange(column_count, column_count + n_sounding)
+            )
 
-        # Assemble params for drape model and add in ghost cells
-        full_cols = []
-        full_rows = []
-        full_model_z_bot = []
-        full_model_x = []
-        full_model_y = []
-        full_model_z_top = []
-        full_layer_first_index = []
-        full_layer_count = []
-        full_model_line_ids = []
-        prism_ind = 0
-        layer_ind = 0
-        ghost_inds = []
-        for ind in range(len(n_cols)):
-            cols[ind] = [c + prism_ind for c in cols[ind]]
-            layer_first_index[ind] = [c + layer_ind for c in layer_first_index[ind]]
-
-            full_cols += list(cols[ind])
-            full_rows += list(rows[ind])
-            full_model_z_bot += list(model_z_bot[ind])
-            full_model_x += model_x[ind]
-            full_model_y += model_y[ind]
-            full_model_z_top += model_z_top[ind]
-            full_layer_first_index += list(layer_first_index[ind])
-            full_layer_count += list(layer_count[ind])
-            full_model_line_ids.append(model_line_ids[ind])
-
-            prism_ind += n_cols[ind]
-            layer_ind = len(full_cols)
-            ghost_inds += len(cols[ind]) * [1]
-
-            if ind != len(n_cols) - 1:
-                full_cols += [prism_ind, prism_ind + 1]
-                full_rows += [0, 0]
-                dx = [
-                    model_x[ind][-1] - model_x[ind][-2],
-                    model_x[ind + 1][1] - model_x[ind + 1][0],
+            prisms.append(
+                np.c_[
+                    xyz[:, :2],
+                    z_loc,
+                    np.arange(cell_count, cell_count + n_sounding * nZ, nZ),
+                    np.ones_like(z_loc) * nZ,
                 ]
-                dy = [
-                    model_y[ind][-1] - model_y[ind][-2],
-                    model_y[ind + 1][1] - model_y[ind + 1][0],
-                ]
-                dz = [
-                    model_z_top[ind][-1] - model_z_top[ind][-2],
-                    model_z_top[ind + 1][1] - model_z_top[ind + 1][0],
-                ]
+            )
+            layers.append(np.c_[I.flatten(), K.flatten(), Z.flatten()])
+            column_count += n_sounding
+            cell_count += nZ * n_sounding
+            full_model_line_ids.append(np.ones(nZ * n_sounding) * line)
 
-                full_model_x += [model_x[ind][-1] + dx[0], model_x[ind + 1][0] - dx[1]]
-                full_model_y += [model_y[ind][-1] + dy[0], model_y[ind + 1][0] - dy[1]]
-                z = [model_z_top[ind][-1] + dz[0], model_z_top[ind + 1][0] - dz[1]]
-                full_model_z_bot += [z[0] - 10e-10, z[1] - 10e-10]
-                full_model_z_top += z
+            if line != values[0][-1]:
+                prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
+                    -1, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
+                )
 
-                full_layer_first_index += [layer_ind, layer_ind + 1]
-                full_layer_count += [1, 1]
-                prism_ind += 2
-                layer_ind += 2
-                full_model_line_ids.append(np.array([0, 0]))
-                ghost_inds += [0, 0]
+        ind_map = np.ones(cell_count, dtype=bool)
+        ind_map[np.hstack(ghost_ind)] = False
 
-        ghost_mat = np.outer(ghost_inds, ghost_inds)
-        drop_inds = np.where(np.array(ghost_inds) == 0)[0]
-        ghost_mat = csr_matrix(np.delete(ghost_mat, drop_inds, axis=1))
+        ghost_mat = diags(np.ones(cell_count)).tocsr()[:, ind_map]
+        ghost_mat[np.hstack(ghost_ind), 0] = np.nan
 
-        layers = np.c_[full_cols, full_rows, full_model_z_bot]
-        prisms = np.c_[
-            full_model_x,
-            full_model_y,
-            full_model_z_top,
-            full_layer_first_index,
-            full_layer_count,
-        ]
-        model = DrapeModel.create(
+        model: DrapeModel = DrapeModel.create(
             workspace,
-            layers=layers,
+            layers=np.vstack(layers),
             name="DrapeModel",
-            prisms=prisms,
+            prisms=np.vstack(prisms),
             parent=out_group,
         )
         model.add_data(
             {
                 "Line": {
-                    "values": np.hstack(full_model_line_ids).astype("uint32"),
+                    "values": ghost_mat
+                    @ np.hstack(full_model_line_ids).astype("uint32"),
                     "type": "referenced",
                     "value_map": line_data.value_map.map,
                 }
@@ -637,6 +571,8 @@ def inversion(input_file):
         )
         data_ordering = np.hstack(data_ordering)
 
+        cell_count -= len(ghost_ind)
+
     reference = "BFHS"
     if "reference_model" in list(input_param):
         if "model" in list(input_param["reference_model"]):
@@ -653,13 +589,13 @@ def inversion(input_file):
                 grid = con_object.vertices
 
             tree = cKDTree(grid)
-            _, ind = tree.query(np.vstack(model_vertices))
+            _, ind = tree.query(model.centroids)
 
             ref = con_model[ind]
             reference = np.log(ref)
 
         elif "value" in list(input_param["reference_model"]):
-            reference = np.ones(np.vstack(model_vertices).shape[0]) * np.log(
+            reference = np.ones(cell_count) * np.log(
                 input_param["reference_model"]["value"]
             )
 
@@ -680,13 +616,13 @@ def inversion(input_file):
                 grid = con_object.vertices
 
             tree = cKDTree(grid)
-            _, ind = tree.query(np.vstack(model_vertices))
+            _, ind = tree.query(model.centroids)
 
             ref = con_model[ind]
             starting = np.log(ref)
 
         elif "value" in list(input_param["starting_model"]):
-            starting = np.ones(np.vstack(model_vertices).shape[0]) * np.log(
+            starting = np.ones(cell_count) * np.log(
                 input_param["starting_model"]["value"]
             )
 
@@ -705,17 +641,16 @@ def inversion(input_file):
                 grid = sus_object.vertices
 
             tree = cKDTree(grid)
-            _, ind = tree.query(np.vstack(model_vertices))
+            _, ind = tree.query(model.centroids)
 
             susceptibility = sus_model[ind]
 
         elif "value" in list(input_param["susceptibility_model"]):
             susceptibility = (
-                np.ones(np.vstack(model_vertices).shape[0])
-                * input_param["susceptibility_model"]["value"]
+                np.ones(cell_count) * input_param["susceptibility_model"]["value"]
             )
     else:
-        susceptibility = np.zeros(np.vstack(model_vertices).shape[0])
+        susceptibility = np.zeros(cell_count)
 
     stn_id = np.hstack(stn_id)
     n_sounding = stn_id.shape[0]
@@ -1043,13 +978,11 @@ def inversion(input_file):
     reg.mref = mref
     weighting = prob.getJtJdiag(m0) ** 0.5
     weighting /= weighting.max()
-    for ind in drop_inds:
-        weighting = np.insert(weighting, ind, np.nan)
-        susceptibility = np.insert(susceptibility, ind, np.nan)
-    model.add_data({"Cell_weights": {"values": weighting}})
+
+    model.add_data({"Cell_weights": {"values": ghost_mat @ weighting}})
 
     if em_specs["type"] == "frequency":
-        model.add_data({"Susceptibility": {"values": susceptibility}})
+        model.add_data({"Susceptibility": {"values": ghost_mat @ susceptibility}})
 
     min_distance = None
     reg.get_grad_horizontal(
@@ -1142,6 +1075,23 @@ def inversion(input_file):
                     {f"Residual{channel}": {"association": "VERTEX", "values": res}}
                 )
                 curve.add_data_to_group(residuals, "Residual")
+
+
+def append_ghost(ind, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind):
+    prisms.append(
+        np.r_[
+            xyz[ind, :2] - np.mean(np.diff(xyz[:, :2], axis=0), axis=0),
+            z_loc[ind],
+            cell_count,
+            1,
+        ].reshape((-1, 5))
+    )
+    layers.append(np.c_[column_count, 0, z_loc[ind] - 1.0])
+    column_count += 1
+    ghost_ind.append(cell_count)
+    cell_count += 1
+
+    return prisms, layers, column_count, cell_count, ghost_ind
 
 
 if __name__ == "__main__":
