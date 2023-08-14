@@ -107,19 +107,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-forward_ui_json = {
-    "starting_model": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-3,
-    },
-}
+
 default_ui_json = {
     "title": "Frequency Domain Electromagnetic Inversion",
     "icon": "surveyairborneem",

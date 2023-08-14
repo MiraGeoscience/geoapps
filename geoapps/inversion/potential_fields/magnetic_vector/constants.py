@@ -157,57 +157,7 @@ forward_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-inversion_ui_json = {
-    "tmi_channel_bool": False,
-    "bx_channel_bool": False,
-    "by_channel_bool": False,
-    "bz_channel_bool": False,
-    "bxx_channel_bool": False,
-    "bxy_channel_bool": False,
-    "bxz_channel_bool": False,
-    "byy_channel_bool": False,
-    "byz_channel_bool": False,
-    "bzz_channel_bool": False,
-}
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Susceptibility (SI)",
-        "property": None,
-        "value": 1e-4,
-    },
-    "starting_inclination": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "optional": True,
-        "enabled": False,
-        "parent": "mesh",
-        "label": "Inclination (deg)",
-        "property": None,
-        "value": 0.0,
-    },
-    "starting_declination": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "optional": True,
-        "enabled": False,
-        "parent": "mesh",
-        "label": "Declination (deg)",
-        "property": None,
-        "value": 0.0,
-    },
-}
+
 default_ui_json = {
     "title": "Magnetic Vector (MVI) Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",

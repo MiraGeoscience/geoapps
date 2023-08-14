@@ -53,6 +53,26 @@ from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
+active_data_channels = [
+    "z_real_channel",
+    "z_imag_channel",
+    "zxx_real_channel",
+    "zxx_imag_channel",
+    "zxy_real_channel",
+    "zxy_imag_channel",
+    "zyx_real_channel",
+    "zyx_imag_channel",
+    "zyy_real_channel",
+    "zyy_imag_channel",
+    "txz_real_channel",
+    "txz_imag_channel",
+    "tyz_real_channel",
+    "tyz_imag_channel",
+    "gz_channel",
+    "tmi_channel",
+    "z_channel",
+]
+
 
 def write_default_uijson(path: str | Path, use_initializers=False):
     from geoapps.inversion.potential_fields.gravity.constants import (
@@ -296,6 +316,29 @@ def write_default_uijson(path: str | Path, use_initializers=False):
             "update_enabled": (True if params.geoh5 is not None else False)
         }
         params.input_file.validation_options = validation_options
+        if hasattr(params, "forward_only"):
+            if params.forward_only:
+                for form in params.input_file.ui_json.values():
+                    if isinstance(form, dict):
+                        group = form.get("group", None)
+                        if group == "Data":
+                            form["group"] = "Survey"
+                for param in [
+                    "starting_model",
+                    "starting_inclination",
+                    "starting_declination",
+                ]:
+                    if param in params.input_file.ui_json:
+                        form = params.input_file.ui_json[param]
+                        form["label"] = (
+                            form["label"].replace("Initial ", "").capitalize()
+                        )
+            elif params.data_object is None:
+                for channel in active_data_channels:
+                    form = params.input_file.ui_json.get(channel, None)
+                    if form:
+                        form["enabled"] = True
+
         params.write_input_file(name=filename, path=path, validate=False)
 
 
