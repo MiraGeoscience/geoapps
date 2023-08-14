@@ -50,6 +50,7 @@ jobs:
           activate-environment: test_env
           cache-downloads: true
       - name: pytest
+        shell: powershell
         run: |
           pytest --cov=${source_dir} --cov-report=xml --cov-branch
       - name: Codecov
