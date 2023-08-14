@@ -21,6 +21,7 @@ from geoh5py.objects import Curve, DrapeModel, Grid2D
 from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
+from scipy.sparse import csr_matrix
 from scipy.spatial import cKDTree
 from simpeg_archive import (
     DataMisfit,
@@ -506,7 +507,7 @@ def inversion(input_file):
 
             model_x.append(list(xyz[:, 0]))
             model_y.append(list(xyz[:, 1]))
-            model_z_top.append(list(z_loc - top_hz))
+            model_z_top.append(list(z_loc))
             model_z_bot.append(list(Z.flatten()))
 
             model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
@@ -579,7 +580,7 @@ def inversion(input_file):
                 full_model_x += [model_x[ind][-1] + dx[0], model_x[ind + 1][0] - dx[1]]
                 full_model_y += [model_y[ind][-1] + dy[0], model_y[ind + 1][0] - dy[1]]
                 z = [model_z_top[ind][-1] + dz[0], model_z_top[ind + 1][0] - dz[1]]
-                full_model_z_bot += z
+                full_model_z_bot += [z[0] - 10e-10, z[1] - 10e-10]
                 full_model_z_top += z
 
                 full_layer_first_index += [layer_ind, layer_ind + 1]
@@ -591,7 +592,7 @@ def inversion(input_file):
 
         ghost_mat = np.outer(ghost_inds, ghost_inds)
         drop_inds = np.where(np.array(ghost_inds) == 0)[0]
-        ghost_mat = np.delete(ghost_mat, drop_inds, axis=1)
+        ghost_mat = csr_matrix(np.delete(ghost_mat, drop_inds, axis=1))
 
         layers = np.c_[full_cols, full_rows, full_model_z_bot]
         prisms = np.c_[
@@ -634,7 +635,6 @@ def inversion(input_file):
                 }
             }
         )
-        raise ValueError("ASds")
         data_ordering = np.hstack(data_ordering)
 
     reference = "BFHS"
@@ -958,9 +958,7 @@ def inversion(input_file):
                 minGNiter=1,
                 fix_Jmatrix=True,
                 betaSearch=False,
-                # chifact_start=chi_target,
                 chifact_target=chi_target,
-                transform=ghost_mat,
             )
         )
         directive_list.append(Directives.UpdatePreconditioner())
@@ -1045,6 +1043,9 @@ def inversion(input_file):
     reg.mref = mref
     weighting = prob.getJtJdiag(m0) ** 0.5
     weighting /= weighting.max()
+    for ind in drop_inds:
+        weighting = np.insert(weighting, ind, np.nan)
+        susceptibility = np.insert(susceptibility, ind, np.nan)
     model.add_data({"Cell_weights": {"values": weighting}})
 
     if em_specs["type"] == "frequency":
@@ -1081,12 +1082,22 @@ def inversion(input_file):
             Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
         )
 
+    save_mapping = Maps.ExpMap(nP=int(n_sounding * hz.size))
+
+    def transform(model):
+        trans_mat = ghost_mat * np.exp(model)
+        trans_mat[trans_mat == 0] = np.nan
+        return trans_mat
+
+    save_mapping._transform = transform
+
     directive_list.append(Directives.UpdatePreconditioner())
     directive_list.append(
         Directives.SaveIterationsGeoH5(
             h5_object=model,
-            mapping=mapping,
+            mapping=save_mapping,
             attribute="model",
+            association="CELL",
         )
     )
     directive_list.append(
