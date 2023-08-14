@@ -202,78 +202,7 @@ def test_get_uncertainty_component(tmp_path: Path):
     unc = data.get_data()[2]["tmi"]
     assert len(np.unique(unc)) == 1
     assert np.unique(unc)[0] == 1
-    assert len(unc) == len(data.mask)
-
-
-def test_parse_ignore_values(tmp_path: Path):
-    ws, params = setup_params(tmp_path)
-    locs = params.data_object.centroids
-    params.update(
-        {
-            "window_center_x": np.mean(locs[:, 0]),
-            "window_center_y": np.mean(locs[:, 1]),
-            "window_width": 100.0,
-            "window_height": 100.0,
-        }
-    )
-    params.ignore_values = "<99"
-    data = InversionData(ws, params)
-    val, logic = data.parse_ignore_values()
-    assert val == 99
-    assert logic == "<"
-
-    params.ignore_values = ">99"
-    data = InversionData(ws, params)
-    val, logic = data.parse_ignore_values()
-    assert val == 99
-    assert logic == ">"
-
-    params.ignore_values = "99"
-    data = InversionData(ws, params)
-    val, logic = data.parse_ignore_values()
-    assert val == 99
-    assert logic == "="
-
-
-def test_set_infinity_uncertainties(tmp_path: Path):
-    ws, params = setup_params(tmp_path)
-    locs = params.data_object.centroids
-    params.update(
-        {
-            "window_center_x": np.mean(locs[:, 0]),
-            "window_center_y": np.mean(locs[:, 1]),
-            "window_width": 100.0,
-            "window_height": 100.0,
-        }
-    )
-    data = InversionData(ws, params)
-    test_data = np.array([0, 1, 2, 3, 4, 5])
-    test_unc = np.array([0.1] * 6)
-    data.ignore_value = 3
-    data.ignore_type = "="
-    unc = data.set_infinity_uncertainties(test_unc, test_data)
-    where_inf = np.where(np.isinf(unc))[0]
-    assert len(where_inf) == 1
-    assert where_inf == 3
-
-    data.ignore_value = 3
-    data.ignore_type = "<"
-    unc = data.set_infinity_uncertainties(test_unc, test_data)
-    where_inf = np.where(np.isinf(unc))[0]
-    assert len(where_inf) == 4
-    assert np.all(where_inf == [0, 1, 2, 3])
-
-    data.ignore_value = 3
-    data.ignore_type = ">"
-    unc = data.set_infinity_uncertainties(test_unc, test_data)
-    where_inf = np.where(np.isinf(unc))[0]
-    assert len(where_inf) == 3
-    assert np.all(where_inf == [3, 4, 5])
-
-    data.ignore_value = None
-    data.ignore_type = None
-    unc = data.set_infinity_uncertainties(test_unc, test_data)
-    assert np.all(test_unc == unc)
+    assert len(unc) == data.entity.n_vertices
 
 
 def test_displace(tmp_path: Path):
@@ -327,40 +256,24 @@ def test_drape(tmp_path: Path):
 
 def test_normalize(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    locs = params.data_object.centroids
-    params.update(
-        {
-            "window_center_x": np.mean(locs[:, 0]),
-            "window_center_y": np.mean(locs[:, 1]),
-            "window_width": 100.0,
-            "window_height": 100.0,
-        }
-    )
     data = InversionData(ws, params)
+    len_data = len(data.observed["tmi"])
     data.observed = {
-        "tmi": np.arange(12, dtype=float),
-        "gz": np.arange(12, dtype=float),
+        "tmi": np.arange(len_data, dtype=float),
+        "gz": np.arange(len_data, dtype=float),
     }
     data.components = list(data.observed.keys())
     data.normalizations = data.get_normalizations()
     test_data = data.normalize(data.observed)
     assert np.all(
-        np.hstack(data.normalizations[None].values()).tolist() == np.repeat([1, -1], 12)
+        np.hstack(data.normalizations[None].values()).tolist()
+        == np.repeat([1, -1], len_data)
     )
     assert all(test_data["gz"] == (-1 * data.observed["gz"]))
 
 
 def test_get_survey(tmp_path: Path):
     ws, params = setup_params(tmp_path)
-    locs = params.data_object.centroids
-    params.update(
-        {
-            "window_center_x": np.mean(locs[:, 0]),
-            "window_center_y": np.mean(locs[:, 1]),
-            "window_width": 100.0,
-            "window_height": 100.0,
-        }
-    )
     data = InversionData(ws, params)
     survey = data.create_survey()
     assert isinstance(survey[0], SimPEG.potential_fields.magnetics.Survey)

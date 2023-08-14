@@ -34,12 +34,7 @@ geoh5 = Workspace(PROJECT)
 def setup_params(path):
     geotest = Geoh5Tester(geoh5, path, "test.geoh5", MagneticVectorParams)
     geotest.set_param("data_object", "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}")
-    geotest.set_param("tmi_channel_bool", True)
     geotest.set_param("tmi_channel", "{44822654-b6ae-45b0-8886-2d845f80f422}")
-    geotest.set_param("window_center_x", 314183.0)
-    geotest.set_param("window_center_y", 6071014.0)
-    geotest.set_param("window_width", 1000.0)
-    geotest.set_param("window_height", 1000.0)
     geotest.set_param("mesh", "{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}")
     geotest.set_param("topography_object", "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}")
     geotest.set_param("topography", "{a603a762-f6cb-4b21-afda-3160e725bf7d}")
@@ -72,7 +67,7 @@ def test_collection(tmp_path: Path):
     models.remove_air(driver.models.active_cells)
     starting = InversionModel(driver, "starting")
     starting.remove_air(driver.models.active_cells)
-    np.testing.assert_allclose(models.starting, starting.model)
+    np.testing.assert_allclose(models.starting, starting.model, atol=1e-7)
 
 
 def test_initialize(tmp_path: Path):

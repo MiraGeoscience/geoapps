@@ -14,9 +14,7 @@ from geoapps.inversion.params import InversionBaseParams
 from .constants import (
     default_ui_json,
     forward_defaults,
-    forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
@@ -31,9 +29,7 @@ class GravityParams(InversionBaseParams):
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._forward_defaults = deepcopy(forward_defaults)
-        self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "gravity"
         self._validations = validations
         self._gz_channel_bool = None
@@ -67,8 +63,6 @@ class GravityParams(InversionBaseParams):
         self._gy_channel = None
         self._gy_uncertainty = None
         self._out_group = None
-        self._detrend_type = None
-        self._detrend_order = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 

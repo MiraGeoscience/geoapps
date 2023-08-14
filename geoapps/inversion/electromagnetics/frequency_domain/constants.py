@@ -15,8 +15,6 @@ import geoapps
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
     "version": geoapps.__version__,
     "title": "Frequency-domain EM (FEM) Inversion",
@@ -27,7 +25,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_real_channel": None,
     "z_real_uncertainty": None,
     "z_imag_channel": None,
@@ -38,12 +35,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "length_scale_x": 1.0,
     "length_scale_y": 1.0,
@@ -71,7 +62,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 0.001,
+    "sens_wts_threshold": 1.0,
     "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
@@ -88,7 +79,6 @@ inversion_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-
 forward_defaults = {
     "version": geoapps.__version__,
     "title": "Frequency-domain EM (FEM) Forward",
@@ -99,17 +89,11 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_real_channel_bool": True,
     "z_imag_channel_bool": True,
     "mesh": None,
     "starting_model": 1e-3,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -122,89 +106,6 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-}
-
-forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": [
-            "{b3a47539-0301-4b27-922e-1dde9d882c60}",  # AirborneFEMReceivers
-        ],
-        "value": None,
-    },
-    "z_real_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Z real component",
-        "value": False,
-    },
-    "z_real_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "z-real component",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "z_real_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "z_real_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "z_imag_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Z imag component",
-        "value": False,
-    },
-    "z_imag_channel": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "z-imag component",
-        "parent": "data_object",
-        "optional": True,
-        "enabled": False,
-        "value": None,
-    },
-    "z_imag_uncertainty": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Survey",
-        "dataGroupType": "Multi-element",
-        "main": True,
-        "label": "Uncertainty",
-        "parent": "data_object",
-        "dependency": "z_imag_channel",
-        "dependencyType": "enabled",
-        "value": None,
-    },
-    "starting_model": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-3,
-    },
 }
 
 default_ui_json = {
@@ -329,11 +230,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-
-################ Validations #################
 validations = {
     "inversion_type": {
         "types": [str],
@@ -347,5 +244,4 @@ validations = {
     "z_imag_uncertainty": {"one_of": "uncertainty_channel"},
 }
 validations = dict(base_validations, **validations)
-
 app_initializer = {}

@@ -16,9 +16,6 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.airborne_electromagnetics.frequency_domain import (
-    FrequencyDomainElectromagneticsParams,
-)
 from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
     DirectCurrentPseudo3DParams,
 )
@@ -37,6 +34,9 @@ from geoapps.inversion.electricals.induced_polarization.three_dimensions import 
 from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
     InducedPolarization2DParams,
 )
+from geoapps.inversion.electromagnetics.frequency_domain import (
+    FrequencyDomainElectromagneticsParams,
+)
 from geoapps.inversion.electromagnetics.time_domain import (
     TimeDomainElectromagneticsParams,
 )
@@ -52,6 +52,26 @@ from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
+
+active_data_channels = [
+    "z_real_channel",
+    "z_imag_channel",
+    "zxx_real_channel",
+    "zxx_imag_channel",
+    "zxy_real_channel",
+    "zxy_imag_channel",
+    "zyx_real_channel",
+    "zyx_imag_channel",
+    "zyy_real_channel",
+    "zyy_imag_channel",
+    "txz_real_channel",
+    "txz_imag_channel",
+    "tyz_real_channel",
+    "tyz_imag_channel",
+    "gz_channel",
+    "tmi_channel",
+    "z_channel",
+]
 
 
 def write_default_uijson(path: str | Path, use_initializers=False):
@@ -118,7 +138,7 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     ip_p3d_init["geoh5"] = str(assets_path() / "FlinFlon_dcip.geoh5")
     ip_p3d_init = ip_p3d_init if use_initializers else {}
 
-    from geoapps.inversion.airborne_electromagnetics.frequency_domain.constants import (
+    from geoapps.inversion.electromagnetics.frequency_domain.constants import (
         app_initializer as fem_init,
     )
 
@@ -296,6 +316,29 @@ def write_default_uijson(path: str | Path, use_initializers=False):
             "update_enabled": (True if params.geoh5 is not None else False)
         }
         params.input_file.validation_options = validation_options
+        if hasattr(params, "forward_only"):
+            if params.forward_only:
+                for form in params.input_file.ui_json.values():
+                    if isinstance(form, dict):
+                        group = form.get("group", None)
+                        if group == "Data":
+                            form["group"] = "Survey"
+                for param in [
+                    "starting_model",
+                    "starting_inclination",
+                    "starting_declination",
+                ]:
+                    if param in params.input_file.ui_json:
+                        form = params.input_file.ui_json[param]
+                        form["label"] = (
+                            form["label"].replace("Initial ", "").capitalize()
+                        )
+            elif params.data_object is None:
+                for channel in active_data_channels:
+                    form = params.input_file.ui_json.get(channel, None)
+                    if form:
+                        form["enabled"] = True
+
         params.write_input_file(name=filename, path=path, validate=False)
 
 

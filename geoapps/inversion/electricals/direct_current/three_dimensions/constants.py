@@ -27,7 +27,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": True,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -40,12 +39,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
@@ -102,7 +95,6 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": True,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -111,11 +103,6 @@ forward_defaults = {
     "mesh": None,
     "starting_model": 1e-3,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -128,38 +115,6 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-}
-
-inversion_ui_json = {
-    "potential_channel_bool": True,
-}
-
-forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
-        "value": None,
-    },
-    "z_from_topo": {
-        "group": "Survey",
-        "main": True,
-        "label": "Surface survey",
-        "tooltip": "Uncheck if borehole data is present",
-        "value": True,
-    },
-    "starting_model": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-1,
-    },
 }
 
 default_ui_json = {
@@ -270,7 +225,6 @@ default_ui_json = {
         "enabled": False,
         "visible": False,
     },
-    "resolution": None,
 }
 
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
@@ -296,12 +250,6 @@ app_initializer = {
     "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
     "reference_model": 1e-1,
     "starting_model": 1e-1,
-    "resolution": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "octree_levels_topo": [0, 0, 0, 2],
     "octree_levels_obs": [5, 5, 5, 5],
     "depth_core": 500.0,

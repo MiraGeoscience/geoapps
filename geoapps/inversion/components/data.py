@@ -25,7 +25,7 @@ from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 
 from geoapps.inversion.utils import create_nested_mesh
-from geoapps.shared_utils.utils import drape_2_tensor, filter_xy
+from geoapps.shared_utils.utils import drape_2_tensor
 
 from .factories import (
     EntityFactory,
@@ -43,16 +43,10 @@ class InversionData(InversionLocations):
     Parameters
     ---------
 
-    resolution :
-        Desired data grid spacing.
     offset :
         Static receivers location offsets.
     radar :
         Radar channel address used to drape receiver locations over topography.
-    ignore_value :
-        Data value to ignore (infinity uncertainty).
-    ignore_type :
-        Type of ignore value (<, >, =).
     locations :
         Data locations.
     mask :
@@ -89,11 +83,8 @@ class InversionData(InversionLocations):
         :param: params: Params object containing location based data parameters.
         """
         super().__init__(workspace, params)
-        self.resolution: int | None = None
         self.offset: list[float] | None = None
         self.radar: np.ndarray | None = None
-        self.ignore_value: float | None = None
-        self.ignore_type: str | None = None
         self.locations: np.ndarray | None = None
         self.mask: np.ndarray | None = None
         self.global_map: np.ndarray | None = None
@@ -117,19 +108,14 @@ class InversionData(InversionLocations):
         """Extract data from the workspace using params data."""
         self.vector = True if self.params.inversion_type == "magnetic vector" else False
         self.n_blocks = 3 if self.params.inversion_type == "magnetic vector" else 1
-        self.ignore_value, self.ignore_type = self.parse_ignore_values()
         self.components, self.observed, self.uncertainties = self.get_data()
         self.has_tensor = InversionData.check_tensor(self.components)
         self.offset, self.radar = self.params.offset()
         self.locations = super().get_locations(self.params.data_object)
-        self.mask = filter_xy(
-            self.locations[:, 0],
-            self.locations[:, 1],
-            window=self.params.window,
-            angle=self.angle,
-            distance=self.params.resolution,
-        )
 
+        if self.angle is not None and self.angle != 0:
+            raise ValueError("Mesh is rotated.")
+        self.mask = np.ones(len(self.locations), dtype=bool)
         if self.radar is not None:
             if any(np.isnan(self.radar)):
                 self.mask[np.isnan(self.radar)] = False
@@ -140,6 +126,7 @@ class InversionData(InversionLocations):
 
         self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
+        self.uncertainties = self.normalize(self.uncertainties, absolute=True)
         self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
         self.locations = super().get_locations(self.entity)
@@ -208,9 +195,7 @@ class InversionData(InversionLocations):
             order of self.observed.keys().
         :return: data: Dictionary of components and associated data
         :return: uncertainties: Dictionary of components and
-            associated uncertainties with infinite uncertainty set on
-            ignored data (specified by self.ignore_type and
-            self.ignore_value).
+            associated uncertainties.
         """
 
         components = self.params.components()
@@ -235,51 +220,56 @@ class InversionData(InversionLocations):
         data = self.predicted if self.params.forward_only else self.observed
         basename = "Predicted" if self.params.forward_only else "Observed"
         self._observed_data_types = {c: {} for c in data.keys()}
-        data_entity = {c: {} for c in data.keys()}
+        data_dict = {c: {} for c in data.keys()}
+        uncert_dict = {c: {} for c in data.keys()}
 
         if self.params.inversion_type in ["magnetotellurics", "tipper", "tdem", "fem"]:
             for component, channels in data.items():
-                for channel, values in channels.items():
-                    dnorm = self.normalizations[channel][component] * values
-                    data_entity[component][channel] = entity.add_data(
-                        {f"{basename}_{component}_{channel}": {"values": dnorm}}
+                for ind, (channel, values) in enumerate(channels.items()):
+                    dnorm = values / self.normalizations[channel][component]
+                    data_channel = entity.add_data(
+                        {f"{basename}_{component}_[{ind}]": {"values": dnorm}}
                     )
-                    entity.add_data_to_group(
-                        data_entity[component][channel], f"{basename}_{component}"
+                    data_dict[component] = entity.add_data_to_group(
+                        data_channel, f"{basename}_{component}"
                     )
                     if not self.params.forward_only:
                         self._observed_data_types[component][
-                            f"{channel:.2e}"
-                        ] = data_entity[component][channel].entity_type
-                        uncerts = self.uncertainties[component][channel].copy()
+                            f"[{ind}]"
+                        ] = data_channel.entity_type
+                        uncerts = np.abs(
+                            self.uncertainties[component][channel].copy()
+                            / self.normalizations[channel][component]
+                        )
                         uncerts[np.isinf(uncerts)] = np.nan
                         uncert_entity = entity.add_data(
-                            {
-                                f"Uncertainties_{component}_{channel}": {
-                                    "values": uncerts
-                                }
-                            }
+                            {f"Uncertainties_{component}_[{ind}]": {"values": uncerts}}
                         )
-                        entity.add_data_to_group(
+                        uncert_dict[component] = entity.add_data_to_group(
                             uncert_entity, f"Uncertainties_{component}"
                         )
         else:
             for component in data:
-                dnorm = self.normalizations[None][component] * data[component]
+                dnorm = data[component] / self.normalizations[None][component]
                 if "2d" in self.params.inversion_type:
                     dnorm = self._embed_2d(dnorm)
-                data_entity[component] = entity.add_data(
+                data_dict[component] = entity.add_data(
                     {f"{basename}_{component}": {"values": dnorm}}
                 )
                 if not self.params.forward_only:
-                    self._observed_data_types[component] = data_entity[
+                    self._observed_data_types[component] = data_dict[
                         component
                     ].entity_type
-                    uncerts = self.uncertainties[component].copy()
+                    uncerts = np.abs(
+                        self.uncertainties[component].copy()
+                        / self.normalizations[None][component]
+                    )
                     uncerts[np.isinf(uncerts)] = np.nan
                     if "2d" in self.params.inversion_type:
                         uncerts = self._embed_2d(uncerts)
-                    entity.add_data({f"Uncertainties_{component}": {"values": uncerts}})
+                    uncert_dict[component] = entity.add_data(
+                        {f"Uncertainties_{component}": {"values": uncerts}}
+                    )
 
                 if "direct current" in self.params.inversion_type:
                     apparent_property = data[component].copy()
@@ -290,7 +280,7 @@ class InversionData(InversionLocations):
                     if "2d" in self.params.inversion_type:
                         apparent_property = self._embed_2d(apparent_property)
 
-                    data_entity["apparent_resistivity"] = entity.add_data(
+                    data_dict["apparent_resistivity"] = entity.add_data(
                         {
                             f"{basename}_apparent_resistivity": {
                                 "values": apparent_property,
@@ -298,53 +288,8 @@ class InversionData(InversionLocations):
                             }
                         }
                     )
-        return data_entity
 
-    def parse_ignore_values(self) -> tuple[float, str]:
-        """Returns an ignore value and type ('<', '>', or '=') from params data."""
-        if self.params.forward_only:
-            return None, None
-        else:
-            ignore_values = self.params.ignore_values
-            if ignore_values is not None:
-                ignore_type = [k for k in ignore_values if k in ["<", ">"]]
-                ignore_type = "=" if not ignore_type else ignore_type[0]
-                if ignore_type in ["<", ">"]:
-                    ignore_value = float(ignore_values.split(ignore_type)[1])
-                else:
-                    try:
-                        ignore_value = float(ignore_values)
-                    except ValueError:
-                        return None, None
-
-                return ignore_value, ignore_type
-            else:
-                return None, None
-
-    def set_infinity_uncertainties(
-        self, uncertainties: np.ndarray, data: np.ndarray
-    ) -> np.ndarray:
-        """Use self.ignore_value self.ignore_type to set uncertainties to infinity."""
-
-        if uncertainties is None:
-            return None
-
-        unc = uncertainties.copy()
-        unc[np.isnan(data)] = np.inf
-
-        if self.ignore_value is None:
-            return unc
-        elif self.ignore_type == "<":
-            unc[data <= self.ignore_value] = np.inf
-        elif self.ignore_type == ">":
-            unc[data >= self.ignore_value] = np.inf
-        elif self.ignore_type == "=":
-            unc[data == self.ignore_value] = np.inf
-        else:
-            msg = f"Unrecognized ignore type: {self.ignore_type}."
-            raise (ValueError(msg))
-
-        return unc
+        self.update_params(data_dict, uncert_dict)
 
     def apply_transformations(self, locations: np.ndarray):
         """Apply all coordinate transformations to locations"""
@@ -376,7 +321,9 @@ class InversionData(InversionLocations):
 
         return self.displace(locs, radar_offset_pad)
 
-    def normalize(self, data: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+    def normalize(
+        self, data: dict[str, np.ndarray], absolute=False
+    ) -> dict[str, np.ndarray]:
         """
         Apply data type specific normalizations to data.
 
@@ -393,8 +340,12 @@ class InversionData(InversionLocations):
                 if isinstance(d[comp], dict):
                     if d[comp][chan] is not None:
                         d[comp][chan] *= self.normalizations[chan][comp]
+                        if absolute:
+                            d[comp][chan] = np.abs(d[comp][chan])
                 elif d[comp] is not None:
                     d[comp] *= self.normalizations[chan][comp]
+                    if absolute:
+                        d[comp] = np.abs(d[comp])
 
         return d
 
@@ -564,3 +515,22 @@ class InversionData(InversionLocations):
         tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
         has_tensor = lambda c: any(k in c for k in tensor_components)
         return any(has_tensor(c) for c in channels)
+
+    def update_params(self, data_dict, uncert_dict):
+        """
+        Update pointers to newly created object and data.
+        """
+
+        components = self.params.components()
+        self.params.data_object = self.entity
+
+        for comp in components:
+            if getattr(self.params, "_".join([comp, "channel"]), None) is None:
+                continue
+
+            setattr(self.params, f"{comp}_channel", data_dict[comp])
+            setattr(self.params, f"{comp}_uncertainty", uncert_dict[comp])
+
+        if getattr(self.params, "line_object", None) is not None:
+            new_line = self.params.line_object.copy(parent=self.entity)
+            self.params.line_object = new_line

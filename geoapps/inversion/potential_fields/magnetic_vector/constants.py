@@ -17,8 +17,6 @@ from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
     "version": geoapps.__version__,
     "title": "Magnetic Vector (MVI) Inversion",
@@ -33,7 +31,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -68,12 +65,6 @@ inversion_defaults = {
     "reference_inclination": None,
     "reference_declination": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 100.0,
@@ -118,20 +109,7 @@ inversion_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "tmi_channel_bool": False,
-    "bxx_channel_bool": False,
-    "bxy_channel_bool": False,
-    "bxz_channel_bool": False,
-    "byy_channel_bool": False,
-    "byz_channel_bool": False,
-    "bzz_channel_bool": False,
-    "bx_channel_bool": False,
-    "by_channel_bool": False,
-    "bz_channel_bool": False,
-    "fix_aspect_ratio": True,
-    "colorbar": False,
 }
-
 forward_defaults = {
     "version": geoapps.__version__,
     "title": "Magnetic Vector (MVI) Forward",
@@ -146,7 +124,6 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -166,11 +143,6 @@ forward_defaults = {
     "starting_inclination": None,
     "starting_declination": None,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -184,135 +156,6 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-}
-
-
-inversion_ui_json = {
-    "tmi_channel_bool": False,
-    "bx_channel_bool": False,
-    "by_channel_bool": False,
-    "bz_channel_bool": False,
-    "bxx_channel_bool": False,
-    "bxy_channel_bool": False,
-    "bxz_channel_bool": False,
-    "byy_channel_bool": False,
-    "byz_channel_bool": False,
-    "bzz_channel_bool": False,
-}
-
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Susceptibility (SI)",
-        "property": None,
-        "value": 1e-4,
-    },
-    "starting_inclination": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "optional": True,
-        "enabled": False,
-        "parent": "mesh",
-        "label": "Inclination (deg)",
-        "property": None,
-        "value": 0.0,
-    },
-    "starting_declination": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "optional": True,
-        "enabled": False,
-        "parent": "mesh",
-        "label": "Declination (deg)",
-        "property": None,
-        "value": 0.0,
-    },
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": [
-            "{202c5db1-a56d-4004-9cad-baafd8899406}",
-            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
-            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
-            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4b99204c-d133-4579-a916-a9c8b98cfccb}",
-            "{028e4905-cc97-4dab-b1bf-d76f58b501b5}",
-        ],
-        "value": None,
-    },
-    "tmi_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "TMI (nT)",
-        "value": True,
-    },
-    "bx_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bx (nT)",
-        "value": False,
-    },
-    "by_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "By (nT)",
-        "value": False,
-    },
-    "bz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bz (nT)",
-        "value": False,
-    },
-    "bxx_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bxx (nT/m)",
-        "value": False,
-    },
-    "bxy_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bxy (nT/m)",
-        "value": False,
-    },
-    "bxz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bxz (nT/m)",
-        "value": False,
-    },
-    "byy_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Byy (nT/m)",
-        "value": False,
-    },
-    "byz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Byz (nT/m)",
-        "value": False,
-    },
-    "bzz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Bzz (nT/m)",
-        "value": False,
-    },
 }
 
 default_ui_json = {
@@ -784,13 +627,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
@@ -818,9 +655,7 @@ validations = {
     "bz_channel": {"one_of": "data channel"},
     "bz_uncertainty": {"one_of": "uncertainty channel"},
 }
-
 validations = dict(base_validations, **validations)
-
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "monitoring_directory": str((assets_path() / "Temp").resolve()),
@@ -834,12 +669,6 @@ app_initializer = {
     "inducing_field_inclination": 79.0,
     "inducing_field_declination": 11.0,
     "reference_model": 0.0,
-    "resolution": 50.0,
-    "window_center_x": 314600.0,
-    "window_center_y": 6072300.0,
-    "window_width": 1000.0,
-    "window_height": 1500.0,
-    "window_azimuth": 0.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,

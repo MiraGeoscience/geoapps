@@ -18,9 +18,7 @@ from geoapps.inversion import InversionBaseParams
 from .constants import (
     default_ui_json,
     forward_defaults,
-    forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
@@ -35,9 +33,7 @@ class MagneticScalarParams(InversionBaseParams):
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._forward_defaults = deepcopy(forward_defaults)
-        self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "magnetic scalar"
         self._validations = validations
         self._inducing_field_strength: float = None
@@ -73,8 +69,6 @@ class MagneticScalarParams(InversionBaseParams):
         self._bz_channel_bool = None
         self._bz_channel = None
         self._bz_uncertainty = None
-        self._detrend_type = None
-        self._detrend_order = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 

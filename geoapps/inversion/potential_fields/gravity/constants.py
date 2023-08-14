@@ -17,8 +17,6 @@ from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
     "version": geoapps.__version__,
     "title": "Gravity Inversion",
@@ -30,7 +28,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -61,12 +58,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
@@ -111,18 +102,6 @@ inversion_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gz_channel_bool": False,
-    "guv_channel_bool": False,
-    "gxy_channel_bool": False,
-    "gxx_channel_bool": False,
-    "gyy_channel_bool": False,
-    "gzz_channel_bool": False,
-    "gxz_channel_bool": False,
-    "gyz_channel_bool": False,
-    "gx_channel_bool": False,
-    "gy_channel_bool": False,
-    "fix_aspect_ratio": True,
-    "colorbar": False,
 }
 forward_defaults = {
     "version": geoapps.__version__,
@@ -136,7 +115,6 @@ forward_defaults = {
     "topography": None,
     "data_object": None,
     "z_from_topo": False,
-    "resolution": None,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
@@ -153,11 +131,6 @@ forward_defaults = {
     "mesh": None,
     "starting_model": None,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -171,108 +144,6 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-}
-
-inversion_ui_json = {
-    "gz_channel_bool": False,
-    "gx_channel_bool": False,
-    "gy_channel_bool": False,
-    "guv_channel_bool": False,
-    "gxy_channel_bool": False,
-    "gxx_channel_bool": False,
-    "gyy_channel_bool": False,
-    "gzz_channel_bool": False,
-    "gxz_channel_bool": False,
-    "gyz_channel_bool": False,
-}
-
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": True,
-        "parent": "mesh",
-        "label": "Density contrast (g/cc)",
-        "property": None,
-        "value": 1e-3,
-    },
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": [
-            "{202c5db1-a56d-4004-9cad-baafd8899406}",
-            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
-            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
-            "{48f5054a-1c5c-4ca4-9048-80f36dc60a06}",
-            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{b54f6be6-0eb5-4a4e-887a-ba9d276f9a83}",
-            "{5ffa3816-358d-4cdd-9b7d-e1f7f5543e05}",
-        ],
-        "value": None,
-    },
-    "gz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gz (mGal)",
-        "value": True,
-    },
-    "gx_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gx (mGal)",
-        "value": False,
-    },
-    "gy_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gy (mGal)",
-        "value": False,
-    },
-    "guv_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Guv (Eo)",
-        "value": False,
-    },
-    "gxy_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gxy/Gne (Eo)",
-        "value": False,
-    },
-    "gxx_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gxx (Eo)",
-        "value": False,
-    },
-    "gyy_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gyy (Eo)",
-        "value": False,
-    },
-    "gzz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gzz (Eo)",
-        "value": False,
-    },
-    "gxz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gxz (Eo)",
-        "value": False,
-    },
-    "gyz_channel_bool": {
-        "group": "Survey",
-        "main": True,
-        "label": "Gyz (Eo)",
-        "value": False,
-    },
 }
 
 default_ui_json = {
@@ -646,12 +517,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
@@ -679,9 +545,7 @@ validations = {
     "gy_channel": {"one_of": "data channel"},
     "gy_uncertainty": {"one_of": "uncertainty channel"},
 }
-
 validations = dict(base_validations, **validations)
-
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "monitoring_directory": str((assets_path() / "Temp").resolve()),
@@ -700,12 +564,6 @@ app_initializer = {
     "gyz_channel": UUID("{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}"),
     "gyz_uncertainty": 1.0,
     "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
-    "resolution": 50.0,
-    "window_center_x": 314565.0,
-    "window_center_y": 6072334.0,
-    "window_width": 1000.0,
-    "window_height": 1500.0,
-    "window_azimuth": 0.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,

@@ -28,7 +28,6 @@ inversion_defaults = {
     "data_object": None,
     "line_object": None,
     "line_id": 1,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
     "receivers_offset_z": 0.0,
@@ -47,12 +46,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
@@ -112,7 +105,6 @@ forward_defaults = {
     "data_object": None,
     "line_object": None,
     "line_id": 1,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
     "receivers_offset_z": 0.0,
@@ -127,11 +119,6 @@ forward_defaults = {
     "mesh": None,
     "starting_model": 1e-3,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -147,40 +134,6 @@ forward_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
-}
-
-inversion_ui_json = {
-    "potential_channel_bool": True,
-}
-
-forward_ui_json = {
-    "data_object": {
-        "main": True,
-        "group": "Survey",
-        "label": "Object",
-        "meshType": "{275ecee9-9c24-4378-bf94-65f3c5fbe163}",
-        "value": None,
-    },
-    "line_object": {
-        "association": ["Cell", "Vertex"],
-        "dataType": "Referenced",
-        "group": "Survey",
-        "main": True,
-        "label": "Line ID",
-        "parent": "data_object",
-        "value": None,
-    },
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Conductivity (S/m)",
-        "property": None,
-        "value": 1e-3,
-    },
 }
 
 default_ui_json = {
@@ -329,7 +282,6 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
-    "resolution": None,
     "tile_spatial": 1,
     "files_only": {
         "label": "Generate files only",
@@ -370,12 +322,6 @@ app_initializer = {
     "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
     "starting_model": 1e-1,
     "reference_model": 1e-1,
-    "resolution": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,

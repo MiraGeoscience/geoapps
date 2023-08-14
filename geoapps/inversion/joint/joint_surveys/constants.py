@@ -74,8 +74,6 @@ inversion_defaults = {
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
-forward_ui_json = {}
-inversion_ui_json = {}
 
 default_ui_json = {
     "title": "SimPEG Joint Surveys Inversion",
@@ -133,12 +131,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(joint_default_ui_json, **default_ui_json)
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
