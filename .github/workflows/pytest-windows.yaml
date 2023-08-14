@@ -47,8 +47,10 @@ jobs:
         with:
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
           environment-name: test_env
+          activate-environment: test_env
           cache-downloads: true
       - name: pytest
+        shell: shell: bash -l {0}
         run: |
           pytest --cov=${source_dir} --cov-report=xml --cov-branch
       - name: Codecov
