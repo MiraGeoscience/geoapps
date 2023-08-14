@@ -30,7 +30,6 @@ from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import ObjectSelection
-from geoapps.clustering.constants import app_initializer
 from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.layout import cluster_layout
 from geoapps.clustering.params import ClusteringParams
@@ -44,9 +43,8 @@ class Clustering(ScatterPlots):
     _param_class = ClusteringParams
     _driver_class = ClusteringDriver
 
-    def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
-        super().__init__(ui_json=ui_json, **app_initializer)
+    def __init__(self, ui_json=None, ui_json_data=None, params=None):
+        super().__init__(ui_json, ui_json_data, params)
 
         # Params and driver used for updating scatter plot in make_scatter_plot function.
         self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)
