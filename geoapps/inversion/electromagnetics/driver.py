@@ -591,7 +591,7 @@ def inversion(input_file):
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
 
-            ref = con_model[ind]
+            ref = con_model[ind][ind_map]
             reference = np.log(ref)
 
         elif "value" in list(input_param["reference_model"]):
@@ -618,7 +618,7 @@ def inversion(input_file):
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
 
-            ref = con_model[ind]
+            ref = con_model[ind][ind_map]
             starting = np.log(ref)
 
         elif "value" in list(input_param["starting_model"]):
@@ -643,7 +643,7 @@ def inversion(input_file):
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
 
-            susceptibility = sus_model[ind]
+            susceptibility = sus_model[ind][ind_map]
 
         elif "value" in list(input_param["susceptibility_model"]):
             susceptibility = (
