@@ -18,6 +18,7 @@ from time import time
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -1036,7 +1037,7 @@ class InversionApp(PlotSelection2D):
         )
 
         with ws as new_workspace:
-            with self.workspace.open(mode="r"):
+            with fetch_active_workspace(self.workspace):
                 param_dict["geoh5"] = new_workspace
 
                 for elem in [
@@ -1124,6 +1125,10 @@ class InversionApp(PlotSelection2D):
             # Create new params object and write
             param_dict["resolution"] = None  # No downsampling for dcip
             param_dict["geoh5"] = new_workspace
+
+            if param_dict.get("reference_model", None) is None:
+                param_dict["reference_model"] = param_dict["starting_model"]
+                param_dict["alpha_s"] = 0.0
 
             # Pre-processing
             update_dict = preprocess_data(

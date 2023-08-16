@@ -185,6 +185,7 @@ def test_dc_inversion(tmp_path: Path):
         "z_from_topo": False,
         "forward_only": False,
         "starting_model": 0.01,
+        "reference_model": None,
     }
     side_effects = {}
     app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
