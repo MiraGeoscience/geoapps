@@ -21,7 +21,7 @@ from geoh5py.objects import Curve, DrapeModel, Grid2D
 from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
-from scipy.sparse import diags
+from scipy.sparse import csr_matrix, diags
 from scipy.spatial import cKDTree
 from simpeg_archive import (
     DataMisfit,
@@ -529,12 +529,16 @@ def inversion(input_file):
                     -1, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
                 )
 
-        ind_map = np.ones(cell_count, dtype=bool)
-        ind_map[np.hstack(ghost_ind)] = False
-
-        ghost_mat = diags(np.ones(cell_count)).tocsr()[:, ind_map]
-        ghost_mat[np.hstack(ghost_ind), 0] = np.nan
-
+        n_active = cell_count - len(ghost_ind)
+        bool_array = np.ones(cell_count, dtype=bool)
+        bool_array[ghost_ind] = False
+        col_ind = np.zeros(cell_count)
+        col_ind[bool_array] = np.arange(n_active)
+        values = np.ones(cell_count)
+        values[ghost_ind] = np.nan
+        ghost_mat = csr_matrix(
+            (values, (np.arange(cell_count), col_ind)), shape=(cell_count, n_active)
+        )
         model: DrapeModel = DrapeModel.create(
             workspace,
             layers=np.vstack(layers),
@@ -591,7 +595,7 @@ def inversion(input_file):
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
 
-            ref = con_model[ind][ind_map]
+            ref = con_model[ind][bool_array]
             reference = np.log(ref)
 
         elif "value" in list(input_param["reference_model"]):
@@ -618,7 +622,7 @@ def inversion(input_file):
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
 
-            ref = con_model[ind][ind_map]
+            ref = con_model[ind][bool_array]
             starting = np.log(ref)
 
         elif "value" in list(input_param["starting_model"]):
@@ -643,7 +647,7 @@ def inversion(input_file):
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
 
-            susceptibility = sus_model[ind][ind_map]
+            susceptibility = sus_model[ind][bool_array]
 
         elif "value" in list(input_param["susceptibility_model"]):
             susceptibility = (
