@@ -564,7 +564,7 @@ app_initializer = {
     "gyz_channel": UUID("{3d19bd53-8bb8-4634-aeae-4e3a90e9d19e}"),
     "gyz_uncertainty": 1.0,
     "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
-    "resolution": 33.0,
+    "resolution": 50.0,
     "window_center_x": 314565.0,
     "window_center_y": 6072334.0,
     "window_width": 1000.0,
