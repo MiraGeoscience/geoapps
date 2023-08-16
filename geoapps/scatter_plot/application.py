@@ -26,7 +26,6 @@ from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication, ObjectSelection
-from geoapps.scatter_plot.constants import app_initializer
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.layout import scatter_layout
 from geoapps.scatter_plot.params import ScatterPlotParams
@@ -40,18 +39,19 @@ class ScatterPlots(BaseDashApplication):
     _param_class = ScatterPlotParams
     _driver_class = ScatterPlotDriver
 
-    def __init__(self, ui_json=None, ui_json_data=None, params=None, **kwargs):
-        app_initializer.update(kwargs)
-
+    def __init__(self, ui_json=None, ui_json_data=None, params=None):
         if params is not None:
-            # Launched from ObjectSelection, with default ui.json
+            # Launched from notebook
+            # Params for initialization are coming from params
+            # ui_json_data is provided
             self.params = params
-        elif ui_json is not None and Path(ui_json.path).is_dir():
+        elif ui_json is not None and Path(ui_json.path).exists():
+            # Launched from terminal
+            # Params for initialization are coming from ui_json
+            # ui_json_data starts as None
             self.params = self._param_class(ui_json)
-            ui_json_data = ui_json.demote(ui_json.data.copy())
-        else:
-            self.params = self._param_class(**app_initializer)
-            ui_json_data = app_initializer
+            ui_json_data = self.params.input_file.demote(self.params.to_dict())
+
         super().__init__()
 
         # Start flask server

@@ -23,6 +23,7 @@ from geoh5py.workspace import Workspace
 
 from geoapps.block_model_creation.application import BlockModelCreation
 from geoapps.calculator import Calculator
+from geoapps.clustering import ClusteringParams
 from geoapps.clustering.application import Clustering
 from geoapps.contours.application import ContourValues
 from geoapps.coordinate_transformation import CoordinateTransformation
@@ -197,7 +198,8 @@ def test_clustering(tmp_path: Path):
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
-    app = Clustering(geoh5=str(temp_workspace), output_path=str(tmp_path))
+    params = ClusteringParams(geoh5=str(temp_workspace), output_path=str(tmp_path))
+    app = Clustering(params=params)
 
     # Set test variables
     n_clicks = 0

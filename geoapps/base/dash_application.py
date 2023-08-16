@@ -47,6 +47,7 @@ class BaseDashApplication:
     _param_class = BaseParams
     _driver_class = None
     _workspace = None
+    _app_initializer: dict | None = None
 
     def __init__(self):
         self.workspace = self.params.geoh5
@@ -120,6 +121,10 @@ class BaseDashApplication:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
+
+                if self._app_initializer is not None:
+                    ui_json_data.update(self._app_initializer)
+
                 object_value = ui_json_data[param_name]
 
             self.workspace.open()
@@ -131,6 +136,7 @@ class BaseDashApplication:
                 }
                 for obj in self.workspace.objects
             ]
+
         return object_options, object_value, ui_json_data, None, None
 
     def get_data_options(
@@ -337,6 +343,8 @@ class ObjectSelection:
     opens a Qt window to run an app.
     """
 
+    _app_initializer: dict | None = None
+
     def __init__(
         self,
         app_name: str,
@@ -356,6 +364,11 @@ class ObjectSelection:
 
         app_initializer.update(kwargs)
         self.params = self.param_class(**app_initializer)
+        self._app_initializer = {
+            key: value
+            for key, value in app_initializer.items()
+            if key not in self.params.param_names
+        }
         self.workspace = self.params.geoh5
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -374,8 +387,10 @@ class ObjectSelection:
             Output(component_id="ui_json_data", component_property="data"),
             Output(component_id="upload", component_property="filename"),
             Output(component_id="upload", component_property="contents"),
+            Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="upload", component_property="filename"),
             Input(component_id="upload", component_property="contents"),
+            Input(component_id="objects", component_property="value"),
         )(self.update_object_options)
         self.app.callback(
             Output(component_id="launch_app_markdown", component_property="children"),
@@ -384,7 +399,12 @@ class ObjectSelection:
         )(self.launch_qt)
 
     def update_object_options(
-        self, filename: str, contents: str, trigger: str | None = None
+        self,
+        ui_json_data: dict,
+        filename: str,
+        contents: str,
+        objects: str,
+        trigger: str | None = None,
     ) -> (list, str, dict, None, None):
         """
         This function is called when a file is uploaded. It sets the new workspace, sets the dcc ui_json_data component,
@@ -400,37 +420,47 @@ class ObjectSelection:
         :return filename: Return None to reset the filename so the same file can be chosen twice in a row.
         :return contents: Return None to reset the contents so the same file can be chosen twice in a row.
         """
-        ui_json_data, object_options, object_value = no_update, no_update, None
-
         if trigger is None:
             trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
+
+        if trigger != "":
+            # Remove entities from ui_json_data
+            inp_ui_json_data = ui_json_data.copy()
+            for key, value in inp_ui_json_data.items():
+                if is_uuid(value) or isinstance(value, Entity):
+                    setattr(self.params, key, None)
+                    del ui_json_data[key]
+        if trigger == "objects":
+            return no_update, objects, ui_json_data, None, None
+
+        object_options, object_value = no_update, None
         if contents is not None or trigger == "":
-            if filename is not None and filename.endswith(".ui.json"):
-                # Uploaded ui.json
-                _, content_string = contents.split(",")
-                decoded = base64.b64decode(content_string)
-                ui_json = json.loads(decoded)
-                self.workspace = Workspace(ui_json["geoh5"], mode="r")
-                # Create ifile from ui.json
-                ifile = InputFile(ui_json=ui_json)
-                self.params = self.param_class(ifile)
-                # Demote ifile data so it can be stored as a string
-                ui_json_data = ifile.demote(ifile.data.copy())
-                # Get new object value for dropdown from ui.json
-                object_value = ui_json_data["objects"]
-            elif filename is not None and filename.endswith(".geoh5"):
-                # Uploaded workspace
-                _, content_string = contents.split(",")
-                decoded = io.BytesIO(base64.b64decode(content_string))
-                self.workspace = Workspace(decoded, mode="r")
-                # Update self.params with new workspace, but keep unaffected params the same.
-                new_params = self.params.to_dict()
-                for key, value in new_params.items():
-                    if isinstance(value, Entity):
-                        new_params[key] = None
-                new_params["geoh5"] = self.workspace
-                self.params = self.param_class(**new_params)
-                ui_json_data = no_update
+            if filename is not None:
+                if filename.endswith(".ui.json"):
+                    # Uploaded ui.json
+                    _, content_string = contents.split(",")
+                    decoded = base64.b64decode(content_string)
+                    ui_json = json.loads(decoded)
+                    self.workspace = Workspace(ui_json["geoh5"], mode="r")
+                    # Create ifile from ui.json
+                    ifile = InputFile(ui_json=ui_json)
+                    self.params = self.param_class(ifile)
+                    # Demote ifile data so it can be stored as a string
+                    ui_json_data = ifile.demote(ifile.data.copy())
+                    # Get new object value for dropdown from ui.json
+                    object_value = ui_json_data["objects"]
+                elif filename.endswith(".geoh5"):
+                    # Uploaded workspace
+                    _, content_string = contents.split(",")
+                    decoded = io.BytesIO(base64.b64decode(content_string))
+                    self.workspace = Workspace(decoded, mode="r")
+                    # Update self.params with new workspace, but keep unaffected params the same.
+                    new_params = self.params.to_dict()
+                    for key, value in new_params.items():
+                        if isinstance(value, Entity):
+                            new_params[key] = None
+                    new_params["geoh5"] = self.workspace
+                    self.params = self.param_class(**new_params)
             elif trigger == "":
                 # Initialization of app from self.params.
                 ifile = InputFile(
@@ -439,6 +469,8 @@ class ObjectSelection:
                 )
                 ifile.update_ui_values(self.params.to_dict())
                 ui_json_data = ifile.demote(ifile.data)
+                if self._app_initializer is not None:
+                    ui_json_data.update(self._app_initializer)
                 object_value = ui_json_data["objects"]
 
             # Get new options for object dropdown
@@ -489,7 +521,7 @@ class ObjectSelection:
         """
         app = app_class(ui_json=ui_json, ui_json_data=ui_json_data, params=params)
         if port is not None:
-            app.app.run_server(host="127.0.0.1", port=port)
+            app.app.run(host="127.0.0.1", port=port)
 
     @staticmethod
     def make_qt_window(app_name: str, port: int):

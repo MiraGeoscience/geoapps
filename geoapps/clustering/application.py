@@ -29,7 +29,7 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
-from geoapps.clustering.constants import app_initializer
+from geoapps.base.dash_application import ObjectSelection
 from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.layout import cluster_layout
 from geoapps.clustering.params import ClusteringParams
@@ -43,14 +43,8 @@ class Clustering(ScatterPlots):
     _param_class = ClusteringParams
     _driver_class = ClusteringDriver
 
-    def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json.path).is_dir():
-            self.params = self._param_class(ui_json)
-        else:
-            self.params = self._param_class(**app_initializer)
-
-        super().__init__(**self.params.to_dict())
+    def __init__(self, ui_json=None, ui_json_data=None, params=None):
+        super().__init__(ui_json, ui_json_data, params)
 
         # Params and driver used for updating scatter plot in make_scatter_plot function.
         self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)
@@ -1335,7 +1329,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     ifile.workspace.open("r")
-    app = Clustering(ui_json=ifile)
     print("Loaded. Building the clustering app . . .")
-    app.run()
+    ObjectSelection.run("Clustering", Clustering, ifile)
     print("Done")

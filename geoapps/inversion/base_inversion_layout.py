@@ -308,7 +308,6 @@ plot_layout = html.Div(
                                 "width": "35%",
                                 "margin-right": "3%",
                             },
-                            value=50.0,
                         ),
                     ],
                     style={"width": "60%"},
