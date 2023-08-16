@@ -61,7 +61,9 @@ scipy = {version = "~1.10.1", optional = true } # also in simpeg and geoana
 tqdm = {version = "^4.64.0", optional = true }
 libhwloc = {version = "2.9.0"}
 
-simpeg_archive = {version = "~0.9.1.dev5", source = "pypi", optional = true}
+#simpeg_archive = {version = "~0.9.1.dev5", source = "pypi", optional = true}
+simpeg_archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive_dev6.zip#sha256="}
+
 #mira-simpeg = {version = "~0.15.1.dev9", source = "pypi", optional = true}
 mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip#sha256=", optional = true}
 
