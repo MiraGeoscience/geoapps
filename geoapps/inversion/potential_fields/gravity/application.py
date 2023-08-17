@@ -32,11 +32,17 @@ class GravityApp(InversionApp):
     _components = component_list
 
     def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
         if ui_json is not None and pathlib.Path(ui_json.path).exists():
             self.params = self._param_class(ui_json)
         else:
+            app_initializer.update(kwargs)
             self.params = self._param_class(**app_initializer)
+            extras = {
+                key: value
+                for key, value in app_initializer.items()
+                if key not in self.params.param_names
+            }
+            self._app_initializer = extras
 
         super().__init__()
 

@@ -115,7 +115,7 @@ default_ui_json.update(
 validations = {}
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "monitoring_directory": str(assets_path().resolve()),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
     "cell_size_x": 50.0,
     "cell_size_y": 50.0,
