@@ -187,7 +187,7 @@ def test_dc_inversion(tmp_path: Path):
         "starting_model": 0.01,
         "reference_model": None,
     }
-    side_effects = {}
+    side_effects = {"reference_model": changes["starting_model"], "alpha_s": 0}
     app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
     app.geoh5 = str(tmp_path / "invtest.geoh5")
 
@@ -204,6 +204,9 @@ def test_dc_inversion(tmp_path: Path):
     params_reload = DirectCurrent3DParams(ifile)
 
     for param, value in changes.items():
+        if param == "reference_model":
+            continue
+
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert p_value == value, f"Parameter {param} not saved and loaded correctly."
