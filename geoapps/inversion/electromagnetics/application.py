@@ -25,7 +25,7 @@ from geoh5py.objects import (
     Points,
     Surface,
 )
-from geoh5py.shared.utils import is_uuid
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid
 from geoh5py.workspace import Workspace
 
 from geoapps import assets_path
@@ -921,6 +921,7 @@ class InversionApp(PlotSelection2D):
             and getattr(self, "_h5file", None) is not None
         ):
             self.workspace = Workspace(self.h5file)
+
         return self._workspace
 
     @workspace.setter
@@ -1366,13 +1367,13 @@ class InversionApp(PlotSelection2D):
             return
 
         time_stamp = time()
-        with Workspace(
+        with Workspace.create(
             str(
                 Path(self.export_directory.selected_path)
                 / (self.ga_group_name.value + f"{time_stamp:.0f}.geoh5")
             )
         ) as new_workspace:
-            with self.workspace.open("r"):
+            with fetch_active_workspace(self.workspace):
                 obj, _ = self.get_selected_entities()
                 new_obj = obj.copy(parent=new_workspace, copy_children=False)
 
@@ -1400,9 +1401,6 @@ class InversionApp(PlotSelection2D):
 
                     new_group = new_obj.add_data_to_group(data_list, prop_group.name)
                     input_dict["uncertainty_channel"] = str(new_group.uid)
-                # if self.system.value == "Airborne TEM Survey":
-                #     prop_group = new_obj.add_data_to_group(data_list, )
-                #
 
                 _, data = self.sensor.get_selected_entities()
                 for d in data:
