@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 06873b1000bcbc886c84077e73776da4aa37d8457aa00613a6da529ea4ff6b36
-    osx-64: 71c3b7826f4504fb7af94358cea568948df9c575e9350b0777ab5e7df3e6505d
-    linux-64: d234e0cc87f673e25d40f9029d43898edab2607422ce70fb317d883dd59351d4
+    win-64: 395575a2564044ec80a33e10e22436fc995c7d6e7ca7e6de8697a8ef39076f9f
+    osx-64: 981dc9e08f33e446cc1070cc48a48b8d840e03b4da214f055b11d6a29b164754
+    linux-64: 1b42805415f1c6d2ddaf6959a14848b2668d0f25c2aa99bc32a43d573c73b806
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -1926,16 +1926,16 @@ package:
   category: core
   optional: true
 - name: click
-  version: 8.1.6
+  version: 8.1.7
   manager: conda
   platform: linux-64
   dependencies:
     __unix: ''
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.6-unix_pyh707e725_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.7-unix_pyh707e725_0.conda
   hash:
-    md5: 64dbb3b205546691a61204d1cfb208e3
-    sha256: 73392cf4851bf7c89e99518effea01d531360a4894c4218e768d5e03e89d7943
+    md5: f3ad426304898027fc619827ff428eca
+    sha256: f0016cbab6ac4138a429e28dbcb904a90305b34b3fe41a9b89d697c90401caec
   category: core
   optional: true
 - name: cloudpickle
@@ -4343,7 +4343,7 @@ package:
   category: apps
   optional: true
 - name: dash
-  version: 2.12.0
+  version: 2.12.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -4357,10 +4357,10 @@ package:
     setuptools: ''
     typing-extensions: '>=4.1.1'
     werkzeug: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.12.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.12.1-pyhd8ed1ab_0.conda
   hash:
-    md5: 89c47b7b4bc59995170d312f235d82e6
-    sha256: 143765caba0cd9366c0b62ba1aa8d8944c0b0ef99ae6c548561cab6cc6b7a624
+    md5: ef8cbf64af2a8f94ab967b6f16fa7f82
+    sha256: c4be071de643d7ae26a0c129570d4a0521aa8278a04a4b9f58cc9cd75019b743
   category: apps
   optional: true
 - name: distributed
@@ -4758,7 +4758,7 @@ package:
   category: main
   optional: false
 - name: imagecodecs
-  version: 2023.7.10
+  version: 2023.8.12
   manager: conda
   platform: linux-64
   dependencies:
@@ -4794,10 +4794,10 @@ package:
     xz: '>=5.2.6,<6.0a0'
     zfp: '>=1.0.0,<2.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/imagecodecs-2023.7.10-py39he027151_2.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/imagecodecs-2023.8.12-py39he027151_0.conda
   hash:
-    md5: 861f0dfd0ca222639eb6cbe355cb6fac
-    sha256: 7635dce713ab305f95e064c3a1f2ad4243c447fc3a6c96b9b3e6fc23a99da93f
+    md5: 82e71aefffa5a4d6fb1c509a3380ce74
+    sha256: f310b135d85137a6f7483f38eb86582bb3f7fbf8dc9b387b2067ace0bc9eca95
   category: apps
   optional: true
 - name: imageio
@@ -5260,13 +5260,13 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    imagecodecs: '>=2023.1.23'
+    imagecodecs: '>=2023.8.12'
     numpy: '>=1.19.2'
     python: '>=3.9'
-  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2023.8.12-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2023.8.12-pyhd8ed1ab_1.conda
   hash:
-    md5: 8011f62c4f00db4aa7c37e0088827bad
-    sha256: 13f9aa25981d3c1d01f262eb57671b4c02828bd3c49718eeb446614b46b1fc6d
+    md5: ef24b983632e6acdaf424dec8e16bb55
+    sha256: 1b6bfc407d464ce0f83d2d1728abd62baad4a9709914307c33af4d335eea18e6
   category: apps
   optional: true
 - name: zarr
@@ -5566,14 +5566,14 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pymatsolver: '>=0.2'
-    scipy: '>=1.8.0'
-    geoh5py: '*'
-    empymod: '>=2.0.0'
-    discretize: '>=0.8.0'
     scikit-learn: '>=1.2'
-    pandas: '*'
+    discretize: '>=0.8.0'
     numpy: '>=1.20'
+    empymod: '>=2.0.0'
+    geoh5py: '*'
+    scipy: '>=1.8.0'
+    pandas: '*'
+    pymatsolver: '>=0.2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -5598,22 +5598,22 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev6
+  version: 0.9.1.dev5
   manager: pip
   platform: linux-64
   dependencies:
+    discretize: '*'
+    properties: '>=0.3.1b2'
     scipy: '>=0.13'
     numpy: '>=1.7'
     pymatsolver: '>=0.1.1'
-    properties: '>=0.3.1b2'
-    discretize: '*'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive_dev6.zip
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip
   hash:
     sha256: ''
   category: core
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive_dev6.zip#sha256=
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip#sha256=
   optional: true
 - name: bzip2
   version: 1.0.8
@@ -6927,16 +6927,16 @@ package:
   category: core
   optional: true
 - name: click
-  version: 8.1.6
+  version: 8.1.7
   manager: conda
   platform: osx-64
   dependencies:
     __unix: ''
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.6-unix_pyh707e725_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.7-unix_pyh707e725_0.conda
   hash:
-    md5: 64dbb3b205546691a61204d1cfb208e3
-    sha256: 73392cf4851bf7c89e99518effea01d531360a4894c4218e768d5e03e89d7943
+    md5: f3ad426304898027fc619827ff428eca
+    sha256: f0016cbab6ac4138a429e28dbcb904a90305b34b3fe41a9b89d697c90401caec
   category: core
   optional: true
 - name: cloudpickle
@@ -9129,7 +9129,7 @@ package:
   category: core
   optional: true
 - name: dash
-  version: 2.12.0
+  version: 2.12.1
   manager: conda
   platform: osx-64
   dependencies:
@@ -9143,10 +9143,10 @@ package:
     plotly: '>=5.0.0'
     typing-extensions: '>=4.1.1'
     flask: '>=1.0.4'
-  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.12.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.12.1-pyhd8ed1ab_0.conda
   hash:
-    md5: 89c47b7b4bc59995170d312f235d82e6
-    sha256: 143765caba0cd9366c0b62ba1aa8d8944c0b0ef99ae6c548561cab6cc6b7a624
+    md5: ef8cbf64af2a8f94ab967b6f16fa7f82
+    sha256: c4be071de643d7ae26a0c129570d4a0521aa8278a04a4b9f58cc9cd75019b743
   category: apps
   optional: true
 - name: distributed
@@ -9214,7 +9214,7 @@ package:
   category: main
   optional: false
 - name: imagecodecs
-  version: 2023.7.10
+  version: 2023.8.12
   manager: conda
   platform: osx-64
   dependencies:
@@ -9249,10 +9249,10 @@ package:
     xz: '>=5.2.6,<6.0a0'
     zfp: '>=1.0.0,<2.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/imagecodecs-2023.7.10-py39hfc0e906_2.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/imagecodecs-2023.8.12-py39hfc0e906_0.conda
   hash:
-    md5: e60ba821d6f1bc7c285fc2ec0f998d2b
-    sha256: e14e8c2035de4e9c298fcb87a46d86fdea380e4438288450f54b9a5566ee2ac8
+    md5: d7e25000c81525a084df938ae1fba567
+    sha256: 40b7cf53286236f342f31abde3f7f7f745b555300ed6a739dd659d4d87ce869f
   category: apps
   optional: true
 - name: imageio
@@ -9669,11 +9669,11 @@ package:
   dependencies:
     python: '>=3.9'
     numpy: '>=1.19.2'
-    imagecodecs: '>=2023.1.23'
-  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2023.8.12-pyhd8ed1ab_0.conda
+    imagecodecs: '>=2023.8.12'
+  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2023.8.12-pyhd8ed1ab_1.conda
   hash:
-    md5: 8011f62c4f00db4aa7c37e0088827bad
-    sha256: 13f9aa25981d3c1d01f262eb57671b4c02828bd3c49718eeb446614b46b1fc6d
+    md5: ef24b983632e6acdaf424dec8e16bb55
+    sha256: 1b6bfc407d464ce0f83d2d1728abd62baad4a9709914307c33af4d335eea18e6
   category: apps
   optional: true
 - name: zarr
@@ -10234,14 +10234,14 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    pymatsolver: '>=0.2'
-    scipy: '>=1.8.0'
-    geoh5py: '*'
-    empymod: '>=2.0.0'
-    discretize: '>=0.8.0'
     scikit-learn: '>=1.2'
-    pandas: '*'
+    discretize: '>=0.8.0'
     numpy: '>=1.20'
+    empymod: '>=2.0.0'
+    geoh5py: '*'
+    scipy: '>=1.8.0'
+    pandas: '*'
+    pymatsolver: '>=0.2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -10266,22 +10266,22 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev6
+  version: 0.9.1.dev5
   manager: pip
   platform: osx-64
   dependencies:
+    discretize: '*'
+    properties: '>=0.3.1b2'
     scipy: '>=0.13'
     numpy: '>=1.7'
     pymatsolver: '>=0.1.1'
-    properties: '>=0.3.1b2'
-    discretize: '*'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive_dev6.zip
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip
   hash:
     sha256: ''
   category: core
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive_dev6.zip#sha256=
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip#sha256=
   optional: true
 - name: ca-certificates
   version: 2023.7.22
@@ -12802,17 +12802,17 @@ package:
   category: apps
   optional: true
 - name: click
-  version: 8.1.6
+  version: 8.1.7
   manager: conda
   platform: win-64
   dependencies:
     colorama: ''
     __win: ''
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.6-win_pyh7428d3b_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/click-8.1.7-win_pyh7428d3b_0.conda
   hash:
-    md5: c1e57b6771510a3d2648ed6e76277391
-    sha256: 6fa8a7c644073b88ef3f857bb56f51efcf7c3852777a009187360f9a6bd1c606
+    md5: 3549ecbceb6cd77b91a105511b7d0786
+    sha256: 90236b113b9a20041736e80b80ee965167f9aac0468315c55e2bad902d673fb0
   category: core
   optional: true
 - name: comm
@@ -13965,7 +13965,7 @@ package:
   category: core
   optional: true
 - name: dash
-  version: 2.12.0
+  version: 2.12.1
   manager: conda
   platform: win-64
   dependencies:
@@ -13979,10 +13979,10 @@ package:
     plotly: '>=5.0.0'
     typing-extensions: '>=4.1.1'
     flask: '>=1.0.4'
-  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.12.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/dash-2.12.1-pyhd8ed1ab_0.conda
   hash:
-    md5: 89c47b7b4bc59995170d312f235d82e6
-    sha256: 143765caba0cd9366c0b62ba1aa8d8944c0b0ef99ae6c548561cab6cc6b7a624
+    md5: ef8cbf64af2a8f94ab967b6f16fa7f82
+    sha256: c4be071de643d7ae26a0c129570d4a0521aa8278a04a4b9f58cc9cd75019b743
   category: apps
   optional: true
 - name: gst-plugins-base
@@ -14297,7 +14297,7 @@ package:
   category: main
   optional: false
 - name: imagecodecs
-  version: 2023.7.10
+  version: 2023.8.12
   manager: conda
   platform: win-64
   dependencies:
@@ -14333,10 +14333,10 @@ package:
     xz: '>=5.2.6,<6.0a0'
     zfp: '>=1.0.0,<2.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/win-64/imagecodecs-2023.7.10-py39had998c7_2.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/imagecodecs-2023.8.12-py39had998c7_0.conda
   hash:
-    md5: d5501939cfdf2d0838ab65adece6e571
-    sha256: 0e2de13724314a971781a700b81c7aade4083a3a8eca21838368758782df14da
+    md5: dbbb2c556045efd3e6006e88e75a044d
+    sha256: e2c71e00f038ece293ba0877737789468230a241f8bbf8817d9ad9e2a90dfebc
   category: apps
   optional: true
 - name: imageio
@@ -14790,11 +14790,11 @@ package:
   dependencies:
     python: '>=3.9'
     numpy: '>=1.19.2'
-    imagecodecs: '>=2023.1.23'
-  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2023.8.12-pyhd8ed1ab_0.conda
+    imagecodecs: '>=2023.8.12'
+  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2023.8.12-pyhd8ed1ab_1.conda
   hash:
-    md5: 8011f62c4f00db4aa7c37e0088827bad
-    sha256: 13f9aa25981d3c1d01f262eb57671b4c02828bd3c49718eeb446614b46b1fc6d
+    md5: ef24b983632e6acdaf424dec8e16bb55
+    sha256: 1b6bfc407d464ce0f83d2d1728abd62baad4a9709914307c33af4d335eea18e6
   category: apps
   optional: true
 - name: zarr
@@ -15055,14 +15055,14 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    pymatsolver: '>=0.2'
-    scipy: '>=1.8.0'
-    geoh5py: '*'
-    empymod: '>=2.0.0'
-    discretize: '>=0.8.0'
     scikit-learn: '>=1.2'
-    pandas: '*'
+    discretize: '>=0.8.0'
     numpy: '>=1.20'
+    empymod: '>=2.0.0'
+    geoh5py: '*'
+    scipy: '>=1.8.0'
+    pandas: '*'
+    pymatsolver: '>=0.2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -15087,20 +15087,20 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev6
+  version: 0.9.1.dev5
   manager: pip
   platform: win-64
   dependencies:
+    discretize: '*'
+    properties: '>=0.3.1b2'
     scipy: '>=0.13'
     numpy: '>=1.7'
     pymatsolver: '>=0.1.1'
-    properties: '>=0.3.1b2'
-    discretize: '*'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive_dev6.zip
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip
   hash:
     sha256: ''
   category: core
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive_dev6.zip#sha256=
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip#sha256=
   optional: true
