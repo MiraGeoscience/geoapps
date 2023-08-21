@@ -34,7 +34,7 @@ from geoapps.inversion.potential_fields.magnetic_vector.application import (
     MagneticVectorApp,
 )
 
-from .. import PROJECT, PROJECT_DCIP
+from .. import PROJECT, PROJECT_DCIP, PROJECT_TEM
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -324,19 +324,23 @@ def test_ip_inversion(tmp_path: Path):
 
 def test_em1d_inversion(tmp_path: Path):
     """Tests the jupyter application for em1d inversion."""
-    with Workspace(PROJECT) as ws:
+    with Workspace(PROJECT_TEM) as ws:
         with Workspace(tmp_path / "invtest.geoh5") as new_geoh5:
-            new_obj = ws.get_entity(UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"))[
+            new_obj = ws.get_entity(UUID("34698019-cde6-4b43-8d53-a040b25c989a"))[
                 0
             ].copy(parent=new_geoh5)
 
-            prop_group_uid = new_obj.property_groups[0].uid
+            data_group_uid = new_obj.find_or_create_property_group("dbdt_z").uid
+            uncert_group_uid = new_obj.find_or_create_property_group(
+                "dbdt_z_uncert"
+            ).uid
 
     changes = {
         "objects": new_obj.uid,
-        "data": prop_group_uid,
+        "data": data_group_uid,
+        "uncertainties": uncert_group_uid,
     }
-    side_effects = {"system": "VTEM (2007)"}
+    side_effects = {"system": "Airborne TEM Survey"}
     app = EMInversionApp(geoh5=PROJECT, plot_result=False)
     app.workspace = new_geoh5
 
