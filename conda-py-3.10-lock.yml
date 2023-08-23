@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 717f60d81f23b659328c96f7b4a4f15482cfb57e65ba54213bf9d65ccfd49fb0
-    osx-64: e147228a40b1e32eb45d4c4bd44050648cc09727626449a763a5e48dea76f3c1
-    linux-64: f3563c29313140bfe56ced10ce1c993790592195f52f56e7d06565027abebb53
+    win-64: 429142de221a590676e2d6633866d26c955a14b8e4e3819ce2038302a4bde320
+    osx-64: cab016b1f5338ad1ae880f72314ba65ecd9fc8c83b0b53e29ffe387780d31802
+    linux-64: 1f0fd49259c11ab80fef801076d68ce5fe53d2479d81d232065b212c29f0dff9
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -5540,14 +5540,14 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    scikit-learn: '>=1.2'
+    pandas: '*'
+    discretize: '>=0.8.0'
     geoh5py: '*'
-    empymod: '>=2.0.0'
     pymatsolver: '>=0.2'
+    empymod: '>=2.0.0'
     scipy: '>=1.8.0'
     numpy: '>=1.20'
-    discretize: '>=0.8.0'
-    pandas: '*'
+    scikit-learn: '>=1.2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -5576,18 +5576,15 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pymatsolver: '>=0.1.1'
     discretize: '*'
-    properties: '>=0.3.1b2'
-    scipy: '>=0.13'
     numpy: '>=1.7'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
   category: core
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256=
   optional: true
 - name: bzip2
   version: 1.0.8
@@ -10182,14 +10179,14 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    scikit-learn: '>=1.2'
+    pandas: '*'
+    discretize: '>=0.8.0'
     geoh5py: '*'
-    empymod: '>=2.0.0'
     pymatsolver: '>=0.2'
+    empymod: '>=2.0.0'
     scipy: '>=1.8.0'
     numpy: '>=1.20'
-    discretize: '>=0.8.0'
-    pandas: '*'
+    scikit-learn: '>=1.2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -10218,18 +10215,15 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    pymatsolver: '>=0.1.1'
     discretize: '*'
-    properties: '>=0.3.1b2'
-    scipy: '>=0.13'
     numpy: '>=1.7'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
   category: core
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256=
   optional: true
 - name: ca-certificates
   version: 2023.7.22
@@ -14978,14 +14972,14 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    scikit-learn: '>=1.2'
+    pandas: '*'
+    discretize: '>=0.8.0'
     geoh5py: '*'
-    empymod: '>=2.0.0'
     pymatsolver: '>=0.2'
+    empymod: '>=2.0.0'
     scipy: '>=1.8.0'
     numpy: '>=1.20'
-    discretize: '>=0.8.0'
-    pandas: '*'
+    scikit-learn: '>=1.2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -15014,16 +15008,13 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    pymatsolver: '>=0.1.1'
     discretize: '*'
-    properties: '>=0.3.1b2'
-    scipy: '>=0.13'
     numpy: '>=1.7'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
   category: core
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256=
   optional: true
