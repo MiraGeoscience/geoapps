@@ -338,10 +338,10 @@ def test_em1d_inversion(tmp_path: Path):
     changes = {
         "objects": new_obj.uid,
         "data": data_group_uid,
-        "uncertainties": uncert_group_uid,
+        "_uncertainties": uncert_group_uid,
     }
     side_effects = {"system": "Airborne TEM Survey"}
-    app = EMInversionApp(geoh5=PROJECT, plot_result=False)
+    app = EMInversionApp(geoh5=PROJECT_TEM, plot_result=False)
     app.workspace = new_geoh5
 
     for param, value in changes.items():

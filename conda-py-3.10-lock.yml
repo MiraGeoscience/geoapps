@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 23285d093188461643e11f21bdededc90ded3de343914446948b88ecc9b7de28
-    osx-64: 71cc843b74ebeea6f572e67a75211a80e883b85c9b4a00358cea2fb3953507b5
-    linux-64: c65c1db1cdf77ad600d7e00a20d4956ae825895fa0f421f2bb7057368ca5dc29
+    win-64: 717f60d81f23b659328c96f7b4a4f15482cfb57e65ba54213bf9d65ccfd49fb0
+    osx-64: e147228a40b1e32eb45d4c4bd44050648cc09727626449a763a5e48dea76f3c1
+    linux-64: f3563c29313140bfe56ced10ce1c993790592195f52f56e7d06565027abebb53
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -1268,18 +1268,18 @@ package:
   category: main
   optional: false
 - name: libzip
-  version: 1.9.2
+  version: 1.10.0
   manager: conda
   platform: linux-64
   dependencies:
     bzip2: '>=1.0.8,<2.0a0'
     libgcc-ng: '>=12'
-    libzlib: '>=1.2.12,<1.3.0a0'
-    openssl: '>=3.0.5,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libzip-1.9.2-hc929e4a_1.tar.bz2
+    libzlib: '>=1.2.13,<1.3.0a0'
+    openssl: '>=3.1.2,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libzip-1.10.0-h2629f0a_0.conda
   hash:
-    md5: 5b122b50e738c4be5c3f2899f010d7cf
-    sha256: e2dbd5239f62fbac4f00f828b1de0ea5898d6ed5c1f3049baaf4dfcc4ebdbe7c
+    md5: 980b76fe19286dc811ee83354a0847ae
+    sha256: fea211cc1b0bd7e12bb96e1a412e191ed759b8a9f94bf880f8d833ce15ea70d8
   category: apps
   optional: true
 - name: mysql-common
@@ -1454,7 +1454,7 @@ package:
   category: core
   optional: true
 - name: c-blosc2
-  version: 2.10.0
+  version: 2.10.2
   manager: conda
   platform: linux-64
   dependencies:
@@ -1463,10 +1463,10 @@ package:
     lz4-c: '>=1.9.3,<1.10.0a0'
     zlib-ng: '>=2.0.7,<2.1.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/c-blosc2-2.10.0-hb4ffafa_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/c-blosc2-2.10.2-hb4ffafa_0.conda
   hash:
-    md5: 63b397207c1e039b3373dd45af045d8b
-    sha256: 44b30db65cbf2a32ea0d74e127b2bbf4e7ad4ee7f121d1e9ce48fd03a0c0e54b
+    md5: 1a88c95afde6f13403492cac91352568
+    sha256: cd2157e19514bbe00f1025f9c31b081b748ba43dae0e53b104550248a03af1c6
   category: apps
   optional: true
 - name: freetype
@@ -1659,20 +1659,20 @@ package:
   category: main
   optional: false
 - name: nss
-  version: '3.89'
+  version: '3.92'
   manager: conda
   platform: linux-64
   dependencies:
     __glibc: '>=2.17,<3.0.a0'
     libgcc-ng: '>=12'
-    libsqlite: '>=3.40.0,<4.0a0'
+    libsqlite: '>=3.42.0,<4.0a0'
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
     nspr: '>=4.35,<5.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/nss-3.89-he45b914_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/nss-3.92-h1d7d5a4_0.conda
   hash:
-    md5: 2745719a58eeaab6657256a3f142f099
-    sha256: 6d512e4a7ffae4fed9feac2cb2037398c78ade47e5358fc79ac3e58494de0cad
+    md5: 22c89a3d87828fe925b310b9cdf0f574
+    sha256: a57445e96ace70b0c4075a95bf3308f174aa2a3865b37b486e021b5ab7e50b80
   category: main
   optional: false
 - name: pandoc
@@ -2086,18 +2086,6 @@ package:
     md5: 348e27e78a5e39090031448c72f66d5e
     sha256: 42be6ac8478051b26751d778490d6a71de12e5c6443e145ff3eddbc577d9bcda
   category: core
-  optional: true
-- name: flit-core
-  version: 3.9.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/flit-core-3.9.0-pyhd8ed1ab_0.conda
-  hash:
-    md5: e8cfceef004266b259604c3faa2a0191
-    sha256: a2ef503739ac22bf2a5d91c6a7b0f6a4413a56fbdb9b84f8f70427b9e37fbb69
-  category: apps
   optional: true
 - name: fontconfig
   version: 2.14.2
@@ -2725,7 +2713,7 @@ package:
   category: core
   optional: true
 - name: pyyaml
-  version: '6.0'
+  version: 6.0.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -2733,10 +2721,10 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     yaml: '>=0.2.5,<0.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0-py310h5764c6d_5.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/pyyaml-6.0.1-py310h2372a71_0.conda
   hash:
-    md5: 9e68d2ff6d98737c855b65f48dd3c597
-    sha256: 602d68ee4544274b12fb6d13b8d5fc61d0ebbee190292c21d8be10a4e68185bd
+    md5: 511120451bf728d52bb37c73d4069e57
+    sha256: 134f2bf206e21eff1b075c35b43e28dd97a9070ebc6879166629a7bac690348b
   category: core
   optional: true
 - name: pyzmq
@@ -2784,15 +2772,15 @@ package:
   category: apps
   optional: true
 - name: setuptools
-  version: 68.0.0
+  version: 68.1.2
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-68.0.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-68.1.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5a7739d0f57ee64133c9d32e6507c46d
-    sha256: 083a0913f5b56644051f31ac40b4eeea762a88c00aa12437817191b85a753cec
+    md5: 4fe12573bf499ff85a0a364e00cc5c53
+    sha256: dc5a777597e05ceddefc87d2f96389b7ae0afb097e558307af83a453db3e3887
   category: main
   optional: false
 - name: six
@@ -3018,27 +3006,27 @@ package:
   category: apps
   optional: true
 - name: websocket-client
-  version: 1.6.1
+  version: 1.6.2
   manager: conda
   platform: linux-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.6.1-pyhd8ed1ab_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.6.2-pyhd8ed1ab_0.conda
   hash:
-    md5: c34d9325a609381a0b0e8a5b4f325147
-    sha256: c71cb65ac49692adb33735f3114b99a96c0c5140db1d56cf4ccef4fe92ea9a4c
+    md5: 23f16ffe9711ac76b391c60ce4ea4656
+    sha256: 93aecd1b6b0fcb0ffbf96e367e56713824e648f6c02c9daaaedfef5f8e03caa9
   category: apps
   optional: true
 - name: wheel
-  version: 0.41.1
+  version: 0.41.2
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.41.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.41.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 8f467ba2db2b5470d297953d9c1f9c7d
-    sha256: a27e2c2709245386ebffae865650b5d3f383530b809480c3083f7ae258759303
+    md5: 1ccd092478b3e0ee10d7a891adbf8a4f
+    sha256: 21bcec5373b04d739ab65252b5532b04a08d229865ebb24b5b94902d6d0a77b0
   category: main
   optional: false
 - name: wrapt
@@ -3396,7 +3384,7 @@ package:
   category: core
   optional: true
 - name: fonttools
-  version: 4.42.0
+  version: 4.42.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -3406,10 +3394,10 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     unicodedata2: '>=14.0.0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.42.0-py310h2372a71_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/fonttools-4.42.1-py310h2372a71_0.conda
   hash:
-    md5: f939fe2998c888a77b310926a6c666f3
-    sha256: 6f511ea8de64bf72fb8c247654c7291f5a661c7d34778a000290c75d9bc63211
+    md5: 1f18231ffab82f236ce074b2aaa07e54
+    sha256: 63c6f5a5b94e6eb8a567e8e187761fea0edab749422aabfe85906a92062bcbe3
   category: core
   optional: true
 - name: glib
@@ -4003,7 +3991,7 @@ package:
   category: core
   optional: true
 - name: flask
-  version: 2.3.2
+  version: 2.3.3
   manager: conda
   platform: linux-64
   dependencies:
@@ -4013,11 +4001,11 @@ package:
     itsdangerous: '>=2.1.2'
     jinja2: '>=3.1.2'
     python: '>=3.8'
-    werkzeug: '>=2.3.3'
-  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.3.2-pyhd8ed1ab_0.conda
+    werkzeug: '>=2.3.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.3.3-pyhd8ed1ab_0.conda
   hash:
-    md5: 816d75d4c0f2e41b5765d17498c57a2e
-    sha256: f93246be286f2d0f93e85c4f08f9ce48f3eed875a79225e2ea119e70c0237421
+    md5: 9b0d29067484a8dfacfae85b8fba81bc
+    sha256: 4f84ffdc5471236e8225db86c7508426b46aa2c3802d58ca40b3c3e174533b39
   category: apps
   optional: true
 - name: geotiff
@@ -4316,17 +4304,17 @@ package:
   category: main
   optional: false
 - name: argon2-cffi
-  version: 21.3.0
+  version: 23.1.0
   manager: conda
   platform: linux-64
   dependencies:
     argon2-cffi-bindings: ''
-    flit-core: '>=3.4,<4'
-    python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/argon2-cffi-21.3.0-pyhd8ed1ab_0.tar.bz2
+    python: '>=3.7'
+    typing-extensions: ''
+  url: https://conda.anaconda.org/conda-forge/noarch/argon2-cffi-23.1.0-pyhd8ed1ab_0.conda
   hash:
-    md5: a0b402db58f73aaab8ee0ca1025a362e
-    sha256: 3a53cfd674641d9ff9901f5d4e1cc5e9a3ce9bb8b6a7dca826db840c2e39bc23
+    md5: 3afef1f55a1366b4d3b6a0d92e2235e4
+    sha256: 130766446f5507bd44df957b6b5c898a8bd98f024bb426ed6cb9ff1ad67fc677
   category: apps
   optional: true
 - name: dash
@@ -5510,13 +5498,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -5552,14 +5540,14 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    scipy: '>=1.8.0'
     scikit-learn: '>=1.2'
-    pandas: '*'
-    pymatsolver: '>=0.2'
-    numpy: '>=1.20'
     geoh5py: '*'
-    discretize: '>=0.8.0'
     empymod: '>=2.0.0'
+    pymatsolver: '>=0.2'
+    scipy: '>=1.8.0'
+    numpy: '>=1.20'
+    discretize: '>=0.8.0'
+    pandas: '*'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -5584,22 +5572,22 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev5
+  version: 0.11.0.dev6
   manager: pip
   platform: linux-64
   dependencies:
-    properties: '>=0.3.1b2'
-    numpy: '>=1.7'
-    discretize: '*'
     pymatsolver: '>=0.1.1'
+    discretize: '*'
+    properties: '>=0.3.1b2'
     scipy: '>=0.13'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip
+    numpy: '>=1.7'
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash:
     sha256: ''
   category: core
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip#sha256=
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256=
   optional: true
 - name: bzip2
   version: 1.0.8
@@ -6488,7 +6476,7 @@ package:
   category: core
   optional: true
 - name: c-blosc2
-  version: 2.10.0
+  version: 2.10.2
   manager: conda
   platform: osx-64
   dependencies:
@@ -6496,10 +6484,10 @@ package:
     lz4-c: '>=1.9.3,<1.10.0a0'
     zlib-ng: '>=2.0.7,<2.1.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/c-blosc2-2.10.0-h0dcb076_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/c-blosc2-2.10.2-h0dcb076_0.conda
   hash:
-    md5: deec618ceb5d9c6135efd2448917b131
-    sha256: 7c488f3a2f2da21c197800d94ec262ae1dcd9aa45719b959dde50ddda901bcc9
+    md5: 6be7747430164f3bf93f83777428964f
+    sha256: 004127cfbd915cd8087e6edc51816cafa374993fc784198df3742358a3dc1fa4
   category: apps
   optional: true
 - name: fonts-conda-ecosystem
@@ -6685,17 +6673,17 @@ package:
   category: main
   optional: false
 - name: libzip
-  version: 1.9.2
+  version: 1.10.0
   manager: conda
   platform: osx-64
   dependencies:
     bzip2: '>=1.0.8,<2.0a0'
-    libzlib: '>=1.2.12,<1.3.0a0'
-    openssl: '>=3.0.5,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/libzip-1.9.2-h6db710c_1.tar.bz2
+    libzlib: '>=1.2.13,<1.3.0a0'
+    openssl: '>=3.1.2,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/libzip-1.10.0-hc158999_0.conda
   hash:
-    md5: ce732d37e479919f3d22b1ccdeb858ac
-    sha256: 1f8399c3d70a25b74fb682cdd32d50814aa3728b152192c7aef7d7fd7a215f8c
+    md5: 464ec476eff8e9b2bb425c35d630aa0f
+    sha256: 132b7fecce61e0d8d69bfca22954ddf08667dc36ca83e5c2410dcf42a4b720b6
   category: apps
   optional: true
 - name: mkl
@@ -6725,18 +6713,18 @@ package:
   category: main
   optional: false
 - name: nss
-  version: '3.89'
+  version: '3.92'
   manager: conda
   platform: osx-64
   dependencies:
-    libcxx: '>=14.0.6'
-    libsqlite: '>=3.40.0,<4.0a0'
+    libcxx: '>=15.0.7'
+    libsqlite: '>=3.42.0,<4.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     nspr: '>=4.35,<5.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/nss-3.89-h78b00b3_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/nss-3.92-hd6ac835_0.conda
   hash:
-    md5: 1eb1408ecae62d98a902636d46f5595c
-    sha256: 284f9d58f678e82a742aecff60fced40cc944f37e13b42887b364c294abe690e
+    md5: 16309eccb1260f741376cdce0b7b60ad
+    sha256: 551ebfb540fde58f0ee13c4e5888f1ccadd438c6405221c47ee6d76a6b4b3203
   category: main
   optional: false
 - name: python
@@ -7058,18 +7046,6 @@ package:
     md5: 348e27e78a5e39090031448c72f66d5e
     sha256: 42be6ac8478051b26751d778490d6a71de12e5c6443e145ff3eddbc577d9bcda
   category: core
-  optional: true
-- name: flit-core
-  version: 3.9.0
-  manager: conda
-  platform: osx-64
-  dependencies:
-    python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/flit-core-3.9.0-pyhd8ed1ab_0.conda
-  hash:
-    md5: e8cfceef004266b259604c3faa2a0191
-    sha256: a2ef503739ac22bf2a5d91c6a7b0f6a4413a56fbdb9b84f8f70427b9e37fbb69
-  category: apps
   optional: true
 - name: fontconfig
   version: 2.14.2
@@ -7676,17 +7652,17 @@ package:
   category: core
   optional: true
 - name: pyyaml
-  version: '6.0'
+  version: 6.0.1
   manager: conda
   platform: osx-64
   dependencies:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     yaml: '>=0.2.5,<0.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/pyyaml-6.0-py310h90acd4f_5.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/pyyaml-6.0.1-py310h6729b98_0.conda
   hash:
-    md5: e0ba2009f52ccda088c63dedf0d1c5ec
-    sha256: ab7b2b8fef9adc4211834054d004f3e286161bb3e1dcb17d4b974fae4f87b31b
+    md5: 9ae73732335472d09a634eb5811b711e
+    sha256: 37450c212aaaa0606b530b7a00fe00838989073eb33ade68758c986387352283
   category: core
   optional: true
 - name: pyzmq
@@ -7719,15 +7695,15 @@ package:
   category: apps
   optional: true
 - name: setuptools
-  version: 68.0.0
+  version: 68.1.2
   manager: conda
   platform: osx-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-68.0.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-68.1.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5a7739d0f57ee64133c9d32e6507c46d
-    sha256: 083a0913f5b56644051f31ac40b4eeea762a88c00aa12437817191b85a753cec
+    md5: 4fe12573bf499ff85a0a364e00cc5c53
+    sha256: dc5a777597e05ceddefc87d2f96389b7ae0afb097e558307af83a453db3e3887
   category: main
   optional: false
 - name: six
@@ -7937,27 +7913,27 @@ package:
   category: apps
   optional: true
 - name: websocket-client
-  version: 1.6.1
+  version: 1.6.2
   manager: conda
   platform: osx-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.6.1-pyhd8ed1ab_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.6.2-pyhd8ed1ab_0.conda
   hash:
-    md5: c34d9325a609381a0b0e8a5b4f325147
-    sha256: c71cb65ac49692adb33735f3114b99a96c0c5140db1d56cf4ccef4fe92ea9a4c
+    md5: 23f16ffe9711ac76b391c60ce4ea4656
+    sha256: 93aecd1b6b0fcb0ffbf96e367e56713824e648f6c02c9daaaedfef5f8e03caa9
   category: apps
   optional: true
 - name: wheel
-  version: 0.41.1
+  version: 0.41.2
   manager: conda
   platform: osx-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.41.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.41.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 8f467ba2db2b5470d297953d9c1f9c7d
-    sha256: a27e2c2709245386ebffae865650b5d3f383530b809480c3083f7ae258759303
+    md5: 1ccd092478b3e0ee10d7a891adbf8a4f
+    sha256: 21bcec5373b04d739ab65252b5532b04a08d229865ebb24b5b94902d6d0a77b0
   category: main
   optional: false
 - name: wrapt
@@ -8245,7 +8221,7 @@ package:
   category: core
   optional: true
 - name: fonttools
-  version: 4.42.0
+  version: 4.42.1
   manager: conda
   platform: osx-64
   dependencies:
@@ -8254,10 +8230,10 @@ package:
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
     unicodedata2: '>=14.0.0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.42.0-py310h6729b98_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/fonttools-4.42.1-py310h6729b98_0.conda
   hash:
-    md5: f23e7e0fd82662cc9ddd8124ef45d5b4
-    sha256: 82771cfc1d8aa7249b8d53f3f29bab9025c10134128936d231dd9c16e28240cb
+    md5: c4f4f938e4c3a1ec42493f5fee6a7707
+    sha256: 1bf7345d68f895bf2747408d3cb07e4f2790fcbd05b049555bcaa886cc4b32de
   category: core
   optional: true
 - name: glib
@@ -8782,7 +8758,7 @@ package:
   category: core
   optional: true
 - name: flask
-  version: 2.3.2
+  version: 2.3.3
   manager: conda
   platform: osx-64
   dependencies:
@@ -8792,11 +8768,11 @@ package:
     importlib-metadata: '>=3.6.0'
     itsdangerous: '>=2.1.2'
     blinker: '>=1.6.2'
-    werkzeug: '>=2.3.3'
-  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.3.2-pyhd8ed1ab_0.conda
+    werkzeug: '>=2.3.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.3.3-pyhd8ed1ab_0.conda
   hash:
-    md5: 816d75d4c0f2e41b5765d17498c57a2e
-    sha256: f93246be286f2d0f93e85c4f08f9ce48f3eed875a79225e2ea119e70c0237421
+    md5: 9b0d29067484a8dfacfae85b8fba81bc
+    sha256: 4f84ffdc5471236e8225db86c7508426b46aa2c3802d58ca40b3c3e174533b39
   category: apps
   optional: true
 - name: geotiff
@@ -9073,17 +9049,17 @@ package:
   category: apps
   optional: true
 - name: argon2-cffi
-  version: 21.3.0
+  version: 23.1.0
   manager: conda
   platform: osx-64
   dependencies:
+    typing-extensions: ''
     argon2-cffi-bindings: ''
-    python: '>=3.6'
-    flit-core: '>=3.4,<4'
-  url: https://conda.anaconda.org/conda-forge/noarch/argon2-cffi-21.3.0-pyhd8ed1ab_0.tar.bz2
+    python: '>=3.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/argon2-cffi-23.1.0-pyhd8ed1ab_0.conda
   hash:
-    md5: a0b402db58f73aaab8ee0ca1025a362e
-    sha256: 3a53cfd674641d9ff9901f5d4e1cc5e9a3ce9bb8b6a7dca826db840c2e39bc23
+    md5: 3afef1f55a1366b4d3b6a0d92e2235e4
+    sha256: 130766446f5507bd44df957b6b5c898a8bd98f024bb426ed6cb9ff1ad67fc677
   category: apps
   optional: true
 - name: contourpy
@@ -9138,8 +9114,8 @@ package:
     psutil: '>=5.0'
     zict: '>=0.1.3'
     sortedcontainers: '!=2.0.0,!=2.0.1'
-    click: '>=6.6'
     tblib: '>=1.6.0'
+    click: '>=6.6'
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
     tornado: '>=6.0.3,<6.2'
@@ -9734,8 +9710,8 @@ package:
     appnope: ''
     pickleshare: ''
     python: '>=3.9'
-    pygments: '>=2.4.0'
     traitlets: '>=5'
+    pygments: '>=2.4.0'
     jedi: '>=0.16'
     pexpect: '>4.3'
     prompt_toolkit: '>=3.0.30,<3.1.0,!=3.0.37'
@@ -9943,8 +9919,8 @@ package:
     traitlets: '>=5.0'
     markupsafe: '>=2.0'
     pandocfilters: '>=1.4.1'
-    nbformat: '>=5.1'
     jupyter_core: '>=4.7'
+    nbformat: '>=5.1'
     pygments: '>=2.4.1'
     nbclient: '>=0.5.0'
     mistune: '>=2.0.3,<4'
@@ -10164,13 +10140,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -10206,14 +10182,14 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    scipy: '>=1.8.0'
     scikit-learn: '>=1.2'
-    pandas: '*'
-    pymatsolver: '>=0.2'
-    numpy: '>=1.20'
     geoh5py: '*'
-    discretize: '>=0.8.0'
     empymod: '>=2.0.0'
+    pymatsolver: '>=0.2'
+    scipy: '>=1.8.0'
+    numpy: '>=1.20'
+    discretize: '>=0.8.0'
+    pandas: '*'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -10238,22 +10214,22 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev5
+  version: 0.11.0.dev6
   manager: pip
   platform: osx-64
   dependencies:
-    properties: '>=0.3.1b2'
-    numpy: '>=1.7'
-    discretize: '*'
     pymatsolver: '>=0.1.1'
+    discretize: '*'
+    properties: '>=0.3.1b2'
     scipy: '>=0.13'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip
+    numpy: '>=1.7'
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash:
     sha256: ''
   category: core
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip#sha256=
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256=
   optional: true
 - name: ca-certificates
   version: 2023.7.22
@@ -11179,19 +11155,20 @@ package:
   category: main
   optional: false
 - name: libzip
-  version: 1.9.2
+  version: 1.10.0
   manager: conda
   platform: win-64
   dependencies:
     bzip2: '>=1.0.8,<2.0a0'
-    libzlib: '>=1.2.12,<1.3.0a0'
-    openssl: '>=3.0.5,<4.0a0'
-    vc: '>=14.1,<15'
-    vs2015_runtime: '>=14.16.27033'
-  url: https://conda.anaconda.org/conda-forge/win-64/libzip-1.9.2-h519de47_1.tar.bz2
+    libzlib: '>=1.2.13,<1.3.0a0'
+    openssl: '>=3.1.2,<4.0a0'
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vc14_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/libzip-1.10.0-h1d365fa_0.conda
   hash:
-    md5: 9c3138e53e36c0c161a23d20db91297b
-    sha256: 7551ba06879206b81637ef4206b72a8d5d23752f0c6a5be82c9865f72ecc1c81
+    md5: da1c248b54af228fa824bb4102a130ca
+    sha256: fdfd09cf8319e2f331e6b5bd4689607d6b5d926bb6f2772cd213c3af4bf04ab3
   category: apps
   optional: true
 - name: m2w64-gcc-libs
@@ -11434,7 +11411,7 @@ package:
   category: core
   optional: true
 - name: c-blosc2
-  version: 2.10.0
+  version: 2.10.2
   manager: conda
   platform: win-64
   dependencies:
@@ -11444,10 +11421,10 @@ package:
     vc14_runtime: '>=14.29.30139'
     zlib-ng: '>=2.0.7,<2.1.0a0'
     zstd: '>=1.5.2,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/win-64/c-blosc2-2.10.0-h183a6f4_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/c-blosc2-2.10.2-h183a6f4_0.conda
   hash:
-    md5: 0bc5d4e8f20a0437838fc473c048ddba
-    sha256: ea468ce331c73e19400c6a67ff8688e10319c69a3fa3b2a2a19c23052a2e8d14
+    md5: b0242639fe568f800585ff946d33fed3
+    sha256: 460d11835f7dca107f8b7b36199c9a916fa6471949cd1838e61aa0c57267fab1
   category: apps
   optional: true
 - name: cached_property
@@ -11621,18 +11598,6 @@ package:
     md5: 348e27e78a5e39090031448c72f66d5e
     sha256: 42be6ac8478051b26751d778490d6a71de12e5c6443e145ff3eddbc577d9bcda
   category: core
-  optional: true
-- name: flit-core
-  version: 3.9.0
-  manager: conda
-  platform: win-64
-  dependencies:
-    python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/flit-core-3.9.0-pyhd8ed1ab_0.conda
-  hash:
-    md5: e8cfceef004266b259604c3faa2a0191
-    sha256: a2ef503739ac22bf2a5d91c6a7b0f6a4413a56fbdb9b84f8f70427b9e37fbb69
-  category: apps
   optional: true
 - name: freetype
   version: 2.12.1
@@ -12249,7 +12214,7 @@ package:
   category: apps
   optional: true
 - name: pyyaml
-  version: '6.0'
+  version: 6.0.1
   manager: conda
   platform: win-64
   dependencies:
@@ -12257,12 +12222,12 @@ package:
     python_abi: 3.10.*
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
+    vc14_runtime: '>=14.29.30139'
     yaml: '>=0.2.5,<0.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/win-64/pyyaml-6.0-py310h8d17308_5.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/win-64/pyyaml-6.0.1-py310h8d17308_0.conda
   hash:
-    md5: d0daf3eed98dd2bf4337ed08d8011eb8
-    sha256: 7d948a99bf7af50c9823a248267fce75ac555e4f357de166f65a75fab8549f3c
+    md5: 6d93ba016139a726feb2dcc66d15dee3
+    sha256: c9a61bbd4e7ab5abf7b41c855d469bbe9e5d81366a3a810adae2fba3a0ad28ff
   category: core
   optional: true
 - name: pyzmq
@@ -12300,15 +12265,15 @@ package:
   category: apps
   optional: true
 - name: setuptools
-  version: 68.0.0
+  version: 68.1.2
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-68.0.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-68.1.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5a7739d0f57ee64133c9d32e6507c46d
-    sha256: 083a0913f5b56644051f31ac40b4eeea762a88c00aa12437817191b85a753cec
+    md5: 4fe12573bf499ff85a0a364e00cc5c53
+    sha256: dc5a777597e05ceddefc87d2f96389b7ae0afb097e558307af83a453db3e3887
   category: main
   optional: false
 - name: six
@@ -12523,27 +12488,27 @@ package:
   category: apps
   optional: true
 - name: websocket-client
-  version: 1.6.1
+  version: 1.6.2
   manager: conda
   platform: win-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.6.1-pyhd8ed1ab_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/websocket-client-1.6.2-pyhd8ed1ab_0.conda
   hash:
-    md5: c34d9325a609381a0b0e8a5b4f325147
-    sha256: c71cb65ac49692adb33735f3114b99a96c0c5140db1d56cf4ccef4fe92ea9a4c
+    md5: 23f16ffe9711ac76b391c60ce4ea4656
+    sha256: 93aecd1b6b0fcb0ffbf96e367e56713824e648f6c02c9daaaedfef5f8e03caa9
   category: apps
   optional: true
 - name: wheel
-  version: 0.41.1
+  version: 0.41.2
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.41.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/wheel-0.41.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 8f467ba2db2b5470d297953d9c1f9c7d
-    sha256: a27e2c2709245386ebffae865650b5d3f383530b809480c3083f7ae258759303
+    md5: 1ccd092478b3e0ee10d7a891adbf8a4f
+    sha256: 21bcec5373b04d739ab65252b5532b04a08d229865ebb24b5b94902d6d0a77b0
   category: main
   optional: false
 - name: win_inet_pton
@@ -13439,7 +13404,7 @@ package:
   category: core
   optional: true
 - name: flask
-  version: 2.3.2
+  version: 2.3.3
   manager: conda
   platform: win-64
   dependencies:
@@ -13449,15 +13414,15 @@ package:
     importlib-metadata: '>=3.6.0'
     itsdangerous: '>=2.1.2'
     blinker: '>=1.6.2'
-    werkzeug: '>=2.3.3'
-  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.3.2-pyhd8ed1ab_0.conda
+    werkzeug: '>=2.3.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/flask-2.3.3-pyhd8ed1ab_0.conda
   hash:
-    md5: 816d75d4c0f2e41b5765d17498c57a2e
-    sha256: f93246be286f2d0f93e85c4f08f9ce48f3eed875a79225e2ea119e70c0237421
+    md5: 9b0d29067484a8dfacfae85b8fba81bc
+    sha256: 4f84ffdc5471236e8225db86c7508426b46aa2c3802d58ca40b3c3e174533b39
   category: apps
   optional: true
 - name: fonttools
-  version: 4.42.0
+  version: 4.42.1
   manager: conda
   platform: win-64
   dependencies:
@@ -13469,10 +13434,10 @@ package:
     unicodedata2: '>=14.0.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.42.0-py310h8d17308_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/fonttools-4.42.1-py310h8d17308_0.conda
   hash:
-    md5: ec31ba91f0feb2bbc6dd48f620e48129
-    sha256: b62403e12e321e41da0414cc810b5deb9aea0d51194ec57b5b813af5b7022b15
+    md5: 351c74cb2750058f426f7161f4da5ded
+    sha256: 32844057874d51e3d86df728152b37f64eff9a41562441dbcd39755a931d8b25
   category: core
   optional: true
 - name: geotiff
@@ -13738,17 +13703,17 @@ package:
   category: apps
   optional: true
 - name: argon2-cffi
-  version: 21.3.0
+  version: 23.1.0
   manager: conda
   platform: win-64
   dependencies:
+    typing-extensions: ''
     argon2-cffi-bindings: ''
-    python: '>=3.6'
-    flit-core: '>=3.4,<4'
-  url: https://conda.anaconda.org/conda-forge/noarch/argon2-cffi-21.3.0-pyhd8ed1ab_0.tar.bz2
+    python: '>=3.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/argon2-cffi-23.1.0-pyhd8ed1ab_0.conda
   hash:
-    md5: a0b402db58f73aaab8ee0ca1025a362e
-    sha256: 3a53cfd674641d9ff9901f5d4e1cc5e9a3ce9bb8b6a7dca826db840c2e39bc23
+    md5: 3afef1f55a1366b4d3b6a0d92e2235e4
+    sha256: 130766446f5507bd44df957b6b5c898a8bd98f024bb426ed6cb9ff1ad67fc677
   category: apps
   optional: true
 - name: distributed
@@ -13767,8 +13732,8 @@ package:
     psutil: '>=5.0'
     zict: '>=0.1.3'
     sortedcontainers: '!=2.0.0,!=2.0.1'
-    click: '>=6.6'
     tblib: '>=1.6.0'
+    click: '>=6.6'
     locket: '>=1.0.0'
     msgpack-python: '>=0.6.0'
     tornado: '>=6.0.3,<6.2'
@@ -14127,8 +14092,8 @@ package:
     backcall: ''
     pickleshare: ''
     python: '>=3.9'
-    pygments: '>=2.4.0'
     traitlets: '>=5'
+    pygments: '>=2.4.0'
     jedi: '>=0.16'
     prompt_toolkit: '>=3.0.30,<3.1.0,!=3.0.37'
   url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.14.0-pyh08f2357_0.conda
@@ -14354,8 +14319,8 @@ package:
     traitlets: '>=5.0'
     markupsafe: '>=2.0'
     pandocfilters: '>=1.4.1'
-    nbformat: '>=5.1'
     jupyter_core: '>=4.7'
+    nbformat: '>=5.1'
     pygments: '>=2.4.1'
     nbclient: '>=0.5.0'
     mistune: '>=2.0.3,<4'
@@ -14971,13 +14936,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -15013,14 +14978,14 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    scipy: '>=1.8.0'
     scikit-learn: '>=1.2'
-    pandas: '*'
-    pymatsolver: '>=0.2'
-    numpy: '>=1.20'
     geoh5py: '*'
-    discretize: '>=0.8.0'
     empymod: '>=2.0.0'
+    pymatsolver: '>=0.2'
+    scipy: '>=1.8.0'
+    numpy: '>=1.20'
+    discretize: '>=0.8.0'
+    pandas: '*'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -15045,20 +15010,20 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev5
+  version: 0.11.0.dev6
   manager: pip
   platform: win-64
   dependencies:
-    properties: '>=0.3.1b2'
-    numpy: '>=1.7'
-    discretize: '*'
     pymatsolver: '>=0.1.1'
+    discretize: '*'
+    properties: '>=0.3.1b2'
     scipy: '>=0.13'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip
+    numpy: '>=1.7'
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash:
     sha256: ''
   category: core
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/GEOPY-1028.zip#sha256=
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256=
   optional: true
