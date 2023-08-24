@@ -718,7 +718,7 @@ class PeakFinder(ObjectDataSelection):
 
     def create_default_groups(self, _):
         if self.group_auto.value:
-            with fetch_active_workspace(self.workspace) as workspace:
+            with fetch_active_workspace(self.workspace, mode="r+") as workspace:
                 obj = workspace.get_entity(self.objects.value)[0]
                 if obj is None:
                     return
@@ -1313,17 +1313,15 @@ class PeakFinder(ObjectDataSelection):
                             param_dict[key] = value.copy(
                                 parent=new_workspace, copy_children=True
                             )
-                            line_field = [
-                                c for c in param_dict[key].children if c.name == "Line"
-                            ]
-                            if line_field:
-                                param_dict["line_field"] = line_field[0]
 
                     elif isinstance(value, uuid.UUID) and value in p_g_uid:
                         param_dict[key] = param_dict[
                             "objects"
                         ].find_or_create_property_group(name=p_g_uid[value])
 
+                param_dict["data"] = param_dict[
+                    "objects"
+                ].find_or_create_property_group(name=p_g_uid[param_dict["data"].uid])
                 param_dict["geoh5"] = new_workspace
 
         if self.live_link.value:

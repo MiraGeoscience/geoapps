@@ -9,3 +9,6 @@ from pathlib import Path
 
 PROJECT = Path(__file__).parent.parent / "geoapps-assets" / "FlinFlon.geoh5"
 PROJECT_DCIP = Path(__file__).parent.parent / "geoapps-assets" / "FlinFlon_dcip.geoh5"
+PROJECT_TEM = (
+    Path(__file__).parent.parent / "geoapps-assets" / "FlinFlon_airborne_tem.geoh5"
+)
