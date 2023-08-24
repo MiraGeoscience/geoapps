@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: ed7f0d8f0d7406e623e95933052aba5d274c508bcbe987184876bb716e423392
-    osx-64: 70e53ad19dc2b45d190137399fe0990a91dbe76ecbab4b9b9ab6ad23279add2d
-    linux-64: 2bb06b6679330bf62365cfb2a91964e9fca0888271f26a7b803aaef4a242668a
+    win-64: 99f7f98ebc3dded107c42ab5dd22fb313b8992c54e685cd31ed827bc2832a9fb
+    osx-64: 8f3e57e6845fd412e7e900329f1e580a3d8f744075e44816ce76644bf8677ba6
+    linux-64: b5c1863f3c85ba4405d588e4f58b557ab8aa83d83bff55d899b02d07dc2bc2f6
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -1268,7 +1268,7 @@ package:
   category: main
   optional: false
 - name: libzip
-  version: 1.10.0
+  version: 1.10.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -1276,10 +1276,10 @@ package:
     libgcc-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.2,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libzip-1.10.0-h2629f0a_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/libzip-1.10.1-h2629f0a_0.conda
   hash:
-    md5: 980b76fe19286dc811ee83354a0847ae
-    sha256: fea211cc1b0bd7e12bb96e1a412e191ed759b8a9f94bf880f8d833ce15ea70d8
+    md5: d597567092897b1f1c7350f32e03944e
+    sha256: a143d176e1ba47a50444b015fcb15a9ac98d2b963b251469f256d2472d33c678
   category: apps
   optional: true
 - name: mysql-common
@@ -2191,7 +2191,7 @@ package:
   category: apps
   optional: true
 - name: kiwisolver
-  version: 1.4.4
+  version: 1.4.5
   manager: conda
   platform: linux-64
   dependencies:
@@ -2199,10 +2199,10 @@ package:
     libstdcxx-ng: '>=12'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/kiwisolver-1.4.4-py39hf939315_1.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/linux-64/kiwisolver-1.4.5-py39h7633fee_0.conda
   hash:
-    md5: 41679a052a8ce841c74df1ebc802e411
-    sha256: eb28254cc7029e702d0059536d986b010221de62f9c8588a5a83e95a00b4e74d
+    md5: 3822b0ae733e022c10469c0e46bdddc4
+    sha256: 760ed6e19a1f5773c7864d1442012f32d058922e7984bf5bca04cdea7d8cb065
   category: core
   optional: true
 - name: lazy-object-proxy
@@ -5512,13 +5512,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.8.0-alpha.4.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.8.0-alpha.4.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -5554,14 +5554,14 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    scipy: '>=1.8.0'
-    geoh5py: '*'
-    discretize: '>=0.8.0'
-    numpy: '>=1.20'
-    pymatsolver: '>=0.2'
     pandas: '*'
+    pymatsolver: '>=0.2'
     empymod: '>=2.0.0'
     scikit-learn: '>=1.2'
+    discretize: '>=0.8.0'
+    numpy: '>=1.20'
+    geoh5py: '*'
+    scipy: '>=1.8.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -6684,17 +6684,17 @@ package:
   category: main
   optional: false
 - name: libzip
-  version: 1.10.0
+  version: 1.10.1
   manager: conda
   platform: osx-64
   dependencies:
     bzip2: '>=1.0.8,<2.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.2,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/libzip-1.10.0-hc158999_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/libzip-1.10.1-hc158999_0.conda
   hash:
-    md5: 464ec476eff8e9b2bb425c35d630aa0f
-    sha256: 132b7fecce61e0d8d69bfca22954ddf08667dc36ca83e5c2410dcf42a4b720b6
+    md5: 3facf1bdd47189d57141b0684e674ccc
+    sha256: fd7cf7b8a76b2cca29fd5a0576ba774b3b5d09b5cc0e7d65e61cab00aa858472
   category: apps
   optional: true
 - name: mkl
@@ -7159,17 +7159,17 @@ package:
   category: apps
   optional: true
 - name: kiwisolver
-  version: 1.4.4
+  version: 1.4.5
   manager: conda
   platform: osx-64
   dependencies:
-    libcxx: '>=14.0.4'
+    libcxx: '>=15.0.7'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.*
-  url: https://conda.anaconda.org/conda-forge/osx-64/kiwisolver-1.4.4-py39h92daf61_1.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/osx-64/kiwisolver-1.4.5-py39h8ee36c8_0.conda
   hash:
-    md5: 7720e059630e25ab17ab12677e59c615
-    sha256: c397173c92ca77678d645bf8ef8064e81b821169db056217963f020acc09d42c
+    md5: f28fe03c60c8db494d77ac1779264253
+    sha256: 9dafcdf903f6582d40c9289cca951db9b236673249c0b09bd280851d04d6a6be
   category: core
   optional: true
 - name: lazy-object-proxy
@@ -10165,13 +10165,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.8.0-alpha.4.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.8.0-alpha.4.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -10207,14 +10207,14 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    scipy: '>=1.8.0'
-    geoh5py: '*'
-    discretize: '>=0.8.0'
-    numpy: '>=1.20'
-    pymatsolver: '>=0.2'
     pandas: '*'
+    pymatsolver: '>=0.2'
     empymod: '>=2.0.0'
     scikit-learn: '>=1.2'
+    discretize: '>=0.8.0'
+    numpy: '>=1.20'
+    geoh5py: '*'
+    scipy: '>=1.8.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -11177,7 +11177,7 @@ package:
   category: main
   optional: false
 - name: libzip
-  version: 1.10.0
+  version: 1.10.1
   manager: conda
   platform: win-64
   dependencies:
@@ -11187,10 +11187,10 @@ package:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libzip-1.10.0-h1d365fa_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/libzip-1.10.1-h1d365fa_0.conda
   hash:
-    md5: da1c248b54af228fa824bb4102a130ca
-    sha256: fdfd09cf8319e2f331e6b5bd4689607d6b5d926bb6f2772cd213c3af4bf04ab3
+    md5: 5e6b28dda05590eb4d86245423fda06e
+    sha256: 44e0d69923c90dad2b34b2dbbcf4964ba5b25efbe7e1b5ef8b1c8b9c0b8fb682
   category: apps
   optional: true
 - name: m2w64-gcc-libs
@@ -11709,7 +11709,7 @@ package:
   category: apps
   optional: true
 - name: kiwisolver
-  version: 1.4.4
+  version: 1.4.5
   manager: conda
   platform: win-64
   dependencies:
@@ -11717,11 +11717,11 @@ package:
     python_abi: 3.9.*
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/kiwisolver-1.4.4-py39h1f6ef14_1.tar.bz2
+    vc14_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/kiwisolver-1.4.5-py39h1f6ef14_0.conda
   hash:
-    md5: de04861ceb137d2952d3f2d0a13e9d46
-    sha256: e73843fbff7ae10d7a75629c1e67f71b52b166123c0a65583fb1744ca2c66e39
+    md5: b0fb6e245d3221600f0b9fda41f38adb
+    sha256: 83cd6f106c8df7824336860b0b29ea96858621994467a001ac83869ca9334d2e
   category: core
   optional: true
 - name: lazy-object-proxy
@@ -14972,13 +14972,13 @@ package:
     pillow: '>=8.0.1,<10.0.0'
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.23.5,<1.24.0'
-  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip
+  url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.8.0-alpha.4.zip
   hash:
     sha256: ''
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-438.zip#sha256=
+    url: https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.8.0-alpha.4.zip#sha256=
   optional: false
 - name: properties
   version: 0.6.1
@@ -15014,14 +15014,14 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    scipy: '>=1.8.0'
-    geoh5py: '*'
-    discretize: '>=0.8.0'
-    numpy: '>=1.20'
-    pymatsolver: '>=0.2'
     pandas: '*'
+    pymatsolver: '>=0.2'
     empymod: '>=2.0.0'
     scikit-learn: '>=1.2'
+    discretize: '>=0.8.0'
+    numpy: '>=1.20'
+    geoh5py: '*'
+    scipy: '>=1.8.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
