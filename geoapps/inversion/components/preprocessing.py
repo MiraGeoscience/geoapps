@@ -17,7 +17,7 @@ import uuid
 import numpy as np
 from geoh5py import Workspace
 from geoh5py.data import Data
-from geoh5py.objects import ObjectBase
+from geoh5py.objects import ObjectBase, PotentialElectrode
 from geoh5py.shared.utils import is_uuid
 
 from geoapps.inversion.utils import calculate_2D_trend
@@ -87,7 +87,10 @@ def window_data(
         name=data_object.name + "_processed",
     )
 
-    if getattr(data_object, "parts", None) is not None:
+    if (
+        not isinstance(data_object, PotentialElectrode)
+        and getattr(data_object, "parts", None) is not None
+    ):
         new_data_object.parts = data_object.parts[mask]
 
     # Update data dict

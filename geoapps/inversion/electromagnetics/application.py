@@ -25,7 +25,7 @@ from geoh5py.objects import (
     Points,
     Surface,
 )
-from geoh5py.shared.utils import is_uuid
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid
 from geoh5py.workspace import Workspace
 
 from geoapps import assets_path
@@ -921,6 +921,7 @@ class InversionApp(PlotSelection2D):
             and getattr(self, "_h5file", None) is not None
         ):
             self.workspace = Workspace(self.h5file)
+
         return self._workspace
 
     @workspace.setter
@@ -1366,13 +1367,13 @@ class InversionApp(PlotSelection2D):
             return
 
         time_stamp = time()
-        with Workspace(
+        with Workspace.create(
             str(
                 Path(self.export_directory.selected_path)
                 / (self.ga_group_name.value + f"{time_stamp:.0f}.geoh5")
             )
         ) as new_workspace:
-            with self.workspace.open("r"):
+            with fetch_active_workspace(self.workspace):
                 obj, _ = self.get_selected_entities()
                 new_obj = obj.copy(parent=new_workspace, copy_children=False)
 
@@ -1384,10 +1385,10 @@ class InversionApp(PlotSelection2D):
                     data = self.workspace.get_entity(prop)[0]
                     data_list.append(data.copy(parent=new_obj))
 
-                new_group = new_obj.add_data_to_group(data_list, prop_group.name)
+                data_group = new_obj.add_data_to_group(data_list, prop_group.name)
 
                 if isinstance(input_dict["data"]["channels"], str):
-                    input_dict["data"]["channels"] = str(new_group.uid)
+                    input_dict["data"]["channels"] = str(data_group.uid)
 
                 if self._uncertainties.value is not None:
                     prop_group = obj.find_or_create_property_group(
@@ -1398,11 +1399,8 @@ class InversionApp(PlotSelection2D):
                         data = self.workspace.get_entity(prop)[0]
                         data_list.append(data.copy(parent=new_obj))
 
-                    new_group = new_obj.add_data_to_group(data_list, prop_group.name)
-                    input_dict["uncertainty_channel"] = str(new_group.uid)
-                # if self.system.value == "Airborne TEM Survey":
-                #     prop_group = new_obj.add_data_to_group(data_list, )
-                #
+                    uncert_group = new_obj.add_data_to_group(data_list, prop_group.name)
+                    input_dict["uncertainty_channel"] = str(uncert_group.uid)
 
                 _, data = self.sensor.get_selected_entities()
                 for d in data:
@@ -1442,24 +1440,28 @@ class InversionApp(PlotSelection2D):
             )[0]
             components = []
             data_dict = {}
-            for key, value in input_dict["data"]["channels"].items():
-                comp = key
-                components.append(comp)
-                data_dict[comp + "_channel"] = {
-                    "name": new_workspace.get_entity(uuid.UUID(value["name"]))[0].name
-                }
-                if is_uuid(value["uncertainties"]):
-                    data_dict[comp + "_uncertainty"] = {
-                        "name": new_workspace.get_entity(
-                            uuid.UUID(value["uncertainties"])
-                        )[0].name
+            if isinstance(input_dict["data"]["channels"], dict):
+                for key, value in input_dict["data"]["channels"].items():
+                    comp = key
+                    components.append(comp)
+                    data_dict[comp + "_channel"] = {
+                        "name": new_workspace.get_entity(uuid.UUID(value["name"]))[
+                            0
+                        ].name
                     }
-            # Add lines to data_dict
-            components.append("lines")
-            line_data = list(input_dict["lines"].keys())[0]
-            data_dict["lines_channel"] = {
-                "name": new_workspace.get_entity(uuid.UUID(line_data))[0].name
-            }
+                    if is_uuid(value["uncertainties"]):
+                        data_dict[comp + "_uncertainty"] = {
+                            "name": new_workspace.get_entity(
+                                uuid.UUID(value["uncertainties"])
+                            )[0].name
+                        }
+                # Add lines to data_dict
+                components.append("lines")
+                line_data = list(input_dict["lines"].keys())[0]
+                data_dict["lines_channel"] = {
+                    "name": new_workspace.get_entity(uuid.UUID(line_data))[0].name
+                }
+
             # Pre-processing
             update_dict = preprocess_data(
                 workspace=new_workspace,
@@ -1476,22 +1478,37 @@ class InversionApp(PlotSelection2D):
             )
             # Update input dict from pre-processing
             input_dict["data"]["name"] = str(update_dict["data_object"])
-            for comp in components:
-                if comp == "lines":
+
+            if isinstance(input_dict["data"]["channels"], dict):
+                for comp in components:
+                    if comp == "lines":
+                        input_dict["lines"] = {
+                            str(update_dict["lines_channel"]): list(
+                                input_dict["lines"].values()
+                            )[0]
+                        }
+                        continue
+                    if comp + "_channel" in update_dict:
+                        input_dict["data"]["channels"][comp]["name"] = str(
+                            update_dict[comp + "_channel"]
+                        )
+                    if comp + "_uncertainty" in update_dict:
+                        input_dict["data"]["channels"][comp]["uncertainties"] = str(
+                            update_dict[comp + "_uncertainty"]
+                        )
+            else:
+                survey = new_workspace.get_entity(update_dict["data_object"])[0]
+                new_group = survey.get_entity(data_group.name)[0]
+                input_dict["data"]["channels"] = str(new_group.uid)
+                new_group = survey.get_entity(uncert_group.name)[0]
+                input_dict["uncertainty_channel"] = str(new_group.uid)
+                line_data = self.workspace.get_entity(self.lines.data.value)[0]
+
+                if line_data:
+                    new_uid = survey.get_entity(line_data.name)[0].uid
                     input_dict["lines"] = {
-                        str(update_dict["lines_channel"]): list(
-                            input_dict["lines"].values()
-                        )[0]
+                        str(new_uid): list(input_dict["lines"].values())[0]
                     }
-                    continue
-                if comp + "_channel" in update_dict:
-                    input_dict["data"]["channels"][comp]["name"] = str(
-                        update_dict[comp + "_channel"]
-                    )
-                if comp + "_uncertainty" in update_dict:
-                    input_dict["data"]["channels"][comp]["uncertainties"] = str(
-                        update_dict[comp + "_uncertainty"]
-                    )
 
         input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
             Path(new_workspace.h5file).resolve()
