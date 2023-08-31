@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
+from warnings import warn
 
 from geoh5py import Workspace
 from geoh5py.objects import ObjectBase
@@ -16,6 +17,7 @@ from geoh5py.ui_json import InputFile, monitored_directory_copy
 from param_sweeps.driver import SweepParams
 from param_sweeps.generate import generate
 
+from geoapps import __version__
 from geoapps.driver_base.params import BaseParams
 
 
@@ -96,6 +98,14 @@ class BaseDriver(ABC):
         ifile = InputFile.read_ui_json(
             filepath, validations=driver_class._validations  # pylint: disable=W0212
         )
+
+        version = ifile.data.get("version", None)
+        if version is not None and version != __version__:
+            warn(
+                f"Input file version '{version}' does not match the "
+                f"installed 'geoapps v{__version__}'. "
+                "Proceed with caution."
+            )
 
         generate_sweep = ifile.data.get("generate_sweep", None)
         if generate_sweep:
