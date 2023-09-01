@@ -96,7 +96,7 @@ class BaseDriver(ABC):
         print("Loading input file . . .")
         filepath = Path(filepath).resolve()
         ifile = InputFile.read_ui_json(
-            filepath, validations=driver_class._validations  # pylint: disable=W0212
+            filepath, validations=getattr(driver_class, "_validations", None)
         )
 
         version = ifile.data.get("version", None)
