@@ -34,10 +34,8 @@ def test_version_is_semver():
 def test_input_file_version(tmp_path):
     oct_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     params = OctreeParams(**oct_init)
-    params.version = "0.0.0"
+    params.version = "10.0.0"
     params.write_input_file("test.ui.json", tmp_path)
 
-    with pytest.warns(
-        UserWarning, match="Input file version '0.0.0' does not match the."
-    ):
+    with pytest.warns(UserWarning, match="Input file version '10.0.0' is ahead"):
         OctreeDriver.start(tmp_path / "test.ui.json")
