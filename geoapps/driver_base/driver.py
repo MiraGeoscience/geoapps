@@ -16,7 +16,7 @@ from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile, monitored_directory_copy
 from param_sweeps.driver import SweepParams
 from param_sweeps.generate import generate
-from semver import compare
+from semver import Version
 
 from geoapps import __version__
 from geoapps.driver_base.params import BaseParams
@@ -101,8 +101,8 @@ class BaseDriver(ABC):
             validations=driver_class._validations,  # pylint: disable=protected-access
         )
 
-        version = ifile.data.get("version", None)
-        if version is not None and compare(version, __version__) == 1:
+        version = Version.parse(ifile.data.get("version", None))
+        if version is not None and version.compare(__version__) == 1:
             warn(
                 f"Input file version '{version}' is ahead of the "
                 f"installed 'geoapps v{__version__}'. "
