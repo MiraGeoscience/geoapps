@@ -51,4 +51,6 @@ def test_input_file_version(tmp_path):
 
     params.version = str(version_in_file)
     params.write_input_file("test.ui.json", tmp_path)
-    OctreeDriver.start(tmp_path / "test.ui.json")
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        OctreeDriver.start(tmp_path / "test.ui.json")
