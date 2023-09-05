@@ -6,9 +6,8 @@
 
 from __future__ import annotations
 
-import re
-
 import pytest
+from semver import Version
 
 import geoapps
 from geoapps import assets_path
@@ -18,24 +17,38 @@ from geoapps.octree_creation.params import OctreeParams
 
 
 def test_version_is_consistent(pyproject: dict[str]):
-    assert geoapps.__version__ == pyproject["tool"]["poetry"]["version"]
+    assert Version.parse(geoapps.__version__) == Version.parse(
+        pyproject["tool"]["poetry"]["version"]
+    )
 
 
 def test_version_is_semver():
-    semver_re = (
-        r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)"
-        r"(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
-        r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
-        r"(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$"
-    )
-    assert re.search(semver_re, geoapps.__version__) is not None
+    assert Version.is_valid(geoapps.__version__)
 
 
 def test_input_file_version(tmp_path):
     oct_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
+    oct_init["Refinement A levels"] = "0, 0"
+    oct_init["Refinement B levels"] = "0, 0"
+    oct_init["Refinement B type"] = "radial"
+
     params = OctreeParams(**oct_init)
-    params.version = "10.0.0"
+    app_version = Version.parse(geoapps.__version__)
+
+    version_in_file = app_version.replace(minor=app_version.minor + 1)
+    params.version = str(version_in_file)
     params.write_input_file("test.ui.json", tmp_path)
 
-    with pytest.warns(UserWarning, match="Input file version '10.0.0' is ahead"):
+    with pytest.warns(
+        UserWarning, match=f"Input file version '{version_in_file}' is ahead"
+    ):
         OctreeDriver.start(tmp_path / "test.ui.json")
+
+    if app_version.minor > 0:
+        version_in_file = app_version.replace(minor=app_version.minor - 1)
+    else:
+        version_in_file = app_version.replace(major=app_version.major - 1)
+
+    params.version = str(version_in_file)
+    params.write_input_file("test.ui.json", tmp_path)
+    OctreeDriver.start(tmp_path / "test.ui.json")
