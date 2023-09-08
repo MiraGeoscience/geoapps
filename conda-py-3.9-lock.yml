@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 124381840eb2b24ce12735f5a6c92259d5306688f38dbffd92448256a9921bb8
-    osx-64: 131df402f03e0881ac25f281163fabad4ccda976e8d1d0a1b6a5bee65d221947
-    linux-64: ffbb654100e0cc71a86079551331dc29649adae7c28f14c76c8c50b28148d615
+    win-64: 199a9fc591bf230f9a459e24d6732efcdb74db40ce22ed16deee4da5889e49fc
+    osx-64: 07bb9cbdf212795670948a541c1fbb230cea4393f6c353212bda35e081caec43
+    linux-64: 9e063fef20e8638d6781db42cf1032cb605a9bcc18dcd363c3a486178d3e681f
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -5344,6 +5344,16 @@ package:
     sha256: eab4aba337b8f41a98bbe123ffa9c6f6408c0a8928c29fdc778c6e293d8d2e94
   category: apps
   optional: true
+- name: semver
+  version: 3.0.1
+  manager: pip
+  platform: linux-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/d4/5d/f2b4fe45886238c405ad177ca43911cb1459d08003004da5c27495eb4216/semver-3.0.1-py3-none-any.whl
+  hash:
+    sha256: 2a23844ba1647362c7490fe3995a86e097bb590d16f0f32dfc383008f19e4cdf
+  category: main
+  optional: false
 - name: geoh5py
   version: 0.8.0a3
   manager: pip
@@ -5394,14 +5404,14 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pandas: '*'
-    geoh5py: '*'
-    scikit-learn: '>=1.2'
-    numpy: '>=1.20'
-    pymatsolver: '>=0.2'
-    empymod: '>=2.0.0'
     scipy: '>=1.8.0'
     discretize: '>=0.8.0'
+    scikit-learn: '>=1.2'
+    numpy: '>=1.20'
+    pandas: '*'
+    pymatsolver: '>=0.2'
+    geoh5py: '*'
+    empymod: '>=2.0.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -9847,6 +9857,16 @@ package:
     sha256: eab4aba337b8f41a98bbe123ffa9c6f6408c0a8928c29fdc778c6e293d8d2e94
   category: apps
   optional: true
+- name: semver
+  version: 3.0.1
+  manager: pip
+  platform: osx-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/d4/5d/f2b4fe45886238c405ad177ca43911cb1459d08003004da5c27495eb4216/semver-3.0.1-py3-none-any.whl
+  hash:
+    sha256: 2a23844ba1647362c7490fe3995a86e097bb590d16f0f32dfc383008f19e4cdf
+  category: main
+  optional: false
 - name: geoh5py
   version: 0.8.0a3
   manager: pip
@@ -9897,14 +9917,14 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    pandas: '*'
-    geoh5py: '*'
-    scikit-learn: '>=1.2'
-    numpy: '>=1.20'
-    pymatsolver: '>=0.2'
-    empymod: '>=2.0.0'
     scipy: '>=1.8.0'
     discretize: '>=0.8.0'
+    scikit-learn: '>=1.2'
+    numpy: '>=1.20'
+    pandas: '*'
+    pymatsolver: '>=0.2'
+    geoh5py: '*'
+    empymod: '>=2.0.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
@@ -14487,6 +14507,16 @@ package:
     sha256: eab4aba337b8f41a98bbe123ffa9c6f6408c0a8928c29fdc778c6e293d8d2e94
   category: apps
   optional: true
+- name: semver
+  version: 3.0.1
+  manager: pip
+  platform: win-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/d4/5d/f2b4fe45886238c405ad177ca43911cb1459d08003004da5c27495eb4216/semver-3.0.1-py3-none-any.whl
+  hash:
+    sha256: 2a23844ba1647362c7490fe3995a86e097bb590d16f0f32dfc383008f19e4cdf
+  category: main
+  optional: false
 - name: geoh5py
   version: 0.8.0a3
   manager: pip
@@ -14537,14 +14567,14 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    pandas: '*'
-    geoh5py: '*'
-    scikit-learn: '>=1.2'
-    numpy: '>=1.20'
-    pymatsolver: '>=0.2'
-    empymod: '>=2.0.0'
     scipy: '>=1.8.0'
     discretize: '>=0.8.0'
+    scikit-learn: '>=1.2'
+    numpy: '>=1.20'
+    pandas: '*'
+    pymatsolver: '>=0.2'
+    geoh5py: '*'
+    empymod: '>=2.0.0'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev2+geoapps.0.11.0.zip
   hash:
     sha256: ''
