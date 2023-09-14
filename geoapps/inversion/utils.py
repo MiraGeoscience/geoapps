@@ -129,6 +129,12 @@ def create_nested_mesh(
     minimum_level: Minimum octree level to preserve everywhere outside the local survey area.
     finalize: Return a finalized local treemesh.
     """
+
+    if method not in ["convex_hull", "padding_cells"]:
+        raise ValueError(
+            "Input 'method' must be one of 'convex_hull' or 'padding_cells'."
+        )
+
     locations = get_unique_locations(survey)
     nested_mesh = TreeMesh(
         [base_mesh.h[0], base_mesh.h[1], base_mesh.h[2]], x0=base_mesh.x0
@@ -141,46 +147,53 @@ def create_nested_mesh(
         base_refinement,
         finalize=False,
     )
+    base_cell = np.min([base_mesh.h[0][0], base_mesh.h[1][0]])
 
     if method == "convex_hull":
         # Find cells inside the data extant
         try:
-            tri2D = Delaunay(locations[:, :2])
-            indices = tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1
-            return nested_mesh.insert_cells(
-                base_mesh.gridCC[indices, :],
-                base_mesh.cell_levels_by_index(np.where(indices)[0]),
-                finalize=finalize,
-            )
+            pad_distance = 0.0
+            radial = locations[:, :2] - np.mean(locations[:, :2], axis=0)
+            for ii in range(minimum_level):
+                pad_distance += base_cell * 2**ii * padding_cells
+
+                locs = np.mean(locations[:, :2], axis=0) + radial * (
+                    1 + pad_distance / np.linalg.norm(radial, axis=0)
+                )
+                tri2D = Delaunay(locs)
+                indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
+                levels = base_mesh.cell_levels_by_index(indices)
+                levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
+                nested_mesh.insert_cells(
+                    base_mesh.gridCC[indices, :],
+                    levels,
+                    finalize=False,
+                )
         except qhull.QhullError:
+            method = "padding_cells"
             warnings.warn(
                 "qhull failed to triangulate. Defaulting to 'padding_cells' method."
             )
-    elif method != "padding_cells":
-        raise ValueError(
-            "Input 'method' must be one of 'convex_hull' or 'padding_cells'."
-        )
-
-    base_cell = np.min([base_mesh.h[0][0], base_mesh.h[1][0]])
-    tree = cKDTree(locations[:, :2])
-    center = np.mean(base_mesh.gridCC[:, :2], axis=0)
-    stretched_cc = (
-        (base_mesh.gridCC[:, :2] - center)
-        * (base_cell / np.r_[base_mesh.h[0][0], base_mesh.h[1][0]])
-    ) + center
-    rad, _ = tree.query(stretched_cc)
-    pad_distance = 0.0
-    for ii in range(minimum_level):
-        pad_distance += base_cell * 2**ii * padding_cells
-        indices = np.where(rad < pad_distance)[0]
-        # indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
-        levels = base_mesh.cell_levels_by_index(indices)
-        levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
-        nested_mesh.insert_cells(
-            base_mesh.gridCC[indices, :],
-            levels,
-            finalize=False,
-        )
+    if method == "padding_cells":
+        tree = cKDTree(locations[:, :2])
+        center = np.mean(base_mesh.gridCC[:, :2], axis=0)
+        stretched_cc = (
+            (base_mesh.gridCC[:, :2] - center)
+            * (base_cell / np.r_[base_mesh.h[0][0], base_mesh.h[1][0]])
+        ) + center
+        rad, _ = tree.query(stretched_cc)
+        pad_distance = 0.0
+        for ii in range(minimum_level):
+            pad_distance += base_cell * 2**ii * padding_cells
+            indices = np.where(rad < pad_distance)[0]
+            # indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
+            levels = base_mesh.cell_levels_by_index(indices)
+            levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
+            nested_mesh.insert_cells(
+                base_mesh.gridCC[indices, :],
+                levels,
+                finalize=False,
+            )
 
     if finalize:
         nested_mesh.finalize()
