@@ -445,6 +445,7 @@ class InversionData(InversionLocations):
             )
 
         else:
+            # from geoapps.driver_base.utils import treemesh_2_octree
             nested_mesh = create_nested_mesh(
                 survey,
                 mesh,
@@ -452,6 +453,7 @@ class InversionData(InversionLocations):
                 minimum_level=3,
                 padding_cells=padding_cells,
             )
+            # treemesh_2_octree(self.entity.workspace, nested_mesh)
             mapping = maps.TileMap(
                 mesh,
                 active_cells,
