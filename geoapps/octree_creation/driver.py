@@ -11,7 +11,7 @@ from __future__ import annotations
 import sys
 
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import ObjectBase, Octree
+from geoh5py.objects import Curve, ObjectBase, Octree
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import utils
 
@@ -19,6 +19,7 @@ from geoapps.driver_base.driver import BaseDriver
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation.constants import validations
 from geoapps.octree_creation.params import OctreeParams
+from geoapps.shared_utils.utils import densify_curve
 
 
 class OctreeDriver(BaseDriver):
@@ -43,7 +44,6 @@ class OctreeDriver(BaseDriver):
     def octree_from_params(params: OctreeParams):
         print("Setting the mesh extent")
         entity = params.objects
-
         p_d = [
             [
                 params.horizontal_padding,
@@ -69,19 +69,33 @@ class OctreeDriver(BaseDriver):
         )
 
         for label, value in params.free_parameter_dict.items():
-            if not isinstance(getattr(params, value["object"]), ObjectBase):
+            ref_entity = getattr(params, value["object"])
+            levels = utils.str2list(getattr(params, value["levels"]))
+            if not isinstance(ref_entity, ObjectBase):
                 continue
 
             print(f"Applying {label} on: {getattr(params, value['object']).name}")
 
-            treemesh = refine_tree_xyz(
-                treemesh,
-                getattr(params, value["object"]).vertices,
-                method=getattr(params, value["type"]),
-                octree_levels=utils.str2list(getattr(params, value["levels"])),
-                max_distance=getattr(params, value["distance"]),
-                finalize=False,
-            )
+            if isinstance(ref_entity, Curve):
+                locs = densify_curve(ref_entity, treemesh.h[0][0])
+                distance = 0
+
+                for ii, n_cells in enumerate(levels):
+                    distance += n_cells * treemesh.h[0][0] * 2**ii
+
+                    treemesh.refine_ball(
+                        locs, distance, treemesh.max_level - ii, finalize=False
+                    )
+
+            else:
+                treemesh = refine_tree_xyz(
+                    treemesh,
+                    ref_entity.vertices,
+                    method=getattr(params, value["type"]),
+                    octree_levels=levels,
+                    max_distance=getattr(params, value["distance"]),
+                    finalize=False,
+                )
 
         print("Finalizing . . .")
         treemesh.finalize()
@@ -93,4 +107,5 @@ class OctreeDriver(BaseDriver):
 
 if __name__ == "__main__":
     file = sys.argv[1]
+    # file = r"C:\Users\dominiquef\Desktop\mesh.ui.json"
     OctreeDriver.start(file)
