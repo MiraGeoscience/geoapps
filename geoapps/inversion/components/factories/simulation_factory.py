@@ -97,12 +97,12 @@ class SimulationFactory(SimPEGFactory):
         if self.factory_type in ["tdem"]:
             from SimPEG.electromagnetics.time_domain import simulation
 
-            if "B" in self.params.data_units:
-                print("Using magnetic flux density (EB) formulation.")
-                return simulation.Simulation3DMagneticFluxDensity
-            else:
-                print("Using magnetic field (HJ) formulation.")
-                return simulation.Simulation3DMagneticField
+            # if "B" in self.params.data_units:
+            #     print("Using magnetic flux density (EB) formulation.")
+            return simulation.Simulation3DMagneticFluxDensity
+            # else:
+            #     print("Using magnetic field (HJ) formulation.")
+            #     return simulation.Simulation3DMagneticField
 
     def assemble_arguments(
         self,
