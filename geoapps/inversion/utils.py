@@ -157,8 +157,10 @@ def create_nested_mesh(
             for ii in range(minimum_level):
                 pad_distance += base_cell * 2**ii * padding_cells
 
-                locs = np.mean(locations[:, :2], axis=0) + radial * (
-                    1 + pad_distance / np.linalg.norm(radial, axis=0)
+                locs = (
+                    np.mean(locations[:, :2], axis=0)
+                    + (1 + pad_distance / np.linalg.norm(radial, axis=1))[:, None]
+                    * radial
                 )
                 tri2D = Delaunay(locs)
                 indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
