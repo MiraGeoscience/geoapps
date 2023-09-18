@@ -453,6 +453,7 @@ class InversionData(InversionLocations):
                 padding_cells=padding_cells,
             )
             # treemesh_2_octree(self.entity.workspace, nested_mesh)
+            print(padding_cells, nested_mesh.nC, mesh.nC)
             mapping = maps.TileMap(
                 mesh,
                 active_cells,

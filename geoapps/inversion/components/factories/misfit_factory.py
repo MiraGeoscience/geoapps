@@ -63,6 +63,11 @@ class MisfitFactory(SimPEGFactory):
         self.sorting = []
         self.ordering = []
         padding_cells = 8 if self.factory_type in ["fem", "tdem"] else 6
+
+        # Keep whole mesh for 1 tile
+        if len(tiles) == 1:
+            padding_cells = 100
+
         tile_num = 0
         data_count = 0
         for local_index in tiles:
