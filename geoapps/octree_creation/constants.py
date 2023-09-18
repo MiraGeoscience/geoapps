@@ -99,6 +99,15 @@ default_ui_json.update(
             "main": True,
             "value": 500.0,
         },
+        "minimum_level": {
+            "enabled": True,
+            "group": "Basic",
+            "label": "Minimum refinement level.",
+            "main": True,
+            "min": 1,
+            "tooltip": "Largest octree cell level allowed (2^i x base_cell).",
+            "value": 4,
+        },
         "ga_group_name": {
             "enabled": True,
             "group": None,

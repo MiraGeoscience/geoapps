@@ -67,6 +67,8 @@ class OctreeDriver(BaseDriver):
             mesh_type="tree",
             depth_core=params.depth_core,
         )
+        minimum_level = max([1, treemesh.max_level - params.minimum_level])
+        treemesh.refine(minimum_level, finalize=False)
 
         for label, value in params.free_parameter_dict.items():
             ref_entity = getattr(params, value["object"])

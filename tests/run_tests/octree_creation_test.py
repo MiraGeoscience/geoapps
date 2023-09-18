@@ -140,11 +140,11 @@ def test_create_octree_curve(tmp_path: Path):
         xyz = np.random.randn(n_data, 3) * 100
         points = Curve.create(workspace, vertices=xyz)
         refine_a = "4, 4, 4"
-        h = [5.0, 10.0, 15.0]
+        h = [5.0, 5.0, 5.0]
         depth_core = 400.0
         horizontal_padding = 500.0
         vertical_padding = 200.0
-
+        minimum_level = 4
         params = OctreeParams(
             geoh5=workspace,
             objects=str(points.uid),
@@ -154,12 +154,7 @@ def test_create_octree_curve(tmp_path: Path):
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
             depth_core=depth_core,
-            # **{
-            #     "Refinement A object", points.uid,
-            #     "Refinement A levels", refine_a,
-            #     "Refinement A type", "radial",
-            #      "Refinement A distance", 0.0
-            # }
+            minimum_level=minimum_level,
         )  # pylint: disable=W0212
 
         setattr(params, "Refinement A object", points)
@@ -170,4 +165,6 @@ def test_create_octree_curve(tmp_path: Path):
         # print("Initializing application . . .")
         driver = OctreeDriver(params)
         print("Running application . . .")
-        driver.run()
+        octree = driver.run()
+
+        assert octree.octree_cells["NCells"].max() == 2**minimum_level
