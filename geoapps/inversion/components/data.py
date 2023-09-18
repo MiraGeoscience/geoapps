@@ -449,10 +449,6 @@ class InversionData(InversionLocations):
             nested_mesh = create_nested_mesh(
                 survey,
                 mesh,
-                method="convex_hull"
-                if hasattr(self.entity, "survey_type")
-                and "large loop" in self.entity.survey_type
-                else "padding_cells",
                 minimum_level=3,
                 padding_cells=padding_cells,
             )
