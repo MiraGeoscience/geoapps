@@ -36,7 +36,7 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.scatter_plot.driver import ScatterPlotDriver
-from geoapps.shared_utils.utils import colors
+from geoapps.shared_utils.colors import UNIQUE_COLORS
 
 
 class Clustering(ScatterPlots):
@@ -407,7 +407,7 @@ class Clustering(ScatterPlots):
                 full_list = ast.literal_eval(ui_json_data["color_pickers"])
             if (full_list is None) | (not full_list):
                 # Default list of colors.
-                color_pickers = colors
+                color_pickers = UNIQUE_COLORS
             else:
                 color_pickers = full_list
         elif trigger == "color_picker":
