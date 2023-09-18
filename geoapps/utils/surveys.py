@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from geoapps.inversion.utils import get_unique_locations
+from SimPEG.survey import BaseSurvey
 
 if TYPE_CHECKING:
     from geoapps.inversion.components.data import InversionData
@@ -377,3 +377,37 @@ def split_dcip_survey(
             line_surveys.append(line_survey)
 
     return line_surveys
+
+
+def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
+    if survey.source_list:
+        locations = []
+        for source in survey.source_list:
+            source_location = source.location
+            if source_location is not None:
+                if not isinstance(source_location, list):
+                    locations += [[source_location]]
+                else:
+                    locations += [source_location]
+            locations += [receiver.locations for receiver in source.receiver_list]
+        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
+    else:
+        locations = survey.receiver_locations
+
+    return np.unique(locations, axis=0)
+
+
+def get_intersecting_cells(locations: np.ndarray, mesh: TreeMesh):
+    """
+    Find cells that intersect with a set of segments.
+
+    :param: locations: Locations making a line path.
+    :param: mesh: TreeMesh object.
+
+    :returns: Array of unique cell indices.
+    """
+    cell_index = []
+    for ind in range(locations.shape[0] - 1):
+        cell_index.append(mesh.get_cells_along_line(locations[ind], locations[ind + 1]))
+
+    return np.unique(np.hstack(cell_index))

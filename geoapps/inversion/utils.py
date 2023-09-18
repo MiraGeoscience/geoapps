@@ -12,8 +12,14 @@ import warnings
 import numpy as np
 from discretize import TreeMesh
 from scipy.spatial import ConvexHull, Delaunay, cKDTree, qhull
+from SimPEG.electromagnetics.frequency_domain.sources import (
+    LineCurrent as FEMLineCurrent,
+)
+from SimPEG.electromagnetics.time_domain.sources import LineCurrent as TEMLineCurrent
 from SimPEG.survey import BaseSurvey
 from SimPEG.utils import mkvc
+
+from geoapps.utils.surveys import get_intersecting_cells, get_unique_locations
 
 
 def calculate_2D_trend(
@@ -177,18 +183,21 @@ def create_nested_mesh(
                 "qhull failed to triangulate. Defaulting to 'padding_cells' method."
             )
     if method == "padding_cells":
+        tx_loops = []
+        for source in survey.source_list:
+            if isinstance(source, (TEMLineCurrent, FEMLineCurrent)):
+                mesh_indices = get_intersecting_cells(source.location, base_mesh)
+                tx_loops.append(base_mesh.cell_centers[mesh_indices, :])
+
+        if tx_loops:
+            locations = np.vstack([locations] + tx_loops)
+
         tree = cKDTree(locations[:, :2])
-        center = np.mean(base_mesh.gridCC[:, :2], axis=0)
-        stretched_cc = (
-            (base_mesh.gridCC[:, :2] - center)
-            * (base_cell / np.r_[base_mesh.h[0][0], base_mesh.h[1][0]])
-        ) + center
-        rad, _ = tree.query(stretched_cc)
+        rad, _ = tree.query(base_mesh.gridCC[:, :2])
         pad_distance = 0.0
         for ii in range(minimum_level):
             pad_distance += base_cell * 2**ii * padding_cells
             indices = np.where(rad < pad_distance)[0]
-            # indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
             levels = base_mesh.cell_levels_by_index(indices)
             levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
             nested_mesh.insert_cells(
@@ -365,21 +374,3 @@ def tile_locations(
     if len(out) == 1:
         return out[0]
     return tuple(out)
-
-
-def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
-    if survey.source_list:
-        locations = []
-        for source in survey.source_list:
-            source_location = source.location
-            if source_location is not None:
-                if not isinstance(source_location, list):
-                    locations += [[source_location]]
-                else:
-                    locations += [source_location]
-            locations += [receiver.locations for receiver in source.receiver_list]
-        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
-    else:
-        locations = survey.receiver_locations
-
-    return np.unique(locations, axis=0)
