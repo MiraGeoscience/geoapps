@@ -67,7 +67,7 @@ class OctreeDriver(BaseDriver):
             mesh_type="tree",
             depth_core=params.depth_core,
         )
-        minimum_level = max([1, treemesh.max_level - params.minimum_level])
+        minimum_level = max([1, treemesh.max_level - params.minimum_level + 1])
         treemesh.refine(minimum_level, finalize=False)
 
         for label, value in params.free_parameter_dict.items():
