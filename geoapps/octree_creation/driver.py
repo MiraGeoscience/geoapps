@@ -57,7 +57,7 @@ class OctreeDriver(BaseDriver):
                 params.v_cell_size,
                 params.w_cell_size,
             ],
-            padding_distance=params.get_paddings(),
+            padding_distance=params.get_padding(),
             mesh_type="tree",
             depth_core=params.depth_core,
         )
@@ -65,28 +65,23 @@ class OctreeDriver(BaseDriver):
         treemesh.refine(minimum_level, finalize=False)
 
         for label, value in params.free_parameter_dict.items():
-            ref_entity = getattr(params, value["object"])
+            refinement_object = getattr(params, value["object"])
             levels = utils.str2list(getattr(params, value["levels"]))
-            if not isinstance(ref_entity, ObjectBase):
+            if not isinstance(refinement_object, ObjectBase):
                 continue
 
             print(f"Applying {label} on: {getattr(params, value['object']).name}")
 
-            if isinstance(ref_entity, Curve):
-                locs = densify_curve(ref_entity, treemesh.h[0][0])
-                distance = 0
-
-                for ii, n_cells in enumerate(levels):
-                    distance += n_cells * treemesh.h[0][0] * 2**ii
-
-                    treemesh.refine_ball(
-                        locs, distance, treemesh.max_level - ii, finalize=False
-                    )
+            if isinstance(refinement_object, Curve):
+                treemesh = OctreeDriver.refine_tree_from_curve(
+                    treemesh, refinement_object, levels
+                )
 
             else:
+                # TODO: Add refinement type 'ball' and 'surfacve' as static method
                 treemesh = refine_tree_xyz(
                     treemesh,
-                    ref_entity.vertices,
+                    refinement_object.vertices,
                     method=getattr(params, value["type"]),
                     octree_levels=levels,
                     max_distance=getattr(params, value["distance"]),
@@ -99,6 +94,30 @@ class OctreeDriver(BaseDriver):
         octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
 
         return octree
+
+    @staticmethod
+    def refine_tree_from_curve(
+        treemesh: TreeMesh, curve: Curve, levels: list[int], finalize=False
+    ) -> TreeMesh:
+        """
+        Refine a tree mesh along the segments of a curve.
+
+        :param treemesh: Tree mesh to refine.
+        :param curve: Curve object to use for refinement.
+        :param levels: Number of cells requested at each refinement level.
+            Defined in reversed order from highest octree to lowest.
+        """
+        locs = densify_curve(curve, treemesh.h[0][0])
+        distance = 0
+
+        for ii, n_cells in enumerate(levels):
+            distance += n_cells * treemesh.h[0][0] * 2**ii
+
+            treemesh.refine_ball(
+                locs, distance, treemesh.max_level - ii, finalize=finalize
+            )
+
+        return treemesh
 
 
 if __name__ == "__main__":
