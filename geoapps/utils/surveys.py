@@ -380,6 +380,14 @@ def split_dcip_survey(
 
 
 def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
+    """
+    Get unique locations from a survey including sources and receivers when
+    applicable.
+
+    :param: survey: SimPEG survey object.
+
+    :returns: Array of unique locations.
+    """
     if survey.source_list:
         locations = []
         for source in survey.source_list:
