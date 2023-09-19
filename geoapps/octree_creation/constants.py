@@ -105,7 +105,7 @@ default_ui_json.update(
             "label": "Minimum refinement level.",
             "main": True,
             "min": 1,
-            "tooltip": "Largest octree cell level allowed (2^i x base_cell).",
+            "tooltip": "Minimum refinement in padding region: 2**(n-1) x base_cell.",
             "value": 4,
         },
         "ga_group_name": {
