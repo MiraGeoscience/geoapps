@@ -11,7 +11,7 @@ import warnings
 
 import numpy as np
 from discretize import TreeMesh
-from scipy.spatial import ConvexHull, Delaunay, cKDTree, qhull
+from scipy.spatial import ConvexHull, cKDTree
 from SimPEG.electromagnetics.frequency_domain.sources import (
     LineCurrent as FEMLineCurrent,
 )
@@ -114,7 +114,6 @@ def calculate_2D_trend(
 def create_nested_mesh(
     survey: BaseSurvey,
     base_mesh: TreeMesh,
-    method: str = "padding_cells",
     padding_cells: int = 8,
     minimum_level: int = 3,
     finalize: bool = True,
@@ -128,19 +127,10 @@ def create_nested_mesh(
 
     locations: Array of coordinates for the local survey shape(*, 3).
     base_mesh: Input global TreeMesh object.
-    method: Refinement of cells from the base mesh determined by from either
-        'convex_hull': Cells that fall inside a 2D Delaunay triangulation of the input locations.
-        'padding_cells':  Cells inside concentric shells made of 'padding_cells'
     padding_cells: Used for 'method'= 'padding_cells'. Number of cells in each concentric shell.
     minimum_level: Minimum octree level to preserve everywhere outside the local survey area.
     finalize: Return a finalized local treemesh.
     """
-
-    if method not in ["convex_hull", "padding_cells"]:
-        raise ValueError(
-            "Input 'method' must be one of 'convex_hull' or 'padding_cells'."
-        )
-
     locations = get_unique_locations(survey)
     nested_mesh = TreeMesh(
         [base_mesh.h[0], base_mesh.h[1], base_mesh.h[2]], x0=base_mesh.x0
@@ -154,57 +144,28 @@ def create_nested_mesh(
         finalize=False,
     )
     base_cell = np.min([base_mesh.h[0][0], base_mesh.h[1][0]])
+    tx_loops = []
+    for source in survey.source_list:
+        if isinstance(source, (TEMLineCurrent, FEMLineCurrent)):
+            mesh_indices = get_intersecting_cells(source.location, base_mesh)
+            tx_loops.append(base_mesh.cell_centers[mesh_indices, :])
 
-    if method == "convex_hull":
-        # Find cells inside the data extant
-        try:
-            pad_distance = 0.0
-            radial = locations[:, :2] - np.mean(locations[:, :2], axis=0)
-            for ii in range(minimum_level):
-                pad_distance += base_cell * 2**ii * padding_cells
+    if tx_loops:
+        locations = np.vstack([locations] + tx_loops)
 
-                locs = (
-                    np.mean(locations[:, :2], axis=0)
-                    + (1 + pad_distance / np.linalg.norm(radial, axis=1))[:, None]
-                    * radial
-                )
-                tri2D = Delaunay(locs)
-                indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
-                levels = base_mesh.cell_levels_by_index(indices)
-                levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
-                nested_mesh.insert_cells(
-                    base_mesh.gridCC[indices, :],
-                    levels,
-                    finalize=False,
-                )
-        except qhull.QhullError:
-            method = "padding_cells"
-            warnings.warn(
-                "qhull failed to triangulate. Defaulting to 'padding_cells' method."
-            )
-    if method == "padding_cells":
-        tx_loops = []
-        for source in survey.source_list:
-            if isinstance(source, (TEMLineCurrent, FEMLineCurrent)):
-                mesh_indices = get_intersecting_cells(source.location, base_mesh)
-                tx_loops.append(base_mesh.cell_centers[mesh_indices, :])
-
-        if tx_loops:
-            locations = np.vstack([locations] + tx_loops)
-
-        tree = cKDTree(locations[:, :2])
-        rad, _ = tree.query(base_mesh.gridCC[:, :2])
-        pad_distance = 0.0
-        for ii in range(minimum_level):
-            pad_distance += base_cell * 2**ii * padding_cells
-            indices = np.where(rad < pad_distance)[0]
-            levels = base_mesh.cell_levels_by_index(indices)
-            levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
-            nested_mesh.insert_cells(
-                base_mesh.gridCC[indices, :],
-                levels,
-                finalize=False,
-            )
+    tree = cKDTree(locations[:, :2])
+    rad, _ = tree.query(base_mesh.gridCC[:, :2])
+    pad_distance = 0.0
+    for ii in range(minimum_level):
+        pad_distance += base_cell * 2**ii * padding_cells
+        indices = np.where(rad < pad_distance)[0]
+        levels = base_mesh.cell_levels_by_index(indices)
+        levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
+        nested_mesh.insert_cells(
+            base_mesh.gridCC[indices, :],
+            levels,
+            finalize=False,
+        )
 
     if finalize:
         nested_mesh.finalize()
