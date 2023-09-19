@@ -44,18 +44,6 @@ class OctreeDriver(BaseDriver):
     def octree_from_params(params: OctreeParams):
         print("Setting the mesh extent")
         entity = params.objects
-        p_d = [
-            [
-                params.horizontal_padding,
-                params.horizontal_padding,
-            ],
-            [
-                params.horizontal_padding,
-                params.horizontal_padding,
-            ],
-            [params.vertical_padding, params.vertical_padding],
-        ]
-
         treemesh = mesh_builder_xyz(
             entity.vertices,
             [
@@ -63,7 +51,7 @@ class OctreeDriver(BaseDriver):
                 params.v_cell_size,
                 params.w_cell_size,
             ],
-            padding_distance=p_d,
+            padding_distance=params.get_paddings(),
             mesh_type="tree",
             depth_core=params.depth_core,
         )

@@ -67,6 +67,22 @@ class OctreeParams(BaseParams):
 
         super().__init__(input_file=input_file, **kwargs)
 
+    def get_padding(self) -> list:
+        """
+        Utility to get the padding values as a list of padding along each axis.
+        """
+        return [
+            [
+                self.horizontal_padding,
+                self.horizontal_padding,
+            ],
+            [
+                self.horizontal_padding,
+                self.horizontal_padding,
+            ],
+            [self.vertical_padding, self.vertical_padding],
+        ]
+
     @property
     def title(self):
         return self._title
