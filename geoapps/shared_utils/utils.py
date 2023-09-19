@@ -524,24 +524,30 @@ def densify_curve(curve: Curve, increment: float) -> np.ndarray:
         cells = curve.cells[np.all(logic[curve.cells], axis=1)]
         vert_ind = np.r_[cells[:, 0], cells[-1, 1]]
         locs = curve.vertices[vert_ind, :]
-
-        distance = np.cumsum(
-            np.r_[0, np.linalg.norm(locs[1:, :] - locs[:-1, :], axis=1)]
-        )
-        x_interp = interp1d(distance, locs[:, 0], kind="linear")
-        y_interp = interp1d(distance, locs[:, 1], kind="linear")
-        z_interp = interp1d(distance, locs[:, 2], kind="linear")
-
-        new_distances = np.sort(
-            np.unique(np.r_[distance, np.arange(0, distance[-1], increment)])
-        )
-
-        locations.append(
-            np.c_[
-                x_interp(new_distances),
-                y_interp(new_distances),
-                z_interp(new_distances),
-            ]
-        )
+        locations.append(resample_locations(locs, increment))
 
     return np.vstack(locations)
+
+
+def resample_locations(locations: np.ndarray, increment: float) -> np.ndarray:
+    """
+    Resample locations along a sequence of positions at a given increment.
+
+    :param locations: Array of shape (n, 3) of x, y, z locations.
+    :param increment: Minimum distance between points along the curve.
+
+    :return: Array of shape (n, 3) of x, y, z locations.
+    """
+    distance = np.cumsum(
+        np.r_[0, np.linalg.norm(locations[1:, :] - locations[:-1, :], axis=1)]
+    )
+    new_distances = np.sort(
+        np.unique(np.r_[distance, np.arange(0, distance[-1], increment)])
+    )
+
+    resampled = []
+    for axis in locations.T:
+        interpolator = interp1d(distance, axis, kind="linear")
+        resampled.append(interpolator(new_distances))
+
+    return np.c_[resampled].T
