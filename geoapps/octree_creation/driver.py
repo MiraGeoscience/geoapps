@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import sys
 
+from discretize import TreeMesh
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
 from geoh5py.objects import Curve, ObjectBase, Octree
 from geoh5py.shared.utils import fetch_active_workspace
@@ -41,6 +42,11 @@ class OctreeDriver(BaseDriver):
         return octree
 
     @staticmethod
+    def minimum_level(treemesh: TreeMesh, level: int):
+        """Computes the minimum level of refinement for a given tree mesh."""
+        return max([1, treemesh.max_level - level + 1])
+
+    @staticmethod
     def octree_from_params(params: OctreeParams):
         print("Setting the mesh extent")
         entity = params.objects
@@ -55,7 +61,7 @@ class OctreeDriver(BaseDriver):
             mesh_type="tree",
             depth_core=params.depth_core,
         )
-        minimum_level = max([1, treemesh.max_level - params.minimum_level + 1])
+        minimum_level = OctreeDriver.minimum_level(treemesh, params.minimum_level)
         treemesh.refine(minimum_level, finalize=False)
 
         for label, value in params.free_parameter_dict.items():
