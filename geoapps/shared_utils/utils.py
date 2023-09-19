@@ -509,7 +509,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     return out
 
 
-def densify_curve(curve: Curve, increment: float):
+def densify_curve(curve: Curve, increment: float) -> np.ndarray:
     """
     Refine a curve by adding points along the curve at a given increment.
 
