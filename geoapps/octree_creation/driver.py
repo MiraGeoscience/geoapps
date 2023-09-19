@@ -109,5 +109,4 @@ class OctreeDriver(BaseDriver):
 
 if __name__ == "__main__":
     file = sys.argv[1]
-    # file = r"C:\Users\dominiquef\Desktop\mesh.ui.json"
     OctreeDriver.start(file)
