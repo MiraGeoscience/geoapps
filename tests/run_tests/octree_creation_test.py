@@ -62,6 +62,7 @@ def test_create_octree_app(tmp_path: Path):
             mesh_type="tree",
             depth_core=depth_core,
         )
+        treemesh.refine(treemesh.max_level - 3, finalize=False)
         treemesh = refine_tree_xyz(
             treemesh,
             points.vertices,
@@ -167,4 +168,4 @@ def test_create_octree_curve(tmp_path: Path):
         print("Running application . . .")
         octree = driver.run()
 
-        assert octree.octree_cells["NCells"].max() == 2**minimum_level
+        assert octree.octree_cells["NCells"].max() == 2 ** (minimum_level - 1)
