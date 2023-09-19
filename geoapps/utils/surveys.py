@@ -234,8 +234,8 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     :param object: Array to be sliced.
     :param slicer: Boolean index array, Integer index array,  or callable
         that provides a condition to keep or remove each row of object.
-    :returns: Sliced array.
-    :returns: Dictionary map from global to local indices.
+    :return: Sliced array.
+    :return: Dictionary map from global to local indices.
     """
 
     if isinstance(slicer, np.ndarray):
@@ -386,7 +386,7 @@ def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
 
     :param: survey: SimPEG survey object.
 
-    :returns: Array of unique locations.
+    :return: Array of unique locations.
     """
     if survey.source_list:
         locations = []
@@ -405,14 +405,14 @@ def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
     return np.unique(locations, axis=0)
 
 
-def get_intersecting_cells(locations: np.ndarray, mesh: TreeMesh):
+def get_intersecting_cells(locations: np.ndarray, mesh: TreeMesh) -> np.ndarray:
     """
     Find cells that intersect with a set of segments.
 
     :param: locations: Locations making a line path.
     :param: mesh: TreeMesh object.
 
-    :returns: Array of unique cell indices.
+    :return: Array of unique cell indices.
     """
     cell_index = []
     for ind in range(locations.shape[0] - 1):
