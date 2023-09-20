@@ -69,8 +69,6 @@ def test_ip_2d_fwr_run(
     fwr_driver = InducedPolarization2DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.models.starting
-
 
 def test_ip_2d_run(
     tmp_path: Path,
@@ -126,26 +124,18 @@ def test_ip_2d_run(
         output["data"] = chargeability.values[np.isfinite(chargeability.values)]
     if pytest:
         check_target(output, target_run)
-    else:
-        return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_ip_2d_fwr_run(
+    test_ip_2d_fwr_run(
         Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
-
-    m_rec = test_ip_2d_run(
+    test_ip_2d_run(
         Path("./"),
         max_iterations=20,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 80.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. You are so special!")
