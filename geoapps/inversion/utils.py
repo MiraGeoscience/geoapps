@@ -11,9 +11,15 @@ import warnings
 
 import numpy as np
 from discretize import TreeMesh
-from scipy.spatial import ConvexHull, Delaunay, cKDTree, qhull
+from scipy.spatial import ConvexHull, cKDTree
+from SimPEG.electromagnetics.frequency_domain.sources import (
+    LineCurrent as FEMLineCurrent,
+)
+from SimPEG.electromagnetics.time_domain.sources import LineCurrent as TEMLineCurrent
 from SimPEG.survey import BaseSurvey
 from SimPEG.utils import mkvc
+
+from geoapps.utils.surveys import get_intersecting_cells, get_unique_locations
 
 
 def calculate_2D_trend(
@@ -108,7 +114,6 @@ def calculate_2D_trend(
 def create_nested_mesh(
     survey: BaseSurvey,
     base_mesh: TreeMesh,
-    method: str = "padding_cells",
     padding_cells: int = 8,
     minimum_level: int = 3,
     finalize: bool = True,
@@ -122,9 +127,6 @@ def create_nested_mesh(
 
     locations: Array of coordinates for the local survey shape(*, 3).
     base_mesh: Input global TreeMesh object.
-    method: Refinement of cells from the base mesh determined by from either
-        'convex_hull': Cells that fall inside a 2D Delaunay triangulation of the input locations.
-        'padding_cells':  Cells inside concentric shells made of 'padding_cells'
     padding_cells: Used for 'method'= 'padding_cells'. Number of cells in each concentric shell.
     minimum_level: Minimum octree level to preserve everywhere outside the local survey area.
     finalize: Return a finalized local treemesh.
@@ -141,39 +143,22 @@ def create_nested_mesh(
         base_refinement,
         finalize=False,
     )
-
-    if method == "convex_hull":
-        # Find cells inside the data extant
-        try:
-            tri2D = Delaunay(locations[:, :2])
-            indices = tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1
-            return nested_mesh.insert_cells(
-                base_mesh.gridCC[indices, :],
-                base_mesh.cell_levels_by_index(np.where(indices)[0]),
-                finalize=finalize,
-            )
-        except qhull.QhullError:
-            warnings.warn(
-                "qhull failed to triangulate. Defaulting to 'padding_cells' method."
-            )
-    elif method != "padding_cells":
-        raise ValueError(
-            "Input 'method' must be one of 'convex_hull' or 'padding_cells'."
-        )
-
     base_cell = np.min([base_mesh.h[0][0], base_mesh.h[1][0]])
+    tx_loops = []
+    for source in survey.source_list:
+        if isinstance(source, (TEMLineCurrent, FEMLineCurrent)):
+            mesh_indices = get_intersecting_cells(source.location, base_mesh)
+            tx_loops.append(base_mesh.cell_centers[mesh_indices, :])
+
+    if tx_loops:
+        locations = np.vstack([locations] + tx_loops)
+
     tree = cKDTree(locations[:, :2])
-    center = np.mean(base_mesh.gridCC[:, :2], axis=0)
-    stretched_cc = (
-        (base_mesh.gridCC[:, :2] - center)
-        * (base_cell / np.r_[base_mesh.h[0][0], base_mesh.h[1][0]])
-    ) + center
-    rad, _ = tree.query(stretched_cc)
+    rad, _ = tree.query(base_mesh.gridCC[:, :2])
     pad_distance = 0.0
     for ii in range(minimum_level):
         pad_distance += base_cell * 2**ii * padding_cells
         indices = np.where(rad < pad_distance)[0]
-        # indices = np.where(tri2D.find_simplex(base_mesh.gridCC[:, :2]) != -1)[0]
         levels = base_mesh.cell_levels_by_index(indices)
         levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
         nested_mesh.insert_cells(
@@ -350,21 +335,3 @@ def tile_locations(
     if len(out) == 1:
         return out[0]
     return tuple(out)
-
-
-def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
-    if survey.source_list:
-        locations = []
-        for source in survey.source_list:
-            source_location = source.location
-            if source_location is not None:
-                if not isinstance(source_location, list):
-                    locations += [[source_location]]
-                else:
-                    locations += [source_location]
-            locations += [receiver.locations for receiver in source.receiver_list]
-        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
-    else:
-        locations = survey.receiver_locations
-
-    return np.unique(locations, axis=0)

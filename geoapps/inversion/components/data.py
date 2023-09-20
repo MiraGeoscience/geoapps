@@ -448,7 +448,6 @@ class InversionData(InversionLocations):
             nested_mesh = create_nested_mesh(
                 survey,
                 mesh,
-                method="padding_cells",
                 minimum_level=3,
                 padding_cells=padding_cells,
             )

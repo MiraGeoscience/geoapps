@@ -99,6 +99,15 @@ default_ui_json.update(
             "main": True,
             "value": 500.0,
         },
+        "minimum_level": {
+            "enabled": True,
+            "group": "Basic",
+            "label": "Minimum refinement level.",
+            "main": True,
+            "min": 1,
+            "tooltip": "Minimum refinement in padding region: 2**(n-1) x base_cell.",
+            "value": 4,
+        },
         "ga_group_name": {
             "enabled": True,
             "group": None,

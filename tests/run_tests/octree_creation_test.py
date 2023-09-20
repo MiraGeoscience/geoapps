@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import Points, Surface
+from geoh5py.objects import Curve, Points, Surface
 from geoh5py.shared.utils import compare_entities
 from geoh5py.ui_json.utils import str2list
 from geoh5py.workspace import Workspace
@@ -19,6 +19,7 @@ from scipy import spatial
 
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation.application import OctreeDriver, OctreeMesh
+from geoapps.octree_creation.params import OctreeParams
 from geoapps.utils.testing import get_output_workspace
 
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -61,6 +62,7 @@ def test_create_octree_app(tmp_path: Path):
             mesh_type="tree",
             depth_core=depth_core,
         )
+        treemesh.refine(treemesh.max_level - 3, finalize=False)
         treemesh = refine_tree_xyz(
             treemesh,
             points.vertices,
@@ -130,3 +132,40 @@ def test_create_octree_driver(tmp_path: Path):
     with driver.params.geoh5.open(mode="r"):
         results = driver.params.geoh5.get_entity("Octree_Mesh")
         compare_entities(results[0], results[1], ignore=["_uid"])
+
+
+def test_create_octree_curve(tmp_path: Path):
+    # Create temp workspace
+    with Workspace(tmp_path / "testOctree.geoh5") as workspace:
+        n_data = 12
+        xyz = np.random.randn(n_data, 3) * 100
+        points = Curve.create(workspace, vertices=xyz)
+        refine_a = "4, 4, 4"
+        h = [5.0, 5.0, 5.0]
+        depth_core = 400.0
+        horizontal_padding = 500.0
+        vertical_padding = 200.0
+        minimum_level = 4
+        params = OctreeParams(
+            geoh5=workspace,
+            objects=str(points.uid),
+            u_cell_size=h[0],
+            v_cell_size=h[1],
+            w_cell_size=h[2],
+            horizontal_padding=horizontal_padding,
+            vertical_padding=vertical_padding,
+            depth_core=depth_core,
+            minimum_level=minimum_level,
+        )  # pylint: disable=W0212
+
+        setattr(params, "Refinement A object", points)
+        setattr(params, "Refinement A levels", refine_a)
+        setattr(params, "Refinement A type", "radial")
+        setattr(params, "Refinement A distance", 0.0)
+        params.write_input_file("octree Mesh Creator.ui.json", tmp_path)
+        # print("Initializing application . . .")
+        driver = OctreeDriver(params)
+        print("Running application . . .")
+        octree = driver.run()
+
+        assert octree.octree_cells["NCells"].max() == 2 ** (minimum_level - 1)
