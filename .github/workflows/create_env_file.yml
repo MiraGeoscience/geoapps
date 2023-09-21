@@ -34,13 +34,13 @@ jobs:
           SHORT_SHA=${GITHUB_SHA:0:8}
           echo "git_ref_suffix=${REF_NAME}-${SHORT_SHA}" >> $GITHUB_OUTPUT
       - name: Activate conda base env
-        uses: mamba-org/provision-with-micromamba@main
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: environments\env-python-${{ env.python_ver }}.yml
           environment-name: conda-lock
           cache-downloads: true
           cache-env: true
-          extra-specs: conda-lock
+          create-args: conda-lock
           channels: conda-forge
       - name: Create env file
         id: create-env-file
