@@ -48,10 +48,6 @@ class OctreeParams(BaseParams):
                     group = key.replace("object", "").rstrip()
                     free_param_dict[group] = deepcopy(template_dict)
 
-            # Add at least one refinements
-            if len(free_param_dict) == 0:
-                free_param_dict["Refinement A"] = deepcopy(template_dict)
-
             ui_json = deepcopy(self._default_ui_json)
             for group, forms in free_param_dict.items():
                 for key, form in forms.items():
