@@ -136,7 +136,7 @@ def test_create_octree_driver(tmp_path: Path):
 
 def test_create_octree_curve(tmp_path: Path):
     # Create temp workspace
-    with Workspace(tmp_path / "testOctree.geoh5") as workspace:
+    with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
         n_data = 12
         xyz = np.random.randn(n_data, 3) * 100
         points = Curve.create(workspace, vertices=xyz)
