@@ -225,7 +225,7 @@ def get_drape_model(
         val.append(mesh)
     if return_sorting:
         sorting = np.arange(mesh.n_cells)
-        sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
+        sorting = sorting.reshape(mesh.shape_cells[1], mesh.shape_cells[0], order="C")
         sorting = sorting[::-1].T.flatten()
         val.append(sorting)
     return val
