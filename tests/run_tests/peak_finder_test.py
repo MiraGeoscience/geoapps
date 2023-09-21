@@ -28,7 +28,7 @@ def test_peak_finder_app(tmp_path: Path):
     h5file_path = tmp_path / r"testPeakFinder.geoh5"
 
     # Create temp workspace
-    ws = Workspace(h5file_path)
+    ws = Workspace.create(h5file_path)
 
     x = np.arange(-2 * np.pi + np.pi / 4, 2 * np.pi, np.pi / 32)
 
