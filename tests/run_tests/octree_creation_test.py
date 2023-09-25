@@ -27,7 +27,7 @@ from geoapps.utils.testing import get_output_workspace
 
 def test_create_octree_app(tmp_path: Path):
     # Create temp workspace
-    with Workspace(tmp_path / "testOctree.geoh5") as workspace:
+    with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
         n_data = 12
         xyz = np.random.randn(n_data, 3) * 100
         points = Points.create(workspace, vertices=xyz)
