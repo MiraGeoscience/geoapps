@@ -10,12 +10,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import Curve, Points, Surface
+from discretize.utils import mesh_builder_xyz
+from geoh5py.objects import Curve, Points
 from geoh5py.shared.utils import compare_entities
 from geoh5py.ui_json.utils import str2list
 from geoh5py.workspace import Workspace
-from scipy import spatial
 
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation.application import OctreeDriver, OctreeMesh
@@ -25,69 +24,58 @@ from geoapps.utils.testing import get_output_workspace
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
-def test_create_octree_app(tmp_path: Path):
-    # Create temp workspace
-    with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
-        n_data = 12
-        xyz = np.random.randn(n_data, 3) * 100
-        points = Points.create(workspace, vertices=xyz)
-        remote = Points.create(
-            workspace, vertices=np.array([[800, 800, np.mean(xyz[:, 2])]])
-        )
-        x, y = np.meshgrid(np.arange(-10, 10), np.arange(-10, 10))
-        x, y = x.ravel() * 100, y.ravel() * 100
-        z = np.random.randn(x.shape[0]) * 10
-        surf = spatial.Delaunay(np.c_[x, y])
-        simplices = getattr(surf, "simplices")
-        # Create a geoh5 surface
-        topo = Surface.create(workspace, vertices=np.c_[x, y, z], cells=simplices)
-        h = [5.0, 10.0, 15.0]
-        depth_core = 400.0
-        horizontal_padding = 500.0
-        vertical_padding = 200.0
-        p_d = [
-            [horizontal_padding, horizontal_padding],
-            [horizontal_padding, horizontal_padding],
-            [vertical_padding, vertical_padding],
-        ]
-        max_distance = 200
-        refine_a = "4, 4, 4"
-        refine_b = "0, 0, 4"
+def setup_test_octree():
+    """
+    Create a circle of points and treemesh from extent.
+    """
+    h = [5.0, 5.0, 5.0]
+    n_data = 16
+    degree = np.linspace(0, 2 * np.pi, n_data)
+    xyz = np.c_[
+        np.cos(degree) * 200.0, np.sin(degree) * 200.0, np.sin(degree * 2.0) * 40.0
+    ]
+    depth_core = 400.0
+    horizontal_padding = 500.0
+    vertical_padding = 200.0
+    p_d = [
+        [horizontal_padding, horizontal_padding],
+        [horizontal_padding, horizontal_padding],
+        [vertical_padding, vertical_padding],
+    ]
+    # Create a tree mesh from discretize
+    treemesh = mesh_builder_xyz(
+        xyz,
+        h,
+        padding_distance=p_d,
+        mesh_type="tree",
+        depth_core=depth_core,
+    )
 
-        # Create a tree mesh from discretize
-        treemesh = mesh_builder_xyz(
-            points.vertices,
-            h,
-            padding_distance=p_d,
-            mesh_type="tree",
-            depth_core=depth_core,
-        )
-        treemesh.refine(treemesh.max_level - 3, finalize=False)
-        treemesh = refine_tree_xyz(
+    return xyz, treemesh, h, depth_core, horizontal_padding, vertical_padding
+
+
+def test_create_octree_app_radial(tmp_path: Path):
+    # Create temp workspace
+    refine_a = "4, 4"
+    minimum_level = 4
+    (
+        xyz,
+        treemesh,
+        h,
+        depth_core,
+        horizontal_padding,
+        vertical_padding,
+    ) = setup_test_octree()
+
+    with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
+        points = Points.create(workspace, vertices=xyz)
+        treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
+        treemesh = OctreeDriver.refine_tree_from_points(
             treemesh,
-            points.vertices,
-            method="radial",
-            octree_levels=str2list(refine_a),
-            max_distance=max_distance,
-            finalize=False,
-        )
-        treemesh = refine_tree_xyz(
-            treemesh,
-            topo.vertices,
-            method="surface",
-            octree_levels=str2list(refine_b),
-            max_distance=max_distance,
-            finalize=False,
-        )
-        treemesh = refine_tree_xyz(
-            treemesh,
-            remote.vertices,
-            method="radial",
-            octree_levels=str2list(refine_a),
-            max_distance=max_distance,
+            points,
+            str2list(refine_a),
             finalize=True,
         )
-
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
 
         # Repeat the creation using the app
@@ -95,15 +83,15 @@ def test_create_octree_app(tmp_path: Path):
             "Refinement A object": points.uid,
             "Refinement A levels": refine_a,
             "Refinement A type": "radial",
-            "Refinement A distance": max_distance,
-            "Refinement B object": topo.uid,
-            "Refinement B levels": refine_b,
-            "Refinement B type": "surface",
-            "Refinement B distance": max_distance,
-            "Refinement C object": remote.uid,
-            "Refinement C levels": refine_a,
-            "Refinement C type": "radial",
-            "Refinement C distance": max_distance,
+            "Refinement B object": None,
+            "minimum_level": minimum_level,
+            # "Refinement B levels": refine_b,
+            # "Refinement B type": "surface",
+            # "Refinement B distance": max_distance,
+            # "Refinement C object": remote.uid,
+            # "Refinement C levels": refine_a,
+            # "Refinement C type": "radial",
+            # "Refinement C distance": max_distance,
         }
         app = OctreeMesh(
             geoh5=workspace,

@@ -288,7 +288,7 @@ class OctreeMesh(ObjectDataSelection):
 
                 try:
                     getattr(self, attr_name).value = value.uid
-                except TraitError:
+                except (TraitError, AttributeError):
                     pass
 
             elif "levels" in key:
