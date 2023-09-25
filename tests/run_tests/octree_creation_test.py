@@ -34,6 +34,8 @@ def setup_test_octree():
     xyz = np.c_[
         np.cos(degree) * 200.0, np.sin(degree) * 200.0, np.sin(degree * 2.0) * 40.0
     ]
+    # Add point at origin
+    xyz = np.r_[xyz, np.zeros((1, 3))]
     depth_core = 400.0
     horizontal_padding = 500.0
     vertical_padding = 200.0
