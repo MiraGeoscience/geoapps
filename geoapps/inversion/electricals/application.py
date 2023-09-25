@@ -128,7 +128,6 @@ class InversionApp(PlotSelection2D):
             description="inversion Type:",
         )
         self._write = Button(
-            value=False,
             description="Write input",
             button_style="warning",
             icon="check",
