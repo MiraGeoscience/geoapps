@@ -143,7 +143,7 @@ class OctreeDriver(BaseDriver):
     @staticmethod
     def refine_tree_from_points(
         treemesh: TreeMesh,
-        points: ObjectBase,
+        points: ObjectBase | np.ndarray,
         levels: list[int] | np.ndarray,
         finalize=False,
     ) -> TreeMesh:
@@ -158,7 +158,10 @@ class OctreeDriver(BaseDriver):
 
         :return: Refined tree mesh.
         """
-        locs = get_locations(points.workspace, points)
+        if isinstance(points, ObjectBase):
+            locs = get_locations(points.workspace, points)
+        else:
+            locs = points
 
         if locs is None:
             raise ValueError("Could not find locations for refinement.")
