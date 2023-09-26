@@ -198,7 +198,10 @@ def test_create_octree_surface(tmp_path: Path, setup_test_octree):
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
 
-        assert octree.n_cells == 168396
+        assert octree.n_cells in [
+            168627,
+            168396,
+        ]  # Different results on Linux and Windows
 
         # Repeat the creation using the app
         refinements = {
@@ -228,7 +231,7 @@ def test_create_octree_surface(tmp_path: Path, setup_test_octree):
 
 
 def test_create_octree_driver(tmp_path: Path):
-    uijson_path = tmp_path.parent / "test_create_octree_app0" / "Temp"
+    uijson_path = tmp_path.parent / "test_create_octree_curve0" / "Temp"
     json_file = next(uijson_path.glob("*.ui.json"))
     driver = OctreeDriver.start(str(json_file))
 
