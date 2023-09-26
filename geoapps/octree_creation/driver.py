@@ -80,11 +80,6 @@ class OctreeDriver(BaseDriver):
                     treemesh, refinement_object, levels
                 )
 
-            elif isinstance(refinement_object, Surface):
-                treemesh = OctreeDriver.refine_tree_from_triangulation(
-                    treemesh, refinement_object, levels
-                )
-
             elif getattr(params, value["type"]) == "surface":
                 treemesh = OctreeDriver.refine_tree_from_surface(
                     treemesh,
@@ -253,45 +248,6 @@ class OctreeDriver(BaseDriver):
         if finalize:
             treemesh.finalize()
 
-        return treemesh
-
-    @staticmethod
-    def refine_tree_from_triangulation(
-        treemesh, surface, levels: list[int] | np.ndarray, finalize=False
-    ):
-        """
-        Refine a tree mesh along the simplicies of a surface.
-
-        :param treemesh: Tree mesh to refine.
-        :param surface: Surface object to use for refinement.
-        :param levels: Number of cells requested at each refinement level.
-            Defined in reversed order from highest octree to lowest.
-        :param finalize: Finalize the tree mesh after refinement.
-
-        :return: Refined tree mesh.
-        """
-        if not isinstance(surface, Surface):
-            raise TypeError("Refinement object must be a Surface.")
-
-        if isinstance(levels, list):
-            levels = np.array(levels)
-
-        ind = np.where(np.r_[levels] > 0)[0]
-
-        if ind:
-            paddings = []
-            for n_cells in levels[ind[0] :]:
-                if n_cells == 0:
-                    continue
-
-                paddings.append([0, 0, n_cells])
-
-            treemesh.refine_surface(
-                (surface.vertices, surface.cells),
-                -ind[0] - 1,
-                paddings,
-                finalize=finalize,
-            )
         return treemesh
 
 
