@@ -247,7 +247,7 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
         cell_sizes,
         depth_core,
         horizontal_padding,
-        _,
+        locations,
         minimum_level,
         refinement,
         treemesh,
@@ -264,7 +264,8 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
     z = np.sin(phi) * 200.0
     # refinement = "1, 2"
     with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
-        points = Surface.create(
+        curve = Curve.create(workspace, vertices=locations)
+        sphere = Surface.create(
             workspace,
             vertices=np.c_[x.flatten(), y.flatten(), z.flatten()],
             cells=surf.simplices,
@@ -272,7 +273,7 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
         treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
         treemesh = OctreeDriver.refine_tree_from_triangulation(
             treemesh,
-            points,
+            sphere,
             str2list(refinement),
             finalize=True,
         )
@@ -282,7 +283,7 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
 
         # Repeat the creation using the app
         refinements = {
-            "Refinement A object": points.uid,
+            "Refinement A object": sphere.uid,
             "Refinement A levels": refinement,
             "Refinement A type": "surface",
             "Refinement B object": None,
@@ -290,7 +291,7 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
         }
         app = OctreeMesh(
             geoh5=workspace,
-            objects=str(points.uid),
+            objects=str(curve.uid),
             u_cell_size=cell_sizes[0],
             v_cell_size=cell_sizes[1],
             w_cell_size=cell_sizes[2],
