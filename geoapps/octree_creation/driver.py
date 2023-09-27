@@ -140,7 +140,7 @@ class OctreeDriver(BaseDriver):
         treemesh: TreeMesh,
         points: ObjectBase | np.ndarray,
         levels: list[int] | np.ndarray,
-        finalize=False,
+        finalize: bool = False,
     ) -> TreeMesh:
         """
         Refine a tree mesh along the vertices of an object.
