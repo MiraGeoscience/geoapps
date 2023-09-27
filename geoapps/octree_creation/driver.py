@@ -113,7 +113,10 @@ class OctreeDriver(BaseDriver):
 
     @staticmethod
     def refine_tree_from_curve(
-        mesh: TreeMesh, curve: Curve, levels: list[int] | np.ndarray, finalize=False
+        mesh: TreeMesh,
+        curve: Curve,
+        levels: list[int] | np.ndarray,
+        finalize: bool = False,
     ) -> TreeMesh:
         """
         Refine a tree mesh along the segments of a curve densified by the
@@ -122,7 +125,9 @@ class OctreeDriver(BaseDriver):
         :param mesh: Tree mesh to refine.
         :param curve: Curve object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
-            Defined in reversed order from highest octree to lowest.
+            Defined in reversed order from the highest octree to lowest.
+        :param finalize: Finalize the tree mesh after refinement.
+
         """
         if not isinstance(curve, Curve):
             raise TypeError("Refinement object must be a Curve.")
@@ -130,8 +135,10 @@ class OctreeDriver(BaseDriver):
         if isinstance(levels, list):
             levels = np.array(levels)
 
-        locs = densify_curve(curve, mesh.h[0][0])
-        mesh = OctreeDriver.refine_tree_from_points(mesh, locs, levels, finalize=False)
+        locations = densify_curve(curve, mesh.h[0][0])
+        mesh = OctreeDriver.refine_tree_from_points(
+            mesh, locations, levels, finalize=False
+        )
 
         if finalize:
             mesh.finalize()
@@ -143,7 +150,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         points: ObjectBase | np.ndarray,
         levels: list[int] | np.ndarray,
-        finalize=False,
+        finalize: bool = False,
     ) -> TreeMesh:
         """
         Refine a tree mesh along the vertices of an object.
@@ -151,17 +158,17 @@ class OctreeDriver(BaseDriver):
         :param mesh: Tree mesh to refine.
         :param points: Object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
-            Defined in reversed order from highest octree to lowest.
+            Defined in reversed order from the highest octree to lowest.
         :param finalize: Finalize the tree mesh after refinement.
 
         :return: Refined tree mesh.
         """
         if isinstance(points, ObjectBase):
-            locs = get_locations(points.workspace, points)
+            locations = get_locations(points.workspace, points)
         else:
-            locs = points
+            locations = points
 
-        if locs is None:
+        if locations is None:
             raise ValueError("Could not find locations for refinement.")
 
         if isinstance(levels, list):
@@ -169,9 +176,8 @@ class OctreeDriver(BaseDriver):
 
         distance = 0
         for ii, n_cells in enumerate(levels):
-            distance += n_cells * mesh.h[0][0] * 2**ii
-
-            mesh.refine_ball(locs, distance, mesh.max_level - ii, finalize=False)
+            distance += n_cells * OctreeDriver.cell_size_from_level(mesh, ii)
+            mesh.refine_ball(locations, distance, mesh.max_level - ii, finalize=False)
 
         if finalize:
             mesh.finalize()
@@ -184,7 +190,7 @@ class OctreeDriver(BaseDriver):
         surface: ObjectBase,
         levels: list[int] | np.ndarray,
         max_distance: float = np.inf,
-        finalize=False,
+        finalize: bool = False,
     ) -> TreeMesh:
         """
         Refine a tree mesh along the simplicies of a surface.
@@ -192,7 +198,7 @@ class OctreeDriver(BaseDriver):
         :param mesh: Tree mesh to refine.
         :param surface: Surface object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
-            Defined in reversed order from highest octree to lowest.
+            Defined in reversed order from the highest octree to lowest.
         :param max_distance: Maximum distance from the surface to refine.
         :param finalize: Finalize the tree mesh after refinement.
 
@@ -209,8 +215,6 @@ class OctreeDriver(BaseDriver):
             tri2D.simplices = surface.cells
 
         F = interpolate.LinearNDInterpolator(tri2D, xyz[:, -1])
-        min_locs = np.min(xyz, axis=0)
-        max_locs = np.max(xyz, axis=0)
         levels = np.array(levels)
 
         depth = 0
@@ -219,16 +223,16 @@ class OctreeDriver(BaseDriver):
             if n_cells == 0:
                 continue
 
-            dx = mesh.h[0][0] * 2**ind
-            dy = mesh.h[1][0] * 2**ind
-            dz = mesh.h[2][0] * 2**ind
+            dx = OctreeDriver.cell_size_from_level(mesh, ind, 0)
+            dy = OctreeDriver.cell_size_from_level(mesh, ind, 1)
+            dz = OctreeDriver.cell_size_from_level(mesh, ind, 2)
 
             # Create a grid at the octree level in xy
-            CCx, CCy = np.meshgrid(
-                np.arange(min_locs[0], max_locs[0], dx),
-                np.arange(min_locs[1], max_locs[1], dy),
+            cell_center_x, cell_center_y = np.meshgrid(
+                np.arange(surface.extent[0, 0], surface.extent[1, 0], dx),
+                np.arange(surface.extent[0, 1], surface.extent[1, 1], dy),
             )
-            xy = np.c_[CCx.reshape(-1), CCy.reshape(-1)]
+            xy = np.c_[cell_center_x.reshape(-1), cell_center_y.reshape(-1)]
 
             # Only keep points within triangulation
             inside = tri2D.find_simplex(xy) != -1
@@ -289,6 +293,19 @@ class OctreeDriver(BaseDriver):
                 finalize=finalize,
             )
         return mesh
+
+    @staticmethod
+    def cell_size_from_level(octree, level: int, axis: int = 0):
+        """
+        Computes the cell size at a given level of refinement for a given tree mesh.
+
+        :param octree: Tree mesh to refine.
+        :param level: Level of refinement.
+        :param axis: Axis of refinement.
+
+        :return: Cell size at the given level of refinement.
+        """
+        return octree.h[axis][0] * 2**level
 
 
 if __name__ == "__main__":
