@@ -183,7 +183,7 @@ class OctreeDriver(BaseDriver):
         surface: ObjectBase,
         levels: list[int] | np.ndarray,
         max_distance: float = np.inf,
-        finalize=False,
+        finalize: bool = False,
     ):
         """
         Refine a tree mesh along the simplicies of a surface.
