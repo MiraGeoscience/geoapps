@@ -53,7 +53,7 @@ class OctreeDriver(BaseDriver):
     def octree_from_params(params: OctreeParams):
         print("Setting the mesh extent")
         entity = params.objects
-        treemesh = mesh_builder_xyz(
+        treemesh: TreeMesh = mesh_builder_xyz(
             entity.vertices,
             [
                 params.u_cell_size,
@@ -189,7 +189,7 @@ class OctreeDriver(BaseDriver):
         levels: list[int] | np.ndarray,
         max_distance: float = np.inf,
         finalize=False,
-    ):
+    ) -> TreeMesh:
         """
         Refine a tree mesh along the simplicies of a surface.
 
@@ -257,8 +257,8 @@ class OctreeDriver(BaseDriver):
 
     @staticmethod
     def refine_tree_from_triangulation(
-        treemesh, surface, levels: list[int] | np.ndarray, finalize=False
-    ):
+        treemesh: TreeMesh, surface, levels: list[int] | np.ndarray, finalize=False
+    ) -> TreeMesh:
         """
         Refine a tree mesh along the simplicies of a surface.
 
