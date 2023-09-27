@@ -91,8 +91,10 @@ def test_create_octree_radial(tmp_path: Path, setup_test_octree):
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
 
-        # Hard wire the expected result
+        # Hard-wire the expected result
         assert octree.n_cells == 164742
+
+        assert OctreeDriver.cell_size_from_level(treemesh, 1) == 10.0
 
         # Repeat the creation using the app
         refinements = {

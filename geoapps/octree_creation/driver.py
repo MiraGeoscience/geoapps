@@ -169,7 +169,7 @@ class OctreeDriver(BaseDriver):
 
         distance = 0
         for ii, n_cells in enumerate(levels):
-            distance += n_cells * treemesh.h[0][0] * 2**ii
+            distance += n_cells * OctreeDriver.cell_size_from_level(treemesh, ii)
 
             treemesh.refine_ball(
                 locs, distance, treemesh.max_level - ii, finalize=False
@@ -221,9 +221,9 @@ class OctreeDriver(BaseDriver):
             if n_cells == 0:
                 continue
 
-            dx = treemesh.h[0][0] * 2**ind
-            dy = treemesh.h[1][0] * 2**ind
-            dz = treemesh.h[2][0] * 2**ind
+            dx = OctreeDriver.cell_size_from_level(treemesh, ind, 0)
+            dy = OctreeDriver.cell_size_from_level(treemesh, ind, 1)
+            dz = OctreeDriver.cell_size_from_level(treemesh, ind, 2)
 
             # Create a grid at the octree level in xy
             CCx, CCy = np.meshgrid(
@@ -252,6 +252,19 @@ class OctreeDriver(BaseDriver):
             treemesh.finalize()
 
         return treemesh
+
+    @staticmethod
+    def cell_size_from_level(octree, level: int, axis: int = 0):
+        """
+        Computes the cell size at a given level of refinement for a given tree mesh.
+
+        :param octree: Tree mesh to refine.
+        :param level: Level of refinement.
+        :param axis: Axis of refinement.
+
+        :return: Cell size at the given level of refinement.
+        """
+        return octree.h[axis][0] * 2**level
 
 
 if __name__ == "__main__":
