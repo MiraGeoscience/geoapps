@@ -108,7 +108,10 @@ class OctreeDriver(BaseDriver):
 
     @staticmethod
     def refine_tree_from_curve(
-        treemesh: TreeMesh, curve: Curve, levels: list[int] | np.ndarray, finalize: bool = False
+        treemesh: TreeMesh,
+        curve: Curve,
+        levels: list[int] | np.ndarray,
+        finalize: bool = False,
     ) -> TreeMesh:
         """
         Refine a tree mesh along the segments of a curve densified by the
