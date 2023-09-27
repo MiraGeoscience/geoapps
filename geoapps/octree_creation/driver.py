@@ -45,15 +45,15 @@ class OctreeDriver(BaseDriver):
         return octree
 
     @staticmethod
-    def minimum_level(treemesh: TreeMesh, level: int):
+    def minimum_level(mesh: TreeMesh, level: int):
         """Computes the minimum level of refinement for a given tree mesh."""
-        return max([1, treemesh.max_level - level + 1])
+        return max([1, mesh.max_level - level + 1])
 
     @staticmethod
     def octree_from_params(params: OctreeParams):
         print("Setting the mesh extent")
         entity = params.objects
-        treemesh: TreeMesh = mesh_builder_xyz(
+        mesh: TreeMesh = mesh_builder_xyz(
             entity.vertices,
             [
                 params.u_cell_size,
@@ -64,8 +64,8 @@ class OctreeDriver(BaseDriver):
             mesh_type="tree",
             depth_core=params.depth_core,
         )
-        minimum_level = OctreeDriver.minimum_level(treemesh, params.minimum_level)
-        treemesh.refine(minimum_level, finalize=False)
+        minimum_level = OctreeDriver.minimum_level(mesh, params.minimum_level)
+        mesh.refine(minimum_level, finalize=False)
 
         for label, value in params.free_parameter_dict.items():
             refinement_object = getattr(params, value["object"])
@@ -76,26 +76,26 @@ class OctreeDriver(BaseDriver):
             print(f"Applying {label} on: {getattr(params, value['object']).name}")
 
             if isinstance(refinement_object, Curve):
-                treemesh = OctreeDriver.refine_tree_from_curve(
-                    treemesh, refinement_object, levels
+                mesh = OctreeDriver.refine_tree_from_curve(
+                    mesh, refinement_object, levels
                 )
 
             elif isinstance(refinement_object, Surface):
-                treemesh = OctreeDriver.refine_tree_from_triangulation(
-                    treemesh, refinement_object, levels
+                mesh = OctreeDriver.refine_tree_from_triangulation(
+                    mesh, refinement_object, levels
                 )
 
             elif getattr(params, value["type"]) == "surface":
-                treemesh = OctreeDriver.refine_tree_from_surface(
-                    treemesh,
+                mesh = OctreeDriver.refine_tree_from_surface(
+                    mesh,
                     refinement_object,
                     levels,
                     max_distance=getattr(params, value["distance"]),
                 )
 
             elif getattr(params, value["type"]) == "radial":
-                treemesh = OctreeDriver.refine_tree_from_points(
-                    treemesh,
+                mesh = OctreeDriver.refine_tree_from_points(
+                    mesh,
                     refinement_object,
                     levels,
                 )
@@ -106,20 +106,20 @@ class OctreeDriver(BaseDriver):
                 )
 
         print("Finalizing . . .")
-        treemesh.finalize()
-        octree = treemesh_2_octree(params.geoh5, treemesh, name=params.ga_group_name)
+        mesh.finalize()
+        octree = treemesh_2_octree(params.geoh5, mesh, name=params.ga_group_name)
 
         return octree
 
     @staticmethod
     def refine_tree_from_curve(
-        treemesh: TreeMesh, curve: Curve, levels: list[int] | np.ndarray, finalize=False
+        mesh: TreeMesh, curve: Curve, levels: list[int] | np.ndarray, finalize=False
     ) -> TreeMesh:
         """
         Refine a tree mesh along the segments of a curve densified by the
         mesh cell size.
 
-        :param treemesh: Tree mesh to refine.
+        :param mesh: Tree mesh to refine.
         :param curve: Curve object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from highest octree to lowest.
@@ -130,19 +130,17 @@ class OctreeDriver(BaseDriver):
         if isinstance(levels, list):
             levels = np.array(levels)
 
-        locs = densify_curve(curve, treemesh.h[0][0])
-        treemesh = OctreeDriver.refine_tree_from_points(
-            treemesh, locs, levels, finalize=False
-        )
+        locs = densify_curve(curve, mesh.h[0][0])
+        mesh = OctreeDriver.refine_tree_from_points(mesh, locs, levels, finalize=False)
 
         if finalize:
-            treemesh.finalize()
+            mesh.finalize()
 
-        return treemesh
+        return mesh
 
     @staticmethod
     def refine_tree_from_points(
-        treemesh: TreeMesh,
+        mesh: TreeMesh,
         points: ObjectBase | np.ndarray,
         levels: list[int] | np.ndarray,
         finalize=False,
@@ -150,7 +148,7 @@ class OctreeDriver(BaseDriver):
         """
         Refine a tree mesh along the vertices of an object.
 
-        :param treemesh: Tree mesh to refine.
+        :param mesh: Tree mesh to refine.
         :param points: Object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from highest octree to lowest.
@@ -171,20 +169,18 @@ class OctreeDriver(BaseDriver):
 
         distance = 0
         for ii, n_cells in enumerate(levels):
-            distance += n_cells * treemesh.h[0][0] * 2**ii
+            distance += n_cells * mesh.h[0][0] * 2**ii
 
-            treemesh.refine_ball(
-                locs, distance, treemesh.max_level - ii, finalize=False
-            )
+            mesh.refine_ball(locs, distance, mesh.max_level - ii, finalize=False)
 
         if finalize:
-            treemesh.finalize()
+            mesh.finalize()
 
-        return treemesh
+        return mesh
 
     @staticmethod
     def refine_tree_from_surface(
-        treemesh: TreeMesh,
+        mesh: TreeMesh,
         surface: ObjectBase,
         levels: list[int] | np.ndarray,
         max_distance: float = np.inf,
@@ -193,7 +189,7 @@ class OctreeDriver(BaseDriver):
         """
         Refine a tree mesh along the simplicies of a surface.
 
-        :param treemesh: Tree mesh to refine.
+        :param mesh: Tree mesh to refine.
         :param surface: Surface object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from highest octree to lowest.
@@ -223,9 +219,9 @@ class OctreeDriver(BaseDriver):
             if n_cells == 0:
                 continue
 
-            dx = treemesh.h[0][0] * 2**ind
-            dy = treemesh.h[1][0] * 2**ind
-            dz = treemesh.h[2][0] * 2**ind
+            dx = mesh.h[0][0] * 2**ind
+            dy = mesh.h[1][0] * 2**ind
+            dz = mesh.h[2][0] * 2**ind
 
             # Create a grid at the octree level in xy
             CCx, CCy = np.meshgrid(
@@ -244,25 +240,25 @@ class OctreeDriver(BaseDriver):
             # Apply vertical padding for current octree level
             for _ in range(int(n_cells)):
                 depth += dz
-                treemesh.insert_cells(
+                mesh.insert_cells(
                     np.c_[xy[keeper], elevation - depth],
-                    np.ones(nnz) * treemesh.max_level - ind,
+                    np.ones(nnz) * mesh.max_level - ind,
                     finalize=False,
                 )
 
         if finalize:
-            treemesh.finalize()
+            mesh.finalize()
 
-        return treemesh
+        return mesh
 
     @staticmethod
     def refine_tree_from_triangulation(
-        treemesh: TreeMesh, surface, levels: list[int] | np.ndarray, finalize=False
+        mesh: TreeMesh, surface, levels: list[int] | np.ndarray, finalize=False
     ) -> TreeMesh:
         """
         Refine a tree mesh along the simplicies of a surface.
 
-        :param treemesh: Tree mesh to refine.
+        :param mesh: Tree mesh to refine.
         :param surface: Surface object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from highest octree to lowest.
@@ -286,13 +282,13 @@ class OctreeDriver(BaseDriver):
 
                 paddings.append([n_cells] * 3)
 
-            treemesh.refine_surface(
+            mesh.refine_surface(
                 (surface.vertices, surface.cells),
                 -ind[0] - 1,
                 paddings,
                 finalize=finalize,
             )
-        return treemesh
+        return mesh
 
 
 if __name__ == "__main__":
