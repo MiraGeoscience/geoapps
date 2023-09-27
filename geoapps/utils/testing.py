@@ -17,7 +17,7 @@ from pathlib import Path
 from uuid import UUID
 
 import numpy as np
-from discretize.utils import mesh_builder_xyz, refine_tree_xyz
+from discretize.utils import mesh_builder_xyz
 from geoh5py.objects import (
     AirborneFEMReceivers,
     AirborneFEMTransmitters,
@@ -38,6 +38,7 @@ from scipy.spatial import Delaunay
 from SimPEG import utils
 
 from geoapps.driver_base.utils import active_from_xyz, treemesh_2_octree
+from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.utils.models import get_drape_model
 from geoapps.utils.surveys import survey_lines
 
@@ -412,21 +413,18 @@ def setup_inversion_workspace(
             padding_distance=padDist,
             mesh_type="TREE",
         )
-        mesh = refine_tree_xyz(
+        mesh = OctreeDriver.refine_tree_from_surface(
             mesh,
-            topo,
-            method="surface",
-            octree_levels=refinement,
-            octree_levels_padding=refinement,
+            topography,
+            levels=refinement,
             finalize=False,
         )
 
         if inversion_type in ["fem", "airborne_tem"]:
-            mesh = refine_tree_xyz(
+            mesh = OctreeDriver.refine_tree_from_points(
                 mesh,
                 vertices,
-                method="radial",
-                octree_levels=[2],
+                levels=[2],
                 finalize=False,
             )
 
