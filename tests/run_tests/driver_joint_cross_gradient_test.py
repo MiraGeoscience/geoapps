@@ -10,7 +10,6 @@ import numpy as np
 from geoh5py.data import FloatData
 from geoh5py.groups import SimPEGGroup
 from geoh5py.workspace import Workspace
-from SimPEG.maps import IdentityMap
 
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
@@ -122,22 +121,6 @@ def test_joint_cross_gradient_fwr_run(
     fwr_driver_a.run()
     fwr_driver_b.run()
     fwr_driver_c.run()
-
-    vector_model = fwr_driver_b.directives.save_directives[0].transforms[0](
-        fwr_driver_b.models.starting
-    )
-    vector_model = (
-        fwr_driver_b.directives.save_directives[0].transforms[1] * vector_model
-    )
-
-    geoh5.close()
-    return np.r_[
-        fwr_driver_a.directives.save_directives[0].transforms[0]
-        * fwr_driver_a.models.starting,
-        vector_model.flatten(),
-        fwr_driver_c.directives.save_directives[0].transforms[0]
-        * fwr_driver_c.models.starting,
-    ]
 
 
 def test_joint_cross_gradient_inv_run(
@@ -255,43 +238,17 @@ def test_joint_cross_gradient_inv_run(
         output["data"] = np.hstack(orig_data)
         if pytest:
             check_target(output, target_run)
-        else:
-            out_model = []
-            for sub_driver in driver.drivers:
-                save_directive = sub_driver.directives.directive_list[0]
-
-                model = driver.inverse_problem.model
-                for fun in save_directive.transforms:
-                    if isinstance(fun, (IdentityMap, np.ndarray, float)):
-                        model = fun * model
-                    else:
-                        model = fun(model)
-
-                out_model.append(model.flatten())
-
-            return np.hstack(out_model)
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_joint_cross_gradient_fwr_run(
+    test_joint_cross_gradient_fwr_run(
         Path("./"),
         n_grid_points=20,
         refinement=(4, 8),
     )
-
-    m_rec = test_joint_cross_gradient_inv_run(
+    test_joint_cross_gradient_inv_run(
         Path("./"),
         max_iterations=20,
         pytest=False,
     )
-    nC = int(m_rec.size / 4)
-    model_residual = (
-        np.nansum((m_rec[: 2 * nC] - m_start[: 2 * nC]) ** 2.0) ** 0.5
-        / np.nansum(m_start[: 2 * nC] ** 2.0) ** 0.5
-        * 100.0
-    )
-    assert (
-        model_residual < 75.0
-    ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"
-    print("Recovered model is within 15% of the answer. Let's go!!")

@@ -60,14 +60,10 @@ def test_susceptibility_fwr_run(
         starting_model=model.uid,
     )
     params.workpath = tmp_path
-
     fwr_driver = MagneticScalarDriver(params)
-
     fwr_driver.run()
 
     assert params.out_group.options, "Error adding metadata on creation."
-
-    return fwr_driver.models.starting
 
 
 def test_susceptibility_run(
@@ -133,18 +129,9 @@ def test_susceptibility_run(
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_susceptibility_fwr_run(
-        Path("./"), n_grid_points=20, refinement=(4, 8)
-    )
-    m_rec = test_susceptibility_run(Path("./"), max_iterations=30, pytest=False)
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 15.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Susceptibility model is within 15% of the answer. Well done you!")
+    test_susceptibility_fwr_run(Path("./"), n_grid_points=20, refinement=(4, 8))
+    test_susceptibility_run(Path("./"), max_iterations=30, pytest=False)

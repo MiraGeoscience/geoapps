@@ -403,7 +403,7 @@ def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tup
 
     if return_sorting:
         sorting = np.arange(mesh.n_cells)
-        sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
+        sorting = sorting.reshape(mesh.shape_cells[1], mesh.shape_cells[0], order="C")
         sorting = sorting[::-1].T.flatten()
         return (mesh, sorting)
     else:

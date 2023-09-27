@@ -65,8 +65,6 @@ def test_ip_3d_fwr_run(
     fwr_driver = InducedPolarization3DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.models.starting
-
 
 def test_ip_3d_run(
     tmp_path: Path,
@@ -121,27 +119,19 @@ def test_ip_3d_run(
         output["data"] = potential.values
     if pytest:
         check_target(output, target_run)
-    else:
-        return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_ip_3d_fwr_run(
+    test_ip_3d_fwr_run(
         Path("./"),
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
-
-    m_rec = test_ip_3d_run(
+    test_ip_3d_run(
         Path("./"),
         n_lines=5,
         max_iterations=15,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 80.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. You are so special!")

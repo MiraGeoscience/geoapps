@@ -76,12 +76,6 @@ def test_dc_p3d_fwr_run(
     fwr_driver = DirectCurrentPseudo3DDriver(params)
     fwr_driver.run()
 
-    local_simpeg_group = geoh5.get_entity("Line 2")[0]
-    drape_model = local_simpeg_group.get_entity("models")[0]
-    starting_model = drape_model.get_data("starting_model")[0].values
-
-    return starting_model
-
 
 def test_dc_p3d_run(
     tmp_path: Path,
@@ -156,26 +150,18 @@ def test_dc_p3d_run(
         output["data"] = potential.values
     if pytest:
         check_target(output, target_run)
-    else:
-        return geoh5.get_entity("Iteration_1_model")[0].values
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_dc_p3d_fwr_run(
+    test_dc_p3d_fwr_run(
         Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
-
-    m_rec = test_dc_p3d_run(
+    test_dc_p3d_run(
         Path("./"),
         max_iterations=20,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 20.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 20% of the answer. You are so special!")

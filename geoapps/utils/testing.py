@@ -439,7 +439,7 @@ def setup_inversion_workspace(
         p0 = np.r_[-20, -20, -30]
         p1 = np.r_[20, 20, -70]
 
-        model = utils.model_builder.addBlock(
+        model = utils.model_builder.add_block(
             entity.centroids,
             background * np.ones(mesh.nC),
             p0,
@@ -450,7 +450,7 @@ def setup_inversion_workspace(
         p0 = np.r_[-20, -20, -10]
         p1 = np.r_[20, 20, 30]
 
-        model = utils.model_builder.addBlock(
+        model = utils.model_builder.add_block(
             entity.centroids,
             background * np.ones(mesh.nC),
             p0,

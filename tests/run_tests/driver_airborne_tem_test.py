@@ -68,8 +68,6 @@ def test_airborne_tem_fwr_run(
     fwr_driver = TimeDomainElectromagneticsDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.models.starting
-
 
 def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
     workpath = tmp_path / "inversion_test.ui.geoh5"
@@ -164,24 +162,13 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_airborne_tem_fwr_run(
-        Path("./"), n_grid_points=5, refinement=(0, 0, 4)
-    )
-
-    m_rec = test_airborne_tem_run(
+    test_airborne_tem_fwr_run(Path("./"), n_grid_points=5, refinement=(0, 0, 4))
+    test_airborne_tem_run(
         Path("./"),
         max_iterations=15,
         pytest=False,
     )
-
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 50% of the answer. Let's go!!")

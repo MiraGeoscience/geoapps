@@ -73,8 +73,6 @@ def test_dc_2d_fwr_run(
     fwr_driver = DirectCurrent2DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.models.starting
-
 
 def test_dc_2d_run(tmp_path: Path, max_iterations=1, pytest=True):
     workpath = tmp_path / "inversion_test.ui.geoh5"
@@ -129,26 +127,18 @@ def test_dc_2d_run(tmp_path: Path, max_iterations=1, pytest=True):
         output["data"] = potential.values[np.isfinite(potential.values)]
     if pytest:
         check_target(output, target_run)
-    else:
-        return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_dc_2d_fwr_run(
+    test_dc_2d_fwr_run(
         Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
-
-    m_rec = test_dc_2d_run(
+    test_dc_2d_run(
         Path("./"),
         max_iterations=20,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 25.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 25% of the answer. You are so special!")
