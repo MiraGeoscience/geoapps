@@ -468,6 +468,9 @@ def check_target(output: dict, target: dict, tolerance=0.1):
     :param target: Dictionary containing keys for 'data_norm', 'phi_d' and 'phi_m'.\
     :param tolerance: Tolerance between output and target measured as: |a-b|/b
     """
+    print(
+        f"'data_norm': {np.linalg.norm(output['data'])}, 'phi_d': {output['phi_d'][1]}, 'phi_m': {output['phi_m'][1]}"
+    )
     if any(np.isnan(output["data"])):
         warnings.warn(
             "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."
