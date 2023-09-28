@@ -1,13 +1,22 @@
 Release Notes
 =============
 
+Release 0.11.0 (2023-10-04)
+---------------------------
+
+**(Major Release)**
+
+- GEOPY-.
+
+
+
 Release 0.10.0 (2023-03-20)
 ---------------------------
 
 **(Major Release)**
 
-GEOPY-738: Add Airborne Time-Domain EM (ATEM) inversion to the inversion suite.
-GEOPY-829, 727: Bug fixes
+- GEOPY-738: Add Airborne Time-Domain EM (ATEM) inversion to the inversion suite.
+- GEOPY-829, 727: Bug fixes
 
 
 Release 0.9.2 (2023-01-17)
@@ -15,11 +24,11 @@ Release 0.9.2 (2023-01-17)
 
 Hotfix release for issues encountered since 0.9.1.
 
-GEOPY-835: Fix iso-surface creation crash after multiple runs of marching cube.
-GEOPY-734, 827, 828, 829, 833: Improve installation and fix SSL error encountered by some users.
-GEOPY-814: Update copyright year
-GEOPY-732: Fix crash on ui.json execution of non-inversion apps from ANALYST.
-GEOPY-729: Add version information to main documentation page.
+- GEOPY-835: Fix iso-surface creation crash after multiple runs of marching cube.
+- GEOPY-734, 827, 828, 829, 833: Improve installation and fix SSL error encountered by some users.
+- GEOPY-814: Update copyright year
+- GEOPY-732: Fix crash on ui.json execution of non-inversion apps from ANALYST.
+- GEOPY-729: Add version information to main documentation page.
 
 
 Release 0.9.1 (2022-12-13)
@@ -27,13 +36,14 @@ Release 0.9.1 (2022-12-13)
 
 This release fixes some of the issues encountered since releasing v0.9.0.
 
-GEOPY-697, 694, 685: Better handling of Curve entity in inversions UI.
-GEOPY-690: Re-implementation of the Z from topo option for DC-IP and MT inversions. Source and receivers are no longer draped onto the active (discretized) topography. To reduce numerical artifacts, the active set is instead augmented to include cells intercepted by receivers locations. The drape on top remains optional as for all other methods.
-GEOPY-397: Re-simulation of tensor gravity and magnetics in the Flin Flon demo project.
+-GEOPY-697, 694, 685: Better handling of Curve entity in inversions UI.
+-GEOPY-690: Re-implementation of the Z from topo option for DC-IP and MT inversions. Source and receivers are no longer draped onto the active (discretized) topography. To reduce numerical artifacts, the active set is instead augmented to include cells intercepted by receivers locations. The drape on top remains optional as for all other methods.
+-GEOPY-397: Re-simulation of tensor gravity and magnetics in the Flin Flon demo project.
+
 Also included are SimPEG specific changes:
 
-Fix error in the IRLS weights for MVI using the "total" gradient option.
-Fix error in the stashed regularization operator introduced in v0.9.0
+-Fix error in the IRLS weights for MVI using the "total" gradient option.
+-Fix error in the stashed regularization operator introduced in v0.9.0
 
 
 Release 0.9.0 (2022-10-28)
