@@ -40,7 +40,7 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
     Returns entity's centroids or vertices.
 
     If no location data is found on the provided entity, the method will
-    attempt to call itself on it's parent.
+    attempt to call itself on its parent.
 
     :param workspace: Geoh5py Workspace entity.
     :param entity: Object or uuid of entity containing centroid or

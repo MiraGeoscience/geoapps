@@ -21,13 +21,14 @@ import geoh5py.objects
 import numpy as np
 import pytest
 from discretize import CylindricalMesh, TreeMesh
-from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import Curve, Grid2D
+from discretize.utils import mesh_builder_xyz
+from geoh5py.objects import Curve, Grid2D, Points
 from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.shared_utils.utils import (
     densify_curve,
     downsample_grid,
@@ -108,15 +109,14 @@ def test_drape_to_octree(tmp_path: Path):
         padding_distance=np.array(pads).reshape(3, 2).tolist(),
         mesh_type="TREE",
     )
-    tree = refine_tree_xyz(
-        tree, locs, method="radial", octree_levels=[4, 2], octree_levels_padding=[2, 2]
+    tree = OctreeDriver.refine_tree_from_points(
+        tree, locs, levels=[4, 2], finalize=False
     )
-    tree = refine_tree_xyz(
+    topography = Points.create(ws, vertices=topo)
+    tree = OctreeDriver.refine_tree_from_surface(
         tree,
-        topo,
-        method="surface",
-        octree_levels=[2, 2],
-        octree_levels_padding=[2, 2],
+        topography,
+        levels=[2, 2],
         finalize=True,
     )
     # interp and save common models into the octree
