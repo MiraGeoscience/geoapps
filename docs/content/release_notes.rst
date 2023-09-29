@@ -6,8 +6,37 @@ Release 0.11.0 (2023-10-04)
 
 **(Major Release)**
 
-- GEOPY-.
+New features:
+- GEOPY-715: Add Joint survey inversion: multi-surveys, single physical property.
+- GEOPY-750: Add frequency-domain 3D inversion.
+- GEOPY-787: Add Joint Cross Gradient inversion: up to 3 physical properties.
+- GEOPY-871: Add B-field receivers to TEM inversion
+- GEOPY-995: Migrate utility functions to lightweight package: https://pypi.org/project/geoapps-utils/
+- GEOPY-1100: Add octree refinement on triangulated 3D Surfaces.
+- GEOPY-1059 : Add octree refinement along curve path.
 
+
+Inversion updates:
+- GEOPY-74: Update SimPEG from v0.15.0 to v0.19.0.
+- GEOPY-267: Save command log to inversion group.
+- GEOPY-328: Replace 1D inversion models from surface to DrapeModel object.
+- GEOPY-401: Remove clipping of topography on data extent.
+- GEOPY-564, 720: Save uijson to inversion group and update metadata.
+- GEOPY-607: Migrate from jupyter widgets to Dash application.
+- GEOPY-189, 217, 483, 507: Updates to behaviour of applications.
+- GEOPY-632: Remove detrend options in ui.json.
+- GEOPY-927: Allow to run dcip-2D inversion from existing mesh.
+- GEOPY-1021: Remove data windowing from ui.json.
+
+General Feature updates:
+- GEOPY-767, 994: Migrate and refactor Peak Finder to separate repository.
+- GEOPY-961: Use Qt web window for Dash applications.
+- GEOPY-1100, 1020: Fix deprecation warnings.
+- GEOPY-1059: Re-implementation of radial and surface refinement.
+
+UI.json features:
+- GEOPY-830: Use of pathlib.Path for file paths.
+- GEOPY-875: Add geoapps 'version' identifier to all applications.
 
 
 Release 0.10.0 (2023-03-20)
