@@ -26,7 +26,7 @@ env:
 jobs:
   pylint:
     name: pylint
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
