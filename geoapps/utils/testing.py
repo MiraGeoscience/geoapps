@@ -17,7 +17,7 @@ from pathlib import Path
 from uuid import UUID
 
 import numpy as np
-from discretize.utils import mesh_builder_xyz, refine_tree_xyz
+from discretize.utils import mesh_builder_xyz
 from geoh5py.objects import (
     AirborneFEMReceivers,
     AirborneFEMTransmitters,
@@ -38,6 +38,7 @@ from scipy.spatial import Delaunay
 from SimPEG import utils
 
 from geoapps.driver_base.utils import active_from_xyz, treemesh_2_octree
+from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.utils.models import get_drape_model
 from geoapps.utils.surveys import survey_lines
 
@@ -412,21 +413,18 @@ def setup_inversion_workspace(
             padding_distance=padDist,
             mesh_type="TREE",
         )
-        mesh = refine_tree_xyz(
+        mesh = OctreeDriver.refine_tree_from_surface(
             mesh,
-            topo,
-            method="surface",
-            octree_levels=refinement,
-            octree_levels_padding=refinement,
+            topography,
+            levels=refinement,
             finalize=False,
         )
 
         if inversion_type in ["fem", "airborne_tem"]:
-            mesh = refine_tree_xyz(
+            mesh = OctreeDriver.refine_tree_from_points(
                 mesh,
                 vertices,
-                method="radial",
-                octree_levels=[2],
+                levels=[2],
                 finalize=False,
             )
 
@@ -470,6 +468,9 @@ def check_target(output: dict, target: dict, tolerance=0.1):
     :param target: Dictionary containing keys for 'data_norm', 'phi_d' and 'phi_m'.\
     :param tolerance: Tolerance between output and target measured as: |a-b|/b
     """
+    print(
+        f"'data_norm': {np.linalg.norm(output['data'])}, 'phi_d': {output['phi_d'][1]}, 'phi_m': {output['phi_m'][1]}"
+    )
     if any(np.isnan(output["data"])):
         warnings.warn(
             "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."
