@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         python_ver: ['3.9', '3.10']
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     defaults:
       run:
