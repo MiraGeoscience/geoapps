@@ -26,13 +26,13 @@ env:
 jobs:
   pylint:
     name: pylint
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
     env:
       PYTHONUTF8: 1
-      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-win-64-dev.lock.yml
+      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-linux-64-dev.lock.yml
       PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
     steps:
       - uses: actions/checkout@v3
