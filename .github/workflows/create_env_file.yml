@@ -26,7 +26,7 @@ jobs:
       full_env_file: ${{ steps.create-env-file.outputs.full_env_file }}
       artifact: ${{ env.ARTIFACT_NAME }}.${{ steps.git-info.outputs.git_ref_suffix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: git info
         id: git-info
         run: |
@@ -63,7 +63,7 @@ jobs:
     outputs:
       release_id: ${{ steps.create-release.outputs.release_id }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Create draft release
         id: create-release
         env:
@@ -85,7 +85,7 @@ jobs:
     if: ${{ needs.create-env-file.outputs.releaseFullEnv == true }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v3
         with:
           name: ${{ needs.create-env-file.outputs.artifact }}
