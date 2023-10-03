@@ -40,7 +40,7 @@ jobs:
       CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-${{ startsWith(matrix.os, 'macos') && 'osx' || 'linux' }}-64-dev.lock.yml
       PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           lfs: true
       - name: Setup conda env
