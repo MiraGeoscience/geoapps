@@ -501,5 +501,6 @@ class InversionLogger:
 
 if __name__ == "__main__":
     file = str(Path(sys.argv[1]).resolve())
+    # file = r"C:\Users\dominiquef\Desktop\Inv_run_v10_start.ui.json"
     InversionDriver.start(file)
     sys.stdout.close()
