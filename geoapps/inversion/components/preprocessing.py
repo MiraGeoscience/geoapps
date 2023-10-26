@@ -69,8 +69,10 @@ def window_data(
     """
 
     if not isinstance(data_object, ObjectBase):
-        raise TypeError(f"'data_object' must be an {ObjectBase}, found '{type(data_object)}' instead.")
-    
+        raise TypeError(
+            f"'data_object' must be an {ObjectBase}, found '{type(data_object)}' instead."
+        )
+
     if isinstance(data_object, Grid2D):
         data_object = grid_to_points(data_object)
 
