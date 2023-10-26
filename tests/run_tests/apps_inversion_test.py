@@ -167,8 +167,8 @@ def test_mag_inversion(tmp_path: Path):
         data = ifile.data["data_object"]
         assert isinstance(data, Points)
         assert data.n_vertices == 418
-        assert ifile.data["mesh"] is not None
-        assert ifile.data["topography_object"] is not None
+        assert ifile.data["mesh"].uid == mesh.uid
+        assert ifile.data["topography_object"].uid == topography_object.uid
 
 
 def test_dc_inversion(tmp_path: Path):
