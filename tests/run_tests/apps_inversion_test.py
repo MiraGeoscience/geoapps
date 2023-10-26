@@ -14,6 +14,7 @@ from uuid import UUID
 
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
+from geoh5py.objects import Points
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json.input_file import InputFile
@@ -160,11 +161,14 @@ def test_mag_inversion(tmp_path: Path):
                 reference_declination_const=None,
             )
 
-    filename = next(tmp_path.glob("MagneticVectorInversion_*.geoh5"))
-    with Workspace(filename) as workspace:
-        assert len(workspace.get_entity(app.params.data_object)) == 1
-        assert len(workspace.get_entity(app.params.mesh)) == 1
-        assert len(workspace.get_entity(app.params.topography_object)) == 1
+    filename = next(tmp_path.glob("MagneticVectorInversion_*.json"))
+    ifile = InputFile.read_ui_json(filename)
+    with ifile.data["geoh5"].open():
+        data = ifile.data["data_object"]
+        assert isinstance(data, Points)
+        assert data.n_vertices == 418
+        assert ifile.data["mesh"] is not None
+        assert ifile.data["topography_object"] is not None
 
 
 def test_dc_inversion(tmp_path: Path):
