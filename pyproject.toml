@@ -71,7 +71,7 @@ mira-simpeg = {version = "~0.19.0.dev3", source = "pypi", optional = true}
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = {version = "~2.2.1", optional = true} # from simpeg and geoana
 geoana = {version = "~0.4.0", optional = true} # from simpeg
-h5py = "~3.8.0" # from geoh5py
+h5py = "*" # from geoh5py
 mkl = {version = "2022.*", optional = true} # from simpeg
 Pillow = "*" # from geoh5py
 pydiso = {version = "~0.0.3", optional = true} # from simpeg
