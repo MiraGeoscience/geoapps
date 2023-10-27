@@ -52,32 +52,34 @@ param-sweeps = {version = "~0.1.6a1", source = "pypi", allow-prereleases = true}
 semver = {version="~3.0.0", source = "pypi"}
 
 ## dependencies for core algorithms
-dask = {version = "2022.10.0", extras = ["distributed"], optional = true}
-discretize = {version = "~0.8.3", optional = true } # also in simpeg
-distributed = {version = "2022.10.0", optional = true}
-fsspec = {version = "2022.*", optional = true } # also in simpeg
-matplotlib = {version = "~3.7.1", optional = true } # also in simpeg and geoana
-pandas = {version = "~1.5.3", optional = true } # also in simpeg
-scikit-learn = {version = "~1.2.2", optional = true } # also in simpeg
-scipy = {version = "~1.10.1", optional = true } # also in simpeg and geoana
-tqdm = {version = "^4.64.0", optional = true }
-libhwloc = {version = "2.9.0"}
-simpeg_archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
+dask = {version = "*", extras = ["distributed"], optional = true}
+discretize = {version = "*", optional = true } # also in simpeg
+distributed = {version = "*", optional = true}
+fsspec = {version = "*", optional = true } # also in simpeg
+libhwloc = {version = "*"}
+matplotlib = {version = "*", optional = true } # also in simpeg and geoana
+pandas = {version = "*", optional = true } # also in simpeg
+scikit-learn = {version = "*", optional = true } # also in simpeg
+scipy = {version = "*", optional = true } # also in simpeg and geoana
+tqdm = {version = "*", optional = true }
+
 #simpeg_archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
+simpeg_archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
 #mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev3+geoapps.0.11.0.zip#sha256=", optional = true}
 mira-simpeg = {version = "~0.19.0.dev3", source = "pypi", optional = true}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
-empymod = {version = "~2.2.1", optional = true} # from simpeg and geoana
-geoana = {version = "~0.4.0", optional = true} # from simpeg
-h5py = "~3.8.0" # from geoh5py
-mkl = {version = "2022.*", optional = true} # from simpeg
-pydiso = {version = "~0.0.3", optional = true} # from simpeg
-pymatsolver = {version = "~0.2.0", optional = true} # from simpeg
+empymod = {version = "*", optional = true} # from simpeg and geoana
+geoana = {version = "*", optional = true} # from simpeg
+h5py = "*" # from geoh5py
+mkl = {version = "*", optional = true} # from simpeg
+Pillow = "*" # from geoh5py
+pydiso = {version = "*", optional = true} # from simpeg
+pymatsolver = {version = "*", optional = true} # from simpeg
 pypng = "*" # from omf
-six = "~1.16.0" # from omf
-vectormath = "~0.2.2" # from omf
-zarr = {version = "~2.14.2", optional = true} # from simpeg using Dask
+six = "*" # from omf
+vectormath = "*" # from omf
+zarr = {version = "*", optional = true} # from simpeg using Dask
 
 ## dependencies for UI
 fiona = {version = "~1.9.2", optional = true}
