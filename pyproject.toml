@@ -49,7 +49,7 @@ mira-omf = {version = "~3.0.0", source = "pypi", allow-prereleases = true}
 las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip#sha256="}
 param-sweeps = {version = "~0.1.6a1", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256="}
-semver = {version="~3.0.0", source = "pypi"}
+semver = {version="~3.0.0"}
 
 ## dependencies for core algorithms
 dask = {version = "2022.10.*", extras = ["distributed"], optional = true}
