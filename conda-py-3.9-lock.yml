@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 74054be9e3ea1e18a0549b108097a33c74dd303aa0e14784e61afb31833444ef
-    osx-64: 8a47505dc809149ddc7b88257a628523c046aa5d5faaf85ac0ba1ad7f3a7ab96
-    linux-64: bde3d3e3f24c1eacfbe92127d96573688df3367b8820b974b41f946ab844bf07
+    win-64: bcc7016b3c48d57082d47ea7e7fd9331a2d04bb701661500c05bbfd3db09032b
+    osx-64: b78e6e7745120f03ff7853e830401a01a634e2b9eff5699e18a284357ed0031f
+    linux-64: a98f1e80d97435277d9d0c8b670f6b7ef522e564c0b5999668f8a51122069aea
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -5338,6 +5338,21 @@ package:
     sha256: 2c85cf290cffb72b1fe7d24c22ad6bf89873bf0f562c9c51907dfb6c00f2d4dd
   category: apps
   optional: true
+- name: properties
+  version: 0.6.1
+  manager: conda
+  platform: linux-64
+  dependencies:
+    numpy: '>=1.7'
+    python: ''
+    six: ''
+    vectormath: '>=0.1.4'
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  hash:
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
+  category: main
+  optional: false
 - name: pydiso
   version: 0.0.3
   manager: conda
@@ -5692,26 +5707,28 @@ package:
     sha256: 30204596b0f3eb9118af99a622f177fba2b6c245db0512f9f57c437020599db4
   category: main
   optional: false
-- name: properties
-  version: 0.6.1
+- name: simpeg-archive
+  version: 0.11.0.dev6
   manager: pip
   platform: linux-64
   dependencies:
-    six: '>=1.7.3'
+    discretize: '*'
     numpy: '>=1.7'
-    vectormath: '>=0.1.4'
-  url: https://files.pythonhosted.org/packages/c0/9a/cd2def3421cd077d80d4973c802d29dcb3fba625190b3678480f228a85bf/properties-0.6.1.tar.gz
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: b119ce4c53f4717fa29371c1bb929f422dda7ed90a4559b3583ea77389177263
-  category: main
-  optional: false
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
+  category: core
+  optional: true
 - name: las-geoh5
   version: 0.0.1
   manager: pip
   platform: linux-64
   dependencies:
-    lasio: '>=0.31,<0.32'
     geoh5py: '>=0.8.0rc1,<0.9.0'
+    lasio: '>=0.31,<0.32'
     tqdm: '>=4.64.0,<5.0.0'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip
   hash:
@@ -5767,21 +5784,6 @@ package:
     sha256: fc6dbe635276d563d53d287fb59b59684bf72446b1bd68befa0d9f98432d2e36
   category: main
   optional: false
-- name: simpeg-archive
-  version: 0.11.0.dev6
-  manager: pip
-  platform: linux-64
-  dependencies:
-    discretize: '*'
-    numpy: '>=1.7'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
-    scipy: '>=0.13'
-  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
-  hash:
-    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
-  category: core
-  optional: true
 - name: bzip2
   version: 1.0.8
   manager: conda
@@ -9708,6 +9710,21 @@ package:
     sha256: 10e7fdc75d4b85633be6b12a70b857053987127a808caa0f88b2cba4b3ce6359
   category: apps
   optional: true
+- name: properties
+  version: 0.6.1
+  manager: conda
+  platform: osx-64
+  dependencies:
+    python: ''
+    six: ''
+    numpy: '>=1.7'
+    vectormath: '>=0.1.4'
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  hash:
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
+  category: main
+  optional: false
 - name: pylint
   version: 3.0.2
   manager: conda
@@ -10492,26 +10509,28 @@ package:
     sha256: 30204596b0f3eb9118af99a622f177fba2b6c245db0512f9f57c437020599db4
   category: main
   optional: false
-- name: properties
-  version: 0.6.1
+- name: simpeg-archive
+  version: 0.11.0.dev6
   manager: pip
   platform: osx-64
   dependencies:
-    six: '>=1.7.3'
+    discretize: '*'
     numpy: '>=1.7'
-    vectormath: '>=0.1.4'
-  url: https://files.pythonhosted.org/packages/c0/9a/cd2def3421cd077d80d4973c802d29dcb3fba625190b3678480f228a85bf/properties-0.6.1.tar.gz
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: b119ce4c53f4717fa29371c1bb929f422dda7ed90a4559b3583ea77389177263
-  category: main
-  optional: false
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
+  category: core
+  optional: true
 - name: las-geoh5
   version: 0.0.1
   manager: pip
   platform: osx-64
   dependencies:
-    lasio: '>=0.31,<0.32'
     geoh5py: '>=0.8.0rc1,<0.9.0'
+    lasio: '>=0.31,<0.32'
     tqdm: '>=4.64.0,<5.0.0'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip
   hash:
@@ -10567,21 +10586,6 @@ package:
     sha256: fc6dbe635276d563d53d287fb59b59684bf72446b1bd68befa0d9f98432d2e36
   category: main
   optional: false
-- name: simpeg-archive
-  version: 0.11.0.dev6
-  manager: pip
-  platform: osx-64
-  dependencies:
-    discretize: '*'
-    numpy: '>=1.7'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
-    scipy: '>=0.13'
-  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
-  hash:
-    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
-  category: core
-  optional: true
 - name: ca-certificates
   version: 2023.7.22
   manager: conda
@@ -15164,6 +15168,21 @@ package:
     sha256: 30e0a60a81fa70a10ba4cf1f9a2585f19bfe54c88bb53f0367aaf67a5c56bf37
   category: apps
   optional: true
+- name: properties
+  version: 0.6.1
+  manager: conda
+  platform: win-64
+  dependencies:
+    python: ''
+    six: ''
+    numpy: '>=1.7'
+    vectormath: '>=0.1.4'
+  url: https://conda.anaconda.org/conda-forge/noarch/properties-0.6.1-py_0.tar.bz2
+  hash:
+    md5: 62052fa8409d12536ff149e25b0e9905
+    sha256: 693596b821b28f8d9710e80a143816e55fc401b8cd2f0b0d777f5155bd3358f2
+  category: main
+  optional: false
 - name: pydiso
   version: 0.0.3
   manager: conda
@@ -15472,26 +15491,28 @@ package:
     sha256: 30204596b0f3eb9118af99a622f177fba2b6c245db0512f9f57c437020599db4
   category: main
   optional: false
-- name: properties
-  version: 0.6.1
+- name: simpeg-archive
+  version: 0.11.0.dev6
   manager: pip
   platform: win-64
   dependencies:
-    six: '>=1.7.3'
+    discretize: '*'
     numpy: '>=1.7'
-    vectormath: '>=0.1.4'
-  url: https://files.pythonhosted.org/packages/c0/9a/cd2def3421cd077d80d4973c802d29dcb3fba625190b3678480f228a85bf/properties-0.6.1.tar.gz
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    scipy: '>=0.13'
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: b119ce4c53f4717fa29371c1bb929f422dda7ed90a4559b3583ea77389177263
-  category: main
-  optional: false
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
+  category: core
+  optional: true
 - name: las-geoh5
   version: 0.0.1
   manager: pip
   platform: win-64
   dependencies:
-    lasio: '>=0.31,<0.32'
     geoh5py: '>=0.8.0rc1,<0.9.0'
+    lasio: '>=0.31,<0.32'
     tqdm: '>=4.64.0,<5.0.0'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip
   hash:
@@ -15547,18 +15568,3 @@ package:
     sha256: fc6dbe635276d563d53d287fb59b59684bf72446b1bd68befa0d9f98432d2e36
   category: main
   optional: false
-- name: simpeg-archive
-  version: 0.11.0.dev6
-  manager: pip
-  platform: win-64
-  dependencies:
-    discretize: '*'
-    numpy: '>=1.7'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
-    scipy: '>=0.13'
-  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
-  hash:
-    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
-  category: core
-  optional: true
