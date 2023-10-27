@@ -41,8 +41,8 @@ python = "^3.9, < 3.11"
 
 ## dependencies for a minimal environment
 numpy = "~1.23.5" # also geoh5py, simpeg and geoana
-geoh5py = {version = "~0.8.0rc1", source = "pypi", allow-prereleases = true}
-#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.8.0.zip#sha256="}
+#geoh5py = {version = "~0.8.0rc1", source = "pypi", allow-prereleases = true}
+geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/GEOPY-1116.zip#sha256="}
 mira-omf = {version = "~3.0.0", source = "pypi", allow-prereleases = true}
 #mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/develop.zip#sha256="}
 #las-geoh5 = { version = "~0.1.0", source = "pypi", allow-prereleases = true}
@@ -72,7 +72,6 @@ empymod = {version = "~2.2.1", optional = true} # from simpeg and geoana
 geoana = {version = "~0.4.0", optional = true} # from simpeg
 h5py = "~3.8.0" # from geoh5py
 mkl = {version = "2022.*", optional = true} # from simpeg
-Pillow = "~9.4.0" # from geoh5py
 pydiso = {version = "~0.0.3", optional = true} # from simpeg
 pymatsolver = {version = "~0.2.0", optional = true} # from simpeg
 pypng = "*" # from omf
