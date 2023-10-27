@@ -56,7 +56,6 @@ dask = {version = "2022.10.*", extras = ["distributed"], optional = true}
 discretize = {version = "~0.8.3", optional = true } # also in simpeg
 distributed = {version = "2022.10.*", optional = true}
 fsspec = {version = "2022.*", optional = true } # also in simpeg
-#libhwloc = {version = "*", optional = true}
 matplotlib = {version = "~3.7.1", optional = true } # also in simpeg and geoana
 pandas = {version = "~1.5.3", optional = true } # also in simpeg
 scikit-learn = {version = "~1.2.2", optional = true } # also in simpeg
@@ -116,7 +115,6 @@ core = [
     "empymod",
     "fsspec",
     "geoana",
-#    "libhwloc",
     "matplotlib",
     "mira-simpeg",
     "mkl",
