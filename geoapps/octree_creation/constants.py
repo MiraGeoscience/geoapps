@@ -99,6 +99,12 @@ default_ui_json.update(
             "main": True,
             "value": 500.0,
         },
+        "diagonal_balance": {
+            "group": "Basic",
+            "label": "UBC Compatible",
+            "main": True,
+            "value": False,
+        },
         "minimum_level": {
             "enabled": True,
             "group": "Basic",

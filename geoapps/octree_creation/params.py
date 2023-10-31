@@ -31,6 +31,7 @@ class OctreeParams(BaseParams):
         self._u_cell_size = None
         self._v_cell_size = None
         self._w_cell_size = None
+        self._diagonal_balance = None
         self._minimum_level = None
         self._horizontal_padding = None
         self._vertical_padding = None
@@ -142,6 +143,14 @@ class OctreeParams(BaseParams):
     @depth_core.setter
     def depth_core(self, val):
         self.setter_validator("depth_core", val)
+
+    @property
+    def diagonal_balance(self):
+        return self._diagonal_balance
+
+    @diagonal_balance.setter
+    def diagonal_balance(self, val):
+        self.setter_validator("diagonal_balance", val)
 
     @property
     def minimum_level(self):
