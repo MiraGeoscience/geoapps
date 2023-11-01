@@ -128,7 +128,6 @@ class InversionApp(PlotSelection2D):
             description="inversion Type:",
         )
         self._write = Button(
-            value=False,
             description="Write input",
             button_style="warning",
             icon="check",
@@ -170,7 +169,7 @@ class InversionApp(PlotSelection2D):
         self._coolingFactor = FloatText(value=2, description="Beta cooling factor")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._sens_wts_threshold = FloatText(
-            value=0.001, description="Threshold sensitivity weights", max=100, min=0
+            value=0.001, description="Threshold sensitivity weights"
         )
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
         self._n_cpu = IntText(

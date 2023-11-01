@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 import SimPEG
-from discretize.utils import mesh_builder_xyz, refine_tree_xyz
+from discretize.utils import mesh_builder_xyz
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
 
@@ -22,6 +22,7 @@ from geoapps.inversion.potential_fields.magnetic_vector.driver import (
     MagneticVectorDriver,
     MagneticVectorParams,
 )
+from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.utils.testing import Geoh5Tester
 
 from . import PROJECT
@@ -76,10 +77,10 @@ def test_survey_data(tmp_path: Path):
             depth_core=50,
             mesh_type="TREE",
         )
-        mesh = refine_tree_xyz(
+        mesh = OctreeDriver.refine_tree_from_surface(
             mesh,
-            test_topo_object.vertices,
-            method="surface",
+            test_topo_object,
+            levels=[2],
             finalize=True,
         )
 
@@ -266,7 +267,7 @@ def test_normalize(tmp_path: Path):
     data.normalizations = data.get_normalizations()
     test_data = data.normalize(data.observed)
     assert np.all(
-        np.hstack(data.normalizations[None].values()).tolist()
+        np.hstack(list(data.normalizations[None].values())).tolist()
         == np.repeat([1, -1], len_data)
     )
     assert all(test_data["gz"] == (-1 * data.observed["gz"]))

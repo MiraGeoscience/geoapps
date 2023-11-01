@@ -16,12 +16,25 @@ import uuid
 
 import numpy as np
 from geoh5py import Workspace
-from geoh5py.data import Data
-from geoh5py.objects import ObjectBase, PotentialElectrode
+from geoh5py.data import Data, NumericData
+from geoh5py.objects import Grid2D, ObjectBase, Points, PotentialElectrode
 from geoh5py.shared.utils import is_uuid
 
 from geoapps.inversion.utils import calculate_2D_trend
 from geoapps.shared_utils.utils import filter_xy, get_locations
+
+
+# TODO replace with implementation in geoh5py v0.9.0
+def grid_to_points(grid2d: Grid2D) -> Points:
+    """"""
+    points = Points.create(
+        grid2d.workspace, vertices=grid2d.centroids, name=grid2d.name
+    )
+    for child in grid2d.children:
+        if isinstance(child, NumericData):
+            child.copy(parent=points, association="VERTEX")
+
+    return points
 
 
 def window_data(
@@ -54,6 +67,15 @@ def window_data(
     :return: Updated data dict.
     :return: Vertices or centroids of the windowed data object.
     """
+
+    if not isinstance(data_object, ObjectBase):
+        raise TypeError(
+            f"'data_object' must be an {ObjectBase}, found '{type(data_object)}' instead."
+        )
+
+    if isinstance(data_object, Grid2D):
+        data_object = grid_to_points(data_object)
+
     # Get locations
     locations = get_locations(workspace, data_object)
 
@@ -80,7 +102,7 @@ def window_data(
     )
 
     new_data_object = data_object.copy(
-        parent=None,
+        parent=data_object.workspace,
         copy_children=True,
         clear_cache=False,
         mask=mask,

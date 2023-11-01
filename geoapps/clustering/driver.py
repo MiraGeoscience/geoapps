@@ -25,7 +25,8 @@ from sklearn.cluster import KMeans
 from geoapps.clustering.constants import validations
 from geoapps.clustering.params import ClusteringParams
 from geoapps.driver_base.driver import BaseDriver
-from geoapps.shared_utils.utils import colors, hex_to_rgb
+from geoapps.shared_utils.colors import UNIQUE_COLORS
+from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils.statistics import random_sampling
 
 
@@ -220,7 +221,7 @@ class ClusteringDriver(BaseDriver):
 
             color_pickers = self.params.color_pickers
             if not color_pickers:
-                color_pickers = colors
+                color_pickers = UNIQUE_COLORS
 
             for ii in range(self.params.n_clusters):
                 colorpicker = color_pickers[ii]

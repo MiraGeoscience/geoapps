@@ -94,7 +94,7 @@ def test_centroids(tmp_path: Path):
             }
         }
     )
-    ws.finalize()
+    ws.close()
 
 
 def test_vertices(tmp_path: Path):
@@ -141,7 +141,7 @@ def test_vertices(tmp_path: Path):
             }
         }
     )
-    ws.finalize()
+    ws.close()
 
     assert np.all(center_error < 0.25)
 

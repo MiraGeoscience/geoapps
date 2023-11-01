@@ -129,9 +129,9 @@ class BlockModelDriver(BaseDriver):
         object_out = BlockModel.create(
             workspace,
             origin=[mesh.x0[0], mesh.x0[1], locs[:, 2].max()],
-            u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-            v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-            z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
+            u_cell_delimiters=mesh.nodes_x - mesh.x0[0],
+            v_cell_delimiters=mesh.nodes_y - mesh.x0[1],
+            z_cell_delimiters=-(mesh.x0[2] + mesh.h[2].sum() - mesh.nodes_z[::-1]),
             name=name,
         )
 

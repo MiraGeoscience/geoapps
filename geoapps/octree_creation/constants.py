@@ -99,6 +99,15 @@ default_ui_json.update(
             "main": True,
             "value": 500.0,
         },
+        "minimum_level": {
+            "enabled": True,
+            "group": "Basic",
+            "label": "Minimum refinement level.",
+            "main": True,
+            "min": 1,
+            "tooltip": "Minimum refinement in padding region: 2**(n-1) x base_cell.",
+            "value": 4,
+        },
         "ga_group_name": {
             "enabled": True,
             "group": None,
@@ -120,7 +129,7 @@ default_ui_json.update(
 template_dict = {
     "object": {
         "groupOptional": True,
-        "enabled": True,
+        "enabled": False,
         "group": "Refinement A",
         "label": "Object",
         "meshType": [
@@ -135,20 +144,20 @@ template_dict = {
         "value": None,
     },
     "levels": {
-        "enabled": True,
+        "enabled": False,
         "group": "Refinement A",
         "label": "Levels",
         "value": "4, 4, 4",
     },
     "type": {
         "choiceList": ["surface", "radial"],
-        "enabled": True,
+        "enabled": False,
         "group": "Refinement A",
         "label": "Type",
         "value": "radial",
     },
     "distance": {
-        "enabled": True,
+        "enabled": False,
         "group": "Refinement A",
         "label": "Distance",
         "value": 1000.0,

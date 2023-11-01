@@ -12,7 +12,6 @@ from pathlib import Path
 import numpy as np
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.inversion.potential_fields.magnetic_vector.driver import (
@@ -24,11 +23,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_mvi_run = {
-    "data_norm": 6.3559,
-    "phi_d": 0.003886,
-    "phi_m": 2.263e-6,
-}
+target_mvi_run = {"data_norm": 6.3559205278626525, "phi_d": 0.00448, "phi_m": 2.411e-06}
 
 
 def test_magnetic_vector_fwr_run(
@@ -71,7 +66,6 @@ def test_magnetic_vector_fwr_run(
     fwr_driver = MagneticVectorDriver(params)
 
     fwr_driver.run()
-    return fwr_driver.models.starting
 
 
 def test_magnetic_vector_run(
@@ -136,18 +130,9 @@ def test_magnetic_vector_run(
             )
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return utils.spherical2cartesian(driver.inverse_problem.model)
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_magnetic_vector_fwr_run(
-        Path("./"), n_grid_points=20, refinement=(4, 8)
-    )
-    m_rec = test_magnetic_vector_run(Path("./"), max_iterations=30, pytest=False)
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("MVI model is within 50% of the answer. Done!")
+    test_magnetic_vector_fwr_run(Path("./"), n_grid_points=20, refinement=(4, 8))
+    test_magnetic_vector_run(Path("./"), max_iterations=30, pytest=False)

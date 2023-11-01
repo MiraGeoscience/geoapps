@@ -163,9 +163,17 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     tipper_init = tipper_init if use_initializers else {}
 
     from geoapps.octree_creation.constants import app_initializer as oct_init
+    from geoapps.octree_creation.constants import template_dict
 
-    oct_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
-    oct_init = oct_init if use_initializers else {}
+    if use_initializers:
+        oct_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
+        # Add refinements
+    else:
+        oct_init = {}
+        for label in "ABC":
+            name = f"Refinement {label}"
+            for label, form in template_dict.items():
+                oct_init[f"{name} {label}"] = form["value"]
 
     from geoapps.scatter_plot.constants import app_initializer as scatter_init
 
