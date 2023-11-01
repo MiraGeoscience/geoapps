@@ -19,6 +19,7 @@ from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 
 from geoapps.driver_base.utils import treemesh_2_octree
+from geoapps.octree_creation import OctreeParams
 from geoapps.octree_creation.application import OctreeDriver, OctreeMesh
 from geoapps.utils.testing import get_output_workspace
 
@@ -88,6 +89,7 @@ def test_create_octree_radial(tmp_path: Path, setup_test_octree):
             treemesh,
             points,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -139,11 +141,16 @@ def test_create_octree_curve(tmp_path: Path, setup_test_octree):
     with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
         curve = Curve.create(workspace, vertices=locations)
         curve.remove_cells([-1])
-        treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
+        treemesh.refine(
+            treemesh.max_level - minimum_level + 1,
+            diagonal_balance=False,
+            finalize=False,
+        )
         treemesh = OctreeDriver.refine_tree_from_curve(
             treemesh,
             curve,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -191,11 +198,16 @@ def test_create_octree_surface(tmp_path: Path, setup_test_octree):
 
     with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
         points = Points.create(workspace, vertices=locations)
-        treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
+        treemesh.refine(
+            treemesh.max_level - minimum_level + 1,
+            diagonal_balance=False,
+            finalize=False,
+        )
         treemesh = OctreeDriver.refine_tree_from_surface(
             treemesh,
             points,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -270,11 +282,16 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
             vertices=np.c_[x.flatten(), y.flatten(), z.flatten()],
             cells=surf.simplices,
         )
-        treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
+        treemesh.refine(
+            treemesh.max_level - minimum_level + 1,
+            diagonal_balance=False,
+            finalize=False,
+        )
         treemesh = OctreeDriver.refine_tree_from_triangulation(
             treemesh,
             sphere,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -306,3 +323,48 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
         with Workspace(get_output_workspace(tmp_path)) as workspace:
             rec_octree = workspace.get_entity("Octree_Mesh")[0]
             compare_entities(octree, rec_octree, ignore=["_uid"])
+
+
+def test_octree_diagonal_balance(tmp_path: Path):
+    # Create temp workspace
+    with Workspace(tmp_path / "testOctree.geoh5") as workspace:
+        points = Points.create(workspace, vertices=np.array([[150, 0, 150], [0, 0, 0]]))
+
+        # Repeat the creation using the app
+        params_dict = {
+            "geoh5": workspace,
+            "objects": str(points.uid),
+            "u_cell_size": 10.0,
+            "v_cell_size": 10.0,
+            "w_cell_size": 10.0,
+            "horizontal_padding": 500.0,
+            "vertical_padding": 200.0,
+            "depth_core": 400.0,
+            "Refinement A object": points.uid,
+            "Refinement A levels": "1",
+            "Refinement A type": "radial",
+            "Refinement A distance": 200,
+        }
+
+        diag_true_params = OctreeParams(
+            **params_dict, diagonal_balance=True, ga_group_name="diag_true_mesh"
+        )
+        diag_false_params = OctreeParams(
+            **params_dict, diagonal_balance=False, ga_group_name="diag_false_mesh"
+        )
+
+        diag_true_filename = "diag_balance_true.ui.json"
+        diag_false_filename = "diag_balance_false.ui.json"
+        diag_true_params.write_input_file(
+            name=diag_true_filename, path=tmp_path, validate=False
+        )
+        diag_false_params.write_input_file(
+            name=diag_false_filename, path=tmp_path, validate=False
+        )
+
+        OctreeDriver.start(tmp_path / diag_true_filename)
+        OctreeDriver.start(tmp_path / diag_false_filename)
+
+        with workspace.open(mode="r"):
+            diag_true_results = workspace.get_entity("diag_true_mesh")
+            diag_false_results = workspace.get_entity("diag_false_mesh")
