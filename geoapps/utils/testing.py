@@ -417,6 +417,7 @@ def setup_inversion_workspace(
             mesh,
             topography,
             levels=refinement,
+            diagonal_balance=False,
             finalize=False,
         )
 
@@ -425,6 +426,7 @@ def setup_inversion_workspace(
                 mesh,
                 vertices,
                 levels=[2],
+                diagonal_balance=False,
                 finalize=False,
             )
 

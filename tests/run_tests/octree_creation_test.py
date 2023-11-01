@@ -21,6 +21,7 @@ from scipy.spatial import Delaunay
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation import OctreeParams
 from geoapps.octree_creation.application import OctreeDriver, OctreeMesh
+from geoapps.shared_utils.utils import octree_2_treemesh
 from geoapps.utils.testing import get_output_workspace
 
 # pylint: disable=redefined-outer-name
@@ -326,9 +327,10 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
 
 
 def test_octree_diagonal_balance(tmp_path: Path):
-    # Create temp workspace
-    with Workspace(tmp_path / "testOctree.geoh5") as workspace:
-        points = Points.create(workspace, vertices=np.array([[150, 0, 150], [0, 0, 0]]))
+    workspace = Workspace.create(tmp_path / "testDiagonalBalance.geoh5")
+    with workspace.open(mode="r+"):
+        point = [0, 0, 0]
+        points = Points.create(workspace, vertices=np.array([[150, 0, 150], point]))
 
         # Repeat the creation using the app
         params_dict = {
@@ -365,6 +367,38 @@ def test_octree_diagonal_balance(tmp_path: Path):
         OctreeDriver.start(tmp_path / diag_true_filename)
         OctreeDriver.start(tmp_path / diag_false_filename)
 
-        with workspace.open(mode="r"):
-            diag_true_results = workspace.get_entity("diag_true_mesh")
-            diag_false_results = workspace.get_entity("diag_false_mesh")
+    with workspace.open(mode="r"):
+        for name in ["diag_true_mesh", "diag_false_mesh"]:
+            results = []
+            treemesh = octree_2_treemesh(workspace.get_entity(name)[0])
+
+            ind = treemesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+                point
+            )
+            starting_cell = treemesh[ind]
+
+            level = starting_cell._level  # pylint: disable=protected-access
+            for first_neighbor in starting_cell.neighbors:
+                neighbors = []
+                for neighbor in treemesh[first_neighbor].neighbors:
+                    if isinstance(neighbor, list):
+                        neighbors += neighbor
+                    else:
+                        neighbors.append(neighbor)
+
+                for second_neighbor in neighbors:
+                    compare_cell = treemesh[second_neighbor]
+                    if set(starting_cell.nodes) & set(compare_cell.nodes):
+                        results.append(
+                            np.abs(
+                                level
+                                - compare_cell._level  # pylint: disable=protected-access
+                            )
+                        )
+
+            if name == "diag_true_mesh":
+                assert np.all(np.array(results) < 2)
+            elif name == "diag_false_mesh":
+                values, counts = np.unique(results, return_counts=True)
+                assert (values == np.array([0, 1, 2])).all()
+                assert (counts == np.array([22, 8, 2])).all()
