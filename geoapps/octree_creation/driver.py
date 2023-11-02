@@ -120,7 +120,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         curve: Curve,
         levels: list[int] | np.ndarray,
-        diagonal_balance: bool,
+        diagonal_balance: bool = True,
         finalize: bool = False,
     ) -> TreeMesh:
         """
@@ -156,7 +156,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         points: ObjectBase | np.ndarray,
         levels: list[int] | np.ndarray,
-        diagonal_balance: bool,
+        diagonal_balance: bool = True,
         finalize: bool = False,
     ) -> TreeMesh:
         """
@@ -203,7 +203,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         surface: ObjectBase,
         levels: list[int] | np.ndarray,
-        diagonal_balance: bool,
+        diagonal_balance: bool = True,
         max_distance: float = np.inf,
         finalize: bool = False,
     ) -> TreeMesh:
@@ -277,7 +277,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         surface,
         levels: list[int] | np.ndarray,
-        diagonal_balance: bool,
+        diagonal_balance: bool = True,
         finalize=False,
     ) -> TreeMesh:
         """

@@ -103,7 +103,7 @@ default_ui_json.update(
             "group": "Basic",
             "label": "UBC Compatible",
             "main": True,
-            "value": False,
+            "value": True,
         },
         "minimum_level": {
             "enabled": True,

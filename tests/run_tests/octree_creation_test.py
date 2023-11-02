@@ -326,7 +326,13 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
             compare_entities(octree, rec_octree, ignore=["_uid"])
 
 
-def test_octree_diagonal_balance(tmp_path: Path):
+@pytest.mark.parametrize(
+    "diagonal_balance, exp_values, exp_counts",
+    [(True, [0, 1], [22, 10]), (False, [0, 1, 2], [22, 8, 2])],
+)
+def test_octree_diagonal_balance(
+    tmp_path: Path, diagonal_balance, exp_values, exp_counts
+):
     workspace = Workspace.create(tmp_path / "testDiagonalBalance.geoh5")
     with workspace.open(mode="r+"):
         point = [0, 0, 0]
@@ -348,57 +354,44 @@ def test_octree_diagonal_balance(tmp_path: Path):
             "Refinement A distance": 200,
         }
 
-        diag_true_params = OctreeParams(
-            **params_dict, diagonal_balance=True, ga_group_name="diag_true_mesh"
+        params = OctreeParams(
+            **params_dict, diagonal_balance=diagonal_balance, ga_group_name="mesh"
         )
-        diag_false_params = OctreeParams(
-            **params_dict, diagonal_balance=False, ga_group_name="diag_false_mesh"
-        )
+        filename = "diag_balance.ui.json"
 
-        diag_true_filename = "diag_balance_true.ui.json"
-        diag_false_filename = "diag_balance_false.ui.json"
-        diag_true_params.write_input_file(
-            name=diag_true_filename, path=tmp_path, validate=False
-        )
-        diag_false_params.write_input_file(
-            name=diag_false_filename, path=tmp_path, validate=False
-        )
+        params.write_input_file(name=filename, path=tmp_path, validate=False)
 
-        OctreeDriver.start(tmp_path / diag_true_filename)
-        OctreeDriver.start(tmp_path / diag_false_filename)
+        OctreeDriver.start(tmp_path / filename)
 
     with workspace.open(mode="r"):
-        for name in ["diag_true_mesh", "diag_false_mesh"]:
-            results = []
-            treemesh = octree_2_treemesh(workspace.get_entity(name)[0])
+        results = []
+        treemesh = octree_2_treemesh(workspace.get_entity("mesh")[0])
 
-            ind = treemesh._get_containing_cell_indexes(  # pylint: disable=protected-access
-                point
-            )
-            starting_cell = treemesh[ind]
+        ind = treemesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+            point
+        )
+        starting_cell = treemesh[ind]
 
-            level = starting_cell._level  # pylint: disable=protected-access
-            for first_neighbor in starting_cell.neighbors:
-                neighbors = []
-                for neighbor in treemesh[first_neighbor].neighbors:
-                    if isinstance(neighbor, list):
-                        neighbors += neighbor
-                    else:
-                        neighbors.append(neighbor)
+        level = starting_cell._level  # pylint: disable=protected-access
+        for first_neighbor in starting_cell.neighbors:
+            neighbors = []
+            for neighbor in treemesh[first_neighbor].neighbors:
+                if isinstance(neighbor, list):
+                    neighbors += neighbor
+                else:
+                    neighbors.append(neighbor)
 
-                for second_neighbor in neighbors:
-                    compare_cell = treemesh[second_neighbor]
-                    if set(starting_cell.nodes) & set(compare_cell.nodes):
-                        results.append(
-                            np.abs(
-                                level
-                                - compare_cell._level  # pylint: disable=protected-access
-                            )
+            for second_neighbor in neighbors:
+                compare_cell = treemesh[second_neighbor]
+                if set(starting_cell.nodes) & set(compare_cell.nodes):
+                    results.append(
+                        np.abs(
+                            level
+                            - compare_cell._level  # pylint: disable=protected-access
                         )
+                    )
 
-            if name == "diag_true_mesh":
-                assert np.all(np.array(results) < 2)
-            elif name == "diag_false_mesh":
-                values, counts = np.unique(results, return_counts=True)
-                assert (values == np.array([0, 1, 2])).all()
-                assert (counts == np.array([22, 8, 2])).all()
+        values, counts = np.unique(results, return_counts=True)
+
+        assert (values == np.array(exp_values)).all()
+        assert (counts == np.array(exp_counts)).all()
