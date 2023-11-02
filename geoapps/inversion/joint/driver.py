@@ -119,7 +119,7 @@ class BaseJointDriver(InversionDriver):
                 self.inversion_mesh.mesh,
                 global_actives,
                 driver.inversion_mesh.mesh,
-                enforce_active=True,
+                enforce_active=False,
                 components=3 if driver.inversion_data.vector else 1,
             )
             driver.models.active_cells = projection.local_active

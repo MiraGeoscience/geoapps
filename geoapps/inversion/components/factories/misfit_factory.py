@@ -62,6 +62,12 @@ class MisfitFactory(SimPEGFactory):
         local_misfits = []
         self.sorting = []
         self.ordering = []
+        padding_cells = 8 if self.factory_type in ["fem", "tdem"] else 6
+
+        # Keep whole mesh for 1 tile
+        if len(tiles) == 1:
+            padding_cells = 100
+
         tile_num = 0
         data_count = 0
         for local_index in tiles:
@@ -84,7 +90,12 @@ class MisfitFactory(SimPEGFactory):
                         self.sorting.append(local_index)
 
                 local_sim, local_map = inversion_data.simulation(
-                    mesh, active_cells, survey, self.models, tile_id=tile_num
+                    mesh,
+                    active_cells,
+                    survey,
+                    self.models,
+                    tile_id=tile_num,
+                    padding_cells=padding_cells,
                 )
                 # TODO Parse workers to simulations
                 local_sim.workers = self.params.distributed_workers

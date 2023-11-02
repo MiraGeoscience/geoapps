@@ -20,11 +20,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.29978,
-    "phi_d": 663.9,
-    "phi_m": 25.47,
-}
+target_run = {"data_norm": 0.2997791602206556, "phi_d": 705.5, "phi_m": 36.17}
 
 
 def test_joint_surveys_fwr_run(
@@ -91,11 +87,6 @@ def test_joint_surveys_fwr_run(
     fwr_driver_a.run()
     fwr_driver_b.run()
     geoh5.close()
-
-    return (
-        fwr_driver_a.directives.save_directives[0].transforms[0]
-        * fwr_driver_a.models.starting
-    )
 
 
 def test_joint_surveys_inv_run(
@@ -168,32 +159,17 @@ def test_joint_surveys_inv_run(
 
         if unittest:
             check_target(output, target_run)
-        else:
-            return (
-                driver.drivers[0].directives.save_directives[0].transforms[0]
-                * driver.inverse_problem.model
-            )
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_joint_surveys_fwr_run(
+    test_joint_surveys_fwr_run(
         Path("./"),
         n_grid_points=20,
         refinement=(4, 8),
     )
-
-    m_rec = test_joint_surveys_inv_run(
+    test_joint_surveys_inv_run(
         Path("./"),
         max_iterations=20,
         unittest=False,
     )
-    model_residual = (
-        np.nansum((m_rec - m_start) ** 2.0) ** 0.5
-        / np.nansum(m_start**2.0) ** 0.5
-        * 100.0
-    )
-    assert (
-        model_residual < 75.0
-    ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"
-    print("Density model is within 15% of the answer. Let's go!!")

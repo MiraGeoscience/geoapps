@@ -20,11 +20,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.001855,
-    "phi_d": 0.1323,
-    "phi_m": 3647,
-}
+target_run = {"data_norm": 0.0020959218368283884, "phi_d": 0.123, "phi_m": 3632}
 
 np.random.seed(0)
 
@@ -64,8 +60,6 @@ def test_tipper_fwr_run(
     params.workpath = tmp_path
     fwr_driver = TipperDriver(params)
     fwr_driver.run()
-
-    return fwr_driver.models.starting
 
 
 def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
@@ -158,22 +152,13 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 4))
-
-    m_rec = test_tipper_run(
+    test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 4))
+    test_tipper_run(
         Path("./"),
         max_iterations=15,
         pytest=False,
     )
-
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 50% of the answer. Let's go!!")

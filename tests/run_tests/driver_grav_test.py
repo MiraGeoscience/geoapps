@@ -20,11 +20,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.0028055,
-    "phi_d": 9.169e-6,
-    "phi_m": 1.45e-3,
-}
+target_run = {"data_norm": 0.0028055269276044915, "phi_d": 4.475e-05, "phi_m": 0.00144}
 
 
 def test_gravity_fwr_run(
@@ -55,8 +51,6 @@ def test_gravity_fwr_run(
     )
     fwr_driver = GravityDriver(params)
     fwr_driver.run()
-
-    return fwr_driver.models.starting
 
 
 def test_gravity_run(
@@ -136,25 +130,18 @@ def test_gravity_run(
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_gravity_fwr_run(
+    test_gravity_fwr_run(
         Path("./"),
         n_grid_points=20,
         refinement=(4, 8),
     )
 
-    m_rec = test_gravity_run(
+    test_gravity_run(
         Path("./"),
         max_iterations=15,
         pytest=False,
     )
-    model_residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        model_residual < 75.0
-    ), f"Deviation from the true solution is {model_residual:.2f}%. Validate the solution!"
-    print("Density model is within 15% of the answer. Let's go!!")

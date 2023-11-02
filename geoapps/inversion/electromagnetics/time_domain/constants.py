@@ -272,6 +272,13 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
+    "store_sensitivities": {
+        "choiceList": ["ram"],
+        "group": "Compute",
+        "label": "Storage device",
+        "tooltip": "Only RAM storage available for now.",
+        "value": "ram",
+    },
 }
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
 validations = {

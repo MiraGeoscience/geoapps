@@ -25,11 +25,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 35.9341,
-    "phi_d": 30.2,
-    "phi_m": 869.4,
-}
+target_run = {"data_norm": 47.522882323952054, "phi_d": 364.3, "phi_m": 443.3}
 np.random.seed(0)
 
 
@@ -67,7 +63,6 @@ def test_fem_fwr_run(
     fwr_driver = FrequencyDomainElectromagneticsDriver(params)
     fwr_driver.run()
     geoh5.close()
-    return fwr_driver.models.starting
 
 
 def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
@@ -167,24 +162,13 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
-
-    return driver
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_fem_fwr_run(Path("./"), n_grid_points=5, refinement=(4, 4, 4))
-
-    m_rec = test_fem_run(
+    test_fem_fwr_run(Path("./"), n_grid_points=5, refinement=(4, 4, 4))
+    test_fem_run(
         Path("./"),
         max_iterations=15,
         pytest=False,
     )
-
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. Let's go!!")

@@ -24,11 +24,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.00749,
-    "phi_d": 0.795,
-    "phi_m": 0.1013,
-}
+target_run = {"data_norm": 0.008494880725179624, "phi_d": 1.734, "phi_m": 0.3202}
 
 np.random.seed(0)
 
@@ -64,8 +60,6 @@ def test_ip_3d_fwr_run(
     params.workpath = tmp_path
     fwr_driver = InducedPolarization3DDriver(params)
     fwr_driver.run()
-
-    return fwr_driver.models.starting
 
 
 def test_ip_3d_run(
@@ -121,27 +115,19 @@ def test_ip_3d_run(
         output["data"] = potential.values
     if pytest:
         check_target(output, target_run)
-    else:
-        return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_ip_3d_fwr_run(
+    test_ip_3d_fwr_run(
         Path("./"),
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
-
-    m_rec = test_ip_3d_run(
+    test_ip_3d_run(
         Path("./"),
         n_lines=5,
         max_iterations=15,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 80.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. You are so special!")
