@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 4cb879696c7232b3a88ef8a6c362e11b64cfc4417447d6246c897b1383a48b2b
-    osx-64: a0672b7157c83f6b8082ebcc89c927ee87be19a83e516c6dbe6cb680aacedd0f
-    linux-64: 378e6eae689a9a1b377f19aa33389b4b373284b34c88898009e5a96dd277ab80
+    win-64: 1e6cb1913c6f06b718940570c141b50beb43b1216a01a5394f2733b6da29a4c2
+    osx-64: 592b309861f20d1a8d9bfdac8a3ddf2f48e7f02d4b9e6d09a422cedd842cc2f2
+    linux-64: 39b52cb925acc7108a00b1f3c7f67fbe3738b3e320d210121ab93b87844d0d1b
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -266,15 +266,15 @@ package:
   category: main
   optional: false
 - name: c-ares
-  version: 1.20.1
+  version: 1.21.0
   manager: conda
   platform: linux-64
   dependencies:
     libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-64/c-ares-1.20.1-hd590300_1.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/c-ares-1.21.0-hd590300_0.conda
   hash:
-    md5: 2facbaf5ee1a56967aecaee89799160e
-    sha256: 1700d9ebfd3b21c8b50e12a502f26e015719e1f3dbb5d491b5be061cf148ca7a
+    md5: c06fa0440048270817b9e3142cc661bf
+    sha256: dfe0e81d5462fced79fd0f99edeec94c9b27268cb04238638180981af2f889f1
   category: main
   optional: false
 - name: charls
@@ -1254,7 +1254,7 @@ package:
   category: main
   optional: false
 - name: libprotobuf
-  version: 4.24.3
+  version: 4.24.4
   manager: conda
   platform: linux-64
   dependencies:
@@ -1262,10 +1262,10 @@ package:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libprotobuf-4.24.3-hf27288f_1.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/libprotobuf-4.24.4-hf27288f_0.conda
   hash:
-    md5: 5097789a2bc83e697d7509df57f25bfd
-    sha256: 911ad483f051d96c9f07ecd8177546763c2da601e26941b434c3a09fa9fcd8f8
+    md5: 1a0287ab734591ad63603734f923016b
+    sha256: 3e0f6454190abb27edd2aeb724688ee440de133edb02cbb17d5609ba36aa8be0
   category: apps
   optional: true
 - name: libre2-11
@@ -1297,16 +1297,16 @@ package:
   category: apps
   optional: true
 - name: libsqlite
-  version: 3.43.2
+  version: 3.44.0
   manager: conda
   platform: linux-64
   dependencies:
     libgcc-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libsqlite-3.43.2-h2797004_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/libsqlite-3.44.0-h2797004_0.conda
   hash:
-    md5: 4b441a1ee22397d5a27dc1126b849edd
-    sha256: b30279b67fce2382a93c638625ff2b284324e2347e30bd0acab813d89289c18a
+    md5: b58e6816d137f3aabf77d341dd5d732b
+    sha256: 74ef5dcb900c38bec53140036e5e2a9cc7ffcd806da479ea2305f962a358a259
   category: main
   optional: false
 - name: libssh2
@@ -1390,11 +1390,11 @@ package:
   dependencies:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-    openssl: '>=3.1.3,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-common-8.0.33-hf1915f5_5.conda
+    openssl: '>=3.1.4,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-common-8.0.33-hf1915f5_6.conda
   hash:
-    md5: 1e8ef4090ca4f0d66404a7441e1dbf3c
-    sha256: 1b5114244f28e416d42e9ac0c61dfdabdfd7255b9fe752a07ca157a3e3893d2a
+    md5: 80bf3b277c120dd294b51d404b931a75
+    sha256: c8b2c5c9d0d013a4f6ef96cb4b339bfdc53a74232d8c61ed08178e5b1ec4eb63
   category: main
   optional: false
 - name: pcre2
@@ -1696,16 +1696,16 @@ package:
   category: main
   optional: false
 - name: llvm-openmp
-  version: 17.0.3
+  version: 17.0.4
   manager: conda
   platform: linux-64
   dependencies:
     libzlib: '>=1.2.13,<1.3.0a0'
     zstd: '>=1.5.5,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/llvm-openmp-17.0.3-h4dfa4b3_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/llvm-openmp-17.0.4-h4dfa4b3_0.conda
   hash:
-    md5: 1a82298c57b609a31ab6f2342a307b69
-    sha256: eb66e2747d281fb245ed2c961cf157a64174fc683cd01af9c0c4663548f8c55d
+    md5: c560d4ecf0d3536108aa4de0222942d3
+    sha256: ef5c3a2eb09239a95fbcd4ec9272cb05a950382f52968c2d5e09dfe72488bf63
   category: main
   optional: false
 - name: minizip
@@ -1736,12 +1736,12 @@ package:
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
     mysql-common: 8.0.33
-    openssl: '>=3.1.3,<4.0a0'
+    openssl: '>=3.1.4,<4.0a0'
     zstd: '>=1.5.5,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-libs-8.0.33-hca2cd23_5.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/mysql-libs-8.0.33-hca2cd23_6.conda
   hash:
-    md5: b72f016c910ff9295b1377d3e17da3f2
-    sha256: 90a5c105e35990cac53f45366c256d88f4c8f66a360afd37dcae1357e370ade6
+    md5: e87530d1b12dd7f4e0f856dc07358d60
+    sha256: 78c905637dac79b197395065c169d452b8ca2a39773b58e45e23114f1cb6dcdb
   category: main
   optional: false
 - name: nss
@@ -1814,19 +1814,19 @@ package:
   category: apps
   optional: true
 - name: sqlite
-  version: 3.43.2
+  version: 3.44.0
   manager: conda
   platform: linux-64
   dependencies:
     libgcc-ng: '>=12'
-    libsqlite: 3.43.2
+    libsqlite: 3.44.0
     libzlib: '>=1.2.13,<1.3.0a0'
     ncurses: '>=6.4,<7.0a0'
     readline: '>=8.2,<9.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.43.2-h2c6b66d_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/sqlite-3.44.0-h2c6b66d_0.conda
   hash:
-    md5: c37b95bcd6c6833dacfd5df0ae2f4303
-    sha256: f49389e9cce5bdc451d1c5b56972cf5f75b1ba00350d35ab099848e65b32e94f
+    md5: df56c636df4a98990462d66ac7be2330
+    sha256: ae7031a471868c7057cc16eded7bb58fa3723d9c1650c9d3eb8de1ff65d89dbb
   category: apps
   optional: true
 - name: xcb-util
@@ -1921,18 +1921,6 @@ package:
     sha256: 063639cd568f5c7a557b0fb1cc27f098598c0d8ff869088bfeb82934674f8821
   category: apps
   optional: true
-- name: backcall
-  version: 0.2.0
-  manager: conda
-  platform: linux-64
-  dependencies:
-    python: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/backcall-0.2.0-pyh9f0ad1d_0.tar.bz2
-  hash:
-    md5: 6006a6d08a3fa99268a2681c7fb55213
-    sha256: ee62d6434090c1327a48551734e06bd10e65a64ef7f3b6e68719500dab0e42b9
-  category: apps
-  optional: true
 - name: backports
   version: '1.0'
   manager: conda
@@ -1946,15 +1934,15 @@ package:
   category: apps
   optional: true
 - name: blinker
-  version: 1.6.3
+  version: 1.7.0
   manager: conda
   platform: linux-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/blinker-1.6.3-pyhd8ed1ab_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/blinker-1.7.0-pyhd8ed1ab_0.conda
   hash:
-    md5: d33cf7357de636cec64320f0c4fb7b6f
-    sha256: b9e264f0acb369040da1c3cbeb032b0ca54e017ffe166cd9d946dab78dad0d44
+    md5: 550da20b2c2e38be9cc44bb819fda5d5
+    sha256: c8d72c2af4f57898dfd5e4c62ae67f7fea1490a37c8b6855460a170d61591177
   category: apps
   optional: true
 - name: brotli
@@ -2012,15 +2000,15 @@ package:
   category: core
   optional: true
 - name: charset-normalizer
-  version: 3.3.1
+  version: 3.3.2
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-3.3.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-3.3.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 985378f74689fccce52f158027bd9acd
-    sha256: a31739c49c4b1c8e0cbdec965ba152683d36ce6e23bdaefcfee99937524dabd1
+    md5: 7f4a9e3fcff3f6356ae99244a014da6a
+    sha256: 20cae47d31fdd58d99c4d2e65fbdcefa0b0de0c84e455ba9d6356a4bdbc4b5b9
   category: core
   optional: true
 - name: click
@@ -2381,23 +2369,23 @@ package:
   category: main
   optional: false
 - name: libgrpc
-  version: 1.58.2
+  version: 1.59.2
   manager: conda
   platform: linux-64
   dependencies:
     c-ares: '>=1.20.1,<2.0a0'
     libabseil: '>=20230802.1,<20230803.0a0'
     libgcc-ng: '>=12'
-    libprotobuf: '>=4.24.3,<4.24.4.0a0'
+    libprotobuf: '>=4.24.4,<4.24.5.0a0'
     libre2-11: '>=2023.6.2,<2024.0a0'
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.4,<4.0a0'
     re2: ''
-  url: https://conda.anaconda.org/conda-forge/linux-64/libgrpc-1.58.2-he06187c_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/libgrpc-1.59.2-hd6c4280_0.conda
   hash:
-    md5: 1eec35ecc7bd34e4ec2f2b4eccb8816e
-    sha256: f910b7f57997fabae045f38d5f16148324536cf6f948a575446d653536d39b78
+    md5: dd26e7127a7b08068b52181f47849f04
+    sha256: 4ac31c7667fb0940856afc4b8ea58d8f1cb18db3cdf41729aa7d2c7f7a5e6429
   category: apps
   optional: true
 - name: libpq
@@ -3648,16 +3636,16 @@ package:
   dependencies:
     libabseil: '>=20230802.1,<20230803.0a0'
     libcrc32c: '>=1.1.2,<1.2.0a0'
-    libcurl: '>=8.3.0,<9.0a0'
+    libcurl: '>=8.4.0,<9.0a0'
     libgcc-ng: '>=12'
-    libgrpc: '>=1.58.1,<1.59.0a0'
-    libprotobuf: '>=4.24.3,<4.24.4.0a0'
+    libgrpc: '>=1.59.2,<1.60.0a0'
+    libprotobuf: '>=4.24.4,<4.24.5.0a0'
     libstdcxx-ng: '>=12'
-    openssl: '>=3.1.3,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libgoogle-cloud-2.12.0-h19a6dae_3.conda
+    openssl: '>=3.1.4,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libgoogle-cloud-2.12.0-h5206363_4.conda
   hash:
-    md5: cb26f6b7184480053106ea4713a52daf
-    sha256: 8d03bf42a533783c692e2e4cd99be300e3f4b62508d7af44d58df19b12d1c37f
+    md5: b5eb63d2683102be45d17c55021282f6
+    sha256: 82a7d211d0df165b073f9e8ba6d789c4b1c7c4882d546ca12d40f201fc3496fc
   category: apps
   optional: true
 - name: libxkbcommon
@@ -4945,12 +4933,11 @@ package:
   category: apps
   optional: true
 - name: ipython
-  version: 8.16.1
+  version: 8.17.2
   manager: conda
   platform: linux-64
   dependencies:
     __linux: ''
-    backcall: ''
     decorator: ''
     exceptiongroup: ''
     jedi: '>=0.16'
@@ -4963,10 +4950,10 @@ package:
     stack_data: ''
     traitlets: '>=5'
     typing_extensions: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.16.1-pyh0d859eb_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.17.2-pyh41d4057_0.conda
   hash:
-    md5: 7e52cb0dbf01b90365bfe433ec8bd3c0
-    sha256: 2dc119746ddac02cb01644ae7c7ac54a296366e2edf0d178f50f833113aaf94a
+    md5: f39d0b60e268fe547f1367edbab457d4
+    sha256: 31322d58f412787f5beeb01db4d16f10f8ae4e0cc2ec99fafef1e690374fe298
   category: apps
   optional: true
 - name: nbclient
@@ -5717,9 +5704,9 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    lasio: '>=0.31,<0.32'
     tqdm: '>=4.64.0,<5.0.0'
     geoh5py: '>=0.8.0rc1,<0.9.0'
+    lasio: '>=0.31,<0.32'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip
   hash:
     sha256: ''
@@ -5729,19 +5716,19 @@ package:
     url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: mira-omf
-  version: 3.0.1
+  version: 3.1.0a1
   manager: pip
   platform: linux-64
   dependencies:
-    geoh5py: '>=0.5.0'
-    numpy: '>=1.7,<2.0'
+    geoh5py: '>=0.8.0rc2,<0.9.0'
+    numpy: '>=1.23.5,<1.24.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
-  url: https://files.pythonhosted.org/packages/e2/ba/da67766f51565f73bdf7599a29b44fd99878a36d6a411a57382a4abc25a9/mira_omf-3.0.1-py3-none-any.whl
+  url: https://files.pythonhosted.org/packages/6e/8c/275d63af4c587327382196413095c766c006e969e457a928516a48431d1b/mira_omf-3.1.0a1-py3-none-any.whl
   hash:
-    sha256: 7e1b003bbfae4d3eedb6b41f242d3dc9e9e1d86050cacb0ddbf460aedab048d6
+    sha256: 5ff6a78817059d51867264edb7374c5c3ad87f15ef598391f45dc7917196ccf8
   category: main
   optional: false
 - name: mira-simpeg
@@ -5786,14 +5773,14 @@ package:
   category: main
   optional: false
 - name: c-ares
-  version: 1.20.1
+  version: 1.21.0
   manager: conda
   platform: osx-64
   dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/osx-64/c-ares-1.20.1-h10d778d_1.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/c-ares-1.21.0-h10d778d_0.conda
   hash:
-    md5: 0f9fe8eb46d409939d9b2a7d90a52325
-    sha256: 9e99ffb7e3376188c1e0c8037982a8fdc08c5736ea28f2314c20b8846179f0fe
+    md5: 88426162f781739069a6bd178841ed5d
+    sha256: 7450d861c07e74b10dfcf3ba680b384cf22f1c2dd34c3eba763ab5920376bf79
   category: main
   optional: false
 - name: ca-certificates
@@ -6061,14 +6048,14 @@ package:
   category: main
   optional: false
 - name: llvm-openmp
-  version: 17.0.3
+  version: 17.0.4
   manager: conda
   platform: osx-64
   dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/osx-64/llvm-openmp-17.0.3-hb6ac08f_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/llvm-openmp-17.0.4-hb6ac08f_0.conda
   hash:
-    md5: b70adc70bc7527a207c81c2e6b43532c
-    sha256: 5bded7aa593e4d5dea89fc19ef2aa48b531cbe455452877ef9bd5a698cf35e53
+    md5: 31391b68245bc68504169e98ffaf2c44
+    sha256: d49b6958d22075de5fb707fd5f593cfa4be059015db48b7f1cd5e47e7efde2ff
   category: main
   optional: false
 - name: poppler-data
@@ -6402,15 +6389,15 @@ package:
   category: main
   optional: false
 - name: libsqlite
-  version: 3.43.2
+  version: 3.44.0
   manager: conda
   platform: osx-64
   dependencies:
     libzlib: '>=1.2.13,<1.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/libsqlite-3.43.2-h92b6c6a_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/libsqlite-3.44.0-h92b6c6a_0.conda
   hash:
-    md5: 61b88c5f99f1537ed30b34758bd54d54
-    sha256: e0ba6181738d5250213576167935a97dc3ee581032f716dd4e2acbc817c763dc
+    md5: 5dd5e957ebfee02720c30e0e2d127bbe
+    sha256: 0832dc9cf18e811d2b41f8f4951d5ab608678e3459b1a4f36347097d8a9abf68
   category: main
   optional: false
 - name: libvorbis
@@ -6851,18 +6838,18 @@ package:
   category: main
   optional: false
 - name: libprotobuf
-  version: 4.24.3
+  version: 4.24.4
   manager: conda
   platform: osx-64
   dependencies:
-    __osx: '>=10.13'
+    __osx: '>=10.9'
     libabseil: '>=20230802.1,<20230803.0a0'
-    libcxx: '>=15.0.7'
+    libcxx: '>=16.0.6'
     libzlib: '>=1.2.13,<1.3.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/libprotobuf-4.24.3-he0c2237_1.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/libprotobuf-4.24.4-h0ee05dc_0.conda
   hash:
-    md5: 45b790be289d0759d1eb91283c98e95d
-    sha256: 42426fb0dba77e8f8cdf7732e9ee5d1dbed6724d1d94c84deeb98376f4cdcadd
+    md5: c0f2660a38d96e55c6aae15a06ee277b
+    sha256: 4c0cd48fa2b0ac5cad6204d686bcb8e51bc5906c25180919ecf8f3000c0eade5
   category: apps
   optional: true
 - name: libre2-11
@@ -6976,11 +6963,11 @@ package:
   dependencies:
     __osx: '>=10.9'
     libcxx: '>=16.0.6'
-    openssl: '>=3.1.3,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-common-8.0.33-h1d20c9b_5.conda
+    openssl: '>=3.1.4,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-common-8.0.33-h1d20c9b_6.conda
   hash:
-    md5: 09e162ea228f7ab750af8867a278f3a0
-    sha256: 9b9fca358afc68c09832d40351d8f7caf90aca57b2a2c6d696a056f586821131
+    md5: ad07fbd8dc7992e5e004f7bdfdee246d
+    sha256: b6b18aeed435d4075b4aac3559a070a6caa5a174a339e8de87785fca2f8f57a6
   category: main
   optional: false
 - name: nss
@@ -7155,12 +7142,12 @@ package:
     libcxx: '>=16.0.6'
     libzlib: '>=1.2.13,<1.3.0a0'
     mysql-common: 8.0.33
-    openssl: '>=3.1.3,<4.0a0'
+    openssl: '>=3.1.4,<4.0a0'
     zstd: '>=1.5.5,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-libs-8.0.33-hed35180_5.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/mysql-libs-8.0.33-hed35180_6.conda
   hash:
-    md5: bb617accdbcffd5c05370ea0763fe209
-    sha256: 324f9b0c07c868dc68bdb781b803bf206b9a2336fe8f7887808379a1151f63d4
+    md5: c27fddc4d3c2d471d1d706b243570f37
+    sha256: 87d754167fddf342b894e377fdcaac096c93c941773267ad9c89bb7b64924a33
   category: main
   optional: false
 - name: openjpeg
@@ -7213,18 +7200,18 @@ package:
   category: apps
   optional: true
 - name: sqlite
-  version: 3.43.2
+  version: 3.44.0
   manager: conda
   platform: osx-64
   dependencies:
-    libsqlite: 3.43.2
+    libsqlite: 3.44.0
     libzlib: '>=1.2.13,<1.3.0a0'
     ncurses: '>=6.4,<7.0a0'
     readline: '>=8.2,<9.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/sqlite-3.43.2-h7461747_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/sqlite-3.44.0-h7461747_0.conda
   hash:
-    md5: 527ebf7d63c8d415d5089eaa5f826e1d
-    sha256: 06ca9a9e0d1b951e10b2d09d04f13cd8943a353cc57d364db41643ed199a43fe
+    md5: 4c125fcbf57aa07682468a1e9d202cfa
+    sha256: a222b2686f7e62c27ec2aaa64e7f2d927a883e5ef62e4ea060b6bd53c032cfca
   category: apps
   optional: true
 - name: appnope
@@ -7263,18 +7250,6 @@ package:
     sha256: 063639cd568f5c7a557b0fb1cc27f098598c0d8ff869088bfeb82934674f8821
   category: apps
   optional: true
-- name: backcall
-  version: 0.2.0
-  manager: conda
-  platform: osx-64
-  dependencies:
-    python: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/backcall-0.2.0-pyh9f0ad1d_0.tar.bz2
-  hash:
-    md5: 6006a6d08a3fa99268a2681c7fb55213
-    sha256: ee62d6434090c1327a48551734e06bd10e65a64ef7f3b6e68719500dab0e42b9
-  category: apps
-  optional: true
 - name: backports
   version: '1.0'
   manager: conda
@@ -7288,15 +7263,15 @@ package:
   category: apps
   optional: true
 - name: blinker
-  version: 1.6.3
+  version: 1.7.0
   manager: conda
   platform: osx-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/blinker-1.6.3-pyhd8ed1ab_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/blinker-1.7.0-pyhd8ed1ab_0.conda
   hash:
-    md5: d33cf7357de636cec64320f0c4fb7b6f
-    sha256: b9e264f0acb369040da1c3cbeb032b0ca54e017ffe166cd9d946dab78dad0d44
+    md5: 550da20b2c2e38be9cc44bb819fda5d5
+    sha256: c8d72c2af4f57898dfd5e4c62ae67f7fea1490a37c8b6855460a170d61591177
   category: apps
   optional: true
 - name: brotli-python
@@ -7373,15 +7348,15 @@ package:
   category: core
   optional: true
 - name: charset-normalizer
-  version: 3.3.1
+  version: 3.3.2
   manager: conda
   platform: osx-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-3.3.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-3.3.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 985378f74689fccce52f158027bd9acd
-    sha256: a31739c49c4b1c8e0cbdec965ba152683d36ce6e23bdaefcfee99937524dabd1
+    md5: 7f4a9e3fcff3f6356ae99244a014da6a
+    sha256: 20cae47d31fdd58d99c4d2e65fbdcefa0b0de0c84e455ba9d6356a4bdbc4b5b9
   category: core
   optional: true
 - name: click
@@ -7666,7 +7641,7 @@ package:
   category: main
   optional: false
 - name: libgrpc
-  version: 1.58.2
+  version: 1.59.2
   manager: conda
   platform: osx-64
   dependencies:
@@ -7674,15 +7649,15 @@ package:
     c-ares: '>=1.20.1,<2.0a0'
     libabseil: '>=20230802.1,<20230803.0a0'
     libcxx: '>=16.0.6'
-    libprotobuf: '>=4.24.3,<4.24.4.0a0'
+    libprotobuf: '>=4.24.4,<4.24.5.0a0'
     libre2-11: '>=2023.6.2,<2024.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.4,<4.0a0'
     re2: ''
-  url: https://conda.anaconda.org/conda-forge/osx-64/libgrpc-1.58.2-hecc90c7_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/libgrpc-1.59.2-ha7f534c_0.conda
   hash:
-    md5: 8084a2ff6579e8cc178457bbaaf44b6b
-    sha256: 37478256b62e36ac20248ae31c9724a7ca6028fa3d88d74c956abf219507fe13
+    md5: 7db1bdebc02cd6e56f9f420ac3c1e557
+    sha256: 3f4e2df8760e279921adba7eba8b8b56c2b6ecde7872242ce6ae3bf55319e0b5
   category: apps
   optional: true
 - name: libpq
@@ -8821,15 +8796,15 @@ package:
     __osx: '>=10.9'
     libabseil: '>=20230802.1,<20230803.0a0'
     libcrc32c: '>=1.1.2,<1.2.0a0'
-    libcurl: '>=8.3.0,<9.0a0'
+    libcurl: '>=8.4.0,<9.0a0'
     libcxx: '>=16.0.6'
-    libgrpc: '>=1.58.1,<1.59.0a0'
-    libprotobuf: '>=4.24.3,<4.24.4.0a0'
-    openssl: '>=3.1.3,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/libgoogle-cloud-2.12.0-h407922f_3.conda
+    libgrpc: '>=1.59.2,<1.60.0a0'
+    libprotobuf: '>=4.24.4,<4.24.5.0a0'
+    openssl: '>=3.1.4,<4.0a0'
+  url: https://conda.anaconda.org/conda-forge/osx-64/libgoogle-cloud-2.12.0-hc0857f6_4.conda
   hash:
-    md5: 9d9423eb233bbd6f82184eb9e2a95f2d
-    sha256: ad0dbbd851ec86974b239de1c800c8ef52d665ea90c4fdc2ea855c3dcbb34983
+    md5: 976555c39f83093265491c9c081a801c
+    sha256: 1bf47f43796369ec85a27221ab9a84ecc848f93a88049d046cd8521c25b129f6
   category: apps
   optional: true
 - name: matplotlib-inline
@@ -10096,7 +10071,7 @@ package:
   category: apps
   optional: true
 - name: ipython
-  version: 8.16.1
+  version: 8.17.2
   manager: conda
   platform: osx-64
   dependencies:
@@ -10106,7 +10081,6 @@ package:
     __osx: ''
     stack_data: ''
     matplotlib-inline: ''
-    backcall: ''
     appnope: ''
     pickleshare: ''
     python: '>=3.9'
@@ -10115,10 +10089,10 @@ package:
     jedi: '>=0.16'
     pexpect: '>4.3'
     prompt_toolkit: '>=3.0.30,<3.1.0,!=3.0.37'
-  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.16.1-pyh31c8845_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.17.2-pyh31c8845_0.conda
   hash:
-    md5: 531bac092414642fdead7a511357485a
-    sha256: 77cfbc15ee2ad8976009a6880bb1f7c716db44e23594fba7c9c382135e02eb03
+    md5: 28e743c2963d1cecaa75f7612ade74c4
+    sha256: b28ec68a49d8ddc41b92f3161f536d63e62eb5493021e41bb172b5f0af54ca2d
   category: apps
   optional: true
 - name: nbclient
@@ -10520,9 +10494,9 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    lasio: '>=0.31,<0.32'
     tqdm: '>=4.64.0,<5.0.0'
     geoh5py: '>=0.8.0rc1,<0.9.0'
+    lasio: '>=0.31,<0.32'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip
   hash:
     sha256: ''
@@ -10532,19 +10506,19 @@ package:
     url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: mira-omf
-  version: 3.0.1
+  version: 3.1.0a1
   manager: pip
   platform: osx-64
   dependencies:
-    geoh5py: '>=0.5.0'
-    numpy: '>=1.7,<2.0'
+    geoh5py: '>=0.8.0rc2,<0.9.0'
+    numpy: '>=1.23.5,<1.24.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
-  url: https://files.pythonhosted.org/packages/e2/ba/da67766f51565f73bdf7599a29b44fd99878a36d6a411a57382a4abc25a9/mira_omf-3.0.1-py3-none-any.whl
+  url: https://files.pythonhosted.org/packages/6e/8c/275d63af4c587327382196413095c766c006e969e457a928516a48431d1b/mira_omf-3.1.0a1-py3-none-any.whl
   hash:
-    sha256: 7e1b003bbfae4d3eedb6b41f242d3dc9e9e1d86050cacb0ddbf460aedab048d6
+    sha256: 5ff6a78817059d51867264edb7374c5c3ad87f15ef598391f45dc7917196ccf8
   category: main
   optional: false
 - name: mira-simpeg
@@ -10883,17 +10857,17 @@ package:
   category: main
   optional: false
 - name: c-ares
-  version: 1.20.1
+  version: 1.21.0
   manager: conda
   platform: win-64
   dependencies:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/c-ares-1.20.1-hcfcfb64_1.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/c-ares-1.21.0-hcfcfb64_0.conda
   hash:
-    md5: 0a45278f9b791a68dbe4acc234fa8a26
-    sha256: 817b2733caef6f8513ed6dc9a1b5883ddc9ac303eaf1971e4d4ec73080f6ab99
+    md5: 834ab09083aa903a2a22574d92ab872e
+    sha256: 7a261653adc286949de3aa5bf742dff978f2f1355330b00687500a18022e6e2d
   category: apps
   optional: true
 - name: charls
@@ -11128,17 +11102,17 @@ package:
   category: apps
   optional: true
 - name: libsqlite
-  version: 3.43.2
+  version: 3.44.0
   manager: conda
   platform: win-64
   dependencies:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libsqlite-3.43.2-hcfcfb64_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/libsqlite-3.44.0-hcfcfb64_0.conda
   hash:
-    md5: a4a81906f6ce911113f672973777f305
-    sha256: 54cc0f0591354e4f23395ee08ca44efe584ad6df57111358d5bcb4b10259cb2e
+    md5: 446fb1973cfeb8b32de4add3c9ac1057
+    sha256: b2be4125343d89765269b537e90ea5ab7f219e7398e7ad610ddcdcf31e7b9e65
   category: main
   optional: false
 - name: libwebp-base
@@ -11528,7 +11502,7 @@ package:
   category: main
   optional: false
 - name: libprotobuf
-  version: 4.24.3
+  version: 4.24.4
   manager: conda
   platform: win-64
   dependencies:
@@ -11537,10 +11511,10 @@ package:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libprotobuf-4.24.3-hb8276f3_1.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/libprotobuf-4.24.4-hb8276f3_0.conda
   hash:
-    md5: dad0daf4a610f3c2ba3ef3325096c5e6
-    sha256: dd0f3ef35ee2774db9ca5dfcba088636bf1f0b1d3cb2c4c35ff2a2ffdf01bf09
+    md5: db95f0bafffb9a5b6b9f398d35d693ad
+    sha256: 2c2b9c1f65458c2f2a4b57d49bf8113781b933b63f8fc976f050627bddcf983d
   category: apps
   optional: true
 - name: libre2-11
@@ -11706,18 +11680,18 @@ package:
   category: main
   optional: false
 - name: sqlite
-  version: 3.43.2
+  version: 3.44.0
   manager: conda
   platform: win-64
   dependencies:
-    libsqlite: 3.43.2
+    libsqlite: 3.44.0
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/sqlite-3.43.2-hcfcfb64_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/sqlite-3.44.0-hcfcfb64_0.conda
   hash:
-    md5: 49cf1a42e5cba0d9a5ce5dcec46f49ed
-    sha256: 4ed16b2ad2a2f167055f2121d8bc8d4e3dea7223edbed7053133a9e10accd790
+    md5: 8bd8b9fbf5116bc98f5d6eef70f82af9
+    sha256: f6a4ae8130b32f566d0e406ebeb315671e202f08408fd69c512f38fb8efc0c7c
   category: apps
   optional: true
 - name: zeromq
@@ -11788,18 +11762,6 @@ package:
     sha256: 063639cd568f5c7a557b0fb1cc27f098598c0d8ff869088bfeb82934674f8821
   category: apps
   optional: true
-- name: backcall
-  version: 0.2.0
-  manager: conda
-  platform: win-64
-  dependencies:
-    python: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/backcall-0.2.0-pyh9f0ad1d_0.tar.bz2
-  hash:
-    md5: 6006a6d08a3fa99268a2681c7fb55213
-    sha256: ee62d6434090c1327a48551734e06bd10e65a64ef7f3b6e68719500dab0e42b9
-  category: apps
-  optional: true
 - name: backports
   version: '1.0'
   manager: conda
@@ -11813,15 +11775,15 @@ package:
   category: apps
   optional: true
 - name: blinker
-  version: 1.6.3
+  version: 1.7.0
   manager: conda
   platform: win-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/blinker-1.6.3-pyhd8ed1ab_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/blinker-1.7.0-pyhd8ed1ab_0.conda
   hash:
-    md5: d33cf7357de636cec64320f0c4fb7b6f
-    sha256: b9e264f0acb369040da1c3cbeb032b0ca54e017ffe166cd9d946dab78dad0d44
+    md5: 550da20b2c2e38be9cc44bb819fda5d5
+    sha256: c8d72c2af4f57898dfd5e4c62ae67f7fea1490a37c8b6855460a170d61591177
   category: apps
   optional: true
 - name: blosc
@@ -11916,15 +11878,15 @@ package:
   category: core
   optional: true
 - name: charset-normalizer
-  version: 3.3.1
+  version: 3.3.2
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-3.3.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/charset-normalizer-3.3.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 985378f74689fccce52f158027bd9acd
-    sha256: a31739c49c4b1c8e0cbdec965ba152683d36ce6e23bdaefcfee99937524dabd1
+    md5: 7f4a9e3fcff3f6356ae99244a014da6a
+    sha256: 20cae47d31fdd58d99c4d2e65fbdcefa0b0de0c84e455ba9d6356a4bdbc4b5b9
   category: core
   optional: true
 - name: cloudpickle
@@ -13451,13 +13413,13 @@ package:
   category: main
   optional: false
 - name: libgrpc
-  version: 1.58.2
+  version: 1.59.2
   manager: conda
   platform: win-64
   dependencies:
     c-ares: '>=1.20.1,<2.0a0'
     libabseil: '>=20230802.1,<20230803.0a0'
-    libprotobuf: '>=4.24.3,<4.24.4.0a0'
+    libprotobuf: '>=4.24.4,<4.24.5.0a0'
     libre2-11: '>=2023.6.2,<2024.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.4,<4.0a0'
@@ -13465,10 +13427,10 @@ package:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libgrpc-1.58.2-h2a9c87f_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/libgrpc-1.59.2-h5bbd4a7_0.conda
   hash:
-    md5: 61d0c367fb3714c0e2f25c58411669f8
-    sha256: cf99715f991ffa36cc108d324983f3d4e5750a0fb8a006419c04dd15d59e6797
+    md5: d24136f864e225e77b5869a486baf92d
+    sha256: ab4c1c1f5af4c2c0d13b636a10ef518085a9daa49971365e05d481a09f78513a
   category: apps
   optional: true
 - name: libxcb
@@ -14005,17 +13967,17 @@ package:
   dependencies:
     libabseil: '>=20230802.1,<20230803.0a0'
     libcrc32c: '>=1.1.2,<1.2.0a0'
-    libcurl: '>=8.3.0,<9.0a0'
-    libgrpc: '>=1.58.1,<1.59.0a0'
-    libprotobuf: '>=4.24.3,<4.24.4.0a0'
-    openssl: '>=3.1.3,<4.0a0'
+    libcurl: '>=8.4.0,<9.0a0'
+    libgrpc: '>=1.59.2,<1.60.0a0'
+    libprotobuf: '>=4.24.4,<4.24.5.0a0'
+    openssl: '>=3.1.4,<4.0a0'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libgoogle-cloud-2.12.0-ha74b051_3.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/libgoogle-cloud-2.12.0-h39f2fc6_4.conda
   hash:
-    md5: 5ed09a5cc8ac4f0b2f5a1aa17baaa79a
-    sha256: 1aa3c5471e21713cfd955d8643f47200eb4a2d5d60dc60c9f40f04fd1f91a3a1
+    md5: f79cf72abe2235de65fb50b386f323a0
+    sha256: 9621cb3e90aa22123cc7120bc1228df31453a390b7760773a0e5453a2718f7ef
   category: apps
   optional: true
 - name: libnetcdf
@@ -14589,7 +14551,7 @@ package:
   category: apps
   optional: true
 - name: ipython
-  version: 8.16.1
+  version: 8.17.2
   manager: conda
   platform: win-64
   dependencies:
@@ -14600,17 +14562,16 @@ package:
     exceptiongroup: ''
     stack_data: ''
     matplotlib-inline: ''
-    backcall: ''
     pickleshare: ''
     python: '>=3.9'
     pygments: '>=2.4.0'
     traitlets: '>=5'
     jedi: '>=0.16'
     prompt_toolkit: '>=3.0.30,<3.1.0,!=3.0.37'
-  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.16.1-pyh5737063_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.17.2-pyh5737063_0.conda
   hash:
-    md5: 1f0a208b45d0bf8d1cf09d2f2b549ab5
-    sha256: 9a09600613147838d6bd027d22078abc13e83300a53192b465e8deb1ef0eeb22
+    md5: f303446f1ce22bd9173650d3e722e87b
+    sha256: e9da075dab85ad01df4355e264220e156273f719a62f6fad588a686616e86a9c
   category: apps
   optional: true
 - name: nbclient
@@ -15502,9 +15463,9 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    lasio: '>=0.31,<0.32'
     tqdm: '>=4.64.0,<5.0.0'
     geoh5py: '>=0.8.0rc1,<0.9.0'
+    lasio: '>=0.31,<0.32'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip
   hash:
     sha256: ''
@@ -15514,19 +15475,19 @@ package:
     url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip#sha256=
   optional: false
 - name: mira-omf
-  version: 3.0.1
+  version: 3.1.0a1
   manager: pip
   platform: win-64
   dependencies:
-    geoh5py: '>=0.5.0'
-    numpy: '>=1.7,<2.0'
+    geoh5py: '>=0.8.0rc2,<0.9.0'
+    numpy: '>=1.23.5,<1.24.0'
     properties: '>=0.6.0,<0.7.0'
     pypng: '>=0.20220715,<0.20220716'
     six: '>=1.16,<2.0'
     vectormath: '>=0.2.0,<0.3.0'
-  url: https://files.pythonhosted.org/packages/e2/ba/da67766f51565f73bdf7599a29b44fd99878a36d6a411a57382a4abc25a9/mira_omf-3.0.1-py3-none-any.whl
+  url: https://files.pythonhosted.org/packages/6e/8c/275d63af4c587327382196413095c766c006e969e457a928516a48431d1b/mira_omf-3.1.0a1-py3-none-any.whl
   hash:
-    sha256: 7e1b003bbfae4d3eedb6b41f242d3dc9e9e1d86050cacb0ddbf460aedab048d6
+    sha256: 5ff6a78817059d51867264edb7374c5c3ad87f15ef598391f45dc7917196ccf8
   category: main
   optional: false
 - name: mira-simpeg
