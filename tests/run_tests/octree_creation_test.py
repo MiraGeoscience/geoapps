@@ -116,6 +116,7 @@ def test_create_octree_radial(tmp_path: Path, setup_test_octree):
             w_cell_size=cell_sizes[2],
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
+            diagonal_balance=False,
             depth_core=depth_core,
             **refinements,
         )
@@ -175,6 +176,7 @@ def test_create_octree_curve(tmp_path: Path, setup_test_octree):
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
             depth_core=depth_core,
+            diagonal_balance=False,
             **refinements,
         )
         app.trigger_click(None)
@@ -235,6 +237,7 @@ def test_create_octree_surface(tmp_path: Path, setup_test_octree):
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
             depth_core=depth_core,
+            diagonal_balance=False,
             **refinements,
         )
         app.trigger_click(None)
