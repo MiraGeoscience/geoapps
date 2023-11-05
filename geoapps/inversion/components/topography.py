@@ -22,7 +22,7 @@ from geoh5py.shared import Entity
 from geoapps.driver_base.utils import active_from_xyz
 from geoapps.inversion.components.data import InversionData
 from geoapps.inversion.components.locations import InversionLocations
-from geoapps.shared_utils.utils import filter_xy
+from geoapps.shared_utils.utils import filter_xy, get_neighbouring_cells
 from geoapps.utils.models import floating_active
 from geoapps.utils.surveys import get_containing_cells
 
@@ -96,7 +96,12 @@ class InversionTopography(InversionLocations):
             print(
                 "Adjusting active cells so that receivers are all within an active cell . . ."
             )
-            active_cells[get_containing_cells(mesh.mesh, data)] = True
+            containing_cells = get_containing_cells(mesh.mesh, data)
+            active_cells[containing_cells] = True
+
+            neighbours = get_neighbouring_cells(mesh.mesh, containing_cells)
+            active_cells[neighbours[0]] = True  # x-axis neighbours
+            active_cells[neighbours[1]] = True  # y-axis neighbours
 
             if floating_active(mesh.mesh, active_cells):
                 warnings.warn(

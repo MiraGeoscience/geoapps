@@ -64,6 +64,32 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
     return locations
 
 
+def get_neighbouring_cells(
+    mesh: TreeMesh, cell_ind: list, axis: int | tuple = (0, 1)
+) -> tuple:
+    """
+    Get the indices of neighbouring cells along a given axis for a given list of
+    cell indices.
+
+    :param mesh: discretize.TreeMesh object.
+    :param cell_ind: List of cell indices.
+    :param axis: Axis along which to find neighbouring cells.
+    :param return_diagonal: If True, return diagonal neighbours as well.
+
+    :return: List of neighbouring cell indices.
+    """
+    if isinstance(axis, int):
+        axis = (axis,)
+
+    neighbors = {ax: [] for ax in range(mesh.dim)}
+
+    for ind in cell_ind:
+        for ax in range(mesh.dim):
+            neighbors[ax].append(np.r_[tuple(mesh[ind].neighbors[ax * 2 : ax * 2 + 2])])
+
+    return tuple(np.r_[tuple(neighbors[ax])] for ax in axis)
+
+
 def weighted_average(
     xyz_in: np.ndarray,
     xyz_out: np.ndarray,
