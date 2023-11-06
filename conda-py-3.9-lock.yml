@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: aa979165c281a056d76e5088fa6d882686bd8fd1b56aabe8339e3978e77cb423
-    osx-64: 0ccd5934a8ade5128c04bbb6b3d7516d14ab48d5421fb6e3159272fe13f0b81e
-    linux-64: 09086388dff3fbb013f6b5147e3bfc80be5fc556f8d7cdaf3f6c65e317d1b42b
+    win-64: 3d9d058ed5abfc8f820a89735ff05a39bacf81ed0f43ffa09dc4fdb9e8211f0c
+    osx-64: c38661225893dc16557fef8e8f8ad2290ca4c3544b067d4a210734ed7ef75dff
+    linux-64: f94156506723e9238ae34d247a4a52b12bdb727f472ac30fa61253474f7035f4
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -5701,9 +5701,9 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    geoh5py: '>=0.8.0rc3,<0.9.0'
-    tqdm: '>=4.64.0,<5.0.0'
     lasio: '>=0.31,<0.32'
+    tqdm: '>=4.64.0,<5.0.0'
+    geoh5py: '>=0.8.0rc3,<0.9.0'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip
   hash:
     sha256: ''
@@ -10494,9 +10494,9 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    geoh5py: '>=0.8.0rc3,<0.9.0'
-    tqdm: '>=4.64.0,<5.0.0'
     lasio: '>=0.31,<0.32'
+    tqdm: '>=4.64.0,<5.0.0'
+    geoh5py: '>=0.8.0rc3,<0.9.0'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip
   hash:
     sha256: ''
@@ -15462,9 +15462,9 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    geoh5py: '>=0.8.0rc3,<0.9.0'
-    tqdm: '>=4.64.0,<5.0.0'
     lasio: '>=0.31,<0.32'
+    tqdm: '>=4.64.0,<5.0.0'
+    geoh5py: '>=0.8.0rc3,<0.9.0'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip
   hash:
     sha256: ''
