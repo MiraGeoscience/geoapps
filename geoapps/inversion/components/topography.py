@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 import warnings
 
 import numpy as np
+from discretize import TreeMesh
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
@@ -99,15 +100,19 @@ class InversionTopography(InversionLocations):
             containing_cells = get_containing_cells(mesh.mesh, data)
             active_cells[containing_cells] = True
 
-            neighbours = get_neighbouring_cells(mesh.mesh, containing_cells)
-            neighbours_xy = np.r_[neighbours[0] + neighbours[1]]
+            # Apply extra active cells to ensure connectivity for tree meshes
+            if isinstance(mesh.mesh, TreeMesh):
+                neighbours = get_neighbouring_cells(mesh.mesh, containing_cells)
+                neighbours_xy = np.r_[neighbours[0] + neighbours[1]]
 
-            # Make sure the new actives are connected to the old actives
-            new_actives = ~active_cells[neighbours_xy]
-            neighbours = get_neighbouring_cells(mesh.mesh, neighbours_xy[new_actives])
+                # Make sure the new actives are connected to the old actives
+                new_actives = ~active_cells[neighbours_xy]
+                neighbours = get_neighbouring_cells(
+                    mesh.mesh, neighbours_xy[new_actives]
+                )
 
-            active_cells[neighbours_xy] = True  # xy-axis neighbours
-            active_cells[np.r_[neighbours[2][0]]] = True  # z-axis neighbours
+                active_cells[neighbours_xy] = True  # xy-axis neighbours
+                active_cells[np.r_[neighbours[2][0]]] = True  # z-axis neighbours
 
             if floating_active(mesh.mesh, active_cells):
                 warnings.warn(
