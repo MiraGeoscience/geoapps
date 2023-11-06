@@ -100,8 +100,14 @@ class InversionTopography(InversionLocations):
             active_cells[containing_cells] = True
 
             neighbours = get_neighbouring_cells(mesh.mesh, containing_cells)
-            active_cells[neighbours[0]] = True  # x-axis neighbours
-            active_cells[neighbours[1]] = True  # y-axis neighbours
+            neighbours_xy = np.r_[neighbours[0] + neighbours[1]]
+
+            # Make sure the new actives are connected to the old actives
+            new_actives = ~active_cells[neighbours_xy]
+            neighbours = get_neighbouring_cells(mesh.mesh, neighbours_xy[new_actives])
+
+            active_cells[neighbours_xy] = True  # xy-axis neighbours
+            active_cells[np.r_[neighbours[2][0]]] = True  # z-axis neighbours
 
             if floating_active(mesh.mesh, active_cells):
                 warnings.warn(
