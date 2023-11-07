@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 1760457dc2fbef2c60401702544062e025d04493de71982432c46fc818c9a895
-    osx-64: e14c1802eb9ef1cd0d1694fa6f9423948b0c8b26d21b236b0ccaaa76d8ea8e9e
-    linux-64: d0f48d02cc7d652c658710885d94265565598e9d92eb818f446b6aa814016965
+    win-64: 598575cbdd953c72b57fac7d7ba83edb35215aa683249d7349d6e12d7b48b912
+    osx-64: 1b5e6d17a3bdb4e5c4e7a42e9a472632751aa89457e2c760440ce78564bb0007
+    linux-64: 89e9014673787f3a360478d6516f78eab7896d4e9f868553627db5a06407afbb
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -1583,16 +1583,16 @@ package:
   category: main
   optional: false
 - name: libgcrypt
-  version: 1.10.1
+  version: 1.10.2
   manager: conda
   platform: linux-64
   dependencies:
-    libgcc-ng: '>=10.3.0'
-    libgpg-error: '>=1.44,<2.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libgcrypt-1.10.1-h166bdaf_0.tar.bz2
+    libgcc-ng: '>=12'
+    libgpg-error: '>=1.47,<2.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libgcrypt-1.10.2-hd590300_0.conda
   hash:
-    md5: f967fc95089cd247ceed56eda31de3a9
-    sha256: 8fd7e6db1021cd9298d9896233454de204116840eb66a06fcb712e1015ff132a
+    md5: 3d7d5e5cebf8af5aadb040732860f1b6
+    sha256: 21053a00af8e648d58bafc856167dc2c35a9e927a6aff3030d50e01b113265a3
   category: main
   optional: false
 - name: libglib
@@ -3536,16 +3536,16 @@ package:
   category: apps
   optional: true
 - name: importlib_resources
-  version: 6.1.0
+  version: 6.1.1
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.8'
     zipp: '>=3.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/importlib_resources-6.1.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/importlib_resources-6.1.1-pyhd8ed1ab_0.conda
   hash:
-    md5: 48b0d98e0c0ec810d3ccc2a0926c8c0e
-    sha256: adab6da633ec3b642f036ab5c1196c3e2db0e8db57fb0c7fc9a8e06e29fa9bdc
+    md5: 3d5fa25cf42f3f32a12b2d874ace8574
+    sha256: e584f9ae08fb2d242af0ce7e19e3cd2f85f362d8523119e08f99edb962db99ed
   category: apps
   optional: true
 - name: isort
@@ -5174,20 +5174,20 @@ package:
   category: main
   optional: false
 - name: discretize
-  version: 0.8.3
+  version: 0.10.0
   manager: conda
   platform: linux-64
   dependencies:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-    numpy: '>=1.21.6,<2.0a0'
+    numpy: '>=1.22.4,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
-    scipy: '>=0.13'
-  url: https://conda.anaconda.org/conda-forge/linux-64/discretize-0.8.3-py310h5a539fb_0.conda
+    scipy: '>=1.8'
+  url: https://conda.anaconda.org/conda-forge/linux-64/discretize-0.10.0-py310hcb52e73_1.conda
   hash:
-    md5: e99dbe732683f3bbee6b866e15364f32
-    sha256: 68602e2e77296cd339dc7bd4b73806f4c4667f23cb71ba51cfc680c97cb7e5b0
+    md5: 1f0f0e9eb694f1d36ea44e167622fd97
+    sha256: 3cfbc4e072448f7e1bbcfdff0c01b18ae67d6d83d12b7585567a4dd057b8c02e
   category: core
   optional: true
 - name: empymod
@@ -5688,15 +5688,12 @@ package:
   platform: linux-64
   dependencies:
     geoh5py: '>=0.8.0rc3,<0.9.0'
-    tqdm: '>=4.64.0,<5.0.0'
     lasio: '>=0.31,<0.32'
-  url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip
+    tqdm: '>=4.64.0,<5.0.0'
+  url: https://files.pythonhosted.org/packages/e5/ec/f6c74d4c718e7afa23c4291789cf7b8d1d60b5c378120caf0cfbc094861c/las_geoh5-0.1.0-py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: 547e5b642d082095b6aa37e6e677429ed6387d32dc32fa6ba35f5bb52078e65f
   category: main
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip#sha256=
   optional: false
 - name: mira-omf
   version: 3.1.0a1
@@ -8698,16 +8695,16 @@ package:
   category: apps
   optional: true
 - name: importlib_resources
-  version: 6.1.0
+  version: 6.1.1
   manager: conda
   platform: osx-64
   dependencies:
     python: '>=3.8'
     zipp: '>=3.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/importlib_resources-6.1.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/importlib_resources-6.1.1-pyhd8ed1ab_0.conda
   hash:
-    md5: 48b0d98e0c0ec810d3ccc2a0926c8c0e
-    sha256: adab6da633ec3b642f036ab5c1196c3e2db0e8db57fb0c7fc9a8e06e29fa9bdc
+    md5: 3d5fa25cf42f3f32a12b2d874ace8574
+    sha256: e584f9ae08fb2d242af0ce7e19e3cd2f85f362d8523119e08f99edb962db99ed
   category: apps
   optional: true
 - name: isort
@@ -9990,19 +9987,20 @@ package:
   category: core
   optional: true
 - name: discretize
-  version: 0.8.3
+  version: 0.10.0
   manager: conda
   platform: osx-64
   dependencies:
-    libcxx: '>=14.0.6'
-    numpy: '>=1.21.6,<2.0a0'
+    __osx: '>=10.9'
+    libcxx: '>=16.0.6'
+    numpy: '>=1.22.4,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
-    scipy: '>=0.13'
-  url: https://conda.anaconda.org/conda-forge/osx-64/discretize-0.8.3-py310h3e792ce_0.conda
+    scipy: '>=1.8'
+  url: https://conda.anaconda.org/conda-forge/osx-64/discretize-0.10.0-py310h65d09f4_1.conda
   hash:
-    md5: 21a0671c4d78e77259bf3d8ef127f2c3
-    sha256: 61aee7d065a734ba17b2bd4b6f12468e0cabd4fc79da272797c8e528635c3d35
+    md5: 690e65e69d4b89ea722582420d83f200
+    sha256: 3b52c8c57237a6f91011825cb96ad527756e37a4738b09707d5a300eb2766ed6
   category: core
   optional: true
 - name: empymod
@@ -10052,8 +10050,8 @@ package:
   dependencies:
     typing_extensions: ''
     decorator: ''
-    exceptiongroup: ''
     __osx: ''
+    exceptiongroup: ''
     stack_data: ''
     matplotlib-inline: ''
     appnope: ''
@@ -10467,15 +10465,12 @@ package:
   platform: osx-64
   dependencies:
     geoh5py: '>=0.8.0rc3,<0.9.0'
-    tqdm: '>=4.64.0,<5.0.0'
     lasio: '>=0.31,<0.32'
-  url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip
+    tqdm: '>=4.64.0,<5.0.0'
+  url: https://files.pythonhosted.org/packages/e5/ec/f6c74d4c718e7afa23c4291789cf7b8d1d60b5c378120caf0cfbc094861c/las_geoh5-0.1.0-py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: 547e5b642d082095b6aa37e6e677429ed6387d32dc32fa6ba35f5bb52078e65f
   category: main
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip#sha256=
   optional: false
 - name: mira-omf
   version: 3.1.0a1
@@ -13292,16 +13287,16 @@ package:
   category: apps
   optional: true
 - name: importlib_resources
-  version: 6.1.0
+  version: 6.1.1
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.8'
     zipp: '>=3.1.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/importlib_resources-6.1.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/importlib_resources-6.1.1-pyhd8ed1ab_0.conda
   hash:
-    md5: 48b0d98e0c0ec810d3ccc2a0926c8c0e
-    sha256: adab6da633ec3b642f036ab5c1196c3e2db0e8db57fb0c7fc9a8e06e29fa9bdc
+    md5: 3d5fa25cf42f3f32a12b2d874ace8574
+    sha256: e584f9ae08fb2d242af0ce7e19e3cd2f85f362d8523119e08f99edb962db99ed
   category: apps
   optional: true
 - name: isort
@@ -14953,21 +14948,21 @@ package:
   category: main
   optional: false
 - name: discretize
-  version: 0.8.3
+  version: 0.10.0
   manager: conda
   platform: win-64
   dependencies:
-    numpy: '>=1.21.6,<2.0a0'
+    numpy: '>=1.22.4,<2.0a0'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
-    scipy: '>=0.13'
+    scipy: '>=1.8'
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
-    vs2015_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/discretize-0.8.3-py310h220cb41_0.conda
+    vc14_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/discretize-0.10.0-py310h4856b71_1.conda
   hash:
-    md5: eb163df36e7c567ec372f4af8f305e6e
-    sha256: 0e12ec04d5fa226fcfc724344c74b526dd3c4222de9bd6f5fc9da88d65a61969
+    md5: 7af88a12920a5b2b5ae459a5dd032019
+    sha256: 6170c71a13541cd570afde2d6acfb24f19ced2f3a082c94157ed31d34c92c563
   category: core
   optional: true
 - name: empymod
@@ -15421,15 +15416,12 @@ package:
   platform: win-64
   dependencies:
     geoh5py: '>=0.8.0rc3,<0.9.0'
-    tqdm: '>=4.64.0,<5.0.0'
     lasio: '>=0.31,<0.32'
-  url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip
+    tqdm: '>=4.64.0,<5.0.0'
+  url: https://files.pythonhosted.org/packages/e5/ec/f6c74d4c718e7afa23c4291789cf7b8d1d60b5c378120caf0cfbc094861c/las_geoh5-0.1.0-py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: 547e5b642d082095b6aa37e6e677429ed6387d32dc32fa6ba35f5bb52078e65f
   category: main
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip#sha256=
   optional: false
 - name: mira-omf
   version: 3.1.0a1
