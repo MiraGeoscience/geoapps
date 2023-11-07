@@ -36,6 +36,7 @@ from geoapps.shared_utils.utils import (
     drape_2_tensor,
     filter_xy,
     get_locations,
+    get_neighbouring_cells,
     octree_2_treemesh,
     rotate_xyz,
     weighted_average,
@@ -1009,3 +1010,33 @@ def test_densify_curve(tmp_path: Path):
         )
         locations = densify_curve(curve, 2)
         assert locations.shape[0] == 11
+
+
+def test_get_neighbouring_cells():
+    """
+    Check that the neighbouring cells are correctly identified and output
+    of the right shape.
+    """
+    mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
+    mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
+    ind = mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+        [95.0, 95.0, 95.0]
+    )
+
+    with pytest.raises(
+        TypeError, match="Input 'indices' must be a list or numpy.ndarray of indices."
+    ):
+        get_neighbouring_cells(mesh, ind)
+
+    with pytest.raises(
+        TypeError, match="Input 'mesh' must be a discretize.TreeMesh object."
+    ):
+        get_neighbouring_cells(1, [ind])
+
+    neighbours = get_neighbouring_cells(mesh, [ind])
+
+    assert len(neighbours) == 3, "Incorrect number of neighbours axes returned."
+    assert all(
+        len(axis) == 2 for axis in neighbours
+    ), "Incorrect number of neighbours returned."
+    assert np.allclose(np.r_[neighbours].flatten(), np.r_[76, 78, 75, 79, 73, 81])
