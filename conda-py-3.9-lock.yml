@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 1eae369c674a554a036d869b22e1154dcb1077891bad729193768abe014badc6
-    osx-64: a45d9848128195326677cf9d0f7e0de6779696f13de8b8a0349cfd25c8fb94b2
-    linux-64: 98622c2789f85149ef64abd37cd6fc2d717ae9e97c6d575e496f1106efdb76cb
+    win-64: 816f74abc248a454caa346f84c1b5cec79ee4f448b90f1a1acbbe0142e88b44e
+    osx-64: 2b0b3408ee32d0fc597d491a5b31434e8b7defbed5cdb19c6ceaeb6c7b5ebf1a
+    linux-64: 6b06a2d3b3ed22d482ed54e60c7708c93bc64c7c0f5a25774cb86d7ce525a6b4
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -1224,20 +1224,20 @@ package:
   category: core
   optional: true
 - name: libnghttp2
-  version: 1.55.1
+  version: 1.58.0
   manager: conda
   platform: linux-64
   dependencies:
-    c-ares: '>=1.20.1,<2.0a0'
+    c-ares: '>=1.21.0,<2.0a0'
     libev: '>=4.33,<4.34.0a0'
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.4,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libnghttp2-1.55.1-h47da74e_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/libnghttp2-1.58.0-h47da74e_0.conda
   hash:
-    md5: a802251d1eaeeae041c867faf0f94fa8
-    sha256: 5e60b852dbde156ef1fa939af2491fe0e9eb3000de146786dede7cda8991ae4c
+    md5: 9b13d5ee90fc9f09d54fd403247342b4
+    sha256: 151b18e4f92dcca263a6d23e4beb0c4e2287aa1c7d0587ff71ef50035ed34aca
   category: main
   optional: false
 - name: libpng
@@ -1537,7 +1537,7 @@ package:
   category: core
   optional: true
 - name: c-blosc2
-  version: 2.11.1
+  version: 2.11.2
   manager: conda
   platform: linux-64
   dependencies:
@@ -1546,10 +1546,10 @@ package:
     lz4-c: '>=1.9.3,<1.10.0a0'
     zlib-ng: '>=2.0.7,<2.1.0a0'
     zstd: '>=1.5.5,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/c-blosc2-2.11.1-hb4ffafa_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/c-blosc2-2.11.2-hb4ffafa_0.conda
   hash:
-    md5: c898b02b6ed79db692e6a85f7bdba176
-    sha256: 6bb008daba198d7ece275f497d771ae5d95c288915af3671573fc97bead9d457
+    md5: aa776e4716e54633d1279cf7599c3711
+    sha256: 1520ea1435c887fee2e1c9db98a720d81e0d10ec755c99265c6c012dbb2c8c52
   category: apps
   optional: true
 - name: freetype
@@ -2439,7 +2439,7 @@ package:
   category: main
   optional: false
 - name: llvmlite
-  version: 0.40.1
+  version: 0.41.1
   manager: conda
   platform: linux-64
   dependencies:
@@ -2449,10 +2449,10 @@ package:
     libzlib: '>=1.2.13,<1.3.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/llvmlite-0.40.1-py39h174d805_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/llvmlite-0.41.1-py39h174d805_0.conda
   hash:
-    md5: 45c73f595cf0675c480be9a413100b92
-    sha256: d6fc31ffaa0db4d3a5549403647e8ecbaceaa2299dc846abfc92e3731c65224f
+    md5: 73ce5d159d6ab04551db34fddbf0e9c7
+    sha256: 246eeeb5075b49b6fd54eaf95061e1be9a28a5b5633c1bae045744d4a1bd02b2
   category: core
   optional: true
 - name: locket
@@ -4973,20 +4973,21 @@ package:
   category: apps
   optional: true
 - name: numba
-  version: 0.57.1
+  version: 0.58.1
   manager: conda
   platform: linux-64
   dependencies:
+    _openmp_mutex: '>=4.5'
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-    llvmlite: '>=0.40.0,<0.41.0a0'
-    numpy: '>=1.21.6,<2.0a0'
+    llvmlite: '>=0.41.1,<0.42.0a0'
+    numpy: '>=1.22.4,<2.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/numba-0.57.1-py39hb75a051_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/numba-0.58.1-py39h615d6bd_0.conda
   hash:
-    md5: 2a79819971cb69857ec9edc33e278515
-    sha256: 54c6d592ecb4ae007f7d7982005ed6887d30eac8c3f832feeec0f8cada455740
+    md5: 8f156f9670e456c090cf2df25238541a
+    sha256: 85eccf9735994ae8afd7d87a60ece998bcb9bbecad81715a3cb930065e714af5
   category: core
   optional: true
 - name: numcodecs
@@ -6675,7 +6676,7 @@ package:
   category: core
   optional: true
 - name: c-blosc2
-  version: 2.11.1
+  version: 2.11.2
   manager: conda
   platform: osx-64
   dependencies:
@@ -6684,10 +6685,10 @@ package:
     lz4-c: '>=1.9.3,<1.10.0a0'
     zlib-ng: '>=2.0.7,<2.1.0a0'
     zstd: '>=1.5.5,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/c-blosc2-2.11.1-h354e526_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/c-blosc2-2.11.2-h354e526_0.conda
   hash:
-    md5: 61a3f94338980f421d95a5ae5378283f
-    sha256: 460d04f7063bf2b8db6b01f183d1bc43d7ddafd56d22e37a133533e465046fed
+    md5: 0477a11772342ccf430f5595d3ce0ee8
+    sha256: c32f486132fe042a9be1dacd057172196b41adfff31089d16571bbac8eb10cdd
   category: apps
   optional: true
 - name: fonts-conda-ecosystem
@@ -6816,20 +6817,20 @@ package:
   category: main
   optional: false
 - name: libnghttp2
-  version: 1.55.1
+  version: 1.58.0
   manager: conda
   platform: osx-64
   dependencies:
     __osx: '>=10.9'
-    c-ares: '>=1.20.1,<2.0a0'
-    libcxx: '>=15.0.7'
+    c-ares: '>=1.21.0,<2.0a0'
+    libcxx: '>=16.0.6'
     libev: '>=4.33,<4.34.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     openssl: '>=3.1.4,<4.0a0'
-  url: https://conda.anaconda.org/conda-forge/osx-64/libnghttp2-1.55.1-hc0a10c5_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/libnghttp2-1.58.0-h64cf6d3_0.conda
   hash:
-    md5: a9269f10f70851af622c112d2956d544
-    sha256: a0352eafcf148aa1dfa25f28cf30c80f70bc78c1e549fdec6b7aad100b865944
+    md5: 864e23fba3678000154f53bbf6d476a2
+    sha256: b2b94cdaffa0d4fddd73c04262fdb1d1bcd6f8783979281ccfdb832e159cac4e
   category: main
   optional: false
 - name: libprotobuf
@@ -7672,19 +7673,18 @@ package:
   category: main
   optional: false
 - name: llvmlite
-  version: 0.40.1
+  version: 0.41.1
   manager: conda
   platform: osx-64
   dependencies:
-    libcxx: '>=15.0.7'
     libllvm14: '>=14.0.6,<14.1.0a0'
     libzlib: '>=1.2.13,<1.3.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.*
-  url: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.40.1-py39hc281fc9_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/llvmlite-0.41.1-py39he5a6977_0.conda
   hash:
-    md5: e8e88b94bb469539d9a402d84d96fe3a
-    sha256: 40a50900c4a0246ad652d739a4c3167d996e1b3ee5c8b152956f46709169be1f
+    md5: b7c4bc0db717902f487586a67ecc1d74
+    sha256: d377baf706189ffe309cfeecd80861aba749c6fad889d58dde73119d668ad0e7
   category: core
   optional: true
 - name: locket
@@ -8819,20 +8819,21 @@ package:
   category: apps
   optional: true
 - name: numba
-  version: 0.57.1
+  version: 0.58.1
   manager: conda
   platform: osx-64
   dependencies:
-    libcxx: '>=15.0.7'
-    llvm-openmp: '>=16.0.6'
-    llvmlite: '>=0.40.0,<0.41.0a0'
-    numpy: '>=1.21.6,<2.0a0'
+    __osx: '>=10.9'
+    libcxx: '>=16.0.6'
+    llvm-openmp: '>=17.0.4'
+    llvmlite: '>=0.41.1,<0.42.0a0'
+    numpy: '>=1.22.4,<2.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.*
-  url: https://conda.anaconda.org/conda-forge/osx-64/numba-0.57.1-py39hb7a5252_0.conda
+  url: https://conda.anaconda.org/conda-forge/osx-64/numba-0.58.1-py39hcfd2841_0.conda
   hash:
-    md5: ed80d2ba2464a070e6e357453642f282
-    sha256: d7c1048163aaf0f06f426fe31ba41b08c52d0f2aa1174b9ea98c7670c157d8e1
+    md5: 92d252ce278398cafbcb7fabbc4091b6
+    sha256: 9577c58a90b10a7b5d9805bbe59deb9d05aaddb30d6239f7c32bdd9ff275f207
   category: core
   optional: true
 - name: numcodecs
@@ -11833,7 +11834,7 @@ package:
   category: core
   optional: true
 - name: c-blosc2
-  version: 2.11.1
+  version: 2.11.2
   manager: conda
   platform: win-64
   dependencies:
@@ -11843,10 +11844,10 @@ package:
     vc14_runtime: '>=14.29.30139'
     zlib-ng: '>=2.0.7,<2.1.0a0'
     zstd: '>=1.5.5,<1.6.0a0'
-  url: https://conda.anaconda.org/conda-forge/win-64/c-blosc2-2.11.1-h183a6f4_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/c-blosc2-2.11.2-h183a6f4_0.conda
   hash:
-    md5: 83624cde47e90209d772e861edc732f6
-    sha256: ca93fe3b4b2d70a962842eefe2262ccb004c2592d270a4457c0b72c0d84bcc7e
+    md5: a6024f60ea62ce7a9f2284c51811e5bb
+    sha256: 24da4dad12cd09997ba5416baef5b8766977b3152e22c6469cb4678be2a8783e
   category: apps
   optional: true
 - name: cached_property
@@ -12246,7 +12247,7 @@ package:
   category: main
   optional: false
 - name: llvmlite
-  version: 0.40.1
+  version: 0.41.1
   manager: conda
   platform: win-64
   dependencies:
@@ -12257,10 +12258,10 @@ package:
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
     vs2015_runtime: ''
-  url: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.40.1-py39hd28a505_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/llvmlite-0.41.1-py39hd28a505_0.conda
   hash:
-    md5: 1173ee4417943ad908757129e7b648eb
-    sha256: a613b045f3689005d3562091075372f344a82345983b91952954734cff76963f
+    md5: a56eb1507a905aa5b716f788900957a2
+    sha256: de0668571ba45b772cac0f7b4e3f7cbc7412a68ce601dd1dd6a59054a7a4ff6a
   category: core
   optional: true
 - name: locket
@@ -14800,21 +14801,21 @@ package:
   category: apps
   optional: true
 - name: numba
-  version: 0.57.1
+  version: 0.58.1
   manager: conda
   platform: win-64
   dependencies:
-    llvmlite: '>=0.40.0,<0.41.0a0'
-    numpy: '>=1.21.6,<2.0a0'
+    llvmlite: '>=0.41.1,<0.42.0a0'
+    numpy: '>=1.22.4,<2.0a0'
     python: '>=3.9,<3.10.0a0'
     python_abi: 3.9.*
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/numba-0.57.1-py39hadaa1c4_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/numba-0.58.1-py39h6836801_0.conda
   hash:
-    md5: 0947e590eeb6df6d58119546232baa22
-    sha256: 573f4b6ee9efb60eebce3a88e93cca95355ed23323b9c2bde7da8486d3c5cd50
+    md5: 083efafa3073ca3cb3f61c6926081430
+    sha256: 22db51224082672ebe7f78529c46d80a516d1c0561f91eefa3fc50d12d90ab26
   category: core
   optional: true
 - name: numcodecs
