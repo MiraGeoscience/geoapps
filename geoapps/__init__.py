@@ -5,7 +5,7 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-__version__ = "0.11.0-rc.1"
+__version__ = "0.11.0-rc.2"
 
 import os
 import warnings
