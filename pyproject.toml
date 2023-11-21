@@ -52,6 +52,7 @@ semver = {version="~3.0.0"}
 dask = {version = "2022.10.*", extras = ["distributed"]}
 discretize = "~0.10.0" # also in simpeg
 distributed = "2022.10.*"
+distributed = "2022.10.*"  # because conda-lock doesn't take dask extras into account
 fiona = "~1.9.2"
 fsspec = "2022.*" # also in simpeg
 gdal = "~3.6.3"
