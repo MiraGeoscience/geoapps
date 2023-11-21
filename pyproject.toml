@@ -69,6 +69,8 @@ mira-simpeg = {version = "~0.19.0.dev4", source = "pypi", optional = true}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = {version = "~2.2.1", optional = true} # from simpeg and geoana
+fiona = {version = "~1.9.2", optional = true}
+gdal = {version = "~3.6.3", optional = true}
 geoana = {version = "~0.4.0", optional = true} # from simpeg
 h5py = "*" # from geoh5py
 mkl = {version = "2022.*", optional = true} # from simpeg
@@ -77,19 +79,17 @@ properties = "*" # from omf
 pydiso = {version = "~0.0.3", optional = true} # from simpeg
 pymatsolver = {version = "~0.2.0", optional = true} # from simpeg
 pypng = "*" # from omf
+scikit-image = {version = "~0.19.2", optional = true}
 six = "*" # from omf
 vectormath = "*" # from omf
 zarr = {version = "~2.14.2", optional = true} # from simpeg using Dask
 
 ## dependencies for UI
-fiona = {version = "~1.9.2", optional = true}
-gdal = {version = "~3.6.3", optional = true}
 ipyfilechooser = {version = "~0.6.0", optional = true}
 ipywidgets = {version = "^7.6.5", optional = true}
 plotly = {version = "~5.13.1", optional = true}
 pyqtwebengine = {version = "~5.15"}
 pyside2 = {version = "~5.15"}
-scikit-image = {version = "~0.19.2", optional = true}
 dash-daq = {version = "~0.5.0", optional = true}
 
 ## about pip dependencies
@@ -114,7 +114,9 @@ core = [
     "discretize",
     "distributed",
     "empymod",
+    "fiona",
     "fsspec",
+    "gdal",
     "geoana",
     "matplotlib",
     "mira-simpeg",
@@ -122,6 +124,7 @@ core = [
     "pandas",
     "pydiso",
     "pymatsolver",
+    "scikit-image",
     "scikit-learn",
     "scipy",
     "simpeg_archive",
@@ -133,12 +136,9 @@ core = [
 apps = [
     # should include "core", but need non-overlapping extra lists for conda-lock
     "dash-daq",
-    "fiona",
-    "gdal",
     "ipyfilechooser",
     "ipywidgets",
     "plotly",
-    "scikit-image",
 ]
 
 [tool.conda-lock]
