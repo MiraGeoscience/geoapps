@@ -88,15 +88,15 @@ zarr = {version = "~2.14.2", optional = true} # from simpeg using Dask
 ipyfilechooser = {version = "~0.6.0", optional = true}
 ipywidgets = {version = "^7.6.5", optional = true}
 plotly = {version = "~5.13.1", optional = true}
-pyqtwebengine = {version = "~5.15"}
-pyside2 = {version = "~5.15"}
+pyqtwebengine = {version = "~5.15", optional = true}
+pyside2 = {version = "~5.15", optional = true}
 dash-daq = {version = "~0.5.0", optional = true}
 
 ## about pip dependencies
 # to be specified to work with conda-lock
 # - from PyPI: my_package = { version = "1.2.3", source = "pypi" }
 # - from URL:
-#   - for a tags: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.zip#sha256=" }
+#   - for a tags:   my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.zip#sha256=" }
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=" }
 # Note - conda-lock does not support the syntax: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
@@ -138,6 +138,8 @@ apps = [
     "ipyfilechooser",
     "ipywidgets",
     "plotly",
+    "pyqtwebengine",
+    "pyside2",
 ]
 
 [tool.conda-lock]
