@@ -68,16 +68,16 @@ mira-simpeg = {version = "~0.19.0.dev4", source = "pypi"}
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = "~2.2.1"  # from simpeg and geoana
 geoana = "~0.4.0"  # from simpeg
-h5py = "*"  # from geoh5py
+h5py = "^3.2.1"  # from geoh5py
 mkl = "2022.*"  # from simpeg
-Pillow = "*"  # from geoh5py
-properties = "*"  # from omf
+Pillow = "^10.0.1"  # from geoh5py
+properties = "~0.6.0"  # from omf
 pydiso = "~0.0.3"  # from simpeg
 pymatsolver = "~0.2.0"  # from simpeg
-pypng = "*"  # from omf
+pypng = "^0.20220715"  # from omf
 scikit-image = "~0.19.2"
-six = "*"  # from omf
-vectormath = "*"  # from omf
+six = "^1.16"  # from omf
+vectormath = "~0.2.0"  # from omf
 zarr = "~2.14.2"  # from simpeg using Dask
 
 ## dependencies for UI

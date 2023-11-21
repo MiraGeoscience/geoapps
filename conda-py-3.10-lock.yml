@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 5364699f509f265b3184f65c5eae57e74f0342e692786e5ae32dd4f97d0d0744
-    osx-64: 1a65ffa47774333475ad947a111cf799472f89aecaf3f2825b9e7c9ae0762468
-    linux-64: 489808cd5a00ecd5daa7ba8b1ea03ca05f6bd81e6f69763448c5f7cba2432913
+    win-64: aaa5986a6468a5d06a2392bd2e30b8724106bfb46318d5ce8891ccfae187f9ac
+    osx-64: d58dc8c37bb44863d0c20be59512d267a0d6f0348d2a0500ec566e03ab3425d6
+    linux-64: 3d527d6779168606ba616fe86a4d583d912f92cce144b4db2168c0ed149d84b9
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -2293,39 +2293,39 @@ package:
   category: ui
   optional: true
 - name: exceptiongroup
-  version: 1.1.3
+  version: 1.2.0
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.1.3-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.0-pyhd8ed1ab_0.conda
   hash:
-    md5: e6518222753f519e911e83136d2158d9
-    sha256: c28f715e049fe0f09785660bcbffa175ffb438720e5bc5a60d56d4b08364b315
+    md5: f6c211fee3c98229652b60a9a42ef363
+    sha256: cf83dcaf9006015c8ccab3fc6770f478464a66a8769e1763ca5d7dff09d11d08
   category: dev
   optional: true
 - name: exceptiongroup
-  version: 1.1.3
+  version: 1.2.0
   manager: conda
   platform: osx-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.1.3-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.0-pyhd8ed1ab_0.conda
   hash:
-    md5: e6518222753f519e911e83136d2158d9
-    sha256: c28f715e049fe0f09785660bcbffa175ffb438720e5bc5a60d56d4b08364b315
+    md5: f6c211fee3c98229652b60a9a42ef363
+    sha256: cf83dcaf9006015c8ccab3fc6770f478464a66a8769e1763ca5d7dff09d11d08
   category: dev
   optional: true
 - name: exceptiongroup
-  version: 1.1.3
+  version: 1.2.0
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.1.3-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.0-pyhd8ed1ab_0.conda
   hash:
-    md5: e6518222753f519e911e83136d2158d9
-    sha256: c28f715e049fe0f09785660bcbffa175ffb438720e5bc5a60d56d4b08364b315
+    md5: f6c211fee3c98229652b60a9a42ef363
+    sha256: cf83dcaf9006015c8ccab3fc6770f478464a66a8769e1763ca5d7dff09d11d08
   category: dev
   optional: true
 - name: executing
