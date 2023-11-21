@@ -40,26 +40,25 @@ start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["
 python = "^3.9, < 3.11"
 
 ## dependencies for a minimal environment
-numpy = "~1.23.5" # also geoh5py, simpeg and geoana
+numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 geoh5py = {version = "~0.8.0rc3", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.8.0-rc.2.zip#sha256="}
 param-sweeps = {version = "~0.1.6a1", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256="}
-scipy = {version = "~1.10.1"} # also in simpeg and geoana
+scipy = {version = "~1.10.1"}  # also in simpeg and geoana
 semver = {version="~3.0.0"}
 
 ## dependencies for core algorithms
 dask = {version = "2022.10.*", extras = ["distributed"]}
-discretize = "~0.10.0" # also in simpeg
-distributed = "2022.10.*"
+discretize = "~0.10.0"  # also in simpeg
 distributed = "2022.10.*"  # because conda-lock doesn't take dask extras into account
 fiona = "~1.9.2"
-fsspec = "2022.*" # also in simpeg
+fsspec = "2022.*"  # also in simpeg
 gdal = "~3.6.3"
-matplotlib = "~3.7.1" # also in simpeg and geoana
-pandas = "~1.5.3" # also in simpeg
-scikit-learn = "~1.2.2" # also in simpeg
-tqdm = "^4.64.0" # also in las-geoh5
+matplotlib = "~3.7.1"  # also in simpeg and geoana
+pandas = "~1.5.3"  # also in simpeg
+scikit-learn = "~1.2.2"  # also in simpeg
+tqdm = "^4.64.0"  # also in las-geoh5
 
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
 simpeg-archive = {version = "~0.11.0.dev6", source = "pypi"}
@@ -67,19 +66,19 @@ simpeg-archive = {version = "~0.11.0.dev6", source = "pypi"}
 mira-simpeg = {version = "~0.19.0.dev4", source = "pypi"}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
-empymod = "~2.2.1" # from simpeg and geoana
-geoana = "~0.4.0" # from simpeg
-h5py = "*" # from geoh5py
-mkl = "2022.*" # from simpeg
-Pillow = "*" # from geoh5py
-properties = "*" # from omf
-pydiso = "~0.0.3" # from simpeg
-pymatsolver = "~0.2.0" # from simpeg
-pypng = "*" # from omf
+empymod = "~2.2.1"  # from simpeg and geoana
+geoana = "~0.4.0"  # from simpeg
+h5py = "*"  # from geoh5py
+mkl = "2022.*"  # from simpeg
+Pillow = "*"  # from geoh5py
+properties = "*"  # from omf
+pydiso = "~0.0.3"  # from simpeg
+pymatsolver = "~0.2.0"  # from simpeg
+pypng = "*"  # from omf
 scikit-image = "~0.19.2"
-six = "*" # from omf
-vectormath = "*" # from omf
-zarr = "~2.14.2" # from simpeg using Dask
+six = "*"  # from omf
+vectormath = "*"  # from omf
+zarr = "~2.14.2"  # from simpeg using Dask
 
 ## dependencies for UI
 ipyfilechooser = {version = "~0.6.0", optional = true}
