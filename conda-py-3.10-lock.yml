@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 3052df01a0a50dbd971a70f56675b6005493cd75b853f64cf802a6fe32852a52
-    osx-64: 754cd2c47594db6b6ac980eb4b21b10c9d595a635c39b3e4510cfec199c48e54
-    linux-64: 7c614028e6d6d06992e17920fa631b901b4484d53f96dc6d318a7866692f1d19
+    win-64: 0efbc2d91ed941952b2b69d3aa71074019dcf3be5ee1e4695cca9fbff95b3837
+    osx-64: f2f4709a102810332f5969886844b0dc308ec141324d61620f4c563af82cf137
+    linux-64: 8fa4a6caea815a1e457634d7f88076b7fb6f9f1fccb8dcb11eeeb7cf32aaeb94
   channels:
   - url: conda-forge
     used_env_vars: []

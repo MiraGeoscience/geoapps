@@ -64,8 +64,8 @@ pandas = {version = "~1.5.3", optional = true } # also in simpeg
 scikit-learn = {version = "~1.2.2", optional = true } # also in simpeg
 tqdm = {version = "^4.64.0", optional = true } # also in las-geoh5
 
-#simpeg_archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
-simpeg_archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
+#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
+simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
 #mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev3+geoapps.0.11.0.zip#sha256=", optional = true}
 mira-simpeg = {version = "~0.19.0.dev4", source = "pypi", optional = true}
 
@@ -126,7 +126,7 @@ core = [
     "pymatsolver",
     "scikit-image",
     "scikit-learn",
-    "simpeg_archive",
+    "simpeg-archive",
     "tqdm",
     "zarr",
 ]
