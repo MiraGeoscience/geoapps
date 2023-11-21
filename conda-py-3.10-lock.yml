@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 06a39ceaa57cf4a8f72682998446389a4a39059e81e2dc2c38dbb8ceeffd6137
-    osx-64: 834e8f868f8f72fdc90f7b2b1696b2daa260f177fd33726bd7398ff4d2afa14c
-    linux-64: 82a10911b32d8806228ef30deba6dcb8d973e37fde77783594daec4c2342f1d4
+    win-64: 547a883b5f2533f4b39b1e45ac1f1292bb562892eea8cd5e434cab439eed2b9f
+    osx-64: 5c66a16ece9b79a805a8ba17de0874c08ee66ef2488b1b598cccfee7ccb69e52
+    linux-64: 7074af6a4b00498abda543802d2b7d4f73b4bca945ea855a0ea73c657cbe970d
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -229,16 +229,16 @@ package:
   category: main
   optional: false
 - name: aom
-  version: 3.7.0
+  version: 3.7.1
   manager: conda
   platform: linux-64
   dependencies:
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-64/aom-3.7.0-h59595ed_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/aom-3.7.1-h59595ed_0.conda
   hash:
-    md5: fe83288cf960ca82e60d5b5472809917
-    sha256: c038a0381388202b717fee121fc36a157d2951a49eb090e7a7207da77476aaa5
+    md5: 504e70332b8322cda93b7bceb5925fca
+    sha256: 57ad60805ffc7097a690d6d0e07ba432a3dae187158e13001c392177358478f9
   category: core
   optional: true
 - name: attr
@@ -1973,8 +1973,8 @@ package:
   hash:
     md5: 1f95722c94f00b69af69a066c7433714
     sha256: e22268d81905338570786921b3def88e55f9ed6d0ccdd17d9fbae31a02fbef69
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: cached_property
   version: 1.5.2
   manager: conda
@@ -1997,8 +1997,8 @@ package:
   hash:
     md5: 2011bcf45376341dd1d690263fdbc789
     sha256: afa22b77128a812cb57bc707c297d926561bd225a3d9dd74205d87a3b2d14a96
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: charset-normalizer
   version: 3.3.2
   manager: conda
@@ -2009,8 +2009,8 @@ package:
   hash:
     md5: 7f4a9e3fcff3f6356ae99244a014da6a
     sha256: 20cae47d31fdd58d99c4d2e65fbdcefa0b0de0c84e455ba9d6356a4bdbc4b5b9
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: click
   version: 8.1.7
   manager: conda
@@ -2241,8 +2241,8 @@ package:
   hash:
     md5: 34272b248891bddccc64479f9a7fffed
     sha256: 9887c35c374ec1847f167292d3fde023cb4c994a4ceeec283072b95440131f09
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: iniconfig
   version: 2.0.0
   manager: conda
@@ -2777,8 +2777,8 @@ package:
   hash:
     md5: 2a7de29fb590ca14b5243c4c812c8025
     sha256: a42f826e958a8d22e65b3394f437af7332610e43ee313393d1cf143f0a2d274b
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: python-fastjsonschema
   version: 2.19.0
   manager: conda
@@ -3068,8 +3068,8 @@ package:
   hash:
     md5: 5b1be40a26d10a06f6d4f1f9e19fa0c7
     sha256: 38d16b5c53ec1af845d37d22e7bb0e6c934c7f19499123507c5a470f6f8b7dde
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: unicodedata2
   version: 15.1.0
   manager: conda
@@ -3767,8 +3767,8 @@ package:
   hash:
     md5: 6bb4ee32cd435deaeac72776c001e7ac
     sha256: 67381d3f7cadca7df7699238e0dcce680ad20d7fd28804bab48611fecb084937
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: plotly
   version: 5.13.1
   manager: conda
@@ -3977,8 +3977,8 @@ package:
   hash:
     md5: f8ced8ee63830dec7ecc1be048d1470a
     sha256: eff5029820b4eaeab3a291a39854a6cd8fc8c4216264087f68c2d8d59822c869
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: werkzeug
   version: 3.0.1
   manager: conda
@@ -4374,8 +4374,8 @@ package:
   hash:
     md5: a30144e4156cdbb236f99ebb49828f8b
     sha256: 9f629d6fd3c8ac5f2a198639fe7af87c4db2ac9235279164bfe0fcb49d8c4bad
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: stack_data
   version: 0.6.2
   manager: conda
@@ -4660,8 +4660,8 @@ package:
   hash:
     md5: 134b2b57b7865d2316a7cce1915a51ed
     sha256: 51b02987370bbff28dbf782063c23e3b264aa34173b344454203cd691946e077
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: prompt-toolkit
   version: 3.0.41
   manager: conda
@@ -7270,8 +7270,8 @@ package:
   hash:
     md5: 2362e323293e7699cf1e621d502f86d6
     sha256: 57d66ca3e072b889c94cfaf56eb7e1794d3b1b3179bd475a4edef50a03359354
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: brunsli
   version: '0.1'
   manager: conda
@@ -7329,8 +7329,8 @@ package:
   hash:
     md5: 2011bcf45376341dd1d690263fdbc789
     sha256: afa22b77128a812cb57bc707c297d926561bd225a3d9dd74205d87a3b2d14a96
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: charset-normalizer
   version: 3.3.2
   manager: conda
@@ -7341,8 +7341,8 @@ package:
   hash:
     md5: 7f4a9e3fcff3f6356ae99244a014da6a
     sha256: 20cae47d31fdd58d99c4d2e65fbdcefa0b0de0c84e455ba9d6356a4bdbc4b5b9
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: click
   version: 8.1.7
   manager: conda
@@ -7530,8 +7530,8 @@ package:
   hash:
     md5: 34272b248891bddccc64479f9a7fffed
     sha256: 9887c35c374ec1847f167292d3fde023cb4c994a4ceeec283072b95440131f09
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: iniconfig
   version: 2.0.0
   manager: conda
@@ -8016,8 +8016,8 @@ package:
   hash:
     md5: 2a7de29fb590ca14b5243c4c812c8025
     sha256: a42f826e958a8d22e65b3394f437af7332610e43ee313393d1cf143f0a2d274b
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: python-fastjsonschema
   version: 2.19.0
   manager: conda
@@ -8276,8 +8276,8 @@ package:
   hash:
     md5: 5b1be40a26d10a06f6d4f1f9e19fa0c7
     sha256: 38d16b5c53ec1af845d37d22e7bb0e6c934c7f19499123507c5a470f6f8b7dde
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: unicodedata2
   version: 15.1.0
   manager: conda
@@ -8893,8 +8893,8 @@ package:
   hash:
     md5: 6bb4ee32cd435deaeac72776c001e7ac
     sha256: 67381d3f7cadca7df7699238e0dcce680ad20d7fd28804bab48611fecb084937
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: plotly
   version: 5.13.1
   manager: conda
@@ -9158,8 +9158,8 @@ package:
   hash:
     md5: f8ced8ee63830dec7ecc1be048d1470a
     sha256: eff5029820b4eaeab3a291a39854a6cd8fc8c4216264087f68c2d8d59822c869
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: vectormath
   version: 0.2.2
   manager: conda
@@ -9526,8 +9526,8 @@ package:
   hash:
     md5: a30144e4156cdbb236f99ebb49828f8b
     sha256: 9f629d6fd3c8ac5f2a198639fe7af87c4db2ac9235279164bfe0fcb49d8c4bad
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: stack_data
   version: 0.6.2
   manager: conda
@@ -9770,8 +9770,8 @@ package:
   hash:
     md5: 134b2b57b7865d2316a7cce1915a51ed
     sha256: 51b02987370bbff28dbf782063c23e3b264aa34173b344454203cd691946e077
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: prompt-toolkit
   version: 3.0.41
   manager: conda
@@ -10802,17 +10802,17 @@ package:
   category: main
   optional: false
 - name: aom
-  version: 3.7.0
+  version: 3.7.1
   manager: conda
   platform: win-64
   dependencies:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/aom-3.7.0-h63175ca_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/aom-3.7.1-h63175ca_0.conda
   hash:
-    md5: d28fa3283b38d8c430a834d0763ec9fd
-    sha256: 3205467eb46f5ea410c54992bc6a985b554e3200ef5b125d878beff58d4e09c1
+    md5: 1b52cb3995f780a5c0a52fc1bb81b337
+    sha256: aa317fd3271b4fabbfe3b800cc0d55a9bbfb9b5aa7f91bfb08c86f2da08d2729
   category: core
   optional: true
 - name: bzip2
@@ -11807,8 +11807,8 @@ package:
   hash:
     md5: 42bfbc1d41cbe2696a3c9d8b0342324f
     sha256: 8de77cf62a653dd6ffe19927b92c421f5fa73c078d7799181f5211a1bac2883b
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: c-blosc2
   version: 2.11.2
   manager: conda
@@ -11848,8 +11848,8 @@ package:
   hash:
     md5: 2011bcf45376341dd1d690263fdbc789
     sha256: afa22b77128a812cb57bc707c297d926561bd225a3d9dd74205d87a3b2d14a96
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: charset-normalizer
   version: 3.3.2
   manager: conda
@@ -11860,8 +11860,8 @@ package:
   hash:
     md5: 7f4a9e3fcff3f6356ae99244a014da6a
     sha256: 20cae47d31fdd58d99c4d2e65fbdcefa0b0de0c84e455ba9d6356a4bdbc4b5b9
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: cloudpickle
   version: 3.0.0
   manager: conda
@@ -12036,8 +12036,8 @@ package:
   hash:
     md5: 34272b248891bddccc64479f9a7fffed
     sha256: 9887c35c374ec1847f167292d3fde023cb4c994a4ceeec283072b95440131f09
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: iniconfig
   version: 2.0.0
   manager: conda
@@ -12663,7 +12663,7 @@ package:
   category: core
   optional: true
 - name: rpds-py
-  version: 0.13.0
+  version: 0.13.1
   manager: conda
   platform: win-64
   dependencies:
@@ -12672,10 +12672,10 @@ package:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.13.0-py310h87d50f1_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.13.1-py310h87d50f1_0.conda
   hash:
-    md5: 36708573876fb9685bece2cab045be50
-    sha256: bebc9d3414d70fd484a2a6688037ef77ed772f8f8354376bb9ec71509672e2a7
+    md5: 23480a5334d40b39aaa04daedd0645d9
+    sha256: 6f2b127dd638fdd3ec40a3ee90bdcc34900a924bb585194b296c0705a62f5a93
   category: apps
   optional: true
 - name: semver
@@ -12871,8 +12871,8 @@ package:
   hash:
     md5: 5b1be40a26d10a06f6d4f1f9e19fa0c7
     sha256: 38d16b5c53ec1af845d37d22e7bb0e6c934c7f19499123507c5a470f6f8b7dde
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: unicodedata2
   version: 15.1.0
   manager: conda
@@ -12948,8 +12948,8 @@ package:
   hash:
     md5: 30878ecc4bd36e8deeea1e3c151b2e0b
     sha256: a11ae693a0645bf6c7b8a47bac030be9c0967d0b1924537b9ff7458e832c0511
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: xorg-libxau
   version: 1.0.11
   manager: conda
@@ -13491,8 +13491,8 @@ package:
   hash:
     md5: 6bb4ee32cd435deaeac72776c001e7ac
     sha256: 67381d3f7cadca7df7699238e0dcce680ad20d7fd28804bab48611fecb084937
-  category: dev
-  optional: true
+  category: main
+  optional: false
 - name: plotly
   version: 5.13.1
   manager: conda
@@ -13556,8 +13556,8 @@ package:
   hash:
     md5: 56cd9fe388baac0e90c7149cfac95b60
     sha256: b3a612bc887f3dd0fb7c4199ad8e342bd148cf69a9b74fd9468a18cf2bef07b7
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: pytest
   version: 7.4.3
   manager: conda
@@ -14116,8 +14116,8 @@ package:
   hash:
     md5: f8ced8ee63830dec7ecc1be048d1470a
     sha256: eff5029820b4eaeab3a291a39854a6cd8fc8c4216264087f68c2d8d59822c869
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: wcwidth
   version: 0.2.10
   manager: conda
@@ -14314,8 +14314,8 @@ package:
   hash:
     md5: a30144e4156cdbb236f99ebb49828f8b
     sha256: 9f629d6fd3c8ac5f2a198639fe7af87c4db2ac9235279164bfe0fcb49d8c4bad
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: tiledb
   version: 2.16.3
   manager: conda
@@ -14483,8 +14483,8 @@ package:
   hash:
     md5: 134b2b57b7865d2316a7cce1915a51ed
     sha256: 51b02987370bbff28dbf782063c23e3b264aa34173b344454203cd691946e077
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: prompt_toolkit
   version: 3.0.41
   manager: conda
