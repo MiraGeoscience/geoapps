@@ -246,9 +246,9 @@ def recreate_per_platform_lock_files() -> None:
     delete_per_platform_lock_files()
     with print_execution_time("create_per_platform_lock"):
         for py_ver in _python_versions:
-            per_platform_env(py_ver, ["core", "apps"], dev=False)
+            per_platform_env(py_ver, ["core", "ui"], dev=False)
             finalize_per_platform_envs(py_ver, dev=False)
-            per_platform_env(py_ver, ["core", "apps"], dev=True)
+            per_platform_env(py_ver, ["core", "ui"], dev=True)
             finalize_per_platform_envs(py_ver, dev=True)
 
 
