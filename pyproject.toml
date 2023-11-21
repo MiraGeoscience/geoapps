@@ -49,21 +49,23 @@ las-geoh5 = { version = "~0.1.0", source = "pypi", allow-prereleases = true}
 #las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip#sha256="}
 param-sweeps = {version = "~0.1.6a1", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256="}
+scipy = {version = "~1.10.1"} # also in simpeg and geoana
 semver = {version="~3.0.0"}
 
 ## dependencies for core algorithms
 dask = {version = "2022.10.*", extras = ["distributed"], optional = true}
 discretize = {version = "~0.10.0", optional = true } # also in simpeg
 distributed = {version = "2022.10.*", optional = true}
+fiona = {version = "~1.9.2", optional = true}
 fsspec = {version = "2022.*", optional = true } # also in simpeg
+gdal = {version = "~3.6.3", optional = true}
 matplotlib = {version = "~3.7.1", optional = true } # also in simpeg and geoana
 pandas = {version = "~1.5.3", optional = true } # also in simpeg
 scikit-learn = {version = "~1.2.2", optional = true } # also in simpeg
-scipy = {version = "~1.10.1", optional = true } # also in simpeg and geoana
 tqdm = {version = "^4.64.0", optional = true } # also in las-geoh5
 
-#simpeg_archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
-simpeg_archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
+#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
+simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
 #mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev3+geoapps.0.11.0.zip#sha256=", optional = true}
 mira-simpeg = {version = "~0.19.0.dev4", source = "pypi", optional = true}
 
@@ -77,26 +79,24 @@ properties = "*" # from omf
 pydiso = {version = "~0.0.3", optional = true} # from simpeg
 pymatsolver = {version = "~0.2.0", optional = true} # from simpeg
 pypng = "*" # from omf
+scikit-image = {version = "~0.19.2", optional = true}
 six = "*" # from omf
 vectormath = "*" # from omf
 zarr = {version = "~2.14.2", optional = true} # from simpeg using Dask
 
 ## dependencies for UI
-fiona = {version = "~1.9.2", optional = true}
-gdal = {version = "~3.6.3", optional = true}
 ipyfilechooser = {version = "~0.6.0", optional = true}
 ipywidgets = {version = "^7.6.5", optional = true}
 plotly = {version = "~5.13.1", optional = true}
-pyqtwebengine = {version = "~5.15"}
-pyside2 = {version = "~5.15"}
-scikit-image = {version = "~0.19.2", optional = true}
+pyqtwebengine = {version = "~5.15", optional = true}
+pyside2 = {version = "~5.15", optional = true}
 dash-daq = {version = "~0.5.0", optional = true}
 
 ## about pip dependencies
 # to be specified to work with conda-lock
 # - from PyPI: my_package = { version = "1.2.3", source = "pypi" }
 # - from URL:
-#   - for a tags: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.zip#sha256=" }
+#   - for a tags:   my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.zip#sha256=" }
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=" }
 # Note - conda-lock does not support the syntax: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
@@ -114,7 +114,9 @@ core = [
     "discretize",
     "distributed",
     "empymod",
+    "fiona",
     "fsspec",
+    "gdal",
     "geoana",
     "matplotlib",
     "mira-simpeg",
@@ -122,9 +124,9 @@ core = [
     "pandas",
     "pydiso",
     "pymatsolver",
+    "scikit-image",
     "scikit-learn",
-    "scipy",
-    "simpeg_archive",
+    "simpeg-archive",
     "tqdm",
     "zarr",
 ]
@@ -133,12 +135,11 @@ core = [
 apps = [
     # should include "core", but need non-overlapping extra lists for conda-lock
     "dash-daq",
-    "fiona",
-    "gdal",
     "ipyfilechooser",
     "ipywidgets",
     "plotly",
-    "scikit-image",
+    "pyqtwebengine",
+    "pyside2",
 ]
 
 [tool.conda-lock]
