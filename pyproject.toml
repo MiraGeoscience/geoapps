@@ -167,14 +167,6 @@ line_length = 88
 [tool.black]
 # defaults are just fine
 
-[tool.poetry2conda]
-name = "geoapps"
-## usage of poetry2conda
-# As poetry2conda does not support url sources for pip dependencies,
-# temporarily edit this file and use git sources instead, with 'tag=' indifferently whether it is actually a branch or rev.
-#> poetry2conda pyproject.toml -E full environment.yml
-#> poetry2conda pyproject.toml -E full --dev environment-dev.yml
-
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools"]
 build-backend = "poetry.core.masonry.api"
