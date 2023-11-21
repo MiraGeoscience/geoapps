@@ -111,28 +111,6 @@ pytest-cov = "*"
 toml = "*" # for tests only
 
 [tool.poetry.extras]
-core = [
-    "dask",
-    "discretize",
-    "distributed",
-    "empymod",
-    "fiona",
-    "fsspec",
-    "gdal",
-    "geoana",
-    "matplotlib",
-    "mira-simpeg",
-    "mkl",
-    "pandas",
-    "pydiso",
-    "pymatsolver",
-    "scikit-image",
-    "scikit-learn",
-    "simpeg-archive",
-    "tqdm",
-    "zarr",
-]
-
 # extras for I/O
 io = [
     "las-geoh5",
