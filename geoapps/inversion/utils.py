@@ -217,7 +217,7 @@ def tile_locations(
 
         np.random.seed(0)
         # Cluster
-        # TODO turn off filter once sklearn has dealt with the issue causeing the warning
+        # TODO turn off filter once sklearn has dealt with the issue causing the warning
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             from sklearn.cluster import KMeans
