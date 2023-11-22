@@ -30,8 +30,8 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import networkx as nx
-import ruamel.yaml as yaml
 from add_url_tag_sha256 import patch_pyproject_toml
+from ruamel.yaml import YAML
 
 env_file_variables_section_ = """
 variables:
@@ -274,8 +274,11 @@ def remove_redundant_pip_from_lock_file(lock_file: Path) -> None:
     assert lock_file.is_file()
     print("## Removing redundant pip packages ...")
 
+    yaml = YAML()
+    yaml.width = 1200
+
     with open(lock_file, encoding="utf-8") as file:
-        yaml_content = yaml.load(file, Loader=yaml.RoundTripLoader)
+        yaml_content = yaml.load(file)
         assert yaml_content is not None
 
     packages = yaml_content["package"]
@@ -313,7 +316,7 @@ def remove_redundant_pip_from_lock_file(lock_file: Path) -> None:
         or p["name"] in remaining_pip_per_platform[p["platform"]]
     ]
     with open(lock_file, mode="w", encoding="utf-8") as file:
-        yaml.dump(yaml_content, file, Dumper=yaml.RoundTripDumper, width=1200)
+        yaml.dump(yaml_content, file)
 
 
 def list_redundant_pip_packages(
