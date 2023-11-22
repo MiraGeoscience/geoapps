@@ -160,13 +160,39 @@ line_length = 88
 [tool.black]
 # defaults are just fine
 
-[tool.poetry2conda]
-name = "geoapps"
-## usage of poetry2conda
-# As poetry2conda does not support url sources for pip dependencies,
-# temporarily edit this file and use git sources instead, with 'tag=' indifferently whether it is actually a branch or rev.
-#> poetry2conda pyproject.toml -E full environment.yml
-#> poetry2conda pyproject.toml -E full --dev environment-dev.yml
+[tool.mypy]
+warn_unused_configs = true
+ignore_missing_imports = true
+scripts_are_modules = true
+show_error_context = true
+show_column_numbers = true
+check_untyped_defs = true
+
+plugins = [
+    #    'numpy.typing.mypy_plugin'
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov my_app --cov-report html --cov-report term-missing:skip-covered"
+
+[tool.coverage.run]
+branch = true
+source = ["geoapps"]
+omit = []
+
+[tool.coverage.report]
+exclude_lines = [
+    "raise NotImplementedError",
+    "pass",
+    "if TYPE_CHECKING",
+    "pragma: no cover"
+]
+
+fail_under = 80
+
+[tool.coverage.html]
+skip_empty = true
+skip_covered = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0", "setuptools"]
