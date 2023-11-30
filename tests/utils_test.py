@@ -25,10 +25,11 @@ from discretize.utils import mesh_builder_xyz
 from geoh5py.objects import Curve, Grid2D, Points
 from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
+from octree_creation_app.driver import OctreeDriver
+from octree_creation_app.utils import octree_2_treemesh, treemesh_2_octree
 
-from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
+from geoapps.driver_base.utils import active_from_xyz, running_mean
 from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.shared_utils.utils import (
     densify_curve,
     downsample_grid,
@@ -36,7 +37,6 @@ from geoapps.shared_utils.utils import (
     drape_2_tensor,
     filter_xy,
     get_locations,
-    octree_2_treemesh,
     rotate_xyz,
     weighted_average,
     window_xy,
@@ -755,33 +755,6 @@ def test_weigted_average():
     values = [np.array([1, 2, 3])]
     out = weighted_average(xyz_in, xyz_out, values, threshold=1e30)
     assert out[0] == 2
-
-
-def test_treemesh_2_octree(tmp_path: Path):
-    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make() as workspace:
-        mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
-        mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
-        omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
-        assert omesh.n_cells == mesh.n_cells
-        assert np.all(
-            (omesh.centroids - mesh.cell_centers[getattr(mesh, "_ubc_order")]) < 1e-14
-        )
-        expected_refined_cells = [
-            (0, 0, 6),
-            (0, 0, 7),
-            (1, 0, 6),
-            (1, 0, 7),
-            (0, 1, 6),
-            (0, 1, 7),
-            (1, 1, 6),
-            (1, 1, 7),
-        ]
-        ijk_refined = omesh.octree_cells[["I", "J", "K"]][
-            omesh.octree_cells["NCells"] == 1
-        ].tolist()
-        assert np.all([k in ijk_refined for k in expected_refined_cells])
-        assert np.all([k in expected_refined_cells for k in ijk_refined])
 
 
 def test_drape_2_tensormesh(tmp_path: Path):

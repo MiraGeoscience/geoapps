@@ -34,11 +34,12 @@ from geoh5py.objects import (
     TipperReceivers,
 )
 from geoh5py.workspace import Workspace
+from octree_creation_app.driver import OctreeDriver
+from octree_creation_app.utils import treemesh_2_octree
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
-from geoapps.driver_base.utils import active_from_xyz, treemesh_2_octree
-from geoapps.octree_creation.driver import OctreeDriver
+from geoapps.driver_base.utils import active_from_xyz
 from geoapps.utils.models import get_drape_model
 from geoapps.utils.surveys import survey_lines
 

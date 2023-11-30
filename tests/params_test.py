@@ -24,6 +24,7 @@ from geoh5py.shared.exceptions import (
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import requires_value
 from geoh5py.workspace import Workspace
+from octree_creation_app.params import OctreeParams
 
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
@@ -51,8 +52,7 @@ from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
 from geoapps.inversion.potential_fields.magnetic_vector.constants import (
     app_initializer as mvi_init,
 )
-from geoapps.octree_creation.constants import app_initializer as octree_initializer
-from geoapps.octree_creation.params import OctreeParams
+from geoapps.octree_creation.application import app_initializer as octree_initializer
 from geoapps.peak_finder.constants import app_initializer as peak_initializer
 from geoapps.peak_finder.params import PeakFinderParams
 

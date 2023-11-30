@@ -41,14 +41,16 @@ python = "^3.9, < 3.11"
 
 ## dependencies for a minimal environment
 numpy = "~1.23.5" # also geoh5py, simpeg and geoana
-#geoh5py = {version = "~0.8.0rc1", source = "pypi", allow-prereleases = true}
-geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.8.0-rc.2.zip#sha256="}
+#geoh5py = {version = "~0.8.0rc3", source = "pypi", allow-prereleases = true}
+#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.8.0-rc.2.zip#sha256="}
 mira-omf = {version = "~3.0.0", source = "pypi", allow-prereleases = true}
 #mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/develop.zip#sha256="}
 #las-geoh5 = { version = "~0.1.0", source = "pypi", allow-prereleases = true}
 las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/develop.zip#sha256="}
 param-sweeps = {version = "~0.1.6a1", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256="}
+octree-creation-app = {version = "~0.1.0a1", source = "pypi", allow-prereleases = true}
+#octree-creation-app = { url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/GEOPY-1224.zip#sha256=" }
 semver = {version="~3.0.0"}
 
 ## dependencies for core algorithms

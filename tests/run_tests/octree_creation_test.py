@@ -16,12 +16,10 @@ from geoh5py.objects import Curve, Points, Surface
 from geoh5py.shared.utils import compare_entities
 from geoh5py.ui_json.utils import str2list
 from geoh5py.workspace import Workspace
+from octree_creation_app.utils import treemesh_2_octree
 from scipy.spatial import Delaunay
 
-from geoapps.driver_base.utils import treemesh_2_octree
-from geoapps.octree_creation import OctreeParams
 from geoapps.octree_creation.application import OctreeDriver, OctreeMesh
-from geoapps.shared_utils.utils import octree_2_treemesh
 from geoapps.utils.testing import get_output_workspace
 
 # pylint: disable=redefined-outer-name
@@ -248,16 +246,6 @@ def test_create_octree_surface(tmp_path: Path, setup_test_octree):
             compare_entities(octree, rec_octree, ignore=["_uid"])
 
 
-def test_create_octree_driver(tmp_path: Path):
-    uijson_path = tmp_path.parent / "test_create_octree_curve0" / "Temp"
-    json_file = next(uijson_path.glob("*.ui.json"))
-    driver = OctreeDriver.start(str(json_file))
-
-    with driver.params.geoh5.open(mode="r"):
-        results = driver.params.geoh5.get_entity("Octree_Mesh")
-        compare_entities(results[0], results[1], ignore=["_uid"])
-
-
 def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
     (
         cell_sizes,
@@ -327,74 +315,3 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
         with Workspace(get_output_workspace(tmp_path)) as workspace:
             rec_octree = workspace.get_entity("Octree_Mesh")[0]
             compare_entities(octree, rec_octree, ignore=["_uid"])
-
-
-@pytest.mark.parametrize(
-    "diagonal_balance, exp_values, exp_counts",
-    [(True, [0, 1], [22, 10]), (False, [0, 1, 2], [22, 8, 2])],
-)
-def test_octree_diagonal_balance(
-    tmp_path: Path, diagonal_balance, exp_values, exp_counts
-):
-    workspace = Workspace.create(tmp_path / "testDiagonalBalance.geoh5")
-    with workspace.open(mode="r+"):
-        point = [0, 0, 0]
-        points = Points.create(workspace, vertices=np.array([[150, 0, 150], point]))
-
-        # Repeat the creation using the app
-        params_dict = {
-            "geoh5": workspace,
-            "objects": str(points.uid),
-            "u_cell_size": 10.0,
-            "v_cell_size": 10.0,
-            "w_cell_size": 10.0,
-            "horizontal_padding": 500.0,
-            "vertical_padding": 200.0,
-            "depth_core": 400.0,
-            "Refinement A object": points.uid,
-            "Refinement A levels": "1",
-            "Refinement A type": "radial",
-            "Refinement A distance": 200,
-        }
-
-        params = OctreeParams(
-            **params_dict, diagonal_balance=diagonal_balance, ga_group_name="mesh"
-        )
-        filename = "diag_balance.ui.json"
-
-        params.write_input_file(name=filename, path=tmp_path, validate=False)
-
-        OctreeDriver.start(tmp_path / filename)
-
-    with workspace.open(mode="r"):
-        results = []
-        treemesh = octree_2_treemesh(workspace.get_entity("mesh")[0])
-
-        ind = treemesh._get_containing_cell_indexes(  # pylint: disable=protected-access
-            point
-        )
-        starting_cell = treemesh[ind]
-
-        level = starting_cell._level  # pylint: disable=protected-access
-        for first_neighbor in starting_cell.neighbors:
-            neighbors = []
-            for neighbor in treemesh[first_neighbor].neighbors:
-                if isinstance(neighbor, list):
-                    neighbors += neighbor
-                else:
-                    neighbors.append(neighbor)
-
-            for second_neighbor in neighbors:
-                compare_cell = treemesh[second_neighbor]
-                if set(starting_cell.nodes) & set(compare_cell.nodes):
-                    results.append(
-                        np.abs(
-                            level
-                            - compare_cell._level  # pylint: disable=protected-access
-                        )
-                    )
-
-        values, counts = np.unique(results, return_counts=True)
-
-        assert (values == np.array(exp_values)).all()
-        assert (counts == np.array(exp_counts)).all()

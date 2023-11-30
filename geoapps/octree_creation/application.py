@@ -20,12 +20,12 @@ from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
+from octree_creation_app.driver import OctreeDriver
+from octree_creation_app.params import OctreeParams
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.octree_creation.constants import app_initializer
-from geoapps.octree_creation.driver import OctreeDriver
-from geoapps.octree_creation.params import OctreeParams
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
@@ -354,6 +354,57 @@ class OctreeMesh(ObjectDataSelection):
 
         return VBox(widget_list, layout=Layout(border="solid"))
 
+
+template_dict = {
+    "object": {
+        "groupOptional": True,
+        "enabled": False,
+        "group": "Refinement A",
+        "label": "Object",
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{b99bd6e5-4fe1-45a5-bd2f-75fc31f91b38}",
+            "{0b639533-f35b-44d8-92a8-f70ecff3fd26}",
+            "{9b08bb5a-300c-48fe-9007-d206f971ea92}",
+            "{19730589-fd28-4649-9de0-ad47249d9aba}",
+        ],
+        "value": None,
+    },
+    "levels": {
+        "enabled": False,
+        "group": "Refinement A",
+        "label": "Levels",
+        "value": "4, 4, 4",
+    },
+    "type": {
+        "choiceList": ["surface", "radial"],
+        "enabled": False,
+        "group": "Refinement A",
+        "label": "Type",
+        "value": "radial",
+    },
+    "distance": {
+        "enabled": False,
+        "group": "Refinement A",
+        "label": "Distance",
+        "value": 1000.0,
+    },
+}
+
+app_initializer = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": uuid.UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "Refinement A object": uuid.UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "Refinement A levels": "4, 4, 4",
+    "Refinement A type": "radial",
+    "Refinement A distance": 1000.0,
+    "Refinement B object": uuid.UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "Refinement B levels": "0, 0, 4",
+    "Refinement B type": "surface",
+    "Refinement B distance": 1200.0,
+}
 
 if __name__ == "__main__":
     file = sys.argv[1]

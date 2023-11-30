@@ -18,12 +18,13 @@ from geoh5py.objects import BlockModel, DrapeModel, Octree
 from geoh5py.shared import INTEGER_NDV
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
+from octree_creation_app.utils import octree_2_treemesh
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.driver import BlockModelDriver
 from geoapps.driver_base.utils import running_mean
-from geoapps.shared_utils.utils import octree_2_treemesh, rotate_xyz
+from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.surveys import compute_alongline_distance, traveling_salesman
 
 

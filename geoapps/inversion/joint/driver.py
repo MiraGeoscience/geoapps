@@ -13,10 +13,10 @@ import sys
 
 import numpy as np
 from geoh5py.ui_json import InputFile
+from octree_creation_app.utils import treemesh_2_octree
 from SimPEG.maps import TileMap
 from SimPEG.objective_function import ComboObjectiveFunction
 
-from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.inversion import DRIVER_MAP
 from geoapps.inversion.components import InversionMesh
 from geoapps.inversion.components.factories import SaveIterationGeoh5Factory
