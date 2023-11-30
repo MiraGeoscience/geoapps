@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2022-2023 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -29,7 +29,9 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+import networkx as nx
 from add_url_tag_sha256 import patch_pyproject_toml
+from ruamel.yaml import YAML
 
 env_file_variables_section_ = """
 variables:
@@ -54,7 +56,7 @@ def print_execution_time(name: str = "") -> Generator:
         print(f"--{message_prefix} execution time: {duration}")
 
 
-def create_multi_platform_lock(py_ver: str, platform: str | None = None) -> None:
+def create_multi_platform_lock(py_ver: str, platform: str | None = None) -> Path:
     print(f"# Creating multi-platform lock file for Python {py_ver} ...")
     platform_option = f"-p {platform}" if platform else ""
     with print_execution_time(f"conda-lock for {py_ver}"):
@@ -69,7 +71,9 @@ def create_multi_platform_lock(py_ver: str, platform: str | None = None) -> None
             check=True,
             stderr=subprocess.STDOUT,
         )
-        patch_absolute_path(Path(f"conda-py-{py_ver}-lock.yml"))
+        file = Path(f"conda-py-{py_ver}-lock.yml")
+        patch_absolute_path(file)
+    return file
 
 
 def per_platform_env(
@@ -219,21 +223,29 @@ def config_conda() -> None:
     )
 
 
+def get_multiplatform_lock_files() -> list[Path]:
+    return list(Path().glob("*-lock.yml"))
+
+
 def delete_multiplatform_lock_files() -> None:
-    for f in Path().glob("*-lock.yml"):
+    for f in get_multiplatform_lock_files():
         f.unlink()
 
 
-def recreate_multiplatform_lock_files() -> None:
+def recreate_multiplatform_lock_files() -> list[Path]:
     delete_multiplatform_lock_files()
 
     # also delete per-platform lock files to make it obvious that
     # they must be cre-created after the multi-platform files were updated
     delete_per_platform_lock_files()
 
+    created_files: list[Path] = []
     with print_execution_time("create_multi_platform_lock"):
         for py_ver in _python_versions:
-            create_multi_platform_lock(py_ver)
+            file = create_multi_platform_lock(py_ver)
+            created_files.append(file)
+            remove_redundant_pip_from_lock_file(file)
+    return created_files
 
 
 def delete_per_platform_lock_files() -> None:
@@ -252,7 +264,118 @@ def recreate_per_platform_lock_files() -> None:
             finalize_per_platform_envs(py_ver, dev=True)
 
 
-if __name__ == "__main__":
+def remove_redundant_pip_from_lock_file(lock_file: Path) -> None:
+    """
+    Remove pip packages that are also fetched from conda.
+
+    If a package version is different between pip and conda, exit with an error.
+    """
+
+    assert lock_file.is_file()
+    print("## Removing redundant pip packages ...")
+
+    yaml = YAML()
+    yaml.width = 1200
+
+    with open(lock_file, encoding="utf-8") as file:
+        yaml_content = yaml.load(file)
+        assert yaml_content is not None
+
+    packages = yaml_content["package"]
+    remaining_pip_per_platform: dict[str, list[str]] = {}
+    for platform in ["linux-64", "osx-64", "win-64"]:
+        # parse the yml file
+        pip_packages = [
+            p for p in packages if p["manager"] == "pip" and p["platform"] == platform
+        ]
+        if len(pip_packages) == 0:
+            continue
+
+        conda_packages = {
+            p["name"]: p["version"]
+            for p in packages
+            if p["manager"] == "conda" and p["platform"] == platform
+        }
+        redundant_pip_names = list_redundant_pip_packages(pip_packages, conda_packages)
+        graph = build_dependency_tree(pip_packages)
+        graph = trim_dependency_tree(graph, redundant_pip_names)
+        remaining_pip_names = list(graph.nodes)
+        remaining_pip_packages = [
+            p for p in pip_packages if p["name"] in remaining_pip_names
+        ]
+        assert (
+            len(list_redundant_pip_packages(remaining_pip_packages, conda_packages))
+            == 0
+        ), "Could not eliminate all redundant pip packages (likely due mismatch on versions)"
+        remaining_pip_per_platform[platform] = remaining_pip_names
+
+    yaml_content["package"] = [
+        p
+        for p in packages
+        if p["manager"] != "pip"
+        or p["name"] in remaining_pip_per_platform[p["platform"]]
+    ]
+    with open(lock_file, mode="w", encoding="utf-8") as file:
+        yaml.dump(yaml_content, file)
+
+
+def list_redundant_pip_packages(
+    pip_packages: list[dict], conda_packages: dict[str, str]
+) -> list[str]:
+    """
+    Return the names of pip packages that are also listed as conda packages.
+
+    If some packages are present for both pip and conda but with different versions, exit with an error.
+    :param pip_packages: list of pip packages, where each package is a dict with its full description.
+    :param conda_packages: list of conda packages as a dict with the package name as key and its version as value.
+    :return: names of the pip packages that are also listed as conda packages.
+    """
+
+    redundant_pip_packages: list[str] = []
+    for pip_package in pip_packages:
+        package_name = pip_package["name"]
+        version_from_conda = conda_packages.get(package_name, None)
+        if version_from_conda is None:
+            continue
+
+        if version_from_conda == pip_package["version"]:
+            print(
+                f"package {pip_package['name']} ({version_from_conda} {pip_package['platform']}) is fetched from pip and conda"
+            )
+            redundant_pip_packages.append(package_name)
+        else:
+            print(
+                f"package {pip_package['name']} ({pip_package['platform']}) is fetched with a different version "
+                f"from pip ({pip_package['version']}) and conda ({version_from_conda})"
+            )
+    return redundant_pip_packages
+
+
+def build_dependency_tree(packages: list[dict]) -> nx.DiGraph:
+    graph = nx.DiGraph()
+    for package in packages:
+        graph.add_node(package["name"])
+        for dependency in package["dependencies"].keys():
+            graph.add_edge(package["name"], dependency)
+    return graph
+
+
+def trim_dependency_tree(
+    graph: nx.DiGraph, packages_to_remove: list[str]
+) -> nx.DiGraph:
+    # Remove the specified packages
+    for package in packages_to_remove:
+        if package in graph:
+            graph.remove_node(package)
+
+    orphaned_nodes = [node for node, degree in graph.degree() if degree == 0]
+    for node in orphaned_nodes:
+        graph.remove_node(node)
+
+    return graph
+
+
+def main():
     assert _environments_folder.is_dir()
 
     config_conda()
@@ -260,3 +383,7 @@ if __name__ == "__main__":
 
     recreate_multiplatform_lock_files()
     recreate_per_platform_lock_files()
+
+
+if __name__ == "__main__":
+    main()

@@ -15,7 +15,9 @@ from datetime import date
 
 if __name__ == "__main__":
     current_year = date.today().year
-    copyright_re = re.compile(rf"\bcopyright \(c\) \b{current_year}\b", re.IGNORECASE)
+    copyright_re = re.compile(
+        rf"\bcopyright \(c\) (:?\d{{4}}-|)\b{current_year}\b", re.IGNORECASE
+    )
     files = sys.argv[1:]
     max_lines = 10
     report_files = []
@@ -25,7 +27,9 @@ if __name__ == "__main__":
             has_dated_copyright = False
             for line in file:
                 count += 1
-                if count >= max_lines and not f.endswith("README.rst"):
+                if count >= max_lines and not (
+                    f.endswith("README.rst") or f.endswith("README-dev.rst")
+                ):
                     break
                 if re.search(copyright_re, line):
                     has_dated_copyright = True
