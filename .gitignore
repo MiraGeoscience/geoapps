@@ -140,8 +140,11 @@ dmypy.json
 # customization
 get_custom_conda.bat
 
+# not using poetry here, but conda lock
+poetry.lock
+
 # cleanup after tests
-*.lock
+*.geoh5.lock
 /geoapps-assets/EM1DInversion_.json
 /geoapps-assets/Inversion_.json
 /geoapps-assets/SimPEG_PFInversion/
