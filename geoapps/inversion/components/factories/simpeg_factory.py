@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.driver_base.params import BaseParams
+    from geoapps_utils.driver.params import BaseParams
 
 # TODO Redesign simpeg factory to avoid pylint arguments-differ complaint
 

@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.driver_base.params import BaseParams
+    from geoapps_utils.driver.params import BaseParams
 
 from pathlib import Path
 

@@ -13,6 +13,7 @@ from warnings import warn
 import numpy as np
 from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
+from geoapps_utils.numerical import running_mean, traveling_salesman
 from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, DrapeModel, Octree
 from geoh5py.shared import INTEGER_NDV
@@ -22,9 +23,8 @@ from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.driver import BlockModelDriver
-from geoapps.driver_base.utils import running_mean
 from geoapps.shared_utils.utils import octree_2_treemesh, rotate_xyz
-from geoapps.utils.surveys import compute_alongline_distance, traveling_salesman
+from geoapps.utils.surveys import compute_alongline_distance
 
 
 def drape_to_octree(

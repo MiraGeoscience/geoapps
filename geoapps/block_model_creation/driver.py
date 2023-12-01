@@ -11,6 +11,7 @@ import sys
 
 import numpy as np
 from discretize.utils import mesh_utils
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.objects import BlockModel
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
@@ -18,7 +19,6 @@ from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.constants import validations
 from geoapps.block_model_creation.params import BlockModelParams
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.utils import get_locations
 
 

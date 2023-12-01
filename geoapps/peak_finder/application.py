@@ -15,6 +15,8 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from geoapps_utils import geophysical_systems
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.data import ReferencedData
 from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
@@ -29,7 +31,6 @@ from geoapps.peak_finder.constants import (
     default_ui_json,
     template_dict,
 )
-from geoapps.utils import geophysical_systems, warn_module_not_found
 
 from . import PeakFinderParams
 from .driver import PeakFinderDriver

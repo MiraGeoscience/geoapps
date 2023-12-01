@@ -15,6 +15,7 @@ import sys
 import uuid
 
 import numpy as np
+from geoapps_utils import geophysical_systems
 from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, DrapeModel, Grid2D
@@ -42,7 +43,6 @@ from simpeg_archive.simpegEM1D import (
 from simpeg_archive.utils import Counter, mkvc
 
 from geoapps.shared_utils.utils import filter_xy, rotate_xyz
-from geoapps.utils import geophysical_systems
 
 
 def inversion(input_file):

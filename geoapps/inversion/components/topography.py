@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.driver_base.params import BaseParams
+    from geoapps_utils.driver.params import BaseParams
     from . import InversionMesh
 
 import warnings

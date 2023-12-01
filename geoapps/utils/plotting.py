@@ -12,11 +12,12 @@ from copy import copy
 from pathlib import Path
 
 import numpy as np
+from geoapps_utils.importing import warn_module_not_found
+from geoapps_utils.plotting import symlog
 from geoh5py.data import Data
 from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 
 from geoapps.shared_utils.utils import filter_xy
-from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
     from matplotlib import colors
@@ -27,13 +28,6 @@ with warn_module_not_found():
 
 with warn_module_not_found():
     import ipywidgets as widgets
-
-
-def symlog(values, threshold):
-    """
-    Convert values to log with linear threshold near zero
-    """
-    return np.sign(values) * np.log10(1 + np.abs(values) / threshold)
 
 
 def inv_symlog(values, threshold):

@@ -11,6 +11,8 @@ from __future__ import annotations
 import sys
 
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.formatters import string_name
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
 from matplotlib.pyplot import axes
@@ -18,9 +20,7 @@ from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.contours.constants import validations
 from geoapps.contours.params import ContoursParams
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.utils import get_contours
-from geoapps.utils.formatters import string_name
 from geoapps.utils.plotting import plot_plan_data_selection
 
 

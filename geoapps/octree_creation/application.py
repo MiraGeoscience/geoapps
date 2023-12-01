@@ -15,6 +15,7 @@ import warnings
 from pathlib import Path
 from time import time
 
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace
@@ -23,7 +24,6 @@ from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils import warn_module_not_found
 
 from . import OctreeParams, app_initializer
 from .driver import OctreeDriver

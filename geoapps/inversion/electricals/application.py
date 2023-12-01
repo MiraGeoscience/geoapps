@@ -16,6 +16,8 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from geoapps_utils.importing import warn_module_not_found
+from geoapps_utils.iterables import find_value
 from geoh5py.data import Data
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.shared.utils import fetch_active_workspace
@@ -39,8 +41,6 @@ from geoapps.inversion.potential_fields.application import (
     MeshOctreeOptions,
     ModelOptions,
 )
-from geoapps.utils import warn_module_not_found
-from geoapps.utils.list import find_value
 
 with warn_module_not_found():
     import ipywidgets as widgets

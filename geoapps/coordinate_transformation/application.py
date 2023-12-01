@@ -12,6 +12,7 @@ from pathlib import Path
 from time import time
 
 import numpy
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D, Points, Surface
@@ -19,7 +20,6 @@ from geoh5py.ui_json.utils import monitored_directory_copy
 
 from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
 
 from ..base.application import BaseApplication

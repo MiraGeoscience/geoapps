@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from time import time
 
+from geoapps_utils.formatters import string_name
 from geoh5py.objects.object_base import Entity, ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json.input_file import InputFile
@@ -19,7 +20,6 @@ from geoapps.base.plot import PlotSelection2D
 from geoapps.contours.constants import app_initializer
 from geoapps.contours.driver import ContoursDriver
 from geoapps.contours.params import ContoursParams
-from geoapps.utils.formatters import string_name
 
 
 class ContourValues(PlotSelection2D):

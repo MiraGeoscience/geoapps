@@ -15,6 +15,9 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from geoapps_utils import geophysical_systems
+from geoapps_utils.importing import warn_module_not_found
+from geoapps_utils.iterables import find_value
 from geoh5py.data import Data
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import (
@@ -33,8 +36,6 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
 from geoapps.inversion.components.preprocessing import preprocess_data
-from geoapps.utils import geophysical_systems, warn_module_not_found
-from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
 
 with warn_module_not_found():

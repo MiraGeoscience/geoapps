@@ -7,4 +7,4 @@
 
 from __future__ import annotations
 
-from .importing import warn_module_not_found
+from geoapps_utils.importing import warn_module_not_found

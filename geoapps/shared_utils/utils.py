@@ -13,22 +13,13 @@ from uuid import UUID
 
 import numpy as np
 from discretize import TensorMesh, TreeMesh
-from geoh5py.objects import Curve, DrapeModel
+from geoapps_utils.conversions import string_to_numeric
+from geoh5py.objects import DrapeModel
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
-from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 
-from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import compute_alongline_distance
-
-
-def hex_to_rgb(hex_color):
-    """
-    Convert hex color code to RGB
-    """
-    code = hex_color.lstrip("#")
-    return [int(code[i : i + 2], 16) for i in (0, 2, 4)]
 
 
 def get_locations(workspace: Workspace, entity: UUID | Entity):
@@ -535,47 +526,3 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     out = dict(zip(cols, list(map(list, zip(*out)))))
 
     return out
-
-
-def densify_curve(curve: Curve, increment: float) -> np.ndarray:
-    """
-    Refine a curve by adding points along the curve at a given increment.
-
-    :param curve: Curve object to be refined.
-    :param increment: Distance between points along the curve.
-
-    :return: Array of shape (n, 3) of x, y, z locations.
-    """
-    locations = []
-    for part in curve.unique_parts:
-        logic = curve.parts == part
-        cells = curve.cells[np.all(logic[curve.cells], axis=1)]
-        vert_ind = np.r_[cells[:, 0], cells[-1, 1]]
-        locs = curve.vertices[vert_ind, :]
-        locations.append(resample_locations(locs, increment))
-
-    return np.vstack(locations)
-
-
-def resample_locations(locations: np.ndarray, increment: float) -> np.ndarray:
-    """
-    Resample locations along a sequence of positions at a given increment.
-
-    :param locations: Array of shape (n, 3) of x, y, z locations.
-    :param increment: Minimum distance between points along the curve.
-
-    :return: Array of shape (n, 3) of x, y, z locations.
-    """
-    distance = np.cumsum(
-        np.r_[0, np.linalg.norm(locations[1:, :] - locations[:-1, :], axis=1)]
-    )
-    new_distances = np.sort(
-        np.unique(np.r_[distance, np.arange(0, distance[-1], increment)])
-    )
-
-    resampled = []
-    for axis in locations.T:
-        interpolator = interp1d(distance, axis, kind="linear")
-        resampled.append(interpolator(new_distances))
-
-    return np.c_[resampled].T

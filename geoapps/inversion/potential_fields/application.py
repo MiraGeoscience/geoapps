@@ -17,6 +17,9 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from geoapps_utils import geophysical_systems
+from geoapps_utils.importing import warn_module_not_found
+from geoapps_utils.iterables import find_value
 from geoh5py.data import Data
 from geoh5py.objects import Octree
 from geoh5py.shared import Entity
@@ -27,8 +30,6 @@ from geoh5py.workspace import Workspace
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
-from geoapps.utils import geophysical_systems, warn_module_not_found
-from geoapps.utils.list import find_value
 
 from ...base.application import BaseApplication
 

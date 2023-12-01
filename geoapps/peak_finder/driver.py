@@ -13,18 +13,18 @@ import sys
 import numpy as np
 from dask import compute, delayed
 from dask.diagnostics import ProgressBar
+from geoapps_utils import geophysical_systems
+from geoapps_utils.conversions import hex_to_rgb
+from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.formatters import string_name
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
 from geoh5py.shared.utils import fetch_active_workspace
 from tqdm import tqdm
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.peak_finder.constants import validations
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.peak_finder.utils import default_groups_from_property_group, find_anomalies
-from geoapps.shared_utils.utils import hex_to_rgb
-from geoapps.utils import geophysical_systems
-from geoapps.utils.formatters import string_name
 
 
 class PeakFinderDriver(BaseDriver):

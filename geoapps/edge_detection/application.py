@@ -11,6 +11,8 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from geoapps_utils.formatters import string_name
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace
@@ -21,8 +23,6 @@ from geoapps.base.plot import PlotSelection2D
 from geoapps.edge_detection.constants import app_initializer
 from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
-from geoapps.utils import warn_module_not_found
-from geoapps.utils.formatters import string_name
 
 with warn_module_not_found():
     from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox

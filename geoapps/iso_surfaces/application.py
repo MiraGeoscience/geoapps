@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from time import time
 
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import uuid2entity
 from geoh5py.ui_json import InputFile
@@ -19,7 +20,6 @@ from geoapps.base.selection import ObjectDataSelection
 from geoapps.iso_surfaces.constants import app_initializer
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 from geoapps.iso_surfaces.params import IsoSurfacesParams
-from geoapps.utils.importing import warn_module_not_found
 
 with warn_module_not_found():
     from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget

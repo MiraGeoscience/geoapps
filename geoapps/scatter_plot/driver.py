@@ -10,11 +10,12 @@ from __future__ import annotations
 
 import numpy as np
 import plotly.graph_objects as go
+from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.plotting import symlog
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.scatter_plot.constants import validations
 from geoapps.scatter_plot.params import ScatterPlotParams
-from geoapps.utils.plotting import format_axis, normalize, symlog
+from geoapps.utils.plotting import format_axis, normalize
 from geoapps.utils.statistics import random_sampling
 
 

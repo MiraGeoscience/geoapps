@@ -10,13 +10,13 @@ from __future__ import annotations
 from uuid import UUID
 
 import numpy as np
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 from geoh5py.shared.utils import fetch_active_workspace
 
 from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.shared_utils.utils import get_contours, rotate_xyz
-from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
 
 with warn_module_not_found():

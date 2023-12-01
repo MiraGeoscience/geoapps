@@ -12,6 +12,8 @@ from time import time
 from uuid import UUID
 
 import numpy as np
+from geoapps_utils.formatters import string_name
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Surface
 from geoh5py.ui_json.utils import monitored_directory_copy
@@ -22,8 +24,6 @@ from scipy.spatial import Delaunay, cKDTree
 from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.utils import warn_module_not_found
-from geoapps.utils.formatters import string_name
 
 with warn_module_not_found():
     from ipywidgets import (

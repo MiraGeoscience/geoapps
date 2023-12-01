@@ -12,6 +12,8 @@ import sys
 import warnings
 
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.formatters import string_name
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, ObjectBase, Surface
 from geoh5py.shared.utils import fetch_active_workspace
@@ -19,11 +21,9 @@ from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 from tqdm import tqdm
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.iso_surfaces.constants import validations
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.shared_utils.utils import get_contours, rotate_xyz, weighted_average
-from geoapps.utils.formatters import string_name
 
 
 class IsoSurfacesDriver(BaseDriver):

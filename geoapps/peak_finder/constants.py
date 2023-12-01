@@ -11,11 +11,11 @@ from __future__ import annotations
 from copy import deepcopy
 from uuid import UUID
 
+from geoapps_utils.geophysical_systems import parameters
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
 import geoapps
 from geoapps import assets_path
-from geoapps.utils.geophysical_systems import parameters
 
 defaults = {
     "version": geoapps.__version__,

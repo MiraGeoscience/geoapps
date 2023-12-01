@@ -9,14 +9,14 @@ from __future__ import annotations
 import warnings
 
 import pytest
+from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.ui_json.constants import default_ui_json
 from geoh5py.ui_json.input_file import InputFile
 from semver import Version
 
 import geoapps
 from geoapps import assets_path
-from geoapps.driver_base.driver import BaseDriver
-from geoapps.driver_base.params import BaseParams
 
 
 def test_version_is_consistent(pyproject: dict[str]):

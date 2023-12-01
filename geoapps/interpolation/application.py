@@ -10,6 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from time import time
 
+from geoapps_utils.importing import warn_module_not_found
 from geoh5py.objects import ObjectBase
 from geoh5py.objects.object_base import Entity
 from geoh5py.shared.utils import fetch_active_workspace
@@ -20,7 +21,6 @@ from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.interpolation.constants import app_initializer
 from geoapps.interpolation.driver import DataInterpolationDriver
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
     from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, VBox

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from geoapps_utils.numerical import traveling_salesman
 from SimPEG.survey import BaseSurvey
 
 if TYPE_CHECKING:
@@ -103,31 +104,6 @@ def find_unique_tops(locations: np.ndarray):
         locations = np.c_[locs, tops]
 
     return locations
-
-
-def traveling_salesman(locs: np.ndarray) -> np.ndarray:
-    """
-    Finds the order of a roughly linear point set.
-
-    Uses the point furthest from the mean location as the starting point.
-
-    :param: locs: Cartesian coordinates of points lying either roughly within a plane or a line.
-    :param: return_index: Return the indices of the end points in the original array.
-    """
-    mean = locs[:, :2].mean(axis=0)
-    current = np.argmax(np.linalg.norm(locs[:, :2] - mean, axis=1))
-    order = [current]
-    mask = np.ones(locs.shape[0], dtype=bool)
-    mask[current] = False
-
-    for _ in range(locs.shape[0] - 1):
-        remaining = np.where(mask)[0]
-        ind = np.argmin(np.linalg.norm(locs[current, :2] - locs[remaining, :2], axis=1))
-        current = remaining[ind]
-        order.append(current)
-        mask[current] = False
-
-    return np.asarray(order)
 
 
 def compute_alongline_distance(points: np.ndarray, ordered: bool = True):
