@@ -30,6 +30,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import networkx as nx
+import tomli as toml
 from add_url_tag_sha256 import patch_pyproject_toml
 from ruamel.yaml import YAML
 
@@ -239,12 +240,14 @@ def recreate_multiplatform_lock_files() -> list[Path]:
     # they must be cre-created after the multi-platform files were updated
     delete_per_platform_lock_files()
 
+    non_optional_deps = non_optional_dependencies()
     created_files: list[Path] = []
     with print_execution_time("create_multi_platform_lock"):
         for py_ver in _python_versions:
             file = create_multi_platform_lock(py_ver)
             created_files.append(file)
             remove_redundant_pip_from_lock_file(file)
+            force_non_optional_packages(file, non_optional_deps)
     return created_files
 
 
@@ -262,6 +265,62 @@ def recreate_per_platform_lock_files() -> None:
             finalize_per_platform_envs(py_ver, dev=False)
             per_platform_env(py_ver, ["core", "apps"], dev=True)
             finalize_per_platform_envs(py_ver, dev=True)
+
+
+def non_optional_dependencies() -> list[str]:
+    """
+    List the names of non-optional dependencies from pyproject.toml
+    """
+
+    pyproject_toml = Path("pyproject.toml")
+    assert pyproject_toml.is_file()
+
+    non_optional_packages: list[str] = []
+    with open(pyproject_toml, "rb") as pyproject:
+        content = toml.load(pyproject)
+    for name, spec in content["tool"]["poetry"]["dependencies"].items():
+        if isinstance(spec, str) or (
+            isinstance(spec, dict) and not spec.get("optional", False)
+        ):
+            non_optional_packages.append(name)
+    return non_optional_packages
+
+
+def force_non_optional_packages(lock_file: Path, force_packages: list[str]) -> None:
+    """
+    Patch the multi-platform lock file to force some packages not to be optional.
+    """
+
+    if len(force_packages) == 0:
+        return
+
+    assert lock_file.is_file()
+    print("## Force packages as non-optional: " + ", ".join(force_packages))
+
+    yaml = YAML()
+    yaml.width = 1200
+
+    with open(lock_file, encoding="utf-8") as file:
+        yaml_content = yaml.load(file)
+        assert yaml_content is not None
+
+    # collect packages from that list that are already in the lock file as optional
+    packages_to_change = [
+        package
+        for package in yaml_content["package"]
+        if package["name"] in force_packages and package["optional"]
+    ]
+
+    # change all packages in the dependency tree to be non-optional
+    graph = build_dependency_tree(packages_to_change)
+    for package in graph.nodes:
+        for p in yaml_content["package"]:
+            if p["name"] == package:
+                p["optional"] = False
+                p["category"] = "main"
+
+    with open(lock_file, mode="w", encoding="utf-8") as file:
+        yaml.dump(yaml_content, file)
 
 
 def remove_redundant_pip_from_lock_file(lock_file: Path) -> None:
