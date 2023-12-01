@@ -52,7 +52,8 @@ las-geoh5 = { version = "~0.1.0", source = "pypi", allow-prereleases = true}
 #las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip#sha256="}
 param-sweeps = {version = "~0.1.6a1", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256="}
-octree-creation-app = {version = "~0.1.0a1", source = "pypi", allow-prereleases = true}
+#octree-creation-app = {version = "~0.1.0a1", source = "pypi", allow-prereleases = true}
+octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/GEOPY-1235.zip#sha256="}
 
 ## dependencies for core algorithms
 dask = {version = "2022.10.*", extras = ["distributed"], optional = true}
