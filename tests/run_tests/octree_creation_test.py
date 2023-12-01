@@ -307,6 +307,7 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
             depth_core=depth_core,
+            diagonal_balance=False,
             **refinements,
         )
         app.trigger_click(None)
