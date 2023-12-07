@@ -17,9 +17,9 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 1fee268d84bb7503bc3987732db1c79a5afeca3e19d5397857b0203b49f6fc89
-    osx-64: 1a497e22320db9161813ecf7f06fec0bd990f37eb69bae199590f2373cae4d13
-    linux-64: 1b01dff6cad9aa49b07538e4ddd06e7b18422a2e7ee1b1f8ef8edd95e4e4aadc
+    win-64: d32f5c03d78c541f4c8c7d90482b35616b689c86571de194e2905822517fe0e7
+    osx-64: aed4ac69a8240720b64ad4368f0afa420af423b60a4dd029a090343bf7c110d7
+    linux-64: 8ecf3dae0d080dd6f222f3f6ca70ea3aad52d1c4105889f23dc21543ec784dd5
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -5675,21 +5675,18 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    empymod: '>=2.0.0'
-    scikit-learn: '>=1.2'
-    pymatsolver: '>=0.2'
-    scipy: '>=1.8.0'
-    numpy: '>=1.20'
-    geoh5py: '*'
     discretize: '>=0.8.0'
+    empymod: '>=2.0.0'
+    geoh5py: '*'
+    numpy: '>=1.20'
     pandas: '*'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev5+geoapps.0.11.0.zip
+    pymatsolver: '>=0.2'
+    scikit-learn: '>=1.2'
+    scipy: '>=1.8.0'
+  url: https://files.pythonhosted.org/packages/4c/79/b38ad32a3c01146332bda00c2a7cefaebb155cce6879959fc5e4f2d7952f/mira_simpeg-0.19.0.dev5-py2.py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: d617a012e9c72071534f8ee448cb12348bb7b6d996cad5436dfb4a01400c714e
   category: core
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev5+geoapps.0.11.0.zip#sha256=
   optional: true
 - name: param-sweeps
   version: 0.1.6a1
@@ -10420,21 +10417,18 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    empymod: '>=2.0.0'
-    scikit-learn: '>=1.2'
-    pymatsolver: '>=0.2'
-    scipy: '>=1.8.0'
-    numpy: '>=1.20'
-    geoh5py: '*'
     discretize: '>=0.8.0'
+    empymod: '>=2.0.0'
+    geoh5py: '*'
+    numpy: '>=1.20'
     pandas: '*'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev5+geoapps.0.11.0.zip
+    pymatsolver: '>=0.2'
+    scikit-learn: '>=1.2'
+    scipy: '>=1.8.0'
+  url: https://files.pythonhosted.org/packages/4c/79/b38ad32a3c01146332bda00c2a7cefaebb155cce6879959fc5e4f2d7952f/mira_simpeg-0.19.0.dev5-py2.py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: d617a012e9c72071534f8ee448cb12348bb7b6d996cad5436dfb4a01400c714e
   category: core
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev5+geoapps.0.11.0.zip#sha256=
   optional: true
 - name: param-sweeps
   version: 0.1.6a1
@@ -15334,21 +15328,18 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    empymod: '>=2.0.0'
-    scikit-learn: '>=1.2'
-    pymatsolver: '>=0.2'
-    scipy: '>=1.8.0'
-    numpy: '>=1.20'
-    geoh5py: '*'
     discretize: '>=0.8.0'
+    empymod: '>=2.0.0'
+    geoh5py: '*'
+    numpy: '>=1.20'
     pandas: '*'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev5+geoapps.0.11.0.zip
+    pymatsolver: '>=0.2'
+    scikit-learn: '>=1.2'
+    scipy: '>=1.8.0'
+  url: https://files.pythonhosted.org/packages/4c/79/b38ad32a3c01146332bda00c2a7cefaebb155cce6879959fc5e4f2d7952f/mira_simpeg-0.19.0.dev5-py2.py3-none-any.whl
   hash:
-    sha256: ''
+    sha256: d617a012e9c72071534f8ee448cb12348bb7b6d996cad5436dfb4a01400c714e
   category: core
-  source:
-    type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev5+geoapps.0.11.0.zip#sha256=
   optional: true
 - name: param-sweeps
   version: 0.1.6a1
