@@ -10,7 +10,7 @@ dependencies:
   - font-ttf-inconsolata=3.000=h77eed37_0
   - font-ttf-source-code-pro=2.038=h77eed37_0
   - font-ttf-ubuntu=0.83=h77eed37_1
-  - intel-openmp=2023.2.0=h57928b3_50497
+  - intel-openmp=2024.0.0=h57928b3_49840
   - libboost-headers=1.83.0=h57928b3_0
   - libexpat=2.5.0=h63175ca_1
   - msys2-conda-epoch=20160418=1
@@ -122,7 +122,7 @@ dependencies:
   - jupyterlab_widgets=1.1.7=pyhd8ed1ab_0
   - kiwisolver=1.4.5=py310h232114e_1
   - libclang=15.0.7=default_h77d9078_3
-  - libcurl=8.4.0=hd5e4a3a_0
+  - libcurl=8.5.0=hd5e4a3a_0
   - libglib=2.78.1=he8f3873_0
   - libhwloc=2.9.3=default_haede6df_1009
   - libpq=16.1=h43585b0_0
@@ -144,6 +144,7 @@ dependencies:
   - parso=0.8.3=pyhd8ed1ab_0
   - pickleshare=0.7.5=py_1003
   - pkgutil-resolve-name=1.3.10=pyhd8ed1ab_1
+  - platformdirs=4.1.0=pyhd8ed1ab_0
   - pluggy=1.3.0=pyhd8ed1ab_0
   - ply=3.11=py_1
   - prometheus_client=0.19.0=pyhd8ed1ab_0
@@ -182,7 +183,7 @@ dependencies:
   - utm=0.7.0=pyhd8ed1ab_0
   - wcwidth=0.2.12=pyhd8ed1ab_0
   - webencodings=0.5.1=pyhd8ed1ab_2
-  - websocket-client=1.6.4=pyhd8ed1ab_0
+  - websocket-client=1.7.0=pyhd8ed1ab_0
   - wheel=0.42.0=pyhd8ed1ab_0
   - win_inet_pton=1.1.0=pyhd8ed1ab_6
   - xorg-libxau=1.0.11=hcd874cb_0
@@ -206,21 +207,21 @@ dependencies:
   - freexl=2.0.0=h8276f4a_0
   - glib-tools=2.78.1=h12be248_0
   - hdf5=1.14.2=nompi_h73e8ff5_100
-  - importlib-metadata=6.9.0=pyha770c72_0
+  - importlib-metadata=7.0.0=pyha770c72_0
   - importlib_resources=6.1.1=pyhd8ed1ab_0
   - isort=5.12.0=pyhd8ed1ab_1
   - jedi=0.19.1=pyhd8ed1ab_0
   - jinja2=3.1.2=pyhd8ed1ab_1
   - joblib=1.3.2=pyhd8ed1ab_0
+  - jupyter_core=5.5.0=py310h5588dad_0
   - jupyterlab_pygments=0.3.0=pyhd8ed1ab_0
-  - lcms2=2.15=h67d730c_3
+  - lcms2=2.16=h67d730c_0
   - libgrpc=1.59.3=h5bbd4a7_0
   - libxcb=1.15=hcd874cb_0
   - matplotlib-inline=0.1.6=pyhd8ed1ab_0
   - openjpeg=2.5.0=h3d672ee_3
   - partd=1.4.1=pyhd8ed1ab_0
   - pip=23.3.1=pyhd8ed1ab_0
-  - platformdirs=4.0.0=pyhd8ed1ab_0
   - plotly=5.13.1=pyhd8ed1ab_0
   - postgresql=16.1=hc80876b_0
   - proj=9.3.0=he13c7e8_2
@@ -228,7 +229,7 @@ dependencies:
   - pysocks=1.7.1=pyh0701188_6
   - pytest=7.4.3=pyhd8ed1ab_0
   - python-dateutil=2.8.2=pyhd8ed1ab_0
-  - referencing=0.31.1=pyhd8ed1ab_0
+  - referencing=0.32.0=pyhd8ed1ab_0
   - retrying=1.3.3=py_2
   - send2trash=1.8.2=pyh08f2357_0
   - sip=6.7.12=py310h00ffb61_0
@@ -245,11 +246,11 @@ dependencies:
   - cligj=0.7.2=pyhd8ed1ab_1
   - dask-core=2022.10.2=pyhd8ed1ab_0
   - flask=3.0.0=pyhd8ed1ab_0
-  - fonttools=4.45.1=py310h8d17308_0
+  - fonttools=4.46.0=py310h8d17308_0
   - geotiff=1.7.1=hcf4a93f_14
   - glib=2.78.1=h12be248_0
   - jsonschema-specifications=2023.11.2=pyhd8ed1ab_0
-  - jupyter_core=5.5.0=py310h5588dad_0
+  - jupyter_client=7.3.4=pyhd8ed1ab_0
   - kealib=1.5.2=ha10e780_1
   - libgoogle-cloud=2.12.0=h39f2fc6_4
   - libnetcdf=4.9.2=nompi_h8284064_112
@@ -263,9 +264,8 @@ dependencies:
   - argon2-cffi=23.1.0=pyhd8ed1ab_0
   - distributed=2022.10.2=pyhd8ed1ab_0
   - gstreamer=1.22.7=hb4038d2_0
-  - ipython=8.18.1=pyh5737063_1
+  - ipython=8.18.1=pyh7428d3b_3
   - jsonschema=4.20.0=pyhd8ed1ab_0
-  - jupyter_client=7.3.4=pyhd8ed1ab_0
   - libblas=3.9.0=18_win64_mkl
   - poppler=23.10.0=hc2f3c52_0
   - pylint=3.0.2=pyhd8ed1ab_0
@@ -288,7 +288,7 @@ dependencies:
   - h5py=3.10.0=nompi_py310h20f5850_100
   - imagecodecs=2023.9.18=py310h0dcf169_2
   - imageio=2.31.5=pyh8c1a49c_0
-  - nbconvert-core=7.11.0=pyhd8ed1ab_0
+  - nbconvert-core=7.12.0=pyhd8ed1ab_0
   - numba=0.58.1=py310h9ccaf4f_0
   - numcodecs=0.12.1=py310h00ffb61_0
   - pandas=1.5.3=py310h1c4a608_1
@@ -304,7 +304,7 @@ dependencies:
   - fiona=1.9.3=py310h4a685fe_0
   - jupyter_server=1.24.0=pyhd8ed1ab_0
   - matplotlib-base=3.7.3=py310hc9baf74_0
-  - nbconvert-pandoc=7.11.0=pyhd8ed1ab_0
+  - nbconvert-pandoc=7.12.0=pyhd8ed1ab_0
   - properties=0.6.1=py_0
   - pydiso=0.0.3=py310h847dae0_4
   - pyqtwebengine=5.15.9=py310he49db7d_5
@@ -312,7 +312,7 @@ dependencies:
   - tifffile=2023.9.26=pyhd8ed1ab_0
   - zarr=2.14.2=pyhd8ed1ab_0
   - geoana=0.4.0=py310h232114e_1
-  - nbconvert=7.11.0=pyhd8ed1ab_0
+  - nbconvert=7.12.0=pyhd8ed1ab_0
   - notebook-shim=0.2.3=pyhd8ed1ab_0
   - pymatsolver=0.2.0=pyhd8ed1ab_0
   - scikit-image=0.19.3=py310h1c4a608_2
