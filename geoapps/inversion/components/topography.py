@@ -18,6 +18,7 @@ import warnings
 
 import numpy as np
 from discretize import TreeMesh
+from geoh5py.objects.surveys.electromagnetics.base import LargeLoopGroundEMSurvey
 from geoh5py.shared import Entity
 
 from geoapps.driver_base.utils import active_from_xyz
@@ -88,7 +89,7 @@ class InversionTopography(InversionLocations):
             "direct current 2d",
             "induced polarization 3d",
             "induced polarization 2d",
-        ]
+        ] or isinstance(data.entity, LargeLoopGroundEMSurvey)
         active_cells = active_from_xyz(
             mesh.entity,
             self.locations,
