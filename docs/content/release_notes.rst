@@ -100,6 +100,7 @@ This release focuses on SimPEG DC/IP 2D inversion as well as a revamp of all inv
 - GEOPY-613: Allow for TEM survey entities as input for SimPEG EM1D inversions.
 
 New or revamped applications:
+
 - GEOPY-579: New BlockModel creation application.
 - GEOPY-592: Conversion of Clustering to Dash (Plotly) app with ui.json implementation.
 - GEOPY-588: Conversion of Scatter Plot to Dash (Plotly) app with ui.json implementation.
