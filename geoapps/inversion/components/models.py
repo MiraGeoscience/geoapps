@@ -115,16 +115,17 @@ class InversionModelCollection:
 
     @property
     def starting(self):
-        mstart = self._starting.model
+        mstart = self._starting.model.copy()
 
         if mstart is not None and self.is_sigma:
+            mstart = mstart.copy()
             mstart = np.log(mstart)
 
         return mstart
 
     @property
     def reference(self):
-        mref = self._reference.model
+        mref = self._reference.model.copy()
 
         if self.driver.params.forward_only:
             return mref
@@ -132,11 +133,13 @@ class InversionModelCollection:
         if mref is None:
             mref = self.starting
             self.driver.params.alpha_s = 0.0
-        elif self.is_sigma & (all(mref == 0)):
-            mref = self.starting
-            self.driver.params.alpha_s = 0.0
         else:
-            mref = np.log(mref) if self.is_sigma else mref
+            mref = mref.copy()
+            if self.is_sigma & (all(mref == 0)):
+                mref = self.starting
+                self.driver.params.alpha_s = 0.0
+            else:
+                mref = np.log(mref) if self.is_sigma else mref
         return mref
 
     @property
@@ -145,6 +148,8 @@ class InversionModelCollection:
 
         if lbound is None:
             return -np.inf
+
+        lbound = lbound.copy()
 
         if self.is_sigma:
             is_finite = np.isfinite(lbound)
@@ -158,6 +163,7 @@ class InversionModelCollection:
         if ubound is None:
             return np.inf
 
+        ubound = ubound.copy()
         if self.is_sigma:
             is_finite = np.isfinite(ubound)
             ubound[is_finite] = np.log(ubound[is_finite])
@@ -169,6 +175,7 @@ class InversionModelCollection:
         mstart = self._conductivity.model
 
         if mstart is not None and self.is_sigma:
+            mstart = mstart.copy()
             mstart = np.log(mstart)
 
         return mstart
