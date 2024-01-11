@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from geoapps.driver_base.params import BaseParams
 
 import numpy as np
+from geoh5py.objects import LargeLoopGroundTEMReceivers
 
 from geoapps.shared_utils.utils import rotate_xyz
 
@@ -34,7 +35,7 @@ class SourcesFactory(SimPEGFactory):
         if self.factory_type in ["magnetic vector", "magnetic scalar"]:
             from SimPEG.potential_fields.magnetics import sources
 
-            return sources.SourceField
+            return sources.UniformBackgroundField
 
         elif self.factory_type == "gravity":
             from SimPEG.potential_fields.gravity import sources
@@ -51,15 +52,23 @@ class SourcesFactory(SimPEGFactory):
 
             return sources.Dipole
 
+        elif "fem" in self.factory_type:
+            from SimPEG.electromagnetics.frequency_domain import sources
+
+            return sources.MagDipole
+
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import sources
 
-            return sources.MagDipole
+            if isinstance(self.params.data_object, LargeLoopGroundTEMReceivers):
+                return sources.LineCurrent
+            else:
+                return sources.MagDipole
 
         elif self.factory_type in ["magnetotellurics", "tipper"]:
             from SimPEG.electromagnetics.natural_source import sources
 
-            return sources.Planewave_xy_1Dprimary
+            return sources.PlanewaveXYPrimary
 
     def assemble_arguments(
         self,
@@ -93,7 +102,7 @@ class SourcesFactory(SimPEGFactory):
                 locations=locations,
             )
 
-        elif self.factory_type in ["magnetotellurics", "tipper"]:
+        elif self.factory_type in ["fem", "magnetotellurics", "tipper"]:
             args.append(receivers)
             args.append(frequency)
 
@@ -115,6 +124,8 @@ class SourcesFactory(SimPEGFactory):
             kwargs["parameters"] = self.params.inducing_field_aid()
         if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["sigma_primary"] = [self.params.background_conductivity]
+        if self.factory_type in ["fem"]:
+            kwargs["location"] = locations
         if self.factory_type in ["tdem"]:
             kwargs["location"] = locations
             kwargs["waveform"] = waveform

@@ -1,9 +1,14 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
+from pathlib import Path
+
 import numpy as np
 from geoh5py.workspace import Workspace
 
@@ -69,7 +74,7 @@ def test_truncate_locs_depths():
     assert zrange + depth_core_new == depth_core + z
 
 
-def test_find_top_padding(tmp_path):
+def test_find_top_padding(tmp_path: Path):
     top = 500
     depth_core = 300.0
     height = 300
@@ -90,7 +95,7 @@ def test_find_top_padding(tmp_path):
     assert top_padding >= pads[-1]
 
 
-def test_get_block_model(tmp_path):
+def test_get_block_model(tmp_path: Path):
     # padding in the W/E/N/S directions should make create locs at least as
     # far as the core hull plus the padding distances
     top = 500

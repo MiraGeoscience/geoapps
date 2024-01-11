@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,11 +8,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from geoh5py.workspace import Workspace
-    from geoapps.driver_base.params import BaseParams
+    from geoapps.inversion.params import InversionBaseParams
 
 
 import numpy as np
@@ -53,18 +53,13 @@ class InversionLocations:
 
     """
 
-    def __init__(
-        self, workspace: Workspace, params: BaseParams, window: dict[str, Any]
-    ):
+    def __init__(self, workspace: Workspace, params: InversionBaseParams):
         """
         :param workspace: Geoh5py workspace object containing location based data.
         :param params: Params object containing location based data parameters.
-        :param window: Center and size defining window for data, topography, etc.
-
         """
         self.workspace = workspace
-        self.params = params
-        self.window = window
+        self._params: InversionBaseParams = params
         self.mask: np.ndarray = None
         self.origin: list[float] = None
         self.angle: float = None
@@ -214,3 +209,8 @@ class InversionLocations:
         xyz[:, 2] = z_topo
 
         return xyz
+
+    @property
+    def params(self):
+        """Associated parameters."""
+        return self._params

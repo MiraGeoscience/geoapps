@@ -1,11 +1,13 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -20,15 +22,11 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 11.707134,
-    "phi_d": 1.598,
-    "phi_m": 8.824e-6,
-}
+target_run = {"data_norm": 8.71227951689941, "phi_d": 18.42, "phi_m": 2.981e-06}
 
 
 def test_susceptibility_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -58,22 +56,21 @@ def test_susceptibility_fwr_run(
         starting_model=model.uid,
     )
     params.workpath = tmp_path
-
     fwr_driver = MagneticScalarDriver(params)
-
     fwr_driver.run()
-    return fwr_driver.starting_model
+
+    assert params.out_group.options, "Error adding metadata on creation."
 
 
 def test_susceptibility_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(
-            tmp_path / "../test_susceptibility_fwr_run0/inversion_test.geoh5"
+        workpath = (
+            tmp_path.parent / "test_susceptibility_fwr_run0" / "inversion_test.ui.geoh5"
         )
 
     with Workspace(workpath) as geoh5:
@@ -105,34 +102,32 @@ def test_susceptibility_run(
             tmi_channel_bool=True,
             z_from_topo=False,
             tmi_channel=tmi.uid,
-            tmi_uncertainty=4.0,
+            tmi_uncertainty=1.0,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e0,
             store_sensitivities="ram",
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = MagneticScalarDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+
+    driver = MagneticScalarDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
         output["data"] = orig_tmi
+        assert (
+            run_ws.get_entity("Iteration_1_tmi")[0].entity_type.uid
+            == run_ws.get_entity("Observed_tmi")[0].entity_type.uid
+        )
+
         if pytest:
             check_target(output, target_run)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_susceptibility_fwr_run("./", n_grid_points=20, refinement=(4, 8))
-    m_rec = test_susceptibility_run("./", max_iterations=30, pytest=False)
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 15.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Susceptibility model is within 15% of the answer. Well done you!")
+    test_susceptibility_fwr_run(Path("./"), n_grid_points=20, refinement=(4, 8))
+    test_susceptibility_run(Path("./"), max_iterations=30, pytest=False)

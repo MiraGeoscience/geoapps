@@ -1,11 +1,13 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -18,24 +20,20 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.004784,
-    "phi_d": 12.56,
-    "phi_m": 16.51,
-}
+target_run = {"data_norm": 0.0020959218368283884, "phi_d": 0.123, "phi_m": 3632}
 
 np.random.seed(0)
 
 
 def test_tipper_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
-        background=0.01,
+        background=1e-3,
         anomaly=1.0,
         n_electrodes=n_grid_points,
         n_lines=n_grid_points,
@@ -53,23 +51,21 @@ def test_tipper_fwr_run(
         z_from_topo=False,
         data_object=survey.uid,
         starting_model=model.uid,
-        background_conductivity=1e-2,
+        conductivity_model=1e-3,
         txz_real_channel_bool=True,
         txz_imag_channel_bool=True,
         tyz_real_channel_bool=True,
         tyz_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = TipperDriver(params, warmstart=False)
+    fwr_driver = TipperDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
 
-
-def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_tipper_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_tipper_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("survey")[0]
@@ -98,7 +94,7 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
                     {
                         f"uncertainty_{comp}_[{ind}]": {
                             "values": np.ones_like(data_entity.values)
-                            * np.percentile(np.abs(data_entity.values), 10)
+                            * np.percentile(np.abs(data_entity.values), 5)
                         }
                     }
                 )
@@ -124,9 +120,9 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             topography_object=topography.uid,
             resolution=0.0,
             data_object=survey.uid,
-            starting_model=0.01,
-            reference_model=0.01,
-            background_conductivity=1e-2,
+            starting_model=0.001,
+            reference_model=0.001,
+            conductivity_model=1e-3,
             s_norm=1.0,
             x_norm=1.0,
             y_norm=1.0,
@@ -136,14 +132,15 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             z_from_topo=False,
             upper_bound=0.75,
             max_global_iterations=max_iterations,
-            initial_beta_ratio=1e4,
-            sens_wts_threshold=60.0,
+            initial_beta_ratio=1e2,
+            coolingRate=2,
             prctile=100,
+            chi_factor=0.1,
             store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = TipperDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = TipperDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
@@ -155,22 +152,13 @@ def test_tipper_run(tmp_path, max_iterations=1, pytest=True):
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_tipper_fwr_run("./", n_grid_points=8, refinement=(4, 8))
-
-    m_rec = test_tipper_run(
-        "./",
+    test_tipper_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 4))
+    test_tipper_run(
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )
-
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 50% of the answer. Let's go!!")

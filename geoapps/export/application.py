@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import re
-from os import path
+from pathlib import Path
 
 import discretize
 import numpy as np
@@ -197,8 +197,7 @@ class Export(ObjectDataSelection):
     def _export_csv(self, entity, fields):
         dataframe = object_2_dataframe(entity, fields=fields)
         dataframe.to_csv(
-            f"{path.join(self.export_directory.selected_path, self.export_as.value)}"
-            + ".csv",
+            f"{Path(self.export_directory.selected_path) / self.export_as.value}.csv",
             index=False,
         )
 
@@ -217,31 +216,27 @@ class Export(ObjectDataSelection):
                 export_curve_2_shapefile(
                     entity,
                     attribute=key,
-                    file_name=path.join(self.export_directory.selected_path, out_name),
+                    file_name=str(Path(self.export_directory.selected_path) / out_name),
                     wkt_code=self.wkt_code.value,
                 )
-                filename = (
-                    path.join(self.export_directory.selected_path, out_name) + ".shp"
-                )
+                filename = f"{Path(self.export_directory.selected_path) / out_name}.shp"
                 print(f"Object saved to {filename}")
 
         else:
             out_name = re.sub("[^0-9a-zA-Z]+", "_", self.export_as.value)
             export_curve_2_shapefile(
                 entity,
-                file_name=path.join(self.export_directory.selected_path, out_name),
+                file_name=str(Path(self.export_directory.selected_path) / out_name),
                 wkt_code=self.wkt_code.value,
             )
-            filename = path.join(self.export_directory.selected_path, out_name) + ".shp"
+            filename = f"{Path(self.export_directory.selected_path) / out_name}.shp"
             print(f"Object saved to {filename}")
 
     def _export_geotiff(self, entity):
         for key in self.data.value:
-            name = (
-                path.join(self.export_directory.selected_path, self.export_as.value)
-                + "_"
-                + self.data.uid_name_map[key]
-                + ".tif"
+            name = str(
+                Path(self.export_directory.selected_path)
+                / f"{self.export_as.value}_{self.data.uid_name_map[key]}.tif"
             )
             if self.workspace.get_entity(key):
                 export_grid_2_geotiff(
@@ -262,9 +257,9 @@ class Export(ObjectDataSelection):
                     )
                     plt.colorbar(image, fraction=0.02)
                     plt.savefig(
-                        path.join(
-                            self.export_directory.selected_path,
-                            self.export_as.value,
+                        str(
+                            Path(self.export_directory.selected_path)
+                            / self.export_as.value
                         )
                         + "_"
                         + self.data.uid_name_map[key]
@@ -288,15 +283,14 @@ class Export(ObjectDataSelection):
             for key, item in data_values.items():
                 ind = np.argsort(mesh._ubc_order)  # pylint: disable=protected-access
                 models[
-                    path.join(self.export_directory.selected_path, self.export_as.value)
+                    str(
+                        Path(self.export_directory.selected_path) / self.export_as.value
+                    )
                     + "_"
                     + self.data.uid_name_map[key]
                     + ".mod"
                 ] = item[ind]
-            name = (
-                path.join(self.export_directory.selected_path, self.export_as.value)
-                + ".msh"
-            )
+            name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
             mesh.writeUBC(
                 name,
                 models=models,
@@ -319,10 +313,7 @@ class Export(ObjectDataSelection):
                 entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
                 entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
             ]
-            name = (
-                path.join(self.export_directory.selected_path, self.export_as.value)
-                + ".msh"
-            )
+            name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
             mesh.writeUBC(name)
             print(f"Mesh saved to {name}")
 
@@ -342,13 +333,7 @@ class Export(ObjectDataSelection):
                     else:
                         values = item
 
-                    name = (
-                        path.join(
-                            self.export_directory.selected_path,
-                            self.data.uid_name_map[key],
-                        )
-                        + ".mod"
-                    )
+                    name = f"{Path(self.export_directory.selected_path) / self.data.uid_name_map[key]}.mod"
                     np.savetxt(name, values)
                     print(f"Model saved to {name}")
 

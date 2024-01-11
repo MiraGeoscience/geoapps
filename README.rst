@@ -29,7 +29,7 @@
 Welcome to **geoapps** - Open-source applications in geosciences
 ================================================================
 
-.. image:: https://github.com/MiraGeoscience/geoapps/raw/v0.10.0-rc.3/docs/images/index_page.png
+.. image:: https://github.com/MiraGeoscience/geoapps/raw/v0.10.0-rc.2/docs/images/index_page.png
     :align: right
     :width: 50%
 
@@ -65,12 +65,21 @@ Current sponsors
 - `Teck <https://www.teck.com/>`_
 - `Vale <https://www.vale.com/canada>`_
 
+Third Party Software
+^^^^^^^^^^^^^^^^^^^^
+The geoapps Software may provide links to third party libraries or code (collectively “Third Party Software”)
+to implement various functions. Third Party Software does not comprise part of the Software.
+The use of Third Party Software is governed by the terms of such software license(s).
+Third Party Software notices and/or additional terms and conditions are located in the
+`THIRD_PARTY_SOFTWARE.rst`_ file.
+
+.. _THIRD_PARTY_SOFTWARE.rst: THIRD_PARTY_SOFTWARE.rst
 
 License
 ^^^^^^^
 MIT License
 
-Copyright (c) 2023 Mira Geoscience
+Copyright (c) 2024 Mira Geoscience
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

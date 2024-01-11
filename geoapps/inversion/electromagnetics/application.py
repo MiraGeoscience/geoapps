@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,6 +10,9 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
+import uuid
+from pathlib import Path
+from time import time
 
 import numpy as np
 from geoh5py.data import Data
@@ -22,12 +25,14 @@ from geoh5py.objects import (
     Points,
     Surface,
 )
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid
 from geoh5py.workspace import Workspace
 
 from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
+from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
@@ -617,38 +622,40 @@ def get_inversion_output(h5file, group_name):
     """
     Recover an inversion iterations from a ContainerGroup comments.
     """
-    workspace = Workspace(h5file)
-    out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
+    with Workspace(h5file) as workspace:
+        out = {"time": [], "iteration": [], "phi_d": [], "phi_m": [], "beta": []}
 
-    if workspace.get_entity(group_name):
-        group = workspace.get_entity(group_name)[0]
+        if workspace.get_entity(group_name):
+            group = workspace.get_entity(group_name)[0]
 
-        for comment in group.comments.values:
-            if "Iteration" in comment["Author"]:
-                out["iteration"] += [np.int(comment["Author"].split("_")[1])]
-                out["time"] += [comment["Date"]]
-                values = json.loads(comment["Text"])
-                out["phi_d"] += [float(values["phi_d"])]
-                out["phi_m"] += [float(values["phi_m"])]
-                out["beta"] += [float(values["beta"])]
+            for comment in group.comments.values:
+                if "Iteration" in comment["Author"]:
+                    out["iteration"] += [np.int(comment["Author"].split("_")[1])]
+                    out["time"] += [comment["Date"]]
+                    values = json.loads(comment["Text"])
+                    out["phi_d"] += [float(values["phi_d"])]
+                    out["phi_m"] += [float(values["phi_m"])]
+                    out["beta"] += [float(values["beta"])]
 
-        if len(out["iteration"]) > 0:
-            out["iteration"] = np.hstack(out["iteration"])
-            ind = np.argsort(out["iteration"])
-            out["iteration"] = out["iteration"][ind]
-            out["phi_d"] = np.hstack(out["phi_d"])[ind]
-            out["phi_m"] = np.hstack(out["phi_m"])[ind]
-            out["time"] = np.hstack(out["time"])[ind]
+            if len(out["iteration"]) > 0:
+                out["iteration"] = np.hstack(out["iteration"])
+                ind = np.argsort(out["iteration"])
+                out["iteration"] = out["iteration"][ind]
+                out["phi_d"] = np.hstack(out["phi_d"])[ind]
+                out["phi_m"] = np.hstack(out["phi_m"])[ind]
+                out["time"] = np.hstack(out["time"])[ind]
 
     return out
 
 
 def plot_convergence_curve(h5file):
     """"""
-    workspace = Workspace(h5file)
-    names = [
-        group.name for group in workspace.groups if isinstance(group, ContainerGroup)
-    ]
+    with Workspace(h5file, mode="r") as workspace:
+        names = [
+            group.name
+            for group in workspace.groups
+            if isinstance(group, ContainerGroup)
+        ]
     objects = widgets.Dropdown(
         options=names,
         value=names[0],
@@ -656,22 +663,23 @@ def plot_convergence_curve(h5file):
     )
 
     def plot_curve(objects):
-        inversion = workspace.get_entity(objects)[0]
-        result = None
-        if getattr(inversion, "comments", None) is not None:
-            if inversion.comments.values is not None:
-                result = get_inversion_output(workspace.h5file, objects)
-                iterations = result["iteration"]
-                phi_d = result["phi_d"]
-                phi_m = result["phi_m"]
+        with Workspace(h5file, mode="r") as workspace:
+            inversion = workspace.get_entity(objects)[0]
+            result = None
+            if getattr(inversion, "comments", None) is not None:
+                if inversion.comments.values is not None:
+                    result = get_inversion_output(workspace.h5file, objects)
+                    iterations = result["iteration"]
+                    phi_d = result["phi_d"]
+                    phi_m = result["phi_m"]
 
-                ax1 = plt.subplot()
-                ax2 = ax1.twinx()
-                ax1.plot(iterations, phi_d, linewidth=3, c="k")
-                ax1.set_xlabel("Iterations")
-                ax1.set_ylabel(r"$\phi_d$", size=16)
-                ax2.plot(iterations, phi_m, linewidth=3, c="r")
-                ax2.set_ylabel(r"$\phi_m$", size=16)
+                    ax1 = plt.subplot()
+                    ax2 = ax1.twinx()
+                    ax1.plot(iterations, phi_d, linewidth=3, c="k")
+                    ax1.set_xlabel("Iterations")
+                    ax1.set_ylabel(r"$\phi_d$", size=16)
+                    ax2.plot(iterations, phi_m, linewidth=3, c="r")
+                    ax2.set_ylabel(r"$\phi_m$", size=16)
 
         return result
 
@@ -913,11 +921,14 @@ class InversionApp(PlotSelection2D):
             and getattr(self, "_h5file", None) is not None
         ):
             self.workspace = Workspace(self.h5file)
+
         return self._workspace
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -939,8 +950,8 @@ class InversionApp(PlotSelection2D):
         """"""
         os.system(
             "start cmd.exe @cmd /k "
-            + 'python -m geoapps.inversion.airborne_electromagnetics.driver "'
-            + f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
+            + 'python -m geoapps.inversion.electromagnetics.driver "'
+            + self.trigger.file_name
         )
         self.trigger.button_style = ""
 
@@ -1032,10 +1043,10 @@ class InversionApp(PlotSelection2D):
             tx_offsets = self.em_system_specs[self.system.value]["tx_offsets"]
             uncertainties = self.em_system_specs[self.system.value]["uncertainty"]
             system_specs = {}
-            for key, time in self.em_system_specs[self.system.value][
+            for key, time_gate in self.em_system_specs[self.system.value][
                 "channels"
             ].items():
-                system_specs[key] = f"{time:.5e}"
+                system_specs[key] = f"{time_gate:.5e}"
 
             for ind, (key, channel) in enumerate(system_specs.items()):
                 if ind + 1 < start_channel:
@@ -1355,77 +1366,156 @@ class InversionApp(PlotSelection2D):
             print("TEM survey requires an Uncertainty group.")
             return
 
-        with Workspace(
-            os.path.join(
-                self.export_directory.selected_path,
-                self.ga_group_name.value + ".geoh5",
+        time_stamp = time()
+        with Workspace.create(
+            str(
+                Path(self.export_directory.selected_path)
+                / (self.ga_group_name.value + f"{time_stamp:.0f}.geoh5")
             )
         ) as new_workspace:
-            obj, _ = self.get_selected_entities()
-            new_obj = obj.copy(parent=new_workspace, copy_children=False)
+            with fetch_active_workspace(self.workspace):
+                obj, _ = self.get_selected_entities()
+                new_obj = obj.copy(parent=new_workspace, copy_children=False)
 
-            prop_group = obj.find_or_create_property_group(
-                name=self.data.uid_name_map[self.data.value]
-            )
-            data_list = []
-            for prop in prop_group.properties:
-                data = self.workspace.get_entity(prop)[0]
-                data_list.append(data.copy(parent=new_obj))
-
-            new_group = new_obj.add_data_to_group(data_list, prop_group.name)
-
-            if isinstance(input_dict["data"]["channels"], str):
-                input_dict["data"]["channels"] = str(new_group.uid)
-
-            if self._uncertainties.value is not None:
                 prop_group = obj.find_or_create_property_group(
-                    name=self.data.uid_name_map[self._uncertainties.value]
+                    name=self.data.uid_name_map[self.data.value]
                 )
                 data_list = []
                 for prop in prop_group.properties:
                     data = self.workspace.get_entity(prop)[0]
                     data_list.append(data.copy(parent=new_obj))
 
-                new_group = new_obj.add_data_to_group(data_list, prop_group.name)
+                data_group = new_obj.add_data_to_group(data_list, prop_group.name)
+
+                if isinstance(input_dict["data"]["channels"], str):
+                    input_dict["data"]["channels"] = str(data_group.uid)
+
+                if self._uncertainties.value is not None:
+                    prop_group = obj.find_or_create_property_group(
+                        name=self.data.uid_name_map[self._uncertainties.value]
+                    )
+                    data_list = []
+                    for prop in prop_group.properties:
+                        data = self.workspace.get_entity(prop)[0]
+                        data_list.append(data.copy(parent=new_obj))
+
+                    uncert_group = new_obj.add_data_to_group(data_list, prop_group.name)
+                    input_dict["uncertainty_channel"] = str(uncert_group.uid)
+
+                _, data = self.sensor.get_selected_entities()
+                for d in data:
+                    if d is None:
+                        continue
+                    d.copy(parent=new_obj)
+
+                _, data = self.lines.get_selected_entities()
+                for d in data:
+                    if d is None:
+                        continue
+                    d.copy(parent=new_obj)
+
+                for elem in [
+                    self.topography,
+                    self.inversion_parameters.starting_model,
+                    self.inversion_parameters.reference_model,
+                    self.inversion_parameters.susceptibility_model,
+                ]:
+                    obj, data = elem.get_selected_entities()
+
+                    if obj is not None:
+                        new_obj = new_workspace.get_entity(obj.uid)[0]
+                        if new_obj is None:
+                            new_obj = obj.copy(
+                                parent=new_workspace, copy_children=False
+                            )
+
+                        for d in data:
+                            if d is None:
+                                continue
+                            d.copy(parent=new_obj)
+
+            # Get data_dict for pre-processing
+            data_object = new_workspace.get_entity(
+                uuid.UUID(input_dict["data"]["name"])
+            )[0]
+            components = []
+            data_dict = {}
+            if isinstance(input_dict["data"]["channels"], dict):
+                for key, value in input_dict["data"]["channels"].items():
+                    comp = key
+                    components.append(comp)
+                    data_dict[comp + "_channel"] = {
+                        "name": new_workspace.get_entity(uuid.UUID(value["name"]))[
+                            0
+                        ].name
+                    }
+                    if is_uuid(value["uncertainties"]):
+                        data_dict[comp + "_uncertainty"] = {
+                            "name": new_workspace.get_entity(
+                                uuid.UUID(value["uncertainties"])
+                            )[0].name
+                        }
+                # Add lines to data_dict
+                components.append("lines")
+                line_data = list(input_dict["lines"].keys())[0]
+                data_dict["lines_channel"] = {
+                    "name": new_workspace.get_entity(uuid.UUID(line_data))[0].name
+                }
+
+            # Pre-processing
+            update_dict = preprocess_data(
+                workspace=new_workspace,
+                param_dict=input_dict,
+                resolution=self.resolution.value,
+                data_object=data_object,
+                window_center_x=self.window_center_x.value,
+                window_center_y=self.window_center_y.value,
+                window_width=self.window_width.value,
+                window_height=self.window_height.value,
+                window_azimuth=self.window_azimuth.value,
+                components=components,
+                data_dict=data_dict,
+            )
+            # Update input dict from pre-processing
+            input_dict["data"]["name"] = str(update_dict["data_object"])
+
+            if isinstance(input_dict["data"]["channels"], dict):
+                for comp in components:
+                    if comp == "lines":
+                        input_dict["lines"] = {
+                            str(update_dict["lines_channel"]): list(
+                                input_dict["lines"].values()
+                            )[0]
+                        }
+                        continue
+                    if comp + "_channel" in update_dict:
+                        input_dict["data"]["channels"][comp]["name"] = str(
+                            update_dict[comp + "_channel"]
+                        )
+                    if comp + "_uncertainty" in update_dict:
+                        input_dict["data"]["channels"][comp]["uncertainties"] = str(
+                            update_dict[comp + "_uncertainty"]
+                        )
+            else:
+                survey = new_workspace.get_entity(update_dict["data_object"])[0]
+                new_group = survey.get_entity(data_group.name)[0]
+                input_dict["data"]["channels"] = str(new_group.uid)
+                new_group = survey.get_entity(uncert_group.name)[0]
                 input_dict["uncertainty_channel"] = str(new_group.uid)
-            # if self.system.value == "Airborne TEM Survey":
-            #     prop_group = new_obj.add_data_to_group(data_list, )
-            #
+                line_data = self.workspace.get_entity(self.lines.data.value)[0]
 
-            _, data = self.sensor.get_selected_entities()
-            for d in data:
-                if d is None:
-                    continue
-                d.copy(parent=new_obj)
+                if line_data:
+                    new_uid = survey.get_entity(line_data.name)[0].uid
+                    input_dict["lines"] = {
+                        str(new_uid): list(input_dict["lines"].values())[0]
+                    }
 
-            _, data = self.lines.get_selected_entities()
-            for d in data:
-                if d is None:
-                    continue
-                d.copy(parent=new_obj)
+        input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
+            Path(new_workspace.h5file).resolve()
+        )
 
-            for elem in [
-                self.topography,
-                self.inversion_parameters.starting_model,
-                self.inversion_parameters.reference_model,
-                self.inversion_parameters.susceptibility_model,
-            ]:
-                obj, data = elem.get_selected_entities()
-
-                if obj is not None:
-                    new_obj = new_workspace.get_entity(obj.uid)[0]
-                    if new_obj is None:
-                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
-
-                    for d in data:
-                        if d is None:
-                            continue
-                        d.copy(parent=new_obj)
-
-        input_dict["workspace"] = os.path.abspath(new_workspace.h5file)
-        input_dict["save_to_geoh5"] = os.path.abspath(new_workspace.h5file)
-
-        file = f"{os.path.join(self.export_directory.selected_path, self.ga_group_name.value)}.json"
+        file = f"{Path(self.export_directory.selected_path) / self.ga_group_name.value}{time_stamp:.0f}.json"
+        self.trigger.file_name = file
 
         with open(file, "w", encoding="utf8") as f:
             json.dump(input_dict, f, indent=4)

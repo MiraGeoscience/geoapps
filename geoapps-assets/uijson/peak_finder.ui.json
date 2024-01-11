@@ -12,6 +12,7 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
+    "version": "0.11.0-alpha.1",
     "tem_checkbox": {
         "main": true,
         "label": "TEM type",
@@ -22,7 +23,7 @@
         "group": "Data",
         "label": "Object",
         "meshType": [
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}"
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}"
         ],
         "value": ""
     },

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,10 +11,12 @@ from copy import deepcopy
 
 import plotly.express as px
 
+import geoapps
 from geoapps import assets_path
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
 
 defaults = {
+    "version": geoapps.__version__,
     "title": "Clustering",
     "n_clusters": None,
     "ga_group_name": None,
@@ -34,6 +36,7 @@ defaults = {
 default_ui_json = deepcopy(base_default_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Clustering",
         "color_maps": {
             "choiceList": px.colors.named_colorscales() + ["kmeans"],
@@ -93,7 +96,7 @@ validations = {}
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "monitoring_directory": str((assets_path() / "Temp").absolute()),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
     "channel": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
     "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",

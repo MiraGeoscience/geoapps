@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,14 +11,14 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from time import time
 
-from dash import callback_context, no_update
+from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from flask import Flask
 from geoh5py.objects.object_base import ObjectBase
-from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -37,17 +37,23 @@ class BlockModelCreation(BaseDashApplication):
     _driver_class = BlockModelDriver
 
     def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
+        if ui_json is not None and Path(ui_json.path).exists():
             self.params = self._param_class(ui_json)
         else:
+            app_initializer.update(kwargs)
             self.params = self._param_class(**app_initializer)
+            extras = {
+                key: value
+                for key, value in app_initializer.items()
+                if key not in self.params.param_names
+            }
+            self._app_initializer = extras
 
         super().__init__()
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
@@ -140,9 +146,9 @@ class BlockModelCreation(BaseDashApplication):
             if (
                 (monitoring_directory is not None)
                 and (monitoring_directory != "")
-                and (os.path.exists(os.path.abspath(monitoring_directory)))
+                and Path(monitoring_directory).is_dir()
             ):
-                monitoring_directory = os.path.abspath(monitoring_directory)
+                monitoring_directory = str(Path(monitoring_directory).resolve())
             else:
                 print("Invalid output path.")
                 raise PreventUpdate

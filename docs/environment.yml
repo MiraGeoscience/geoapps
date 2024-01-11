@@ -7,6 +7,7 @@ dependencies:
   - pip=21.0.1
   - ipywidgets
   - ipykernel
+  - pandoc=3.1.3
   - pip:
     - numpydoc
     - jinja2==3.0.3

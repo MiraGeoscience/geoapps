@@ -1,14 +1,10 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 #
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
 
 from __future__ import annotations
 
@@ -17,10 +13,12 @@ from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
+import geoapps
 from geoapps import assets_path
 from geoapps.utils.geophysical_systems import parameters
 
 defaults = {
+    "version": geoapps.__version__,
     "title": "Peak Finder Parameters",
     "geoh5": None,
     "tem_checkbox": False,
@@ -51,6 +49,7 @@ defaults = {
 default_ui_json = deepcopy(base_ui_json)
 default_ui_json.update(
     {
+        "version": geoapps.__version__,
         "title": "Peak Finder Parameters",
         "tem_checkbox": {
             "main": True,

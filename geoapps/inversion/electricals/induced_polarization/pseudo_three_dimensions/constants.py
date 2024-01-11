@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,12 +11,14 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
 inversion_defaults = {
-    "title": "Induced Polarization 2d batch inversion",
+    "version": geoapps.__version__,
+    "title": "Induced Polarization (IP) 2D Batch Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -26,7 +28,6 @@ inversion_defaults = {
     "data_object": None,
     "line_object": None,
     "line_id": 1,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
     "receivers_offset_z": 0.0,
@@ -46,14 +47,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
@@ -65,9 +58,8 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
@@ -81,7 +73,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 30.0,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
@@ -103,7 +95,8 @@ inversion_defaults = {
     "chargeability_channel_bool": True,
 }
 forward_defaults = {
-    "title": "Induced Polarization 2d batch forward",
+    "version": geoapps.__version__,
+    "title": "Induced Polarization (IP) 2D Batch Forward",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization pseudo 3d",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -113,7 +106,6 @@ forward_defaults = {
     "data_object": None,
     "line_object": None,
     "line_id": 1,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
     "receivers_offset_z": 0.0,
@@ -129,11 +121,6 @@ forward_defaults = {
     "conductivity_model": 1e-3,
     "starting_model": 1e-3,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -149,35 +136,10 @@ forward_defaults = {
     "run_command_boolean": False,
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
-
-inversion_ui_json = {
-    "chargeability_channel_bool": True,
-}
-
-forward_ui_json = {
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
-    "title": "Induced Polarization inversion",
+    "title": "Induced Polarization (IP) 3D Inversion",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization pseudo 3d",
     "line_object": {
@@ -185,7 +147,7 @@ default_ui_json = {
         "dataType": "Referenced",
         "group": "Data",
         "main": True,
-        "label": "Line field",
+        "label": "Line ID",
         "parent": "data_object",
         "value": None,
     },
@@ -219,7 +181,7 @@ default_ui_json = {
         "value": 1.0,
     },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "optional": True,
         "enabled": False,
@@ -231,7 +193,7 @@ default_ui_json = {
     "conductivity_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -241,7 +203,7 @@ default_ui_json = {
     },
     "u_cell_size": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Easting core cell size (m)",
@@ -249,7 +211,7 @@ default_ui_json = {
     },
     "v_cell_size": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Northing core cell size (m)",
@@ -257,7 +219,7 @@ default_ui_json = {
     },
     "depth_core": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Depth of core (m)",
@@ -265,7 +227,7 @@ default_ui_json = {
     },
     "horizontal_padding": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "enabled": True,
         "label": "Horizontal padding (m)",
@@ -273,7 +235,7 @@ default_ui_json = {
     },
     "vertical_padding": {
         "min": 0.0,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "dependencyType": "disabled",
         "label": "Vertical padding (m)",
@@ -281,14 +243,14 @@ default_ui_json = {
     },
     "expansion_factor": {
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "label": "Expansion factor",
         "value": 1.1,
     },
     "starting_model": {
         "association": "Cell",
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -300,7 +262,7 @@ default_ui_json = {
         "association": "Cell",
         "dataType": "Float",
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference chargeability (V/V)",
@@ -311,7 +273,7 @@ default_ui_json = {
         "association": "Cell",
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (V/V)",
@@ -324,7 +286,7 @@ default_ui_json = {
         "association": "Cell",
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (V/V)",
@@ -333,9 +295,6 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
-    "resolution": None,
-    "detrend_order": None,
-    "detrend_type": None,
     "tile_spatial": 1,
     "files_only": {
         "label": "Generate files only",
@@ -376,12 +335,6 @@ app_initializer = {
     "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
     "starting_model": 1e-4,
     "conductivity_model": 0.1,
-    "resolution": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,

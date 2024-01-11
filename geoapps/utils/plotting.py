@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import warnings
 from copy import copy
-from os import path
+from pathlib import Path
 
 import numpy as np
 from geoh5py.data import Data
@@ -551,7 +551,7 @@ def plot_convergence_curve(outfile: str) -> widgets.interactive | None:
         r"$\phi_d$": "phi_d",
         r"$\phi_m$": "phi_m",
     }
-    if not path.exists(outfile):
+    if not Path(outfile).is_file():
         warnings.warn(f"File {outfile} does not exist.")
         return
 

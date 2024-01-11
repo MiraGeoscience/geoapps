@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -13,6 +13,7 @@ from uuid import UUID
 import numpy as np
 from geoh5py.data import NumericData
 from geoh5py.groups import SimPEGGroup
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.driver_base.params import BaseParams
@@ -23,16 +24,17 @@ class InversionBaseParams(BaseParams):
     Base parameter class for geophysical->property inversion.
     """
 
-    _directive_list = None
     _default_ui_json = None
     _forward_defaults = None
-    _forward_ui_json = None
     _inversion_defaults = None
-    _inversion_ui_json = None
     _inversion_type = None
+    _physical_property = None
 
     def __init__(
-        self, input_file: InputFile | None = None, forward_only: bool = False, **kwargs
+        self,
+        input_file: InputFile | None = None,
+        forward_only: bool = False,
+        **kwargs,
     ):
         self._forward_only: bool = (
             forward_only if input_file is None else input_file.data["forward_only"]
@@ -46,19 +48,10 @@ class InversionBaseParams(BaseParams):
         self._receivers_radar_drape = None
         self._receivers_offset_z: float = None
         self._gps_receivers_offset = None
-        self._ignore_values: str = None
-        self._resolution: float = None
-        self._detrend_order: int = None
-        self._detrend_type: str = None
         self._max_chunk_size: int = None
         self._chunk_by_rows: bool = None
         self._output_tile_files: bool = None
         self._mesh = None
-        self._window_azimuth: float = None
-        self._window_center_x: float = None
-        self._window_center_y: float = None
-        self._window_height: float = None
-        self._window_width: float = None
         self._inversion_style: str = None
         self._chi_factor: float = None
         self._sens_wts_threshold: float = None
@@ -80,9 +73,9 @@ class InversionBaseParams(BaseParams):
         self._initial_beta_ratio: float = None
         self._tol_cg: float = None
         self._alpha_s: float = None
-        self._alpha_x: float = None
-        self._alpha_y: float = None
-        self._alpha_z: float = None
+        self._length_scale_x: float = None
+        self._length_scale_y: float = None
+        self._length_scale_z: float = None
         self._s_norm: float = None
         self._x_norm: float = None
         self._y_norm: float = None
@@ -96,6 +89,7 @@ class InversionBaseParams(BaseParams):
         self._max_ram: float = None
         self._store_sensitivities: str = None
         self._out_group = None
+        self._ga_group = None
         self._no_data_value: float = None
         self._distributed_workers = None
         self._documentation: str = ""
@@ -106,9 +100,6 @@ class InversionBaseParams(BaseParams):
 
         if input_file is None:
             ui_json = deepcopy(self._default_ui_json)
-            ui_json.update(
-                self._forward_ui_json if self.forward_only else self._inversion_ui_json
-            )
             ui_json = {
                 k: ui_json[k] for k in list(self.defaults)
             }  # Re-order using defaults
@@ -116,7 +107,7 @@ class InversionBaseParams(BaseParams):
                 ui_json=ui_json,
                 data=self.defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
 
         super().__init__(input_file=input_file, **kwargs)
@@ -190,21 +181,6 @@ class InversionBaseParams(BaseParams):
 
         return comps
 
-    def window(self) -> dict[str, float]:
-        """Returns window dictionary"""
-        win = {
-            "azimuth": self.window_azimuth,
-            "center_x": self.window_center_x,
-            "center_y": self.window_center_y,
-            "width": self.window_width,
-            "height": self.window_height,
-            "center": [self.window_center_x, self.window_center_y],
-            "size": [self.window_width, self.window_height],
-        }
-        check_keys = ["center_x", "center_y", "width", "height"]
-        no_data = all([v is None for k, v in win.items() if k in check_keys])
-        return None if no_data else win
-
     def offset(self) -> tuple[list[float], UUID]:
         """Returns offset components as list and drape data."""
         offsets = [
@@ -231,11 +207,6 @@ class InversionBaseParams(BaseParams):
             self.y_norm,
             self.z_norm,
         ]
-
-    @property
-    def directive_list(self):
-        """List of directives"""
-        return self._directive_list
 
     @property
     def forward_defaults(self):
@@ -286,6 +257,7 @@ class InversionBaseParams(BaseParams):
     @data_object.setter
     def data_object(self, val):
         self.setter_validator("data_object", val, fun=self._uuid_promoter)
+        self.update_group_options()
 
     @property
     def starting_model(self):
@@ -336,44 +308,12 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("gps_receivers_offset", val, fun=self._uuid_promoter)
 
     @property
-    def ignore_values(self):
-        return self._ignore_values
-
-    @ignore_values.setter
-    def ignore_values(self, val):
-        self.setter_validator("ignore_values", val)
-
-    @property
     def inversion_type(self):
         return self._inversion_type
 
     @inversion_type.setter
     def inversion_type(self, val):
         self.setter_validator("inversion_type", val)
-
-    @property
-    def resolution(self):
-        return self._resolution
-
-    @resolution.setter
-    def resolution(self, val):
-        self.setter_validator("resolution", val)
-
-    @property
-    def detrend_order(self):
-        return self._detrend_order
-
-    @detrend_order.setter
-    def detrend_order(self, val):
-        self.setter_validator("detrend_order", val)
-
-    @property
-    def detrend_type(self):
-        return self._detrend_type
-
-    @detrend_type.setter
-    def detrend_type(self, val):
-        self.setter_validator("detrend_type", val)
 
     @property
     def max_chunk_size(self):
@@ -406,46 +346,7 @@ class InversionBaseParams(BaseParams):
     @mesh.setter
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
-
-    @property
-    def window_center_x(self):
-        return self._window_center_x
-
-    @window_center_x.setter
-    def window_center_x(self, val):
-        self.setter_validator("window_center_x", val)
-
-    @property
-    def window_center_y(self):
-        return self._window_center_y
-
-    @window_center_y.setter
-    def window_center_y(self, val):
-        self.setter_validator("window_center_y", val)
-
-    @property
-    def window_width(self):
-        return self._window_width
-
-    @window_width.setter
-    def window_width(self, val):
-        self.setter_validator("window_width", val)
-
-    @property
-    def window_height(self):
-        return self._window_height
-
-    @window_height.setter
-    def window_height(self, val):
-        self.setter_validator("window_height", val)
-
-    @property
-    def window_azimuth(self):
-        return self._window_azimuth
-
-    @window_azimuth.setter
-    def window_azimuth(self, val):
-        self.setter_validator("window_azimuth", val)
+        self.update_group_options()
 
     @property
     def inversion_style(self):
@@ -616,28 +517,28 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("alpha_s", val)
 
     @property
-    def alpha_x(self):
-        return self._alpha_x
+    def length_scale_x(self):
+        return self._length_scale_x
 
-    @alpha_x.setter
-    def alpha_x(self, val):
-        self.setter_validator("alpha_x", val)
-
-    @property
-    def alpha_y(self):
-        return self._alpha_y
-
-    @alpha_y.setter
-    def alpha_y(self, val):
-        self.setter_validator("alpha_y", val)
+    @length_scale_x.setter
+    def length_scale_x(self, val):
+        self.setter_validator("length_scale_x", val)
 
     @property
-    def alpha_z(self):
-        return self._alpha_z
+    def length_scale_y(self):
+        return self._length_scale_y
 
-    @alpha_z.setter
-    def alpha_z(self, val):
-        self.setter_validator("alpha_z", val)
+    @length_scale_y.setter
+    def length_scale_y(self, val):
+        self.setter_validator("length_scale_y", val)
+
+    @property
+    def length_scale_z(self):
+        return self._length_scale_z
+
+    @length_scale_z.setter
+    def length_scale_z(self, val):
+        self.setter_validator("length_scale_z", val)
 
     @property
     def s_norm(self):
@@ -712,6 +613,11 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("parallelized", val)
 
     @property
+    def physical_property(self):
+        """Physical property to invert."""
+        return self._physical_property
+
+    @property
     def n_cpu(self):
         return self._n_cpu
 
@@ -736,28 +642,23 @@ class InversionBaseParams(BaseParams):
         self.setter_validator("store_sensitivities", val)
 
     @property
-    def out_group(self):
-        if self._out_group is None and self.geoh5 is not None:
-            name = self.inversion_type.capitalize()
-            if self.forward_only:
-                name += "Forward"
-            else:
-                name += "Inversion"
-
-            self.out_group = SimPEGGroup.create(self.geoh5, name=name)
-
+    def out_group(self) -> SimPEGGroup | None:
+        """Return the SimPEGGroup object."""
         return self._out_group
 
     @out_group.setter
     def out_group(self, val):
-        if val is None:
-            self._out_group = val
-            return
+        self.setter_validator("out_group", val)
+        self.update_group_options()
 
-        self.setter_validator(
-            "out_group",
-            val,
-        )
+    @property
+    def ga_group(self) -> str:
+        """GA group name."""
+        return self._ga_group
+
+    @ga_group.setter
+    def ga_group(self, val):
+        self.setter_validator("ga_group", val)
 
     @property
     def distributed_workers(self):
@@ -766,3 +667,18 @@ class InversionBaseParams(BaseParams):
     @distributed_workers.setter
     def distributed_workers(self, val):
         self.setter_validator("distributed_workers", val)
+
+    @property
+    def unit_conversion(self):
+        """Return unit conversion factor."""
+        return None
+
+    def update_group_options(self):
+        """
+        Add options to the SimPEGGroup inversion using input file class.
+        """
+        if self._input_file is not None and self._out_group is not None:
+            with fetch_active_workspace(self.geoh5, mode="r+"):
+                ui_json = self.to_dict(ui_json_format=True)
+                self._out_group.options = ui_json
+                self._out_group.metadata = None

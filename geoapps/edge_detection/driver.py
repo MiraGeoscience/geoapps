@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,14 +9,12 @@
 from __future__ import annotations
 
 import sys
-from os import path
 
 import geoh5py.data
 import geoh5py.objects
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D
-from geoh5py.ui_json.utils import monitored_directory_copy
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
@@ -57,13 +55,7 @@ class EdgeDetectionDriver(BaseDriver):
                     cells=cells,
                     parent=out_entity,
                 )
-
-                if self.params.monitoring_directory is not None and path.exists(
-                    self.params.monitoring_directory
-                ):
-                    monitored_directory_copy(
-                        self.params.monitoring_directory, out_entity
-                    )
+                self.update_monitoring_directory(out_entity)
 
     @staticmethod
     def get_edges(

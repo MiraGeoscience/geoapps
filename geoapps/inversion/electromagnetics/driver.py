@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -15,14 +15,14 @@ import sys
 import uuid
 
 import numpy as np
-import scipy as sp
 from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
-from geoh5py.objects import Curve, Grid2D, Surface
+from geoh5py.objects import Curve, DrapeModel, Grid2D
 from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
-from scipy.spatial import Delaunay, cKDTree
+from scipy.sparse import csr_matrix, diags
+from scipy.spatial import cKDTree
 from simpeg_archive import (
     DataMisfit,
     Directives,
@@ -457,25 +457,30 @@ def inversion(input_file):
         else:
             normalization = np.prod(em_specs["normalization"])
 
+    out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
+    out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
+
     hz = hz_min * expansion ** np.arange(n_cells)
     CCz = -np.cumsum(hz) + hz / 2.0
+    top_hz = hz[0] / 2.0
     nZ = hz.shape[0]
 
     # Select data and downsample
     stn_id = []
-    model_count = 0
-    model_ordering = []
     model_vertices = []
-    model_cells = []
     pred_count = 0
-    model_line_ids = []
     line_ids = []
     data_ordering = []
     pred_vertices = []
     pred_cells = []
+    layers = []
+    prisms = []
+    ghost_ind = []
+    column_count = 0
+    cell_count = 0
+    full_model_line_ids = []
     for key, values in selection.items():
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
-
         for line in values[0]:
             line_ind = np.where(line_data.values[win_ind] == line)[0]
             n_sounding = len(line_ind)
@@ -484,45 +489,10 @@ def inversion(input_file):
 
             stn_id.append(line_ind)
             xyz = locations[line_ind, :]
-
-            # Create a 2D mesh to store the results
-            dist = np.r_[
-                0, np.cumsum(np.linalg.norm(xyz[1:, :2] - xyz[:-1, :2], axis=1))
-            ]
             z_loc = dem[line_ind, 2]
-
-            # Create a grid for the surface
-            X = np.kron(np.ones(nZ), xyz[:, 0].reshape((z_loc.shape[0], 1)))
-            Y = np.kron(np.ones(nZ), xyz[:, 1].reshape((z_loc.shape[0], 1)))
-            L = np.kron(np.ones(nZ), dist.reshape((z_loc.shape[0], 1)))
             Z = np.kron(np.ones(nZ), z_loc.reshape((z_loc.shape[0], 1))) + np.kron(
-                CCz, np.ones((z_loc.shape[0], 1))
+                -np.cumsum(hz), np.ones((z_loc.shape[0], 1))
             )
-
-            tri2D = Delaunay(np.c_[np.ravel(L), np.ravel(Z)])
-            topo_top = sp.interpolate.interp1d(dist, z_loc)
-
-            # Remove triangles beyond surface edges
-            indx = np.ones(tri2D.simplices.shape[0], dtype=bool)
-            for i in range(3):
-                x = tri2D.points[tri2D.simplices[:, i], 0]
-                z = tri2D.points[tri2D.simplices[:, i], 1]
-
-                indx *= np.any(
-                    [
-                        np.abs(topo_top(x) - z) < hz_min,
-                        np.abs((topo_top(x) - z) + CCz[-1]) < hz_min,
-                    ],
-                    axis=0,
-                )
-
-            # Remove the simplices too long
-            tri2D.simplices = tri2D.simplices[indx == False, :]
-            temp = np.arange(int(nZ * n_sounding)).reshape((nZ, n_sounding), order="F")
-            model_ordering.append(temp.T.ravel() + model_count)
-            model_vertices.append(np.c_[np.ravel(X), np.ravel(Y), np.ravel(Z)])
-            model_cells.append(tri2D.simplices + model_count)
-            model_line_ids.append(np.ones_like(np.ravel(X)) * float(line))
             line_ids.append(np.ones_like(z_loc) * float(line))
             data_ordering.append(np.arange(z_loc.shape[0]) + pred_count)
             pred_vertices.append(xyz)
@@ -530,29 +500,63 @@ def inversion(input_file):
                 np.c_[np.arange(z_loc.shape[0] - 1), np.arange(z_loc.shape[0] - 1) + 1]
                 + pred_count
             )
-
-            model_count += tri2D.points.shape[0]
             pred_count += z_loc.shape[0]
 
-        out_group = ContainerGroup.create(workspace, name=input_param["out_group"])
-        out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
-        surface = Surface.create(
+            if line != values[0][0]:
+                prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
+                    0, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
+                )
+
+            K, I = np.meshgrid(
+                np.arange(nZ), np.arange(column_count, column_count + n_sounding)
+            )
+
+            prisms.append(
+                np.c_[
+                    xyz[:, :2],
+                    z_loc,
+                    np.arange(cell_count, cell_count + n_sounding * nZ, nZ),
+                    np.ones_like(z_loc) * nZ,
+                ]
+            )
+            layers.append(np.c_[I.flatten(), K.flatten(), Z.flatten()])
+            column_count += n_sounding
+            cell_count += nZ * n_sounding
+            full_model_line_ids.append(np.ones(nZ * n_sounding) * line)
+
+            if line != values[0][-1]:
+                prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
+                    -1, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
+                )
+
+        n_active = cell_count - len(ghost_ind)
+        bool_array = np.ones(cell_count, dtype=bool)
+        bool_array[ghost_ind] = False
+        col_ind = np.zeros(cell_count)
+        col_ind[bool_array] = np.arange(n_active)
+        values = np.ones(cell_count)
+        values[ghost_ind] = np.nan
+        ghost_mat = csr_matrix(
+            (values, (np.arange(cell_count), col_ind)), shape=(cell_count, n_active)
+        )
+        model: DrapeModel = DrapeModel.create(
             workspace,
-            name=f"{input_param['out_group']}_Model",
-            vertices=np.vstack(model_vertices),
-            cells=np.vstack(model_cells),
+            layers=np.vstack(layers),
+            name="DrapeModel",
+            prisms=np.vstack(prisms),
             parent=out_group,
         )
-        surface.add_data(
+        model.add_data(
             {
                 "Line": {
-                    "values": np.hstack(model_line_ids).astype("uint32"),
+                    "values": ghost_mat
+                    @ np.hstack(full_model_line_ids).astype("uint32"),
                     "type": "referenced",
                     "value_map": line_data.value_map.map,
                 }
             }
         )
-        model_ordering = np.hstack(model_ordering).astype(int)
+
         curve = Curve.create(
             workspace,
             name=f"{input_param['out_group']}_Predicted",
@@ -571,6 +575,8 @@ def inversion(input_file):
         )
         data_ordering = np.hstack(data_ordering)
 
+        cell_count -= len(ghost_ind)
+
     reference = "BFHS"
     if "reference_model" in list(input_param):
         if "model" in list(input_param["reference_model"]):
@@ -587,13 +593,13 @@ def inversion(input_file):
                 grid = con_object.vertices
 
             tree = cKDTree(grid)
-            _, ind = tree.query(np.vstack(model_vertices))
+            _, ind = tree.query(model.centroids)
 
-            ref = con_model[ind]
-            reference = np.log(ref[np.argsort(model_ordering)])
+            ref = con_model[ind][bool_array]
+            reference = np.log(ref)
 
         elif "value" in list(input_param["reference_model"]):
-            reference = np.ones(np.vstack(model_vertices).shape[0]) * np.log(
+            reference = np.ones(cell_count) * np.log(
                 input_param["reference_model"]["value"]
             )
 
@@ -614,13 +620,13 @@ def inversion(input_file):
                 grid = con_object.vertices
 
             tree = cKDTree(grid)
-            _, ind = tree.query(np.vstack(model_vertices))
+            _, ind = tree.query(model.centroids)
 
-            ref = con_model[ind]
-            starting = np.log(ref[np.argsort(model_ordering)])
+            ref = con_model[ind][bool_array]
+            starting = np.log(ref)
 
         elif "value" in list(input_param["starting_model"]):
-            starting = np.ones(np.vstack(model_vertices).shape[0]) * np.log(
+            starting = np.ones(cell_count) * np.log(
                 input_param["starting_model"]["value"]
             )
 
@@ -639,18 +645,16 @@ def inversion(input_file):
                 grid = sus_object.vertices
 
             tree = cKDTree(grid)
-            _, ind = tree.query(np.vstack(model_vertices))
+            _, ind = tree.query(model.centroids)
 
-            sus = sus_model[ind]
-            susceptibility = sus[np.argsort(model_ordering)]
+            susceptibility = sus_model[ind][bool_array]
 
         elif "value" in list(input_param["susceptibility_model"]):
             susceptibility = (
-                np.ones(np.vstack(model_vertices).shape[0])
-                * input_param["susceptibility_model"]["value"]
+                np.ones(cell_count) * input_param["susceptibility_model"]["value"]
             )
     else:
-        susceptibility = np.zeros(np.vstack(model_vertices).shape[0])
+        susceptibility = np.zeros(cell_count)
 
     stn_id = np.hstack(stn_id)
     n_sounding = stn_id.shape[0]
@@ -893,7 +897,6 @@ def inversion(input_file):
                 minGNiter=1,
                 fix_Jmatrix=True,
                 betaSearch=False,
-                # chifact_start=chi_target,
                 chifact_target=chi_target,
             )
         )
@@ -979,10 +982,11 @@ def inversion(input_file):
     reg.mref = mref
     weighting = prob.getJtJdiag(m0) ** 0.5
     weighting /= weighting.max()
-    surface.add_data({"Cell_weights": {"values": weighting[model_ordering]}})
+
+    model.add_data({"Cell_weights": {"values": ghost_mat @ weighting}})
 
     if em_specs["type"] == "frequency":
-        surface.add_data({"Susceptibility": {"values": susceptibility[model_ordering]}})
+        model.add_data({"Susceptibility": {"values": ghost_mat @ susceptibility}})
 
     min_distance = None
     reg.get_grad_horizontal(
@@ -1015,13 +1019,22 @@ def inversion(input_file):
             Directives.BetaEstimate_ByEig(beta0_ratio=initial_beta_ratio)
         )
 
+    save_mapping = Maps.ExpMap(nP=int(n_sounding * hz.size))
+
+    def transform(model):
+        trans_mat = ghost_mat * np.exp(model)
+        trans_mat[trans_mat == 0] = np.nan
+        return trans_mat
+
+    save_mapping._transform = transform
+
     directive_list.append(Directives.UpdatePreconditioner())
     directive_list.append(
         Directives.SaveIterationsGeoH5(
-            h5_object=surface,
-            sorting=model_ordering,
-            mapping=mapping,
+            h5_object=model,
+            mapping=save_mapping,
             attribute="model",
+            association="CELL",
         )
     )
     directive_list.append(
@@ -1066,6 +1079,23 @@ def inversion(input_file):
                     {f"Residual{channel}": {"association": "VERTEX", "values": res}}
                 )
                 curve.add_data_to_group(residuals, "Residual")
+
+
+def append_ghost(ind, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind):
+    prisms.append(
+        np.r_[
+            xyz[ind, :2] - np.mean(np.diff(xyz[:, :2], axis=0), axis=0),
+            z_loc[ind],
+            cell_count,
+            1,
+        ].reshape((-1, 5))
+    )
+    layers.append(np.c_[column_count, 0, z_loc[ind] - 1.0])
+    column_count += 1
+    ghost_ind.append(cell_count)
+    cell_count += 1
+
+    return prisms, layers, column_count, cell_count, ghost_ind
 
 
 if __name__ == "__main__":

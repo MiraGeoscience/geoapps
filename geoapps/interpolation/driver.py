@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,10 +9,8 @@
 from __future__ import annotations
 
 import sys
-from os import path
 
 import numpy as np
-from geoh5py.ui_json.utils import monitored_directory_copy
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
@@ -169,12 +167,7 @@ class DataInterpolationDriver(BaseDriver):
                 {key + self.params.ga_group_name: {"values": vals, "type": primitive}}
             )
 
-        if self.params.monitoring_directory is not None and path.exists(
-            self.params.monitoring_directory
-        ):
-            monitored_directory_copy(
-                self.params.monitoring_directory, self.params.out_object
-            )
+        self.update_monitoring_directory(self.params.out_object)
 
 
 if __name__ == "__main__":

@@ -1,12 +1,14 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
-import os
+from pathlib import Path
 from uuid import UUID, uuid4
 
 import pytest
@@ -56,10 +58,7 @@ from geoapps.peak_finder.params import PeakFinderParams
 
 from . import PROJECT, PROJECT_DCIP
 
-geoh5 = Workspace(PROJECT)
-
 # Setup
-tmpfile = lambda path: os.path.join(path, "test.ui.json")
 geoh5 = Workspace(PROJECT)
 
 
@@ -70,6 +69,7 @@ def tmp_input_file(filepath, idict):
 
 mvi_init["geoh5"] = str(PROJECT)
 mvi_params = MagneticVectorParams(**mvi_init)
+mvi_params.input_file.geoh5.open()
 
 
 def catch_invalid_generator(param, invalid_value, validation_type):
@@ -99,14 +99,15 @@ def param_test_generator(param, value):
     assert pval == value
 
 
-def test_write_input_file_validation(tmp_path):
+def test_write_input_file_validation(tmp_path: Path):
     grav_init["geoh5"] = str(PROJECT)
     params = GravityParams(validate=False, **grav_init)
+    params.topography_object = None
     params.validate = True
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
 
-    assert "gz_channel" in str(excinfo.value)
+    assert "topography_object" in str(excinfo.value)
 
 
 def test_params_initialize():
@@ -140,7 +141,7 @@ def test_params_initialize():
     assert params.center == 1000.0
 
 
-def test_input_file_construction(tmp_path):
+def test_input_file_construction(tmp_path: Path):
     params_classes = [
         GravityParams,
         MagneticScalarParams,
@@ -156,9 +157,7 @@ def test_input_file_construction(tmp_path):
         for forward_only in [True, False]:
             params = params_class(forward_only=forward_only)
             params.write_input_file(name=filename, path=tmp_path, validate=False)
-            ifile = InputFile.read_ui_json(
-                os.path.join(tmp_path, filename), validation_options={"disabled": True}
-            )
+            ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
             params = params_class(input_file=ifile)
 
             check = []
@@ -176,7 +175,7 @@ def test_input_file_construction(tmp_path):
             assert all(check)
 
 
-def test_default_input_file(tmp_path):
+def test_default_input_file(tmp_path: Path):
     for params_class in [
         MagneticScalarParams,
         MagneticVectorParams,
@@ -184,10 +183,10 @@ def test_default_input_file(tmp_path):
         DirectCurrent3DParams,
         InducedPolarization3DParams,
     ]:
-        filename = os.path.join(tmp_path, "test.ui.json")
+        filename = "test.ui.json"
         params = params_class()
         params.write_input_file(name=filename, path=tmp_path, validate=False)
-        ifile = InputFile.read_ui_json(filename, validation_options={"disabled": True})
+        ifile = InputFile.read_ui_json(tmp_path / filename, validate=False)
 
         # check that reads back into input file with defaults
         check = []
@@ -216,7 +215,7 @@ def test_update():
     assert params.starting_model == 99.0
 
 
-def test_chunk_validation_mvi(tmp_path):
+def test_chunk_validation_mvi(tmp_path: Path):
     test_dict = dict(mvi_init, **{"geoh5": geoh5})
     test_dict.pop("data_object")
     params = MagneticVectorParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -226,7 +225,7 @@ def test_chunk_validation_mvi(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_mag(tmp_path):
+def test_chunk_validation_mag(tmp_path: Path):
     test_dict = dict(mag_initializer, **{"geoh5": geoh5})
     test_dict["inducing_field_strength"] = None
     params = MagneticScalarParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -236,16 +235,17 @@ def test_chunk_validation_mag(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_grav(tmp_path):
+def test_chunk_validation_grav(tmp_path: Path):
     test_dict = dict(grav_init, **{"geoh5": geoh5})
     params = GravityParams(**test_dict)  # pylint: disable=repeated-keyword
+    params.topography_object = None
     with pytest.raises(OptionalValidationError) as excinfo:
         params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["Cannot set a None", "gz_channel"]:
+    for a in ["Cannot set a None", "topography_object"]:
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_dc(tmp_path):
+def test_chunk_validation_dc(tmp_path: Path):
     with Workspace(PROJECT_DCIP) as dc_geoh5:
         test_dict = dc_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
@@ -258,7 +258,7 @@ def test_chunk_validation_dc(tmp_path):
             assert a in str(excinfo.value)
 
 
-def test_chunk_validation_ip(tmp_path):
+def test_chunk_validation_ip(tmp_path: Path):
     with Workspace(PROJECT_DCIP) as dc_geoh5:
         test_dict = ip_initializer.copy()
         test_dict.update({"geoh5": dc_geoh5})
@@ -273,7 +273,7 @@ def test_chunk_validation_ip(tmp_path):
             assert a in str(excinfo.value)
 
 
-def test_chunk_validation_octree(tmp_path):
+def test_chunk_validation_octree(tmp_path: Path):
     test_dict = dict(octree_initializer, **{"geoh5": geoh5})
     test_dict.pop("objects")
     params = OctreeParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -284,7 +284,7 @@ def test_chunk_validation_octree(tmp_path):
         assert a in str(excinfo.value)
 
 
-def test_chunk_validation_peakfinder(tmp_path):
+def test_chunk_validation_peakfinder(tmp_path: Path):
     test_dict = dict(peak_initializer, **{"geoh5": geoh5})
     test_dict.pop("data")
     params = PeakFinderParams(**test_dict)  # pylint: disable=repeated-keyword
@@ -424,34 +424,6 @@ def test_validate_receivers_offset_z():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_ignore_values():
-    param = "ignore_values"
-    newval = "12345"
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_resolution():
-    param = "resolution"
-    newval = 10.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_detrend_order():
-    param = "detrend_order"
-    newval = 2
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_detrend_type():
-    param = "detrend_type"
-    newval = "perimeter"
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, "sdf", "value")
-
-
 def test_validate_max_chunk_size():
     param = "max_chunk_size"
     newval = 256
@@ -476,34 +448,6 @@ def test_validate_output_tile_files():
 def test_validate_mesh():
     param = "mesh"
     newval = UUID("{c02e0470-0c3e-4119-8ac1-0aacba5334af}")
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_center_x():
-    param = "window_center_x"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_center_y():
-    param = "window_center_y"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_width():
-    param = "window_width"
-    newval = 99.0
-    param_test_generator(param, newval)
-    catch_invalid_generator(param, {}, "type")
-
-
-def test_validate_window_height():
-    param = "window_height"
-    newval = 99.0
     param_test_generator(param, newval)
     catch_invalid_generator(param, {}, "type")
 
@@ -648,22 +592,22 @@ def test_validate_alpha_s():
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_x():
-    param = "alpha_x"
+def test_validate_length_scale_x():
+    param = "length_scale_x"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_y():
-    param = "alpha_y"
+def test_validate_length_scale_y():
+    param = "length_scale_y"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
 
 
-def test_validate_alpha_z():
-    param = "alpha_z"
+def test_validate_length_scale_z():
+    param = "length_scale_z"
     newval = 0.1
     param_test_generator(param, newval)
     catch_invalid_generator(param, "test", "type")
@@ -753,12 +697,21 @@ def test_validate_n_cpu():
     catch_invalid_generator(param, "test", "type")
 
 
+grav_params_fwr = GravityParams(
+    **{
+        "geoh5": str(PROJECT),
+        "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    },
+    forward_only=True,
+)
+grav_params_fwr.input_file.geoh5.open()
 grav_params = GravityParams(
     **{
         "geoh5": str(PROJECT),
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-    }
+    },
 )
+grav_params.input_file.geoh5.open()
 
 
 def test_validate_geoh5():
@@ -779,9 +732,9 @@ def test_validate_out_group():
 
 def test_validate_distributed_workers():
     param = "distributed_workers"
-    newval = ["one", "two"]
+    newval = "one, two"
     param_test_generator(param, newval)
-    catch_invalid_generator(param, (), "type")
+    catch_invalid_generator(param, 123, "type")
 
 
 def test_gravity_inversion_type():
@@ -795,7 +748,7 @@ def test_gravity_inversion_type():
 
 def test_gz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gz_channel_bool = "alskdj"
+        grav_params_fwr.gz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gz_channel_bool", "Type", "str", "bool"]]
@@ -803,7 +756,7 @@ def test_gz_channel_bool():
 
 
 def test_gz_channel():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_channel = uuid4()
 
     with pytest.raises(TypeValidationError) as excinfo:
@@ -815,7 +768,7 @@ def test_gz_channel():
 
 
 def test_gz_uncertainty():
-    with pytest.raises(AssociationValidationError) as excinfo:
+    with pytest.raises(AssociationValidationError):
         grav_params.gz_uncertainty = uuid4()
 
     grav_params.gz_uncertainty = 4.0
@@ -840,7 +793,7 @@ def test_gz_uncertainty():
 
 def test_guv_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.guv_channel_bool = "alskdj"
+        grav_params_fwr.guv_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["guv_channel_bool", "Type", "str", "bool"]]
@@ -885,7 +838,7 @@ def test_guv_uncertainty():
 
 def test_gxy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gxy_channel_bool = "alskdj"
+        grav_params_fwr.gxy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gxy_channel_bool", "Type", "str", "bool"]]
@@ -930,7 +883,7 @@ def test_gxy_uncertainty():
 
 def test_gxx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gxx_channel_bool = "alskdj"
+        grav_params_fwr.gxx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gxx_channel_bool", "Type", "str", "bool"]]
@@ -975,7 +928,7 @@ def test_gxx_uncertainty():
 
 def test_gyy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gyy_channel_bool = "alskdj"
+        grav_params_fwr.gyy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gyy_channel_bool", "Type", "str", "bool"]]
@@ -1020,7 +973,7 @@ def test_gyy_uncertainty():
 
 def test_gzz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gzz_channel_bool = "alskdj"
+        grav_params_fwr.gzz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gzz_channel_bool", "Type", "str", "bool"]]
@@ -1065,7 +1018,7 @@ def test_gzz_uncertainty():
 
 def test_gxz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gxz_channel_bool = "alskdj"
+        grav_params_fwr.gxz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gxz_channel_bool", "Type", "str", "bool"]]
@@ -1110,7 +1063,7 @@ def test_gxz_uncertainty():
 
 def test_gyz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gyz_channel_bool = "alskdj"
+        grav_params_fwr.gyz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gyz_channel_bool", "Type", "str", "bool"]]
@@ -1155,7 +1108,7 @@ def test_gyz_uncertainty():
 
 def test_gx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gx_channel_bool = "alskdj"
+        grav_params_fwr.gx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gx_channel_bool", "Type", "str", "bool"]]
@@ -1200,7 +1153,7 @@ def test_gx_uncertainty():
 
 def test_gy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.gy_channel_bool = "alskdj"
+        grav_params_fwr.gy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["gy_channel_bool", "Type", "str", "bool"]]
@@ -1243,12 +1196,20 @@ def test_gy_uncertainty():
     )
 
 
+mag_params_fwr = MagneticScalarParams(
+    **{
+        "geoh5": str(PROJECT),
+        "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    },
+    forward_only=True,
+)
 mag_params = MagneticScalarParams(
     **{
         "geoh5": str(PROJECT),
         "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     }
 )
+mag_params.geoh5.open()
 
 
 def test_magnetic_scalar_inversion_type():
@@ -1301,7 +1262,7 @@ def test_inducing_field_declination():
 
 def test_tmi_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.tmi_channel_bool = "alskdj"
+        mag_params_fwr.tmi_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["tmi_channel_bool", "Type", "str", "bool"]]
@@ -1346,7 +1307,7 @@ def test_tmi_uncertainty():
 
 def test_bxx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bxx_channel_bool = "alskdj"
+        mag_params_fwr.bxx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bxx_channel_bool", "Type", "str", "bool"]]
@@ -1391,7 +1352,7 @@ def test_bxx_uncertainty():
 
 def test_bxy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bxy_channel_bool = "alskdj"
+        mag_params_fwr.bxy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bxy_channel_bool", "Type", "str", "bool"]]
@@ -1436,7 +1397,7 @@ def test_bxy_uncertainty():
 
 def test_bxz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bxz_channel_bool = "alskdj"
+        mag_params_fwr.bxz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bxz_channel_bool", "Type", "str", "bool"]]
@@ -1481,7 +1442,7 @@ def test_bxz_uncertainty():
 
 def test_byy_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.byy_channel_bool = "alskdj"
+        mag_params_fwr.byy_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["byy_channel_bool", "Type", "str", "bool"]]
@@ -1526,7 +1487,7 @@ def test_byy_uncertainty():
 
 def test_byz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.byz_channel_bool = "alskdj"
+        mag_params_fwr.byz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["byz_channel_bool", "Type", "str", "bool"]]
@@ -1571,7 +1532,7 @@ def test_byz_uncertainty():
 
 def test_bzz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bzz_channel_bool = "alskdj"
+        mag_params_fwr.bzz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bzz_channel_bool", "Type", "str", "bool"]]
@@ -1616,7 +1577,7 @@ def test_bzz_uncertainty():
 
 def test_bx_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bx_channel_bool = "alskdj"
+        mag_params_fwr.bx_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bx_channel_bool", "Type", "str", "bool"]]
@@ -1660,7 +1621,7 @@ def test_bx_uncertainty():
 
 def test_by_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.by_channel_bool = "alskdj"
+        mag_params_fwr.by_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["by_channel_bool", "Type", "str", "bool"]]
@@ -1705,7 +1666,7 @@ def test_by_uncertainty():
 
 def test_bz_channel_bool():
     with pytest.raises(TypeValidationError) as excinfo:
-        mag_params.bz_channel_bool = "alskdj"
+        mag_params_fwr.bz_channel_bool = "alskdj"
 
     assert all(
         [s in str(excinfo.value) for s in ["bz_channel_bool", "Type", "str", "bool"]]
@@ -1938,13 +1899,13 @@ def test_conductivity_model():
     )
 
 
-def test_isValue(tmp_path):
+def test_isValue(tmp_path: Path):
     file_name = "test.ui.json"
     mesh = geoh5.get_entity("O2O_Interp_25m")[0]
     mag_params.starting_model = 0.0
     mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
 
-    with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
+    with open(tmp_path / file_name, encoding="utf-8") as f:
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is True, "isValue should be True"
@@ -1952,7 +1913,7 @@ def test_isValue(tmp_path):
     mag_params.starting_model = mesh.get_data("VTEM_model")[0].uid
 
     mag_params.write_input_file(name=file_name, path=tmp_path, validate=False)
-    with open(os.path.join(tmp_path, file_name), encoding="utf-8") as f:
+    with open(tmp_path / file_name, encoding="utf-8") as f:
         ui = json.load(f)
 
     assert ui["starting_model"]["isValue"] is False, "isValue should be False"

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,13 +10,17 @@ from __future__ import annotations
 import time
 import types
 import uuid
-from os import makedirs, mkdir, path
 from pathlib import Path
 from shutil import copyfile
 
 from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
-from geoh5py.shared.utils import dict_mapper, entity2uuid, str2uuid
+from geoh5py.shared.utils import (
+    dict_mapper,
+    entity2uuid,
+    fetch_active_workspace,
+    str2uuid,
+)
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import list2str, monitored_directory_copy
 from geoh5py.workspace import Workspace
@@ -114,39 +118,41 @@ class BaseApplication:
 
     def __populate__(self, **kwargs):
         mappers = [entity2uuid, str2uuid]
+        workspace = getattr(getattr(self, "params", None), "geoh5", None)
 
-        for key, value in kwargs.items():
-            if key[0] == "_":
-                key = key[1:]
-            if hasattr(self, "_" + key) or hasattr(self, key):
-                if isinstance(value, list):
-                    value = [dict_mapper(val, mappers) for val in value]
-                else:
-                    value = dict_mapper(value, mappers)
-
-                try:
-                    if isinstance(getattr(self, key, None), Widget) and not isinstance(
-                        value, Widget
-                    ):
-                        widget = getattr(self, key)
-
-                        if isinstance(widget, Text):
-                            value = list2str(value)
-
-                        setattr(widget, "value", value)
-                        if hasattr(widget, "style"):
-                            widget.style = {"description_width": "initial"}
-
-                    elif isinstance(value, BaseApplication) and isinstance(
-                        getattr(self, "_" + key, None), BaseApplication
-                    ):
-                        setattr(self, "_" + key, value)
-                    elif type(getattr(self, key, None)) is types.MethodType:
-                        getattr(self, key, None)(key, value)
+        with fetch_active_workspace(workspace):
+            for key, value in kwargs.items():
+                if key[0] == "_":
+                    key = key[1:]
+                if hasattr(self, "_" + key) or hasattr(self, key):
+                    if isinstance(value, list):
+                        value = [dict_mapper(val, mappers) for val in value]
                     else:
-                        setattr(self, key, value)
-                except (AttributeError, TypeError, TraitError, AssertionError):
-                    pass
+                        value = dict_mapper(value, mappers)
+
+                    try:
+                        if isinstance(
+                            getattr(self, key, None), Widget
+                        ) and not isinstance(value, Widget):
+                            widget = getattr(self, key)
+
+                            if isinstance(widget, Text):
+                                value = list2str(value)
+
+                            setattr(widget, "value", value)
+                            if hasattr(widget, "style"):
+                                widget.style = {"description_width": "initial"}
+
+                        elif isinstance(value, BaseApplication) and isinstance(
+                            getattr(self, "_" + key, None), BaseApplication
+                        ):
+                            setattr(self, "_" + key, value)
+                        elif type(getattr(self, key, None)) is types.MethodType:
+                            getattr(self, key, None)(key, value)
+                        else:
+                            setattr(self, key, value)
+                    except (AttributeError, TypeError, TraitError, AssertionError):
+                        pass
 
     @property
     def defaults(self):
@@ -163,7 +169,7 @@ class BaseApplication:
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable="protected-access"
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
 
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()
@@ -174,7 +180,7 @@ class BaseApplication:
                 )
                 self.refresh.value = False
                 self.params.geoh5.open(mode="r")
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**self.params.to_dict())
                 self.refresh.value = True
 
             elif extension == ".geoh5":
@@ -206,8 +212,9 @@ class BaseApplication:
         """
         if self.live_link.value:
             if (self.h5file is not None) and (self.monitoring_directory is None):
-                live_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
-                self.monitoring_directory = live_path
+                self.monitoring_directory = str(
+                    (Path(self.h5file).parent / "Temp").resolve()
+                )
 
             if getattr(self, "_params", None) is not None:
                 setattr(self.params, "monitoring_directory", self.monitoring_directory)
@@ -237,17 +244,17 @@ class BaseApplication:
         return self._monitoring_directory
 
     @monitoring_directory.setter
-    def monitoring_directory(self, live_path: str):
-        if not path.exists(live_path):
-            mkdir(live_path)
+    def monitoring_directory(self, live_path: str | Path):
+        live_path = Path(live_path)
+        live_path.mkdir(exist_ok=True)
 
-        live_path = path.abspath(live_path)
+        live_path_str = str(live_path.resolve())
         self.export_directory._set_form_values(  # pylint: disable=protected-access
-            live_path, ""
+            live_path_str, ""
         )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
 
-        self._monitoring_directory = live_path
+        self._monitoring_directory = live_path_str
 
     @property
     def copy_trigger(self):
@@ -296,22 +303,23 @@ class BaseApplication:
             raise TypeError
 
     @staticmethod
-    def get_output_workspace(live_link, workpath: str = "./", name: str = "Temp.geoh5"):
+    def get_output_workspace(
+        live_link, workpath: str | Path = Path(), name: str = "Temp.geoh5"
+    ):
         """
         Create an active workspace with check for GA monitoring directory
         """
-        if not name.endswith(".geoh5"):
+        if Path(name).suffix != ".geoh5":
             name += ".geoh5"
-        workspace = Workspace(path.join(workpath, name))
+        workspace = Workspace.create(Path(workpath) / name)
         workspace.close()
         new_live_link = False
         time.sleep(1)
         # Check if GA digested the file already
-        if not path.exists(workspace.h5file):
-            workpath = path.join(workpath, ".working")
-            if not path.exists(workpath):
-                makedirs(workpath)
-            workspace = Workspace(path.join(workpath, name))
+        if not Path(workspace.h5file).is_file():
+            workpath = Path(workpath) / ".working"
+            workpath.mkdir(parents=True, exist_ok=True)
+            workspace = Workspace.create(workpath / name)
             workspace.close()
             new_live_link = True
             if not live_link:
@@ -416,7 +424,9 @@ class BaseApplication:
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
 
     @property
@@ -428,7 +438,7 @@ class BaseApplication:
             getattr(self, "_working_directory", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._working_directory = path.abspath(path.dirname(self.h5file))
+            self._working_directory = str(Path(self.h5file).parent.resolve())
         return self._working_directory
 
     @property
@@ -440,12 +450,12 @@ class BaseApplication:
             getattr(self, "_workspace_geoh5", None) is None
             and getattr(self, "_h5file", None) is not None
         ):
-            self._workspace_geoh5 = path.abspath(self.h5file)
+            self._workspace_geoh5 = str(Path(self.h5file).resolve())
         return self._workspace_geoh5
 
     @workspace_geoh5.setter
-    def workspace_geoh5(self, file_path):
-        self._workspace_geoh5 = path.abspath(file_path)
+    def workspace_geoh5(self, file_path: str | Path):
+        self._workspace_geoh5 = str(Path(file_path).resolve())
 
     def create_copy(self, _):
         if self.h5file is not None:
@@ -472,18 +482,18 @@ class BaseApplication:
     def base_workspace_changes(self, workspace: Workspace):
         self._workspace = workspace
         self._h5file = workspace.h5file
+        h5_file_path = Path(self._h5file).resolve()
         self._file_browser.reset(
             path=self.working_directory,
-            filename=path.basename(self._h5file),
+            filename=h5_file_path.name,
         )
         self._file_browser._apply_selection()  # pylint: disable=protected-access
 
-        export_path = path.join(path.abspath(path.dirname(self.h5file)), "Temp")
-        if not path.exists(export_path):
-            mkdir(export_path)
+        export_path = h5_file_path.parent / "Temp"
+        export_path.mkdir(exist_ok=True)
 
         self.export_directory._set_form_values(  # pylint: disable=protected-access
-            export_path, ""
+            str(export_path), ""
         )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
 

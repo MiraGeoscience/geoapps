@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,6 +11,7 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.electromagnetics.magnetotellurics import MTReceivers
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
@@ -18,7 +19,8 @@ from geoapps.inversion.constants import validations as base_validations
 ################# defaults ##################
 
 inversion_defaults = {
-    "title": "Magnetotellurics inversion",
+    "version": geoapps.__version__,
+    "title": "Magnetotellurics (MT) Inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -26,7 +28,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
@@ -54,14 +55,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 1e2,
@@ -73,9 +66,9 @@ inversion_defaults = {
     "max_cg_iterations": 50,
     "tol_cg": 1e-4,
     "alpha_s": 0.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_y": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
@@ -89,7 +82,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 60.0,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": True,
     "parallelized": True,
     "n_cpu": None,
@@ -105,18 +98,10 @@ inversion_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "zxx_real_channel_bool": False,
-    "zxx_imag_channel_bool": False,
-    "zxy_real_channel_bool": False,
-    "zxy_imag_channel_bool": False,
-    "zyx_real_channel_bool": False,
-    "zyx_imag_channel_bool": False,
-    "zyy_real_channel_bool": False,
-    "zyy_imag_channel_bool": False,
 }
-
 forward_defaults = {
-    "title": "Magnetotellurics forward",
+    "version": geoapps.__version__,
+    "title": "Magnetotellurics (MT) Forward",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "geoh5": None,  # Must remain at top of list for notebook app initialization
@@ -124,7 +109,6 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
@@ -141,11 +125,6 @@ forward_defaults = {
     "background_conductivity": 1e-3,
     "starting_model": 1e-3,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -158,44 +137,10 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
-
-inversion_ui_json = {
-    "zxx_real_channel_bool": False,
-    "zxx_imag_channel_bool": False,
-    "zxy_real_channel_bool": False,
-    "zxy_imag_channel_bool": False,
-    "zyx_real_channel_bool": False,
-    "zyx_imag_channel_bool": False,
-    "zyy_real_channel_bool": False,
-    "zyy_imag_channel_bool": False,
-    "detrend_type": None,
-    "detrend_order": None,
-}
-
-forward_ui_json = {
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
-    "title": "Magnetotellurics inversion",
+    "title": "Magnetotellurics Inversion",
     "icon": "surveymagnetotellurics",
     "inversion_type": "magnetotellurics",
     "data_object": {
@@ -448,7 +393,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -460,7 +405,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference conductivity (S/m)",
@@ -470,7 +415,7 @@ default_ui_json = {
     "background_conductivity": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -482,7 +427,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (S/m)",
@@ -495,7 +440,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (S/m)",
@@ -560,12 +505,6 @@ app_initializer = {
     "starting_model": 0.0003,
     "reference_model": 0.0003,
     "background_conductivity": 0.0003,
-    "resolution": 200.0,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 500.0,

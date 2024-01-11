@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,14 +9,15 @@
 
 from __future__ import annotations
 
-import os
 import sys
 import uuid
 import warnings
+from pathlib import Path
 from time import time
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -48,7 +49,7 @@ class OctreeMesh(ObjectDataSelection):
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
@@ -193,7 +194,9 @@ class OctreeMesh(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_choices()
         self.params.geoh5 = workspace
@@ -235,12 +238,13 @@ class OctreeMesh(ObjectDataSelection):
         with ws as new_workspace:
             param_dict["geoh5"] = new_workspace
 
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    obj = new_workspace.get_entity(value.uid)[0]
-                    if obj is None:
-                        obj = value.copy(parent=new_workspace, copy_children=True)
-                    param_dict[key] = obj
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        obj = new_workspace.get_entity(value.uid)[0]
+                        if obj is None:
+                            obj = value.copy(parent=new_workspace, copy_children=True)
+                        param_dict[key] = obj
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
@@ -284,16 +288,14 @@ class OctreeMesh(ObjectDataSelection):
 
                 try:
                     getattr(self, attr_name).value = value.uid
-                except TraitError:
+                except (TraitError, AttributeError):
                     pass
 
             elif "levels" in key:
                 setattr(
                     self,
                     attr_name,
-                    Text(
-                        description=key.capitalize(), value=", ".join(map(str, value))
-                    ),
+                    Text(description=key.capitalize(), value=value),
                 )
             elif "type" in key:
                 setattr(

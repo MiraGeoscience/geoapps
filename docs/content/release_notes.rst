@@ -1,13 +1,59 @@
 Release Notes
 =============
 
+Release 0.11.0 (2023-10-04)
+---------------------------
+
+**(Major Release)**
+
+New features
+^^^^^^^^^^^^
+
+- GEOPY-715: Add Joint survey inversion: multi-surveys, single physical property.
+- GEOPY-750: Add frequency-domain 3D inversion.
+- GEOPY-787: Add Joint Cross Gradient inversion: up to 3 physical properties.
+- GEOPY-871: Add B-field receivers to TEM inversion
+- GEOPY-995: Migrate utility functions to lightweight package: https://pypi.org/project/geoapps-utils/
+- GEOPY-1100: Add octree refinement on triangulated 3D Surfaces.
+- GEOPY-1059 : Add octree refinement along curve path.
+
+
+Inversion updates
+^^^^^^^^^^^^^^^^^
+
+- GEOPY-74: Update SimPEG from v0.15.0 to v0.19.0.
+- GEOPY-267: Save command log to inversion group.
+- GEOPY-328: Replace 1D inversion models from surface to DrapeModel object.
+- GEOPY-401: Remove clipping of topography on data extent.
+- GEOPY-564, 720: Save uijson to inversion group and update metadata.
+- GEOPY-607: Migrate from jupyter widgets to Dash application.
+- GEOPY-189, 217, 483, 507: Updates to behaviour of applications.
+- GEOPY-632: Remove detrend options in ui.json.
+- GEOPY-927: Allow to run dcip-2D inversion from existing mesh.
+- GEOPY-1021: Remove data windowing from ui.json.
+
+General Feature updates
+^^^^^^^^^^^^^^^^^^^^^^^
+
+- GEOPY-767, 994: Migrate and refactor Peak Finder to separate repository.
+- GEOPY-961: Use Qt web window for Dash applications.
+- GEOPY-1100, 1020: Fix deprecation warnings.
+- GEOPY-1059: Re-implementation of radial and surface refinement.
+
+UI.json features
+^^^^^^^^^^^^^^^^
+
+- GEOPY-830: Use of pathlib.Path for file paths.
+- GEOPY-875: Add geoapps 'version' identifier to all applications.
+
+
 Release 0.10.0 (2023-03-20)
 ---------------------------
 
 **(Major Release)**
 
-GEOPY-738: Add Airborne Time-Domain EM (ATEM) inversion to the inversion suite.
-GEOPY-829, 727: Bug fixes
+- GEOPY-738: Add Airborne Time-Domain EM (ATEM) inversion to the inversion suite.
+- GEOPY-829, 727: Bug fixes
 
 
 Release 0.9.2 (2023-01-17)
@@ -15,11 +61,11 @@ Release 0.9.2 (2023-01-17)
 
 Hotfix release for issues encountered since 0.9.1.
 
-GEOPY-835: Fix iso-surface creation crash after multiple runs of marching cube.
-GEOPY-734, 827, 828, 829, 833: Improve installation and fix SSL error encountered by some users.
-GEOPY-814: Update copyright year
-GEOPY-732: Fix crash on ui.json execution of non-inversion apps from ANALYST.
-GEOPY-729: Add version information to main documentation page.
+- GEOPY-835: Fix iso-surface creation crash after multiple runs of marching cube.
+- GEOPY-734, 827, 828, 829, 833: Improve installation and fix SSL error encountered by some users.
+- GEOPY-814: Update copyright year
+- GEOPY-732: Fix crash on ui.json execution of non-inversion apps from ANALYST.
+- GEOPY-729: Add version information to main documentation page.
 
 
 Release 0.9.1 (2022-12-13)
@@ -27,13 +73,14 @@ Release 0.9.1 (2022-12-13)
 
 This release fixes some of the issues encountered since releasing v0.9.0.
 
-GEOPY-697, 694, 685: Better handling of Curve entity in inversions UI.
-GEOPY-690: Re-implementation of the Z from topo option for DC-IP and MT inversions. Source and receivers are no longer draped onto the active (discretized) topography. To reduce numerical artifacts, the active set is instead augmented to include cells intercepted by receivers locations. The drape on top remains optional as for all other methods.
-GEOPY-397: Re-simulation of tensor gravity and magnetics in the Flin Flon demo project.
+- GEOPY-697, 694, 685: Better handling of Curve entity in inversions UI.
+- GEOPY-690: Re-implementation of the Z from topo option for DC-IP and MT inversions. Source and receivers are no longer draped onto the active (discretized) topography. To reduce numerical artifacts, the active set is instead augmented to include cells intercepted by receivers locations. The drape on top remains optional as for all other methods.
+- GEOPY-397: Re-simulation of tensor gravity and magnetics in the Flin Flon demo project.
+
 Also included are SimPEG specific changes:
 
-Fix error in the IRLS weights for MVI using the "total" gradient option.
-Fix error in the stashed regularization operator introduced in v0.9.0
+- Fix error in the IRLS weights for MVI using the "total" gradient option.
+- Fix error in the stashed regularization operator introduced in v0.9.0
 
 
 Release 0.9.0 (2022-10-28)
@@ -53,6 +100,7 @@ This release focuses on SimPEG DC/IP 2D inversion as well as a revamp of all inv
 - GEOPY-613: Allow for TEM survey entities as input for SimPEG EM1D inversions.
 
 New or revamped applications:
+
 - GEOPY-579: New BlockModel creation application.
 - GEOPY-592: Conversion of Clustering to Dash (Plotly) app with ui.json implementation.
 - GEOPY-588: Conversion of Scatter Plot to Dash (Plotly) app with ui.json implementation.

@@ -92,13 +92,12 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "geoapps v0.10.0"
+project = "geoapps v0.11.0"
 
 # The short X.Y version.
-version = "0.10.0"
+version = "0.11.0"
 # The full version, including alpha/beta/rc tags.
-release = "0.10.0"
-
+release = "0.11.0"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

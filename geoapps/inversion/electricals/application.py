@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,20 +10,22 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import os.path as path
 import uuid
 import warnings
+from pathlib import Path
 from time import time
 
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
+from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer,
 )
@@ -101,14 +103,20 @@ class InversionApp(PlotSelection2D):
     inversion_parameters = None
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
-            self.params = self._param_class(InputFile(ui_json))
+        if ui_json is not None and Path(ui_json.path).exists():
+            self.params = self._param_class(ui_json)
         else:
+            app_initializer.update(kwargs)
             self.params = self._param_class(**app_initializer)
+            extras = {
+                key: value
+                for key, value in app_initializer.items()
+                if key not in self.params.param_names
+            }
+            self._app_initializer = extras
 
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
 
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -120,12 +128,11 @@ class InversionApp(PlotSelection2D):
             description="inversion Type:",
         )
         self._write = Button(
-            value=False,
             description="Write input",
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict(ui_json_format=False))
+        self.defaults.update(self.params.to_dict())
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
@@ -162,7 +169,7 @@ class InversionApp(PlotSelection2D):
         self._coolingFactor = FloatText(value=2, description="Beta cooling factor")
         self._max_cg_iterations = IntText(value=30, description="Max CG Iterations")
         self._sens_wts_threshold = FloatText(
-            value=80, description="Threshold sensitivity weights", max=100, min=0
+            value=0.001, description="Threshold sensitivity weights"
         )
         self._tol_cg = FloatText(value=1e-3, description="CG Tolerance")
         self._n_cpu = IntText(
@@ -227,17 +234,17 @@ class InversionApp(PlotSelection2D):
             value=1,
             description="Reference Model (s)",
         )
-        self._alpha_x = widgets.FloatText(
+        self._length_scale_x = widgets.FloatText(
             min=0,
             value=1,
             description="EW-gradient (x)",
         )
-        self._alpha_y = widgets.FloatText(
+        self._length_scale_y = widgets.FloatText(
             min=0,
             value=1,
             description="NS-gradient (y)",
         )
-        self._alpha_z = widgets.FloatText(
+        self._length_scale_z = widgets.FloatText(
             min=0,
             value=1,
             description="Vertical-gradient (z)",
@@ -275,9 +282,9 @@ class InversionApp(PlotSelection2D):
             [
                 Label("Scaling (alphas)"),
                 self._alpha_s,
-                self._alpha_x,
-                self._alpha_y,
-                self._alpha_z,
+                self._length_scale_x,
+                self._length_scale_y,
+                self._length_scale_z,
             ]
         )
         self.bound_panel = HBox(
@@ -346,16 +353,16 @@ class InversionApp(PlotSelection2D):
         return self._alpha_s
 
     @property
-    def alpha_x(self):
-        return self._alpha_x
+    def length_scale_x(self):
+        return self._length_scale_x
 
     @property
-    def alpha_y(self):
-        return self._alpha_y
+    def length_scale_y(self):
+        return self._length_scale_y
 
     @property
-    def alpha_z(self):
-        return self._alpha_z
+    def length_scale_z(self):
+        return self._length_scale_z
 
     # @property
     # def initial_beta(self):
@@ -709,7 +716,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace
@@ -754,7 +763,7 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict(ui_json_format=False)
+        params = self.params.to_dict()
         if self.inversion_type.value == "direct current 3d" and not isinstance(
             self.params, DirectCurrent3DParams
         ):
@@ -1025,58 +1034,62 @@ class InversionApp(PlotSelection2D):
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
+
         with ws as new_workspace:
-            param_dict["geoh5"] = new_workspace
+            with fetch_active_workspace(self.workspace):
+                param_dict["geoh5"] = new_workspace
 
-            for elem in [
-                self,
-                self._mesh_octree,
-                self._topography_group,
-                self._starting_model_group,
-                self._conductivity_model_group,
-                self._reference_model_group,
-                self._lower_bound_group,
-                self._upper_bound_group,
-            ]:
-                obj, data = elem.get_selected_entities()
-                if obj is not None:
-                    new_obj = new_workspace.get_entity(obj.uid)[0]
-                    if new_obj is None:
-                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
-                    for d in data:
-                        if (
-                            isinstance(d, Data)
-                            and new_workspace.get_entity(d.uid)[0] is None
-                        ):
-                            d.copy(parent=new_obj)
-
-            new_obj = new_workspace.get_entity(self.objects.value)[0]
-
-            for key in self.data_channel_choices.options:
-                if not self.forward_only.value:
-                    widget = getattr(self, f"{key}_uncertainty_channel")
-                    if widget.value is not None:
-                        param_dict[f"{key}_uncertainty"] = str(widget.value)
-                        if new_workspace.get_entity(widget.value)[0] is None:
-                            self.workspace.get_entity(widget.value)[0].copy(
-                                parent=new_obj, copy_children=False
+                for elem in [
+                    self,
+                    self._mesh_octree,
+                    self._topography_group,
+                    self._starting_model_group,
+                    self._conductivity_model_group,
+                    self._reference_model_group,
+                    self._lower_bound_group,
+                    self._upper_bound_group,
+                ]:
+                    obj, data = elem.get_selected_entities()
+                    if obj is not None:
+                        new_obj = new_workspace.get_entity(obj.uid)[0]
+                        if new_obj is None:
+                            new_obj = obj.copy(
+                                parent=new_workspace, copy_children=False
                             )
-                    else:
-                        widget = getattr(self, f"{key}_uncertainty_floor")
-                        param_dict[f"{key}_uncertainty"] = widget.value
+                        for d in data:
+                            if (
+                                isinstance(d, Data)
+                                and new_workspace.get_entity(d.uid)[0] is None
+                            ):
+                                d.copy(parent=new_obj)
 
-                if getattr(self, f"{key}_channel_bool").value:
+                new_obj = new_workspace.get_entity(self.objects.value)[0]
+
+                for key in self.data_channel_choices.options:
                     if not self.forward_only.value:
-                        self.workspace.get_entity(
-                            getattr(self, f"{key}_channel").value
-                        )[0].copy(parent=new_obj)
-                    else:
-                        param_dict[f"{key}_channel_bool"] = True
+                        widget = getattr(self, f"{key}_uncertainty_channel")
+                        if widget.value is not None:
+                            param_dict[f"{key}_uncertainty"] = str(widget.value)
+                            if new_workspace.get_entity(widget.value)[0] is None:
+                                self.workspace.get_entity(widget.value)[0].copy(
+                                    parent=new_obj, copy_children=False
+                                )
+                        else:
+                            widget = getattr(self, f"{key}_uncertainty_floor")
+                            param_dict[f"{key}_uncertainty"] = widget.value
 
-            if self.receivers_radar_drape.value is not None:
-                self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
-                    parent=new_obj
-                )
+                    if getattr(self, f"{key}_channel_bool").value:
+                        if not self.forward_only.value:
+                            self.workspace.get_entity(
+                                getattr(self, f"{key}_channel").value
+                            )[0].copy(parent=new_obj)
+                        else:
+                            param_dict[f"{key}_channel_bool"] = True
+
+                if self.receivers_radar_drape.value is not None:
+                    self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
+                        parent=new_obj
+                    )
 
             for key in self.__dict__:
                 if "resolution" in key:
@@ -1110,6 +1123,26 @@ class InversionApp(PlotSelection2D):
 
             # Create new params object and write
             param_dict["resolution"] = None  # No downsampling for dcip
+            param_dict["geoh5"] = new_workspace
+
+            if param_dict.get("reference_model", None) is None:
+                param_dict["reference_model"] = param_dict["starting_model"]
+                param_dict["alpha_s"] = 0.0
+
+            # Pre-processing
+            update_dict = preprocess_data(
+                workspace=ws,
+                param_dict=param_dict,
+                resolution=None,
+                data_object=param_dict["data_object"],
+                window_center_x=self.window_center_x.value,
+                window_center_y=self.window_center_y.value,
+                window_width=self.window_width.value,
+                window_height=self.window_height.value,
+                window_azimuth=self.window_azimuth.value,
+            )
+            param_dict.update(update_dict)
+
             self._run_params = self.params.__class__(**param_dict)
             self._run_params.write_input_file(
                 name=temp_geoh5.replace(".geoh5", ".ui.json"),
@@ -1138,7 +1171,7 @@ class InversionApp(PlotSelection2D):
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
 
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()
@@ -1159,7 +1192,7 @@ class InversionApp(PlotSelection2D):
                 )
                 self.params.geoh5.open(mode="r")
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict(ui_json_format=False))
+                self.__populate__(**self.params.to_dict())
                 self.refresh.value = True
 
             elif extension == ".geoh5":

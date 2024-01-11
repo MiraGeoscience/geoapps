@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,7 +11,6 @@ from copy import deepcopy
 
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
-from geoh5py.ui_json import InputFile
 
 from geoapps.driver_base.params import BaseParams
 from geoapps.iso_surfaces.constants import default_ui_json, defaults, validations
@@ -35,14 +34,6 @@ class IsoSurfacesParams(BaseParams):
         self._max_distance = None
         self._resolution = None
         self._export_as = None
-
-        if input_file is None:
-            ui_json = deepcopy(self._default_ui_json)
-            input_file = InputFile(
-                ui_json=ui_json,
-                validations=self.validations,
-                validation_options={"disabled": True},
-            )
 
         super().__init__(input_file=input_file, **kwargs)
 

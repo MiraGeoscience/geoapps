@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,16 +10,17 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import os.path as path
 import uuid
 import warnings
 from collections import OrderedDict
+from pathlib import Path
 from time import time
 
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.objects import Octree
 from geoh5py.shared import Entity
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
@@ -45,7 +46,6 @@ with warn_module_not_found():
         VBox,
         Widget,
     )
-
 
 from .gravity.params import GravityParams
 from .magnetic_scalar.params import MagneticScalarParams
@@ -98,9 +98,9 @@ class InversionApp(PlotSelection2D):
     _topography = None
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, plot_result=True, **kwargs):
+    def __init__(self, ui_json: str | Path | None = None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             ifile = InputFile.read_ui_json(ui_json)
             self.params = self._param_class(ifile, **kwargs)
         else:
@@ -270,17 +270,17 @@ class InversionApp(PlotSelection2D):
             value=1,
             description="Reference Model (s)",
         )
-        self._alpha_x = widgets.FloatText(
+        self._length_scale_x = widgets.FloatText(
             min=0,
             value=1,
             description="EW-gradient (x)",
         )
-        self._alpha_y = widgets.FloatText(
+        self._length_scale_y = widgets.FloatText(
             min=0,
             value=1,
             description="NS-gradient (y)",
         )
-        self._alpha_z = widgets.FloatText(
+        self._length_scale_z = widgets.FloatText(
             min=0,
             value=1,
             description="Vertical-gradient (z)",
@@ -318,9 +318,9 @@ class InversionApp(PlotSelection2D):
             [
                 Label("Scaling (alphas)"),
                 self._alpha_s,
-                self._alpha_x,
-                self._alpha_y,
-                self._alpha_z,
+                self._length_scale_x,
+                self._length_scale_y,
+                self._length_scale_z,
             ]
         )
         self.bound_panel = HBox(
@@ -384,16 +384,16 @@ class InversionApp(PlotSelection2D):
         return self._alpha_s
 
     @property
-    def alpha_x(self):
-        return self._alpha_x
+    def length_scale_x(self):
+        return self._length_scale_x
 
     @property
-    def alpha_y(self):
-        return self._alpha_y
+    def length_scale_y(self):
+        return self._length_scale_y
 
     @property
-    def alpha_z(self):
-        return self._alpha_z
+    def length_scale_z(self):
+        return self._length_scale_z
 
     @property
     def initial_beta(self):
@@ -790,7 +790,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(workspace, Workspace), f"Workspace must of class {Workspace}"
+        assert isinstance(
+            workspace, Workspace
+        ), f"Workspace must be of class {Workspace}"
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.sensor.workspace = workspace
@@ -1178,36 +1180,21 @@ class InversionApp(PlotSelection2D):
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
-        with ws as new_workspace:
-            param_dict["geoh5"] = new_workspace
+        with fetch_active_workspace(self.workspace):
+            with ws as new_workspace:
+                param_dict["geoh5"] = new_workspace
 
-            for elem in [
-                self,
-                self._mesh_octree,
-                self._topography_group,
-                self._starting_model_group,
-                self._reference_model_group,
-                self._lower_bound_group,
-                self._upper_bound_group,
-            ]:
-                obj, data = elem.get_selected_entities()
-
-                if obj is not None:
-                    new_obj = new_workspace.get_entity(obj.uid)[0]
-                    if new_obj is None:
-                        new_obj = obj.copy(parent=new_workspace, copy_children=False)
-                    for d in data:
-                        if d is not None and new_workspace.get_entity(d.uid)[0] is None:
-                            d.copy(parent=new_obj)
-
-            if self.inversion_type.value == "magnetic vector":
                 for elem in [
-                    self._starting_inclination_group,
-                    self._starting_declination_group,
-                    self._reference_inclination_group,
-                    self._reference_declination_group,
+                    self,
+                    self._mesh_octree,
+                    self._topography_group,
+                    self._starting_model_group,
+                    self._reference_model_group,
+                    self._lower_bound_group,
+                    self._upper_bound_group,
                 ]:
                     obj, data = elem.get_selected_entities()
+
                     if obj is not None:
                         new_obj = new_workspace.get_entity(obj.uid)[0]
                         if new_obj is None:
@@ -1216,77 +1203,100 @@ class InversionApp(PlotSelection2D):
                             )
                         for d in data:
                             if (
-                                isinstance(d, Data)
+                                d is not None
                                 and new_workspace.get_entity(d.uid)[0] is None
                             ):
                                 d.copy(parent=new_obj)
 
-            new_obj = new_workspace.get_entity(self.objects.value)
-            if len(new_obj) == 0 or new_obj[0] is None:
-                print("An object with data must be selected to write the input file.")
-                return
+                if self.inversion_type.value == "magnetic vector":
+                    for elem in [
+                        self._starting_inclination_group,
+                        self._starting_declination_group,
+                        self._reference_inclination_group,
+                        self._reference_declination_group,
+                    ]:
+                        obj, data = elem.get_selected_entities()
+                        if obj is not None:
+                            new_obj = new_workspace.get_entity(obj.uid)[0]
+                            if new_obj is None:
+                                new_obj = obj.copy(
+                                    parent=new_workspace, copy_children=False
+                                )
+                            for d in data:
+                                if (
+                                    isinstance(d, Data)
+                                    and new_workspace.get_entity(d.uid)[0] is None
+                                ):
+                                    d.copy(parent=new_obj)
 
-            new_obj = new_obj[0]
-            for key in self.data_channel_choices.options:
-                if not self.forward_only.value:
-                    widget = getattr(self, f"{key}_uncertainty_channel")
-                    if widget.value is not None:
-                        param_dict[f"{key}_uncertainty"] = str(widget.value)
-                        if new_workspace.get_entity(widget.value)[0] is None:
-                            self.workspace.get_entity(widget.value)[0].copy(
-                                parent=new_obj, copy_children=False
-                            )
-                    else:
-                        widget = getattr(self, f"{key}_uncertainty_floor")
-                        param_dict[f"{key}_uncertainty"] = widget.value
+                new_obj = new_workspace.get_entity(self.objects.value)
+                if len(new_obj) == 0 or new_obj[0] is None:
+                    print(
+                        "An object with data must be selected to write the input file."
+                    )
+                    return
 
-                if getattr(self, f"{key}_channel_bool").value:
+                new_obj = new_obj[0]
+                for key in self.data_channel_choices.options:
                     if not self.forward_only.value:
-                        self.workspace.get_entity(
-                            getattr(self, f"{key}_channel").value
-                        )[0].copy(parent=new_obj)
-                    else:
-                        param_dict[f"{key}_channel_bool"] = True
+                        widget = getattr(self, f"{key}_uncertainty_channel")
+                        if widget.value is not None:
+                            param_dict[f"{key}_uncertainty"] = str(widget.value)
+                            if new_workspace.get_entity(widget.value)[0] is None:
+                                self.workspace.get_entity(widget.value)[0].copy(
+                                    parent=new_obj, copy_children=False
+                                )
+                        else:
+                            widget = getattr(self, f"{key}_uncertainty_floor")
+                            param_dict[f"{key}_uncertainty"] = widget.value
 
-            if self.receivers_radar_drape.value is not None:
-                self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
-                    parent=new_obj
-                )
+                    if getattr(self, f"{key}_channel_bool").value:
+                        if not self.forward_only.value:
+                            self.workspace.get_entity(
+                                getattr(self, f"{key}_channel").value
+                            )[0].copy(parent=new_obj)
+                        else:
+                            param_dict[f"{key}_channel_bool"] = True
 
-            for key in self.__dict__:
-                attr = getattr(self, key)
-                if isinstance(attr, Widget) and hasattr(attr, "value"):
-                    value = attr.value
-                    if isinstance(value, uuid.UUID):
-                        value = new_workspace.get_entity(value)[0]
-                    if hasattr(self.params, key):
-                        param_dict[key.lstrip("_")] = value
-                else:
-                    sub_keys = []
-                    if isinstance(attr, TopographyOptions):
-                        sub_keys = [attr.identifier + "_object", attr.identifier]
-                        attr = self
-                    elif isinstance(attr, ModelOptions):
-                        sub_keys = [attr.identifier]
-                        attr = self
-                    elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
-                        sub_keys = attr.params_keys
-                    for sub_key in sub_keys:
-                        value = getattr(attr, sub_key)
-                        if isinstance(value, Widget) and hasattr(value, "value"):
-                            value = value.value
+                if self.receivers_radar_drape.value is not None:
+                    self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
+                        parent=new_obj
+                    )
+
+                for key in self.__dict__:
+                    attr = getattr(self, key)
+                    if isinstance(attr, Widget) and hasattr(attr, "value"):
+                        value = attr.value
                         if isinstance(value, uuid.UUID):
                             value = new_workspace.get_entity(value)[0]
+                        if hasattr(self.params, key):
+                            param_dict[key.lstrip("_")] = value
+                    else:
+                        sub_keys = []
+                        if isinstance(attr, TopographyOptions):
+                            sub_keys = [attr.identifier + "_object", attr.identifier]
+                            attr = self
+                        elif isinstance(attr, ModelOptions):
+                            sub_keys = [attr.identifier]
+                            attr = self
+                        elif isinstance(attr, (MeshOctreeOptions, SensorOptions)):
+                            sub_keys = attr.params_keys
+                        for sub_key in sub_keys:
+                            value = getattr(attr, sub_key)
+                            if isinstance(value, Widget) and hasattr(value, "value"):
+                                value = value.value
+                            if isinstance(value, uuid.UUID):
+                                value = new_workspace.get_entity(value)[0]
 
-                        if hasattr(self.params, sub_key):
-                            param_dict[sub_key.lstrip("_")] = value
+                            if hasattr(self.params, sub_key):
+                                param_dict[sub_key.lstrip("_")] = value
 
-            # Create new params object and write
-            self._run_params = self.params.__class__(**param_dict)
-            self._run_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=self.export_directory.selected_path,
-            )
+                # Create new params object and write
+                self._run_params = self.params.__class__(**param_dict)
+                self._run_params.write_input_file(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
+                    path=self.export_directory.selected_path,
+                )
 
         self.write.button_style = ""
         self.trigger.button_style = "success"
@@ -1315,7 +1325,7 @@ class InversionApp(PlotSelection2D):
         Change the target h5file
         """
         if not self.file_browser._select.disabled:  # pylint: disable=protected-access
-            _, extension = path.splitext(self.file_browser.selected)
+            extension = Path(self.file_browser.selected).suffix
 
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()
@@ -1335,9 +1345,7 @@ class InversionApp(PlotSelection2D):
                 self.params = getattr(self, "_param_class")(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
-                self.params.geoh5.open(mode="r")
-
-                params = self.params.to_dict(ui_json_format=False)
+                params = self.params.to_dict()
                 if params["resolution"] is None:
                     params["resolution"] = 0
 

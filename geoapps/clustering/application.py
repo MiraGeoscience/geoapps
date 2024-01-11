@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -15,50 +15,44 @@ import os
 import sys
 import time
 import uuid
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-from dash import callback_context, no_update
+from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json import InputFile
-from jupyter_dash import JupyterDash
 
 from geoapps.base.application import BaseApplication
-from geoapps.clustering.constants import app_initializer
+from geoapps.base.dash_application import ObjectSelection
 from geoapps.clustering.driver import ClusteringDriver
 from geoapps.clustering.layout import cluster_layout
 from geoapps.clustering.params import ClusteringParams
 from geoapps.clustering.plot_data import PlotData
 from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.scatter_plot.driver import ScatterPlotDriver
-from geoapps.shared_utils.utils import colors
+from geoapps.shared_utils.colors import UNIQUE_COLORS
 
 
 class Clustering(ScatterPlots):
     _param_class = ClusteringParams
     _driver_class = ClusteringDriver
 
-    def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json.path):
-            self.params = self._param_class(ui_json)
-        else:
-            self.params = self._param_class(**app_initializer)
-
-        super().__init__(**self.params.to_dict())
+    def __init__(self, ui_json=None, ui_json_data=None, params=None):
+        super().__init__(ui_json, ui_json_data, params)
 
         # Params and driver used for updating scatter plot in make_scatter_plot function.
-        self.scatter_params = self._param_class(**self.params.to_dict())
+        self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)
         self.scatter_driver = ScatterPlotDriver(self.scatter_params)
 
         external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
         server = Flask(__name__)
-        self.app = JupyterDash(
+        self.app = Dash(
             server=server,
             url_base_pathname=os.environ.get("JUPYTERHUB_SERVICE_PREFIX", "/"),
             external_stylesheets=external_stylesheets,
@@ -413,7 +407,7 @@ class Clustering(ScatterPlots):
                 full_list = ast.literal_eval(ui_json_data["color_pickers"])
             if (full_list is None) | (not full_list):
                 # Default list of colors.
-                color_pickers = colors
+                color_pickers = UNIQUE_COLORS
             else:
                 color_pickers = full_list
         elif trigger == "color_picker":
@@ -451,10 +445,12 @@ class Clustering(ScatterPlots):
 
         if "ui_json_data" in triggers:
             value = ast.literal_eval(ui_json_data["data_subset"])
-            options = self.get_data_options("ui_json_data", ui_json_data, object_uid)
+            options = self.get_data_options(
+                ui_json_data, object_uid, trigger="ui_json_data"
+            )
         else:
             value = []
-            options = self.get_data_options("objects", ui_json_data, object_uid)
+            options = self.get_data_options(ui_json_data, object_uid)
 
         return options, value
 
@@ -720,6 +716,7 @@ class Clustering(ScatterPlots):
             np.array(mapping),
             update_all_clusters,
         )
+
         return kmeans, clusters
 
     @staticmethod
@@ -862,7 +859,9 @@ class Clustering(ScatterPlots):
 
             update_dict = {}
             for item in callback_context.triggered:
-                update_dict[item["prop_id"].split(".")[0]] = item["value"]
+                key = item["prop_id"].split(".")[0]
+                if key != "channel":
+                    update_dict[key] = item["value"]
 
             params_dict = self.get_params_dict(update_dict)
             params_dict.update(
@@ -876,7 +875,7 @@ class Clustering(ScatterPlots):
                     "size": size,
                 }
             )
-            self.scatter_params.update(params_dict, validate=False)
+            self.scatter_params.update(params_dict)
             crossplot = go.Figure(self.scatter_driver.run())
             return crossplot
         else:
@@ -1283,11 +1282,11 @@ class Clustering(ScatterPlots):
             if (
                 monitoring_directory is not None
                 and monitoring_directory != ""
-                and os.path.exists(os.path.abspath(monitoring_directory))
+                and Path(monitoring_directory).is_dir()
             ):
-                monitoring_directory = os.path.abspath(monitoring_directory)
+                monitoring_directory = str(Path(monitoring_directory).resolve())
             else:
-                monitoring_directory = os.path.dirname(self.workspace.h5file)
+                monitoring_directory = str(Path(self.workspace.h5file).parent)
 
             # Get output workspace.
             temp_geoh5 = f"Clustering_{time.time():.0f}.geoh5"
@@ -1296,7 +1295,6 @@ class Clustering(ScatterPlots):
             )
             if not live_link:
                 param_dict["monitoring_directory"] = ""
-
             with ws as workspace:
                 # Put entities in output workspace.
                 param_dict["geoh5"] = workspace
@@ -1320,7 +1318,7 @@ class Clustering(ScatterPlots):
                 print("Live link active. Check your ANALYST session for new mesh.")
                 return [True]
             else:
-                print("Saved to " + os.path.abspath(monitoring_directory))
+                print(f"Saved to {Path(monitoring_directory).resolve()}")
                 return []
         else:
             return no_update
@@ -1331,7 +1329,6 @@ if __name__ == "__main__":
     file = sys.argv[1]
     ifile = InputFile.read_ui_json(file)
     ifile.workspace.open("r")
-    app = Clustering(ui_json=ifile)
     print("Loaded. Building the clustering app . . .")
-    app.run()
+    ObjectSelection.run("Clustering", Clustering, ifile)
     print("Done")

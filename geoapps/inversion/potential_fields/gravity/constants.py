@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,18 +7,19 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
-    "title": "Gravity inversion",
+    "version": geoapps.__version__,
+    "title": "Gravity Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -27,7 +28,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -58,14 +58,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 10.0,
@@ -77,9 +69,9 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_y": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
@@ -93,7 +85,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 1.0,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": False,
     "parallelized": True,
     "n_cpu": None,
@@ -103,25 +95,17 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": None,
+    "ga_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gz_channel_bool": False,
-    "guv_channel_bool": False,
-    "gxy_channel_bool": False,
-    "gxx_channel_bool": False,
-    "gyy_channel_bool": False,
-    "gzz_channel_bool": False,
-    "gxz_channel_bool": False,
-    "gyz_channel_bool": False,
-    "gx_channel_bool": False,
-    "gy_channel_bool": False,
 }
 forward_defaults = {
-    "title": "Gravity forward",
+    "version": geoapps.__version__,
+    "title": "Gravity Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -131,7 +115,6 @@ forward_defaults = {
     "topography": None,
     "data_object": None,
     "z_from_topo": False,
-    "resolution": None,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
     "gps_receivers_offset": None,
@@ -148,72 +131,23 @@ forward_defaults = {
     "mesh": None,
     "starting_model": None,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": None,
+    "ga_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
-
-inversion_ui_json = {
-    "gz_channel_bool": False,
-    "gx_channel_bool": False,
-    "gy_channel_bool": False,
-    "guv_channel_bool": False,
-    "gxy_channel_bool": False,
-    "gxx_channel_bool": False,
-    "gyy_channel_bool": False,
-    "gzz_channel_bool": False,
-    "gxz_channel_bool": False,
-    "gyz_channel_bool": False,
-}
-
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and Models",
-        "main": True,
-        "isValue": True,
-        "parent": "mesh",
-        "label": "Density contrast (g/cc)",
-        "property": None,
-        "value": 1e-3,
-    },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
-    "title": "Gravity inversion",
+    "title": "Gravity Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "gravity",
@@ -227,7 +161,8 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+            "{b54f6be6-0eb5-4a4e-887a-ba9d276f9a83}",
+            "{5ffa3816-358d-4cdd-9b7d-e1f7f5543e05}",
         ],
         "value": None,
     },
@@ -245,7 +180,7 @@ default_ui_json = {
         "label": "Gz (mGal)",
         "parent": "data_object",
         "optional": True,
-        "enabled": True,
+        "enabled": False,
         "value": None,
     },
     "gz_uncertainty": {
@@ -534,7 +469,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -546,8 +481,10 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
+        "optional": True,
+        "enabled": False,
         "parent": "mesh",
         "label": "Reference density (g/cc)",
         "property": None,
@@ -557,7 +494,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (g/cc)",
@@ -570,7 +507,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (g/cc)",
@@ -580,12 +517,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
@@ -613,11 +545,10 @@ validations = {
     "gy_channel": {"one_of": "data channel"},
     "gy_uncertainty": {"one_of": "uncertainty channel"},
 }
-
 validations = dict(base_validations, **validations)
-
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "gxx_channel": UUID("{53e59b2b-c2ae-4b77-923b-23e06d874e62}"),
@@ -648,4 +579,8 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
+    "receivers_offset_z": 60.0,
+    "fix_aspect_ratio": True,
+    "colorbar": False,
+    "n_cpu": int(multiprocessing.cpu_count() / 2),
 }

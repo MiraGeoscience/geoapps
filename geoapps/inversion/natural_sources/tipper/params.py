@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -15,9 +15,7 @@ from geoapps.inversion import InversionBaseParams
 from .constants import (
     default_ui_json,
     forward_defaults,
-    forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
@@ -27,20 +25,12 @@ class TipperParams(InversionBaseParams):
     Parameter class for magnetotelluric->conductivity inversion.
     """
 
-    _directive_list = [
-        "Update_IRLS",
-        "UpdateSensitivityWeights",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
+    _physical_property = "conductivity"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._forward_defaults = deepcopy(forward_defaults)
-        self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "tipper"
         self._validations = validations
         self._txz_real_channel_bool = None

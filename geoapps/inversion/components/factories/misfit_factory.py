@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -54,7 +54,7 @@ class MisfitFactory(SimPEGFactory):
         active_cells,
     ):
         # Base slice over frequencies
-        if self.factory_type in ["magnetotellurics", "tipper"]:
+        if self.factory_type in ["magnetotellurics", "tipper", "fem"]:
             channels = np.unique([list(v) for v in inversion_data.observed.values()])
         else:
             channels = [None]
@@ -62,6 +62,12 @@ class MisfitFactory(SimPEGFactory):
         local_misfits = []
         self.sorting = []
         self.ordering = []
+        padding_cells = 8 if self.factory_type in ["fem", "tdem"] else 6
+
+        # Keep whole mesh for 1 tile
+        if len(tiles) == 1:
+            padding_cells = 100
+
         tile_num = 0
         data_count = 0
         for local_index in tiles:
@@ -71,7 +77,7 @@ class MisfitFactory(SimPEGFactory):
                 )
 
                 if count == 0:
-                    if self.factory_type in ["tdem"]:
+                    if self.factory_type in ["fem", "tdem"]:
                         self.sorting.append(
                             np.arange(
                                 data_count,
@@ -83,28 +89,30 @@ class MisfitFactory(SimPEGFactory):
                     else:
                         self.sorting.append(local_index)
 
-                lsim, lmap = inversion_data.simulation(
-                    mesh, active_cells, survey, tile_num
+                local_sim, local_map = inversion_data.simulation(
+                    mesh,
+                    active_cells,
+                    survey,
+                    self.models,
+                    tile_id=tile_num,
+                    padding_cells=padding_cells,
                 )
-
                 # TODO Parse workers to simulations
-                lsim.workers = self.params.distributed_workers
-                if "induced polarization" in self.params.inversion_type:
-                    # TODO this should be done in the simulation factory
-                    lsim.sigma = lsim.sigmaMap * lmap * self.models.conductivity
+                local_sim.workers = self.params.distributed_workers
+                local_data = data.Data(survey)
 
                 if self.params.forward_only:
-                    lmisfit = data_misfit.L2DataMisfit(simulation=lsim, model_map=lmap)
-                else:
-                    ldat = (
-                        data.Data(
-                            survey, dobs=survey.dobs, standard_deviation=survey.std
-                        ),
-                    )
                     lmisfit = data_misfit.L2DataMisfit(
-                        data=ldat[0],
-                        simulation=lsim,
-                        model_map=lmap,
+                        local_data, local_sim, model_map=local_map
+                    )
+
+                else:
+                    local_data.dobs = survey.dobs
+                    local_data.standard_deviation = survey.std
+                    lmisfit = data_misfit.L2DataMisfit(
+                        data=local_data,
+                        simulation=local_sim,
+                        model_map=local_map,
                     )
                     lmisfit.W = 1 / survey.std
 
@@ -113,3 +121,7 @@ class MisfitFactory(SimPEGFactory):
                 tile_num += 1
 
         return [local_misfits]
+
+    def assemble_keyword_arguments(self, **_):
+        """Implementation of abstract method from SimPEGFactory."""
+        return {}

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,6 +7,8 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
+from SimPEG.survey import BaseSurvey
 
 if TYPE_CHECKING:
     from geoapps.inversion.components.data import InversionData
@@ -17,6 +19,7 @@ import numpy as np
 from discretize import TensorMesh, TreeMesh
 from geoh5py.data import FloatData
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.objects.surveys.electromagnetics.base import LargeLoopGroundEMSurvey
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
@@ -37,8 +40,20 @@ def get_containing_cells(
             data.locations
         )
 
+        if isinstance(data.entity, LargeLoopGroundEMSurvey):
+            line_ind = []
+            transmitters = data.entity.transmitters
+            for cell in transmitters.cells:
+                line_ind.append(
+                    mesh.get_cells_along_line(
+                        transmitters.vertices[cell[0], :],
+                        transmitters.vertices[cell[1], :],
+                    )
+                )
+            inds = np.unique(np.r_[inds, np.hstack(line_ind)])
+
     elif isinstance(mesh, TensorMesh):
-        locations = data.drape_locations(data.survey.unique_locations)
+        locations = data.drape_locations(get_unique_locations(data.survey))
         xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
         yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
         inds = xi + yi * mesh.shape_cells[0]
@@ -232,8 +247,8 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     :param object: Array to be sliced.
     :param slicer: Boolean index array, Integer index array,  or callable
         that provides a condition to keep or remove each row of object.
-    :returns: Sliced array.
-    :returns: Dictionary map from global to local indices.
+    :return: Sliced array.
+    :return: Dictionary map from global to local indices.
     """
 
     if isinstance(slicer, np.ndarray):
@@ -375,3 +390,45 @@ def split_dcip_survey(
             line_surveys.append(line_survey)
 
     return line_surveys
+
+
+def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
+    """
+    Get unique locations from a survey including sources and receivers when
+    applicable.
+
+    :param: survey: SimPEG survey object.
+
+    :return: Array of unique locations.
+    """
+    if survey.source_list:
+        locations = []
+        for source in survey.source_list:
+            source_location = source.location
+            if source_location is not None:
+                if not isinstance(source_location, list):
+                    locations += [[source_location]]
+                else:
+                    locations += [source_location]
+            locations += [receiver.locations for receiver in source.receiver_list]
+        locations = np.vstack([np.vstack(np.atleast_2d(*locs)) for locs in locations])
+    else:
+        locations = survey.receiver_locations
+
+    return np.unique(locations, axis=0)
+
+
+def get_intersecting_cells(locations: np.ndarray, mesh: TreeMesh) -> np.ndarray:
+    """
+    Find cells that intersect with a set of segments.
+
+    :param: locations: Locations making a line path.
+    :param: mesh: TreeMesh object.
+
+    :return: Array of unique cell indices.
+    """
+    cell_index = []
+    for ind in range(locations.shape[0] - 1):
+        cell_index.append(mesh.get_cells_along_line(locations[ind], locations[ind + 1]))
+
+    return np.unique(np.hstack(cell_index))

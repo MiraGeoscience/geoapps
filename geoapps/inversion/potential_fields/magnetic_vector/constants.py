@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,18 +7,19 @@
 
 from __future__ import annotations
 
+import multiprocessing
 from uuid import UUID
 
 from geoh5py.objects import Grid2D, Points, Surface
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 from geoapps.inversion.constants import validations as base_validations
 
-################# defaults ##################
-
 inversion_defaults = {
-    "title": "Magnetic Vector inversion",
+    "version": geoapps.__version__,
+    "title": "Magnetic Vector (MVI) Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "magnetic vector",
@@ -30,7 +31,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -65,17 +65,9 @@ inversion_defaults = {
     "reference_inclination": None,
     "reference_declination": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
-    "initial_beta_ratio": 10.0,
+    "initial_beta_ratio": 100.0,
     "initial_beta": None,
     "coolingRate": 1,
     "coolingFactor": 2.0,
@@ -84,9 +76,9 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_y": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
@@ -100,7 +92,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 1.0,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": False,
     "parallelized": True,
     "n_cpu": None,
@@ -110,26 +102,17 @@ inversion_defaults = {
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": None,
+    "ga_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "tmi_channel_bool": False,
-    "bxx_channel_bool": False,
-    "bxy_channel_bool": False,
-    "bxz_channel_bool": False,
-    "byy_channel_bool": False,
-    "byz_channel_bool": False,
-    "bzz_channel_bool": False,
-    "bx_channel_bool": False,
-    "by_channel_bool": False,
-    "bz_channel_bool": False,
 }
-
 forward_defaults = {
-    "title": "Magnetic Vector forward",
+    "version": geoapps.__version__,
+    "title": "Magnetic Vector (MVI) Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornemagnetics",
     "inversion_type": "magnetic vector",
@@ -141,7 +124,6 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": False,
     "receivers_offset_z": None,
     "receivers_radar_drape": None,
@@ -161,77 +143,28 @@ forward_defaults = {
     "starting_inclination": None,
     "starting_declination": None,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
     "max_chunk_size": 128,
     "chunk_by_rows": True,
     "out_group": None,
+    "ga_group": None,
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
-
-inversion_ui_json = {
-    "tmi_channel_bool": False,
-    "bx_channel_bool": False,
-    "by_channel_bool": False,
-    "bz_channel_bool": False,
-    "bxx_channel_bool": False,
-    "bxy_channel_bool": False,
-    "bxz_channel_bool": False,
-    "byy_channel_bool": False,
-    "byz_channel_bool": False,
-    "bzz_channel_bool": False,
-}
-
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and Models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Susceptibility (SI)",
-        "property": None,
-        "value": 1e-4,
-    },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
 }
 
 default_ui_json = {
-    "title": "Magnetic Vector inversion",
+    "title": "Magnetic Vector (MVI) Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/grav_mag_inversion.html",
     "icon": "surveyairbornegravity",
     "inversion_type": "magnetic vector",
     "inducing_field_strength": {
-        "min": 0.0,
+        "min": 0.1,
         "max": 100000.0,
         "precision": 2,
         "lineEdit": False,
@@ -251,8 +184,8 @@ default_ui_json = {
         "value": 90.0,
     },
     "inducing_field_declination": {
-        "min": -180,
-        "max": 180,
+        "min": -180.0,
+        "max": 180.0,
         "precision": 2,
         "lineEdit": False,
         "main": True,
@@ -270,7 +203,8 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+            "{4b99204c-d133-4579-a916-a9c8b98cfccb}",
+            "{028e4905-cc97-4dab-b1bf-d76f58b501b5}",
         ],
         "value": None,
     },
@@ -288,7 +222,7 @@ default_ui_json = {
         "label": "TMI (nT)",
         "parent": "data_object",
         "optional": True,
-        "enabled": True,
+        "enabled": False,
         "value": None,
     },
     "tmi_uncertainty": {
@@ -577,7 +511,7 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
@@ -588,7 +522,7 @@ default_ui_json = {
     "starting_inclination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "optional": True,
@@ -598,10 +532,26 @@ default_ui_json = {
         "property": None,
         "value": 0.0,
     },
+    "starting_inclination_object": {
+        "group": "Mesh and models",
+        "main": True,
+        "meshType": [
+            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
+            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
+            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
+            "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
+            "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}",
+        ],
+        "optional": True,
+        "enabled": False,
+        "label": "Object",
+        "value": None,
+    },
     "starting_declination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "optional": True,
@@ -615,8 +565,10 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
+        "optional": True,
+        "enabled": False,
         "parent": "mesh",
         "label": "Reference susceptibility (SI)",
         "property": None,
@@ -625,7 +577,7 @@ default_ui_json = {
     "reference_inclination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "optional": True,
@@ -638,7 +590,7 @@ default_ui_json = {
     "reference_declination": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "optional": True,
@@ -652,7 +604,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": False,
         "parent": "mesh",
         "label": "Lower bound (SI)",
@@ -665,7 +617,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": False,
         "parent": "mesh",
         "label": "Upper bound (SI)",
@@ -675,13 +627,7 @@ default_ui_json = {
         "enabled": False,
     },
 }
-
 default_ui_json = dict(base_default_ui_json, **default_ui_json)
-
-
-################ Validations #################
-
-
 validations = {
     "inversion_type": {
         "required": True,
@@ -709,15 +655,15 @@ validations = {
     "bz_channel": {"one_of": "data channel"},
     "bz_uncertainty": {"one_of": "uncertainty channel"},
 }
-
 validations = dict(base_validations, **validations)
-
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "forward_only": False,
     "data_object": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "tmi_uncertainty": 10.0,
+    "tmi_channel_bool": True,
     "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
     "inducing_field_strength": 60000.0,
     "inducing_field_inclination": 79.0,
@@ -744,7 +690,8 @@ app_initializer = {
     "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     "z_from_topo": True,
-    "detrend_order": 0,
-    "detrend_type": None,
     "receivers_offset_z": 60.0,
+    "fix_aspect_ratio": True,
+    "colorbar": False,
+    "n_cpu": int(multiprocessing.cpu_count() / 2),
 }

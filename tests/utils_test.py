@@ -1,36 +1,37 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import itertools
 import os
 import random
+from pathlib import Path
 
 import geoh5py.objects
 import numpy as np
 import pytest
 from discretize import CylindricalMesh, TreeMesh
-from discretize.utils import mesh_builder_xyz, refine_tree_xyz
-from geoh5py.objects import Grid2D
+from discretize.utils import mesh_builder_xyz
+from geoh5py.objects import Curve, Grid2D, Points
 from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
 from geoapps.inversion.utils import calculate_2D_trend
+from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.shared_utils.utils import (
+    densify_curve,
     downsample_grid,
     downsample_xy,
     drape_2_tensor,
     filter_xy,
     get_locations,
+    get_neighbouring_cells,
     octree_2_treemesh,
     rotate_xyz,
     weighted_average,
@@ -62,9 +63,9 @@ from . import PROJECT
 geoh5 = Workspace(PROJECT)
 
 
-def test_drape_to_octree(tmp_path):
+def test_drape_to_octree(tmp_path: Path):
     # create workspace with tmp_path
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+    ws = Workspace.create(tmp_path / "test.geoh5")
 
     # Generate locs for 2 drape models
     x = np.linspace(0, 10, 11)
@@ -104,15 +105,14 @@ def test_drape_to_octree(tmp_path):
         padding_distance=np.array(pads).reshape(3, 2).tolist(),
         mesh_type="TREE",
     )
-    tree = refine_tree_xyz(
-        tree, locs, method="radial", octree_levels=[4, 2], octree_levels_padding=[2, 2]
+    tree = OctreeDriver.refine_tree_from_points(
+        tree, locs, levels=[4, 2], finalize=False
     )
-    tree = refine_tree_xyz(
+    topography = Points.create(ws, vertices=topo)
+    tree = OctreeDriver.refine_tree_from_surface(
         tree,
-        topo,
-        method="surface",
-        octree_levels=[2, 2],
-        octree_levels_padding=[2, 2],
+        topography,
+        levels=[2, 2],
         finalize=True,
     )
     # interp and save common models into the octree
@@ -163,8 +163,8 @@ def test_floating_active():
     assert floating_active(mesh, active)
 
 
-def test_get_drape_model(tmp_path):
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+def test_get_drape_model(tmp_path: Path):
+    ws = Workspace.create(tmp_path / "test.geoh5")
     x = np.arange(11)
     y = -x + 10
     locs = np.c_[x, y, np.zeros_like(x)].astype(float)
@@ -258,11 +258,11 @@ def test_new_neighbors():
     assert neighbor_id[0] == 1
 
 
-def test_survey_lines(tmp_path):
+def test_survey_lines(tmp_path: Path):
     name = "TestCurrents"
     n_data = 15
     path = tmp_path / r"testDC.geoh5"
-    workspace = Workspace(path)
+    workspace = Workspace.create(path)
 
     # Create sources along line
     x_loc, y_loc = np.meshgrid(np.linspace(0, 10, n_data), np.arange(-1, 3))
@@ -303,11 +303,11 @@ def test_survey_lines(tmp_path):
     )
 
 
-def test_extract_dcip_survey(tmp_path):
+def test_extract_dcip_survey(tmp_path: Path):
     name = "TestCurrents"
     n_data = 12
     path = tmp_path / r"testDC.geoh5"
-    workspace = Workspace(path)
+    workspace = Workspace.create(path)
 
     # Create sources along line
     x_loc, y_loc = np.meshgrid(np.arange(n_data), np.arange(-1, 3))
@@ -346,11 +346,11 @@ def test_extract_dcip_survey(tmp_path):
     assert workspace.get_entity("test_survey_line 3")[0] is not None
 
 
-def test_split_dcip_survey(tmp_path):
+def test_split_dcip_survey(tmp_path: Path):
     name = "TestCurrents"
     n_data = 12
     path = tmp_path / r"testDC.geoh5"
-    workspace = Workspace(path)
+    workspace = Workspace.create(path)
 
     # Create sources along line
     x_loc, y_loc = np.meshgrid(np.arange(n_data), np.arange(-1, 3))
@@ -599,8 +599,8 @@ def test_warn_module_not_found():
         noop(test_import_from_nonexisting_submodule)
 
 
-def test_sorted_children_dict(tmp_path):
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+def test_sorted_children_dict(tmp_path: Path):
+    ws = Workspace.create(tmp_path / "test.geoh5")
     n_x, n_y = 10, 15
     grid = Grid2D.create(
         ws,
@@ -752,7 +752,7 @@ def test_weigted_average():
     assert out[0] == 2
 
 
-def test_treemesh_2_octree(tmp_path):
+def test_treemesh_2_octree(tmp_path: Path):
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     with geotest.make() as workspace:
         mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
@@ -779,8 +779,8 @@ def test_treemesh_2_octree(tmp_path):
         assert np.all([k in expected_refined_cells for k in ijk_refined])
 
 
-def test_drape_2_tensormesh(tmp_path):
-    ws = Workspace(os.path.join(tmp_path, "test.geoh5"))
+def test_drape_2_tensormesh(tmp_path: Path):
+    ws = Workspace.create(tmp_path / "test.geoh5")
     x = np.linspace(358600, 359500, 10)
     y = np.linspace(5885500, 5884600, 10)
     z = 300 * np.ones_like(x)
@@ -807,7 +807,7 @@ def test_drape_2_tensormesh(tmp_path):
     assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
 
 
-def test_octree_2_treemesh(tmp_path):
+def test_octree_2_treemesh(tmp_path: Path):
     geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
     with geotest.make() as workspace:
         mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
@@ -975,8 +975,8 @@ def test_detrend_xy():
     assert "> 0. Value of -2" in str(excinfo.value)
 
 
-def test_get_locations(tmp_path):
-    with Workspace(os.path.join(tmp_path, "test.geoh5")) as workspace:
+def test_get_locations(tmp_path: Path):
+    with Workspace.create(tmp_path / "test.geoh5") as workspace:
         n_x, n_y = 10, 15
         grid = Grid2D.create(
             workspace,
@@ -994,3 +994,44 @@ def test_get_locations(tmp_path):
         data_locs = get_locations(workspace, test_data)
 
         np.testing.assert_array_equal(base_locs, data_locs)
+
+
+def test_densify_curve(tmp_path: Path):
+    with Workspace.create(tmp_path / "test.geoh5") as workspace:
+        curve = Curve.create(
+            workspace,
+            vertices=np.vstack([[0, 0, 0], [10, 0, 0], [10, 10, 0]]),
+            name="test_curve",
+        )
+        locations = densify_curve(curve, 2)
+        assert locations.shape[0] == 11
+
+
+def test_get_neighbouring_cells():
+    """
+    Check that the neighbouring cells are correctly identified and output
+    of the right shape.
+    """
+    mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
+    mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
+    ind = mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+        [95.0, 95.0, 95.0]
+    )
+
+    with pytest.raises(
+        TypeError, match="Input 'indices' must be a list or numpy.ndarray of indices."
+    ):
+        get_neighbouring_cells(mesh, ind)
+
+    with pytest.raises(
+        TypeError, match="Input 'mesh' must be a discretize.TreeMesh object."
+    ):
+        get_neighbouring_cells(1, [ind])
+
+    neighbours = get_neighbouring_cells(mesh, [ind])
+
+    assert len(neighbours) == 3, "Incorrect number of neighbours axes returned."
+    assert all(
+        len(axis) == 2 for axis in neighbours
+    ), "Incorrect number of neighbours returned."
+    assert np.allclose(np.r_[neighbours].flatten(), np.r_[76, 78, 75, 79, 73, 81])

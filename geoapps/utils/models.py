@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,11 +8,15 @@
 
 from __future__ import annotations
 
+from warnings import warn
+
 import numpy as np
 from discretize import TensorMesh, TreeMesh
 from discretize.utils import mesh_utils
 from geoh5py.groups import Group
 from geoh5py.objects import BlockModel, DrapeModel, Octree
+from geoh5py.shared import INTEGER_NDV
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
@@ -92,7 +96,11 @@ def drape_to_octree(
         else:
             octree_model = octree_model[mesh._ubc_order]  # pylint: disable=W0212
 
-        octree_model[~active] = np.nan  # apply active cells
+        if np.issubdtype(octree_model.dtype, np.integer):
+            octree_model[~active] = INTEGER_NDV
+        else:
+            octree_model[~active] = np.nan  # apply active cells
+
         octree.add_data({label: {"values": octree_model}})
 
     return octree
@@ -166,6 +174,7 @@ def get_drape_model(
     distances[:, -1] += locations[:, 2].max() - distances[:, -1].max() + h[1]
     x_interp = interp1d(distances[:, 0], xy_smooth[:, 0], fill_value="extrapolate")
     y_interp = interp1d(distances[:, 0], xy_smooth[:, 1], fill_value="extrapolate")
+
     mesh = mesh_utils.mesh_builder_xyz(
         distances,
         h,
@@ -216,7 +225,7 @@ def get_drape_model(
         val.append(mesh)
     if return_sorting:
         sorting = np.arange(mesh.n_cells)
-        sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
+        sorting = sorting.reshape(mesh.shape_cells[1], mesh.shape_cells[0], order="C")
         sorting = sorting[::-1].T.flatten()
         val.append(sorting)
     return val
@@ -495,9 +504,9 @@ def get_block_model(
     object_out = BlockModel.create(
         workspace,
         origin=[mesh.x0[0], mesh.x0[1], locs[:, 2].max()],
-        u_cell_delimiters=mesh.vectorNx - mesh.x0[0],
-        v_cell_delimiters=mesh.vectorNy - mesh.x0[1],
-        z_cell_delimiters=-(mesh.x0[2] + mesh.hz.sum() - mesh.vectorNz[::-1]),
+        u_cell_delimiters=mesh.nodes_x - mesh.x0[0],
+        v_cell_delimiters=mesh.nodes_y - mesh.x0[1],
+        z_cell_delimiters=-(mesh.x0[2] + mesh.h[2].sum() - mesh.nodes_z[::-1]),
         name=name,
     )
 
@@ -505,3 +514,136 @@ def get_block_model(
     object_out.origin["z"] += top_padding
 
     return object_out
+
+
+def create_octree_from_octrees(meshes: list[Octree | TreeMesh]) -> TreeMesh:
+    """
+    Create an all encompassing octree mesh from a list of meshes.
+
+    :param meshes: List of Octree or TreeMesh meshes.
+
+    :return octree: A global Octree.
+    """
+    cell_size = []
+    dimensions = None
+    origin = None
+
+    for mesh in meshes:
+        attributes = get_octree_attributes(mesh)
+
+        if dimensions is None:
+            dimensions = attributes["dimensions"]
+            origin = attributes["origin"]
+        else:
+            if not np.allclose(dimensions, attributes["dimensions"]):
+                raise ValueError("Meshes must have same dimensions")
+
+            if not np.allclose(origin, attributes["origin"]):
+                raise ValueError("Meshes must have same origin")
+
+        cell_size.append(attributes["cell_size"])
+
+    cell_size = np.min(np.vstack(cell_size), axis=0)
+    cells = []
+    for ind in range(3):
+        extent = dimensions[ind]
+        maxLevel = int(np.ceil(np.log2(extent / cell_size[ind])))
+        cells += [np.ones(2**maxLevel) * cell_size[ind]]
+
+    # Define the mesh and origin
+    treemesh = TreeMesh(cells, origin=origin)
+
+    for mesh in meshes:
+        if isinstance(mesh, Octree):
+            centers = mesh.centroids
+            levels = treemesh.max_level - np.log2(mesh.octree_cells["NCells"])
+        else:
+            centers = mesh.cell_centers
+            levels = (
+                treemesh.max_level
+                - mesh.max_level
+                + mesh.cell_levels_by_index(np.arange(mesh.nC))
+            )
+
+        treemesh.insert_cells(centers, levels, finalize=False)
+
+    treemesh.finalize()
+
+    return treemesh
+
+
+def collocate_octrees(global_mesh: Octree, local_meshes: list[Octree]):
+    """
+    Collocate a list of octree meshes into a global octree mesh.
+
+    :param global_mesh: Global octree mesh.
+    :param local_meshes: List of local octree meshes.
+    """
+    attributes = get_octree_attributes(global_mesh)
+    cell_size = attributes["cell_size"]
+
+    u_grid = global_mesh.octree_cells["I"] * global_mesh.u_cell_size
+    v_grid = global_mesh.octree_cells["J"] * global_mesh.v_cell_size
+    w_grid = global_mesh.octree_cells["K"] * global_mesh.w_cell_size
+
+    xyz = np.c_[u_grid, v_grid, w_grid] + attributes["origin"]
+    tree = cKDTree(xyz)
+
+    for local_mesh in local_meshes:
+        attributes = get_octree_attributes(local_mesh)
+
+        if cell_size and not cell_size == attributes["cell_size"]:
+            raise ValueError(
+                f"Cell size mismatch in dimension {cell_size} != {attributes['cell_size']}"
+            )
+
+        _, closest = tree.query(attributes["origin"])
+        shift = xyz[closest, :] - attributes["origin"]
+
+        if np.any(shift != 0.0):
+            with fetch_active_workspace(local_mesh.workspace) as workspace:
+                warn(
+                    f"Shifting {local_mesh.name} mesh origin by {shift} m to match inversion mesh."
+                )
+                local_mesh.origin = attributes["origin"] + shift
+                workspace.update_attribute(local_mesh, "attributes")
+
+
+def get_octree_attributes(mesh: Octree | TreeMesh) -> dict[str, list]:
+    """
+    Get mesh attributes.
+
+    :param mesh: Input Octree or TreeMesh object.
+    :return mesh_attributes: Dictionary of mesh attributes.
+    """
+    if not isinstance(mesh, (Octree, TreeMesh)):
+        raise TypeError(f"All meshes must be Octree or TreeMesh, not {type(mesh)}")
+
+    cell_size = []
+    cell_count = []
+    dimensions = []
+    if isinstance(mesh, TreeMesh):
+        for dim in range(3):
+            cell_size.append(mesh.h[dim][0])
+            cell_count.append(mesh.h[dim].size)
+            dimensions.append(mesh.h[dim].sum())
+        origin = mesh.origin
+    else:
+        with fetch_active_workspace(mesh.workspace):
+            for dim in "uvw":
+                cell_size.append(np.abs(getattr(mesh, f"{dim}_cell_size")))
+                cell_count.append(getattr(mesh, f"{dim}_count"))
+                dimensions.append(
+                    getattr(mesh, f"{dim}_cell_size") * getattr(mesh, f"{dim}_count")
+                )
+            origin = np.r_[mesh.origin["x"], mesh.origin["y"], mesh.origin["z"]]
+
+    extent = np.r_[origin, origin + np.r_[dimensions]]
+
+    return {
+        "cell_count": cell_count,
+        "cell_size": cell_size,
+        "dimensions": dimensions,
+        "extent": extent,
+        "origin": origin,
+    }

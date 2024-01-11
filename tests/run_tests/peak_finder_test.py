@@ -1,10 +1,12 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-import os
+
+from __future__ import annotations
+
 from pathlib import Path
 
 import numpy as np
@@ -20,13 +22,13 @@ from .. import PROJECT
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
 
-def test_peak_finder_app(tmp_path):
+def test_peak_finder_app(tmp_path: Path):
     app = PeakFinder(geoh5=str(PROJECT), plot_result=False)
 
-    h5file_path = Path(tmp_path) / r"testPeakFinder.geoh5"
+    h5file_path = tmp_path / r"testPeakFinder.geoh5"
 
     # Create temp workspace
-    ws = Workspace(h5file_path)
+    ws = Workspace.create(h5file_path)
 
     x = np.arange(-2 * np.pi + np.pi / 4, 2 * np.pi, np.pi / 32)
 
@@ -82,13 +84,10 @@ def test_peak_finder_app(tmp_path):
     ], "Grouping different than expected"
 
 
-def test_peak_finder_driver(tmp_path):
-    uijson_path = Path(tmp_path) / r"../test_peak_finder_app0/Temp"
-    for file in os.listdir(uijson_path):
-        if file.endswith(".json"):
-            json_file = file
-
-    driver = PeakFinderDriver.start(os.path.join(uijson_path, json_file))
+def test_peak_finder_driver(tmp_path: Path):
+    uijson_path = tmp_path.parent / "test_peak_finder_app0" / "Temp"
+    json_file = next(uijson_path.glob("*.ui.json"))
+    driver = PeakFinderDriver.start(str(uijson_path / json_file))
 
     with driver.params.geoh5.open(mode="r"):
         results = driver.params.geoh5.get_entity("PointMarkers")

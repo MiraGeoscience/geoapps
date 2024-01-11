@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -349,11 +349,13 @@ def default_groups_from_property_group(property_group, start_index=0):
     channel_groups = {}
     for i, (key, default) in enumerate(_default_channel_groups.items()):
         prop_group = parent.find_or_create_property_group(name=key)
-        prop_group.properties = []
+        properties = []
 
         for val in default["label"]:
             for ind in ranges[val]:
-                prop_group.properties += [data_list[ind].uid]
+                properties += [data_list[ind].uid]
+
+        prop_group.add_properties(properties)
 
         channel_groups[prop_group.name] = {
             "data": prop_group.uid,

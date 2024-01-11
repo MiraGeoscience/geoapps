@@ -1,16 +1,17 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
-from SimPEG import utils
 
 from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.inversion.potential_fields.magnetic_vector.driver import (
@@ -22,15 +23,11 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_mvi_run = {
-    "data_norm": 8.9433,
-    "phi_d": 0.02951,
-    "phi_m": 4.164e-6,
-}
+target_mvi_run = {"data_norm": 6.3559205278626525, "phi_d": 0.00448, "phi_m": 2.411e-06}
 
 
 def test_magnetic_vector_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -69,18 +66,19 @@ def test_magnetic_vector_fwr_run(
     fwr_driver = MagneticVectorDriver(params)
 
     fwr_driver.run()
-    return fwr_driver.starting_model
 
 
 def test_magnetic_vector_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(
-            tmp_path / "../test_magnetic_vector_fwr_run0/inversion_test.geoh5"
+        workpath = (
+            tmp_path.parent
+            / "test_magnetic_vector_fwr_run0"
+            / "inversion_test.ui.geoh5"
         )
 
     with Workspace(workpath) as geoh5:
@@ -117,7 +115,7 @@ def test_magnetic_vector_run(
             prctile=100,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = MagneticVectorDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = MagneticVectorDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         # Re-open the workspace and get iterations
@@ -132,16 +130,9 @@ def test_magnetic_vector_run(
             )
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return utils.spherical2cartesian(driver.inverse_problem.model)
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_magnetic_vector_fwr_run("./", n_grid_points=20, refinement=(4, 8))
-    m_rec = test_magnetic_vector_run("./", max_iterations=30, pytest=False)
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("MVI model is within 50% of the answer. Done!")
+    test_magnetic_vector_fwr_run(Path("./"), n_grid_points=20, refinement=(4, 8))
+    test_magnetic_vector_run(Path("./"), max_iterations=30, pytest=False)

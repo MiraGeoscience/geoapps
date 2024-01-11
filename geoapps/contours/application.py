@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,10 +7,11 @@
 
 from __future__ import annotations
 
-import os
+from pathlib import Path
 from time import time
 
 from geoh5py.objects.object_base import Entity, ObjectBase
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json.input_file import InputFile
 from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox
 
@@ -30,7 +31,7 @@ class ContourValues(PlotSelection2D):
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
-        if ui_json is not None and os.path.exists(ui_json):
+        if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
             self.params = self._param_class(**app_initializer)
@@ -140,24 +141,23 @@ class ContourValues(PlotSelection2D):
         ws, self.live_link.value = self.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
-        with ws as workspace:
-            for key, value in param_dict.items():
-                if isinstance(value, ObjectBase):
-                    param_dict[key] = value.copy(parent=workspace, copy_children=True)
+        with fetch_active_workspace(self.workspace):
+            with ws as workspace:
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=workspace, copy_children=True
+                        )
 
-            param_dict["geoh5"] = workspace
+                param_dict["geoh5"] = workspace
 
-            if self.live_link.value:
-                param_dict["monitoring_directory"] = self.monitoring_directory
+                if self.live_link.value:
+                    param_dict["monitoring_directory"] = self.monitoring_directory
 
-            ifile = InputFile(
-                ui_json=self.params.input_file.ui_json,
-                validation_options={"disabled": True},
-            )
-            new_params = ContoursParams(input_file=ifile, **param_dict)
-            new_params.write_input_file()
-            driver = ContoursDriver(new_params)
-            driver.run()
+                new_params = ContoursParams(**param_dict)
+                new_params.write_input_file()
+                driver = ContoursDriver(new_params)
+                driver.run()
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

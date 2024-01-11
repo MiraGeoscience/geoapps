@@ -1,19 +1,10 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 #
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
 
 # pylint: disable=W0221
 
@@ -43,14 +34,7 @@ class EntityFactory(AbstractFactory):
     @property
     def concrete_object(self):
         """Returns a geoh5py object to be constructed by the build method."""
-        if self.factory_type in [
-            "direct current pseudo 3d",
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-            "induced polarization pseudo 3d",
-        ]:
+        if "current" in self.factory_type or "polarization" in self.factory_type:
             from geoh5py.objects import CurrentElectrode, PotentialElectrode
 
             return (PotentialElectrode, CurrentElectrode)
@@ -66,17 +50,12 @@ class EntityFactory(AbstractFactory):
     def build(self, inversion_data: InversionData):
         """Constructs geoh5py object for provided inversion type."""
 
-        if self.factory_type in [
-            "direct current pseudo 3d",
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-            "induced polarization pseudo 3d",
-        ]:
-            return self._build_dcip(inversion_data)
+        if "current" in self.factory_type or "polarization" in self.factory_type:
+            entity = self._build_dcip(inversion_data)
         else:
-            return self._build(inversion_data)
+            entity = self._build(inversion_data)
+
+        return entity
 
     def _build_dcip(self, inversion_data: InversionData):
         PotentialElectrode, CurrentElectrode = self.concrete_object
@@ -133,6 +112,9 @@ class EntityFactory(AbstractFactory):
             entity.transmitters.vertices = inversion_data.apply_transformations(
                 entity.transmitters.vertices
             )
+            tx_freq = self.params.data_object.transmitters.get_data("Tx frequency")
+            if tx_freq:
+                tx_freq[0].copy(parent=entity.transmitters)
 
         if np.any(~inversion_data.mask):
             entity.remove_vertices(~inversion_data.mask)

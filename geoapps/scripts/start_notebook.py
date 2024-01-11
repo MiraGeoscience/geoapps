@@ -1,9 +1,11 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
 
 import importlib.util
 import logging
@@ -19,10 +21,10 @@ def main():
     index_notebook = geoapps_root / "index.ipynb"
     if not index_notebook.is_file():
         logging.getLogger(__package__).error(
-            "Could not find index.ipynb (looking in %s)", geoapps_root.absolute()
+            "Could not find index.ipynb (looking in %s)", geoapps_root.resolve()
         )
 
-    notebook_main([str(index_notebook.absolute())])
+    notebook_main([str(index_notebook.resolve())])
 
 
 if __name__ == "__main__":

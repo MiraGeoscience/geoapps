@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -16,16 +16,17 @@ from geoh5py.workspace import Workspace
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
+
 import numpy as np
 import pandas as pd
-from geoh5py.ui_json import monitored_directory_copy
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
 from geoapps.clustering.constants import validations
 from geoapps.clustering.params import ClusteringParams
 from geoapps.driver_base.driver import BaseDriver
-from geoapps.shared_utils.utils import colors, hex_to_rgb
+from geoapps.shared_utils.colors import UNIQUE_COLORS
+from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils.statistics import random_sampling
 
 
@@ -47,7 +48,7 @@ class ClusteringDriver(BaseDriver):
         update_all_clusters: bool,
     ) -> tuple:
         """
-        Normalize the the selected data and perform the kmeans clustering.
+        Normalize the selected data and perform the kmeans clustering.
         :param n_clusters: Number of clusters.
         :param dataframe_dict: Data names and values for selected data subset.
         :param full_scales: Scaling factors for selected data subset.
@@ -82,7 +83,9 @@ class ClusteringDriver(BaseDriver):
 
         for val in [2, 4, 8, 16, 32, n_clusters]:
             if update_all_clusters or val == n_clusters:
-                kmeans = KMeans(n_clusters=val, random_state=0).fit(np.vstack(values).T)
+                kmeans = KMeans(n_clusters=val, random_state=0, n_init=10).fit(
+                    np.vstack(values).T
+                )
                 kmeans_dict = {
                     "labels": kmeans.labels_.astype(float),
                     "inertia": kmeans.inertia_,
@@ -101,7 +104,7 @@ class ClusteringDriver(BaseDriver):
         downsample_min: int | None = None,
     ) -> tuple:
         """
-        Normalize the the selected data and perform the kmeans clustering.
+        Normalize the selected data and perform the kmeans clustering.
         :param downsampling: Percent downsampling.
         :param channels: Data subset.
         :param workspace: Current workspace.
@@ -121,6 +124,7 @@ class ClusteringDriver(BaseDriver):
                 workspace,
                 downsample_min=downsample_min,
             )
+
             n_values = values.shape[0]
 
             dataframe = pd.DataFrame(
@@ -217,7 +221,7 @@ class ClusteringDriver(BaseDriver):
 
             color_pickers = self.params.color_pickers
             if not color_pickers:
-                color_pickers = colors
+                color_pickers = UNIQUE_COLORS
 
             for ii in range(self.params.n_clusters):
                 colorpicker = color_pickers[ii]
@@ -244,10 +248,4 @@ class ClusteringDriver(BaseDriver):
                 "values": color_map,
             }
 
-            if self.params.monitoring_directory is not None and os.path.exists(
-                os.path.abspath(self.params.monitoring_directory)
-            ):
-                monitored_directory_copy(
-                    os.path.abspath(self.params.monitoring_directory),
-                    self.params.objects,
-                )
+            self.update_monitoring_directory(self.params.objects)

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,14 +7,15 @@
 
 from __future__ import annotations
 
-import os
-from copy import deepcopy
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from geoh5py.shared.utils import str2uuid, uuid2entity
+from geoh5py.shared.utils import fetch_active_workspace, str2uuid, uuid2entity
 from geoh5py.ui_json import InputFile, InputValidation, utils
 from geoh5py.workspace import Workspace
+
+import geoapps
 
 
 class BaseParams:
@@ -41,11 +42,11 @@ class BaseParams:
     _input_file: InputFile = None
     _monitoring_directory = None
     _ui_json = None
-    _input_file = None
+    _validate = True
     _validations = None
     _validation_options = None
     _validator: InputValidation = None
-    validate = True
+    _version = geoapps.__version__
 
     def __init__(
         self,
@@ -75,20 +76,30 @@ class BaseParams:
     def _initialize(self, **kwargs):
         """Custom actions to initialize the class and deal with input values."""
         # Set data on inputfile
+        original_validate_state = self.validate
+        self.validate = False
+
         if self._input_file is None:
             self.input_file = InputFile(
                 ui_json=self._default_ui_json,
-                data=self._defaults,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
-        self.update(self.input_file.data, validate=False)
+        self.update(self.input_file.data)
+        self.validate = original_validate_state
         self.param_names = list(self.input_file.data.keys())
-        self.input_file.validation_options["disabled"] = False
 
         # Apply user input
         if any(kwargs):
             self.update(kwargs)
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, val):
+        self._version = val
 
     @property
     def defaults(self):
@@ -105,33 +116,28 @@ class BaseParams:
 
         return self._ui_json
 
-    def update(self, params_dict: dict[str, Any], validate=True):
+    def update(self, params_dict: dict[str, Any]):
         """Update parameters with dictionary contents."""
-        original_validate_state = self.validate
-        self.validate = validate
-
         params_dict = self.input_file.numify(params_dict)
-        if "geoh5" in params_dict.keys():
-            if params_dict["geoh5"] is not None:
-                setattr(self, "geoh5", params_dict["geoh5"])
+        if params_dict.get("geoh5", None) is not None and self.input_file.geoh5 is None:
+            setattr(self, "geoh5", params_dict.pop("geoh5"))
 
-        params_dict = self.input_file._promote(params_dict)  # pylint: disable=W0212
+        with fetch_active_workspace(self.geoh5):
+            params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
 
-        for key, value in params_dict.items():
-            if key not in self.ui_json.keys() or key == "geoh5":
-                continue  # ignores keys not in default_ui_json
+            for key, value in params_dict.items():
+                if key not in self.ui_json.keys():
+                    continue  # ignores keys not in default_ui_json
 
-            setattr(self, key, value)
+                setattr(self, key, value)
 
-        # Set all parameters belonging to groupOptional disabled.
-        for key in utils.find_all(self.ui_json, "groupOptional"):
-            if key in params_dict and params_dict[key] is None:
-                for elem in utils.collect(
-                    self.ui_json, "group", self.ui_json[key]["group"]
-                ):
-                    setattr(self, elem, None)
-
-        self.validate = original_validate_state
+            # Set all parameters belonging to groupOptional disabled.
+            for key in utils.find_all(self.ui_json, "groupOptional"):
+                if key in params_dict and params_dict[key] is None:
+                    for elem in utils.collect(
+                        self.ui_json, "group", self.ui_json[key]["group"]
+                    ):
+                        setattr(self, elem, None)
 
     @property
     def workpath(self):
@@ -142,15 +148,15 @@ class BaseParams:
             getattr(self, "_workpath", None) is None
             and getattr(self, "_geoh5", None) is not None
         ):
-            self._workpath = os.path.dirname(self.geoh5.h5file)
+            self._workpath = Path(self.geoh5.h5file).parent
         return self._workpath
 
     @workpath.setter
     def workpath(self, val: str | None):
         if val is not None:
-            if not os.path.exists(val):
+            if not Path(val).is_dir():
                 raise ValueError("Provided 'workpath' is not a valid path.")
-            val = os.path.abspath(val)
+            val = Path(val).resolve()
 
         self._workpath = val
 
@@ -171,23 +177,31 @@ class BaseParams:
 
         self._validation_options = value
 
+    @property
+    def validate(self):
+        """Return True if validation is enabled."""
+        return self._validate
+
+    @validate.setter
+    def validate(self, value: bool):
+        """Set validation state."""
+        if not isinstance(value, bool):
+            raise UserWarning("Input 'validate' must be a boolean.")
+
+        self._validate = value
+
+        if self.input_file is not None:
+            self.input_file.validate = value
+
     def to_dict(self, ui_json_format=False):
         """Return params and values dictionary."""
-        params_dict = {
-            k: getattr(self, "_" + k)
-            for k in self.param_names
-            if hasattr(self, "_" + k)
-        }
-
-        for free_dict in self.free_parameter_dict.values():
-            for v in free_dict.values():
-                params_dict[v] = getattr(self, v)
 
         if ui_json_format:
-            self.input_file.data = params_dict
-            return self.input_file.ui_json
+            return self.input_file.stringify(
+                self.input_file.demote(self.input_file.ui_json)
+            )
 
-        return params_dict
+        return {k: getattr(self, k) for k in self.param_names if hasattr(self, k)}
 
     def active_set(self):
         """Return list of parameters with non-null entries."""
@@ -258,19 +272,6 @@ class BaseParams:
         self._validations = validations
 
     @property
-    def validator(self) -> InputValidation:
-        if getattr(self, "_validator", None) is None:
-            self._validator = self.input_file.validators
-        return self._validator
-
-    @validator.setter
-    def validator(self, validator: InputValidation):
-        assert isinstance(
-            validator, InputValidation
-        ), f"Input value must be of class {InputValidation}"
-        self._validator = validator
-
-    @property
     def geoh5(self):
         return self._geoh5
 
@@ -280,10 +281,10 @@ class BaseParams:
             self._geoh5 = val
             return
         self.setter_validator(
-            "geoh5", val, fun=lambda x: Workspace(x) if isinstance(val, str) else x
+            "geoh5",
+            val,
+            fun=lambda x: Workspace(x) if isinstance(val, (str, Path)) else x,
         )
-        if self.input_file.workspace != self.geoh5:
-            self.input_file.workspace = self.geoh5
 
     @property
     def run_command(self):
@@ -372,32 +373,20 @@ class BaseParams:
 
         value = fun(value)
 
-        if self.validate:
-            if "association" in self.validations[key]:
-                validations = deepcopy(self.validations[key])
-                parent = getattr(self, self.validations[key]["association"])
-                if isinstance(parent, UUID):
-                    parent = self.geoh5.get_entity(parent)[0]
-                validations["association"] = parent
-            else:
-                validations = self.validations[key]
-
-            validations = {k: v for k, v in validations.items() if k != "one_of"}
-            self.validator.validate(key, value, validations)
+        if value != self.input_file.data[key]:
+            self.input_file.set_data_value(key, value)
 
         setattr(self, f"_{key}", value)
-        self.input_file.data[key] = value
 
     def write_input_file(
         self,
         name: str | None = None,
-        path: str | None = None,
+        path: str | Path | None = None,
         validate: bool = True,
     ) -> str:
         """Write out a ui.json with the current state of parameters"""
-        if not validate:
-            self.input_file.validation_options["disabled"] = True
-
+        original_validate_state = self.input_file.validate
+        self.input_file.validate = validate
         self.input_file.data = self.to_dict()
-
+        self.input_file.validate = original_validate_state
         return self.input_file.write_ui_json(name=name, path=path)

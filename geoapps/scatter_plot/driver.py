@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -87,7 +87,10 @@ class ScatterPlotDriver(BaseDriver):
             if np.sum(inbound) > 0:
                 x_axis[~inbound] = np.nan
                 x_axis, x_label, x_ticks, _ = format_axis(
-                    self.params.x.name, x_axis, self.params.x_log, self.params.x_thresh
+                    self.params.x.name,
+                    x_axis,
+                    self.params.x_log,
+                    self.params.x_thresh,
                 )
             else:
                 return figure
@@ -102,7 +105,10 @@ class ScatterPlotDriver(BaseDriver):
             if np.sum(inbound) > 0:
                 y_axis[~inbound] = np.nan
                 y_axis, y_label, y_ticks, _ = format_axis(
-                    self.params.y.name, y_axis, self.params.y_log, self.params.y_thresh
+                    self.params.y.name,
+                    y_axis,
+                    self.params.y_log,
+                    self.params.y_thresh,
                 )
             else:
                 return figure

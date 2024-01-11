@@ -1,14 +1,10 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 #
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
 
 from __future__ import annotations
 
@@ -17,9 +13,10 @@ from uuid import UUID
 
 import numpy as np
 from discretize import TensorMesh, TreeMesh
-from geoh5py.objects import DrapeModel
+from geoh5py.objects import Curve, DrapeModel
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
+from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 
 from geoapps.utils.string import string_to_numeric
@@ -39,7 +36,7 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
     Returns entity's centroids or vertices.
 
     If no location data is found on the provided entity, the method will
-    attempt to call itself on it's parent.
+    attempt to call itself on its parent.
 
     :param workspace: Geoh5py Workspace entity.
     :param entity: Object or uuid of entity containing centroid or
@@ -61,6 +58,38 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
         locations = get_locations(workspace, entity.parent)
 
     return locations
+
+
+def get_neighbouring_cells(mesh: TreeMesh, indices: list | np.ndarray) -> tuple:
+    """
+    Get the indices of neighbouring cells along a given axis for a given list of
+    cell indices.
+
+    :param mesh: discretize.TreeMesh object.
+    :param indices: List of cell indices.
+
+    :return: Two lists of neighbouring cell indices for every axis.
+        axis[0] = (west, east)
+        axis[1] = (south, north)
+        axis[2] = (down, up)
+    """
+    if not isinstance(indices, (list, np.ndarray)):
+        raise TypeError("Input 'indices' must be a list or numpy.ndarray of indices.")
+
+    if not isinstance(mesh, TreeMesh):
+        raise TypeError("Input 'mesh' must be a discretize.TreeMesh object.")
+
+    neighbors = {ax: [[], []] for ax in range(mesh.dim)}
+
+    for ind in indices:
+        for ax in range(mesh.dim):
+            neighbors[ax][0].append(np.r_[mesh[ind].neighbors[ax * 2]])
+            neighbors[ax][1].append(np.r_[mesh[ind].neighbors[ax * 2 + 1]])
+
+    return tuple(
+        (np.r_[tuple(neighbors[ax][0])], np.r_[tuple(neighbors[ax][1])])
+        for ax in range(mesh.dim)
+    )
 
 
 def weighted_average(
@@ -402,7 +431,7 @@ def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tup
 
     if return_sorting:
         sorting = np.arange(mesh.n_cells)
-        sorting = sorting.reshape(mesh.nCy, mesh.nCx, order="C")
+        sorting = sorting.reshape(mesh.shape_cells[1], mesh.shape_cells[0], order="C")
         sorting = sorting[::-1].T.flatten()
         return (mesh, sorting)
     else:
@@ -499,8 +528,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         ) from exc
 
-    # TODO use a get_entity call here once we update geoh5py entities with the method
-    outfile = [c for c in group.children if c.name == "SimPEG.out"][0]
+    outfile = group.get_entity("SimPEG.out")[0]
     out = [l for l in outfile.values.decode("utf-8").replace("\r", "").split("\n")][:-1]
     cols = out.pop(0).split(" ")
     out = [[string_to_numeric(k) for k in l.split(" ")] for l in out]
@@ -509,109 +537,45 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     return out
 
 
-colors = [
-    "#000000",
-    "#FFFF00",
-    "#1CE6FF",
-    "#FF34FF",
-    "#FF4A46",
-    "#008941",
-    "#006FA6",
-    "#A30059",
-    "#FFDBE5",
-    "#7A4900",
-    "#0000A6",
-    "#63FFAC",
-    "#B79762",
-    "#004D43",
-    "#8FB0FF",
-    "#997D87",
-    "#5A0007",
-    "#809693",
-    "#FEFFE6",
-    "#1B4400",
-    "#4FC601",
-    "#3B5DFF",
-    "#4A3B53",
-    "#FF2F80",
-    "#61615A",
-    "#BA0900",
-    "#6B7900",
-    "#00C2A0",
-    "#FFAA92",
-    "#FF90C9",
-    "#B903AA",
-    "#D16100",
-    "#DDEFFF",
-    "#000035",
-    "#7B4F4B",
-    "#A1C299",
-    "#300018",
-    "#0AA6D8",
-    "#013349",
-    "#00846F",
-    "#372101",
-    "#FFB500",
-    "#C2FFED",
-    "#A079BF",
-    "#CC0744",
-    "#C0B9B2",
-    "#C2FF99",
-    "#001E09",
-    "#00489C",
-    "#6F0062",
-    "#0CBD66",
-    "#EEC3FF",
-    "#456D75",
-    "#B77B68",
-    "#7A87A1",
-    "#788D66",
-    "#885578",
-    "#FAD09F",
-    "#FF8A9A",
-    "#D157A0",
-    "#BEC459",
-    "#456648",
-    "#0086ED",
-    "#886F4C",
-    "#34362D",
-    "#B4A8BD",
-    "#00A6AA",
-    "#452C2C",
-    "#636375",
-    "#A3C8C9",
-    "#FF913F",
-    "#938A81",
-    "#575329",
-    "#00FECF",
-    "#B05B6F",
-    "#8CD0FF",
-    "#3B9700",
-    "#04F757",
-    "#C8A1A1",
-    "#1E6E00",
-    "#7900D7",
-    "#A77500",
-    "#6367A9",
-    "#A05837",
-    "#6B002C",
-    "#772600",
-    "#D790FF",
-    "#9B9700",
-    "#549E79",
-    "#FFF69F",
-    "#201625",
-    "#72418F",
-    "#BC23FF",
-    "#99ADC0",
-    "#3A2465",
-    "#922329",
-    "#5B4534",
-    "#FDE8DC",
-    "#404E55",
-    "#0089A3",
-    "#CB7E98",
-    "#A4E804",
-    "#324E72",
-    "#6A3A4C",
-]
+def densify_curve(curve: Curve, increment: float) -> np.ndarray:
+    """
+    Refine a curve by adding points along the curve at a given increment.
+
+    :param curve: Curve object to be refined.
+    :param increment: Distance between points along the curve.
+
+    :return: Array of shape (n, 3) of x, y, z locations.
+    """
+    locations = []
+    for part in curve.unique_parts:
+        logic = curve.parts == part
+        cells = curve.cells[np.all(logic[curve.cells], axis=1)]
+        vert_ind = np.r_[cells[:, 0], cells[-1, 1]]
+        locs = curve.vertices[vert_ind, :]
+        locations.append(resample_locations(locs, increment))
+
+    return np.vstack(locations)
+
+
+def resample_locations(locations: np.ndarray, increment: float) -> np.ndarray:
+    """
+    Resample locations along a sequence of positions at a given increment.
+
+    :param locations: Array of shape (n, 3) of x, y, z locations.
+    :param increment: Minimum distance between points along the curve.
+
+    :return: Array of shape (n, 3) of x, y, z locations.
+    """
+    distance = np.cumsum(
+        np.r_[0, np.linalg.norm(locations[1:, :] - locations[:-1, :], axis=1)]
+    )
+    new_distances = np.sort(
+        np.unique(np.r_[distance, np.arange(0, distance[-1], increment)])
+    )
+
+    resampled = []
+    for axis in locations.T:
+        interpolator = interp1d(distance, axis, kind="linear")
+        resampled.append(interpolator(new_distances))
+
+    return np.c_[resampled].T

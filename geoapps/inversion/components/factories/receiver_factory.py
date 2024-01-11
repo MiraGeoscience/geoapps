@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -54,25 +54,30 @@ class ReceiversFactory(SimPEGFactory):
 
             return receivers.Dipole
 
+        elif "fem" in self.factory_type:
+            from SimPEG.electromagnetics.frequency_domain import receivers
+
+            return receivers.PointMagneticFluxDensitySecondary
+
         elif "tdem" in self.factory_type:
             from SimPEG.electromagnetics.time_domain import receivers
 
-            return receivers.PointMagneticFluxTimeDerivative
+            if self.params.data_units == "dB/dt (T/s)":
+                return receivers.PointMagneticFluxTimeDerivative
+            elif self.params.data_units == "B (T)":
+                return receivers.PointMagneticFluxDensity
+            else:
+                return receivers.PointMagneticField
 
         elif self.factory_type == "magnetotellurics":
             from SimPEG.electromagnetics.natural_source import receivers
 
-            return receivers.Point3DImpedance
+            return receivers.PointNaturalSource
 
         elif self.factory_type == "tipper":
             from SimPEG.electromagnetics.natural_source import receivers
 
             return receivers.Point3DTipper
-
-        elif self.factory_type == "tdem":
-            from SimPEG.electromagnetics.time_domain import receivers
-
-            return receivers.PointMagneticFluxTimeDerivative
 
     def assemble_arguments(
         self, locations=None, data=None, local_index=None, mesh=None, component=None
@@ -88,14 +93,10 @@ class ReceiversFactory(SimPEGFactory):
                 -1 * self.params.mesh.rotation[0],
             )
 
-        if self.factory_type in [
-            "direct current pseudo 3d",
-            "direct current 3d",
-            "direct current 2d",
-            "induced polarization 3d",
-            "induced polarization 2d",
-            "induced polarization pseudo 3d",
-        ]:
+        if (
+            "direct current" in self.factory_type
+            or "induced polarization" in self.factory_type
+        ):
             args += self._dcip_arguments(
                 locations=locations,
                 local_index=local_index,
@@ -128,14 +129,17 @@ class ReceiversFactory(SimPEGFactory):
         kwargs = {}
         if self.factory_type in ["gravity", "magnetic scalar", "magnetic vector"]:
             kwargs["components"] = list(data)
-        if self.factory_type in ["magnetotellurics", "tipper"]:
-            kwargs["orientation"] = list(data.keys())[0].split("_")[0][1:]
-            kwargs["component"] = list(data.keys())[0].split("_")[1]
+        else:
+            kwargs["storeProjections"] = True
+
+        if self.factory_type in ["fem", "magnetotellurics", "tipper"]:
+            comp = component.split("_")[0]
+            kwargs["orientation"] = comp[0] if self.factory_type == "fem" else comp[1:]
+            kwargs["component"] = component.split("_")[1]
         if self.factory_type in ["tipper"]:
             kwargs["orientation"] = kwargs["orientation"][::-1]
         if self.factory_type in ["tdem"]:
             kwargs["orientation"] = component
-            kwargs["storeProjections"] = True
 
         return kwargs
 
@@ -191,7 +195,10 @@ class ReceiversFactory(SimPEGFactory):
         return args
 
     def _tdem_arguments(self, data=None, locations=None, local_index=None, mesh=None):
-        return [locations, data.entity.channels]
+        return [
+            locations,
+            np.asarray(data.entity.channels) * self.params.unit_conversion,
+        ]
 
     def _magnetotellurics_arguments(self, locations=None, local_index=None, mesh=None):
         args = []

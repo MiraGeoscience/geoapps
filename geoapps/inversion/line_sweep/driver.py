@@ -1,16 +1,20 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
+from __future__ import annotations
+
 import json
-import os
 import re
+from pathlib import Path
 
 import numpy as np
 from geoh5py.data import FilenameData
+from geoh5py.groups import SimPEGGroup
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from param_sweeps.driver import SweepDriver, SweepParams
@@ -23,10 +27,36 @@ from geoapps.utils.models import drape_to_octree
 
 class LineSweepDriver(SweepDriver, InversionDriver):
     def __init__(self, params):
+        self._out_group = None
         self.workspace = params.geoh5
         self.pseudo3d_params = params
         self.cleanup = params.cleanup
+
+        if (
+            hasattr(self.pseudo3d_params, "out_group")
+            and self.pseudo3d_params.out_group is None
+        ):
+            self.pseudo3d_params.out_group = self.out_group
+
         super().__init__(self.setup_params())
+
+    @property
+    def out_group(self):
+        """The SimPEGGroup"""
+        if self._out_group is None:
+            with fetch_active_workspace(self.workspace, mode="r+"):
+                name = self.pseudo3d_params.inversion_type.capitalize()
+                if self.pseudo3d_params.forward_only:
+                    name += "Forward"
+                else:
+                    name += "Inversion"
+
+                # with fetch_active_workspace(self.geoh5, mode="r+"):
+                self._out_group = SimPEGGroup.create(
+                    self.pseudo3d_params.geoh5, name=name
+                )
+
+        return self._out_group
 
     def run(self):  # pylint: disable=W0221
         super().run()  # pylint: disable=W0221
@@ -36,19 +66,24 @@ class LineSweepDriver(SweepDriver, InversionDriver):
             self.file_cleanup()
 
     def setup_params(self):
-        with self.workspace.open():
-            path = os.path.abspath(self.workspace.h5file)
-            path = ".".join([path.split(".")[0], "ui.json"])
-            if not os.path.exists(path):
+        h5_file_path = Path(self.workspace.h5file).resolve()
+        ui_json_path = h5_file_path.parent / (
+            re.sub(r"\.ui$", "", h5_file_path.stem) + ".ui.json"
+        )
+        if not (ui_json_path).is_file():
+            with self.workspace.open():
                 self.pseudo3d_params.write_input_file(
-                    name=os.path.basename(path),
-                    path=os.path.dirname(path),
+                    name=ui_json_path.name,
+                    path=h5_file_path.parent,
                 )
         generate(
-            path, parameters=["line_id"], update_values={"conda_environment": "geoapps"}
+            ui_json_path,
+            parameters=["line_id"],
+            update_values={"conda_environment": "geoapps"},
         )
         ifile = InputFile.read_ui_json(
-            os.path.join(path.replace(".ui.json", "_sweep.ui.json"))
+            h5_file_path.parent
+            / (re.sub(r"\.ui$", "", h5_file_path.stem) + "_sweep.ui.json")
         )
         with self.workspace.open(mode="r"):
             lines = self.pseudo3d_params.line_object.values
@@ -61,27 +96,26 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
     def file_cleanup(self):
         """Remove files associated with the parameter sweep."""
-        path = os.path.dirname(self.workspace.h5file)
-        with open(os.path.join(path, "lookup.json"), encoding="utf8") as f:
+        path = Path(self.workspace.h5file).parent
+        with open(path / "lookup.json", encoding="utf8") as f:
             files = list(json.load(f))
 
         files = [f"{f}.ui.json" for f in files] + [f"{f}.ui.geoh5" for f in files]
-        files += ["lookup.json"]
-        files += [f for f in os.listdir(path) if "_sweep.ui.json" in f]
+        files += ["lookup.json", "SimPEG.log", "SimPEG.out"]
+        files += [f.name for f in path.glob("*_sweep.ui.json")]
+
         for file in files:
-            filepath = os.path.join(path, file)
-            if os.path.exists(filepath):
-                os.remove(filepath)
+            (path / file).unlink(missing_ok=True)
 
     @staticmethod
-    def line_files(path):
-        with open(os.path.join(path, "lookup.json"), encoding="utf8") as file:
+    def line_files(path: str | Path):
+        with open(Path(path) / "lookup.json", encoding="utf8") as file:
             line_files = {v["line_id"]: k for k, v in json.load(file).items()}
         return line_files
 
     def collect_results(self):
-        path = os.path.join(os.path.dirname(self.workspace.h5file))
-        files = LineSweepDriver.line_files(path)
+        path = Path(self.workspace.h5file).parent
+        files = LineSweepDriver.line_files(str(path))
         lines = np.unique(self.pseudo3d_params.line_object.values)
         data_result = self.pseudo3d_params.data_object.copy(
             parent=self.pseudo3d_params.out_group
@@ -90,7 +124,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         data = {}
         drape_models = []
         for line in lines:
-            with Workspace(f"{os.path.join(path, files[line])}.ui.geoh5") as ws:
+            with Workspace(f"{path / files[line]}.ui.geoh5") as ws:
                 survey = ws.get_entity("Data")[0]
                 data = self.collect_line_data(survey, data)
 

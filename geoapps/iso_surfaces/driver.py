@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -8,14 +8,13 @@
 
 from __future__ import annotations
 
-import os
 import sys
 import warnings
 
 import numpy as np
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, ObjectBase, Surface
-from geoh5py.ui_json.utils import monitored_directory_copy
+from geoh5py.shared.utils import fetch_active_workspace
 from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 from tqdm import tqdm
@@ -49,32 +48,30 @@ class IsoSurfacesDriver(BaseDriver):
         if len(levels) < 1:
             return
 
-        print("Starting the isosurface creation.")
-        surfaces = self.iso_surface(
-            self.params.objects,
-            self.params.data.values,
-            levels,
-            resolution=self.params.resolution,
-            max_distance=self.params.max_distance,
-        )
+        with fetch_active_workspace(self.params.geoh5, mode="r+"):
+            print("Starting the isosurface creation.")
+            surfaces = self.iso_surface(
+                self.params.objects,
+                self.params.data.values,
+                levels,
+                resolution=self.params.resolution,
+                max_distance=self.params.max_distance,
+            )
 
-        container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
-        result = []
-        for surface, level in zip(surfaces, levels):
-            if len(surface[0]) > 0 and len(surface[1]) > 0:
-                result += [
-                    Surface.create(
-                        self.params.geoh5,
-                        name=string_name(self.params.export_as + f"_{level:.2e}"),
-                        vertices=surface[0],
-                        cells=surface[1],
-                        parent=container,
-                    )
-                ]
-        if self.params.monitoring_directory is not None and os.path.exists(
-            self.params.monitoring_directory
-        ):
-            monitored_directory_copy(self.params.monitoring_directory, container)
+            container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
+            result = []
+            for surface, level in zip(surfaces, levels):
+                if len(surface[0]) > 0 and len(surface[1]) > 0:
+                    result += [
+                        Surface.create(
+                            self.params.geoh5,
+                            name=string_name(self.params.export_as + f"_{level:.2e}"),
+                            vertices=surface[0],
+                            cells=surface[1],
+                            parent=container,
+                        )
+                    ]
+            self.update_monitoring_directory(container)
 
         print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
 

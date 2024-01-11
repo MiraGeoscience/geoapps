@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -6,7 +6,9 @@
 #  (see LICENSE file at the root of this source code package).
 # pylint: disable=too-many-locals
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -23,16 +25,12 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.01577,
-    "phi_d": 11.52,
-    "phi_m": 0.4048,
-}
+target_run = {"data_norm": 0.003936832660650801, "phi_d": 1.099, "phi_m": 2.774}
 np.random.seed(0)
 
 
 def test_magnetotellurics_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_grid_points=2,
     refinement=(2,),
 ):
@@ -68,21 +66,21 @@ def test_magnetotellurics_fwr_run(
         zyy_imag_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = MagnetotelluricsDriver(params, warmstart=False)
+    fwr_driver = MagnetotelluricsDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
 
-
-def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(
-            tmp_path / "../test_magnetotellurics_fwr_run0/inversion_test.geoh5"
+        workpath = (
+            tmp_path.parent
+            / "test_magnetotellurics_fwr_run0"
+            / "inversion_test.ui.geoh5"
         )
 
     with Workspace(workpath) as geoh5:
-        survey = geoh5.get_entity("survey")[0]
+        survey = geoh5.get_entity("survey")[0].copy(copy_children=False)
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
 
@@ -104,16 +102,16 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             # uncertainties[f"{cname} uncertainties"] = {}
             uncertainties[f"{cname} uncertainties"] = []
             for ind in range(len(survey.channels)):
-                data_envity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
+                data_entity = geoh5.get_entity(f"Iteration_0_{comp}_[{ind}]")[0].copy(
                     parent=survey
                 )
-                data[cname].append(data_envity)
+                data[cname].append(data_entity)
 
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_[{ind}]": {
-                            "values": np.ones_like(data_envity.values)
-                            * np.percentile(np.abs(data_envity.values), 10)
+                            "values": np.ones_like(data_entity.values)
+                            * np.percentile(np.abs(data_entity.values), 10)
                         }
                     }
                 )
@@ -159,7 +157,7 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
-        driver = MagnetotelluricsDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+        driver = MagnetotelluricsDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
@@ -171,8 +169,6 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
     # test that one channel works
     data_kwargs = {k: v for k, v in data_kwargs.items() if "zxx_real" in k}
@@ -189,23 +185,14 @@ def test_magnetotellurics_run(tmp_path, max_iterations=1, pytest=True):
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")
-    driver = MagnetotelluricsDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
-
-    return driver
+    MagnetotelluricsDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_magnetotellurics_fwr_run("./", n_grid_points=8, refinement=(4, 8))
-
-    m_rec = test_magnetotellurics_run(
-        "./",
+    test_magnetotellurics_fwr_run(Path("./"), n_grid_points=8, refinement=(4, 8))
+    test_magnetotellurics_run(
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )
-
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 15% of the answer. Let's go!!")

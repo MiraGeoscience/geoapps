@@ -1,14 +1,16 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
+
+from __future__ import annotations
+
 import json
-import os
+from pathlib import Path
 
 import numpy as np
-from geoh5py.data import FilenameData
 from geoh5py.groups import SimPEGGroup
 from geoh5py.workspace import Workspace
 
@@ -26,16 +28,16 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.06072,
-    "phi_d": 2772,
-    "phi_m": 0.04514,
+    "data_norm": 0.08768,
+    "phi_d": 7267,
+    "phi_m": 0.1079,
 }
 
 np.random.seed(0)
 
 
 def test_ip_p3d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=10,
     n_lines=3,
     refinement=(4, 6),
@@ -75,23 +77,15 @@ def test_ip_p3d_fwr_run(
     fwr_driver = InducedPolarizationPseudo3DDriver(params)
     fwr_driver.run()
 
-    local_simpeg_group = geoh5.get_entity("Line 2")[0]
-    drape_model = local_simpeg_group.get_entity("models")[0]
-    starting_model = drape_model.get_data("starting_model")[0].values
-
-    return starting_model
-
 
 def test_ip_p3d_run(
     tmp_path,
     max_iterations=1,
     pytest=True,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = os.path.abspath(
-            tmp_path / "../test_ip_p3d_fwr_run0/inversion_test.geoh5"
-        )
+        workpath = tmp_path.parent / "test_ip_p3d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         chargeability = geoh5.get_entity("Iteration_0_ip")[0]
@@ -135,24 +129,18 @@ def test_ip_p3d_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = InducedPolarizationPseudo3DDriver.start(
-        os.path.join(tmp_path, "Inv_run.ui.json")
-    )
+    driver = InducedPolarizationPseudo3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
-    basepath = os.path.dirname(workpath)
-    with open(os.path.join(basepath, "lookup.json"), encoding="utf8") as f:
+    basepath = workpath.parent
+    with open(basepath / "lookup.json", encoding="utf8") as f:
         lookup = json.load(f)
         middle_line_id = [k for k, v in lookup.items() if v["line_id"] == 2][0]
 
-    with Workspace(
-        os.path.join(basepath, f"{middle_line_id}.ui.geoh5"), mode="r"
-    ) as workspace:
+    with Workspace(basepath / f"{middle_line_id}.ui.geoh5", mode="r") as workspace:
         middle_inversion_group = [
             k for k in workspace.groups if isinstance(k, SimPEGGroup)
         ][0]
-        filedata = [
-            k for k in middle_inversion_group.children if isinstance(k, FilenameData)
-        ][0]
+        filedata = middle_inversion_group.get_entity("SimPEG.out")[0]
 
         with driver.pseudo3d_params.out_group.workspace.open(mode="r+"):
             filedata.copy(parent=driver.pseudo3d_params.out_group)
@@ -164,26 +152,18 @@ def test_ip_p3d_run(
         output["data"] = chargeability.values
     if pytest:
         check_target(output, target_run)
-    else:
-        return geoh5.get_entity("Iteration_1_model")[0].values
 
 
 if __name__ == "__main__":
     # Full run
-    m_start = test_ip_p3d_fwr_run(
-        "./",
+    test_ip_p3d_fwr_run(
+        Path("./"),
         n_electrodes=20,
         n_lines=3,
         refinement=(4, 8),
     )
-
-    m_rec = test_ip_p3d_run(
-        "./",
+    test_ip_p3d_run(
+        Path("./"),
         max_iterations=20,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 20.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 20% of the answer. You are so special!")

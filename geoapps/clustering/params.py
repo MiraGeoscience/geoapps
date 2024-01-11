@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,7 +10,6 @@ from __future__ import annotations
 from copy import deepcopy
 
 from geoh5py.data import Data
-from geoh5py.ui_json import InputFile
 
 from geoapps.scatter_plot.params import ScatterPlotParams
 
@@ -35,14 +34,6 @@ class ClusteringParams(ScatterPlotParams):
         self._full_upper_bounds = None
         self._color_pickers = None
         self._plot_kmeans = None
-
-        if input_file is None:
-            ui_json = deepcopy(self._default_ui_json)
-            input_file = InputFile(
-                ui_json=ui_json,
-                validations=self.validations,
-                validation_options={"disabled": True},
-            )
 
         super().__init__(input_file=input_file, **kwargs)
 
@@ -113,9 +104,9 @@ class ClusteringParams(ScatterPlotParams):
         self.setter_validator("full_upper_bounds", val)
 
     @property
-    def color_pickers(self) -> str | None:
+    def color_pickers(self) -> list | None:
         """
-        Upper bounds for all channels.
+        Colors corresponding to each cluster.
         """
         return self._color_pickers
 

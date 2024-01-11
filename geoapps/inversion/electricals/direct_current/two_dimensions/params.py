@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -9,37 +9,26 @@ from __future__ import annotations
 
 from copy import deepcopy
 
-from geoapps.inversion import InversionBaseParams
-
+from ...params import Base2DParams
 from .constants import (
     default_ui_json,
     forward_defaults,
-    forward_ui_json,
     inversion_defaults,
-    inversion_ui_json,
     validations,
 )
 
 
-class DirectCurrent2DParams(InversionBaseParams):
+class DirectCurrent2DParams(Base2DParams):
     """
     Parameter class for electrical->conductivity inversion.
     """
 
-    _directive_list = [
-        "UpdateSensitivityWeights",
-        "Update_IRLS",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
+    _physical_property = "conductivity"
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._default_ui_json = deepcopy(default_ui_json)
         self._forward_defaults = deepcopy(forward_defaults)
-        self._forward_ui_json = deepcopy(forward_ui_json)
         self._inversion_defaults = deepcopy(inversion_defaults)
-        self._inversion_ui_json = deepcopy(inversion_ui_json)
         self._inversion_type = "direct current 2d"
         self._validations = validations
         self._potential_channel_bool = None
@@ -49,30 +38,6 @@ class DirectCurrent2DParams(InversionBaseParams):
         self._line_id = None
 
         super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
-
-    @property
-    def inversion_type(self):
-        return self._inversion_type
-
-    @inversion_type.setter
-    def inversion_type(self, val):
-        self.setter_validator("inversion_type", val)
-
-    @property
-    def line_object(self):
-        return self._line_object
-
-    @line_object.setter
-    def line_object(self, val):
-        self._line_object = val
-
-    @property
-    def line_id(self):
-        return self._line_id
-
-    @line_id.setter
-    def line_id(self, val):
-        self._line_id = val
 
     @property
     def potential_channel_bool(self):

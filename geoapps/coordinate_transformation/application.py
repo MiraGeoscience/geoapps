@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,9 +7,8 @@
 
 from __future__ import annotations
 
-import os
 import re
-import uuid
+from pathlib import Path
 from time import time
 
 import numpy
@@ -111,10 +110,11 @@ class CoordinateTransformation(ObjectDataSelection):
 
                 for uid in self.objects.value:
                     obj = self.workspace.get_entity(uid)[0]
+                    input_copy = obj.copy(parent=ws)
 
-                    if isinstance(obj, Grid2D):
+                    if isinstance(input_copy, Grid2D):
                         count = 0
-                        for child in obj.children:
+                        for child in input_copy.children:
                             temp_file = (
                                 child.name
                                 + f"_{self.code_in.value.replace(':', '_')}.tif"
@@ -139,7 +139,7 @@ class CoordinateTransformation(ObjectDataSelection):
                                     new_obj = geotiff_2_grid(
                                         workspace,
                                         temp_file_out,
-                                        grid_name=obj.name
+                                        grid_name=input_copy.name
                                         + self.code_out.value.replace(":", "_"),
                                         parent=out_entity,
                                     )
@@ -150,19 +150,20 @@ class CoordinateTransformation(ObjectDataSelection):
                                     )
 
                                 del grid
-                                if os.path.exists(temp_file):
-                                    os.remove(temp_file)
-
-                                if os.path.exists(temp_file_out):
-                                    os.remove(temp_file_out)
-
+                                Path(temp_file).unlink(missing_ok=True)
+                                Path(temp_file_out).unlink(missing_ok=True)
                                 count += 1
                     else:
-                        if not hasattr(obj, "vertices"):
-                            print(f"Skipping {obj.name}. Entity does not have vertices")
+                        if not hasattr(input_copy, "vertices"):
+                            print(
+                                f"Skipping {input_copy.name}. Entity does not have vertices"
+                            )
                             continue
 
-                        x, y = obj.vertices[:, 0].tolist(), obj.vertices[:, 1].tolist()
+                        x, y = (
+                            input_copy.vertices[:, 0].tolist(),
+                            input_copy.vertices[:, 1].tolist(),
+                        )
 
                         if self.code_in.value == "EPSG:4326":
                             x, y = y, x
@@ -174,15 +175,18 @@ class CoordinateTransformation(ObjectDataSelection):
                             y,
                         )
 
-                        new_obj = obj.copy(parent=out_entity, copy_children=True)
-                        new_obj.uid = uuid.uuid4()
-                        new_obj.vertices = numpy.c_[x2, y2, obj.vertices[:, 2]]
-                        new_obj.name = new_obj.name + self.code_out.value.replace(
-                            ":", "_"
+                        new_obj = input_copy.copy(
+                            parent=out_entity,
+                            vertices=numpy.c_[x2, y2, input_copy.vertices[:, 2]],
+                            name=(
+                                input_copy.name + self.code_out.value.replace(":", "_")
+                            ),
                         )
 
                     if self.plot_result:
-                        plot_plan_data_selection(obj, obj.children[0], axis=ax1)
+                        plot_plan_data_selection(
+                            input_copy, input_copy.children[0], axis=ax1
+                        )
                         if '"Longitude",EAST' in self.wkt_in.value:
                             ax1.set_xlabel("Longitude")
                             ax1.set_ylabel("Latitude")

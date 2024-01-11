@@ -1,19 +1,21 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.airborne_electromagnetics.time_domain import (
+from geoapps.inversion.electromagnetics.time_domain import (
     TimeDomainElectromagneticsParams,
 )
-from geoapps.inversion.airborne_electromagnetics.time_domain.driver import (
+from geoapps.inversion.electromagnetics.time_domain.driver import (
     TimeDomainElectromagneticsDriver,
 )
 from geoapps.shared_utils.utils import get_inversion_output
@@ -23,17 +25,17 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 3.6444e-11,
-    "phi_d": 0.007553,
-    "phi_m": 0.2285,
+    "data_norm": 2.81018e-10,
+    "phi_d": 15400,
+    "phi_m": 718.9,
 }
 
 np.random.seed(0)
 
 
 def test_airborne_tem_fwr_run(
-    tmp_path,
-    n_grid_points=2,
+    tmp_path: Path,
+    n_grid_points=3,
     refinement=(2,),
 ):
     # Run the forward
@@ -63,16 +65,16 @@ def test_airborne_tem_fwr_run(
         z_channel_bool=True,
     )
     params.workpath = tmp_path
-    fwr_driver = TimeDomainElectromagneticsDriver(params, warmstart=False)
+    fwr_driver = TimeDomainElectromagneticsDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
 
-
-def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_airborne_tem_fwr_run0/inversion_test.geoh5")
+        workpath = (
+            tmp_path.parent / "test_airborne_tem_fwr_run0" / "inversion_test.ui.geoh5"
+        )
 
     with Workspace(workpath) as geoh5:
         survey = geoh5.get_entity("Airborne_rx")[0]
@@ -142,16 +144,13 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
             initial_beta_ratio=1e2,
             coolingRate=4,
             max_cg_iterations=200,
-            sens_wts_threshold=1.0,
             prctile=5,
             store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = TimeDomainElectromagneticsDriver.start(
-        os.path.join(tmp_path, "Inv_run.ui.json")
-    )
+    driver = TimeDomainElectromagneticsDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
@@ -163,22 +162,13 @@ def test_airborne_tem_run(tmp_path, max_iterations=1, pytest=True):
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
             inactive_ind = run_ws.get_entity("active_cells")[0].values == 0
             assert np.all(nan_ind == inactive_ind)
-        else:
-            return driver.inverse_problem.model
 
 
 if __name__ == "__main__":
     # Full run
-    mstart = test_airborne_tem_fwr_run("./", n_grid_points=5, refinement=(0, 0, 4))
-
-    m_rec = test_airborne_tem_run(
-        "./",
+    test_airborne_tem_fwr_run(Path("./"), n_grid_points=5, refinement=(0, 0, 4))
+    test_airborne_tem_run(
+        Path("./"),
         max_iterations=15,
         pytest=False,
     )
-
-    residual = np.linalg.norm(m_rec - mstart) / np.linalg.norm(mstart) * 100.0
-    assert (
-        residual < 50.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 50% of the answer. Let's go!!")

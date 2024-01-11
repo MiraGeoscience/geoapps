@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -31,6 +31,7 @@ class OctreeParams(BaseParams):
         self._u_cell_size = None
         self._v_cell_size = None
         self._w_cell_size = None
+        self._minimum_level = None
         self._horizontal_padding = None
         self._vertical_padding = None
         self._depth_core = None
@@ -47,10 +48,6 @@ class OctreeParams(BaseParams):
                     group = key.replace("object", "").rstrip()
                     free_param_dict[group] = deepcopy(template_dict)
 
-            # Add at least one refinements
-            if len(free_param_dict) == 0:
-                free_param_dict["Refinement A"] = deepcopy(template_dict)
-
             ui_json = deepcopy(self._default_ui_json)
             for group, forms in free_param_dict.items():
                 for key, form in forms.items():
@@ -61,10 +58,26 @@ class OctreeParams(BaseParams):
             input_file = InputFile(
                 ui_json=ui_json,
                 validations=self.validations,
-                validation_options={"disabled": True},
+                validate=False,
             )
 
         super().__init__(input_file=input_file, **kwargs)
+
+    def get_padding(self) -> list:
+        """
+        Utility to get the padding values as a list of padding along each axis.
+        """
+        return [
+            [
+                self.horizontal_padding,
+                self.horizontal_padding,
+            ],
+            [
+                self.horizontal_padding,
+                self.horizontal_padding,
+            ],
+            [self.vertical_padding, self.vertical_padding],
+        ]
 
     @property
     def title(self):
@@ -129,6 +142,14 @@ class OctreeParams(BaseParams):
     @depth_core.setter
     def depth_core(self, val):
         self.setter_validator("depth_core", val)
+
+    @property
+    def minimum_level(self):
+        return self._minimum_level
+
+    @minimum_level.setter
+    def minimum_level(self, val):
+        self.setter_validator("minimum_level", val)
 
     @property
     def ga_group_name(self):

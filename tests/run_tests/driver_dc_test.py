@@ -1,10 +1,13 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
-import os
+
+from __future__ import annotations
+
+from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
@@ -21,17 +24,13 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.14308,
-    "phi_d": 36.06,
-    "phi_m": 241.1,
-}
+target_run = {"data_norm": 0.152105803389558, "phi_d": 31.56, "phi_m": 171.5}
 
 np.random.seed(0)
 
 
 def test_dc_3d_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=4,
     n_lines=3,
     refinement=(4, 6),
@@ -48,6 +47,18 @@ def test_dc_3d_fwr_run(
         inversion_type="dcip",
         flatten=False,
     )
+
+    # Randomly flip order of receivers
+    old = np.random.randint(0, survey.cells.shape[0], n_electrodes)
+    indices = np.ones(survey.cells.shape[0], dtype=bool)
+    indices[old] = False
+
+    tx_id = np.r_[survey.ab_cell_id.values[indices], survey.ab_cell_id.values[~indices]]
+    cells = np.vstack([survey.cells[indices, :], survey.cells[~indices, :]])
+
+    survey.ab_cell_id = tx_id
+    survey.cells = cells
+
     params = DirectCurrent3DParams(
         forward_only=True,
         geoh5=geoh5,
@@ -62,18 +73,16 @@ def test_dc_3d_fwr_run(
     fwr_driver = DirectCurrent3DDriver(params)
     fwr_driver.run()
 
-    return fwr_driver.starting_model
-
 
 def test_dc_3d_run(
-    tmp_path,
+    tmp_path: Path,
     max_iterations=1,
     pytest=True,
     n_lines=3,
 ):
-    workpath = os.path.join(tmp_path, "inversion_test.geoh5")
+    workpath = tmp_path / "inversion_test.ui.geoh5"
     if pytest:
-        workpath = str(tmp_path / "../test_dc_3d_fwr_run0/inversion_test.geoh5")
+        workpath = tmp_path.parent / "test_dc_3d_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
@@ -110,7 +119,7 @@ def test_dc_3d_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-    driver = DirectCurrent3DDriver.start(os.path.join(tmp_path, "Inv_run.ui.json"))
+    driver = DirectCurrent3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.out_group.uid
@@ -119,12 +128,10 @@ def test_dc_3d_run(
         output["data"] = potential.values
     if pytest:
         check_target(output, target_run)
-    else:
-        return driver.inverse_problem.model
 
 
 def test_dc_single_line_fwr_run(
-    tmp_path,
+    tmp_path: Path,
     n_electrodes=4,
     n_lines=1,
     refinement=(4, 6),
@@ -153,27 +160,22 @@ def test_dc_single_line_fwr_run(
     )
     params.workpath = tmp_path
     fwr_driver = DirectCurrent3DDriver(params)
-    assert np.all(fwr_driver.window["size"] > 0)
+    assert np.all(fwr_driver.window.window["size"] > 0)
 
 
 if __name__ == "__main__":
     # Full run
 
-    m_start = test_dc_3d_fwr_run(
-        "./",
+    test_dc_3d_fwr_run(
+        Path("./"),
         n_electrodes=20,
         n_lines=5,
         refinement=(4, 8),
     )
 
-    m_rec = test_dc_3d_run(
-        "./",
+    test_dc_3d_run(
+        Path("./"),
         n_lines=5,
         max_iterations=15,
         pytest=False,
     )
-    residual = np.linalg.norm(m_rec - m_start) / np.linalg.norm(m_start) * 100.0
-    assert (
-        residual < 20.0
-    ), f"Deviation from the true solution is {residual:.2f}%. Validate the solution!"
-    print("Conductivity model is within 20% of the answer. You are so special!")

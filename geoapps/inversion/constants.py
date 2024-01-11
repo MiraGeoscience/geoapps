@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -10,6 +10,8 @@ from __future__ import annotations
 from uuid import UUID
 
 from geoh5py.objects import Curve, Grid2D, Points, Surface
+
+import geoapps
 
 default_ui_json = {
     "forward_only": False,
@@ -49,14 +51,13 @@ default_ui_json = {
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
             "{48F5054A-1C5C-4CA4-9048-80F36DC60A06}",
             "{b020a277-90e2-4cd7-84d6-612ee3f25051}",
-            "{4ea87376-3ece-438b-bf12-3479733ded46}",
         ],
         "value": None,
     },
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -104,90 +105,12 @@ default_ui_json = {
         "verbose": 3,
     },
     "gps_receivers_offset": None,
-    "ignore_values": {
-        "group": "Data pre-processing",
-        "optional": True,
-        "enabled": False,
-        "label": "Values to ignore",
-        "value": None,
-        "verbose": 3,
-    },
-    "resolution": {
-        "min": 0.0,
-        "group": "Data pre-processing",
-        "optional": True,
-        "enabled": False,
-        "label": "Downsampling resolution",
-        "value": 0.0,
-        "verbose": 3,
-    },
-    "detrend_order": {
-        "min": 0,
-        "group": "Data pre-processing",
-        "enabled": False,
-        "dependencyType": "enabled",
-        "label": "Detrend order",
-        "optional": True,
-        "value": 0,
-        "verbose": 3,
-    },
-    "detrend_type": {
-        "choiceList": ["all", "perimeter"],
-        "group": "Data pre-processing",
-        "dependency": "detrend_order",
-        "dependencyType": "enabled",
-        "enabled": False,
-        "optional": True,
-        "label": "Detrend type",
-        "value": "all",
-        "verbose": 3,
-    },
     "mesh": {
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "label": "Mesh",
         "meshType": "4EA87376-3ECE-438B-BF12-3479733DED46",
         "value": None,
-    },
-    "window_center_x": {
-        "group": "Data window",
-        "enabled": False,
-        "groupOptional": True,
-        "label": "Window center easting",
-        "value": 0.0,
-        "verbose": 3,
-    },
-    "window_center_y": {
-        "group": "Data window",
-        "enabled": False,
-        "label": "Window center northing",
-        "value": 0.0,
-        "verbose": 3,
-    },
-    "window_width": {
-        "min": 0.0,
-        "group": "Data window",
-        "enabled": False,
-        "label": "Window width",
-        "value": 0.0,
-        "verbose": 3,
-    },
-    "window_height": {
-        "min": 0.0,
-        "group": "Data window",
-        "enabled": False,
-        "label": "Window height",
-        "value": 0.0,
-        "verbose": 3,
-    },
-    "window_azimuth": {
-        "min": -180,
-        "max": 180,
-        "group": "Data window",
-        "enabled": False,
-        "label": "Window azimuth",
-        "value": 0.0,
-        "verbose": 3,
     },
     "inversion_style": "voxel",
     "chi_factor": {
@@ -204,11 +127,10 @@ default_ui_json = {
         "group": "Update sensitivity weights directive",
         "tooltip": "Update sensitivity weight threshold",
         "label": "Threshold (%)",
-        "value": 30.0,
-        "max": 99.9,
+        "value": 0.001,
+        "max": 1.0,
         "min": 0.0,
-        "precision": 1,
-        "lineEdit": False,
+        "precision": 5,
         "verbose": 2,
     },
     "every_iteration_bool": {
@@ -336,6 +258,7 @@ default_ui_json = {
     "initial_beta": {
         "min": 0.0,
         "group": "Optimization",
+        "optional": True,
         "enabled": False,
         "dependency": "initial_beta_ratio",
         "dependencyType": "disabled",
@@ -359,7 +282,7 @@ default_ui_json = {
         "tooltip": "Constant ratio compared to other weights. Larger values result in models that remain close to the reference model",
         "enabled": True,
     },
-    "alpha_x": {
+    "length_scale_x": {
         "min": 0.0,
         "group": "Regularization",
         "label": "X-smoothness weight",
@@ -367,7 +290,7 @@ default_ui_json = {
         "value": 1.0,
         "enabled": True,
     },
-    "alpha_y": {
+    "length_scale_y": {
         "min": 0.0,
         "group": "Regularization",
         "label": "Y-smoothness weight",
@@ -375,7 +298,7 @@ default_ui_json = {
         "value": 1.0,
         "enabled": True,
     },
-    "alpha_z": {
+    "length_scale_z": {
         "min": 0.0,
         "group": "Regularization",
         "label": "Z-smoothness weight",
@@ -427,8 +350,10 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
+        "optional": True,
+        "enabled": False,
         "parent": "mesh",
         "label": "Reference",
         "property": None,
@@ -445,7 +370,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound",
@@ -458,7 +383,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound",
@@ -519,6 +444,9 @@ default_ui_json = {
         "main": True,
         "value": False,
     },
+    "fix_aspect_ratio": True,
+    "colorbar": False,
+    "ga_group": None,
     "max_ram": None,
     "monitoring_directory": None,
     "workspace_geoh5": None,
@@ -527,6 +455,7 @@ default_ui_json = {
     "run_command_boolean": None,
     "conda_environment": "geoapps",
     "distributed_workers": None,
+    "version": geoapps.__version__,
 }
 
 ######################## Validations ###########################
@@ -536,12 +465,18 @@ validations = {
         "types": [str, UUID, Surface, Points, Grid2D, Curve],
     },
     "alpha_s": {"types": [int, float]},
-    "alpha_x": {"types": [int, float]},
-    "alpha_y": {"types": [int, float]},
-    "alpha_z": {"types": [int, float]},
+    "length_scale_x": {"types": [int, float]},
+    "length_scale_y": {"types": [int, float]},
+    "length_scale_z": {"types": [int, float]},
     "norm_s": {"types": [int, float]},
     "norm_x": {"types": [int, float]},
     "norm_y": {"types": [int, float]},
     "norm_z": {"types": [int, float]},
-    "distributed_workers": {"types": [list, type(None)]},
+    "distributed_workers": {"types": [str, type(None)]},
+    "ga_group": {"types": [str, type(None)]},
+    "version": {
+        "types": [
+            str,
+        ]
+    },
 }

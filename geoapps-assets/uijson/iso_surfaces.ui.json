@@ -12,13 +12,14 @@
     "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
+    "version": "0.11.0-alpha.1",
     "objects": {
         "meshType": [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-            "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
-            "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
-            "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
-            "{4EA87376-3ECE-438B-BF12-3479733DED46}"
+            "{202c5db1-a56d-4004-9cad-baafd8899406}",
+            "{6a057fdc-b355-11e3-95be-fd84a7ffcb88}",
+            "{f26feba3-aded-494b-b9e9-b2bbcbe298e1}",
+            "{4ea87376-3ece-438b-bf12-3479733ded46}"
         ],
         "main": true,
         "group": "Data Selection",
@@ -62,9 +63,9 @@
     "fixed_contours": {
         "main": true,
         "label": "Fixed Contours",
-        "value": "0.0",
+        "value": "",
         "optional": true,
-        "enabled": true
+        "enabled": false
     },
     "max_distance": {
         "enabled": true,

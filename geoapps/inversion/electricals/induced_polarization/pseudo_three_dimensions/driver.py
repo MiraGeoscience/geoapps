@@ -1,13 +1,15 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-import os
+from __future__ import annotations
+
 import sys
 from copy import deepcopy
+from pathlib import Path
 
 import numpy as np
 from geoh5py.data import Data
@@ -54,15 +56,11 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
         ifile = InducedPolarization2DParams(forward_only=forward_only).input_file
 
         with self.workspace.open(mode="r+"):
-            self.inversion_window = InversionWindow(
-                self.workspace, self.pseudo3d_params
-            )
-            self.inversion_data = InversionData(
-                self.workspace, self.pseudo3d_params, self.inversion_window.window
-            )
+            self._window = InversionWindow(self.workspace, self.pseudo3d_params)
+            self._inversion_data = InversionData(self.workspace, self.pseudo3d_params)
 
-            self.inversion_topography = InversionTopography(
-                self.workspace, self.pseudo3d_params, self.inversion_data, self.window
+            self._inversion_topography = InversionTopography(
+                self.workspace, self.pseudo3d_params
             )
 
             xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
@@ -83,10 +81,7 @@ class InducedPolarizationPseudo3DDriver(LineSweepDriver):
                 if trial["status"] != "pending":
                     continue
 
-                filepath = os.path.join(
-                    self.working_directory,  # pylint: disable=E1101
-                    f"{uuid}.ui.geoh5",
-                )
+                filepath = Path(self.working_directory) / f"{uuid}.ui.geoh5"
                 with Workspace(filepath) as iter_workspace:
                     receiver_entity = extract_dcip_survey(
                         iter_workspace,

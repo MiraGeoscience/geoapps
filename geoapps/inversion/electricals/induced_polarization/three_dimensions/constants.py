@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -11,11 +11,13 @@ from uuid import UUID
 
 from geoh5py.objects.surveys.direct_current import PotentialElectrode
 
+import geoapps
 from geoapps import assets_path
 from geoapps.inversion import default_ui_json as base_default_ui_json
 
 inversion_defaults = {
-    "title": "Induced Polarization 3D inversion",
+    "version": geoapps.__version__,
+    "title": "Induced Polarization (IP) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -24,7 +26,6 @@ inversion_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": True,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
@@ -38,14 +39,6 @@ inversion_defaults = {
     "lower_bound": None,
     "upper_bound": None,
     "output_tile_files": False,
-    "ignore_values": None,
-    "detrend_order": None,
-    "detrend_type": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "inversion_style": "voxel",
     "chi_factor": 1.0,
     "initial_beta_ratio": 1e1,
@@ -57,9 +50,9 @@ inversion_defaults = {
     "max_cg_iterations": 30,
     "tol_cg": 1e-4,
     "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
+    "length_scale_x": 1.0,
+    "length_scale_y": 1.0,
+    "length_scale_z": 1.0,
     "s_norm": 0.0,
     "x_norm": 2.0,
     "y_norm": 2.0,
@@ -73,7 +66,7 @@ inversion_defaults = {
     "coolEps_q": True,
     "coolEpsFact": 1.2,
     "beta_search": False,
-    "sens_wts_threshold": 1e-3,
+    "sens_wts_threshold": 0.001,
     "every_iteration_bool": False,
     "parallelized": True,
     "n_cpu": None,
@@ -93,7 +86,8 @@ inversion_defaults = {
 }
 
 forward_defaults = {
-    "title": "Induced Polarization 3D forward",
+    "version": geoapps.__version__,
+    "title": "Induced Polarization (IP) 3D Forward",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -102,7 +96,6 @@ forward_defaults = {
     "topography_object": None,
     "topography": None,
     "data_object": None,
-    "resolution": None,
     "z_from_topo": True,
     "receivers_radar_drape": None,
     "receivers_offset_z": None,
@@ -112,11 +105,6 @@ forward_defaults = {
     "conductivity_model": 1e-3,
     "starting_model": None,
     "output_tile_files": False,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "parallelized": True,
     "n_cpu": None,
     "tile_spatial": 1,
@@ -129,44 +117,10 @@ forward_defaults = {
     "run_command": "geoapps.inversion.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
-inversion_ui_json = {
-    "chargeability_channel_bool": True,
 }
 
-forward_ui_json = {
-    "starting_model": {
-        "association": "Cell",
-        "dataType": "Float",
-        "group": "Mesh and Models",
-        "main": True,
-        "isValue": False,
-        "parent": "mesh",
-        "label": "Chargeability (V/V)",
-        "property": None,
-        "value": 0.0,
-    },
-    "gradient_type": "total",
-    "alpha_s": 1.0,
-    "alpha_x": 1.0,
-    "alpha_y": 1.0,
-    "alpha_z": 1.0,
-    "s_norm": 0.0,
-    "x_norm": 2.0,
-    "y_norm": 2.0,
-    "z_norm": 2.0,
-}
 default_ui_json = {
-    "title": "Induced Polarization 3D inversion",
+    "title": "Induced Polarization (IP) 3D Inversion",
     "documentation": "https://geoapps.readthedocs.io/en/stable/content/applications/dcip_inversion.html",
     "icon": "PotentialElectrode",
     "inversion_type": "induced polarization 3d",
@@ -208,19 +162,21 @@ default_ui_json = {
     "starting_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": False,
         "parent": "mesh",
         "label": "Initial Chargeability (V/V)",
         "property": None,
+        "min": 0.0,
+        "max": 10000.0,
         "value": 0.0,
     },
     "reference_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
         "main": True,
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Reference Chargeability (V/V)",
@@ -230,7 +186,7 @@ default_ui_json = {
     "conductivity_model": {
         "association": ["Cell", "Vertex"],
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "main": True,
         "isValue": True,
         "parent": "mesh",
@@ -242,7 +198,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Lower bound (V/V)",
@@ -255,7 +211,7 @@ default_ui_json = {
         "association": ["Cell", "Vertex"],
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and Models",
+        "group": "Mesh and models",
         "isValue": True,
         "parent": "mesh",
         "label": "Upper bound (V/V",
@@ -264,9 +220,6 @@ default_ui_json = {
         "value": 100.0,
         "enabled": False,
     },
-    "resolution": None,
-    "detrend_order": None,
-    "detrend_type": None,
     "receivers_offset_z": {
         "group": "Data pre-processing",
         "label": "Z static offset",
@@ -311,12 +264,6 @@ app_initializer = {
     "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
     "starting_model": 1e-4,
     "conductivity_model": 0.1,
-    "resolution": None,
-    "window_center_x": None,
-    "window_center_y": None,
-    "window_width": None,
-    "window_height": None,
-    "window_azimuth": None,
     "octree_levels_topo": [0, 0, 4, 4],
     "octree_levels_obs": [4, 4, 4, 4],
     "depth_core": 1200.0,
