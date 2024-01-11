@@ -115,7 +115,7 @@ class InversionModelCollection:
 
     @property
     def starting(self):
-        mstart = self._starting.model.copy()
+        mstart = self._starting.model
 
         if mstart is not None and self.is_sigma:
             mstart = mstart.copy()
@@ -125,7 +125,7 @@ class InversionModelCollection:
 
     @property
     def reference(self):
-        mref = self._reference.model.copy()
+        mref = self._reference.model
 
         if self.driver.params.forward_only:
             return mref
