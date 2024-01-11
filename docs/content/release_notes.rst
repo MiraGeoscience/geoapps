@@ -6,7 +6,9 @@ Release 0.11.0 (2023-10-04)
 
 **(Major Release)**
 
-New features:
+New features
+^^^^^^^^^^^^
+
 - GEOPY-715: Add Joint survey inversion: multi-surveys, single physical property.
 - GEOPY-750: Add frequency-domain 3D inversion.
 - GEOPY-787: Add Joint Cross Gradient inversion: up to 3 physical properties.
@@ -16,7 +18,9 @@ New features:
 - GEOPY-1059 : Add octree refinement along curve path.
 
 
-Inversion updates:
+Inversion updates
+^^^^^^^^^^^^^^^^^
+
 - GEOPY-74: Update SimPEG from v0.15.0 to v0.19.0.
 - GEOPY-267: Save command log to inversion group.
 - GEOPY-328: Replace 1D inversion models from surface to DrapeModel object.
@@ -28,13 +32,17 @@ Inversion updates:
 - GEOPY-927: Allow to run dcip-2D inversion from existing mesh.
 - GEOPY-1021: Remove data windowing from ui.json.
 
-General Feature updates:
+General Feature updates
+^^^^^^^^^^^^^^^^^^^^^^^
+
 - GEOPY-767, 994: Migrate and refactor Peak Finder to separate repository.
 - GEOPY-961: Use Qt web window for Dash applications.
 - GEOPY-1100, 1020: Fix deprecation warnings.
 - GEOPY-1059: Re-implementation of radial and surface refinement.
 
-UI.json features:
+UI.json features
+^^^^^^^^^^^^^^^^
+
 - GEOPY-830: Use of pathlib.Path for file paths.
 - GEOPY-875: Add geoapps 'version' identifier to all applications.
 
@@ -65,14 +73,14 @@ Release 0.9.1 (2022-12-13)
 
 This release fixes some of the issues encountered since releasing v0.9.0.
 
--GEOPY-697, 694, 685: Better handling of Curve entity in inversions UI.
--GEOPY-690: Re-implementation of the Z from topo option for DC-IP and MT inversions. Source and receivers are no longer draped onto the active (discretized) topography. To reduce numerical artifacts, the active set is instead augmented to include cells intercepted by receivers locations. The drape on top remains optional as for all other methods.
--GEOPY-397: Re-simulation of tensor gravity and magnetics in the Flin Flon demo project.
+- GEOPY-697, 694, 685: Better handling of Curve entity in inversions UI.
+- GEOPY-690: Re-implementation of the Z from topo option for DC-IP and MT inversions. Source and receivers are no longer draped onto the active (discretized) topography. To reduce numerical artifacts, the active set is instead augmented to include cells intercepted by receivers locations. The drape on top remains optional as for all other methods.
+- GEOPY-397: Re-simulation of tensor gravity and magnetics in the Flin Flon demo project.
 
 Also included are SimPEG specific changes:
 
--Fix error in the IRLS weights for MVI using the "total" gradient option.
--Fix error in the stashed regularization operator introduced in v0.9.0
+- Fix error in the IRLS weights for MVI using the "total" gradient option.
+- Fix error in the stashed regularization operator introduced in v0.9.0
 
 
 Release 0.9.0 (2022-10-28)
@@ -92,6 +100,7 @@ This release focuses on SimPEG DC/IP 2D inversion as well as a revamp of all inv
 - GEOPY-613: Allow for TEM survey entities as input for SimPEG EM1D inversions.
 
 New or revamped applications:
+
 - GEOPY-579: New BlockModel creation application.
 - GEOPY-592: Conversion of Clustering to Dash (Plotly) app with ui.json implementation.
 - GEOPY-588: Conversion of Scatter Plot to Dash (Plotly) app with ui.json implementation.
