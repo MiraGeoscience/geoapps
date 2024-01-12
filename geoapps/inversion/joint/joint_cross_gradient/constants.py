@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -7,12 +7,14 @@
 
 from __future__ import annotations
 
+import geoapps
 from geoapps.inversion.constants import validations as base_validations
 from geoapps.inversion.joint.constants import default_ui_json as joint_default_ui_json
 
 inversion_defaults = {
     "title": "SimPEG Joint Cross Gradient Inversion",
     "inversion_type": "joint cross gradient",
+    "version": geoapps.__version__,
     "geoh5": None,  # Must remain at top of list for notebook app initialization
     "forward_only": False,
     "topography_object": None,

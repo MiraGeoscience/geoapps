@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -101,10 +101,10 @@ class BaseDriver(ABC):
             validations=driver_class._validations,  # pylint: disable=protected-access
         )
 
-        version = Version.parse(ifile.data.get("version", None))
-        if version is not None and version.compare(__version__) == 1:
+        version = ifile.data.get("version", None)
+        if version is not None and Version.parse(version).compare(__version__) == 1:
             warn(
-                f"Input file version '{version}' is ahead of the "
+                f"Input file version '{Version.parse(version)}' is ahead of the "
                 f"installed 'geoapps v{__version__}'. "
                 "Proceed with caution."
             )

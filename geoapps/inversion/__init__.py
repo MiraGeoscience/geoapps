@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -45,7 +45,7 @@ DRIVER_MAP = {
         "JointSurveyDriver",
     ),
     "fem": (
-        "geoapps.inversion.airborne_electromagnetics.frequency_domain.driver",
+        "geoapps.inversion.electromagnetics.frequency_domain.driver",
         "FrequencyDomainElectromagneticsDriver",
     ),
     "joint cross gradient": (

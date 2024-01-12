@@ -15,7 +15,7 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
-call !MY_CONDA_EXE! run -n base pip install conda-lock[pip_support]
+call !MY_CONDA_EXE! install -n base conda-lock networkx ruamel.yaml tomli
 
 if !errorlevel! neq 0 (
   echo "** ERROR: Installation failed **"

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -6,6 +6,7 @@
 #  (see LICENSE file at the root of this source code package).
 
 __version__ = "0.12.0-alpha.1"
+
 import os
 import warnings
 from pathlib import Path

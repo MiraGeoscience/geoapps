@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -217,7 +217,7 @@ def tile_locations(
 
         np.random.seed(0)
         # Cluster
-        # TODO turn off filter once sklearn has dealt with the issue causeing the warning
+        # TODO turn off filter once sklearn has dealt with the issue causing the warning
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             from sklearn.cluster import KMeans

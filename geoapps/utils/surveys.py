@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -19,6 +19,7 @@ import numpy as np
 from discretize import TensorMesh, TreeMesh
 from geoh5py.data import FloatData
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.objects.surveys.electromagnetics.base import LargeLoopGroundEMSurvey
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
@@ -38,6 +39,18 @@ def get_containing_cells(
         inds = mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
             data.locations
         )
+
+        if isinstance(data.entity, LargeLoopGroundEMSurvey):
+            line_ind = []
+            transmitters = data.entity.transmitters
+            for cell in transmitters.cells:
+                line_ind.append(
+                    mesh.get_cells_along_line(
+                        transmitters.vertices[cell[0], :],
+                        transmitters.vertices[cell[1], :],
+                    )
+                )
+            inds = np.unique(np.r_[inds, np.hstack(line_ind)])
 
     elif isinstance(mesh, TensorMesh):
         locations = data.drape_locations(get_unique_locations(data.survey))

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -34,7 +34,6 @@ class InversionBaseParams(BaseParams):
         self,
         input_file: InputFile | None = None,
         forward_only: bool = False,
-        out_group: SimPEGGroup | None = None,
         **kwargs,
     ):
         self._forward_only: bool = (
@@ -112,8 +111,6 @@ class InversionBaseParams(BaseParams):
             )
 
         super().__init__(input_file=input_file, **kwargs)
-
-        self.out_group = out_group
 
         if not self.forward_only:
             for key in self.__dict__:
