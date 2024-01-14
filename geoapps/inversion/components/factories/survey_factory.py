@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2023-2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -189,10 +189,18 @@ class SurveyFactory(SimPEGFactory):
             dobs = []
             uncerts = []
 
-            data_stack = [np.vstack(list(k.values())) for k in data.observed.values()]
-            uncert_stack = [
-                np.vstack(list(k.values())) for k in data.uncertainties.values()
-            ]
+            data_stack = []
+            uncert_stack = []
+
+            for val in data.observed.values():
+                data_vals = np.vstack(list(val.values()))
+                data_vals[np.isnan(data_vals)] = self.dummy
+                data_stack.append(data_vals)
+            for val in data.uncertainties.values():
+                uncert_vals = np.vstack(list(val.values()))
+                uncert_vals[np.isnan(uncert_vals)] = np.inf
+                uncert_stack.append(uncert_vals)
+
             for order in self.ordering:
                 channel_id, component_id, rx_id = order
                 dobs.append(data_stack[component_id][channel_id, rx_id])

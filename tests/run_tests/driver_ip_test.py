@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2023-2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
 )
@@ -77,6 +78,11 @@ def test_ip_3d_run(
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
 
+        # Set some data as nan
+        vals = potential.values
+        vals[0] = np.nan
+        potential.values = vals
+
         # Run the inverse
         np.random.seed(0)
         params = InducedPolarization3DParams(
@@ -106,11 +112,17 @@ def test_ip_3d_run(
             coolingRate=1,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+        assert survey[0].dobs[0] == survey[0].dummy
     driver = InducedPolarization3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.out_group.uid
     )
+    assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+    assert np.array([o is not np.nan for o in output["phi_m"]]).any()
     if geoh5.open():
         output["data"] = potential.values
     if pytest:
