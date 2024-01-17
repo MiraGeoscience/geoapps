@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "geoapps"
-version = "0.11.1"
+version = "0.11.1-rc.1"
 license = "MIT"
 description = "Open-sourced Applications in Geoscience"
 authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
