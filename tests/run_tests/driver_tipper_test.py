@@ -10,8 +10,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+from geoh5py.groups import RootGroup
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.natural_sources import TipperParams
 from geoapps.inversion.natural_sources.tipper.driver import TipperDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -68,7 +70,10 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
         workpath = tmp_path.parent / "test_tipper_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
-        survey = geoh5.get_entity("survey")[0]
+        # survey = geoh5.get_entity("survey")[0]
+        survey = [
+            s for s in geoh5.get_entity("survey") if isinstance(s.parent, RootGroup)
+        ][0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
 
@@ -99,6 +104,10 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
                     }
                 )
                 uncertainties[f"{cname} uncertainties"].append(uncert)
+        # Set some data as nan
+        vals = survey.get_data("Iteration_0_txz_real_[0]")[0].values
+        vals[0] = np.nan
+        survey.get_data("Iteration_0_txz_real_[0]")[0].values = vals
 
         data_groups = survey.add_components_data(data)
         uncert_groups = survey.add_components_data(uncertainties)
@@ -140,12 +149,19 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
         driver = TipperDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
         output["data"] = orig_tyz_real_1
         if pytest:
             check_target(output, target_run, tolerance=0.5)

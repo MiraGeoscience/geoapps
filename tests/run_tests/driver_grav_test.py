@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -100,6 +101,11 @@ def test_gravity_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
+
     driver = GravityDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     assert driver.params.data_object.uid != gz.parent.uid
@@ -109,6 +115,9 @@ def test_gravity_run(
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
+
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
 
         residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
         assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."

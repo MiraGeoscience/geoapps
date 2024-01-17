@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.natural_sources.magnetotellurics.driver import (
     MagnetotelluricsDriver,
 )
@@ -119,6 +120,17 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
                     uncert.copy(parent=survey)
                 )
 
+        # Set some data as nan
+        vals = (
+            geoh5.get_entity(survey.uid)[0]
+            .get_data("Iteration_0_zxx_real_[0]")[0]
+            .values
+        )
+        vals[0] = np.nan
+        geoh5.get_entity(survey.uid)[0].get_data("Iteration_0_zxx_real_[0]")[
+            0
+        ].values = vals
+
         data_groups = survey.add_components_data(data)
         uncert_groups = survey.add_components_data(uncertainties)
 
@@ -157,12 +169,19 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+        data = InversionData(geoh5, params)
+        simpeg_survey = data.create_survey()
+
+        assert simpeg_survey[0].dobs[0] == simpeg_survey[0].dummy
+
         driver = MagnetotelluricsDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
         output["data"] = orig_zyy_real_1
         if pytest:
             check_target(output, target_run, tolerance=0.5)
@@ -181,7 +200,6 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
         starting_model=0.01,
         conductivity_model=1e-2,
         max_global_iterations=0,
-        # store_sensitivities="ram",
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")

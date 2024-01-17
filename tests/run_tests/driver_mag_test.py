@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.potential_fields import MagneticScalarParams
 from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
     MagneticScalarDriver,
@@ -75,10 +76,14 @@ def test_susceptibility_run(
 
     with Workspace(workpath) as geoh5:
         tmi = geoh5.get_entity("Iteration_0_tmi")[0]
-        orig_tmi = tmi.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
         inducing_field = (50000.0, 90.0, 0.0)
+
+        vals = tmi.values
+        vals[0] = np.nan
+        tmi.values = vals
+        orig_tmi = tmi.values.copy()
 
         # Run the inverse
         np.random.seed(0)
@@ -108,12 +113,19 @@ def test_susceptibility_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
+
     driver = MagneticScalarDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
         output["data"] = orig_tmi
         assert (
             run_ws.get_entity("Iteration_1_tmi")[0].entity_type.uid
