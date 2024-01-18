@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -27,7 +27,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 47.522882323952054, "phi_d": 364.3, "phi_m": 443.3}
+target_run = {"data_norm": 165.30746832133494, "phi_d": 37140, "phi_m": 7111}
 np.random.seed(0)
 
 
@@ -109,9 +109,9 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
                     uncert.copy(parent=survey)
                 )
 
-        vals = survey.get_data("Iteration_0_z_real_[0]")[0].values
+        vals = data["z_real"][0].values
         vals[0] = np.nan
-        survey.get_data("Iteration_0_z_real_[0]")[0].values = vals
+        data["z_real"][0].values = vals
 
         data_groups = survey.add_components_data(data)
         uncert_groups = survey.add_components_data(uncertainties)
@@ -123,7 +123,7 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             data_kwargs[f"{comp}_channel"] = data_group.uid
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
 
-        orig_z_real_1 = geoh5.get_entity("Iteration_0_z_real_[0]")[0].values
+        orig_z_imag_1 = geoh5.get_entity("Iteration_0_z_imag_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
@@ -148,6 +148,7 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             prctile=100,
             coolingRate=3,
             chi_factor=0.25,
+            max_line_search_iterations=1,
             store_sensitivities="ram",
             sens_wts_threshold=1.0,
             **data_kwargs,
@@ -169,7 +170,7 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         assert np.array([o is not np.nan for o in output["phi_d"]]).any()
         assert np.array([o is not np.nan for o in output["phi_m"]]).any()
 
-        output["data"] = orig_z_real_1
+        output["data"] = orig_z_imag_1
 
         assert (
             run_ws.get_entity("Iteration_1_z_imag_[1]")[0].entity_type.uid

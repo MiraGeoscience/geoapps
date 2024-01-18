@@ -174,7 +174,6 @@ plugins = [
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov my_app --cov-report html --cov-report term-missing:skip-covered"
 
 [tool.coverage.run]
 branch = true
@@ -189,7 +188,6 @@ exclude_lines = [
     "pragma: no cover"
 ]
 
-#fail_under = 80
 
 [tool.coverage.html]
 skip_empty = true

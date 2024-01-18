@@ -192,14 +192,16 @@ class SurveyFactory(SimPEGFactory):
             data_stack = []
             uncert_stack = []
 
-            for val in data.observed.values():
-                data_vals = np.vstack(list(val.values()))
+            for key in data.observed:
+                data_vals = np.vstack(list(data.observed[key].values()))
+
+                # Deal with uncertainties first
+                uncert_vals = np.vstack(list(data.uncertainties[key].values()))
+                uncert_vals[np.isnan(data_vals)] = np.inf
+                uncert_stack.append(uncert_vals)
+
                 data_vals[np.isnan(data_vals)] = self.dummy
                 data_stack.append(data_vals)
-            for val in data.uncertainties.values():
-                uncert_vals = np.vstack(list(val.values()))
-                uncert_vals[np.isnan(uncert_vals)] = np.inf
-                uncert_stack.append(uncert_vals)
 
             for order in self.ordering:
                 channel_id, component_id, rx_id = order
