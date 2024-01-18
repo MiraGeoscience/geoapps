@@ -12,7 +12,9 @@ from pathlib import Path
 
 import numpy as np
 from geoh5py import Workspace
+from geoh5py.groups import RootGroup
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.electromagnetics.frequency_domain.driver import (
     FrequencyDomainElectromagneticsDriver,
 )
@@ -71,7 +73,13 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         workpath = tmp_path.parent / "test_fem_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
-        survey = geoh5.get_entity("Airborne_rx")[0].copy(copy_children=False)
+        # survey = geoh5.get_entity("Airborne_rx")[0].copy(copy_children=False)
+        survey = [
+            s
+            for s in geoh5.get_entity("Airborne_rx")
+            if isinstance(s.parent, RootGroup)
+        ][0]
+
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
         data = {}
@@ -93,15 +101,17 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
                 uncert = survey.add_data(
                     {
                         f"uncertainty_{comp}_[{ind}]": {
-                            "values": np.ones_like(abs_val)
-                            * freq
-                            / 200.0  # * 2**(np.abs(ind-1))
+                            "values": np.ones_like(abs_val) * freq / 200.0
                         }
                     }
                 )
                 uncertainties[f"{cname} uncertainties"].append(
                     uncert.copy(parent=survey)
                 )
+
+        vals = survey.get_data("Iteration_0_z_real_[0]")[0].values
+        vals[0] = np.nan
+        survey.get_data("Iteration_0_z_real_[0]")[0].values = vals
 
         data_groups = survey.add_components_data(data)
         uncert_groups = survey.add_components_data(uncertainties)
@@ -143,6 +153,12 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
+
         driver = FrequencyDomainElectromagneticsDriver(params)
         driver.run()
 
@@ -150,6 +166,9 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
+
         output["data"] = orig_z_real_1
 
         assert (

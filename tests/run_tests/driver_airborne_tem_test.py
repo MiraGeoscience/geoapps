@@ -139,13 +139,14 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
         topography,
         survey,
         data_kwargs,
-        orig_dBzdt,
+        _,
     ) = setup_airborne_tem_run(tmp_path, pytest)
     with Workspace(workpath) as geoh5:
         # Set some data as nan
         vals = geoh5.get_entity(survey.uid)[0].get_data("Iteration_0_z_[0]")[0].values
         vals[0] = np.nan
         geoh5.get_entity(survey.uid)[0].get_data("Iteration_0_z_[0]")[0].values = vals
+        orig_dBzdt = vals
 
         # Run the inverse
         np.random.seed(0)
