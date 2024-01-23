@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -98,6 +98,12 @@ default_ui_json.update(
             "label": "Minimum Depth (m)",
             "main": True,
             "value": 500.0,
+        },
+        "diagonal_balance": {
+            "group": "Basic",
+            "label": "UBC Compatible",
+            "main": True,
+            "value": True,
         },
         "minimum_level": {
             "enabled": True,

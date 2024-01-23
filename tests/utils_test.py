@@ -1,9 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -111,13 +106,14 @@ def test_drape_to_octree(tmp_path: Path):
         mesh_type="TREE",
     )
     tree = OctreeDriver.refine_tree_from_points(
-        tree, locs, levels=[4, 2], finalize=False
+        tree, locs, levels=[4, 2], diagonal_balance=False, finalize=False
     )
     topography = Points.create(ws, vertices=topo)
     tree = OctreeDriver.refine_tree_from_surface(
         tree,
         topography,
         levels=[2, 2],
+        diagonal_balance=False,
         finalize=True,
     )
     # interp and save common models into the octree

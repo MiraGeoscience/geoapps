@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -23,13 +23,23 @@ from geoh5py.workspace import Workspace
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
+from geoapps.octree_creation.constants import app_initializer
+from geoapps.octree_creation.driver import OctreeDriver
+from geoapps.octree_creation.params import OctreeParams
 from geoapps.utils import warn_module_not_found
 
-from . import OctreeParams, app_initializer
-from .driver import OctreeDriver
-
 with warn_module_not_found():
-    from ipywidgets import Dropdown, FloatText, Label, Layout, Text, VBox, Widget
+    from ipywidgets import (
+        Checkbox,
+        Dropdown,
+        FloatText,
+        IntText,
+        Label,
+        Layout,
+        Text,
+        VBox,
+        Widget,
+    )
     from ipywidgets.widgets.widget_selection import TraitError
 
 
@@ -46,6 +56,8 @@ class OctreeMesh(ObjectDataSelection):
     _depth_core = None
     _horizontal_padding = None
     _vertical_padding = None
+    _diagonal_balance = None
+    _minimum_level = None
 
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
@@ -79,6 +91,9 @@ class OctreeMesh(ObjectDataSelection):
                         Label("Padding distance"),
                         self.horizontal_padding,
                         self.vertical_padding,
+                        Label("Basic"),
+                        self.diagonal_balance,
+                        self.minimum_level,
                     ],
                     layout=Layout(border="solid"),
                 ),
@@ -179,6 +194,28 @@ class OctreeMesh(ObjectDataSelection):
                 description="Vertical (m)",
             )
         return self._vertical_padding
+
+    @property
+    def diagonal_balance(self) -> Checkbox:
+        """
+        Widget controlling the diagonal balance.
+        """
+        if getattr(self, "_diagonal_balance", None) is None:
+            self._diagonal_balance = Checkbox(
+                description="UBC compatible",
+            )
+        return self._diagonal_balance
+
+    @property
+    def minimum_level(self) -> IntText:
+        """
+        Widget controlling the minimum refinement level.
+        """
+        if getattr(self, "_minimum_level", None) is None:
+            self._minimum_level = IntText(
+                description="Minimum refinement level",
+            )
+        return self._minimum_level
 
     @property
     def workspace(self):

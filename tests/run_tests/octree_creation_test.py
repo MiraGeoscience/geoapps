@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -19,7 +19,9 @@ from geoh5py.workspace import Workspace
 from scipy.spatial import Delaunay
 
 from geoapps.driver_base.utils import treemesh_2_octree
+from geoapps.octree_creation import OctreeParams
 from geoapps.octree_creation.application import OctreeDriver, OctreeMesh
+from geoapps.shared_utils.utils import octree_2_treemesh
 from geoapps.utils.testing import get_output_workspace
 
 # pylint: disable=redefined-outer-name
@@ -88,6 +90,7 @@ def test_create_octree_radial(tmp_path: Path, setup_test_octree):
             treemesh,
             points,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -113,6 +116,7 @@ def test_create_octree_radial(tmp_path: Path, setup_test_octree):
             w_cell_size=cell_sizes[2],
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
+            diagonal_balance=False,
             depth_core=depth_core,
             **refinements,
         )
@@ -139,11 +143,16 @@ def test_create_octree_curve(tmp_path: Path, setup_test_octree):
     with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
         curve = Curve.create(workspace, vertices=locations)
         curve.remove_cells([-1])
-        treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
+        treemesh.refine(
+            treemesh.max_level - minimum_level + 1,
+            diagonal_balance=False,
+            finalize=False,
+        )
         treemesh = OctreeDriver.refine_tree_from_curve(
             treemesh,
             curve,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -167,6 +176,7 @@ def test_create_octree_curve(tmp_path: Path, setup_test_octree):
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
             depth_core=depth_core,
+            diagonal_balance=False,
             **refinements,
         )
         app.trigger_click(None)
@@ -191,11 +201,16 @@ def test_create_octree_surface(tmp_path: Path, setup_test_octree):
 
     with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
         points = Points.create(workspace, vertices=locations)
-        treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
+        treemesh.refine(
+            treemesh.max_level - minimum_level + 1,
+            diagonal_balance=False,
+            finalize=False,
+        )
         treemesh = OctreeDriver.refine_tree_from_surface(
             treemesh,
             points,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -222,6 +237,7 @@ def test_create_octree_surface(tmp_path: Path, setup_test_octree):
             horizontal_padding=horizontal_padding,
             vertical_padding=vertical_padding,
             depth_core=depth_core,
+            diagonal_balance=False,
             **refinements,
         )
         app.trigger_click(None)
@@ -270,11 +286,16 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
             vertices=np.c_[x.flatten(), y.flatten(), z.flatten()],
             cells=surf.simplices,
         )
-        treemesh.refine(treemesh.max_level - minimum_level + 1, finalize=False)
+        treemesh.refine(
+            treemesh.max_level - minimum_level + 1,
+            diagonal_balance=False,
+            finalize=False,
+        )
         treemesh = OctreeDriver.refine_tree_from_triangulation(
             treemesh,
             sphere,
             str2list(refinement),
+            diagonal_balance=False,
             finalize=True,
         )
         octree = treemesh_2_octree(workspace, treemesh, name="Octree_Mesh")
@@ -306,3 +327,74 @@ def test_create_octree_triangulation(tmp_path: Path, setup_test_octree):
         with Workspace(get_output_workspace(tmp_path)) as workspace:
             rec_octree = workspace.get_entity("Octree_Mesh")[0]
             compare_entities(octree, rec_octree, ignore=["_uid"])
+
+
+@pytest.mark.parametrize(
+    "diagonal_balance, exp_values, exp_counts",
+    [(True, [0, 1], [22, 10]), (False, [0, 1, 2], [22, 8, 2])],
+)
+def test_octree_diagonal_balance(
+    tmp_path: Path, diagonal_balance, exp_values, exp_counts
+):
+    workspace = Workspace.create(tmp_path / "testDiagonalBalance.geoh5")
+    with workspace.open(mode="r+"):
+        point = [0, 0, 0]
+        points = Points.create(workspace, vertices=np.array([[150, 0, 150], point]))
+
+        # Repeat the creation using the app
+        params_dict = {
+            "geoh5": workspace,
+            "objects": str(points.uid),
+            "u_cell_size": 10.0,
+            "v_cell_size": 10.0,
+            "w_cell_size": 10.0,
+            "horizontal_padding": 500.0,
+            "vertical_padding": 200.0,
+            "depth_core": 400.0,
+            "Refinement A object": points.uid,
+            "Refinement A levels": "1",
+            "Refinement A type": "radial",
+            "Refinement A distance": 200,
+        }
+
+        params = OctreeParams(
+            **params_dict, diagonal_balance=diagonal_balance, ga_group_name="mesh"
+        )
+        filename = "diag_balance.ui.json"
+
+        params.write_input_file(name=filename, path=tmp_path, validate=False)
+
+        OctreeDriver.start(tmp_path / filename)
+
+    with workspace.open(mode="r"):
+        results = []
+        treemesh = octree_2_treemesh(workspace.get_entity("mesh")[0])
+
+        ind = treemesh._get_containing_cell_indexes(  # pylint: disable=protected-access
+            point
+        )
+        starting_cell = treemesh[ind]
+
+        level = starting_cell._level  # pylint: disable=protected-access
+        for first_neighbor in starting_cell.neighbors:
+            neighbors = []
+            for neighbor in treemesh[first_neighbor].neighbors:
+                if isinstance(neighbor, list):
+                    neighbors += neighbor
+                else:
+                    neighbors.append(neighbor)
+
+            for second_neighbor in neighbors:
+                compare_cell = treemesh[second_neighbor]
+                if set(starting_cell.nodes) & set(compare_cell.nodes):
+                    results.append(
+                        np.abs(
+                            level
+                            - compare_cell._level  # pylint: disable=protected-access
+                        )
+                    )
+
+        values, counts = np.unique(results, return_counts=True)
+
+        assert (values == np.array(exp_values)).all()
+        assert (counts == np.array(exp_counts)).all()

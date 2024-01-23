@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -81,6 +81,7 @@ def test_survey_data(tmp_path: Path):
             mesh,
             test_topo_object,
             levels=[2],
+            diagonal_balance=False,
             finalize=True,
         )
 

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -69,6 +69,7 @@ class BaseJointDriver(InversionDriver):
                 group = self.workspace.get_entity(group.uid)[0]
                 ui_json = group.options
                 ui_json["geoh5"] = self.workspace
+                ui_json["workspace_geoh5"] = None
 
                 ifile = InputFile(ui_json=ui_json)
                 mod_name, class_name = DRIVER_MAP.get(ifile.data["inversion_type"])
