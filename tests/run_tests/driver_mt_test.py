@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2023-2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -141,8 +141,6 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
             data_kwargs[f"{comp}_channel"] = data_group.uid
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
 
-        orig_zyy_real_1 = geoh5.get_entity("Iteration_0_zyy_real_[0]")[0].values
-
         # Run the inverse
         np.random.seed(0)
         params = MagnetotelluricsParams(
@@ -182,7 +180,14 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
         )
         assert np.array([o is not np.nan for o in output["phi_d"]]).any()
         assert np.array([o is not np.nan for o in output["phi_m"]]).any()
-        output["data"] = orig_zyy_real_1
+
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_zyy_real_[0]")
+            if pred.parent.parent.name == "Magnetotellurics Inversion"
+        ][0]
+
+        output["data"] = predicted.values
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)

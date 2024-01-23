@@ -89,6 +89,10 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
             "z_imag": "z_imag",
         }
 
+        vals = geoh5.get_entity("Iteration_0_z_real_[0]")[0].values
+        vals[0] = np.nan
+        geoh5.get_entity("Iteration_0_z_real_[0]")[0].values = vals
+
         for comp, cname in components.items():
             data[cname] = []
             uncertainties[f"{cname} uncertainties"] = []
@@ -109,10 +113,6 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
                     uncert.copy(parent=survey)
                 )
 
-        vals = data["z_real"][0].values
-        vals[0] = np.nan
-        data["z_real"][0].values = vals
-
         data_groups = survey.add_components_data(data)
         uncert_groups = survey.add_components_data(uncertainties)
 
@@ -122,8 +122,6 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         ):
             data_kwargs[f"{comp}_channel"] = data_group.uid
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
-
-        orig_z_imag_1 = geoh5.get_entity("Iteration_0_z_imag_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
@@ -170,8 +168,12 @@ def test_fem_run(tmp_path: Path, max_iterations=1, pytest=True):
         assert np.array([o is not np.nan for o in output["phi_d"]]).any()
         assert np.array([o is not np.nan for o in output["phi_m"]]).any()
 
-        output["data"] = orig_z_imag_1
-
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_z_imag_[0]")
+            if pred.parent.parent.name == "Fem Inversion"
+        ][0]
+        output["data"] = predicted.values
         assert (
             run_ws.get_entity("Iteration_1_z_imag_[1]")[0].entity_type.uid
             == run_ws.get_entity("Observed_z_imag_[1]")[0].entity_type.uid

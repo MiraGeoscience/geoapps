@@ -27,9 +27,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 2.81018e-10,
-    "phi_d": 15400,
-    "phi_m": 718.9,
+    "data_norm": 5.216601671318962e-11,
+    "phi_d": 8963,
+    "phi_m": 384.9,
 }
 
 np.random.seed(0)
@@ -146,7 +146,6 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
         vals = geoh5.get_entity(survey.uid)[0].get_data("Iteration_0_z_[0]")[0].values
         vals[0] = np.nan
         geoh5.get_entity(survey.uid)[0].get_data("Iteration_0_z_[0]")[0].values = vals
-        orig_dBzdt = vals
 
         # Run the inverse
         np.random.seed(0)
@@ -192,7 +191,12 @@ def test_airborne_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
         assert np.array([o is not np.nan for o in output["phi_d"]]).any()
         assert np.array([o is not np.nan for o in output["phi_m"]]).any()
 
-        output["data"] = orig_dBzdt
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_z_[0]")
+            if pred.parent.parent.name == "Tdem Inversion"
+        ][0]
+        output["data"] = predicted.values
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2023-2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -24,7 +24,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_mvi_run = {"data_norm": 6.3559205278626525, "phi_d": 0.00448, "phi_m": 2.411e-06}
+target_mvi_run = {"data_norm": 2.9326291021254236, "phi_d": 0.00371, "phi_m": 1.426e-06}
 
 
 def test_magnetic_vector_fwr_run(
@@ -92,7 +92,6 @@ def test_magnetic_vector_run(
         vals = tmi.values
         vals[0] = np.nan
         tmi.values = vals
-        orig_tmi = tmi.values.copy()
 
         # Run the inverse
         params = MagneticVectorParams(
@@ -134,7 +133,13 @@ def test_magnetic_vector_run(
         )
         assert np.array([o is not np.nan for o in output["phi_d"]]).any()
         assert np.array([o is not np.nan for o in output["phi_m"]]).any()
-        output["data"] = orig_tmi
+
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_tmi")
+            if pred.parent.parent.name == "Magnetic vector Inversion"
+        ][0]
+        output["data"] = predicted.values
         if pytest:
             check_target(output, target_mvi_run)
             nan_ind = np.isnan(

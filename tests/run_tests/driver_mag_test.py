@@ -1,4 +1,4 @@
-#  Copyright (c) 2023 Mira Geoscience Ltd.
+#  Copyright (c) 2023-2024 Mira Geoscience Ltd.
 #
 #  This file is part of geoapps.
 #
@@ -23,7 +23,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 8.71227951689941, "phi_d": 18.42, "phi_m": 2.981e-06}
+target_run = {"data_norm": 2.9323357382980544, "phi_d": 14.05, "phi_m": 1.895e-06}
 
 
 def test_susceptibility_fwr_run(
@@ -83,7 +83,6 @@ def test_susceptibility_run(
         vals = tmi.values
         vals[0] = np.nan
         tmi.values = vals
-        orig_tmi = tmi.values.copy()
 
         # Run the inverse
         np.random.seed(0)
@@ -126,10 +125,22 @@ def test_susceptibility_run(
         )
         assert np.array([o is not np.nan for o in output["phi_d"]]).any()
         assert np.array([o is not np.nan for o in output["phi_m"]]).any()
-        output["data"] = orig_tmi
+
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_tmi")
+            if pred.parent.parent.name == "Magnetic scalar Inversion"
+        ][0]
+        output["data"] = predicted.values
+
+        observed = [
+            o
+            for o in run_ws.get_entity("Observed_tmi")
+            if o.parent.parent.name == "Magnetic scalar Inversion"
+        ][0]
         assert (
             run_ws.get_entity("Iteration_1_tmi")[0].entity_type.uid
-            == run_ws.get_entity("Observed_tmi")[0].entity_type.uid
+            == observed.entity_type.uid
         )
 
         if pytest:

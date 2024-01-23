@@ -25,7 +25,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.152105803389558, "phi_d": 31.56, "phi_m": 171.5}
+target_run = {"data_norm": 0.17688725848387252, "phi_d": 32.56, "phi_m": 155.5}
 
 np.random.seed(0)
 
@@ -136,8 +136,14 @@ def test_dc_3d_run(
     )
     assert np.array([o is not np.nan for o in output["phi_d"]]).any()
     assert np.array([o is not np.nan for o in output["phi_m"]]).any()
+
     if geoh5.open():
-        output["data"] = potential.values
+        predicted = [
+            pred
+            for pred in geoh5.get_entity("Iteration_0_dc")
+            if pred.parent.parent.name == "Direct current 3d Inversion"
+        ][0]
+        output["data"] = predicted.values
     if pytest:
         check_target(output, target_run)
 
