@@ -27,11 +27,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 target_run = {
     "data_norm": 6.265096125728355e-07,
-    "phi_d": 42.19,
-    "phi_m": 301.8,
+    "phi_d": 45.97,
+    "phi_m": 225.4,
 }
-
-np.random.seed(0)
 
 
 def test_ground_tem_fwr_run(
@@ -39,6 +37,7 @@ def test_ground_tem_fwr_run(
     n_grid_points=4,
     refinement=(2,),
 ):
+    np.random.seed(0)
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
