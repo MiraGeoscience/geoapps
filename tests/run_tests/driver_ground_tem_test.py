@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.electromagnetics.time_domain import (
     TimeDomainElectromagneticsParams,
 )
@@ -25,9 +26,9 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 5.95181e-7,
-    "phi_d": 53.94,
-    "phi_m": 241.1,
+    "data_norm": 6.265096125728355e-07,
+    "phi_d": 46.61,
+    "phi_m": 317.2,
 }
 
 np.random.seed(0)
@@ -38,6 +39,7 @@ def test_ground_tem_fwr_run(
     n_grid_points=4,
     refinement=(2,),
 ):
+    np.random.seed(0)
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -120,7 +122,9 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
                 name=f"dB{comp}dt uncertainties"
             )
 
-        orig_dBzdt = geoh5.get_entity("Iteration_0_z_[0]")[0].values
+        vals = survey.get_data("Iteration_0_z_[0]")[0].values
+        vals[0] = np.nan
+        survey.get_data("Iteration_0_z_[0]")[0].values = vals
 
         # Run the inverse
         np.random.seed(0)
@@ -147,11 +151,14 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
             coolingRate=2,
             max_cg_iterations=200,
             prctile=100,
-            # sens_wts_threshold=1.,
             store_sensitivities="ram",
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
 
     driver = TimeDomainElectromagneticsDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
@@ -159,7 +166,14 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
-        output["data"] = orig_dBzdt
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_z_[0]")
+            if pred.parent.parent.name == "Tdem Inversion"
+        ][0]
+        output["data"] = predicted.values
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)

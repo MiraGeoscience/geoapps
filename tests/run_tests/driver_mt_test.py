@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.natural_sources.magnetotellurics.driver import (
     MagnetotelluricsDriver,
 )
@@ -119,6 +120,17 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
                     uncert.copy(parent=survey)
                 )
 
+        # Set some data as nan
+        vals = (
+            geoh5.get_entity(survey.uid)[0]
+            .get_data("Iteration_0_zxx_real_[0]")[0]
+            .values
+        )
+        vals[0] = np.nan
+        geoh5.get_entity(survey.uid)[0].get_data("Iteration_0_zxx_real_[0]")[
+            0
+        ].values = vals
+
         data_groups = survey.add_components_data(data)
         uncert_groups = survey.add_components_data(uncertainties)
 
@@ -128,8 +140,6 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
         ):
             data_kwargs[f"{comp}_channel"] = data_group.uid
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
-
-        orig_zyy_real_1 = geoh5.get_entity("Iteration_0_zyy_real_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
@@ -157,13 +167,27 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+        data = InversionData(geoh5, params)
+        simpeg_survey = data.create_survey()
+
+        assert simpeg_survey[0].dobs[0] == simpeg_survey[0].dummy
+
         driver = MagnetotelluricsDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
-        output["data"] = orig_zyy_real_1
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
+
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_zyy_real_[0]")
+            if pred.parent.parent.name == "Magnetotellurics Inversion"
+        ][0]
+
+        output["data"] = predicted.values
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)
@@ -181,7 +205,6 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
         starting_model=0.01,
         conductivity_model=1e-2,
         max_global_iterations=0,
-        # store_sensitivities="ram",
         **data_kwargs,
     )
     params.write_input_file(path=tmp_path, name="Inv_run")

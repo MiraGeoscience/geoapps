@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.potential_fields import MagneticScalarParams
 from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
     MagneticScalarDriver,
@@ -22,7 +23,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 8.71227951689941, "phi_d": 18.42, "phi_m": 2.981e-06}
+target_run = {"data_norm": 2.9323357382980544, "phi_d": 14.05, "phi_m": 1.895e-06}
 
 
 def test_susceptibility_fwr_run(
@@ -75,10 +76,13 @@ def test_susceptibility_run(
 
     with Workspace(workpath) as geoh5:
         tmi = geoh5.get_entity("Iteration_0_tmi")[0]
-        orig_tmi = tmi.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
         inducing_field = (50000.0, 90.0, 0.0)
+
+        vals = tmi.values
+        vals[0] = np.nan
+        tmi.values = vals
 
         # Run the inverse
         np.random.seed(0)
@@ -108,16 +112,35 @@ def test_susceptibility_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
+
     driver = MagneticScalarDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with Workspace(driver.params.geoh5.h5file) as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
-        output["data"] = orig_tmi
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
+
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_tmi")
+            if pred.parent.parent.name == "Magnetic scalar Inversion"
+        ][0]
+        output["data"] = predicted.values
+
+        observed = [
+            o
+            for o in run_ws.get_entity("Observed_tmi")
+            if o.parent.parent.name == "Magnetic scalar Inversion"
+        ][0]
         assert (
             run_ws.get_entity("Iteration_1_tmi")[0].entity_type.uid
-            == run_ws.get_entity("Observed_tmi")[0].entity_type.uid
+            == observed.entity_type.uid
         )
 
         if pytest:

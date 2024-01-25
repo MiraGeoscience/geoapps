@@ -10,8 +10,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+from geoh5py.groups import RootGroup
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.natural_sources import TipperParams
 from geoapps.inversion.natural_sources.tipper.driver import TipperDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -20,7 +22,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.0020959218368283884, "phi_d": 0.123, "phi_m": 3632}
+target_run = {"data_norm": 0.000968641688072623, "phi_d": 0.1234, "phi_m": 3595}
 
 np.random.seed(0)
 
@@ -68,7 +70,10 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
         workpath = tmp_path.parent / "test_tipper_fwr_run0" / "inversion_test.ui.geoh5"
 
     with Workspace(workpath) as geoh5:
-        survey = geoh5.get_entity("survey")[0]
+        # survey = geoh5.get_entity("survey")[0]
+        survey = [
+            s for s in geoh5.get_entity("survey") if isinstance(s.parent, RootGroup)
+        ][0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
 
@@ -99,6 +104,10 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
                     }
                 )
                 uncertainties[f"{cname} uncertainties"].append(uncert)
+        # Set some data as nan
+        vals = survey.get_data("Iteration_0_txz_real_[0]")[0].values
+        vals[0] = np.nan
+        survey.get_data("Iteration_0_txz_real_[0]")[0].values = vals
 
         data_groups = survey.add_components_data(data)
         uncert_groups = survey.add_components_data(uncertainties)
@@ -109,8 +118,6 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
         ):
             data_kwargs[f"{comp}_channel"] = data_group.uid
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
-
-        orig_tyz_real_1 = geoh5.get_entity("Iteration_0_tyz_real_[0]")[0].values
 
         # Run the inverse
         np.random.seed(0)
@@ -140,13 +147,25 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             **data_kwargs,
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
+
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
         driver = TipperDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     with geoh5.open() as run_ws:
         output = get_inversion_output(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
-        output["data"] = orig_tyz_real_1
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
+        predicted = [
+            pred
+            for pred in run_ws.get_entity("Iteration_0_tyz_real_[0]")
+            if pred.parent.parent.name == "Tipper Inversion"
+        ][0]
+        output["data"] = predicted.values
         if pytest:
             check_target(output, target_run, tolerance=0.5)
             nan_ind = np.isnan(run_ws.get_entity("Iteration_0_model")[0].values)

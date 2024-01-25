@@ -12,6 +12,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
+from geoapps.inversion.components import InversionData
 from geoapps.inversion.potential_fields import GravityParams
 from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
@@ -20,7 +21,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.0028055269276044915, "phi_d": 4.475e-05, "phi_m": 0.00144}
+target_run = {"data_norm": 0.0011829136269148985, "phi_d": 4.475e-05, "phi_m": 0.00144}
 
 
 def test_gravity_fwr_run(
@@ -64,7 +65,6 @@ def test_gravity_run(
 
     with Workspace(workpath) as geoh5:
         gz = geoh5.get_entity("Iteration_0_gz")[0]
-        orig_gz = gz.values.copy()
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
 
@@ -100,6 +100,11 @@ def test_gravity_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
+        data = InversionData(geoh5, params)
+        survey = data.create_survey()
+
+        assert survey[0].dobs[0] == survey[0].dummy
+
     driver = GravityDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     assert driver.params.data_object.uid != gz.parent.uid
@@ -110,6 +115,9 @@ def test_gravity_run(
             driver.params.geoh5.h5file, driver.params.out_group.uid
         )
 
+        assert np.array([o is not np.nan for o in output["phi_d"]]).any()
+        assert np.array([o is not np.nan for o in output["phi_m"]]).any()
+
         residual = run_ws.get_entity("Iteration_1_gz_Residual")[0]
         assert np.isnan(residual.values).sum() == 1, "Number of nan residuals differ."
 
@@ -118,10 +126,12 @@ def test_gravity_run(
             for pred in run_ws.get_entity("Iteration_0_gz")
             if pred.parent.parent.name == "Gravity Inversion"
         ][0]
+
         assert not any(
             np.isnan(predicted.values)
         ), "Predicted data should not have nans."
-        output["data"] = orig_gz
+
+        output["data"] = predicted.values
 
         assert len(run_ws.get_entity("SimPEG.log")) == 2
 
