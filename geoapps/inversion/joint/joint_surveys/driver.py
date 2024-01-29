@@ -47,6 +47,9 @@ class JointSurveyDriver(BaseJointDriver):
                 norm = np.array(np.sum(projection, axis=1)).flatten()
                 model = (projection * model_local_values) / (norm + 1e-8)
 
+                if self.drivers[0].models.is_sigma:
+                    model = np.exp(model)
+
                 setattr(
                     getattr(self.models, f"_{model_type}"),
                     "model",
