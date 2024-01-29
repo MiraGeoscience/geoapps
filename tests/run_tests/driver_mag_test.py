@@ -31,7 +31,7 @@ def test_susceptibility_fwr_run(
     refinement=(2,),
 ):
     np.random.seed(0)
-    inducing_field = (50000.0, 90.0, 0.0)
+    inducing_field = (49999.8, 90.0, 0.0)
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -58,6 +58,8 @@ def test_susceptibility_fwr_run(
     params.workpath = tmp_path
     fwr_driver = MagneticScalarDriver(params)
     fwr_driver.run()
+
+    assert fwr_driver.inversion_data.survey.source_field.amplitude == inducing_field[0]
 
     assert params.out_group.options, "Error adding metadata on creation."
 
