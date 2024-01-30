@@ -121,11 +121,12 @@ class SourcesFactory(SimPEGFactory):
         _ = (receivers, frequency)
         kwargs = {}
         if self.factory_type in ["magnetic scalar", "magnetic vector"]:
-            for key, value in zip(
-                ["amplitude", "inclination", "declination"],
-                self.params.inducing_field_aid(),
-            ):
-                kwargs[key] = value
+            kwargs = dict(
+                zip(
+                    ["amplitude", "inclination", "declination"],
+                    self.params.inducing_field_aid(),
+                )
+            )
 
         if self.factory_type in ["magnetotellurics", "tipper"]:
             kwargs["sigma_primary"] = [self.params.background_conductivity]
