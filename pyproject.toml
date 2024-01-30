@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "geoapps"
-version = "0.11.0-rc.3"
+version = "0.11.1-rc.1"
 license = "MIT"
 description = "Open-sourced Applications in Geoscience"
 authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
@@ -44,13 +44,13 @@ numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 scipy = "~1.10.1"
 semver = "~3.0.0"
 
-geoh5py = {version = "~0.8.0rc3", source = "pypi", allow-prereleases = true}
+geoh5py = {version = "~0.8.0", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/tags/v0.8.0-rc.2.zip#sha256="}
-mira-omf = {version = "~3.1.0rc1", source = "pypi", allow-prereleases = true}
+mira-omf = {version = "~3.1.0", source = "pypi", allow-prereleases = true}
 #mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/develop.zip#sha256="}
 las-geoh5 = { version = "~0.1.0", source = "pypi", allow-prereleases = true}
 #las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/GEOPY-1130.zip#sha256="}
-param-sweeps = {version = "~0.1.6a1", source = "pypi", allow-prereleases = true}
+param-sweeps = {version = "~0.1.6", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip#sha256="}
 
 ## dependencies for core algorithms
@@ -68,7 +68,7 @@ tqdm = {version = "^4.64.0", optional = true }  # also in las-geoh5
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
 simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
 #mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev5+geoapps.0.11.0.zip#sha256=", optional = true}
-mira-simpeg = {version = "~0.19.0.dev5", source = "pypi", optional = true}
+mira-simpeg = {version = "~0.19.0.dev6", source = "pypi", optional = true}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = {version = "~2.2.1", optional = true}  # from simpeg and geoana
