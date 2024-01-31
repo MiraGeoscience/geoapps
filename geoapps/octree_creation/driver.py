@@ -65,7 +65,9 @@ class OctreeDriver(BaseDriver):
             depth_core=params.depth_core,
         )
         minimum_level = OctreeDriver.minimum_level(mesh, params.minimum_level)
-        mesh.refine(minimum_level, finalize=False)
+        mesh.refine(
+            minimum_level, finalize=False, diagonal_balance=params.diagonal_balance
+        )
 
         for label, value in params.free_parameter_dict.items():
             refinement_object = getattr(params, value["object"])
@@ -77,12 +79,12 @@ class OctreeDriver(BaseDriver):
 
             if isinstance(refinement_object, Curve):
                 mesh = OctreeDriver.refine_tree_from_curve(
-                    mesh, refinement_object, levels
+                    mesh, refinement_object, levels, params.diagonal_balance
                 )
 
             elif isinstance(refinement_object, Surface):
                 mesh = OctreeDriver.refine_tree_from_triangulation(
-                    mesh, refinement_object, levels
+                    mesh, refinement_object, levels, params.diagonal_balance
                 )
 
             elif getattr(params, value["type"]) == "surface":
@@ -90,6 +92,7 @@ class OctreeDriver(BaseDriver):
                     mesh,
                     refinement_object,
                     levels,
+                    params.diagonal_balance,
                     max_distance=getattr(params, value["distance"]),
                 )
 
@@ -98,6 +101,7 @@ class OctreeDriver(BaseDriver):
                     mesh,
                     refinement_object,
                     levels,
+                    diagonal_balance=params.diagonal_balance,
                 )
 
             else:
@@ -116,6 +120,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         curve: Curve,
         levels: list[int] | np.ndarray,
+        diagonal_balance: bool = True,
         finalize: bool = False,
     ) -> TreeMesh:
         """
@@ -126,6 +131,7 @@ class OctreeDriver(BaseDriver):
         :param curve: Curve object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from the highest octree to lowest.
+        :param diagonal_balance: Whether to balance cells along the diagonal of the tree during construction.
         :param finalize: Finalize the tree mesh after refinement.
 
         """
@@ -137,7 +143,7 @@ class OctreeDriver(BaseDriver):
 
         locations = densify_curve(curve, mesh.h[0][0])
         mesh = OctreeDriver.refine_tree_from_points(
-            mesh, locations, levels, finalize=False
+            mesh, locations, levels, diagonal_balance=diagonal_balance, finalize=False
         )
 
         if finalize:
@@ -150,6 +156,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         points: ObjectBase | np.ndarray,
         levels: list[int] | np.ndarray,
+        diagonal_balance: bool = True,
         finalize: bool = False,
     ) -> TreeMesh:
         """
@@ -159,6 +166,7 @@ class OctreeDriver(BaseDriver):
         :param points: Object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from the highest octree to lowest.
+        :param diagonal_balance: Whether to balance cells along the diagonal of the tree during construction.
         :param finalize: Finalize the tree mesh after refinement.
 
         :return: Refined tree mesh.
@@ -177,7 +185,13 @@ class OctreeDriver(BaseDriver):
         distance = 0
         for ii, n_cells in enumerate(levels):
             distance += n_cells * OctreeDriver.cell_size_from_level(mesh, ii)
-            mesh.refine_ball(locations, distance, mesh.max_level - ii, finalize=False)
+            mesh.refine_ball(
+                locations,
+                distance,
+                mesh.max_level - ii,
+                diagonal_balance=diagonal_balance,
+                finalize=False,
+            )
 
         if finalize:
             mesh.finalize()
@@ -189,6 +203,7 @@ class OctreeDriver(BaseDriver):
         mesh: TreeMesh,
         surface: ObjectBase,
         levels: list[int] | np.ndarray,
+        diagonal_balance: bool = True,
         max_distance: float = np.inf,
         finalize: bool = False,
     ) -> TreeMesh:
@@ -200,6 +215,7 @@ class OctreeDriver(BaseDriver):
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from the highest octree to lowest.
         :param max_distance: Maximum distance from the surface to refine.
+        :param diagonal_balance: Whether to balance cells along the diagonal of the tree during construction.
         :param finalize: Finalize the tree mesh after refinement.
 
         :return: Refined tree mesh.
@@ -247,6 +263,7 @@ class OctreeDriver(BaseDriver):
                 mesh.insert_cells(
                     np.c_[xy[keeper], elevation - depth],
                     np.ones(nnz) * mesh.max_level - ind,
+                    diagonal_balance=diagonal_balance,
                     finalize=False,
                 )
 
@@ -257,7 +274,11 @@ class OctreeDriver(BaseDriver):
 
     @staticmethod
     def refine_tree_from_triangulation(
-        mesh: TreeMesh, surface, levels: list[int] | np.ndarray, finalize=False
+        mesh: TreeMesh,
+        surface,
+        levels: list[int] | np.ndarray,
+        diagonal_balance: bool = True,
+        finalize=False,
     ) -> TreeMesh:
         """
         Refine a tree mesh along the simplicies of a surface.
@@ -266,6 +287,7 @@ class OctreeDriver(BaseDriver):
         :param surface: Surface object to use for refinement.
         :param levels: Number of cells requested at each refinement level.
             Defined in reversed order from highest octree to lowest.
+        :param diagonal_balance: Whether to balance cells along the diagonal of the tree during construction.
         :param finalize: Finalize the tree mesh after refinement.
 
         :return: Refined tree mesh.
@@ -290,6 +312,7 @@ class OctreeDriver(BaseDriver):
                 (surface.vertices, surface.cells),
                 -ind[0] - 1,
                 paddings,
+                diagonal_balance=diagonal_balance,
                 finalize=finalize,
             )
         return mesh

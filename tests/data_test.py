@@ -81,6 +81,7 @@ def test_survey_data(tmp_path: Path):
             mesh,
             test_topo_object,
             levels=[2],
+            diagonal_balance=False,
             finalize=True,
         )
 
