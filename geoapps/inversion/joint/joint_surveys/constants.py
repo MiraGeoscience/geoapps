@@ -123,7 +123,7 @@ default_ui_json = {
         "association": "Cell",
         "main": True,
         "dataType": "Float",
-        "group": "Mesh and models",
+        "group": "Mesh and Models",
         "isValue": False,
         "parent": "mesh",
         "label": "Reference",
