@@ -1362,14 +1362,10 @@ class InversionApp(BaseDashApplication):
                         param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
                     elif value["uncertainty_type"] == "Channel":
                         if is_uuid(value["uncertainty_channel"]):
-                            param_dict[
-                                comp + "_uncertainty"
-                            ] = self.workspace.get_entity(
-                                uuid.UUID(value["uncertainty_channel"])
-                            )[
-                                0
-                            ].copy(
-                                parent=data_object, copy_children=False
+                            param_dict[comp + "_uncertainty"] = (
+                                self.workspace.get_entity(
+                                    uuid.UUID(value["uncertainty_channel"])
+                                )[0].copy(parent=data_object, copy_children=False)
                             )
             else:
                 param_dict[comp + "_channel_bool"] = False

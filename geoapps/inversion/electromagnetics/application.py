@@ -1212,9 +1212,9 @@ class InversionApp(PlotSelection2D):
         if self.inversion_parameters.beta_start_options.value == "value":
             input_dict["initial_beta"] = self.inversion_parameters.beta_start.value
         else:
-            input_dict[
-                "initial_beta_ratio"
-            ] = self.inversion_parameters.beta_start.value
+            input_dict["initial_beta_ratio"] = (
+                self.inversion_parameters.beta_start.value
+            )
 
         input_dict["tol_cg"] = self.inversion_parameters.tol_cg.value
         input_dict["ignore_values"] = self.inversion_parameters.ignore_values.value
