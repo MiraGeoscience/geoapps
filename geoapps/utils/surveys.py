@@ -22,8 +22,6 @@ from geoh5py.objects.surveys.electromagnetics.base import LargeLoopGroundEMSurve
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
 
-from geoapps.utils.statistics import is_outlier
-
 
 def get_containing_cells(
     mesh: TreeMesh | TensorMesh, data: InversionData
@@ -162,90 +160,6 @@ def compute_alongline_distance(points: np.ndarray, ordered: bool = True):
     return distances
 
 
-def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
-    """
-    Build an array of line ids for a dc survey laid out in a line biased grid.
-
-    :param: survey: geoh5py.objects.surveys object with .vertices attribute or xyz array.
-    :param: start_loc: Easting and Northing of a survey extremity from which the
-        all other survey locations will be traversed and assigned line ids.
-    :save: Name assigned to line id (ReferencedData) object if not None.
-
-    """
-    if survey.vertices is None:
-        raise ValueError("Survey object must have a vertices attribute.")
-
-    locs = survey.vertices[:, :2]
-    nodes = np.arange(len(locs)).tolist()
-
-    # find the id of the closest point to the starting location
-    start_id = np.argmin(np.linalg.norm(locs - start_loc, axis=1))
-
-    # pop the starting location and index out of their respective lists
-    locs = locs.tolist()
-    loc = locs[start_id]
-    inds = []
-    n = nodes.pop(start_id)
-    inds.append(n)
-
-    # compute the tree of the remaining points and begin to traverse the tree
-    # in the direction of closest neighbors.  Label points with same line id
-    # until an outlier is detected in the distance to the next closest point,
-    # then increase the line id.
-    tree = cKDTree(locs)
-    line_id = 1  # zero is reserved
-    lines = []
-    distances = []
-    while nodes:
-        lines.append(line_id)
-        dist, next_id = next_neighbor(tree, loc, nodes)
-
-        outlier = False
-        if len(distances) > 1:
-            if np.allclose(dist, distances, atol=1e-6):
-                outlier = False
-            else:
-                outlier = is_outlier(distances, dist)
-
-        if outlier:
-            line_id += 1
-            distances = []
-        else:
-            distances.append(dist)
-
-        n = nodes.pop(nodes.index(next_id))
-        inds.append(n)
-        loc = locs[next_id]
-
-    lines += [line_id]  # nodes run out before last id assigned
-    inds = np.argsort(inds)
-    sorted_id = np.array(lines)[np.argsort(inds)]
-
-    # Convert to cell data
-    cell_ids = sorted_id[survey.cells]
-
-    assert np.all(cell_ids[:, 0] == cell_ids[:, 1])
-
-    line_reference = {0: "Unknown"}
-    line_reference.update({k: str(k) for k in np.unique(lines)})
-
-    if save is not None:
-        survey.add_data(
-            {
-                save: {
-                    "values": cell_ids[:, 0],
-                    "association": "CELL",
-                    "entity_type": {
-                        "primitive_type": "REFERENCED",
-                        "value_map": line_reference,
-                    },
-                }
-            }
-        )
-
-    return sorted_id
-
-
 def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     """
     Slice an array and return both sliced array and global to local map.
@@ -288,6 +202,10 @@ def extract_dcip_survey(
     :param: line_id: Index of line to extract data from.
     """
     cell_mask = lines == line_id
+
+    if not np.any(cell_mask):
+        raise ValueError(f"Line '{line_id}' not found in survey.")
+
     active_poles = np.zeros(survey.n_vertices, dtype=bool)
     active_poles[survey.cells[cell_mask, :].ravel()] = True
     potentials = survey.copy(parent=workspace, mask=active_poles, cell_mask=cell_mask)
@@ -295,7 +213,7 @@ def extract_dcip_survey(
     return potentials
 
 
-def plit_dcip_surveys(
+def split_dcip_survey(
     survey: PotentialElectrode,
     lines: np.ndarray,
     workspace: Workspace | None = None,

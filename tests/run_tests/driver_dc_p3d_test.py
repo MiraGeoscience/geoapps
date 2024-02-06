@@ -21,7 +21,6 @@ from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params
     DirectCurrentPseudo3DParams,
 )
 from geoapps.shared_utils.utils import get_inversion_output
-from geoapps.utils.surveys import survey_lines
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # To test the full run and validate the inversion.
@@ -50,8 +49,6 @@ def test_dc_p3d_fwr_run(
         drape_height=0.0,
         flatten=False,
     )
-
-    _ = survey_lines(survey, [-100, -100], save="line_ids")
     params = DirectCurrentPseudo3DParams(
         forward_only=True,
         geoh5=geoh5,
@@ -87,7 +84,6 @@ def test_dc_p3d_run(
         out_group = geoh5.get_entity("Line 1")[0].parent
         mesh = out_group.get_entity("mesh")[0]  # Finds the octree mesh
         topography = geoh5.get_entity("topography")[0]
-        _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
 
         # Run the inverse
         np.random.seed(0)
@@ -103,7 +99,7 @@ def test_dc_p3d_run(
             data_object=potential.parent.uid,
             potential_channel=potential.uid,
             potential_uncertainty=1e-3,
-            line_object=geoh5.get_entity("line_IDs")[0].uid,
+            line_object=geoh5.get_entity("line_ids")[0].uid,
             starting_model=1e-2,
             reference_model=1e-2,
             s_norm=0.0,
@@ -128,7 +124,7 @@ def test_dc_p3d_run(
     basepath = workpath.parent
     with open(basepath / "lookup.json", encoding="utf8") as f:
         lookup = json.load(f)
-        middle_line_id = [k for k, v in lookup.items() if v["line_id"] == 2][0]
+        middle_line_id = [k for k, v in lookup.items() if v["line_id"] == 101][0]
 
     with Workspace(basepath / f"{middle_line_id}.ui.geoh5", mode="r") as workspace:
         middle_inversion_group = [

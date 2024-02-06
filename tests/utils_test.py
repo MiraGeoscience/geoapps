@@ -18,7 +18,6 @@ import pytest
 from discretize import CylindricalMesh, TreeMesh
 from discretize.utils import mesh_builder_xyz
 from geoh5py.objects import Curve, Grid2D, Points
-from geoh5py.objects.surveys.direct_current import CurrentElectrode, PotentialElectrode
 from geoh5py.workspace import Workspace
 
 from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
@@ -53,9 +52,8 @@ from geoapps.utils.surveys import (
     find_unique_tops,
     new_neighbors,
     split_dcip_survey,
-    survey_lines,
 )
-from geoapps.utils.testing import Geoh5Tester
+from geoapps.utils.testing import Geoh5Tester, generate_dc_survey
 from geoapps.utils.workspace import sorted_children_dict
 
 from . import PROJECT
@@ -259,135 +257,39 @@ def test_new_neighbors():
     assert neighbor_id[0] == 1
 
 
-def test_survey_lines(tmp_path: Path):
-    name = "TestCurrents"
-    n_data = 15
-    path = tmp_path / r"testDC.geoh5"
-    workspace = Workspace.create(path)
-
-    # Create sources along line
-    x_loc, y_loc = np.meshgrid(np.linspace(0, 10, n_data), np.arange(-1, 3))
-    vertices = np.c_[x_loc.ravel(), y_loc.ravel(), np.zeros_like(x_loc).ravel()]
-    parts = np.kron(np.arange(4), np.ones(n_data)).astype("int")
-    currents = CurrentElectrode.create(
-        workspace, name=name, vertices=vertices, parts=parts
-    )
-    currents.add_default_ab_cell_id()
-    potentials = PotentialElectrode.create(
-        workspace, name=name + "_rx", vertices=vertices
-    )
-    n_dipoles = 9
-    dipoles = []
-    current_id = []
-    for val in currents.ab_cell_id.values:
-        cell_id = int(currents.ab_map[val]) - 1
-
-        for dipole in range(n_dipoles):
-            dipole_ids = currents.cells[cell_id, :] + 2 + dipole
-
-            if (
-                any(dipole_ids > (potentials.n_vertices - 1))
-                or len(np.unique(parts[dipole_ids])) > 1
-            ):
-                continue
-
-            dipoles += [dipole_ids]
-            current_id += [val]
-
-    potentials.cells = np.vstack(dipoles).astype("uint32")
-    potentials.ab_cell_id = np.hstack(current_id).astype("int32")
-    potentials.current_electrodes = currents
-    currents.potential_electrodes = potentials
-    _ = survey_lines(potentials, [-1, -1], save="test_line_ids")
-    assert np.all(
-        np.unique(workspace.get_entity("test_line_ids")[0].values) == np.arange(1, 5)
-    )
-
-
 def test_extract_dcip_survey(tmp_path: Path):
-    name = "TestCurrents"
     n_data = 12
     path = tmp_path / r"testDC.geoh5"
-    workspace = Workspace.create(path)
 
-    # Create sources along line
     x_loc, y_loc = np.meshgrid(np.arange(n_data), np.arange(-1, 3))
-    vertices = np.c_[x_loc.ravel(), y_loc.ravel(), np.zeros_like(x_loc).ravel()]
-    parts = np.kron(np.arange(4), np.ones(n_data)).astype("int")
-    currents = CurrentElectrode.create(
-        workspace, name=name, vertices=vertices, parts=parts
-    )
-    currents.add_default_ab_cell_id()
-    potentials = PotentialElectrode.create(
-        workspace, name=name + "_rx", vertices=vertices
-    )
-    n_dipoles = 9
-    dipoles = []
-    current_id = []
-    for val in currents.ab_cell_id.values:
-        cell_id = int(currents.ab_map[val]) - 1
 
-        for dipole in range(n_dipoles):
-            dipole_ids = currents.cells[cell_id, :] + 2 + dipole
+    with Workspace.create(path) as workspace:
+        potentials = generate_dc_survey(workspace, x_loc, y_loc)
 
-            if (
-                any(dipole_ids > (potentials.n_vertices - 1))
-                or len(np.unique(parts[dipole_ids])) > 1
-            ):
-                continue
+        line_id = potentials.get_data("line_ids")[0].values
 
-            dipoles += [dipole_ids]
-            current_id += [val]
+        with pytest.raises(ValueError, match="Line '3' not found in survey."):
+            extract_dcip_survey(workspace, potentials, line_id, 3)
 
-    potentials.cells = np.vstack(dipoles).astype("uint32")
-    potentials.ab_cell_id = np.hstack(current_id).astype("int32")
-    potentials.current_electrodes = currents
-    currents.potential_electrodes = potentials
-    extract_dcip_survey(workspace, potentials, parts, 3, "test_survey_line")
-    assert workspace.get_entity("test_survey_line 3")[0] is not None
+        surveys = extract_dcip_survey(workspace, potentials, line_id, 6)
+
+        line_field = surveys.get_entity("line_ids")
+        assert line_field
+        assert np.all(line_field[0].values == 6)
 
 
 def test_split_dcip_survey(tmp_path: Path):
-    name = "TestCurrents"
     n_data = 12
     path = tmp_path / r"testDC.geoh5"
-    workspace = Workspace.create(path)
 
-    # Create sources along line
     x_loc, y_loc = np.meshgrid(np.arange(n_data), np.arange(-1, 3))
-    vertices = np.c_[x_loc.ravel(), y_loc.ravel(), np.zeros_like(x_loc).ravel()]
-    parts = np.kron(np.arange(4), np.ones(n_data)).astype("int")
-    currents = CurrentElectrode.create(
-        workspace, name=name, vertices=vertices, parts=parts
-    )
-    currents.add_default_ab_cell_id()
-    potentials = PotentialElectrode.create(
-        workspace, name=name + "_rx", vertices=vertices
-    )
-    n_dipoles = 9
-    dipoles = []
-    current_id = []
-    for val in currents.ab_cell_id.values:
-        cell_id = int(currents.ab_map[val]) - 1
 
-        for dipole in range(n_dipoles):
-            dipole_ids = currents.cells[cell_id, :] + 2 + dipole
+    with Workspace.create(path) as workspace:
+        potentials = generate_dc_survey(workspace, x_loc, y_loc)
+        line_id = potentials.get_data("line_ids")[0].values
 
-            if (
-                any(dipole_ids > (potentials.n_vertices - 1))
-                or len(np.unique(parts[dipole_ids])) > 1
-            ):
-                continue
-
-            dipoles += [dipole_ids]
-            current_id += [val]
-
-    potentials.cells = np.vstack(dipoles).astype("uint32")
-    potentials.ab_cell_id = np.hstack(current_id).astype("int32")
-    potentials.current_electrodes = currents
-    currents.potential_electrodes = potentials
-    split_dcip_survey(potentials, parts + 1, "DC Survey Line", workspace)
-    assert workspace.get_entity("DC Survey Line 4")[0] is not None
+        surveys = split_dcip_survey(potentials, line_id, workspace)
+        assert len(surveys) == len(np.unique(line_id))
 
 
 def test_rectangular_block():
