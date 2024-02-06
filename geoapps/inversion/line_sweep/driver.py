@@ -116,17 +116,19 @@ class LineSweepDriver(SweepDriver, InversionDriver):
     def collect_results(self):
         path = Path(self.workspace.h5file).parent
         files = LineSweepDriver.line_files(str(path))
-        lines = np.unique(self.pseudo3d_params.line_object.values)
-        data_result = self.pseudo3d_params.data_object.copy(
-            parent=self.pseudo3d_params.out_group
-        )
-
+        line_ids = self.pseudo3d_params.line_object.values
         data = {}
         drape_models = []
-        for line in lines:
+        for line in np.unique(line_ids):
             with Workspace(f"{path / files[line]}.ui.geoh5") as ws:
                 survey = ws.get_entity("Data")[0]
-                data = self.collect_line_data(survey, data)
+                line_data = survey.get_entity(self.pseudo3d_params.line_object.name)
+
+                if not line_data:
+                    raise ValueError(f"Line {line} not found in {survey.name}")
+
+                line_indices = line_ids == line
+                data = self.collect_line_data(survey, line_indices, data)
 
                 mesh = ws.get_entity("Models")[0]
                 filedata = [
@@ -143,7 +145,7 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 mesh.name = "models"
                 drape_models.append(mesh)
 
-        data_result.add_data(data)
+        self.pseudo3d_params.data_object.add_data(data)
 
         if self.pseudo3d_params.mesh is None:
             return
@@ -186,16 +188,16 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
         octree_model.copy(parent=self.pseudo3d_params.out_group)
 
-    def collect_line_data(self, survey, data):
+    def collect_line_data(self, survey, line_indices, data):
+        """
+        Fill chunks of values from one line
+        """
         for child in survey.children:  # initialize data values dictionary
             if "Iteration" in child.name and child.name not in data:
-                data[child.name] = {"values": np.zeros(survey.n_cells)}
+                data[child.name] = {"values": np.zeros_like(line_indices) * np.nan}
 
-        ind = None
-        for child in survey.children:  # fill a chunk of values from one line
+        for child in survey.children:
             if "Iteration" in child.name:
-                if ind is None:
-                    ind = ~np.isnan(child.values)
-                data[child.name]["values"][ind] = child.values[ind]
+                data[child.name]["values"][line_indices] = child.values
 
         return data
