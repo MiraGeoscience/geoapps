@@ -102,7 +102,8 @@ class InversionTopography(InversionLocations):
 
             if floating_active(mesh.mesh, active_cells):
                 warnings.warn(
-                    "Active cell adjustment has created a patch of active cells in the air, likely due to a faulty survey location."
+                    "Active cell adjustment has created a patch of active cells in the air, "
+                    "likely due to a faulty survey location."
                 )
 
         return active_cells
