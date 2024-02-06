@@ -141,7 +141,7 @@ default_ui_json = {
     "icon": "PotentialElectrode",
     "inversion_type": "direct current pseudo 3d",
     "line_object": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Referenced",
         "group": "Data",
         "main": True,
@@ -159,7 +159,7 @@ default_ui_json = {
     },
     "potential_channel_bool": True,
     "potential_channel": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Data",
         "main": True,
@@ -168,7 +168,7 @@ default_ui_json = {
         "value": None,
     },
     "potential_uncertainty": {
-        "association": ["Cell", "Vertex"],
+        "association": "Cell",
         "dataType": "Float",
         "group": "Data",
         "main": True,
