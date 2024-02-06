@@ -17,8 +17,7 @@ from typing import Callable
 
 import numpy as np
 from discretize import TensorMesh, TreeMesh
-from geoh5py.data import FloatData
-from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.objects import PotentialElectrode
 from geoh5py.objects.surveys.electromagnetics.base import LargeLoopGroundEMSurvey
 from geoh5py.workspace import Workspace
 from scipy.spatial import cKDTree
@@ -56,7 +55,7 @@ def get_containing_cells(
         locations = data.drape_locations(get_unique_locations(data.survey))
         xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
         yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
-        inds = xi + yi * mesh.shape_cells[0]
+        inds = xi * mesh.shape_cells[1] + yi
 
     else:
         raise TypeError("Mesh must be 'TreeMesh' or 'TensorMesh'")
@@ -165,7 +164,7 @@ def compute_alongline_distance(points: np.ndarray, ordered: bool = True):
 
 def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
     """
-    Build an array of line ids for a survey laid out in a line biased grid.
+    Build an array of line ids for a dc survey laid out in a line biased grid.
 
     :param: survey: geoh5py.objects.surveys object with .vertices attribute or xyz array.
     :param: start_loc: Easting and Northing of a survey extremity from which the
@@ -173,12 +172,10 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
     :save: Name assigned to line id (ReferencedData) object if not None.
 
     """
-    # extract xy locations and create linear indexing
-    try:
-        locs = survey.vertices[:, :2]
-    except AttributeError:
-        locs = survey[:, :2]
+    if survey.vertices is None:
+        raise ValueError("Survey object must have a vertices attribute.")
 
+    locs = survey.vertices[:, :2]
     nodes = np.arange(len(locs)).tolist()
 
     # find the id of the closest point to the starting location
@@ -221,23 +218,32 @@ def survey_lines(survey, start_loc: list[int | float], save: str | None = None):
         loc = locs[next_id]
 
     lines += [line_id]  # nodes run out before last id assigned
-
     inds = np.argsort(inds)
+    sorted_id = np.array(lines)[np.argsort(inds)]
+
+    # Convert to cell data
+    cell_ids = sorted_id[survey.cells]
+
+    assert np.all(cell_ids[:, 0] == cell_ids[:, 1])
+
+    line_reference = {0: "Unknown"}
+    line_reference.update({k: str(k) for k in np.unique(lines)})
+
     if save is not None:
         survey.add_data(
             {
                 save: {
-                    "values": np.array(lines)[inds],
-                    "association": "VERTEX",
+                    "values": cell_ids[:, 0],
+                    "association": "CELL",
                     "entity_type": {
                         "primitive_type": "REFERENCED",
-                        "value_map": {k: str(k) for k in lines},
+                        "value_map": line_reference,
                     },
                 }
             }
         )
 
-    return np.array(lines)[inds]
+    return sorted_id
 
 
 def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
@@ -272,7 +278,6 @@ def extract_dcip_survey(
     survey: PotentialElectrode,
     lines: np.ndarray,
     line_id: int,
-    name: str = "Line",
 ):
     """
     Returns a survey containing data from a single line.
@@ -281,93 +286,18 @@ def extract_dcip_survey(
     :param: survey: PotentialElectrode object.
     :param: lines: Line indexer for survey.
     :param: line_id: Index of line to extract data from.
-    :param: name: Name prefix to assign to the new survey object (to be
-        suffixed with the line number).
     """
-    current = survey.current_electrodes
-
-    # Extract line locations and store map into full survey
-    survey_locs, survey_loc_map = slice_and_map(survey.vertices, lines == line_id)
-
-    # Use line locations to slice cells and store map into full survey
-    func = lambda c: (c[0] in survey_loc_map) & (c[1] in survey_loc_map)
-    survey_cells, survey_cell_map = slice_and_map(survey.cells, func)
-    survey_cells = [[survey_loc_map[i] for i in c] for c in survey_cells]
-
-    # Use line cells to slice ab_cell_ids
-    ab_cell_ids = survey.ab_cell_id.values[list(survey_cell_map)]
-    ab_cell_ids = np.array(ab_cell_ids, dtype=int) - 1
-
-    # Use line ab_cell_ids to slice current cells
-    current_cells, current_cell_map = slice_and_map(
-        current.cells, np.unique(ab_cell_ids)
-    )
-
-    # Use line current cells to slice current locs
-    current_locs, current_loc_map = slice_and_map(
-        current.vertices, np.unique(current_cells.ravel())
-    )
-
-    # Remap global ids to local counterparts
-    ab_cell_ids = np.array([current_cell_map[i] for i in ab_cell_ids])
-    current_cells = [[current_loc_map[i] for i in c] for c in current_cells]
-
-    # Save objects
-    line_name = f"{name} {line_id}"
-    currents = CurrentElectrode.create(
-        workspace,
-        name=f"{line_name} (currents)",
-        vertices=current_locs,
-        cells=np.array(current_cells, dtype=np.int32),
-        allow_delete=True,
-    )
-    currents.add_default_ab_cell_id()
-
-    potentials = PotentialElectrode.create(
-        workspace,
-        name=line_name,
-        vertices=survey_locs,
-        allow_delete=True,
-    )
-    potentials.cells = np.array(survey_cells, dtype=np.int32)
-
-    # Add ab_cell_id as referenced data object
-    value_map = {k + 1: str(k + 1) for k in ab_cell_ids}
-    value_map.update({0: "Unknown"})
-    potentials.add_data(
-        {
-            "A-B Cell ID": {
-                "values": np.array(ab_cell_ids + 1, dtype=np.int32),
-                "association": "CELL",
-                "entity_type": {
-                    "primitive_type": "REFERENCED",
-                    "value_map": value_map,
-                },
-            },
-            "Global Map": {
-                "values": np.array(list(survey_cell_map), dtype=np.int32),
-                "association": "CELL",
-                "entity_type": {
-                    "primitive_type": "REFERENCED",
-                    "value_map": {k: str(k) for k in survey_cell_map},
-                },
-            },
-        }
-    )
-
-    # Attach current and potential objects and copy data slice into line survey
-    potentials.current_electrodes = currents
-    for c in survey.children:
-        if isinstance(c, FloatData) and "Pseudo" not in c.name:
-            potentials.add_data({c.name: {"values": c.values[list(survey_cell_map)]}})
+    cell_mask = lines == line_id
+    active_poles = np.zeros(survey.n_vertices, dtype=bool)
+    active_poles[survey.cells[cell_mask, :].ravel()] = True
+    potentials = survey.copy(parent=workspace, mask=active_poles, cell_mask=cell_mask)
 
     return potentials
 
 
-def split_dcip_survey(
+def plit_dcip_surveys(
     survey: PotentialElectrode,
     lines: np.ndarray,
-    name: str = "Line",
     workspace: Workspace | None = None,
 ):
     """
@@ -386,7 +316,7 @@ def split_dcip_survey(
     with ws.open(mode="r+") as ws:
         line_surveys = []
         for line_id in np.unique(lines):
-            line_survey = extract_dcip_survey(ws, survey, lines, line_id, name)
+            line_survey = extract_dcip_survey(ws, survey, lines, line_id)
             line_surveys.append(line_survey)
 
     return line_surveys
