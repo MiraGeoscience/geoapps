@@ -280,10 +280,6 @@ class SurveyFactory(SimPEGFactory):
                 self.params.line_object.values,
                 self.params.line_id,
             )
-            self.local_index = np.arange(receiver_entity.n_cells)
-            data.global_map = [
-                k for k in receiver_entity.children if k.name == "Global Map"
-            ][0].values
 
         source_ids, order = np.unique(
             receiver_entity.ab_cell_id.values[self.local_index], return_index=True
@@ -291,12 +287,8 @@ class SurveyFactory(SimPEGFactory):
         currents = receiver_entity.current_electrodes
 
         if "2d" in self.params.inversion_type:
-            receiver_locations = receiver_entity.vertices
-            source_locations = currents.vertices
-            if local_index is not None:
-                receiver_locations = data.drape_locations(receiver_locations)
-                source_locations = data.drape_locations(source_locations)
-
+            receiver_locations = data.drape_locations(receiver_entity.vertices)
+            source_locations = data.drape_locations(currents.vertices)
         else:
             receiver_locations = data.locations
             source_locations = currents.vertices
@@ -331,11 +323,6 @@ class SurveyFactory(SimPEGFactory):
             self.local_index.append(receiver_indices)
 
         self.local_index = np.hstack(self.local_index)
-
-        if "2d" in self.factory_type:
-            current_entity = receiver_entity.current_electrodes
-            self.params.geoh5.remove_entity(receiver_entity)
-            self.params.geoh5.remove_entity(current_entity)
 
         return [sources]
 
