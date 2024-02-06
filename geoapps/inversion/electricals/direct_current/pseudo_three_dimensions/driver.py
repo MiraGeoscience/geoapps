@@ -8,11 +8,13 @@
 from __future__ import annotations
 
 import sys
+import uuid
 from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
 from geoh5py.data import Data
+from geoh5py.objects import DrapeModel
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.components.data import InversionData
@@ -42,6 +44,33 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
         if params.files_only:
             sys.exit("Files written")
 
+    def transfer_models(self, mesh: DrapeModel) -> dict[str, uuid.UUID]:
+        xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
+        models = {"starting_model": self.pseudo3d_params.starting_model}
+        if not self.pseudo3d_params.forward_only:
+            models.update(
+                {
+                    "reference_model": self.pseudo3d_params.reference_model,
+                    "lower_bound": self.pseudo3d_params.lower_bound,
+                    "upper_bound": self.pseudo3d_params.upper_bound,
+                }
+            )
+
+        xyz_out = mesh.centroids
+        model_uids = deepcopy(models)
+        for name, model in models.items():
+            if model is None:
+                continue
+            elif isinstance(model, Data):
+                model_values = weighted_average(xyz_in, xyz_out, [model.values], n=1)[0]
+            else:
+                model_values = model * np.ones(len(xyz_out))
+
+            model_object = mesh.add_data({name: {"values": model_values}})
+            model_uids[name] = model_object.uid
+
+        return model_uids
+
     def write_files(self, lookup):
         """Write ui.geoh5 and ui.json files for sweep trials."""
 
@@ -54,22 +83,12 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
             self._inversion_topography = InversionTopography(
                 self.workspace, self.pseudo3d_params
             )
-            xyz_in = get_locations(self.workspace, self.pseudo3d_params.mesh)
-            models = {"starting_model": self.pseudo3d_params.starting_model}
-            if not forward_only:
-                models.update(
-                    {
-                        "reference_model": self.pseudo3d_params.reference_model,
-                        "lower_bound": self.pseudo3d_params.lower_bound,
-                        "upper_bound": self.pseudo3d_params.upper_bound,
-                    }
-                )
 
-            for uuid, trial in lookup.items():
+            for uid, trial in lookup.items():
                 if trial["status"] != "pending":
                     continue
 
-                filepath = Path(self.working_directory) / f"{uuid}.ui.geoh5"
+                filepath = Path(self.working_directory) / f"{uid}.ui.geoh5"
                 with Workspace(filepath) as iter_workspace:
                     receiver_entity = extract_dcip_survey(
                         iter_workspace,
@@ -96,23 +115,7 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                         self.pseudo3d_params.expansion_factor,
                     )[0]
 
-                    iter_workspace.remove_entity(receiver_entity.current_electrodes)
-                    iter_workspace.remove_entity(receiver_entity)
-
-                    xyz_out = mesh.centroids
-                    model_uids = deepcopy(models)
-                    for name, model in models.items():
-                        if model is None:
-                            continue
-                        elif isinstance(model, Data):
-                            model_values = weighted_average(
-                                xyz_in, xyz_out, [model.values], n=1
-                            )[0]
-                        else:
-                            model_values = model * np.ones(len(xyz_out))
-
-                        model_object = mesh.add_data({name: {"values": model_values}})
-                        model_uids[name] = model_object.uid
+                    model_uids = self.transfer_models(mesh)
 
                     for key in ifile.data:
                         param = getattr(self.pseudo3d_params, key, None)
@@ -122,15 +125,13 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                     self.pseudo3d_params.topography_object.copy(
                         parent=iter_workspace, copy_children=True
                     )
-                    self.pseudo3d_params.data_object.copy(
-                        parent=iter_workspace, copy_children=True
-                    )
 
                     ifile.data.update(
                         dict(
                             **{
                                 "geoh5": iter_workspace,
                                 "mesh": mesh,
+                                "data_object": receiver_entity,
                                 "line_id": trial["line_id"],
                                 "out_group": None,
                             },
@@ -138,9 +139,9 @@ class DirectCurrentPseudo3DDriver(LineSweepDriver):
                         )
                     )
 
-                ifile.name = f"{uuid}.ui.json"
+                ifile.name = f"{uid}.ui.json"
                 ifile.path = self.working_directory  # pylint: disable=E1101
                 ifile.write_ui_json()
-                lookup[uuid]["status"] = "written"
+                lookup[uid]["status"] = "written"
 
         _ = self.update_lookup(lookup)  # pylint: disable=E1101
