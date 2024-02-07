@@ -278,7 +278,7 @@ class SurveyFactory(SimPEGFactory):
             receiver_locations = data.drape_locations(receiver_entity.vertices)
             source_locations = data.drape_locations(currents.vertices)
         else:
-            receiver_locations = data.locations
+            receiver_locations = receiver_entity.vertices
             source_locations = currents.vertices
 
         # TODO hook up tile_spatial to handle local_index handling

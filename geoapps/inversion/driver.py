@@ -406,16 +406,6 @@ class InversionDriver(BaseDriver):
         else:
             locations = self.inversion_data.locations
 
-            # Use mid-point between M-N electrodes
-            if self.params.inversion_type in [
-                "direct current 3d",
-                "induced polarization 3d",
-            ]:
-                cells = self.inversion_data.entity.cells
-                locations = (
-                    locations[cells[:, 0], :] + locations[cells[:, 1], :]
-                ) / 2.0
-
             tiles = tile_locations(
                 locations,
                 self.params.tile_spatial,

@@ -81,15 +81,6 @@ def test_filter(tmp_path: Path):
     assert np.all(filtered_data["key"] == [2, 3, 4])
 
 
-def test_rotate(tmp_path: Path):
-    # Basic test since rotate_xy already tested
-    ws, params = setup_params(tmp_path)
-    locations = InversionLocations(ws, params)
-    test_locs = np.array([[1.0, 2.0, 3.0], [3.0, 4.0, 5.0], [6.0, 7.0, 8.0]])
-    locs_rot = locations.rotate(test_locs)
-    assert locs_rot.shape == test_locs.shape
-
-
 def test_z_from_topo(tmp_path: Path):
     ws, params = setup_params(tmp_path)
     locations = InversionLocations(ws, params)
