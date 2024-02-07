@@ -197,6 +197,10 @@ def extract_dcip_survey(
     :param survey: PotentialElectrode object.
     :param cell_mask: Boolean array of M-N pairs to include in the new survey.
     """
+
+    if not np.any(cell_mask):
+        raise ValueError("No cells found in the mask.")
+
     active_poles = np.zeros(survey.n_vertices, dtype=bool)
     active_poles[survey.cells[cell_mask, :].ravel()] = True
     potentials = survey.copy(parent=workspace, mask=active_poles, cell_mask=cell_mask)

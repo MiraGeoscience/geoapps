@@ -268,14 +268,14 @@ def test_extract_dcip_survey(tmp_path: Path):
 
         line_id = potentials.get_data("line_ids")[0].values
 
-        with pytest.raises(ValueError, match="Line '3' not found in survey."):
-            extract_dcip_survey(workspace, potentials, line_id, 3)
+        surveys = extract_dcip_survey(workspace, potentials, line_id == 3)
 
-        surveys = extract_dcip_survey(workspace, potentials, line_id, 6)
+        with pytest.raises(ValueError, match="No cells found in the mask."):
+            extract_dcip_survey(workspace, potentials, line_id == 6)
 
         line_field = surveys.get_entity("line_ids")
         assert line_field
-        assert np.all(line_field[0].values == 6)
+        assert np.all(line_field[0].values == 3)
 
 
 def test_split_dcip_survey(tmp_path: Path):
