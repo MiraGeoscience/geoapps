@@ -50,15 +50,6 @@ class EntityFactory(AbstractFactory):
 
         return entity
 
-    # def _build_dcip(self, inversion_data: InversionData):
-    #     entity = extract_dcip_survey(
-    #         inversion_data.workspace,
-    #         self.params.data_object,
-    #         inversion_data.indices
-    #     )
-    #
-    #     return entity
-
     def _build(self, inversion_data: InversionData):
         if isinstance(self.params.data_object, Grid2D):
             entity = inversion_data.create_entity(

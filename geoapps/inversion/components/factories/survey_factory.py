@@ -267,12 +267,6 @@ class SurveyFactory(SimPEGFactory):
 
         receiver_entity = data.entity
         if "2d" in self.factory_type:
-            # receiver_entity = extract_dcip_survey(
-            #     self.params.geoh5,
-            #     receiver_entity,
-            #     self.params.line_object.values,
-            #     self.params.line_id,
-            # )
             self.local_index = np.arange(receiver_entity.n_cells)
 
         source_ids, order = np.unique(
