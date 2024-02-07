@@ -14,6 +14,7 @@ from uuid import UUID
 import numpy as np
 from discretize import TensorMesh, TreeMesh
 from geoh5py.objects import Curve, DrapeModel
+from geoh5py.objects.surveys.direct_current import BaseElectrode
 from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
@@ -53,7 +54,18 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
     if hasattr(entity, "centroids"):
         locations = entity.centroids
     elif hasattr(entity, "vertices"):
-        locations = entity.vertices
+        if isinstance(entity, BaseElectrode):
+            potentials = entity.potential_electrodes
+            locations = np.mean(
+                [
+                    potentials.vertices[potentials.cells[:, 0], :],
+                    potentials.vertices[potentials.cells[:, 1], :],
+                ],
+                axis=0,
+            )
+        else:
+            locations = entity.vertices
+
     elif getattr(entity, "parent", None) is not None and entity.parent is not None:
         locations = get_locations(workspace, entity.parent)
 

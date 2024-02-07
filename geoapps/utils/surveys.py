@@ -188,24 +188,15 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
 
 
 def extract_dcip_survey(
-    workspace: Workspace,
-    survey: PotentialElectrode,
-    lines: np.ndarray,
-    line_id: int,
+    workspace: Workspace, survey: PotentialElectrode, cell_mask: np.ndarray
 ):
     """
     Returns a survey containing data from a single line.
 
-    :param: workspace: geoh5py workspace containing a valid DCIP survey.
-    :param: survey: PotentialElectrode object.
-    :param: lines: Line indexer for survey.
-    :param: line_id: Index of line to extract data from.
+    :param workspace: geoh5py workspace containing a valid DCIP survey.
+    :param survey: PotentialElectrode object.
+    :param cell_mask: Boolean array of M-N pairs to include in the new survey.
     """
-    cell_mask = lines == line_id
-
-    if not np.any(cell_mask):
-        raise ValueError(f"Line '{line_id}' not found in survey.")
-
     active_poles = np.zeros(survey.n_vertices, dtype=bool)
     active_poles[survey.cells[cell_mask, :].ravel()] = True
     potentials = survey.copy(parent=workspace, mask=active_poles, cell_mask=cell_mask)
@@ -234,7 +225,8 @@ def split_dcip_survey(
     with ws.open(mode="r+") as ws:
         line_surveys = []
         for line_id in np.unique(lines):
-            line_survey = extract_dcip_survey(ws, survey, lines, line_id)
+            cell_mask = lines == line_id
+            line_survey = extract_dcip_survey(ws, survey, cell_mask)
             line_surveys.append(line_survey)
 
     return line_surveys

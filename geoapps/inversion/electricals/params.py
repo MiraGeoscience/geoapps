@@ -11,7 +11,6 @@ import numpy as np
 
 from geoapps.inversion import InversionBaseParams
 from geoapps.utils.models import get_drape_model
-from geoapps.utils.surveys import extract_dcip_survey
 
 
 class Base2DParams(InversionBaseParams):
@@ -114,17 +113,10 @@ class Base2DParams(InversionBaseParams):
     @property
     def mesh(self):
         if self._mesh is None and self.geoh5 is not None:
-            receiver_entity = extract_dcip_survey(
-                self.geoh5,
-                self.data_object,
-                self.line_object.values,
-                self.line_id,
-            )
-            current_entity = receiver_entity.current_electrodes
+            current_entity = self.data_object.current_electrodes
             receiver_locs = np.vstack(
-                [receiver_entity.vertices, current_entity.vertices]
+                [self.data_object.vertices, current_entity.vertices]
             )
-
             self._mesh = get_drape_model(
                 self.geoh5,
                 "Models",

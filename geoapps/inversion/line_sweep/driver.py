@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 from geoh5py.data import FilenameData
 from geoh5py.groups import SimPEGGroup
+from geoh5py.objects import DrapeModel, PotentialElectrode
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -121,7 +122,14 @@ class LineSweepDriver(SweepDriver, InversionDriver):
         drape_models = []
         for line in np.unique(line_ids):
             with Workspace(f"{path / files[line]}.ui.geoh5") as ws:
-                survey = ws.get_entity("Data")[0]
+                out_group = [
+                    group for group in ws.groups if isinstance(group, SimPEGGroup)
+                ][0]
+                survey = [
+                    child
+                    for child in out_group.children
+                    if isinstance(child, PotentialElectrode)
+                ][0]
                 line_data = survey.get_entity(self.pseudo3d_params.line_object.name)
 
                 if not line_data:
@@ -129,8 +137,11 @@ class LineSweepDriver(SweepDriver, InversionDriver):
 
                 line_indices = line_ids == line
                 data = self.collect_line_data(survey, line_indices, data)
-
-                mesh = ws.get_entity("Models")[0]
+                mesh = [
+                    child
+                    for child in out_group.children
+                    if isinstance(child, DrapeModel)
+                ][0]
                 filedata = [
                     k for k in mesh.parent.children if isinstance(k, FilenameData)
                 ]
@@ -141,8 +152,8 @@ class LineSweepDriver(SweepDriver, InversionDriver):
                 )
                 for fdat in filedata:
                     fdat.copy(parent=local_simpeg_group)
+
                 mesh = mesh.copy(parent=local_simpeg_group)
-                mesh.name = "models"
                 drape_models.append(mesh)
 
         self.pseudo3d_params.data_object.add_data(data)

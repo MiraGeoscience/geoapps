@@ -396,11 +396,11 @@ def setup_inversion_workspace(
     # Create a mesh
 
     if "2d" in inversion_type:
-        lines = survey.get_entity("line_id")[0].values
+        lines = survey.get_entity("line_ids")[0].values
         entity, mesh, _ = get_drape_model(  # pylint: disable=W0632
             geoh5,
             "Models",
-            survey.vertices[survey.cells[lines == 2, :], :],
+            survey.vertices[np.unique(survey.cells[lines == 101, :]), :],
             [cell_size[0], cell_size[2]],
             100.0,
             [padding_distance] * 2 + [padding_distance] * 2,

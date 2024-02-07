@@ -89,11 +89,15 @@ class BasePseudo3DDriver(LineSweepDriver):
 
                 filepath = Path(self.working_directory) / f"{uid}.ui.geoh5"
                 with Workspace(filepath) as iter_workspace:
+                    cell_mask: np.ndarray = (
+                        self.pseudo3d_params.line_object.values == trial["line_id"]
+                    )
+
+                    if not np.any(cell_mask):
+                        continue
+
                     receiver_entity = extract_dcip_survey(
-                        iter_workspace,
-                        self.inversion_data.entity,
-                        self.pseudo3d_params.line_object.values,
-                        trial["line_id"],
+                        iter_workspace, self.inversion_data.entity, cell_mask
                     )
                     current_entity = receiver_entity.current_electrodes
                     receiver_locs = np.vstack(

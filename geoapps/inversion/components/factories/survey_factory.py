@@ -19,8 +19,6 @@ import numpy as np
 import SimPEG.electromagnetics.time_domain as tdem
 from scipy.interpolate import interp1d
 
-from geoapps.utils.surveys import extract_dcip_survey
-
 from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
 from .source_factory import SourcesFactory
@@ -227,12 +225,7 @@ class SurveyFactory(SimPEGFactory):
             survey.std = uncertainty_vec
 
         else:
-            index_map = (
-                data.global_map[local_index]
-                if data.global_map is not None
-                else local_index
-            )
-            local_data = {k: v[index_map] for k, v in data.observed.items()}
+            local_data = {k: v[local_index] for k, v in data.observed.items()}
             local_uncertainties = {
                 k: v[local_index] for k, v in data.uncertainties.items()
             }
@@ -274,12 +267,13 @@ class SurveyFactory(SimPEGFactory):
 
         receiver_entity = data.entity
         if "2d" in self.factory_type:
-            receiver_entity = extract_dcip_survey(
-                self.params.geoh5,
-                receiver_entity,
-                self.params.line_object.values,
-                self.params.line_id,
-            )
+            # receiver_entity = extract_dcip_survey(
+            #     self.params.geoh5,
+            #     receiver_entity,
+            #     self.params.line_object.values,
+            #     self.params.line_id,
+            # )
+            self.local_index = np.arange(receiver_entity.n_cells)
 
         source_ids, order = np.unique(
             receiver_entity.ab_cell_id.values[self.local_index], return_index=True

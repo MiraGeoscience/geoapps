@@ -67,13 +67,8 @@ class InversionTopography(InversionLocations):
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
-            angle=self.angle,
         )
-
         self.locations = super().filter(self.locations)
-
-        if self.is_rotated:
-            self.locations = super().rotate(self.locations)
 
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
