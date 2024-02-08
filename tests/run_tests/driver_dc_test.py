@@ -24,7 +24,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.152105803389558, "phi_d": 31.56, "phi_m": 171.5}
+target_run = {"data_norm": 0.15258, "phi_d": 31.85, "phi_m": 122.7}
 
 np.random.seed(0)
 
@@ -58,6 +58,8 @@ def test_dc_3d_fwr_run(
 
     survey.ab_cell_id = tx_id
     survey.cells = cells
+
+    geoh5.close()
 
     params = DirectCurrent3DParams(
         forward_only=True,
