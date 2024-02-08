@@ -230,9 +230,9 @@ class SurveyFactory(SimPEGFactory):
             data_vec = self._stack_channels(local_data, "row")
             uncertainty_vec = self._stack_channels(local_uncertainties, "row")
             uncertainty_vec[np.isnan(data_vec)] = np.inf
-            data_vec[
-                np.isnan(data_vec)
-            ] = self.dummy  # Nan's handled by inf uncertainties
+            data_vec[np.isnan(data_vec)] = (
+                self.dummy
+            )  # Nan's handled by inf uncertainties
             survey.dobs = data_vec
             survey.std = uncertainty_vec
 
@@ -250,9 +250,9 @@ class SurveyFactory(SimPEGFactory):
             data_vec = self._stack_channels(local_data, "column")
             uncertainty_vec = self._stack_channels(local_uncertainties, "column")
             uncertainty_vec[np.isnan(data_vec)] = np.inf
-            data_vec[
-                np.isnan(data_vec)
-            ] = self.dummy  # Nan's handled by inf uncertainties
+            data_vec[np.isnan(data_vec)] = (
+                self.dummy
+            )  # Nan's handled by inf uncertainties
             survey.dobs = data_vec
             survey.std = uncertainty_vec
 
