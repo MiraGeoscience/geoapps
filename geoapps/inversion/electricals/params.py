@@ -8,27 +8,19 @@
 from __future__ import annotations
 
 import numpy as np
+from geoh5py.data import Data, DataAssociationEnum
 
 from geoapps.inversion import InversionBaseParams
 from geoapps.utils.models import get_drape_model
 
 
-class Base2DParams(InversionBaseParams):
+class Core2DParams(InversionBaseParams):
     """
-    Parameter class for electrical->induced polarization (IP) inversion.
+    Core parameter class for 2D electrical->conductivity inversion.
     """
-
-    _directive_list = [
-        "UpdateSensitivityWeights",
-        "Update_IRLS",
-        "BetaEstimate_ByEig",
-        "UpdatePreconditioner",
-        "SaveIterationsGeoH5",
-    ]
 
     def __init__(self, input_file=None, forward_only=False, **kwargs):
         self._line_object = None
-        self._line_id = None
         self._u_cell_size: float = 25.0
         self._v_cell_size: float = 25.0
         self._depth_core: float = 100.0
@@ -47,14 +39,8 @@ class Base2DParams(InversionBaseParams):
     def line_object(self, val):
         self._line_object = val
 
-    @property
-    def line_id(self):
-        """Line ID to invert."""
-        return self._line_id
-
-    @line_id.setter
-    def line_id(self, val):
-        self._line_id = val
+        if isinstance(val, Data) and val.association is not DataAssociationEnum.CELL:
+            raise ValueError("Line identifier must be associated with cells.")
 
     @property
     def u_cell_size(self):
@@ -110,6 +96,26 @@ class Base2DParams(InversionBaseParams):
     def expansion_factor(self, value):
         self.setter_validator("expansion_factor", value)
 
+
+class Base2DParams(Core2DParams):
+    """
+    Parameter class for electrical->induced polarization (IP) inversion.
+    """
+
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._line_id = None
+
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
+
+    @property
+    def line_id(self):
+        """Line ID to invert."""
+        return self._line_id
+
+    @line_id.setter
+    def line_id(self, val):
+        self._line_id = val
+
     @property
     def mesh(self):
         if self._mesh is None and self.geoh5 is not None:
@@ -136,10 +142,30 @@ class Base2DParams(InversionBaseParams):
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
 
-    @property
-    def length_scale_y(self):
-        return None
+
+class BasePseudo3DParams(Core2DParams):
+    """
+    Base parameter class for pseudo electrical->conductivity inversion.
+    """
+
+    def __init__(self, input_file=None, forward_only=False, **kwargs):
+        self._files_only = None
+        self._cleanup = None
+
+        super().__init__(input_file=input_file, forward_only=forward_only, **kwargs)
 
     @property
-    def y_norm(self):
-        return None
+    def files_only(self):
+        return self._files_only
+
+    @files_only.setter
+    def files_only(self, val):
+        self.setter_validator("files_only", val)
+
+    @property
+    def cleanup(self):
+        return self._cleanup
+
+    @cleanup.setter
+    def cleanup(self, val):
+        self.setter_validator("cleanup", val)
