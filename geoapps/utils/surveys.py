@@ -50,7 +50,7 @@ def get_containing_cells(
             inds = np.unique(np.r_[inds, np.hstack(line_ind)])
 
     elif isinstance(mesh, TensorMesh):
-        locations = data.drape_locations(get_unique_locations(data.survey))
+        locations = data.drape_locations(np.unique(data.locations, axis=0))
         xi = np.searchsorted(mesh.nodes_x, locations[:, 0]) - 1
         yi = np.searchsorted(mesh.nodes_y, locations[:, -1]) - 1
         inds = xi * mesh.shape_cells[1] + yi
