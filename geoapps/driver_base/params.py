@@ -280,6 +280,14 @@ class BaseParams:
         if val is None:
             self._geoh5 = val
             return
+
+        if self.input_file is not None and self.input_file.geoh5 is not None:
+            self.input_file = InputFile(
+                ui_json=self._default_ui_json,
+                validations=self.validations,
+                validate=False,
+            )
+
         self.setter_validator(
             "geoh5",
             val,

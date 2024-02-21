@@ -398,3 +398,42 @@ def test_octree_diagonal_balance(
 
         assert (values == np.array(exp_values)).all()
         assert (counts == np.array(exp_counts)).all()
+
+
+def test_app_change_geoh5(tmp_path: Path, setup_test_octree):
+    (
+        cell_sizes,
+        depth_core,
+        horizontal_padding,
+        locations,
+        minimum_level,
+        refinement,
+        _,
+        vertical_padding,
+    ) = setup_test_octree
+
+    with Workspace.create(tmp_path / "testOctree.geoh5") as workspace:
+        points = Points.create(workspace, vertices=locations)
+        refinements = {
+            "Refinement A object": points.uid,
+            "Refinement A levels": refinement,
+            "Refinement A type": "surface",
+            "Refinement B object": None,
+            "minimum_level": minimum_level,
+        }
+        app = OctreeMesh(
+            geoh5=workspace,
+            objects=str(points.uid),
+            u_cell_size=cell_sizes[0],
+            v_cell_size=cell_sizes[1],
+            w_cell_size=cell_sizes[2],
+            horizontal_padding=horizontal_padding,
+            vertical_padding=vertical_padding,
+            diagonal_balance=False,
+            depth_core=depth_core,
+            **refinements,
+        )
+        new_workspace = Workspace.create(tmp_path / "testOctree_new.geoh5")
+        new_workspace.close()
+
+        app.h5file = new_workspace.h5file
