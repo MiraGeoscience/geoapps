@@ -98,9 +98,15 @@ class JointSurveyDriver(BaseJointDriver):
                             )
 
                 self._directives = DirectivesFactory(self)
+                global_model_save = self._directives.save_iteration_model_directive
+                if self.models.is_sigma:
+                    global_model_save.transforms += [
+                        maps.ExpMap(self.inversion_mesh.mesh)
+                    ]
+
                 self._directives.directive_list = (
                     self._directives.inversion_directives
-                    + [self._directives.save_iteration_model_directive]
+                    + [global_model_save]
                     + directives_list
                 )
         return self._directives
