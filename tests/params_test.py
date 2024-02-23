@@ -206,6 +206,14 @@ def test_default_input_file(tmp_path: Path):
         assert all(check)
 
 
+def test_validate_geoh5():
+    ifile = grav_params.input_file
+    with pytest.raises(ValueError, match="Input 'geoh5' must be a valid"):
+        grav_params.geoh5 = 4
+
+    assert grav_params.input_file != ifile
+
+
 def test_update():
     new_params = {
         "starting_model": 99.0,
@@ -712,15 +720,6 @@ grav_params = GravityParams(
     },
 )
 grav_params.input_file.geoh5.open()
-
-
-def test_validate_geoh5():
-    with pytest.raises(TypeValidationError) as excinfo:
-        grav_params.geoh5 = 4
-
-    assert all(
-        [k in str(excinfo.value) for k in ["geoh5", "Type", "int", "str", "Workspace"]]
-    )
 
 
 def test_validate_out_group():
