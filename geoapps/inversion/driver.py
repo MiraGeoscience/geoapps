@@ -490,7 +490,6 @@ class InversionLogger:
 
 
 if __name__ == "__main__":
-    # file = str(Path(sys.argv[1]).resolve())
-    file = r"C:\Users\dominiquef\Desktop\test_tem_crash_full.ui.json"
+    file = str(Path(sys.argv[1]).resolve())
     InversionDriver.start(file)
     sys.stdout.close()
