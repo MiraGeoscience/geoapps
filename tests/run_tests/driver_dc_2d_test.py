@@ -19,16 +19,15 @@ from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
     DirectCurrent2DParams,
 )
 from geoapps.shared_utils.utils import get_inversion_output
-from geoapps.utils.surveys import survey_lines
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
 target_run = {
-    "data_norm": 0.59762,
-    "phi_d": 1425,
-    "phi_m": 7.851,
+    "data_norm": 0.59563,
+    "phi_d": 1400,
+    "phi_m": 8.004,
 }
 
 np.random.seed(0)
@@ -52,7 +51,6 @@ def test_dc_2d_fwr_run(
         drape_height=0.0,
         flatten=False,
     )
-    _ = survey_lines(survey, [-100, -100], save="line_ids")
     params = DirectCurrent2DParams(
         forward_only=True,
         geoh5=geoh5,
@@ -67,7 +65,7 @@ def test_dc_2d_fwr_run(
         data_object=survey.uid,
         starting_model=model.uid,
         line_object=geoh5.get_entity("line_ids")[0].uid,
-        line_id=2,
+        line_id=101,
     )
     params.workpath = tmp_path
     fwr_driver = DirectCurrent2DDriver(params)
@@ -82,7 +80,6 @@ def test_dc_2d_run(tmp_path: Path, max_iterations=1, pytest=True):
     with Workspace(workpath) as geoh5:
         potential = geoh5.get_entity("Iteration_0_dc")[0]
         topography = geoh5.get_entity("topography")[0]
-        _ = survey_lines(potential.parent, [-100, 100], save="line_IDs")
 
         # Run the inverse
         np.random.seed(0)
@@ -98,8 +95,8 @@ def test_dc_2d_run(tmp_path: Path, max_iterations=1, pytest=True):
             data_object=potential.parent.uid,
             potential_channel=potential.uid,
             potential_uncertainty=1e-3,
-            line_object=geoh5.get_entity("line_IDs")[0].uid,
-            line_id=2,
+            line_object=geoh5.get_entity("line_ids")[0].uid,
+            line_id=101,
             starting_model=1e-2,
             reference_model=1e-2,
             s_norm=0.0,

@@ -114,42 +114,39 @@ class InversionModelCollection:
         self._active_cells = active_cells
 
     @property
-    def starting(self):
-        mstart = self._starting.model
+    def starting(self) -> np.ndarray | None:
+        if self._starting.model is None:
+            return None
+
+        mstart = self._starting.model.copy()
 
         if mstart is not None and self.is_sigma:
-            mstart = mstart.copy()
             mstart = np.log(mstart)
 
         return mstart
 
     @property
-    def reference(self):
+    def reference(self) -> np.ndarray | None:
         mref = self._reference.model
 
         if self.driver.params.forward_only:
             return mref
 
-        if mref is None:
+        if mref is None or (self.is_sigma and all(mref == 0)):
             mref = self.starting
             self.driver.params.alpha_s = 0.0
-        else:
-            mref = mref.copy()
-            if self.is_sigma & (all(mref == 0)):
-                mref = self.starting
-                self.driver.params.alpha_s = 0.0
-            else:
-                mref = np.log(mref) if self.is_sigma else mref
-        return mref
+
+        ref_model = mref.copy()
+        ref_model = np.log(ref_model) if self.is_sigma else ref_model
+
+        return ref_model
 
     @property
-    def lower_bound(self):
-        lbound = self._lower_bound.model
-
-        if lbound is None:
+    def lower_bound(self) -> np.ndarray | None:
+        if self._lower_bound.model is None:
             return -np.inf
 
-        lbound = lbound.copy()
+        lbound = self._lower_bound.model.copy()
 
         if self.is_sigma:
             is_finite = np.isfinite(lbound)
@@ -157,13 +154,12 @@ class InversionModelCollection:
         return lbound
 
     @property
-    def upper_bound(self):
-        ubound = self._upper_bound.model
-
-        if ubound is None:
+    def upper_bound(self) -> np.ndarray | None:
+        if self._upper_bound.model is None:
             return np.inf
 
-        ubound = ubound.copy()
+        ubound = self._upper_bound.model.copy()
+
         if self.is_sigma:
             is_finite = np.isfinite(ubound)
             ubound[is_finite] = np.log(ubound[is_finite])
@@ -171,14 +167,16 @@ class InversionModelCollection:
         return ubound
 
     @property
-    def conductivity(self):
-        mstart = self._conductivity.model
+    def conductivity(self) -> np.ndarray | None:
+        if self._conductivity.model is None:
+            return None
 
-        if mstart is not None and self.is_sigma:
-            mstart = mstart.copy()
-            mstart = np.log(mstart)
+        cond_model = self._conductivity.model.copy()
 
-        return mstart
+        if cond_model is not None and self.is_sigma:
+            cond_model = np.log(cond_model)
+
+        return cond_model
 
     def _initialize(self, driver):
         self.driver = driver

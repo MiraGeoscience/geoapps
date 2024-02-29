@@ -19,8 +19,6 @@ import numpy as np
 import SimPEG.electromagnetics.time_domain as tdem
 from scipy.interpolate import interp1d
 
-from geoapps.utils.surveys import extract_dcip_survey
-
 from .receiver_factory import ReceiversFactory
 from .simpeg_factory import SimPEGFactory
 from .source_factory import SourcesFactory
@@ -237,12 +235,7 @@ class SurveyFactory(SimPEGFactory):
             survey.std = uncertainty_vec
 
         else:
-            index_map = (
-                data.global_map[local_index]
-                if data.global_map is not None
-                else local_index
-            )
-            local_data = {k: v[index_map] for k, v in data.observed.items()}
+            local_data = {k: v[local_index] for k, v in data.observed.items()}
             local_uncertainties = {
                 k: v[local_index] for k, v in data.uncertainties.items()
             }
@@ -284,16 +277,7 @@ class SurveyFactory(SimPEGFactory):
 
         receiver_entity = data.entity
         if "2d" in self.factory_type:
-            receiver_entity = extract_dcip_survey(
-                self.params.geoh5,
-                receiver_entity,
-                self.params.line_object.values,
-                self.params.line_id,
-            )
             self.local_index = np.arange(receiver_entity.n_cells)
-            data.global_map = [
-                k for k in receiver_entity.children if k.name == "Global Map"
-            ][0].values
 
         source_ids, order = np.unique(
             receiver_entity.ab_cell_id.values[self.local_index], return_index=True
@@ -301,14 +285,10 @@ class SurveyFactory(SimPEGFactory):
         currents = receiver_entity.current_electrodes
 
         if "2d" in self.params.inversion_type:
-            receiver_locations = receiver_entity.vertices
-            source_locations = currents.vertices
-            if local_index is not None:
-                receiver_locations = data.drape_locations(receiver_locations)
-                source_locations = data.drape_locations(source_locations)
-
+            receiver_locations = data.drape_locations(receiver_entity.vertices)
+            source_locations = data.drape_locations(currents.vertices)
         else:
-            receiver_locations = data.locations
+            receiver_locations = receiver_entity.vertices
             source_locations = currents.vertices
 
         # TODO hook up tile_spatial to handle local_index handling
@@ -341,11 +321,6 @@ class SurveyFactory(SimPEGFactory):
             self.local_index.append(receiver_indices)
 
         self.local_index = np.hstack(self.local_index)
-
-        if "2d" in self.factory_type:
-            current_entity = receiver_entity.current_electrodes
-            self.params.geoh5.remove_entity(receiver_entity)
-            self.params.geoh5.remove_entity(current_entity)
 
         return [sources]
 

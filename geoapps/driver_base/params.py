@@ -280,6 +280,7 @@ class BaseParams:
         if val is None:
             self._geoh5 = val
             return
+
         self.setter_validator(
             "geoh5",
             val,
