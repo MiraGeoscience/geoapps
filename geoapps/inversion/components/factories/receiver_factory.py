@@ -86,13 +86,6 @@ class ReceiversFactory(SimPEGFactory):
 
         args = []
 
-        if getattr(self.params.mesh, "rotation", None):
-            locations = rotate_xyz(
-                locations,
-                self.params.mesh.origin.tolist(),
-                -1 * self.params.mesh.rotation[0],
-            )
-
         if (
             "direct current" in self.factory_type
             or "induced polarization" in self.factory_type
