@@ -97,7 +97,7 @@ project = "geoapps v0.11.1"
 # The short X.Y version.
 version = "0.11.1"
 # The full version, including alpha/beta/rc tags.
-release = "0.11.1-rc.2"
+release = "0.11.1"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
