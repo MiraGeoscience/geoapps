@@ -67,13 +67,8 @@ class InversionTopography(InversionLocations):
         self.mask = filter_xy(
             self.locations[:, 0],
             self.locations[:, 1],
-            angle=self.angle,
         )
-
         self.locations = super().filter(self.locations)
-
-        if self.is_rotated:
-            self.locations = super().rotate(self.locations)
 
     def active_cells(self, mesh: InversionMesh, data: InversionData) -> np.ndarray:
         """
@@ -102,7 +97,8 @@ class InversionTopography(InversionLocations):
 
             if floating_active(mesh.mesh, active_cells):
                 warnings.warn(
-                    "Active cell adjustment has created a patch of active cells in the air, likely due to a faulty survey location."
+                    "Active cell adjustment has created a patch of active cells in the air, "
+                    "likely due to a faulty survey location."
                 )
 
         return active_cells

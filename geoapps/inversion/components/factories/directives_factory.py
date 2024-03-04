@@ -435,17 +435,8 @@ class SaveIterationGeoh5Factory(SimPEGFactory):
             "association": "CELL",
         }
 
-        if sorting is not None and "2d" not in self.factory_type:
+        if sorting is not None:
             kwargs["sorting"] = np.hstack(sorting)
-
-        if "2d" in self.factory_type:
-
-            def transform_2d(x):
-                expanded_data = np.array([np.nan] * len(inversion_object.indices))
-                expanded_data[inversion_object.global_map] = x[sorting]
-                return expanded_data
-
-            kwargs["transforms"].insert(0, transform_2d)
 
         if is_dc and name == "Apparent Resistivity":
             kwargs["transforms"].insert(

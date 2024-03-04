@@ -36,7 +36,6 @@ from SimPEG import utils
 from geoapps.driver_base.utils import active_from_xyz, treemesh_2_octree
 from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.utils.models import get_drape_model
-from geoapps.utils.surveys import survey_lines
 
 
 class Geoh5Tester:
@@ -76,6 +75,63 @@ class Geoh5Tester:
             return self.ws, self.params
         else:
             return self.ws
+
+
+def generate_dc_survey(workspace, x_loc, y_loc, z_loc=None):
+    """
+    Utility function to generate a DC survey.
+    """
+    # Create sources along line
+    if z_loc is None:
+        z_loc = np.zeros_like(x_loc)
+
+    vertices = np.c_[x_loc.ravel(), y_loc.ravel(), z_loc.ravel()]
+    parts = np.kron(np.arange(x_loc.shape[0]), np.ones(x_loc.shape[1])).astype("int")
+    currents = CurrentElectrode.create(workspace, vertices=vertices, parts=parts)
+    currents.add_default_ab_cell_id()
+    n_dipoles = 9
+    dipoles = []
+    current_id = []
+
+    for val in currents.ab_cell_id.values:
+        cell_id = int(currents.ab_map[val]) - 1
+
+        for dipole in range(n_dipoles):
+            dipole_ids = currents.cells[cell_id, :] + 2 + dipole
+
+            if (
+                any(dipole_ids > (currents.n_vertices - 1))
+                or len(
+                    np.unique(parts[np.r_[currents.cells[cell_id, 0], dipole_ids[1]]])
+                )
+                > 1
+            ):
+                continue
+
+            dipoles += [dipole_ids]
+            current_id += [val]
+
+    potentials = PotentialElectrode.create(
+        workspace, vertices=vertices, cells=np.vstack(dipoles).astype("uint32")
+    )
+    line_id = potentials.vertices[potentials.cells[:, 0], 1]
+    line_id = (line_id - np.min(line_id) + 1).astype(np.int32)
+    line_reference = {0: "Unknown"}
+    line_reference.update({k: str(k) for k in np.unique(line_id)})
+    potentials.add_data(
+        {
+            "line_ids": {
+                "values": line_id,
+                "type": "REFERENCED",
+                "value_map": line_reference,
+            }
+        }
+    )
+    potentials.ab_cell_id = np.hstack(current_id).astype("int32")
+    potentials.current_electrodes = currents
+    currents.potential_electrodes = potentials
+
+    return potentials
 
 
 def setup_inversion_workspace(
@@ -140,50 +196,7 @@ def setup_inversion_workspace(
     ]
 
     if inversion_type in ["dcip", "dcip_2d"]:
-        ab_vertices = np.c_[
-            X[:, :-2].flatten(), Y[:, :-2].flatten(), Z[:, :-2].flatten()
-        ]
-        mn_vertices = np.c_[
-            X[:, 2:].flatten() + center[0],
-            Y[:, 2:].flatten() + center[1],
-            Z[:, 2:].flatten() + center[2],
-        ]
-
-        parts = np.repeat(np.arange(n_lines), n_electrodes - 2).astype("int32")
-        currents = CurrentElectrode.create(
-            geoh5, name="survey (currents)", vertices=ab_vertices, parts=parts
-        )
-        currents.add_default_ab_cell_id()
-
-        N = 6
-        dipoles = []
-        current_id = []
-        for val in currents.ab_cell_id.values:  # For each source dipole
-            cell_id = int(currents.ab_map[val]) - 1  # Python 0 indexing
-            line = currents.parts[currents.cells[cell_id, 0]]
-            for m_n in range(N):
-                dipole_ids = (currents.cells[cell_id, :] + m_n).astype(
-                    "uint32"
-                )  # Skip two poles
-
-                # Shorten the array as we get to the end of the line
-                if any(dipole_ids > (len(mn_vertices) - 1)) or any(
-                    currents.parts[dipole_ids] != line
-                ):
-                    continue
-
-                dipoles += [dipole_ids]  # Save the receiver id
-                current_id += [val]  # Save the source id
-
-        survey = PotentialElectrode.create(
-            geoh5,
-            name="survey",
-            vertices=mn_vertices,
-            cells=np.vstack(dipoles).astype("uint32"),
-        )
-        survey.current_electrodes = currents
-        survey.ab_cell_id = np.asarray(current_id).astype("int32")
-        currents.potential_electrodes = survey
+        survey = generate_dc_survey(geoh5, X, Y, Z)
 
     elif inversion_type == "magnetotellurics":
         survey = MTReceivers.create(
@@ -383,13 +396,11 @@ def setup_inversion_workspace(
     # Create a mesh
 
     if "2d" in inversion_type:
-        locs = np.unique(np.vstack([ab_vertices, mn_vertices]), axis=0)
-        lines = survey_lines(locs, [-100, -100])
-
+        lines = survey.get_entity("line_ids")[0].values
         entity, mesh, _ = get_drape_model(  # pylint: disable=W0632
             geoh5,
             "Models",
-            locs[lines == 2],
+            survey.vertices[np.unique(survey.cells[lines == 101, :]), :],
             [cell_size[0], cell_size[2]],
             100.0,
             [padding_distance] * 2 + [padding_distance] * 2,
@@ -413,6 +424,7 @@ def setup_inversion_workspace(
             mesh,
             topography,
             levels=refinement,
+            diagonal_balance=False,
             finalize=False,
         )
 
@@ -421,6 +433,7 @@ def setup_inversion_workspace(
                 mesh,
                 vertices,
                 levels=[2],
+                diagonal_balance=False,
                 finalize=False,
             )
 

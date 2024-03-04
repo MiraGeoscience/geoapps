@@ -13,6 +13,7 @@ from uuid import UUID
 import numpy as np
 from geoh5py.data import NumericData
 from geoh5py.groups import SimPEGGroup
+from geoh5py.objects import Octree
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
@@ -346,6 +347,16 @@ class InversionBaseParams(BaseParams):
     @mesh.setter
     def mesh(self, val):
         self.setter_validator("mesh", val, fun=self._uuid_promoter)
+
+        if (
+            isinstance(self._mesh, Octree)
+            and self._mesh.rotation is not None
+            and self._mesh.rotation != 0.0
+        ):
+            raise ValueError(
+                "Rotated meshes are not supported. Please use a mesh with an angle of 0.0."
+            )
+
         self.update_group_options()
 
     @property

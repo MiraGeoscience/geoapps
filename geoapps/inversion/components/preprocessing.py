@@ -97,6 +97,11 @@ def window_data(
         distance=resolution,
     )
 
+    if isinstance(data_object, PotentialElectrode):
+        vert_mask = np.zeros(data_object.n_vertices, dtype=bool)
+        vert_mask[data_object.cells[mask, :].ravel()] = True
+        mask = vert_mask
+
     new_data_object = data_object.copy(
         parent=data_object.workspace,
         copy_children=True,
