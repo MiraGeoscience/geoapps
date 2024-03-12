@@ -24,6 +24,7 @@ from scipy.spatial import cKDTree
 from SimPEG import maps
 from SimPEG.electromagnetics.static.utils.static_utils import geometric_factor
 
+from geoapps.inversion.electricals.params import Base2DParams
 from geoapps.inversion.utils import create_nested_mesh
 from geoapps.shared_utils.utils import drape_2_tensor
 
@@ -113,7 +114,8 @@ class InversionData(InversionLocations):
         self.locations = super().get_locations(self.params.data_object)
 
         if (
-            getattr(self.params, "line_id", None) is not None
+            isinstance(self.params, Base2DParams)
+            and getattr(self.params, "line_id", None) is not None
             and getattr(self.params, "line_object", None) is not None
         ):
             self.mask = self.params.line_object.values == self.params.line_id
