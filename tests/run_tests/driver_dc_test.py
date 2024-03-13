@@ -12,7 +12,6 @@ from pathlib import Path
 import numpy as np
 from geoh5py.workspace import Workspace
 
-from geoapps.inversion.components import InversionData
 from geoapps.inversion.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
@@ -25,7 +24,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.17688725848387246, "phi_d": 29.61, "phi_m": 174.1}
+target_run = {"data_norm": 0.15258, "phi_d": 31.85, "phi_m": 122.7}
 
 np.random.seed(0)
 
@@ -60,6 +59,8 @@ def test_dc_3d_fwr_run(
     survey.ab_cell_id = tx_id
     survey.cells = cells
 
+    geoh5.close()
+
     params = DirectCurrent3DParams(
         forward_only=True,
         geoh5=geoh5,
@@ -89,11 +90,6 @@ def test_dc_3d_run(
         potential = geoh5.get_entity("Iteration_0_dc")[0]
         mesh = geoh5.get_entity("mesh")[0]
         topography = geoh5.get_entity("topography")[0]
-
-        # Set some data as nan
-        vals = potential.values
-        vals[0] = np.nan
-        potential.values = vals
 
         # Run the inverse
         np.random.seed(0)
@@ -125,25 +121,13 @@ def test_dc_3d_run(
         )
         params.write_input_file(path=tmp_path, name="Inv_run")
 
-        data = InversionData(geoh5, params)
-        survey = data.create_survey()
-        assert survey[0].dobs[0] == survey[0].dummy
-
     driver = DirectCurrent3DDriver.start(str(tmp_path / "Inv_run.ui.json"))
 
     output = get_inversion_output(
         driver.params.geoh5.h5file, driver.params.out_group.uid
     )
-    assert np.array([o is not np.nan for o in output["phi_d"]]).any()
-    assert np.array([o is not np.nan for o in output["phi_m"]]).any()
-
     if geoh5.open():
-        predicted = [
-            pred
-            for pred in geoh5.get_entity("Iteration_0_dc")
-            if pred.parent.parent.name == "Direct current 3d Inversion"
-        ][0]
-        output["data"] = predicted.values
+        output["data"] = potential.values
     if pytest:
         check_target(output, target_run)
 

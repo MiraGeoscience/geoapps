@@ -87,7 +87,6 @@ class InversionData(InversionLocations):
         self.radar: np.ndarray | None = None
         self.locations: np.ndarray | None = None
         self.mask: np.ndarray | None = None
-        self.global_map: np.ndarray | None = None
         self.indices: np.ndarray | None = None
         self.vector: bool | None = None
         self.n_blocks: int | None = None
@@ -113,12 +112,16 @@ class InversionData(InversionLocations):
         self.offset, self.radar = self.params.offset()
         self.locations = super().get_locations(self.params.data_object)
 
-        if self.angle is not None and self.angle != 0:
-            raise ValueError("Mesh is rotated.")
-        self.mask = np.ones(len(self.locations), dtype=bool)
-        if self.radar is not None:
-            if any(np.isnan(self.radar)):
-                self.mask[np.isnan(self.radar)] = False
+        if (
+            getattr(self.params, "line_id", None) is not None
+            and getattr(self.params, "line_object", None) is not None
+        ):
+            self.mask = self.params.line_object.values == self.params.line_id
+        else:
+            self.mask = np.ones(len(self.locations), dtype=bool)
+
+        if self.radar is not None and any(np.isnan(self.radar)):
+            self.mask[np.isnan(self.radar)] = False
 
         self.observed = self.filter(self.observed)
         self.radar = self.filter(self.radar)
@@ -127,8 +130,8 @@ class InversionData(InversionLocations):
         self.normalizations = self.get_normalizations()
         self.observed = self.normalize(self.observed)
         self.uncertainties = self.normalize(self.uncertainties, absolute=True)
-        self.locations = self.apply_transformations(self.locations)
         self.entity = self.write_entity()
+        self.params.data_object = self.entity
         self.locations = super().get_locations(self.entity)
         self.survey, self.local_index, _ = self.create_survey()
 
@@ -163,25 +166,8 @@ class InversionData(InversionLocations):
 
     def filter(self, a):
         """Remove vertices based on mask property."""
-        if (
-            self.params.inversion_type
-            in [
-                "direct current pseudo 3d",
-                "direct current 3d",
-                "direct current 2d",
-                "induced polarization 3d",
-                "induced polarization 2d",
-                "induced polarization pseudo 3d",
-            ]
-            and self.indices is None
-        ):
-            ab_ind = np.where(np.any(self.mask[self.params.data_object.cells], axis=1))[
-                0
-            ]
-            self.indices = ab_ind
-
         if self.indices is None:
-            self.indices = np.where(self.mask)
+            self.indices = np.where(self.mask)[0]
 
         a = super().filter(a, mask=self.indices)
 
@@ -251,11 +237,10 @@ class InversionData(InversionLocations):
         else:
             for component in data:
                 dnorm = data[component] / self.normalizations[None][component]
-                if "2d" in self.params.inversion_type:
-                    dnorm = self._embed_2d(dnorm)
                 data_dict[component] = entity.add_data(
                     {f"{basename}_{component}": {"values": dnorm}}
                 )
+
                 if not self.params.forward_only:
                     self._observed_data_types[component] = data_dict[
                         component
@@ -265,20 +250,14 @@ class InversionData(InversionLocations):
                         / self.normalizations[None][component]
                     )
                     uncerts[np.isinf(uncerts)] = np.nan
-                    if "2d" in self.params.inversion_type:
-                        uncerts = self._embed_2d(uncerts)
+
                     uncert_dict[component] = entity.add_data(
                         {f"Uncertainties_{component}": {"values": uncerts}}
                     )
 
                 if "direct current" in self.params.inversion_type:
                     apparent_property = data[component].copy()
-                    apparent_property[self.global_map] *= self.transformations[
-                        "apparent resistivity"
-                    ]
-
-                    if "2d" in self.params.inversion_type:
-                        apparent_property = self._embed_2d(apparent_property)
+                    apparent_property *= self.transformations["apparent resistivity"]
 
                     data_dict["apparent_resistivity"] = entity.add_data(
                         {
@@ -299,8 +278,7 @@ class InversionData(InversionLocations):
             locations = self.displace(locations, self.offset)
         if self.radar is not None:
             locations = self.drape(locations, self.radar)
-        if self.is_rotated:
-            locations = super().rotate(locations)
+
         return locations
 
     def displace(self, locs: np.ndarray, offset: np.ndarray) -> np.ndarray:
@@ -503,12 +481,6 @@ class InversionData(InversionLocations):
         """
         return self._observed_data_types
 
-    def _embed_2d(self, data):
-        ind = np.ones_like(data, dtype=bool)
-        ind[self.global_map] = False
-        data[ind] = np.nan
-        return data
-
     @staticmethod
     def check_tensor(channels):
         tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
@@ -531,5 +503,7 @@ class InversionData(InversionLocations):
             setattr(self.params, f"{comp}_uncertainty", uncert_dict[comp])
 
         if getattr(self.params, "line_object", None) is not None:
-            new_line = self.params.line_object.copy(parent=self.entity)
+            new_line = self.params.line_object.copy(
+                parent=self.entity, values=self.params.line_object.values[self.mask]
+            )
             self.params.line_object = new_line

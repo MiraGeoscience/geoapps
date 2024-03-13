@@ -47,6 +47,9 @@ class JointSurveyDriver(BaseJointDriver):
                 norm = np.array(np.sum(projection, axis=1)).flatten()
                 model = (projection * model_local_values) / (norm + 1e-8)
 
+                if self.drivers[0].models.is_sigma:
+                    model = np.exp(model)
+
                 setattr(
                     getattr(self.models, f"_{model_type}"),
                     "model",
@@ -95,9 +98,15 @@ class JointSurveyDriver(BaseJointDriver):
                             )
 
                 self._directives = DirectivesFactory(self)
+                global_model_save = self._directives.save_iteration_model_directive
+                if self.models.is_sigma:
+                    global_model_save.transforms += [
+                        maps.ExpMap(self.inversion_mesh.mesh)
+                    ]
+
                 self._directives.directive_list = (
                     self._directives.inversion_directives
-                    + [self._directives.save_iteration_model_directive]
+                    + [global_model_save]
                     + directives_list
                 )
         return self._directives
