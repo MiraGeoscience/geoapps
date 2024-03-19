@@ -39,7 +39,7 @@ variables:
 
 _environments_folder = Path("environments")
 
-_python_versions = ["3.10", "3.9"]
+_python_versions = ["3.10"]
 
 
 @contextmanager
