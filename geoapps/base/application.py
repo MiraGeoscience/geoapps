@@ -516,6 +516,7 @@ class BaseApplication:
 
             except AttributeError:
                 continue
+
         return param_dict
 
 
