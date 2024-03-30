@@ -230,7 +230,10 @@ class EdgeDetectionApp(PlotSelection2D):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.workspace
 
-        with fetch_active_workspace(self.params.geoh5):
+        if param_dict.get("objects", None) is None:
+            return
+
+        with fetch_active_workspace(self.workspace):
             new_params = EdgeDetectionParams(**param_dict)
             self.refresh.value = False
             (
