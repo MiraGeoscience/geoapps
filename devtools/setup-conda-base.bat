@@ -15,6 +15,9 @@ if !errorlevel! neq 0 (
   exit /B !errorlevel!
 )
 
+:: install a few packages in the conda base environment
+:: - conda-lock: for locking the environment
+:: - networkx, ruamel.yaml, tomli: used by run_conda_lock.py to create the conda environment lock files
 call !MY_CONDA_EXE! install -n base conda-lock networkx ruamel.yaml tomli
 
 if !errorlevel! neq 0 (
