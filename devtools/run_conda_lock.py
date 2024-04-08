@@ -41,7 +41,7 @@ variables:
   KMP_WARNINGS: 0
 """
 
-_python_versions = ["3.10", "3.9"]
+_python_versions = ["3.10"]
 _build_dev = True
 
 _environments_folder = Path("environments").resolve()

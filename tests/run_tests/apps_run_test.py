@@ -418,13 +418,14 @@ def test_data_interpolation(tmp_path: Path):
 
 
 def test_edge_detection(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / "edge_detection.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         ]:
             new_copy = GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
-            new_data = new_copy.add_data(
+            grid = new_copy.copy(copy_children=False)
+            new_data = grid.add_data(
                 {
                     "copy_data": {
                         "values": new_copy.children[0].values,
@@ -436,11 +437,13 @@ def test_edge_detection(tmp_path: Path):
     app = EdgeDetectionApp(plot_result=False)
     app._file_browser.reset(
         path=tmp_path,
-        filename="contour.geoh5",
+        filename="edge_detection.geoh5",
     )
     app._file_browser._apply_selection()
     app.file_browser_change(None)
+    app.objects.value = grid.uid
     app.data.value = new_data.uid
+    app.compute_trigger(None)
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
