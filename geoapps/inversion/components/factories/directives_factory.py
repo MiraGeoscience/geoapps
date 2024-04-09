@@ -218,11 +218,19 @@ class DirectivesFactory:
     def vector_inversion_directive(self):
         """Directive to update vector model."""
         if self._vector_inversion_directive is None and "vector" in self.factory_type:
+
+            reference_angle = (
+                getattr(self.driver.params, "reference_inclination", None) is not None
+                or getattr(self.driver.params, "reference_declination", None)
+                is not None
+            )
             self._vector_inversion_directive = directives.VectorInversion(
                 [objective.simulation for objective in self.driver.data_misfit.objfcts],
                 self.driver.regularization,
                 chifact_target=self.driver.params.chi_factor * 2,
+                reference_angle=reference_angle,
             )
+
         return self._vector_inversion_directive
 
 
