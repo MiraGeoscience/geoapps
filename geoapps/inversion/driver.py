@@ -279,7 +279,6 @@ class InversionDriver(BaseDriver):
         self.configure_dask()
 
         simpeg_inversion = self.inversion
-        self.params.update_group_options()
 
         predicted = None
         if self.params.forward_only:
