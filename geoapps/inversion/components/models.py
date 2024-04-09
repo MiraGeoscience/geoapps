@@ -382,21 +382,19 @@ class InversionModel:
             if self.model_type in ["starting", "reference"]:
                 aid = cartesian2amplitude_dip_azimuth(remapped_model)
                 aid[np.isnan(aid[:, 0]), 1:] = np.nan
-                entity = self.driver.inversion_mesh.entity.add_data(
+                self.driver.inversion_mesh.entity.add_data(
                     {f"{self.model_type}_inclination": {"values": aid[:, 1]}}
                 )
-                setattr(self.driver.params, f"{self.model_type}_inclination", entity)
-                entity = self.driver.inversion_mesh.entity.add_data(
+                self.driver.inversion_mesh.entity.add_data(
                     {f"{self.model_type}_declination": {"values": aid[:, 2]}}
                 )
-                setattr(self.driver.params, f"{self.model_type}_declination", entity)
                 remapped_model = aid[:, 0]
             else:
                 remapped_model = np.linalg.norm(
                     remapped_model.reshape((-1, 3), order="F"), axis=1
                 )
 
-        entity = self.driver.inversion_mesh.entity.add_data(
+        self.driver.inversion_mesh.entity.add_data(
             {f"{self.model_type}_model": {"values": remapped_model}}
         )
         model_type = self.model_type
@@ -404,8 +402,6 @@ class InversionModel:
         # TODO: Standardize names for upper_model and lower_model
         if model_type in ["starting", "reference", "conductivity"]:
             model_type += "_model"
-
-        setattr(self.driver.params, model_type, entity)
 
     def edit_ndv_model(self, model):
         """Change values to NDV on models and save to workspace."""
