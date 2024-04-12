@@ -110,7 +110,7 @@ Note the ``--lock`` option, that simple creates or updates the lock file, withou
 ``poetry`` would install the package through ``pip`` while we want dependencies to be installed through ``conda``
 so that they match the version pinned by ``conda-lock``.
 
-One limitation though: Poetry will look for packages in PiPY only and not in the Conda channels.
+One limitation though: Poetry will look for packages in PyPI only and not in the Conda channels.
 The version selected by Poetry might thus not be aviaible for Conda.
 
 To install ``Poetry`` on your computer, refer to the `Poetry documentation`_.

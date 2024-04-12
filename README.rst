@@ -114,7 +114,7 @@ To install the **geoapps** package published on PyPI:
 
 From a Git tag or branch
 ~~~~~~~~~~~~~~~~~~~~~~~~
-If the revision of the package is not on PiPY yet, you can install it from a Git tag:
+If the revision of the package is not on PyPI yet, you can install it from a Git tag:
 
 .. code-block:: bash
 
