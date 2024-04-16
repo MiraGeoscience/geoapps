@@ -92,10 +92,15 @@ class ClusteringDriver(BaseDriver):
 
                 # Create a mapping from original labels to new labels based on sorted cluster centers
                 sorted_centroids_indices = np.argsort(cluster_centers.sum(axis=1))
-                label_mapping = {old_label: new_label for new_label, old_label in enumerate(sorted_centroids_indices)}
+                label_mapping = {
+                    old_label: new_label
+                    for new_label, old_label in enumerate(sorted_centroids_indices)
+                }
 
                 # Apply the mapping to get new labels
-                new_labels = np.array([label_mapping[label] for label in original_labels])
+                new_labels = np.array(
+                    [label_mapping[label] for label in original_labels]
+                )
 
                 kmeans_dict = {
                     "labels": new_labels.astype(float),
