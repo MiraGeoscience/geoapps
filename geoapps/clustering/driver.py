@@ -244,7 +244,7 @@ class ClusteringDriver(BaseDriver):
                 colorpicker = color_pickers[ii]
                 color = colorpicker.lstrip("#")
                 group_map[ii + 1] = f"Cluster_{ii}"
-                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+                color_map += [[ii + 1] + hex_to_rgb(color) + [0]]
 
             color_map = np.core.records.fromarrays(
                 np.vstack(color_map).T,
