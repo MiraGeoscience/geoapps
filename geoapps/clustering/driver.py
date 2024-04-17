@@ -251,9 +251,6 @@ class ClusteringDriver(BaseDriver):
                 names=["Value", "Red", "Green", "Blue", "Alpha"],
             )
 
-            print(cluster_values)
-            print(group_map)
-
             cluster_groups = self.params.objects.add_data(
                 {
                     self.params.ga_group_name: {
