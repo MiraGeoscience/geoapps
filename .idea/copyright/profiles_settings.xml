@@ -1,7 +1,21 @@
 <component name="CopyrightManager">
-  <settings>
+  <settings default="Mira Geoscience - MIT">
     <module2copyright>
-      <element module="mira_sources" copyright="Mira Geoscience - MIT" />
+      <element module="sources" copyright="Mira Geoscience - MIT" />
     </module2copyright>
+    <LanguageOptions name="Python">
+      <option name="fileTypeOverride" value="3" />
+      <option name="block" value="false" />
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="box" value="true" />
+      <option name="filler" value="'" />
+    </LanguageOptions>
+    <LanguageOptions name="__TEMPLATE__">
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="box" value="true" />
+      <option name="filler" value="'" />
+    </LanguageOptions>
   </settings>
 </component>
