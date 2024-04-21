@@ -86,14 +86,31 @@ class ClusteringDriver(BaseDriver):
                 kmeans = KMeans(n_clusters=val, random_state=0, n_init=10).fit(
                     np.vstack(values).T
                 )
+                # Get the original labels and cluster centers
+                original_labels = kmeans.labels_
+                cluster_centers = kmeans.cluster_centers_
+
+                # Create a mapping from original labels to new labels based on sorted cluster centers
+                sorted_centroids_indices = np.argsort(cluster_centers.sum(axis=1))
+                label_mapping = {
+                    old_label: new_label
+                    for new_label, old_label in enumerate(sorted_centroids_indices)
+                }
+
+                # Apply the mapping to get new labels
+                new_labels = np.array(
+                    [label_mapping[label] for label in original_labels]
+                )
+
                 kmeans_dict = {
-                    "labels": kmeans.labels_.astype(float),
+                    "labels": new_labels.astype(float),
                     "inertia": kmeans.inertia_,
                 }
                 clusters[val] = kmeans_dict
 
         cluster_ids = clusters[n_clusters]["labels"].astype(float)
         kmeans = cluster_ids[mapping]
+
         return kmeans, clusters
 
     @staticmethod
@@ -227,7 +244,7 @@ class ClusteringDriver(BaseDriver):
                 colorpicker = color_pickers[ii]
                 color = colorpicker.lstrip("#")
                 group_map[ii + 1] = f"Cluster_{ii}"
-                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+                color_map += [[ii + 1] + hex_to_rgb(color) + [0]]
 
             color_map = np.core.records.fromarrays(
                 np.vstack(color_map).T,
