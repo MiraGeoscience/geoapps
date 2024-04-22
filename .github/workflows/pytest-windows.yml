@@ -1,4 +1,4 @@
-name: pytest on Unix OS
+name: pytest on Windows
 
 on:
   pull_request:
@@ -25,20 +25,20 @@ env:
 
 jobs:
   pytest:
-    name: pytest (Unix)
+    name: pytest (Windows)
     strategy:
       fail-fast: false
       matrix:
         python_ver: ['3.10']
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
     defaults:
       run:
-        shell: bash -l {0}
+        shell: powershell
+    runs-on: windows-latest
     env:
       PYTHONUTF8: 1
-      CONDA_LOCK_ENV_FILE: environments/conda-py-${{ matrix.python_ver }}-${{ startsWith(matrix.os, 'macos') && 'osx' || 'linux' }}-64-dev.lock.yml
-      PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
+      CONDA_CHANNEL_PRIORITY: strict
+      PIP_NO_DEPS: 1 # all dependencies are installed from conda
+      CONDA_LOCK_ENV_FILE: environments/py-${{ matrix.python_ver }}-win-64-dev.conda.lock.yml
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,7 +48,13 @@ jobs:
         with:
           environment-file: ${{ env.CONDA_LOCK_ENV_FILE }}
           environment-name: test_env
+          init-shell: powershell
           cache-downloads: true
       - name: pytest
-        run: |
-          pytest --cov=${source_dir} --cov-report=xml --cov-branch
+        run: pytest --cov --cov-report=xml
+      - name: Codecov
+        if: ${{ success() && matrix.python_ver == '3.10' }}
+        uses: codecov/codecov-action@v3
+        with:
+          name: GitHub
+          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos

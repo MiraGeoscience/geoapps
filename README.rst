@@ -65,6 +65,94 @@ Current sponsors
 - `Teck <https://www.teck.com/>`_
 - `Vale <https://www.vale.com/canada>`_
 
+
+Installation
+^^^^^^^^^^^^
+**geoapps** is currently written for Python 3.10.
+
+Install Conda
+-------------
+
+To install **geoapps**, you need to install **Conda** first.
+
+
+We recommend to install **Conda** using `miniforge`_.
+
+.. _miniforge: https://github.com/conda-forge/miniforge
+
+
+Within a conda environment
+--------------------------
+
+You can install (or update) a conda environment with all the requires packages to run **geoapps**.
+To do so you can directly run the **Install_or_Update.bat** file by double left clicking on it.
+
+Install with conda
+------------------
+
+You can install the package using ``conda`` and the ``.lock`` files from a conda prompt:
+
+.. code-block:: bash
+
+  conda env create -n my-env -f environments/[the_desired_env].lock.yml
+
+Install with PyPI
+-----------------
+
+You should not install the package from PyPI, as the app requires conda packages to run.
+Still, you can install it in a prepared conda environment, telling ``pip`` not to install dependencies
+thanks to the ``--no-deps`` option.
+
+From PyPI
+~~~~~~~~~
+
+To install the **geoapps** package published on PyPI:
+
+.. code-block:: bash
+
+    pip install -U --no-deps geoapps
+
+From a Git tag or branch
+~~~~~~~~~~~~~~~~~~~~~~~~
+If the revision of the package is not on PyPI yet, you can install it from a Git tag:
+
+.. code-block:: bash
+
+    pip install -U --no-deps --force-reinstall https://github.com/MiraGeoscience/geoapps/archive/refs/tags/TAG.zip
+
+Or to install the latest changes available on a given Git branch:
+
+.. code-block:: bash
+
+    pip install -U --no-deps --force-reinstall https://github.com/MiraGeoscience/geoapps/archive/refs/heads/BRANCH.zip
+
+.. note::
+    The ``--force-reinstall`` option is used to make sure the updated version
+    of the sources is installed, and not the cached version, even if the version number
+    did not change. The ``-U`` or ``--upgrade`` option is used to make sure to get the latest version,
+    on not merely reinstall the same version. As the package is aimed to be in a **Conda environment**, the option ``--no-deps`` is used to avoid installing the dependencies with pip, as they will be installed with conda.
+
+From a local copy of the sources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+If you have a git clone of the package sources locally,
+you can install **geoapps** from the local copy of the sources with:
+
+.. code-block:: bash
+
+    pip install -U --force-reinstall path/to/project_folder_with_pyproject_toml
+
+Or in **editable mode**, so that you can edit the sources and see the effect immediately at runtime:
+
+.. code-block:: bash
+
+    pip install -e -U --force-reinstall path/to/project_folder_with_pyproject_toml
+
+Setup for development
+^^^^^^^^^^^^^^^^^^^^^
+To configure the development environment and tools, please see `README-dev.rst`_.
+
+.. _README-dev.rst: README-dev.rst
+
 Third Party Software
 ^^^^^^^^^^^^^^^^^^^^
 The geoapps Software may provide links to third party libraries or code (collectively “Third Party Software”)
