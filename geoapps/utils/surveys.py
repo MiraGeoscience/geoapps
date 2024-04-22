@@ -7,6 +7,8 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from SimPEG.survey import BaseSurvey
