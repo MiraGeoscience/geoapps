@@ -17,11 +17,13 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 9f9d302086cacc6bfce28b184be8acbb7004001057f62f397148654b59dfc41b
-    osx-64: 620c2e53cfb19de14fb6965d4de1c712576d1c990c1d40c281b602eda8e5b917
-    linux-64: e1b026f07a9f89d7e7a91c7e10b35807c881420cffb87ced9129305019ba7e2f
+    win-64: c550b58f790f7c6cf6d5e0aeca6b5e9de49bdc117888dd0d5c87da0d3923e5d2
+    osx-64: 24db61e243e92df8b982388d733fe295396869b3daa7d1ea14c337af005b0e48
+    linux-64: ee4c7f190d113808f096425d63d0f28692f2c9143d16b9d4e8216b7d6ef9d612
   channels:
   - url: conda-forge
+    used_env_vars: []
+  - url: kinverarity
     used_env_vars: []
   platforms:
   - win-64
@@ -1113,6 +1115,45 @@ package:
     sha256: 18e893342e7ac8254741ea1dbae1b1f8e7771f2fdbb12e591e55f3a0519343ef
   category: core
   optional: true
+- name: chardet
+  version: 5.2.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.*
+  url: https://conda.anaconda.org/conda-forge/linux-64/chardet-5.2.0-py310hff52083_1.conda
+  hash:
+    md5: a677136a83b823803d2f92045f885be2
+    sha256: ab38a9946bc2beb9fc03c810b61d9e93030afff3e17e82ad4f8a1e7749957125
+  category: main
+  optional: false
+- name: chardet
+  version: 5.2.0
+  manager: conda
+  platform: osx-64
+  dependencies:
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.*
+  url: https://conda.anaconda.org/conda-forge/osx-64/chardet-5.2.0-py310h2ec42d9_1.conda
+  hash:
+    md5: c1a74b747db074df089e644b92fecc40
+    sha256: 91a708b88de532497469162b335a316aef47d56878bddf66df186928492690ff
+  category: main
+  optional: false
+- name: chardet
+  version: 5.2.0
+  manager: conda
+  platform: win-64
+  dependencies:
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.*
+  url: https://conda.anaconda.org/conda-forge/win-64/chardet-5.2.0-py310h5588dad_1.conda
+  hash:
+    md5: c273eb835519f5b7859fabcd7483f6f7
+    sha256: 069e17a9a0a60456e22b7035ba93bb597867352fa336a7ff46096094b5e8910b
+  category: main
+  optional: false
 - name: charset-normalizer
   version: 3.3.2
   manager: conda
@@ -2094,6 +2135,42 @@ package:
     sha256: 2ec4a0900a4a9f42615fc04d0fb3286b796abe56590e8e042f6ec25e102dd5af
   category: apps
   optional: true
+- name: et_xmlfile
+  version: 1.1.0
+  manager: conda
+  platform: linux-64
+  dependencies:
+    python: '>=3.6'
+  url: https://conda.anaconda.org/conda-forge/noarch/et_xmlfile-1.1.0-pyhd8ed1ab_0.conda
+  hash:
+    md5: a2f2138597905eaa72e561d8efb42cf3
+    sha256: 0c7bb50e1382615a660468dc531b8b17c5b91b88a02ed131c8e3cc63db507ce2
+  category: main
+  optional: false
+- name: et_xmlfile
+  version: 1.1.0
+  manager: conda
+  platform: osx-64
+  dependencies:
+    python: '>=3.6'
+  url: https://conda.anaconda.org/conda-forge/noarch/et_xmlfile-1.1.0-pyhd8ed1ab_0.conda
+  hash:
+    md5: a2f2138597905eaa72e561d8efb42cf3
+    sha256: 0c7bb50e1382615a660468dc531b8b17c5b91b88a02ed131c8e3cc63db507ce2
+  category: main
+  optional: false
+- name: et_xmlfile
+  version: 1.1.0
+  manager: conda
+  platform: win-64
+  dependencies:
+    python: '>=3.6'
+  url: https://conda.anaconda.org/conda-forge/noarch/et_xmlfile-1.1.0-pyhd8ed1ab_0.conda
+  hash:
+    md5: a2f2138597905eaa72e561d8efb42cf3
+    sha256: 0c7bb50e1382615a660468dc531b8b17c5b91b88a02ed131c8e3cc63db507ce2
+  category: main
+  optional: false
 - name: exceptiongroup
   version: 1.2.0
   manager: conda
@@ -4845,6 +4922,54 @@ package:
     sha256: aad2a703b9d7b038c0f745b853c6bb5f122988fe1a7a096e0e606d9cbec4eaab
   category: apps
   optional: true
+- name: lasio
+  version: '0.31'
+  manager: conda
+  platform: linux-64
+  dependencies:
+    chardet: ''
+    numpy: ''
+    openpyxl: ''
+    pandas: ''
+    python: '>=3.7'
+  url: https://conda.anaconda.org/kinverarity/noarch/lasio-0.31-py_0.tar.bz2
+  hash:
+    md5: a6bc8bac0fefc11be3546289d9484d74
+    sha256: ec4529dd72d948ce3a8b3d49d59d93f4518abbce3a313630b275476cee1a4e1d
+  category: main
+  optional: false
+- name: lasio
+  version: '0.31'
+  manager: conda
+  platform: osx-64
+  dependencies:
+    pandas: ''
+    chardet: ''
+    numpy: ''
+    openpyxl: ''
+    python: '>=3.7'
+  url: https://conda.anaconda.org/kinverarity/noarch/lasio-0.31-py_0.tar.bz2
+  hash:
+    md5: a6bc8bac0fefc11be3546289d9484d74
+    sha256: ec4529dd72d948ce3a8b3d49d59d93f4518abbce3a313630b275476cee1a4e1d
+  category: main
+  optional: false
+- name: lasio
+  version: '0.31'
+  manager: conda
+  platform: win-64
+  dependencies:
+    pandas: ''
+    chardet: ''
+    numpy: ''
+    openpyxl: ''
+    python: '>=3.7'
+  url: https://conda.anaconda.org/kinverarity/noarch/lasio-0.31-py_0.tar.bz2
+  hash:
+    md5: a6bc8bac0fefc11be3546289d9484d74
+    sha256: ec4529dd72d948ce3a8b3d49d59d93f4518abbce3a313630b275476cee1a4e1d
+  category: main
+  optional: false
 - name: lcms2
   version: '2.16'
   manager: conda
@@ -9160,6 +9285,52 @@ package:
     sha256: dda71cbe094234ab208f3552dec1f4ca6f2e614175d010808d6cb66ecf0bc753
   category: main
   optional: false
+- name: openpyxl
+  version: 3.1.2
+  manager: conda
+  platform: linux-64
+  dependencies:
+    et_xmlfile: ''
+    libgcc-ng: '>=12'
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.*
+  url: https://conda.anaconda.org/conda-forge/linux-64/openpyxl-3.1.2-py310h2372a71_1.conda
+  hash:
+    md5: 789e90e5acc36137d12f996ef8ca77c2
+    sha256: 283db2d555f93066d34e08a16d55f25a11b3b38ceb2897a0ce228c29c69f8e47
+  category: main
+  optional: false
+- name: openpyxl
+  version: 3.1.2
+  manager: conda
+  platform: osx-64
+  dependencies:
+    et_xmlfile: ''
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.*
+  url: https://conda.anaconda.org/conda-forge/osx-64/openpyxl-3.1.2-py310h6729b98_1.conda
+  hash:
+    md5: 92bead08af2e373e8032e1d89a4efc4a
+    sha256: fe2f7a3bf327690270f9876780645bdd335f4186612aba8d7ff72b9a016591a4
+  category: main
+  optional: false
+- name: openpyxl
+  version: 3.1.2
+  manager: conda
+  platform: win-64
+  dependencies:
+    et_xmlfile: ''
+    python: '>=3.10,<3.11.0a0'
+    python_abi: 3.10.*
+    ucrt: '>=10.0.20348.0'
+    vc: '>=14.2,<15'
+    vc14_runtime: '>=14.29.30139'
+  url: https://conda.anaconda.org/conda-forge/win-64/openpyxl-3.1.2-py310h8d17308_1.conda
+  hash:
+    md5: b67bc1ee2f916f8e30d9dd5c2dc1f763
+    sha256: aa4c11c929f391dfeaa1fb678cac515f109276cda5163eb6ebb723d847de12fc
+  category: main
+  optional: false
 - name: openssl
   version: 3.2.1
   manager: conda
@@ -11347,8 +11518,8 @@ package:
   hash:
     md5: 2cf4264fffb9e6eff6031c5b6884d61c
     sha256: f3ceef02ac164a8d3a080d0d32f8e2ebe10dd29e3a685d240e38b3599e146320
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: python-dateutil
   version: 2.9.0
   manager: conda
@@ -11360,8 +11531,8 @@ package:
   hash:
     md5: 2cf4264fffb9e6eff6031c5b6884d61c
     sha256: f3ceef02ac164a8d3a080d0d32f8e2ebe10dd29e3a685d240e38b3599e146320
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: python-dateutil
   version: 2.9.0
   manager: conda
@@ -11373,8 +11544,8 @@ package:
   hash:
     md5: 2cf4264fffb9e6eff6031c5b6884d61c
     sha256: f3ceef02ac164a8d3a080d0d32f8e2ebe10dd29e3a685d240e38b3599e146320
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: python-fastjsonschema
   version: 2.19.1
   manager: conda
@@ -11454,8 +11625,8 @@ package:
   hash:
     md5: 3eeeeb9e4827ace8c0c1419c85d590ad
     sha256: 1a7d6b233f7e6e3bbcbad054c8fd51e690a67b129a899a056a5e45dd9f00cb41
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: pytz
   version: '2024.1'
   manager: conda
@@ -11466,8 +11637,8 @@ package:
   hash:
     md5: 3eeeeb9e4827ace8c0c1419c85d590ad
     sha256: 1a7d6b233f7e6e3bbcbad054c8fd51e690a67b129a899a056a5e45dd9f00cb41
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: pytz
   version: '2024.1'
   manager: conda
@@ -11478,8 +11649,8 @@ package:
   hash:
     md5: 3eeeeb9e4827ace8c0c1419c85d590ad
     sha256: 1a7d6b233f7e6e3bbcbad054c8fd51e690a67b129a899a056a5e45dd9f00cb41
-  category: core
-  optional: true
+  category: main
+  optional: false
 - name: pywavelets
   version: 1.4.1
   manager: conda
@@ -14932,10 +15103,10 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pydantic: '>=2.5,<2.6'
-    tqdm: '>=4.64.0,<5.0.0'
-    geoh5py: '>=0.9.0-alpha.3,<0.10.0'
     lasio: '>=0.31,<0.32'
+    geoh5py: '>=0.9.0-alpha.3,<0.10.0'
+    tqdm: '>=4.64.0,<5.0.0'
+    pydantic: '>=2.5,<2.6'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip
   hash:
     sha256: ''
@@ -14949,10 +15120,10 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
-    pydantic: '>=2.5,<2.6'
-    tqdm: '>=4.64.0,<5.0.0'
-    geoh5py: '>=0.9.0-alpha.3,<0.10.0'
     lasio: '>=0.31,<0.32'
+    geoh5py: '>=0.9.0-alpha.3,<0.10.0'
+    tqdm: '>=4.64.0,<5.0.0'
+    pydantic: '>=2.5,<2.6'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip
   hash:
     sha256: ''
@@ -14966,10 +15137,10 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    pydantic: '>=2.5,<2.6'
-    tqdm: '>=4.64.0,<5.0.0'
-    geoh5py: '>=0.9.0-alpha.3,<0.10.0'
     lasio: '>=0.31,<0.32'
+    geoh5py: '>=0.9.0-alpha.3,<0.10.0'
+    tqdm: '>=4.64.0,<5.0.0'
+    pydantic: '>=2.5,<2.6'
   url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip
   hash:
     sha256: ''
@@ -14978,50 +15149,17 @@ package:
     type: url
     url: https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip#sha256=
   optional: false
-- name: lasio
-  version: '0.31'
-  manager: pip
-  platform: linux-64
-  dependencies:
-    numpy: '*'
-  url: https://files.pythonhosted.org/packages/62/70/a73c7cefe343162b4085645dacf2c236c0870d348854d2a226ba84f90cab/lasio-0.31-py2.py3-none-any.whl
-  hash:
-    sha256: 30204596b0f3eb9118af99a622f177fba2b6c245db0512f9f57c437020599db4
-  category: main
-  optional: false
-- name: lasio
-  version: '0.31'
-  manager: pip
-  platform: osx-64
-  dependencies:
-    numpy: '*'
-  url: https://files.pythonhosted.org/packages/62/70/a73c7cefe343162b4085645dacf2c236c0870d348854d2a226ba84f90cab/lasio-0.31-py2.py3-none-any.whl
-  hash:
-    sha256: 30204596b0f3eb9118af99a622f177fba2b6c245db0512f9f57c437020599db4
-  category: main
-  optional: false
-- name: lasio
-  version: '0.31'
-  manager: pip
-  platform: win-64
-  dependencies:
-    numpy: '*'
-  url: https://files.pythonhosted.org/packages/62/70/a73c7cefe343162b4085645dacf2c236c0870d348854d2a226ba84f90cab/lasio-0.31-py2.py3-none-any.whl
-  hash:
-    sha256: 30204596b0f3eb9118af99a622f177fba2b6c245db0512f9f57c437020599db4
-  category: main
-  optional: false
 - name: mira-omf
   version: 3.2.0-alpha.1
   manager: pip
   platform: linux-64
   dependencies:
+    numpy: '>=1.23.5,<1.24.0'
     properties: '>=0.6.0,<0.7.0'
+    geoh5py: '>=0.9.0-alpha.1,<0.10.0'
     vectormath: '>=0.2.0,<0.3.0'
     pypng: '>=0.20220715,<0.20220716'
     six: '>=1.16,<2.0'
-    geoh5py: '>=0.9.0-alpha.1,<0.10.0'
-    numpy: '>=1.23.5,<1.24.0'
   url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.2.0.zip
   hash:
     sha256: ''
@@ -15035,12 +15173,12 @@ package:
   manager: pip
   platform: osx-64
   dependencies:
+    numpy: '>=1.23.5,<1.24.0'
     properties: '>=0.6.0,<0.7.0'
+    geoh5py: '>=0.9.0-alpha.1,<0.10.0'
     vectormath: '>=0.2.0,<0.3.0'
     pypng: '>=0.20220715,<0.20220716'
     six: '>=1.16,<2.0'
-    geoh5py: '>=0.9.0-alpha.1,<0.10.0'
-    numpy: '>=1.23.5,<1.24.0'
   url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.2.0.zip
   hash:
     sha256: ''
@@ -15054,12 +15192,12 @@ package:
   manager: pip
   platform: win-64
   dependencies:
+    numpy: '>=1.23.5,<1.24.0'
     properties: '>=0.6.0,<0.7.0'
+    geoh5py: '>=0.9.0-alpha.1,<0.10.0'
     vectormath: '>=0.2.0,<0.3.0'
     pypng: '>=0.20220715,<0.20220716'
     six: '>=1.16,<2.0'
-    geoh5py: '>=0.9.0-alpha.1,<0.10.0'
-    numpy: '>=1.23.5,<1.24.0'
   url: https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.2.0.zip
   hash:
     sha256: ''

@@ -74,6 +74,7 @@ mira-simpeg = {version = "~0.19.0.dev7", source = "pypi", optional = true}
 empymod = {version = "~2.2.1", optional = true}  # from simpeg and geoana
 geoana = {version = "~0.4.0", optional = true}  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
+lasio = "~0.31"  # from las-geoh5
 mkl = {version = "2022.*", optional = true }  # from simpeg
 Pillow = "^10.0.1"  # from geoh5py
 properties = "~0.6.0"  # from omf
@@ -146,7 +147,10 @@ apps = [
 
 [tool.conda-lock]
 platforms = ['win-64', 'osx-64', 'linux-64']
-channels = ['conda-forge']
+channels = [
+    'conda-forge',
+    'kinverarity'  # for lasio
+]
 
 [tool.conda-lock.dependencies]
 libblas = "*=*mkl"
