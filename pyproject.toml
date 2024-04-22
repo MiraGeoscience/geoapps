@@ -77,6 +77,7 @@ h5py = "^3.2.1"  # from geoh5py
 mkl = {version = "2022.*", optional = true }  # from simpeg
 Pillow = "^10.0.1"  # from geoh5py
 properties = "~0.6.0"  # from omf
+pydantic = "~2.5.3"  # from las-geoh5
 pydiso = {version = "~0.0.3", optional = true}  # from simpeg
 pymatsolver = {version = "~0.2.0", optional = true}  # from simpeg
 pypng = "^0.20220715"  # from omf
