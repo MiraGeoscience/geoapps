@@ -94,7 +94,7 @@ You can install the package using ``conda`` and the ``.lock`` files from a conda
 
 .. code-block:: bash
 
-  conda env create -n my-env -f environments/[the_desired_env].lock.yml
+  conda env create --solver libmamba -n my-env -f environments/[the_desired_env].lock.yml
 
 Install with PyPI
 -----------------
