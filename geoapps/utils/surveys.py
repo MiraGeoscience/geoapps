@@ -16,7 +16,7 @@ from SimPEG.survey import BaseSurvey
 if TYPE_CHECKING:
     from geoapps.inversion.components.data import InversionData
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 from discretize import TensorMesh, TreeMesh
