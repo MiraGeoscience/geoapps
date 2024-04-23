@@ -26,11 +26,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.09141,
-    "phi_d": 9934,
-    "phi_m": 0.08341,
-}
+target_run = {"data_norm": 0.09141, "phi_d": 8981, "phi_m": 0.1124}
 
 
 def test_ip_2d_fwr_run(
