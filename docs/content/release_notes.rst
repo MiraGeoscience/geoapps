@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+Release 0.11.1 (2024-03-04)
+---------------------------
+
+Hotfix release for issues encountered since 0.11.0.
+
+- GEOPY-1265: Log applied twice on joint survey inversion with EM methods
+- GEOPY-1275: Fix crash on DCIP 2D inversion with line ID on nodes. Line ID is now on M-N pairs.
+- GEOPY-1325: Inducing field strength not applied to the MVI inversion. Issue introduced since updating SimPEG to v0.19.0.
+- GEOPY-1331: Apply fixes to coterminal angle calculation for MVI inversion.
+
+
 Release 0.11.0 (2023-10-04)
 ---------------------------
 

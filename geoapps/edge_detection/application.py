@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -195,7 +197,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
-        temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.0f}.geoh5"
+        temp_geoh5 = f"{string_name(param_dict.get('export_as'))}_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
@@ -228,16 +230,18 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
-        param_dict["geoh5"] = self.params.geoh5
+        param_dict["geoh5"] = self.workspace
 
-        with fetch_active_workspace(self.params.geoh5):
-            self.params.update(param_dict)
+        if param_dict.get("objects", None) is None:
+            return
 
+        with fetch_active_workspace(self.workspace):
+            new_params = EdgeDetectionParams(**param_dict)
             self.refresh.value = False
             (
                 vertices,
                 _,
-            ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
+            ) = EdgeDetectionDriver.get_edges(*new_params.edge_args())
             self.collections = [
                 collections.LineCollection(
                     np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2

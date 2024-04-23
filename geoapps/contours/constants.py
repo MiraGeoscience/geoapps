@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -115,21 +117,21 @@ default_ui_json.update(
         },
         "window_center_x": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Easting",
             "value": 0.0,
         },
         "window_center_y": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Northing",
             "value": 0.0,
         },
         "window_width": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Width",
             "min": 0.0,
@@ -137,7 +139,7 @@ default_ui_json.update(
         },
         "window_height": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Height",
             "min": 0.0,

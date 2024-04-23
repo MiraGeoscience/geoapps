@@ -1,9 +1,12 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -13,7 +16,7 @@ from SimPEG.survey import BaseSurvey
 if TYPE_CHECKING:
     from geoapps.inversion.components.data import InversionData
 
-from typing import Callable
+from collections.abc import Callable
 
 import numpy as np
 from discretize import TensorMesh, TreeMesh
