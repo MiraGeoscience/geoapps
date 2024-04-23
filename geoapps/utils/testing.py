@@ -491,7 +491,7 @@ def check_target(output: dict, target: dict, tolerance=0.1):
             / target["data_norm"],
             tolerance,
         )
-
+    print(output["phi_m"], target["phi_m"])
     np.testing.assert_array_less(
         np.abs(output["phi_m"][1] - target["phi_m"]) / target["phi_m"], tolerance
     )

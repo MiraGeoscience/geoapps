@@ -44,14 +44,15 @@ numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 scipy = "~1.10.1"
 semver = "~3.0.0"
 
-#geoh5py = {version = "~0.8.0", source = "pypi", allow-prereleases = true}
-geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
-#mira-omf = {version = "~3.1.0", source = "pypi", allow-prereleases = true}
-mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.2.0.zip#sha256="}
-#las-geoh5 = { version = "~0.1.0", source = "pypi", allow-prereleases = true}
-las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip#sha256="}
-#param-sweeps = {version = "~0.1.7-alpha.3", source = "pypi", allow-prereleases = true}
-param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
+geoh5py = {version = "~0.9.0-alpha.4", source = "pypi", allow-prereleases = true}
+#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
+mira-omf = {version = "~3.2.0-alpha.1", source = "pypi", allow-prereleases = true}
+#mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.2.0.zip#sha256="}
+las-geoh5 = { version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
+#las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip#sha256="}
+param-sweeps = {version = "~0.1.7-alpha.4", source = "pypi", allow-prereleases = true}
+#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
+
 
 ## dependencies for core algorithms
 dask = {version = "2022.10.*", extras = ["distributed"], optional = true}
