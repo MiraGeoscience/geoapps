@@ -34,7 +34,6 @@ def test_magnetic_vector_fwr_run(
     n_grid_points=2,
     refinement=(2,),
 ):
-    np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
     geoh5, _, model, points, topography = setup_inversion_workspace(

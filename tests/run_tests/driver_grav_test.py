@@ -31,7 +31,6 @@ def test_gravity_fwr_run(
     n_grid_points=2,
     refinement=(2,),
 ):
-    np.random.seed(0)
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -76,7 +75,6 @@ def test_gravity_run(
         gz.values = values
 
         # Run the inverse
-        np.random.seed(0)
         params = GravityParams(
             geoh5=geoh5,
             mesh=mesh.uid,

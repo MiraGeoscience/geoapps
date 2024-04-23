@@ -33,7 +33,6 @@ def test_susceptibility_fwr_run(
     n_grid_points=2,
     refinement=(2,),
 ):
-    np.random.seed(0)
     inducing_field = (49999.8, 90.0, 0.0)
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
@@ -89,7 +88,6 @@ def test_susceptibility_run(
         tmi.values = vals
 
         # Run the inverse
-        np.random.seed(0)
         params = MagneticScalarParams(
             geoh5=geoh5,
             mesh=mesh.uid,

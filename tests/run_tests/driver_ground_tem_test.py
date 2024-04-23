@@ -33,15 +33,12 @@ target_run = {
     "phi_m": 317.2,
 }
 
-np.random.seed(0)
-
 
 def test_ground_tem_fwr_run(
     tmp_path: Path,
     n_grid_points=4,
     refinement=(2,),
 ):
-    np.random.seed(0)
     # Run the forward
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -129,7 +126,6 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
         survey.get_data("Iteration_0_z_[0]")[0].values = vals
 
         # Run the inverse
-        np.random.seed(0)
         params = TimeDomainElectromagneticsParams(
             geoh5=geoh5,
             mesh=mesh.uid,
@@ -149,8 +145,7 @@ def test_ground_tem_run(tmp_path: Path, max_iterations=1, pytest=True):
             lower_bound=2e-6,
             upper_bound=1e2,
             max_global_iterations=max_iterations,
-            # initial_beta_ratio=1e1,
-            initial_beta=2.65e-02,
+            initial_beta_ratio=1e1,
             coolingRate=2,
             max_cg_iterations=200,
             prctile=100,
