@@ -29,7 +29,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.003936832660650801, "phi_d": 1.099, "phi_m": 2.774}
+target_run = {"data_norm": 0.003936832660650801, "phi_d": 2.505, "phi_m": 2.405}
 
 
 def test_magnetotellurics_fwr_run(

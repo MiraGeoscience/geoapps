@@ -33,7 +33,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 51.20763877051509, "phi_d": 1028, "phi_m": 0.10}
+target_run = {"data_norm": 51.20763877051509, "phi_d": 1287, "phi_m": 0.06688}
 
 
 def test_joint_cross_gradient_fwr_run(

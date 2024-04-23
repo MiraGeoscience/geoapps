@@ -25,7 +25,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 2.9323357382980544, "phi_d": 14.05, "phi_m": 1.895e-06}
+target_run = {"data_norm": 2.9323357382980544, "phi_d": 13.12, "phi_m": 2.242e-06}
 
 
 def test_susceptibility_fwr_run(

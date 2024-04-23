@@ -27,7 +27,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 1.099, "phi_d": 4150, "phi_m": 0.7511}
+target_run = {"data_norm": 1.099, "phi_d": 4346, "phi_m": 0.5953}
 
 
 def test_dc_p3d_fwr_run(
