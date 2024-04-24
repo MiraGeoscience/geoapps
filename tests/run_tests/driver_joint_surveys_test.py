@@ -31,7 +31,6 @@ def test_joint_surveys_fwr_run(
     n_grid_points=6,
     refinement=(2,),
 ):
-    np.random.seed(0)
     # Create local problem A
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -130,7 +129,6 @@ def test_joint_surveys_inv_run(
             drivers.append(GravityDriver(params))
 
         # Run the inverse
-        np.random.seed(0)
         joint_params = JointSurveysParams(
             geoh5=geoh5,
             topography_object=topography.uid,

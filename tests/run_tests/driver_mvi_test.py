@@ -26,7 +26,11 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_mvi_run = {"data_norm": 2.9326291021254236, "phi_d": 0.00371, "phi_m": 1.426e-06}
+target_mvi_run = {
+    "data_norm": 2.9326291021254236,
+    "phi_d": 0.003982,
+    "phi_m": 1.419e-06,
+}
 
 
 def test_magnetic_vector_fwr_run(
@@ -34,7 +38,6 @@ def test_magnetic_vector_fwr_run(
     n_grid_points=2,
     refinement=(2,),
 ):
-    np.random.seed(0)
     inducing_field = (50000.0, 90.0, 0.0)
     # Run the forward
     geoh5, _, model, points, topography = setup_inversion_workspace(

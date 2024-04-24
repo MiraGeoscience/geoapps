@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import numpy as np
 from geoh5py.groups import SimPEGGroup
 from geoh5py.workspace import Workspace
 
@@ -28,9 +27,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 1.099, "phi_d": 4150, "phi_m": 0.7511}
-
-np.random.seed(0)
+target_run = {"data_norm": 1.099, "phi_d": 4346, "phi_m": 0.5953}
 
 
 def test_dc_p3d_fwr_run(
@@ -88,7 +85,6 @@ def test_dc_p3d_run(
         topography = geoh5.get_entity("topography")[0]
 
         # Run the inverse
-        np.random.seed(0)
         params = DirectCurrentPseudo3DParams(
             geoh5=geoh5,
             mesh=mesh.uid,

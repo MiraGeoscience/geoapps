@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import numpy as np
 from geoh5py.groups import SimPEGGroup
 from geoh5py.workspace import Workspace
 
@@ -28,13 +27,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {
-    "data_norm": 0.08768,
-    "phi_d": 8239,
-    "phi_m": 0.1178,
-}
-
-np.random.seed(0)
+target_run = {"data_norm": 0.08768, "phi_d": 8981, "phi_m": 0.1124}
 
 
 def test_ip_p3d_fwr_run(
@@ -94,7 +87,6 @@ def test_ip_p3d_run(
         topography = geoh5.get_entity("topography")[0]
 
         # Run the inverse
-        np.random.seed(0)
         params = InducedPolarizationPseudo3DParams(
             geoh5=geoh5,
             mesh=mesh.uid,

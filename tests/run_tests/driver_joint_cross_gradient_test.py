@@ -33,7 +33,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 51.20763877051509, "phi_d": 1028, "phi_m": 0.10}
+target_run = {"data_norm": 51.20763877051509, "phi_d": 1178, "phi_m": 0.07903}
 
 
 def test_joint_cross_gradient_fwr_run(
@@ -41,7 +41,6 @@ def test_joint_cross_gradient_fwr_run(
     n_grid_points=4,
     refinement=(2,),
 ):
-    np.random.seed(0)
     # Create local problem A
     geoh5, _, model, survey, topography = setup_inversion_workspace(
         tmp_path,
@@ -207,7 +206,6 @@ def test_joint_cross_gradient_inv_run(
                 drivers.append(MagneticVectorDriver(params))
 
         # Run the inverse
-        np.random.seed(0)
         joint_params = JointCrossGradientParams(
             geoh5=geoh5,
             topography_object=topography.uid,

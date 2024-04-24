@@ -24,9 +24,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.000968641688072623, "phi_d": 0.1234, "phi_m": 3595}
-
-np.random.seed(0)
+target_run = {"data_norm": 0.000968641688072623, "phi_d": 0.254, "phi_m": 3194}
 
 
 def test_tipper_fwr_run(
@@ -122,7 +120,6 @@ def test_tipper_run(tmp_path: Path, max_iterations=1, pytest=True):
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
 
         # Run the inverse
-        np.random.seed(0)
         params = TipperParams(
             geoh5=geoh5,
             mesh=mesh.uid,

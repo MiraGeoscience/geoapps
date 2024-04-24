@@ -29,8 +29,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.003936832660650801, "phi_d": 1.099, "phi_m": 2.774}
-np.random.seed(0)
+target_run = {"data_norm": 0.003936832660650801, "phi_d": 2.505, "phi_m": 2.405}
 
 
 def test_magnetotellurics_fwr_run(
@@ -145,7 +144,6 @@ def test_magnetotellurics_run(tmp_path: Path, max_iterations=1, pytest=True):
             data_kwargs[f"{comp}_uncertainty"] = uncert_group.uid
 
         # Run the inverse
-        np.random.seed(0)
         params = MagnetotelluricsParams(
             geoh5=geoh5,
             mesh=mesh.uid,

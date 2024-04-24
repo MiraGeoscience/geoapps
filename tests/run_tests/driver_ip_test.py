@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import numpy as np
 from geoh5py.workspace import Workspace
 
 from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
@@ -26,9 +25,7 @@ from geoapps.utils.testing import check_target, setup_inversion_workspace
 # To test the full run and validate the inversion.
 # Move this file out of the test directory and run.
 
-target_run = {"data_norm": 0.008494, "phi_d": 1.734, "phi_m": 0.3202}
-
-np.random.seed(0)
+target_run = {"data_norm": 0.008494, "phi_d": 1.455, "phi_m": 0.3255}
 
 
 def test_ip_3d_fwr_run(
@@ -80,7 +77,6 @@ def test_ip_3d_run(
         topography = geoh5.get_entity("topography")[0]
 
         # Run the inverse
-        np.random.seed(0)
         params = InducedPolarization3DParams(
             geoh5=geoh5,
             mesh=mesh.uid,
