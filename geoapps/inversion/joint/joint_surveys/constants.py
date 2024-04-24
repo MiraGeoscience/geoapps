@@ -72,7 +72,7 @@ inversion_defaults = {
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
-    "run_command": "geoapps.inversion.driver",
+    "run_command": "simpeg_drivers.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }

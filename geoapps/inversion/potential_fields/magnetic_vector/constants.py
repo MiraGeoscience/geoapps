@@ -106,7 +106,7 @@ inversion_defaults = {
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
-    "run_command": "geoapps.inversion.driver",
+    "run_command": "simpeg_drivers.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
@@ -153,7 +153,7 @@ forward_defaults = {
     "generate_sweep": False,
     "monitoring_directory": None,
     "workspace_geoh5": None,
-    "run_command": "geoapps.inversion.driver",
+    "run_command": "simpeg_drivers.driver",
     "conda_environment": "geoapps",
     "distributed_workers": None,
 }
@@ -664,7 +664,7 @@ app_initializer = {
     "tmi_channel": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "tmi_uncertainty": 10.0,
     "tmi_channel_bool": True,
-    "mesh": UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"),
+    "mesh": UUID("{d7580229-a2f0-414d-b5b6-c888f339e5ca}"),
     "inducing_field_strength": 60000.0,
     "inducing_field_inclination": 79.0,
     "inducing_field_declination": 11.0,
