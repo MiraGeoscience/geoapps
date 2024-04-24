@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: disable=W0613
 
@@ -334,17 +336,16 @@ class InversionApp(BaseDashApplication):
             Output(component_id="window_center_y", component_property="max"),
             Output(component_id="window_width", component_property="max"),
             Output(component_id="window_height", component_property="max"),
+            Output(component_id="window_center_x", component_property="value"),
+            Output(component_id="window_center_y", component_property="value"),
+            Output(component_id="window_width", component_property="value"),
+            Output(component_id="window_height", component_property="value"),
             Input(component_id="data_object", component_property="value"),
         )(self.set_bounding_box)
         # Update plot
         self.app.callback(
             Output(component_id="plot", component_property="figure"),
             Output(component_id="data_count", component_property="children"),
-            Output(component_id="window_center_x", component_property="value"),
-            Output(component_id="window_center_y", component_property="value"),
-            Output(component_id="window_width", component_property="value"),
-            Output(component_id="window_height", component_property="value"),
-            Output(component_id="fix_aspect_ratio", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
             Input(component_id="plot", component_property="relayoutData"),
@@ -913,6 +914,10 @@ class InversionApp(BaseDashApplication):
             window_center_y_max,
             window_width_max,
             window_height_max,
+            (window_center_x_min + window_center_x_max) / 2.0,
+            (window_center_y_min + window_center_y_max) / 2.0,
+            window_width_max,
+            window_height_max,
         )
 
     @staticmethod
@@ -1128,7 +1133,7 @@ class InversionApp(BaseDashApplication):
         resolution: float | int,
         colorbar: list,
         fix_aspect_ratio: list,
-    ) -> (go.Figure, str, float, float, float, float, list):
+    ) -> (go.Figure, str):
         """
         Dash version of the plot_selection function in base/plot.
 
@@ -1159,11 +1164,6 @@ class InversionApp(BaseDashApplication):
             return (
                 go.Figure(),
                 data_count,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
             )
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
@@ -1188,11 +1188,6 @@ class InversionApp(BaseDashApplication):
                 return (
                     figure,
                     data_count,
-                    no_update,
-                    no_update,
-                    no_update,
-                    no_update,
-                    no_update,
                 )
         else:
             # Construct figure from existing figure to keep bounds and plot layout.
@@ -1261,37 +1256,7 @@ class InversionApp(BaseDashApplication):
                 )
                 data_count += f"{count}"
 
-            if (
-                "plot" in triggers
-                or center_x is None
-                or center_y is None
-                or width is None
-                or height is None
-            ):
-                if figure["layout"]["xaxis"]["autorange"]:
-                    x = np.array(figure["data"][0]["x"])
-                    x_range = [np.amin(x), np.amax(x)]
-                elif figure["layout"]["xaxis"]["range"] is not None:
-                    x_range = figure["layout"]["xaxis"]["range"]
-                else:
-                    figure["layout"]["xaxis"]["autorange"] = True
-                    x = np.array(figure["data"][0]["x"])
-                    x_range = [np.amin(x), np.amax(x)]
-                width = x_range[1] - x_range[0]
-                center_x = x_range[0] + (width / 2)
-                if figure["layout"]["yaxis"]["autorange"]:
-                    y = np.array(figure["data"][0]["y"])
-                    y_range = [np.amin(y), np.amax(y)]
-                elif figure["layout"]["yaxis"]["range"] is not None:
-                    y_range = figure["layout"]["yaxis"]["range"]
-                else:
-                    figure["layout"]["yaxis"]["autorange"] = True
-                    y = np.array(figure["data"][0]["y"])
-                    y_range = [np.amin(y), np.amax(y)]
-                height = y_range[1] - y_range[0]
-                center_y = y_range[0] + (height / 2)
-
-        return figure, data_count, center_x, center_y, width, height, fix_aspect_ratio
+        return figure, data_count
 
     def get_general_inversion_params(
         self,
