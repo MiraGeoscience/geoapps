@@ -13,13 +13,13 @@ import sys
 import numpy as np
 from discretize import TreeMesh
 from discretize.utils import mesh_builder_xyz
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.objects import Curve, ObjectBase, Octree, Surface
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import utils
 from scipy import interpolate
 from scipy.spatial import Delaunay, cKDTree
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation.constants import validations
 from geoapps.octree_creation.params import OctreeParams

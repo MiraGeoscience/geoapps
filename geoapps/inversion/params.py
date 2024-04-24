@@ -11,13 +11,12 @@ from copy import deepcopy
 from uuid import UUID
 
 import numpy as np
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.data import NumericData
 from geoh5py.groups import SimPEGGroup
 from geoh5py.objects import Octree
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
-
-from geoapps.driver_base.params import BaseParams
 
 
 class InversionBaseParams(BaseParams):

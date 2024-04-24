@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.data import Data
 from SimPEG.utils.mat_utils import (
     cartesian2amplitude_dip_azimuth,
@@ -17,7 +18,6 @@ from SimPEG.utils.mat_utils import (
     mkvc,
 )
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.utils import rotate_xyz, weighted_average
 
 if TYPE_CHECKING:

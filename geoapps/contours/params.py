@@ -10,11 +10,11 @@ from __future__ import annotations
 from copy import deepcopy
 
 import numpy as np
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, Surface
 
 from geoapps.contours.constants import default_ui_json, defaults, validations
-from geoapps.driver_base.params import BaseParams
 
 
 class ContoursParams(BaseParams):

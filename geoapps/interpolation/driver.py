@@ -11,10 +11,10 @@ from __future__ import annotations
 import sys
 
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.interpolation.constants import validations
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.shared_utils.utils import get_locations, weighted_average

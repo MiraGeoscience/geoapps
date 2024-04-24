@@ -21,6 +21,7 @@ from time import time
 
 import numpy as np
 from dask import config as dconf
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.groups import SimPEGGroup
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
@@ -42,7 +43,6 @@ from simpeg_drivers.components import (
     InversionWindow,
 )
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 from geoapps.inversion.utils import tile_locations
