@@ -11,10 +11,10 @@ from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
+from simpeg_drivers.components import InversionData
+from simpeg_drivers.potential_fields import GravityParams
+from simpeg_drivers.potential_fields.gravity.driver import GravityDriver
 
-from geoapps.inversion.components import InversionData
-from geoapps.inversion.potential_fields import GravityParams
-from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

@@ -11,13 +11,13 @@ from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
-
-from geoapps.inversion.electricals.direct_current.two_dimensions.driver import (
-    DirectCurrent2DDriver,
-)
-from geoapps.inversion.electricals.direct_current.two_dimensions.params import (
+from simpeg_drivers.electricals.direct_current.two_dimensions import (
     DirectCurrent2DParams,
 )
+from simpeg_drivers.electricals.direct_current.two_dimensions.driver import (
+    DirectCurrent2DDriver,
+)
+
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

@@ -13,13 +13,13 @@ from pathlib import Path
 import numpy as np
 from geoh5py.groups import SimPEGGroup
 from geoh5py.workspace import Workspace
-
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.driver import (
+from simpeg_drivers.electricals.direct_current.pseudo_three_dimensions.driver import (
     DirectCurrentPseudo3DDriver,
 )
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
+from simpeg_drivers.electricals.direct_current.pseudo_three_dimensions.params import (
     DirectCurrentPseudo3DParams,
 )
+
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

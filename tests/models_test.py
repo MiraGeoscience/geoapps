@@ -13,16 +13,14 @@ from pathlib import Path
 import numpy as np
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
-
-from geoapps.inversion.components import (
+from simpeg_drivers.components import (
     InversionMesh,
     InversionModel,
     InversionModelCollection,
 )
-from geoapps.inversion.potential_fields import MagneticVectorParams
-from geoapps.inversion.potential_fields.magnetic_vector.driver import (
-    MagneticVectorDriver,
-)
+from simpeg_drivers.potential_fields import MagneticVectorParams
+from simpeg_drivers.potential_fields.magnetic_vector.driver import MagneticVectorDriver
+
 from geoapps.shared_utils.utils import rotate_xyz
 from geoapps.utils.testing import Geoh5Tester
 

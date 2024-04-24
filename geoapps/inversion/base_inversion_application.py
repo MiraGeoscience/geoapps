@@ -26,10 +26,10 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
 from notebook import notebookapp
 from plotly import graph_objects as go
+from simpeg_drivers import InversionBaseParams
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 

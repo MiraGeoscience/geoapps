@@ -20,14 +20,14 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
-
-from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
-from geoapps.inversion.electricals.direct_current.three_dimensions import (
+from simpeg_drivers.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
-from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+from simpeg_drivers.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
 )
+
+from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
 from geoapps.inversion.electromagnetics.application import (
     InversionApp as EMInversionApp,
 )

@@ -15,13 +15,13 @@ import SimPEG
 from discretize.utils import mesh_builder_xyz
 from geoh5py.objects import Points
 from geoh5py.workspace import Workspace
-
-from geoapps.driver_base.utils import treemesh_2_octree
-from geoapps.inversion.components import InversionData
-from geoapps.inversion.potential_fields.magnetic_vector.driver import (
+from simpeg_drivers.components import InversionData
+from simpeg_drivers.potential_fields.magnetic_vector.driver import (
     MagneticVectorDriver,
     MagneticVectorParams,
 )
+
+from geoapps.driver_base.utils import treemesh_2_octree
 from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.utils.testing import Geoh5Tester
 

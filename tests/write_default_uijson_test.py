@@ -10,8 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 
 from geoh5py.ui_json import InputFile
+from simpeg_drivers.potential_fields import GravityParams
 
-from geoapps.inversion.potential_fields import GravityParams
 from geoapps.utils.write_default_uijson import write_default_uijson
 
 

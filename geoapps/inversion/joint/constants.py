@@ -7,7 +7,8 @@
 
 from __future__ import annotations
 
-from geoapps.inversion import default_ui_json as base_default_ui_json
+from simpeg_drivers import default_ui_json as base_default_ui_json
+
 from geoapps.inversion.constants import validations as base_validations
 
 default_ui_json = {

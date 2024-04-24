@@ -14,9 +14,9 @@ import numpy as np
 import pytest
 from geoh5py.objects import Grid2D, Points
 from geoh5py.workspace import Workspace
+from simpeg_drivers.components.locations import InversionLocations
+from simpeg_drivers.potential_fields import MagneticVectorParams
 
-from geoapps.inversion.components.locations import InversionLocations
-from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
 from . import PROJECT

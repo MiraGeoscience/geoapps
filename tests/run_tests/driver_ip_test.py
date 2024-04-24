@@ -11,13 +11,13 @@ from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
-
-from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+from simpeg_drivers.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
 )
-from geoapps.inversion.electricals.induced_polarization.three_dimensions.driver import (
+from simpeg_drivers.electricals.induced_polarization.three_dimensions.driver import (
     InducedPolarization3DDriver,
 )
+
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

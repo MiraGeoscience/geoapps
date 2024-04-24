@@ -12,14 +12,12 @@ from pathlib import Path
 import numpy as np
 from geoh5py.groups import RootGroup
 from geoh5py.workspace import Workspace
-
-from geoapps.inversion.components import InversionData
-from geoapps.inversion.electromagnetics.time_domain import (
-    TimeDomainElectromagneticsParams,
-)
-from geoapps.inversion.electromagnetics.time_domain.driver import (
+from simpeg_drivers.components import InversionData
+from simpeg_drivers.electromagnetics.time_domain import TimeDomainElectromagneticsParams
+from simpeg_drivers.electromagnetics.time_domain.driver import (
     TimeDomainElectromagneticsDriver,
 )
+
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

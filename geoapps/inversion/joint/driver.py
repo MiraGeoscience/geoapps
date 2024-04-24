@@ -15,9 +15,9 @@ import numpy as np
 from geoh5py.ui_json import InputFile
 from SimPEG.maps import TileMap
 from SimPEG.objective_function import ComboObjectiveFunction
+from simpeg_drivers import DRIVER_MAP
 
 from geoapps.driver_base.utils import treemesh_2_octree
-from geoapps.inversion import DRIVER_MAP
 from geoapps.inversion.components import InversionMesh
 from geoapps.inversion.components.factories import SaveIterationGeoh5Factory
 from geoapps.inversion.driver import InversionDriver

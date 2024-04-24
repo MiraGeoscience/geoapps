@@ -12,10 +12,10 @@ from pathlib import Path
 import numpy as np
 from geoh5py.groups import RootGroup
 from geoh5py.workspace import Workspace
+from simpeg_drivers.components import InversionData
+from simpeg_drivers.natural_sources import TipperParams
+from simpeg_drivers.natural_sources.tipper.driver import TipperDriver
 
-from geoapps.inversion.components import InversionData
-from geoapps.inversion.natural_sources import TipperParams
-from geoapps.inversion.natural_sources.tipper.driver import TipperDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

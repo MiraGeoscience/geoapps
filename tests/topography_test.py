@@ -12,9 +12,9 @@ from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
+from simpeg_drivers.components import InversionTopography
+from simpeg_drivers.potential_fields import MagneticVectorParams
 
-from geoapps.inversion.components import InversionTopography
-from geoapps.inversion.potential_fields import MagneticVectorParams
 from geoapps.utils.testing import Geoh5Tester
 
 from . import PROJECT

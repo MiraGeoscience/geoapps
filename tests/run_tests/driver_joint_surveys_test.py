@@ -9,11 +9,11 @@ from pathlib import Path
 import numpy as np
 from geoh5py.objects import Octree
 from geoh5py.workspace import Workspace
+from simpeg_drivers.joint.joint_surveys import JointSurveysParams
+from simpeg_drivers.joint.joint_surveys.driver import JointSurveyDriver
+from simpeg_drivers.potential_fields import GravityParams
+from simpeg_drivers.potential_fields.gravity.driver import GravityDriver
 
-from geoapps.inversion.joint.joint_surveys import JointSurveysParams
-from geoapps.inversion.joint.joint_surveys.driver import JointSurveyDriver
-from geoapps.inversion.potential_fields import GravityParams
-from geoapps.inversion.potential_fields.gravity.driver import GravityDriver
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

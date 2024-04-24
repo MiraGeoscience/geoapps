@@ -10,39 +10,38 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+from simpeg_drivers.electricals.direct_current.pseudo_three_dimensions.params import (
+    DirectCurrentPseudo3DParams,
+)
+from simpeg_drivers.electricals.direct_current.three_dimensions import (
+    DirectCurrent3DParams,
+)
+from simpeg_drivers.electricals.direct_current.two_dimensions import (
+    DirectCurrent2DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.pseudo_three_dimensions.params import (
+    InducedPolarizationPseudo3DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.two_dimensions import (
+    InducedPolarization2DParams,
+)
+from simpeg_drivers.electromagnetics.frequency_domain import (
+    FrequencyDomainElectromagneticsParams,
+)
+from simpeg_drivers.electromagnetics.time_domain import TimeDomainElectromagneticsParams
+from simpeg_drivers.joint.joint_cross_gradient import JointCrossGradientParams
+from simpeg_drivers.joint.joint_surveys import JointSurveysParams
+from simpeg_drivers.natural_sources import MagnetotelluricsParams, TipperParams
+
 from geoapps import assets_path
 from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
-    DirectCurrentPseudo3DParams,
-)
-from geoapps.inversion.electricals.direct_current.three_dimensions import (
-    DirectCurrent3DParams,
-)
-from geoapps.inversion.electricals.direct_current.two_dimensions import (
-    DirectCurrent2DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.params import (
-    InducedPolarizationPseudo3DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
-    InducedPolarization3DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
-    InducedPolarization2DParams,
-)
-from geoapps.inversion.electromagnetics.frequency_domain import (
-    FrequencyDomainElectromagneticsParams,
-)
-from geoapps.inversion.electromagnetics.time_domain import (
-    TimeDomainElectromagneticsParams,
-)
-from geoapps.inversion.joint.joint_cross_gradient import JointCrossGradientParams
-from geoapps.inversion.joint.joint_surveys import JointSurveysParams
-from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
 from geoapps.inversion.potential_fields import (
     GravityParams,
     MagneticScalarParams,
@@ -75,14 +74,14 @@ active_data_channels = [
 
 
 def write_default_uijson(path: str | Path, use_initializers=False):
-    from geoapps.inversion.potential_fields.gravity.constants import (
+    from simpeg_drivers.potential_fields.gravity.constants import (
         app_initializer as grav_init,
     )
 
     grav_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     grav_init = grav_init if use_initializers else {}
 
-    from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
+    from simpeg_drivers.potential_fields.magnetic_scalar.constants import (
         app_initializer as mag_init,
     )
 

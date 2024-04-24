@@ -11,12 +11,10 @@ from pathlib import Path
 
 import numpy as np
 from geoh5py.workspace import Workspace
+from simpeg_drivers.components import InversionData
+from simpeg_drivers.potential_fields import MagneticScalarParams
+from simpeg_drivers.potential_fields.magnetic_scalar.driver import MagneticScalarDriver
 
-from geoapps.inversion.components import InversionData
-from geoapps.inversion.potential_fields import MagneticScalarParams
-from geoapps.inversion.potential_fields.magnetic_scalar.driver import (
-    MagneticScalarDriver,
-)
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

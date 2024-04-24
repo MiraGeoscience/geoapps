@@ -13,13 +13,13 @@ from pathlib import Path
 import numpy as np
 from geoh5py import Workspace
 from geoh5py.groups import RootGroup
-
-from geoapps.inversion.electromagnetics.frequency_domain.driver import (
-    FrequencyDomainElectromagneticsDriver,
-)
-from geoapps.inversion.electromagnetics.frequency_domain.params import (
+from simpeg_drivers.electromagnetics.frequency_domain import (
     FrequencyDomainElectromagneticsParams,
 )
+from simpeg_drivers.electromagnetics.frequency_domain.driver import (
+    FrequencyDomainElectromagneticsDriver,
+)
+
 from geoapps.shared_utils.utils import get_inversion_output
 from geoapps.utils.testing import check_target, setup_inversion_workspace
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from geoapps.inversion import InversionBaseParams
+    from simpeg_drivers import InversionBaseParams
 
 import multiprocessing
 import sys
@@ -33,16 +33,16 @@ from SimPEG import (
     optimization,
 )
 from SimPEG.regularization import BaseRegularization, Sparse
-
-from geoapps.driver_base.driver import BaseDriver
-from geoapps.inversion import DRIVER_MAP
-from geoapps.inversion.components import (
+from simpeg_drivers import DRIVER_MAP
+from simpeg_drivers.components import (
     InversionData,
     InversionMesh,
     InversionModelCollection,
     InversionTopography,
     InversionWindow,
 )
+
+from geoapps.driver_base.driver import BaseDriver
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
 from geoapps.inversion.params import InversionBaseParams
 from geoapps.inversion.utils import tile_locations
