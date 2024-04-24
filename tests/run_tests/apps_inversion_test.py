@@ -34,8 +34,7 @@ from geoapps.inversion.electromagnetics.application import (
 from geoapps.inversion.potential_fields.magnetic_vector.application import (
     MagneticVectorApp,
 )
-
-from .. import PROJECT, PROJECT_DCIP, PROJECT_TEM
+from tests import PROJECT, PROJECT_DCIP, PROJECT_TEM
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
