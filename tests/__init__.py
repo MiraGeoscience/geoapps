@@ -5,7 +5,6 @@
 #  geoapps is distributed under the terms and conditions of the MIT License
 #  (see LICENSE file at the root of this source code package).
 
-from pathlib import Path
 from geoapps import assets_path
 
 PROJECT = assets_path() / "FlinFlon.geoh5"
