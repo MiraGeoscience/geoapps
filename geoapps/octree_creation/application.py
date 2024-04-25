@@ -335,15 +335,9 @@ class OctreeMesh(ObjectDataSelection):
                     attr_name,
                     Text(description=key.capitalize(), value=value),
                 )
-            elif "type" in key:
+            elif "horizon" in key:
                 setattr(
-                    self,
-                    attr_name,
-                    Dropdown(
-                        description=key.capitalize(),
-                        options=["surface", "radial"],
-                        value=value,
-                    ),
+                    self, attr_name, Checkbox(description=key.capitalize(), value=value)
                 )
             elif "distance" in key:
                 setattr(
