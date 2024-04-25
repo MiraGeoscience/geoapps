@@ -49,7 +49,7 @@ class DirectivesFactory:
         ):
             self._beta_estimate_by_eigenvalues_directive = (
                 directives.BetaEstimate_ByEig(
-                    beta0_ratio=self.params.initial_beta_ratio, method="ratio"
+                    beta0_ratio=self.params.initial_beta_ratio, method="ratio", seed=0
                 )
             )
 
