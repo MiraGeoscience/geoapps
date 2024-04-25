@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 from geoh5py.objects import DrapeModel, Octree
+from octree_creation_app.params import OctreeParams
 
-from geoapps.octree_creation.params import OctreeParams
 from geoapps.shared_utils.utils import drape_2_tensor, octree_2_treemesh
 
 if TYPE_CHECKING:

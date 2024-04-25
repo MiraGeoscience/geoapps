@@ -28,8 +28,6 @@ from octree_creation_app.params import OctreeParams
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.octree_creation.constants import app_initializer
-# from geoapps.octree_creation.driver import OctreeDriver
-# from geoapps.octree_creation.params import OctreeParams
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():

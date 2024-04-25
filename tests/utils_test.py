@@ -21,10 +21,10 @@ from discretize import CylindricalMesh, TreeMesh
 from discretize.utils import mesh_builder_xyz
 from geoh5py.objects import Curve, Grid2D, Points
 from geoh5py.workspace import Workspace
+from octree_creation_app.driver import OctreeDriver
 from simpeg_drivers.utils.utils import calculate_2D_trend
 
 from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
-from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.shared_utils.utils import (
     densify_curve,
     downsample_grid,
