@@ -36,7 +36,11 @@ from geoapps.inversion.electromagnetics.application import (
 from geoapps.inversion.potential_fields.magnetic_vector.application import (
     MagneticVectorApp,
 )
-from tests import PROJECT, PROJECT_DCIP, PROJECT_TEM
+from tests import (  # pylint: disable=no-name-in-module
+    PROJECT,
+    PROJECT_DCIP,
+    PROJECT_TEM,
+)
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -182,7 +186,7 @@ def test_dc_inversion(tmp_path: Path):
             # dc object
             currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
             currents.copy(parent=new_geoh5)
-            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+            ws.get_entity(UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"))[0].copy(
                 parent=new_geoh5
             )
     changes = {
@@ -254,7 +258,7 @@ def test_ip_inversion(tmp_path: Path):
                 0
             ].copy(parent=new_geoh5)
             # Conductivity mesh + model
-            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+            ws.get_entity(UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"))[0].copy(
                 parent=new_geoh5
             )
 
@@ -266,10 +270,10 @@ def test_ip_inversion(tmp_path: Path):
         "topography_object": new_topo.uid,
         "z_from_topo": False,
         "forward_only": False,
-        "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
+        "mesh": UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"),
         "inversion_type": "induced polarization 3d",
         "chargeability_channel": UUID("502e7256-aafa-4016-969f-5cc3a4f27315"),
-        "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
+        "conductivity_model": UUID("a096af7c-12b1-4fd2-a95c-22611ea924c6"),
     }
     side_effects = {"starting_model": 1e-4}
     app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
