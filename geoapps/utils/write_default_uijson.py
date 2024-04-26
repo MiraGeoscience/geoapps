@@ -37,6 +37,11 @@ from simpeg_drivers.electromagnetics.time_domain import TimeDomainElectromagneti
 from simpeg_drivers.joint.joint_cross_gradient import JointCrossGradientParams
 from simpeg_drivers.joint.joint_surveys import JointSurveysParams
 from simpeg_drivers.natural_sources import MagnetotelluricsParams, TipperParams
+from simpeg_drivers.potential_fields import (
+    GravityParams,
+    MagneticScalarParams,
+    MagneticVectorParams,
+)
 
 from geoapps import assets_path
 from geoapps.block_model_creation.params import BlockModelParams
@@ -44,11 +49,6 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.potential_fields import (
-    GravityParams,
-    MagneticScalarParams,
-    MagneticVectorParams,
-)
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
