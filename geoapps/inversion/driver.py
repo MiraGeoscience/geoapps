@@ -75,6 +75,7 @@ class InversionDriver(BaseDriver):
         self._sorting: list[np.ndarray] | None = None
         self._ordering: list[np.ndarray] | None = None
         self._window = None
+        self.out_group: SimPEGGroup | None = None
 
     @property
     def data_misfit(self):
@@ -367,7 +368,7 @@ class InversionDriver(BaseDriver):
             return BaseRegularization(mesh=self.inversion_mesh.mesh)
 
         reg_funcs = []
-        for mapping in self.mapping:
+        for mapping in self.mapping:  # pylint: disable=not-an-iterable
             reg = Sparse(
                 self.inversion_mesh.mesh,
                 active_cells=self.models.active_cells,
