@@ -48,12 +48,12 @@ def test_mag_inversion(tmp_path: Path):
 
     with Workspace(PROJECT) as ws:
         with Workspace(temp_workspace) as new_geoh5:
-            data_object = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
+            data_object = ws.get_entity(UUID("{7aaf00be-adbf-4540-8333-8ac2c2a3c31a}"))[
                 0
             ]
             data_object.copy(parent=new_geoh5, copy_children=True)
 
-            mesh = ws.get_entity(UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"))[0]
+            mesh = ws.get_entity(UUID("{f6b08e3b-9a85-45ab-a487-4700e3ca1917}"))[0]
             mesh.copy(parent=new_geoh5, copy_children=True)
 
             topography_object = ws.get_entity(
@@ -73,7 +73,7 @@ def test_mag_inversion(tmp_path: Path):
             full_components = {
                 "tmi": {
                     "channel_bool": True,
-                    "channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+                    "channel": "{a342e416-946a-4162-9604-6807ccb06073}",
                     "uncertainty_type": "Floor",
                     "uncertainty_floor": 1.0,
                     "uncertainty_channel": None,

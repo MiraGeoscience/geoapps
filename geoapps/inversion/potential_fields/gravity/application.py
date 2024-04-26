@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import pathlib
 
-from simpeg_drivers.potential_fields.gravity.constants import app_initializer
 from simpeg_drivers.potential_fields.gravity.params import GravityParams
 
 from geoapps.inversion.base_inversion_application import InversionApp
+from geoapps.inversion.potential_fields.gravity.constants import app_initializer
 from geoapps.inversion.potential_fields.gravity.layout import (
     component_list,
     gravity_inversion_params,
