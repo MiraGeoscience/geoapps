@@ -75,7 +75,7 @@ class InversionDriver(BaseDriver):
         self._sorting: list[np.ndarray] | None = None
         self._ordering: list[np.ndarray] | None = None
         self._window = None
-        self.out_group: SimPEGGroup | None = None
+        self._out_group: SimPEGGroup | None = None
 
     @property
     def data_misfit(self):
