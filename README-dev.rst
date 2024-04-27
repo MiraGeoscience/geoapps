@@ -46,7 +46,7 @@ The python versions are specified at the beginning of the ``devtools/run_conda_l
 
 .. code-block:: python
 
-    _python_versions = ["3.10", "3.9"]
+    _PYTHON_VERSIONS = ["3.10", "3.11"]
 
 The ``Install_or_Update.bat`` and the ``setup-dev.bat`` will use them to install the environment.
 

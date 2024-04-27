@@ -12,7 +12,7 @@ ci:
 
 repos:
 -   repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 24.4.2
     hooks:
     -   id: black
 -   repo: https://github.com/PyCQA/isort
@@ -20,16 +20,12 @@ repos:
     hooks:
     -   id: isort
         additional_dependencies: [tomli] # to read config from pyproject.toml
-# -   repo: https://github.com/humitos/mirrors-autoflake
-#     rev: v2.3.1
-#     hooks:
-#     -   id: autoflake
 #-   repo: https://github.com/PyCQA/flake8
 #    rev: 6.1.0
 #    hooks:
 #    -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+    rev: v3.15.2
     hooks:
     -   id: pyupgrade
         args: [--py310-plus]
@@ -43,7 +39,7 @@ repos:
 #            tomli # to read config from pyproject.toml
 #        ]
 -   repo: https://github.com/codingjoe/relint
-    rev: 3.1.0
+    rev: 3.1.1
     hooks:
     -   id: relint
         args: [-W]  # to fail on warnings
@@ -80,7 +76,7 @@ repos:
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb|^THIRD_PARTY_SOFTWARE\.rst)$
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
     -   id: trailing-whitespace
         exclude: \.mdj$

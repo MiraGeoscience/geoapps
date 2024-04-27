@@ -154,6 +154,10 @@ channels = [
 ]
 
 [tool.conda-lock.dependencies]
+## Specify the BLAS implementation
+#` MKL is faster on Interl processors, but its size is larger than the OpenBLAS implementation.
+#  Make sure to force the MKL implementation if a dependency from another package (e.g. SimPEG)
+#  is already bringing in the MKL.
 libblas = "*=*mkl"
 
 [tool.isort]
