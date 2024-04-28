@@ -11,6 +11,20 @@ ci:
     autoupdate_schedule: monthly
 
 repos:
+-   repo: https://github.com/hadialqattan/pycln
+    rev: v2.4.0
+    hooks:
+    -   id: pycln
+        args: [ --config=pyproject.toml ]
+-   repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+    -   id: isort
+        additional_dependencies: [tomli] # to read config from pyproject.toml
+-   repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+    -   id: black
 -   repo: https://github.com/psf/black
     rev: 24.4.2
     hooks:
