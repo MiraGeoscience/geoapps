@@ -43,15 +43,19 @@ python = "^3.10, < 3.11"
 numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 scipy = "~1.10.1"
 semver = "~3.0.0"
+tbb-devel = "2021.12.0"
 
-geoh5py = {version = "~0.9.0-alpha.4", source = "pypi", allow-prereleases = true}
+geoh5py = {version = "~0.9.0a4", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
 mira-omf = {version = "~3.2.0-alpha.1", source = "pypi", allow-prereleases = true}
 #mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.2.0.zip#sha256="}
 las-geoh5 = { version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
 #las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip#sha256="}
-param-sweeps = {version = "~0.1.7-alpha.4", source = "pypi", allow-prereleases = true}
+param-sweeps = {version = "~0.1.7a4", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
+octree-creation-app = {version = "~0.1.0a5", source = "pypi", allow-prereleases = true}
+geoapps-utils = {version = "~0.3.0a3", source = "pypi", allow-prereleases = true}
+simpeg-drivers = { url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.zip#sha256=" }
 
 
 ## dependencies for core algorithms
@@ -68,8 +72,7 @@ tqdm = {version = "^4.64.0", optional = true }  # also in las-geoh5
 
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
 simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
-mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev8+geoapps.0.12.0.zip#sha256=", optional = true}
-#mira-simpeg = {version = "~0.19.0.dev7", source = "pypi", optional = true}
+mira-simpeg = {version = "~0.19.0.dev8", source = "pypi"}#mira-simpeg = {version = "~0.19.0.dev7", source = "pypi", optional = true}
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 empymod = {version = "~2.2.1", optional = true}  # from simpeg and geoana
