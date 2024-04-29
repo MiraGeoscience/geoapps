@@ -1,13 +1,23 @@
-#!/usr/bin/env python3
-
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2022-2024 Mira Geoscience Ltd.                                '
-#                                                                              '
-#  This file is part of geoapps.                                               '
-#                                                                              '
-#  geoapps is distributed under the terms and conditions of the MIT License    '
-#  (see LICENSE file at the root of this source code package).                 '
+#  Copyright (c) 2023-2024 Mira Geoscience Ltd.
+#  All rights reserved.
+#
+#  This file is part of simpeg-drivers.
+#
+#  The software and information contained herein are proprietary to, and
+#  comprise valuable trade secrets of, Mira Geoscience, which
+#  intend to preserve as trade secrets such software and information.
+#  This software is furnished pursuant to a written license agreement and
+#  may be used, copied, transmitted, and stored only in accordance with
+#  the terms of such license and with the inclusion of the above copyright
+#  notice.  This software and information or any other copies thereof may
+#  not be provided or otherwise made available to any other person.
+#
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#
+#  This file is part of simpeg_drivers package.
+#
+#  All rights reserved.
 
 """
 Creates cross-platform lock files for each python version and per-platform conda environment files.
@@ -26,27 +36,23 @@ from __future__ import annotations
 import os
 import re
 import subprocess
-import sys
 import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
-import networkx as nx  # type: ignore
-import tomli as toml
+import networkx as nx
 from add_url_tag_sha256 import patch_pyproject_toml
-from packaging.version import Version
-from ruamel.yaml import YAML  # type: ignore
+from ruamel.yaml import YAML
 
 env_file_variables_section_ = """
 variables:
   KMP_WARNINGS: 0
 """
 
-_python_versions = ["3.10"]
-_build_dev = True
+_environments_folder = Path("environments")
 
-_environments_folder = Path("environments").resolve()
+_python_versions = ["3.10"]
 
 
 @contextmanager
@@ -191,10 +197,8 @@ class LockFilePatcher:
 
         pip_dependency_re = re.compile(r"^\s*- (\S+) (@|===) .*")
         with open(self.lock_file, encoding="utf-8") as file:
-            # advance until the pip section
-            for line in file:
-                if self.pip_section_re.match(line):
-                    break
+            while not self.pip_section_re.match(file.readline()):
+                pass
 
             for line in file:
                 if pip_dependency_re.match(line) and not self.sha_re.match(line):
@@ -237,24 +241,18 @@ def delete_multiplatform_lock_files() -> None:
 
 
 def recreate_multiplatform_lock_files() -> list[Path]:
-    """
-    Delete and recreate the multi-platform lock files for each python version.
-    """
-
     delete_multiplatform_lock_files()
 
     # also delete per-platform lock files to make it obvious that
     # they must be cre-created after the multi-platform files were updated
     delete_per_platform_lock_files()
 
-    non_optional_deps = non_optional_dependencies()
     created_files: list[Path] = []
     with print_execution_time("create_multi_platform_lock"):
         for py_ver in _python_versions:
             file = create_multi_platform_lock(py_ver)
             created_files.append(file)
             remove_redundant_pip_from_lock_file(file)
-            force_non_optional_packages(file, non_optional_deps)
     return created_files
 
 
@@ -264,93 +262,14 @@ def delete_per_platform_lock_files() -> None:
             f.unlink()
 
 
-def recreate_per_platform_lock_files(
-    suffix_for_extras: dict[str, list[str]] = {}
-) -> None:
-    """
-    Delete and recreate the per-platform lock files for each python version.
-
-    :param suffix_for_extras: a dictionary with the suffix for each list extra.
-        Creates a per-platform lock file for each extra list with the corresponding suffix.
-        For example, to create "core", "apps", and "ui" per-platform lock files with
-        their corresponding list of extras::
-
-            {
-                "core": [],  # no extra
-                "apps": ["apps"],
-                "ui": ["apps", "ui"],  # UI needs both apps and ui extras
-            }
-    """
-
+def recreate_per_platform_lock_files() -> None:
     delete_per_platform_lock_files()
-    if not suffix_for_extras:
-        suffix_for_extras = {"": []}
     with print_execution_time("create_per_platform_lock"):
         for py_ver in _python_versions:
-            for suffix, extras in suffix_for_extras.items():
-                if suffix and not suffix.startswith("-"):
-                    suffix = f"-{suffix}"
-                per_platform_env(py_ver, extras, dev=False, suffix=suffix)
-                finalize_per_platform_envs(py_ver, dev=False, suffix=suffix)
-                if _build_dev:
-                    per_platform_env(py_ver, extras, dev=True, suffix=suffix)
-                    finalize_per_platform_envs(py_ver, dev=True, suffix=suffix)
-
-
-def non_optional_dependencies() -> list[str]:
-    """
-    List the names of non-optional dependencies from pyproject.toml
-    """
-
-    pyproject_toml = Path("pyproject.toml")
-    assert pyproject_toml.is_file()
-
-    non_optional_packages: list[str] = []
-    with open(pyproject_toml, "rb") as pyproject:
-        content = toml.load(pyproject)
-    for name, spec in content["tool"]["poetry"]["dependencies"].items():
-        if isinstance(spec, str) or (
-            isinstance(spec, dict) and not spec.get("optional", False)
-        ):
-            non_optional_packages.append(name)
-    return non_optional_packages
-
-
-def force_non_optional_packages(lock_file: Path, force_packages: list[str]) -> None:
-    """
-    Patch the multi-platform lock file to force some packages not to be optional.
-    """
-
-    if len(force_packages) == 0:
-        return
-
-    assert lock_file.is_file()
-    print("## Force packages as non-optional: " + ", ".join(force_packages))
-
-    yaml = YAML()
-    yaml.width = 1200
-
-    with open(lock_file, encoding="utf-8") as file:
-        yaml_content = yaml.load(file)
-        assert yaml_content is not None
-
-    # collect packages from that list that are already in the lock file as optional
-    packages_to_change = [
-        package
-        for package in yaml_content["package"]
-        if package["name"] in force_packages and package["optional"]
-    ]
-
-    # change all packages in the dependency tree to be non-optional
-    graph = build_dependency_tree(packages_to_change)
-    for package in graph.nodes:
-        for p in yaml_content["package"]:
-            if p["name"] == package:
-                p["optional"] = False
-                p["category"] = "main"
-
-    with open(lock_file, mode="w", encoding="utf-8") as file:
-        yaml.dump(yaml_content, file)
+            per_platform_env(py_ver, dev=False)
+            finalize_per_platform_envs(py_ver, dev=False)
+            per_platform_env(py_ver, dev=True)
+            finalize_per_platform_envs(py_ver, dev=True)
 
 
 def remove_redundant_pip_from_lock_file(lock_file: Path) -> None:
@@ -386,11 +305,6 @@ def remove_redundant_pip_from_lock_file(lock_file: Path) -> None:
             if p["manager"] == "conda" and p["platform"] == platform
         }
         redundant_pip_names = list_redundant_pip_packages(pip_packages, conda_packages)
-
-        # these Qt libraries are irrelevant for Conda
-        redundant_pip_names.append("pyqt5-qt5")
-        redundant_pip_names.append("pyqtwebengine-qt5")
-
         graph = build_dependency_tree(pip_packages)
         graph = trim_dependency_tree(graph, redundant_pip_names)
         remaining_pip_names = list(graph.nodes)
@@ -428,35 +342,20 @@ def list_redundant_pip_packages(
     redundant_pip_packages: list[str] = []
     for pip_package in pip_packages:
         package_name = pip_package["name"]
-        version_str_from_conda = conda_packages.get(package_name, None)
-        if version_str_from_conda is None:
+        version_from_conda = conda_packages.get(package_name, None)
+        if version_from_conda is None:
             continue
 
-        version_from_conda = Version(version_str_from_conda)
-        version_from_pip = Version(pip_package["version"])
-        has_non_compatible_versions = False
         if version_from_conda == pip_package["version"]:
             print(
                 f"package {pip_package['name']} ({version_from_conda} {pip_package['platform']}) is fetched from pip and conda"
             )
             redundant_pip_packages.append(package_name)
         else:
-            msg = (
+            print(
                 f"package {pip_package['name']} ({pip_package['platform']}) is fetched with a different version "
                 f"from pip ({pip_package['version']}) and conda ({version_from_conda})"
             )
-            if (
-                version_from_pip <= version_from_conda
-                and version_from_pip.major == version_from_conda.major
-            ):
-                print(msg + ": versions are expected compatible")
-                redundant_pip_packages.append(package_name)
-            else:
-                has_non_compatible_versions = True
-                print(msg + ": versions are **not compatible**")
-        if has_non_compatible_versions:
-            sys.exit(1)
-
     return redundant_pip_packages
 
 
@@ -488,12 +387,9 @@ def main():
     assert _environments_folder.is_dir()
 
     patch_pyproject_toml()
-    recreate_multiplatform_lock_files()
 
-    extras_and_suffix = {
-        "": ["core", "apps"],
-    }
-    recreate_per_platform_lock_files(extras_and_suffix)
+    recreate_multiplatform_lock_files()
+    recreate_per_platform_lock_files()
 
 
 if __name__ == "__main__":
