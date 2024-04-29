@@ -2,7 +2,7 @@
 #  Copyright (c) 2023-2024 Mira Geoscience Ltd.
 #  All rights reserved.
 #
-#  This file is part of simpeg-drivers.
+#  This file is part of geoapps.
 #
 #  The software and information contained herein are proprietary to, and
 #  comprise valuable trade secrets of, Mira Geoscience, which
@@ -14,10 +14,6 @@
 #  not be provided or otherwise made available to any other person.
 #
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#
-#  This file is part of simpeg_drivers package.
-#
-#  All rights reserved.
 
 """
 Creates cross-platform lock files for each python version and per-platform conda environment files.
