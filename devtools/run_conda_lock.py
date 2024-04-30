@@ -577,10 +577,7 @@ def create_env_lock_files(suffix_for_extras: dict[str, list[str]], include_dev: 
 def main():
     logging.basicConfig(level=logging.INFO)
 
-    suffix_for_extras = {
-        "": ["core", "apps"],
-    }
-    create_env_lock_files(suffix_for_extras, True)
+    create_env_lock_files({}, include_dev=True)
 
 
 if __name__ == "__main__":
