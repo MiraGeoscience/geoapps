@@ -1,6 +1,10 @@
 {
     "title": "Inversion mesh creator",
+    "conda_environment": "geoapps",
+    "run_command": "geoapps.octree_creation.application",
     "geoh5": "",
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
     "objects": {
         "enabled": true,
         "group": "Mesh",
@@ -134,15 +138,11 @@
         "label": "Name:",
         "value": "Inversion Mesh"
     },
-    "run_command": "geoapps.octree_creation.application",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
         "main": true
     },
-    "monitoring_directory": "",
-    "workspace_geoh5": "",
-    "conda_environment": "geoapps",
     "conda_environment_boolean": false
 }
