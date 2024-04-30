@@ -29,7 +29,7 @@ def get_jira_id(text) -> str:
         making sure it gets compiled only once."""
 
         __pattern = re.compile(
-            r"(?:GEOPY|GI|GA|GMS|VPem1D|VPem3D|VPmg|UBCGIF|LICMGR)-\d+"
+            r"(?:GEOPY|DEVOPS|QA|GI|GA|GMS|VPem1D|VPem3D|VPmg|UBCGIF|LICMGR)-\d+"
         )
 
         @staticmethod
