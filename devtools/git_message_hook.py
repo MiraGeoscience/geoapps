@@ -48,10 +48,7 @@ def get_branch_name() -> str | None:
     """:return: the name of the current branch"""
 
     git_proc = subprocess.run(
-        shlex.split("git branch --list"),
-        stdout=subprocess.PIPE,
-        text=True,
-        check=False
+        shlex.split("git branch --list"), stdout=subprocess.PIPE, text=True, check=False
     )
 
     # cannot use HEAD during rebase
