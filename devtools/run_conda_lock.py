@@ -463,6 +463,9 @@ def remove_redundant_pip_from_lock_file(lock_file: Path) -> None:
         redundant_pip_names.append("pyqt5-qt5")
         redundant_pip_names.append("pyqtwebengine-qt5")
 
+        # sometimes mysteriously added by conda-lock as a pip package, but not a requirement
+        redundant_pip_names.append("setuptools-scm")
+
         graph = build_dependency_tree(pip_packages)
         graph = trim_dependency_tree(graph, redundant_pip_names)
         remaining_pip_names = list(graph.nodes)
