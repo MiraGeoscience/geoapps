@@ -1,7 +1,7 @@
 {
     "title": "Edge Detection",
     "geoh5": "",
-    "run_command": "geoapps.edge_detection.driver",
+    "run_command": "curve_apps.edge_detection.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",

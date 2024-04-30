@@ -13,6 +13,8 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from curve_apps.edge_detection.driver import EdgeDetectionDriver
+from curve_apps.edge_detection.params import Parameters
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace
@@ -20,9 +22,6 @@ from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
-from geoapps.edge_detection.constants import app_initializer
-from geoapps.edge_detection.driver import EdgeDetectionDriver
-from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
@@ -31,6 +30,17 @@ with warn_module_not_found():
 
 with warn_module_not_found():
     from matplotlib import collections
+
+from geoapps import assets_path
+
+INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+    "sigma": 0.5,
+    "window_azimuth": -20.0,
+    "ga_group_name": "Edges",
+}
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -52,14 +62,14 @@ class EdgeDetectionApp(PlotSelection2D):
     """
 
     _object_types = (Grid2D,)
-    _param_class = EdgeDetectionParams
+    _param_class = Parameters
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
-        app_initializer.update(kwargs)
+        INITIALIZER.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
+            self.params = self._param_class(input_file=InputFile(ui_json))
         else:
-            self.params = self._param_class(**app_initializer)
+            self.params = self._param_class(**INITIALIZER)
 
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
@@ -214,7 +224,7 @@ class EdgeDetectionApp(PlotSelection2D):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = EdgeDetectionParams(**param_dict)
+            new_params = Parameters(**param_dict)
             new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
             driver = EdgeDetectionDriver(new_params)
             driver.run()
@@ -236,7 +246,7 @@ class EdgeDetectionApp(PlotSelection2D):
             return
 
         with fetch_active_workspace(self.workspace):
-            new_params = EdgeDetectionParams(**param_dict)
+            new_params = Parameters(**param_dict)
             self.refresh.value = False
             (
                 vertices,
