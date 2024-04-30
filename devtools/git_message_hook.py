@@ -49,6 +49,7 @@ def get_branch_name() -> str | None:
         shlex.split("git branch --list"),
         stdout=subprocess.PIPE,
         text=True,
+        check=False
     )
 
     # cannot use HEAD during rebase
@@ -182,10 +183,7 @@ def prepare_commit_msg(filepath: str, source: str | None = None) -> None:
     if source not in [None, "message", "template"]:
         return
 
-    with open(
-        filepath,
-        "r+",
-    ) as message_file:
+    with open(filepath, "r+", encoding="utf-8") as message_file:
         message_has_jira_id = False
         message_lines = message_file.readlines()
         for line_index, line_content in enumerate(message_lines):

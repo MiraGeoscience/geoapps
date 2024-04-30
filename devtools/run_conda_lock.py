@@ -317,7 +317,7 @@ def delete_per_platform_lock_files() -> None:
 
 
 def recreate_per_platform_lock_files(
-    suffix_for_extras: dict[str, list[str]] = {}, include_dev: bool = False
+    suffix_for_extras: dict[str, list[str]] | None = None, include_dev: bool = False
 ) -> None:
     """
     Delete and recreate the per-platform lock files for each python version.
