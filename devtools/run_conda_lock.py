@@ -280,7 +280,7 @@ class LockFilePatcher:
 
 
 def get_multiplatform_lock_files() -> list[Path]:
-    return list(_ENVIRONMENT_FILES_DIR.glob("*.conda-lock.yml"))
+    return list(_PROJECT_ROOT.glob("*.conda-lock.yml"))
 
 
 def delete_multiplatform_lock_files() -> None:
