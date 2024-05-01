@@ -49,7 +49,7 @@ python = "^3.10, < 3.11"
 
 ## dependencies for a minimal environment
 numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
-scipy = "~1.12.0"
+scipy = "~1.10.0"
 
 geoh5py = {version = "~0.9.0rc1", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
