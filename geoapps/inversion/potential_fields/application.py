@@ -49,9 +49,9 @@ with warn_module_not_found():
         Widget,
     )
 
-from .gravity.params import GravityParams
-from .magnetic_scalar.params import MagneticScalarParams
-from .magnetic_vector.params import MagneticVectorParams
+from simpeg_drivers.potential_fields.gravity.params import GravityParams
+from simpeg_drivers.potential_fields.magnetic_scalar.params import MagneticScalarParams
+from simpeg_drivers.potential_fields.magnetic_vector.params import MagneticVectorParams
 
 
 def inversion_defaults():

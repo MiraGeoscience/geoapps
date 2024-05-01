@@ -30,7 +30,9 @@ class EdgeDetectionDriver(BaseDriver):
     _params_class = EdgeDetectionParams
     _validations = validations
 
-    def __init__(self, params: EdgeDetectionParams):
+    def __init__(
+        self, params: EdgeDetectionParams
+    ):  # pylint: disable=useless-super-delegation
         super().__init__(params)
 
     def run(self):

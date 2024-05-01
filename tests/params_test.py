@@ -30,30 +30,30 @@ from octree_creation_app.params import OctreeParams
 from simpeg_drivers.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
-from simpeg_drivers.electricals.direct_current.three_dimensions.constants import (
-    app_initializer as dc_initializer,
-)
 from simpeg_drivers.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
-)
-from simpeg_drivers.electricals.induced_polarization.three_dimensions.constants import (
-    app_initializer as ip_initializer,
 )
 from simpeg_drivers.potential_fields import (
     GravityParams,
     MagneticScalarParams,
     MagneticVectorParams,
 )
-from simpeg_drivers.potential_fields.gravity.constants import (
+
+from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
+    app_initializer as dc_initializer,
+)
+from geoapps.inversion.electricals.induced_polarization.three_dimensions.constants import (
+    app_initializer as ip_initializer,
+)
+from geoapps.inversion.potential_fields.gravity.constants import (
     app_initializer as grav_init,
 )
-from simpeg_drivers.potential_fields.magnetic_scalar.constants import (
+from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
     app_initializer as mag_initializer,
 )
-from simpeg_drivers.potential_fields.magnetic_vector.constants import (
+from geoapps.inversion.potential_fields.magnetic_vector.constants import (
     app_initializer as mvi_init,
 )
-
 from geoapps.octree_creation.constants import app_initializer as octree_initializer
 from geoapps.peak_finder.constants import app_initializer as peak_initializer
 from geoapps.peak_finder.params import PeakFinderParams
