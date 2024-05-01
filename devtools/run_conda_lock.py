@@ -521,9 +521,10 @@ def list_redundant_pip_packages(
                 f"package {pip_package['name']} ({pip_package['platform']}) is fetched with a different version "
                 f"from pip ({pip_package['version']}) and conda ({version_from_conda})."
             )
-            if (
-                version_from_pip <= version_from_conda
-                and version_from_pip.major == version_from_conda.major
+            if version_from_pip <= version_from_conda and (
+                version_from_pip.major == version_from_conda.major
+                # no known dependency is placing a version constraint on intel-openmp: latest should work fine
+                or package_name == "intel-openmp"
             ):
                 _logger.warning(msg + ": versions are expected compatible.")
                 redundant_pip_packages.append(package_name)
