@@ -72,7 +72,7 @@ def normalize(values):
     ind = ~np.isnan(values)
     values[ind] = np.abs(values[ind])
     values[ind] /= values[ind].max()
-    values[ind == False] = 0
+    values[~ind] = 0
     return values
 
 
@@ -143,7 +143,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
     if "indices" in kwargs:
         indices = kwargs["indices"]
-        if isinstance(indices, np.ndarray) and np.all(indices == False):
+        if isinstance(indices, np.ndarray) and np.all(~indices):
             indices = None
 
     if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
@@ -198,7 +198,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
         if values is not None:
             values = np.asarray(values.reshape(entity.shape, order="F"), dtype=float)
-            values[indices == False] = np.nan
+            values[~indices] = np.nan
             values = values[ind_x, :][:, ind_y]
 
         if np.any(values):

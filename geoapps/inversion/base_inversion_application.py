@@ -760,8 +760,8 @@ class InversionApp(BaseDashApplication):
 
                 # Get uncertainty value
                 if comp + "_uncertainty" in ui_json_data and (
-                    (type(ui_json_data[comp + "_uncertainty"]) == float)
-                    or (type(ui_json_data[comp + "_uncertainty"]) == int)
+                    (type(ui_json_data[comp + "_uncertainty"]) == float)  # noqa: E721
+                    or (type(ui_json_data[comp + "_uncertainty"]) == int)  # noqa: E721
                 ):
                     uncertainty_type = "Floor"
                     uncertainty_floor = ui_json_data[comp + "_uncertainty"]

@@ -545,9 +545,11 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
         ) from exc
 
     outfile = group.get_entity("SimPEG.out")[0]
-    out = [l for l in outfile.values.decode("utf-8").replace("\r", "").split("\n")][:-1]
+    out = [
+        line for line in outfile.values.decode("utf-8").replace("\r", "").split("\n")
+    ][:-1]
     cols = out.pop(0).split(" ")
-    out = [[string_to_numeric(k) for k in l.split(" ")] for l in out]
+    out = [[string_to_numeric(k) for k in line.split(" ")] for line in out]
     out = dict(zip(cols, list(map(list, zip(*out)))))
 
     return out
