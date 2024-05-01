@@ -538,18 +538,18 @@ class ObjectSelection:
         """
         app = QtWidgets.QApplication(sys.argv)  # pylint: disable=c-extension-no-member
         browser = (
-            QtWebEngineWidgets.QWebEngineView()
-        )  # pylint: disable=c-extension-no-member
+            QtWebEngineWidgets.QWebEngineView()  # pylint: disable=c-extension-no-member
+        )
 
         browser.setWindowTitle(app_name)
-        localhost_url = QtCore.QUrl(
+        localhost_url = QtCore.QUrl(  # pylint: disable=c-extension-no-member
             "http://127.0.0.1:" + str(port)
-        )  # pylint: disable=c-extension-no-member
+        )
         browser.load(localhost_url)
         # Brings Qt window to the front
         browser.setWindowFlags(
-            QtCore.Qt.WindowStaysOnTopHint
-        )  # pylint: disable=c-extension-no-member
+            QtCore.Qt.WindowStaysOnTopHint  # pylint: disable=c-extension-no-member
+        )
         # Setting window size
         browser.resize(1200, 800)
         browser.show()

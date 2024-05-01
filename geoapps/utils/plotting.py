@@ -187,6 +187,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         x = entity.centroids[:, 0].reshape(entity.shape, order="F")
         y = entity.centroids[:, 1].reshape(entity.shape, order="F")
         indices = filter_xy(x, y, resolution, window=window)
+        assert indices is not None
 
         ind_x, ind_y = (
             np.any(indices, axis=1),
