@@ -199,7 +199,9 @@ class BaseDashApplication:
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
             if key in update_dict:
-                if bool in validations[key]["types"] and type(update_dict[key]) == list:  # noqa: E721
+                if (
+                    bool in validations[key]["types"] and type(update_dict[key]) == list
+                ):  # noqa: E721
                     # Convert from dash component checklist to bool
                     if not update_dict[key]:
                         output_dict[key] = False
@@ -534,13 +536,19 @@ class ObjectSelection:
         :param port: Port where the dash app has been launched.
         """
         app = QtWidgets.QApplication(sys.argv)  # pylint: disable=c-extension-no-member
-        browser = QtWebEngineWidgets.QWebEngineView()  # pylint: disable=c-extension-no-member
+        browser = (
+            QtWebEngineWidgets.QWebEngineView()
+        )  # pylint: disable=c-extension-no-member
 
         browser.setWindowTitle(app_name)
-        localhost_url = QtCore.QUrl("http://127.0.0.1:" + str(port))  # pylint: disable=c-extension-no-member
+        localhost_url = QtCore.QUrl(
+            "http://127.0.0.1:" + str(port)
+        )  # pylint: disable=c-extension-no-member
         browser.load(localhost_url)
         # Brings Qt window to the front
-        browser.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)  # pylint: disable=c-extension-no-member
+        browser.setWindowFlags(
+            QtCore.Qt.WindowStaysOnTopHint
+        )  # pylint: disable=c-extension-no-member
         # Setting window size
         browser.resize(1200, 800)
         browser.show()
