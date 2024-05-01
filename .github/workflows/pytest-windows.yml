@@ -2,6 +2,7 @@ name: pytest on Windows
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - develop
       - main
@@ -26,6 +27,7 @@ env:
 jobs:
   pytest:
     name: pytest (Windows)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     strategy:
       fail-fast: false
       matrix:
