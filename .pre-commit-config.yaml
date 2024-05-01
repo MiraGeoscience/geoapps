@@ -1,7 +1,7 @@
 
 default_language_version:
     python: python3
-exclude: (^docs/(conf.py|_ext/)|^geoapps/simpeg(PF|EM1D)/|^geoapps-assets/)
+exclude: (^docs/(conf.py|_ext/))
 default_stages: [commit,push]
 fail_fast: false
 
@@ -11,39 +11,42 @@ ci:
     autoupdate_schedule: monthly
 
 repos:
--   repo: https://github.com/psf/black
-    rev: 24.1.1
+-   repo: https://github.com/hadialqattan/pycln
+    rev: v2.4.0
     hooks:
-    -   id: black
+    -   id: pycln
+        args: [--config=pyproject.toml]
 -   repo: https://github.com/PyCQA/isort
     rev: 5.13.2
     hooks:
     -   id: isort
-        additional_dependencies: [tomli] # to read config from pyproject.toml
-# -   repo: https://github.com/humitos/mirrors-autoflake
-#     rev: v2.3.1
-#     hooks:
-#     -   id: autoflake
-#-   repo: https://github.com/PyCQA/flake8
-#    rev: 6.1.0
-#    hooks:
-#    -   id: flake8
+        additional_dependencies: [tomli]  # to read config from pyproject.toml
+-   repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+    -   id: black
+-   repo: https://github.com/PyCQA/flake8
+    rev: 7.0.0
+    hooks:
+    -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
+    rev: v3.15.2
     hooks:
     -   id: pyupgrade
         args: [--py310-plus]
-#-   repo: https://github.com/pre-commit/mirrors-mypy
-#    rev: v1.6.1
+#-   repo: https://github.com/pre-commit/mirrors-mypy  # TODO: fix mypy errors
+#    rev: v1.10.0
 #    hooks:
 #    -   id: mypy
 #        additional_dependencies: [
+#            numpy==1.26.*,  # pre-commit CI does not provide numpy 1.23.*
 #            types-toml,
 #            types-PyYAML,
-#            tomli # to read config from pyproject.toml
+#            tomli  # to read config from pyproject.toml
 #        ]
+#        exclude: ^(docs|geoapps-assets)/
 -   repo: https://github.com/codingjoe/relint
-    rev: 3.1.0
+    rev: 3.1.1
     hooks:
     -   id: relint
         args: [-W]  # to fail on warnings
@@ -80,10 +83,12 @@ repos:
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb|^THIRD_PARTY_SOFTWARE\.rst)$
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
     -   id: trailing-whitespace
         exclude: \.mdj$
+    -   id: check-json
+        exclude_types: [jupyter]
     -   id: check-toml
     -   id: check-yaml
 #    -   id: check-added-large-files # crashing on some configuration. To be investigated
@@ -96,6 +101,15 @@ repos:
     -   id: mixed-line-ending
         exclude: ^\.idea/.*\.xml$
     -   id: name-tests-test
+    -   id: pretty-format-json
+        args:
+            - --autofix
+            - --indent=4
+            - --no-sort-keys
+            - --top-keys
+            - version,title,icon,documentation,conda_environment,run_command,geoh5,monitoring_directory,workspace_geoh5
+        exclude_types: [jupyter]
+        exclude: ^docs/.*/images/
 -   repo: https://github.com/rstcheck/rstcheck
     rev: v6.2.0
     hooks:

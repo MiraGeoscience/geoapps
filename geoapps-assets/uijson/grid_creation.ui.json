@@ -1,15 +1,15 @@
 {
     "title": "Block Model Creation",
-    "geoh5": "",
+    "conda_environment": "geoapps",
     "run_command": "geoapps.grid_creation.driver",
+    "geoh5": "",
+    "monitoring_directory": "",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
         "main": true
     },
-    "monitoring_directory": "",
-    "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
     "live_link": false,

@@ -105,7 +105,7 @@ class Calculator(ObjectDataSelection):
         """
         Evaluate the expression and output the result to geoh5
         """
-        var = self.var  # pylint: disable=unused-variable
+        var = self.var  # pylint: disable=unused-variable  # noqa: F841
         obj = self.workspace.get_entity(self.objects.value)[0]
 
         if obj is None:

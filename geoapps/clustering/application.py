@@ -402,7 +402,7 @@ class Clustering(ScatterPlots):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json_data":
             # Read in list of colors from ui.json.
-            if type(ui_json_data["color_pickers"]) == list:
+            if type(ui_json_data["color_pickers"]) == list:  # noqa: E721
                 full_list = ui_json_data["color_pickers"]
             else:
                 # Convert string to list.
