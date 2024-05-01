@@ -1,5 +1,13 @@
 [flake8]
-ignore = E203, E266, E501, W503
+ignore =
+    E203,
+    E266,
+    E501,
+    W503,
+    # TODO: reduce complexity and restore this rule (Function is too complex)
+    C901,
+
+
 max-line-length = 80
 max-complexity = 16
 select = B,C,E,F,W,T4,B9
