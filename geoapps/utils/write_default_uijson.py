@@ -13,6 +13,7 @@ import argparse
 from pathlib import Path
 
 from curve_apps.edge_detection.params import Parameters as EdgeDetectionParameters
+from octree_creation_app.params import OctreeParams
 from simpeg_drivers.electricals.direct_current.pseudo_three_dimensions.params import (
     DirectCurrentPseudo3DParams,
 )
@@ -50,7 +51,6 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.iso_surfaces.params import IsoSurfacesParams
-from geoapps.octree_creation.params import OctreeParams
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
@@ -163,8 +163,9 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     tipper_init["geoh5"] = str(assets_path() / "FlinFlon_natural_sources.geoh5")
     tipper_init = tipper_init if use_initializers else {}
 
+    from octree_creation_app.constants import template_dict
+
     from geoapps.octree_creation.constants import app_initializer as oct_init
-    from geoapps.octree_creation.constants import template_dict
 
     if use_initializers:
         oct_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
