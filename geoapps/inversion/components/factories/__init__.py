@@ -7,6 +7,8 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+# flake8: noqa
+
 from __future__ import annotations
 
 from .directives_factory import DirectivesFactory, SaveIterationGeoh5Factory

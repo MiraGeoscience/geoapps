@@ -199,7 +199,7 @@ class BaseDashApplication:
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
             if key in update_dict:
-                if bool in validations[key]["types"] and type(update_dict[key]) == list:
+                if bool in validations[key]["types"] and type(update_dict[key]) == list:  # noqa: E721
                     # Convert from dash component checklist to bool
                     if not update_dict[key]:
                         output_dict[key] = False
@@ -208,7 +208,7 @@ class BaseDashApplication:
                 elif (
                     float in validations[key]["types"]
                     and int not in validations[key]["types"]
-                    and type(update_dict[key]) == int
+                    and type(update_dict[key]) == int  # noqa: E721
                 ):
                     # Checking for values that Dash has given as int when they should be floats.
                     output_dict[key] = float(update_dict[key])
@@ -533,13 +533,14 @@ class ObjectSelection:
         :param app_name: App name to display as Qt window title.
         :param port: Port where the dash app has been launched.
         """
-        app = QtWidgets.QApplication(sys.argv)
-        browser = QtWebEngineWidgets.QWebEngineView()
+        app = QtWidgets.QApplication(sys.argv)  # pylint: disable=c-extension-no-member
+        browser = QtWebEngineWidgets.QWebEngineView()  # pylint: disable=c-extension-no-member
 
         browser.setWindowTitle(app_name)
-        browser.load(QtCore.QUrl("http://127.0.0.1:" + str(port)))
+        localhost_url = QtCore.QUrl("http://127.0.0.1:" + str(port))  # pylint: disable=c-extension-no-member
+        browser.load(localhost_url)
         # Brings Qt window to the front
-        browser.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        browser.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)  # pylint: disable=c-extension-no-member
         # Setting window size
         browser.resize(1200, 800)
         browser.show()

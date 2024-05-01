@@ -7,5 +7,7 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+# flake8: noqa
+
 from .magnetotellurics import MagnetotelluricsParams
 from .tipper import TipperParams

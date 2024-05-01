@@ -707,7 +707,7 @@ def inversion(input_file):
                 }
             }
         )
-        curve.add_data_to_group(d_i, f"Observed")
+        curve.add_data_to_group(d_i, "Observed")
         data_types[channel] = d_i.entity_type
 
     xyz = locations[stn_id, :]
@@ -965,7 +965,7 @@ def inversion(input_file):
         d_i = curve.add_data(
             {"Uncertainties_" + channel: {"association": "VERTEX", "values": temp}}
         )
-        curve.add_data_to_group(d_i, f"Uncertainties")
+        curve.add_data_to_group(d_i, "Uncertainties")
 
         uncert[ind::block][uncert_orig[ind::block] == np.inf] = np.inf
 

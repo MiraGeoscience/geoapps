@@ -7,4 +7,6 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+# flake8: noqa
+
 from .params import TimeDomainElectromagneticsParams

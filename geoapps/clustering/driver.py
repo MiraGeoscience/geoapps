@@ -17,7 +17,6 @@ from geoh5py.workspace import Workspace
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
-
 import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree

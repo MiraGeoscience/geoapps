@@ -7,6 +7,8 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+# flake8: noqa
+
 from __future__ import annotations
 
 from .direct_current.three_dimensions import DirectCurrent3DParams

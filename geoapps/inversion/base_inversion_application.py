@@ -505,7 +505,7 @@ class InversionApp(BaseDashApplication):
             options = "Model"
             data = str(val)
             const = None
-        elif (type(val) == float) or (type(val) == int):
+        elif (type(val) == float) or (type(val) == int):  # noqa: E721
             options = "Constant"
             data = None
             const = val
