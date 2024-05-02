@@ -140,7 +140,8 @@ sphinx = "^5.0"
 tomli = "*"
 
 [tool.conda-lock]
-platforms = ['win-64', 'linux-64']
+#platforms = ['win-64', 'linux-64']
+platforms = ['win-64']
 channels = ['conda-forge']
 
 [tool.conda-lock.dependencies]
