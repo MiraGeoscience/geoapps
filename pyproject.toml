@@ -57,6 +57,7 @@ matplotlib = "~3.7.1"  # also in simpeg and geoana
 numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 pandas = "~2.2.1"  # also in simpeg
 scikit-learn = "~1.4.0"  # also in simpeg
+scikit-image = "~0.20.0"
 scipy = "~1.10.0"
 tqdm = "^4.66.1"  # also in las-geoh5
 
