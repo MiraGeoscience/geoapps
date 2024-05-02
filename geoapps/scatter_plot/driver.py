@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import numpy as np
 import plotly.graph_objects as go
+from geoapps_utils.driver.driver import BaseDriver
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.scatter_plot.constants import validations
 from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils.plotting import format_axis, normalize, symlog

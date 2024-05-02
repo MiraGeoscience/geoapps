@@ -453,7 +453,7 @@ default_ui_json = {
     "monitoring_directory": None,
     "workspace_geoh5": None,
     "geoh5": None,
-    "run_command": "geoapps.inversion.driver",
+    "run_command": "simpeg_drivers.driver",
     "run_command_boolean": None,
     "conda_environment": "geoapps",
     "distributed_workers": None,

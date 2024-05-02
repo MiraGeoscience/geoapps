@@ -23,6 +23,12 @@ from geoh5py.objects import CurrentElectrode, PotentialElectrode
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
+from simpeg_drivers.electricals.direct_current.three_dimensions.params import (
+    DirectCurrent3DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.three_dimensions.params import (
+    InducedPolarization3DParams,
+)
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
@@ -30,12 +36,6 @@ from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer,
-)
-from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
-    DirectCurrent3DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
-    InducedPolarization3DParams,
 )
 from geoapps.inversion.potential_fields.application import (
     MeshOctreeOptions,

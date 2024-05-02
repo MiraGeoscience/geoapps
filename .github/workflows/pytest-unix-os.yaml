@@ -22,7 +22,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  source_dir: geoapps
+  source_dir: simpeg_drivers
 
 jobs:
   pytest:
@@ -53,4 +53,5 @@ jobs:
           environment-name: test_env
           cache-downloads: true
       - name: pytest
-        run: pytest --cov --cov-report=xml
+        run: |
+          pytest --cov=${source_dir} --cov-report=xml --cov-branch

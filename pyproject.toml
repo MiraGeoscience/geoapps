@@ -63,7 +63,9 @@ tqdm = "^4.66.1"  # also in las-geoh5
 
 ## dependencies for UI
 #---------------------
+dash = "~2.12"
 dash-daq = "~0.5.0"
+notebook = "~6.4.0"
 ipyfilechooser = "~0.6.0"
 ipywidgets = "^7.6.5"
 plotly = "~5.19.0"
@@ -77,6 +79,15 @@ geoh5py = {version = "~0.9.0rc1", source = "pypi", allow-prereleases = true}
 
 param-sweeps = {version = "~0.1.7rc1", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
+
+octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true, optional = true}
+#octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/release/0.1.0.zip#sha256=", optional = true}
+
+geoapps-utils = {version = "~0.3.0rc1", source = "pypi", allow-prereleases = true, optional = true}
+#geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/release/0.3.0.zip#sha256=", optional = true}
+
+simpeg-drivers = {version = "~0.1.0b3", source = "pypi", allow-prereleases = true, optional = true}
+#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.zip#sha256=", optional = true}
 
 simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
@@ -93,6 +104,7 @@ h5py = "^3.2.1"  # from geoh5py
 mkl = "2022.1.*"  # from simpeg
 Pillow = "~10.1.0"  # from geoh5py
 properties = "~0.6.0"  # from simpeg-archive
+pydantic = "~2.5.2"  # from geoapps-utils
 pydiso = "~0.0.3"  # from simpeg
 pymatsolver = "~0.2.0"  # from simpeg
 zarr = "~2.14.2"  # from simpeg using Dask

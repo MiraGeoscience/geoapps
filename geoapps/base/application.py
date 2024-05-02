@@ -15,6 +15,7 @@ import uuid
 from pathlib import Path
 from shutil import copyfile
 
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import (
@@ -28,7 +29,6 @@ from geoh5py.ui_json.utils import list2str, monitored_directory_copy
 from geoh5py.workspace import Workspace
 from traitlets import TraitError
 
-from geoapps.driver_base.params import BaseParams
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():

@@ -12,6 +12,7 @@ from __future__ import annotations
 import pathlib
 
 from dash import Input, Output, State
+from simpeg_drivers.potential_fields.magnetic_vector.params import MagneticVectorParams
 
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
@@ -19,9 +20,6 @@ from geoapps.inversion.potential_fields.magnetic_vector.layout import (
     component_list,
     magnetic_vector_inversion_params,
     magnetic_vector_layout,
-)
-from geoapps.inversion.potential_fields.magnetic_vector.params import (
-    MagneticVectorParams,
 )
 
 

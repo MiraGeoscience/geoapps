@@ -14,12 +14,12 @@ import sys
 import geoh5py.data
 import geoh5py.objects
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Grid2D
 from skimage.feature import canny
 from skimage.transform import probabilistic_hough_line
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.edge_detection.constants import validations
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.shared_utils.utils import filter_xy
@@ -30,7 +30,9 @@ class EdgeDetectionDriver(BaseDriver):
     _params_class = EdgeDetectionParams
     _validations = validations
 
-    def __init__(self, params: EdgeDetectionParams):
+    def __init__(
+        self, params: EdgeDetectionParams
+    ):  # pylint: disable=useless-super-delegation
         super().__init__(params)
 
     def run(self):

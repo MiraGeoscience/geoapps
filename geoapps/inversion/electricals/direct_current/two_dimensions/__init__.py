@@ -8,5 +8,3 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # flake8: noqa
-
-from .params import DirectCurrent2DParams

@@ -11,9 +11,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.ui_json import InputFile
-
-from geoapps.driver_base.params import BaseParams
 
 from .constants import default_ui_json, defaults, template_dict, validations
 
