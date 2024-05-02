@@ -7,7 +7,7 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-from __future__ import annotations
+# flake8: noqa
 
 from .constants import app_initializer
 from .params import ScatterPlotParams

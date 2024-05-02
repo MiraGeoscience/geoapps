@@ -18,6 +18,14 @@ exclude = [
     "geoapps-assets/uijson/**",
 ]
 
+include = [
+    "COPYING",
+    "COPYING.LESSER",
+    "LICENSE",
+    "README.rst",
+    "THIRD_PARTY_SOFTWARE.rst",
+]
+
 keywords = ["geology", "geophysics", "earth sciences"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -39,62 +47,59 @@ start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["
 [tool.poetry.dependencies]
 python = "^3.10, < 3.11"
 
-## dependencies for a minimal environment
+dask = {version = "2022.10.*", extras = ["distributed"]}
+discretize = "~0.10.0"  # also in simpeg
+distributed = "2022.10.*"  # because conda-lock doesn't take dask extras into account
+fiona = "~1.9.2"
+fsspec = "2022.*"  # also in simpeg
+gdal = "~3.6.3"
+matplotlib = "~3.7.1"  # also in simpeg and geoana
 numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
-scipy = "~1.10.1"
-semver = "~3.0.0"
-
-geoh5py = {version = "~0.9.0-alpha.4", source = "pypi", allow-prereleases = true}
-#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
-mira-omf = {version = "~3.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-#mira-omf = {url = "https://github.com/MiraGeoscience/omf/archive/refs/heads/release/3.2.0.zip#sha256="}
-las-geoh5 = { version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-#las-geoh5 = {url = "https://github.com/MiraGeoscience/las-geoh5/archive/refs/heads/release/0.2.0.zip#sha256="}
-param-sweeps = {version = "~0.1.7-alpha.4", source = "pypi", allow-prereleases = true}
-#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
-
-
-## dependencies for core algorithms
-dask = {version = "2022.10.*", extras = ["distributed"], optional = true}
-discretize = {version = "~0.10.0", optional = true }  # also in simpeg
-distributed = {version = "2022.10.*", optional = true}  # because conda-lock doesn't take dask extras into account
-fiona = {version = "~1.9.2", optional = true}
-fsspec = {version = "2022.*", optional = true }  # also in simpeg
-gdal = {version = "~3.6.3", optional = true}
-matplotlib = {version = "~3.7.1", optional = true }  # also in simpeg and geoana
-pandas = {version = "~1.5.3", optional = true }  # also in simpeg
-scikit-learn = {version = "~1.2.2", optional = true }  # also in simpeg
-tqdm = {version = "^4.64.0", optional = true }  # also in las-geoh5
-
-#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
-simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", optional = true}
-mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/v0.19.0.dev8+geoapps.0.12.0.zip#sha256=", optional = true}
-#mira-simpeg = {version = "~0.19.0.dev7", source = "pypi", optional = true}
-
-## indirect dependencies, forcing them here for installation through Conda not pip
-empymod = {version = "~2.2.1", optional = true}  # from simpeg and geoana
-geoana = {version = "~0.4.0", optional = true}  # from simpeg
-h5py = "^3.2.1"  # from geoh5py
-lasio = "~0.31"  # from las-geoh5
-mkl = {version = "2022.*", optional = true }  # from simpeg
-Pillow = "^10.0.1"  # from geoh5py
-properties = "~0.6.0"  # from omf
-pydantic = "~2.5.3"  # from las-geoh5
-pydiso = {version = "~0.0.3", optional = true}  # from simpeg
-pymatsolver = {version = "~0.2.0", optional = true}  # from simpeg
-pypng = "^0.20220715"  # from omf
-scikit-image = {version = "~0.19.2", optional = true}
-six = "^1.16"  # from omf
-vectormath = "~0.2.0"  # from omf
-zarr = {version = "~2.14.2", optional = true}  # from simpeg using Dask
+pandas = "~2.2.1"  # also in simpeg
+scikit-learn = "~1.4.0"  # also in simpeg
+scikit-image = "~0.20.0"
+scipy = "~1.10.0"
+tqdm = "^4.66.1"  # also in las-geoh5
 
 ## dependencies for UI
-ipyfilechooser = {version = "~0.6.0", optional = true}
-ipywidgets = {version = "^7.6.5", optional = true}
-plotly = {version = "~5.13.1", optional = true}
-pyqtwebengine = {version = "~5.15", optional = true}
-pyside2 = {version = "~5.15", optional = true}
-dash-daq = {version = "~0.5.0", optional = true}
+#---------------------
+dash-daq = "~0.5.0"
+ipyfilechooser = "~0.6.0"
+ipywidgets = "^7.6.5"
+plotly = "~5.19.0"
+pyqtwebengine = "~5.15.2"
+pyside2 = "~5.15.2.1"
+
+## pip dependencies from Git repositories
+#----------------------------------------
+geoh5py = {version = "~0.9.0rc1", source = "pypi", allow-prereleases = true}
+#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
+
+param-sweeps = {version = "~0.1.7rc1", source = "pypi", allow-prereleases = true}
+#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
+
+simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
+#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
+
+mira-simpeg = {version = ">=0.19.0.8a3,<0.19.0.8.post999", source = "pypi", allow-prereleases = true}
+#mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/0.19.0.8.zip#sha256="}
+
+
+## indirect dependencies, forcing them here for installation through Conda not pip
+#---------------------------------------------------------------------------------
+empymod = "~2.2.1"  # from simpeg and geoana
+geoana = "~0.4.0"  # from simpeg
+h5py = "^3.2.1"  # from geoh5py
+mkl = "2022.1.*"  # from simpeg
+Pillow = "~10.1.0"  # from geoh5py
+properties = "~0.6.0"  # from simpeg-archive
+pydiso = "~0.0.3"  # from simpeg
+pymatsolver = "~0.2.0"  # from simpeg
+zarr = "~2.14.2"  # from simpeg using Dask
+
+# force some versions to resolve incompatible resolution between PyPI and Conda
+#-------------------------------------------------------------------------------
+tzdata = "2023.4"  # through pandas from SimPEG (constraint copied from simpeg-drivers)
 
 ## about pip dependencies
 # to be specified to work with conda-lock
@@ -110,59 +115,18 @@ Pygments = "*"
 pylint = "*"
 pytest = "*"
 pytest-cov = "*"
+semver = "*"
 tomli = "*"
 
-[tool.poetry.extras]
-core = [
-    "dask",
-    "discretize",
-    "distributed",
-    "empymod",
-    "fiona",
-    "fsspec",
-    "gdal",
-    "geoana",
-    "matplotlib",
-    "mira-simpeg",
-    "mkl",
-    "pandas",
-    "pydiso",
-    "pymatsolver",
-    "scikit-image",
-    "scikit-learn",
-    "simpeg-archive",
-    "tqdm",
-    "zarr",
-]
-
-# extras for apps user interface
-apps = [
-    # should include "core", but need non-overlapping extra lists for conda-lock
-    "dash-daq",
-    "ipyfilechooser",
-    "ipywidgets",
-    "plotly",
-    "pyqtwebengine",
-    "pyside2",
-]
-
 [tool.conda-lock]
-platforms = ['win-64', 'osx-64', 'linux-64']
-channels = [
-    'conda-forge',
-    'kinverarity'  # for lasio
-]
+platforms = ['win-64', 'linux-64']
+channels = ['conda-forge']
 
 [tool.conda-lock.dependencies]
-libblas = "*=*mkl"
+libblas = "*=*mkl"  # because simpeg already brings in the MKL
 
 [tool.isort]
-# settings for compatibility between ``isort`` and ``black`` formatting
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 88
+profile = "black"
 
 [tool.black]
 # defaults are just fine
@@ -176,7 +140,7 @@ show_column_numbers = true
 check_untyped_defs = true
 
 plugins = [
-    #    'numpy.typing.mypy_plugin'
+    'numpy.typing.mypy_plugin'
 ]
 
 [tool.pytest.ini_options]

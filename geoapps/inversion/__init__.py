@@ -7,6 +7,8 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
+# flake8: noqa
+
 # isort: skip_file
 
 from __future__ import annotations

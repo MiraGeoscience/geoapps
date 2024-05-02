@@ -488,7 +488,10 @@ class InversionData(InversionLocations):
     @staticmethod
     def check_tensor(channels):
         tensor_components = ["xx", "xy", "xz", "yx", "zx", "yy", "zz", "zy", "yz"]
-        has_tensor = lambda c: any(k in c for k in tensor_components)
+
+        def has_tensor(c):
+            return any(k in c for k in tensor_components)
+
         return any(has_tensor(c) for c in channels)
 
     def update_params(self, data_dict, uncert_dict):

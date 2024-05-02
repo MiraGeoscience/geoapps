@@ -142,7 +142,7 @@ class SourcesFactory(SimPEGFactory):
 
     def build(
         self, receivers=None, locations=None, frequency=None, waveform=None
-    ):  #  pylint: disable=arguments-differ
+    ):  # pylint: disable=arguments-differ
         return super().build(
             receivers=receivers,
             locations=locations,

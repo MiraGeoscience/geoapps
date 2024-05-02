@@ -176,8 +176,8 @@ class IsoSurfacesDriver(BaseDriver):
                 active[nan_verts] = nan_verts.shape[0]
                 _, inv_map = np.unique(active, return_inverse=True)
 
-                verts = verts[nan_verts == False, :]
-                faces = faces[rem_cells == False, :]
+                verts = verts[~nan_verts, :]
+                faces = faces[~rem_cells, :]
                 faces = inv_map[faces].astype("uint32")
 
                 vertices = []

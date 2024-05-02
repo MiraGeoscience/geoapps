@@ -9,11 +9,6 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from geoapps.inversion import InversionBaseParams
-
 import multiprocessing
 import sys
 from datetime import datetime, timedelta
@@ -37,7 +32,7 @@ from SimPEG import (
 from SimPEG.regularization import BaseRegularization, Sparse
 
 from geoapps.driver_base.driver import BaseDriver
-from geoapps.inversion import DRIVER_MAP
+from geoapps.inversion import DRIVER_MAP, InversionBaseParams
 from geoapps.inversion.components import (
     InversionData,
     InversionMesh,
@@ -46,7 +41,6 @@ from geoapps.inversion.components import (
     InversionWindow,
 )
 from geoapps.inversion.components.factories import DirectivesFactory, MisfitFactory
-from geoapps.inversion.params import InversionBaseParams
 from geoapps.inversion.utils import tile_locations
 
 
@@ -434,7 +428,7 @@ class InversionDriver(BaseDriver):
         inversion_type = ifile.data["inversion_type"]
         if inversion_type not in DRIVER_MAP:
             msg = f"Inversion type {inversion_type} is not supported."
-            msg += f" Valid inversions are: {*list(DRIVER_MAP),}."
+            msg += f" Valid inversions are: {*list(DRIVER_MAP), }."
             raise NotImplementedError(msg)
 
         mod_name, class_name = DRIVER_MAP.get(inversion_type)

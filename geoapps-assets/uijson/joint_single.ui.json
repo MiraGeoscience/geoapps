@@ -1,7 +1,11 @@
 {
     "title": "SimPEG Joint Inversion - Single Property",
-    "inversion_type": "tipper",
+    "conda_environment": "geoapps",
+    "run_command": "geoapps.inversion.driver",
     "geoh5": "",
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
+    "inversion_type": "tipper",
     "forward_only": false,
     "topography_object": {
         "main": true,
@@ -486,16 +490,12 @@
         "label": "Results group name",
         "value": "TipperInversion"
     },
-    "monitoring_directory": "",
-    "workspace_geoh5": "",
-    "run_command": "geoapps.inversion.driver",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
         "main": true
     },
-    "conda_environment": "geoapps",
     "distributed_workers": "",
     "txz_real_channel_bool": false,
     "txz_imag_channel_bool": false,

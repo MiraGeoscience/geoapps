@@ -1173,7 +1173,7 @@ class PeakFinder(ObjectDataSelection):
                 axs.text(
                     np.mean(times),
                     np.mean(y),
-                    f"Tau: {np.abs(group['linear_fit'][1] ** -1.)*1e+3:.2e} msec",
+                    f"Tau: {np.abs(group['linear_fit'][1] ** -1.) * 1e+3:.2e} msec",
                     color="k",
                 )
                 axs.scatter(

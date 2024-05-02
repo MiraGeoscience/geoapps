@@ -20,7 +20,7 @@ jobs:
       run: >
         echo $HEAD_REF $PR_TITLE
         | echo "issue_key=$(
-        grep -osi "\b\(GA\|GEOPY\)[ #-]*[0-9]\+"
+        grep -osi "\b\(GA\|GEOPY\|DEVOPS\)[ #-]*[0-9]\+"
         | head -n1
         | sed -E "s/([A-Z]+)[-# ]*([0-9]+)/\1-\2/i"
         | tr [:lower:] [:upper:]
