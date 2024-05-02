@@ -20,6 +20,7 @@ import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.objects import Curve, ObjectBase
 from geoh5py.shared import Entity
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -110,7 +111,15 @@ class PeakFinder(ObjectDataSelection):
         if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
-            self.params = self._param_class(**app_initializer)
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
 
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
