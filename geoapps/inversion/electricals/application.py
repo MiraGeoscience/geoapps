@@ -20,6 +20,7 @@ from time import time
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -109,7 +110,17 @@ class InversionApp(PlotSelection2D):
             self.params = self._param_class(ui_json)
         else:
             app_initializer.update(kwargs)
-            self.params = self._param_class(**app_initializer)
+
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
+
             extras = {
                 key: value
                 for key, value in app_initializer.items()
