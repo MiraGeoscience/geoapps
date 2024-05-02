@@ -293,7 +293,7 @@ class Export(ObjectDataSelection):
                     + ".mod"
                 ] = item[ind]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
-            mesh.writeUBC(
+            mesh.write_UBC(
                 name,
                 models=models,
             )
@@ -316,7 +316,7 @@ class Export(ObjectDataSelection):
                 entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
             ]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
-            mesh.writeUBC(name)
+            mesh.write_UBC(name)
             print(f"Mesh saved to {name}")
 
             if any(data_values):
