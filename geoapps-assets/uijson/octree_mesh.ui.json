@@ -1,18 +1,19 @@
 {
+    "version": "0.11.0-alpha.1",
     "title": "octree Mesh Creator",
-    "geoh5": "",
+    "conda_environment": "geoapps",
     "run_command": "geoapps.octree_creation.driver",
+    "geoh5": "",
+    "monitoring_directory": "",
+    "workspace_geoh5": "",
     "run_command_boolean": {
         "value": false,
         "label": "Run python module ",
         "tooltip": "Warning: launches process to run python model on save",
         "main": true
     },
-    "monitoring_directory": "",
-    "conda_environment": "geoapps",
     "conda_environment_boolean": false,
     "workspace": "",
-    "version": "0.11.0-alpha.1",
     "objects": {
         "enabled": true,
         "group": "1- Core",
@@ -83,7 +84,6 @@
         "main": true,
         "value": false
     },
-    "workspace_geoh5": "",
     "Refinement A object": {
         "groupOptional": true,
         "enabled": true,
