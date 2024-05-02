@@ -276,7 +276,7 @@ class Surface2D(ObjectDataSelection):
         else:
             if elevations:  # Assumes non-property_group selection
                 z_values = elevations[0].values
-                ind = np.isnan(z_values) == False
+                ind = ~np.isnan(z_values)
                 locations = np.c_[locations[ind, :2], z_values[ind]]
             else:
                 ind = np.ones(locations.shape[0], dtype="bool")
