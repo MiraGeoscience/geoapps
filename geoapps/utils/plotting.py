@@ -112,7 +112,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
     :return line_selection:
     :return contour_set:
     """
-    indices = None
+    indices: np.array | None = None
     line_selection = None
     contour_set = None
     values = None
@@ -198,7 +198,8 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
         if values is not None:
             values = np.asarray(values.reshape(entity.shape, order="F"), dtype=float)
-            values[~indices] = np.nan
+            assert indices is not None
+            values[~indices] = np.nan  # pylint: disable=invalid-unary-operand-type
             values = values[ind_x, :][:, ind_y]
 
         if np.any(values):
