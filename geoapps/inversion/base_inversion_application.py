@@ -885,7 +885,7 @@ class InversionApp(BaseDashApplication):
         if is_uuid(object_uid):
             obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
         if isinstance(obj, Grid2D):
             lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
             lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
@@ -893,7 +893,7 @@ class InversionApp(BaseDashApplication):
             lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
             lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
 
         width = lim_x[1] - lim_x[0]
         height = lim_y[1] - lim_y[0]
