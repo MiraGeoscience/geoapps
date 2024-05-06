@@ -12,4 +12,3 @@
 from __future__ import annotations
 
 from .constants import app_initializer
-from .params import OctreeParams

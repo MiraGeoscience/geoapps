@@ -36,8 +36,7 @@ from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
-
-from .. import PROJECT
+from tests import PROJECT
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)

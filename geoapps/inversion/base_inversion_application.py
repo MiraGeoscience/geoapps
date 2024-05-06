@@ -28,10 +28,10 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
 from notebook import notebookapp
 from plotly import graph_objects as go
+from simpeg_drivers import InversionBaseParams
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
@@ -885,7 +885,7 @@ class InversionApp(BaseDashApplication):
         if is_uuid(object_uid):
             obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
         if isinstance(obj, Grid2D):
             lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
             lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
@@ -893,7 +893,7 @@ class InversionApp(BaseDashApplication):
             lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
             lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
 
         width = lim_x[1] - lim_x[0]
         height = lim_y[1] - lim_y[0]

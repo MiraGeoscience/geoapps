@@ -28,6 +28,7 @@ import numpy as np
 from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
@@ -37,7 +38,6 @@ from geoh5py.workspace import Workspace
 from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets  # pylint: disable=E0401
 
 from geoapps.base.layout import object_selection_layout
-from geoapps.driver_base.params import BaseParams
 
 
 class BaseDashApplication:
@@ -669,7 +669,7 @@ class ObjectSelection:
     def param_class(self, val):
         if not issubclass(val, BaseParams):
             raise TypeError(
-                "Value for attribute `param_class` should be a subclass of :obj:`geoapps.driver_base.BaseParams`"
+                "Value for attribute `param_class` should be a subclass of :obj:`simpeg_drivers.params.BaseParams`"
             )
         self._param_class = val
 
