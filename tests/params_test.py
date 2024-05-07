@@ -15,9 +15,7 @@ import pytest
 from geoh5py.shared.exceptions import OptionalValidationError
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from octree_creation_app.params import OctreeParams
 
-from geoapps.octree_creation.constants import app_initializer as octree_initializer
 from geoapps.peak_finder.constants import app_initializer as peak_initializer
 from geoapps.peak_finder.params import PeakFinderParams
 
@@ -29,7 +27,6 @@ geoh5 = Workspace(PROJECT)
 
 def test_params_initialize():
     for params in [
-        OctreeParams(),
         PeakFinderParams(),
     ]:
         check = []
@@ -43,15 +40,12 @@ def test_params_initialize():
             check.append(getattr(params, k) == v)
         assert all(check)
 
-    params = OctreeParams(vertical_padding=500.0)
-    assert params.vertical_padding == 500.0
     params = PeakFinderParams(center=1000.0)
     assert params.center == 1000.0
 
 
 def test_input_file_construction(tmp_path: Path):
     params_classes = [
-        OctreeParams,
         PeakFinderParams,
     ]
 
@@ -76,17 +70,6 @@ def test_input_file_construction(tmp_path: Path):
                 check.append(getattr(params, k) == v)
 
             assert all(check)
-
-
-def test_chunk_validation_octree(tmp_path: Path):
-    test_dict = dict(octree_initializer, **{"geoh5": geoh5})
-    test_dict.pop("objects")
-    params = OctreeParams(**test_dict)  # pylint: disable=repeated-keyword
-
-    with pytest.raises(OptionalValidationError) as excinfo:
-        params.write_input_file(name="test.ui.json", path=tmp_path)
-    for a in ["objects"]:
-        assert a in str(excinfo.value)
 
 
 def test_chunk_validation_peakfinder(tmp_path: Path):
