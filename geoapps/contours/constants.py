@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
@@ -177,8 +178,8 @@ validations = {}
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "interval_min": -400.0,
     "interval_max": 2000.0,
     "interval_spacing": 100.0,
