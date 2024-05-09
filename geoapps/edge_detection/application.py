@@ -13,8 +13,13 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from pydantic import BaseModel
+from typing import Any
 from curve_apps.edge_detection.driver import EdgeDetectionDriver
+from curve_apps.edge_detection.params import DetectionParameters, SourceParameters
+from curve_apps.params import OutputParameters
 from curve_apps.edge_detection.params import Parameters
+from geoh5py import Workspace
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace
@@ -33,15 +38,27 @@ with warn_module_not_found():
 
 from geoapps import assets_path
 
-INITIALIZER = {
-    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-    "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
-    "sigma": 0.5,
-    "window_azimuth": -20.0,
-    "ga_group_name": "Edges",
-}
+# INITIALIZER = {
+#     "geoh5": Workspace(str(assets_path() / "FlinFlon.geoh5")),
+#     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+#     "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
 
+#     "sigma": 0.5,
+#     "window_azimuth": -20.0,
+#     "ga_group_name": "Edges",
+# }
+workspace=Workspace(str(assets_path() / "FlinFlon.geoh5"))
+objects = workspace.get_entity("Gravity_Magnetics_drape60m")[0]
+data = objects.get_data("Airborne_TMI")[0]
+INITIALIZER = Parameters(
+    geoh5=workspace,
+    detection=DetectionParameters(sigma=0.5),
+    output=OutputParameters(export_as="Edges"),
+    source=SourceParameters(
+        objects=objects,
+        data=data,
+    ),
+)
 
 class EdgeDetectionApp(PlotSelection2D):
     """
@@ -64,14 +81,13 @@ class EdgeDetectionApp(PlotSelection2D):
     _object_types = (Grid2D,)
     _param_class = Parameters
 
-    def __init__(self, ui_json=None, plot_result=True, **kwargs):
-        INITIALIZER.update(kwargs)
+    def __init__(self, ui_json=None, plot_result=True):
         if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(input_file=InputFile(ui_json))
         else:
-            self.params = self._param_class(**INITIALIZER)
+            self.params = INITIALIZER
 
-        for key, value in self.params.to_dict().items():
+        for key, value in self.params.flatten().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
             else:
@@ -136,6 +152,17 @@ class EdgeDetectionApp(PlotSelection2D):
         self.trigger.button_style = "success"
 
         self.compute.click()
+
+
+    @property
+    def params(self):
+        return self._params
+
+    @params.setter
+    def params(self, val):
+        if not isinstance(val, Parameters):
+            raise TypeError("Input parameters must be of type Parameters.")
+        self._params = val
 
     @property
     def compute(self):
@@ -238,6 +265,9 @@ class EdgeDetectionApp(PlotSelection2D):
         else:
             self.export_as.value = "Edges"
 
+    def edge_args(self):
+
+
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.workspace
@@ -246,8 +276,19 @@ class EdgeDetectionApp(PlotSelection2D):
             return
 
         with fetch_active_workspace(self.workspace):
-            new_params = Parameters(**param_dict)
+            detection = DetectionParameters(**param_dict)
+            source = SourceParameters(**param_dict)
+            output = OutputParameters(**param_dict)
+            new_params = Parameters(
+                detection=detection,
+                output=output,
+                source=source,
+                **param_dict,
+            )
             self.refresh.value = False
+
+            print("window_size: ", self.window_size)
+            print("window_selection: ", self.window_selection)
             (
                 vertices,
                 _,
