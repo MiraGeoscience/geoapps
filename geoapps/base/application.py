@@ -503,7 +503,7 @@ class BaseApplication:
         param_dict = {}
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                if isinstance(getattr(self, key), Widget) and key.lstrip('_') in self.params.flatten():
                     value = getattr(self, key).value
                     if key[0] == "_":
                         key = key[1:]
@@ -517,8 +517,8 @@ class BaseApplication:
                     param_dict[key] = value
 
             except AttributeError:
+                print("attribute error")
                 continue
-
         return param_dict
 
 
