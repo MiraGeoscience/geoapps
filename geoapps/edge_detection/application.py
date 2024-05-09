@@ -265,9 +265,6 @@ class EdgeDetectionApp(PlotSelection2D):
         else:
             self.export_as.value = "Edges"
 
-    def edge_args(self):
-
-
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
         param_dict["geoh5"] = self.workspace
@@ -287,12 +284,15 @@ class EdgeDetectionApp(PlotSelection2D):
             )
             self.refresh.value = False
 
-            print("window_size: ", self.window_size)
-            print("window_selection: ", self.window_selection)
             (
                 vertices,
                 _,
-            ) = EdgeDetectionDriver.get_edges(*new_params.edge_args())
+            ) = EdgeDetectionDriver.get_edges(
+                self.params.source.objects,
+                self.params.source.data,
+                self.params.detection
+            )
+            print("vertices shape: ", vertices.shape)
             self.collections = [
                 collections.LineCollection(
                     np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
