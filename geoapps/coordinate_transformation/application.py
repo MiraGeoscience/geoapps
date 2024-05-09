@@ -32,6 +32,8 @@ with warn_module_not_found():
 with warn_module_not_found():
     from fiona.transform import transform
 
+from uuid import UUID
+
 with warn_module_not_found():
     from osgeo import gdal, osr
 
@@ -44,8 +46,8 @@ app_initializer = {
     "ga_group_name": "CoordinateTransformation",
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": [
-        "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+        UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+        UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"),
     ],
     "code_in": "EPSG:26914",
     "code_out": "EPSG:4326",

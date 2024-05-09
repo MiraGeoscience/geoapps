@@ -15,6 +15,7 @@ import os
 import uuid
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 import numpy as np
 from geoh5py.data import Data
@@ -710,8 +711,8 @@ def inversion_defaults():
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-    "data": "{2d165431-63bd-4e07-9db8-5b44acf8c9bf}",
+    "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "data": UUID("{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"),
     "resolution": 50,
     "window_width": 1500,
     "window_height": 1500,
@@ -719,11 +720,11 @@ app_initializer = {
     "inversion_parameters": {"max_iterations": 25},
     "topography": {
         "options": "Object",
-        "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-        "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+        "objects": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+        "data": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     },
     "lines": {
-        "data": "{b6927372-22d2-4ca1-9c23-372411ddc772}",
+        "data": UUID("{b6927372-22d2-4ca1-9c23-372411ddc772}"),
         "lines": [8, 9, 10, 11, 12],
     },
     "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
