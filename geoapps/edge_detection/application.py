@@ -12,13 +12,13 @@ from __future__ import annotations
 from pathlib import Path
 from time import time
 
-import numpy as np
-from pydantic import BaseModel
-from typing import Any
 from curve_apps.edge_detection.driver import EdgeDetectionDriver
-from curve_apps.edge_detection.params import DetectionParameters, SourceParameters
+from curve_apps.edge_detection.params import (
+    DetectionParameters,
+    Parameters,
+    SourceParameters,
+)
 from curve_apps.params import OutputParameters
-from curve_apps.edge_detection.params import Parameters
 from geoh5py import Workspace
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
@@ -38,20 +38,11 @@ with warn_module_not_found():
 
 from geoapps import assets_path
 
-# INITIALIZER = {
-#     "geoh5": Workspace(str(assets_path() / "FlinFlon.geoh5")),
-#     "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-#     "data": "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
-
-#     "sigma": 0.5,
-#     "window_azimuth": -20.0,
-#     "ga_group_name": "Edges",
-# }
-workspace=Workspace(str(assets_path() / "FlinFlon.geoh5"))
-objects = workspace.get_entity("Gravity_Magnetics_drape60m")[0]
+flinflon = Workspace(str(assets_path() / "FlinFlon.geoh5"))
+objects = flinflon.get_entity("Gravity_Magnetics_drape60m")[0]
 data = objects.get_data("Airborne_TMI")[0]
 INITIALIZER = Parameters(
-    geoh5=workspace,
+    geoh5=flinflon,
     detection=DetectionParameters(sigma=0.5),
     output=OutputParameters(export_as="Edges"),
     source=SourceParameters(
@@ -59,6 +50,7 @@ INITIALIZER = Parameters(
         data=data,
     ),
 )
+
 
 class EdgeDetectionApp(PlotSelection2D):
     """
@@ -152,7 +144,6 @@ class EdgeDetectionApp(PlotSelection2D):
         self.trigger.button_style = "success"
 
         self.compute.click()
-
 
     @property
     def params(self):
@@ -251,8 +242,10 @@ class EdgeDetectionApp(PlotSelection2D):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = Parameters(**param_dict)
-            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+            new_params = Parameters.build(param_dict)
+            new_params.input_file.write_ui_json(
+                name=temp_geoh5.replace(".geoh5", ".ui.json")
+            )
             driver = EdgeDetectionDriver(new_params)
             driver.run()
 
@@ -286,16 +279,14 @@ class EdgeDetectionApp(PlotSelection2D):
 
             (
                 vertices,
-                _,
+                cells,
             ) = EdgeDetectionDriver.get_edges(
-                self.params.source.objects,
-                self.params.source.data,
-                self.params.detection
+                new_params.source.objects,
+                new_params.source.data,
+                new_params.detection,
             )
-            print("vertices shape: ", vertices.shape)
+            segments = [vertices[c, :2] for c in cells]
             self.collections = [
-                collections.LineCollection(
-                    np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
-                )
+                collections.LineCollection(segments, colors="k", linewidths=2)
             ]
             self.refresh.value = True
