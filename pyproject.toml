@@ -47,8 +47,8 @@ start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["
 [tool.poetry.dependencies]
 python = "^3.10, < 3.11"
 
-dask = {version = "2022.10.*", extras = ["distributed"]}
-discretize = "~0.10.0"  # also in simpeg
+dask = {version = "2022.10.*", extras = ["distributed"]}  # also in from simpeg[dask], simpeg-drivers
+discretize = "~0.10.0"  # also in simpeg, simpeg-drivers, octrree-creation-app
 distributed = "2022.10.*"  # because conda-lock doesn't take dask extras into account
 fiona = "~1.9.2"
 fsspec = "2022.*"  # also in simpeg
@@ -56,60 +56,70 @@ gdal = "~3.6.3"
 matplotlib = "~3.7.1"  # also in simpeg and geoana
 numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 pandas = "~2.2.1"  # also in simpeg
-scikit-learn = "~1.4.0"  # also in simpeg
 scikit-image = "~0.20.0"
+scikit-learn = "~1.4.0"  # also in simpeg
 scipy = "~1.10.0"
 tqdm = "^4.66.1"  # also in las-geoh5
 
 ## dependencies for UI
 #---------------------
-dash = "~2.12"
+dash = "~2.12"  # also in geoapps-utils[dash]
 dash-daq = "~0.5.0"
-notebook = "~6.4.0"
+flask = "~3.0.3"  # also in geoapps-utils[dash]
 ipyfilechooser = "~0.6.0"
 ipywidgets = "^7.6.5"
+notebook = "~6.4.0"
 plotly = "~5.19.0"
-pyqtwebengine = "~5.15.2"
-pyside2 = "~5.15.2.1"
+pyqtwebengine = "~5.15.2"  # also in geoapps-utils[dash]
+pyside2 = "~5.15.2.1"  # also in geoapps-utils[dash]
 
 ## pip dependencies from Git repositories
 #----------------------------------------
-geoh5py = {version = "~0.9.0rc1", source = "pypi", allow-prereleases = true}
+geoh5py = {version = "~0.9.0rc2", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
+#geoh5py = {url = "http://localhost:8888/geoh5py.tar.gz#sha256="}
 
-param-sweeps = {version = "~0.1.7rc1", source = "pypi", allow-prereleases = true}
+param-sweeps = {version = "~0.1.7rc2", source = "pypi", allow-prereleases = true}
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
+#param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz#sha256="}
 
 curve-apps = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 
-octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true, optional = true}
-#octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/release/0.1.0.zip#sha256=", optional = true}
+octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
+# already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
+#octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/release/0.1.0.zip#sha256="}
+#octree-creation-app = {url = "http://localhost:8888/octree-creation-app.tar.gz#sha256="}
 
-geoapps-utils = {version = "~0.3.0rc1", source = "pypi", allow-prereleases = true, optional = true}
-#geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/release/0.3.0.zip#sha256=", optional = true}
+## geoapps-utils should have extras = ["dash"], but that break resolution by conda-lock
+geoapps-utils = {version = "~0.3.0rc3", source = "pypi", allow-prereleases = true}
+# already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
+#geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/release/0.3.0.zip#sha256="}
+#geoapps-utils = {url = "http://localhost:8888/geoapps-utils.tar.gz#sha256="}
 
-simpeg-drivers = {version = "~0.1.0b3", source = "pypi", allow-prereleases = true, optional = true}
-#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.zip#sha256=", optional = true}
+simpeg-drivers = {version = "~0.1.0b4", source = "pypi", allow-prereleases = true}
+#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.zip#sha256="}
+#simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz#sha256="}
 
 simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
 
-mira-simpeg = {version = ">=0.19.0.8a3,<0.19.0.8.post999", source = "pypi", allow-prereleases = true}
-#mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/0.19.0.8.zip#sha256="}
+mira-simpeg = {version = ">=0.19.0.8rc1,<0.19.0.8.post999", source = "pypi", allow-prereleases = true, extras = ["dask"]}
+#mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/0.19.0.8.zip#sha256=", extras = ["dask"]}
+#mira-simpeg = {url = "http://localhost:8888/mira-simpeg.tar.gz#sha256=", extras = ["dask"]}
 
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 #---------------------------------------------------------------------------------
+Pillow = "~10.1.0"  # from geoh5py
 empymod = "~2.2.1"  # from simpeg and geoana
 geoana = "~0.4.0"  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
 mkl = "2022.1.*"  # from simpeg
-Pillow = "~10.1.0"  # from geoh5py
 properties = "~0.6.0"  # from simpeg-archive
-pydantic = "~2.5.2"  # from geoapps-utils
+pydantic = "~2.5.2"  # from geoapps-utils, octrree-creation-app
 pydiso = "~0.0.3"  # from simpeg
 pymatsolver = "~0.2.0"  # from simpeg
-zarr = "~2.14.2"  # from simpeg using Dask
+zarr = "~2.14.2"  # from simpeg[dask], simpeg-drivers
 
 # force some versions to resolve incompatible resolution between PyPI and Conda
 #-------------------------------------------------------------------------------
@@ -124,20 +134,24 @@ tzdata = "2023.4"  # through pandas from SimPEG (constraint copied from simpeg-d
 # Note - conda-lock does not support the syntax: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 
+[tool.conda-lock.dependencies]
+libblas = "*=*mkl"  # because simpeg already brings in the MKL
+
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
+jupyter-book = "^0.13"
+jupytext = "^1.14"
 pylint = "*"
 pytest = "*"
 pytest-cov = "*"
+readthedocs-sphinx-ext = "*"
 semver = "*"
+sphinx = "^5.0"
 tomli = "*"
 
 [tool.conda-lock]
 platforms = ['win-64', 'linux-64']
 channels = ['conda-forge']
-
-[tool.conda-lock.dependencies]
-libblas = "*=*mkl"  # because simpeg already brings in the MKL
 
 [tool.isort]
 profile = "black"
