@@ -260,12 +260,11 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
-        param_dict["geoh5"] = self.workspace
-
         if param_dict.get("objects", None) is None:
             return
 
-        with fetch_active_workspace(self.workspace):
+        with fetch_active_workspace(self.workspace, mode="r+"):
+            param_dict["geoh5"] = self.workspace
             detection = DetectionParameters(**param_dict)
             source = SourceParameters(**param_dict)
             output = OutputParameters(**param_dict)
