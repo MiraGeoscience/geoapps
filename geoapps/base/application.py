@@ -15,6 +15,7 @@ import uuid
 from pathlib import Path
 from shutil import copyfile
 
+from geoapps_utils.driver.data import BaseData
 from geoapps_utils.driver.params import BaseParams
 from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
@@ -503,7 +504,12 @@ class BaseApplication:
         param_dict = {}
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget) and key.lstrip('_') in self.params.flatten():
+                collect_value = isinstance(getattr(self, key), Widget)
+                if isinstance(self.params, BaseData):
+                    collect_value &= key.lstrip("_") in self.params.flatten()
+                else:
+                    collect_value &= hasattr(self.params, key)
+                if collect_value:
                     value = getattr(self, key).value
                     if key[0] == "_":
                         key = key[1:]
@@ -517,7 +523,6 @@ class BaseApplication:
                     param_dict[key] = value
 
             except AttributeError:
-                print("attribute error")
                 continue
         return param_dict
 
