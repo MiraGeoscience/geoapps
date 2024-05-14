@@ -38,18 +38,18 @@ with warn_module_not_found():
 
 from geoapps import assets_path
 
-flinflon = Workspace(str(assets_path() / "FlinFlon.geoh5"))
-objects = flinflon.get_entity("Gravity_Magnetics_drape60m")[0]
-data = objects.get_data("Airborne_TMI")[0]
-INITIALIZER = Parameters(
-    geoh5=flinflon,
-    detection=DetectionParameters(sigma=0.5),
-    output=OutputParameters(export_as="Edges"),
-    source=SourceParameters(
-        objects=objects,
-        data=data,
-    ),
-)
+with Workspace(str(assets_path() / "FlinFlon.geoh5")) as flinflon:
+    objects = flinflon.get_entity("Gravity_Magnetics_drape60m")[0]
+    data = objects.get_data("Airborne_TMI")[0]
+    INITIALIZER = Parameters(
+        geoh5=flinflon,
+        detection=DetectionParameters(sigma=0.5),
+        output=OutputParameters(export_as="Edges"),
+        source=SourceParameters(
+            objects=objects,
+            data=data,
+        ),
+    )
 
 
 class EdgeDetectionApp(PlotSelection2D):
