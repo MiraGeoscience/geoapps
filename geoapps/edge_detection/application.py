@@ -9,8 +9,10 @@
 
 from __future__ import annotations
 
+import warnings
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 from curve_apps.edge_detection.driver import EdgeDetectionDriver
 from curve_apps.edge_detection.params import (
@@ -38,18 +40,26 @@ with warn_module_not_found():
 
 from geoapps import assets_path
 
-with Workspace(str(assets_path() / "FlinFlon.geoh5")) as flinflon:
-    objects = flinflon.get_entity("Gravity_Magnetics_drape60m")[0]
-    data = objects.get_data("Airborne_TMI")[0]
-    INITIALIZER = Parameters(
-        geoh5=flinflon,
-        detection=DetectionParameters(sigma=0.5),
-        output=OutputParameters(export_as="Edges"),
-        source=SourceParameters(
-            objects=objects,
-            data=data,
-        ),
-    )
+INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "sigma": 0.5,
+    "export_as": "Edges",
+}
+
+# with Workspace(str(assets_path() / "FlinFlon.geoh5")) as flinflon:
+#     objects = flinflon.get_entity("Gravity_Magnetics_drape60m")[0]
+#     data = objects.get_data("Airborne_TMI")[0]
+#     INITIALIZER = Parameters(
+#         geoh5=flinflon,
+#         detection=DetectionParameters(sigma=0.5),
+#         output=OutputParameters(export_as="Edges"),
+#         source=SourceParameters(
+#             objects=objects,
+#             data=data,
+#         ),
+#     )
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -73,17 +83,37 @@ class EdgeDetectionApp(PlotSelection2D):
     _object_types = (Grid2D,)
     _param_class = Parameters
 
-    def __init__(self, ui_json=None, plot_result=True):
-        if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(input_file=InputFile(ui_json))
-        else:
-            self.params = INITIALIZER
+    def __init__(
+        self,
+        ui_json=None,
+        plot_result=True,
+        geoh5: str | None = None
+    ):
 
-        for key, value in self.params.flatten().items():
-            if isinstance(value, Entity):
-                self.defaults[key] = value.uid
+        defaults = {}
+
+        if isinstance(geoh5, str):
+            if Path(geoh5).exists():
+                defaults = {"geoh5": geoh5}
             else:
-                self.defaults[key] = value
+                warnings.warn("Path provided in 'geoh5' argument does not exist.")
+
+        if ui_json is not None and Path(ui_json).exists():
+            defaults = InputFile.read_ui_json(ui_json).data
+
+        if not defaults:
+            if Path(INITIALIZER["geoh5"]).exists():
+                defaults = INITIALIZER.copy()
+            else:
+                defaults = {}
+                warnings.warn("Geoapps is missing 'FlinFlon.geoh5' file in the assets folder.")
+
+
+        for key, value in defaults.items():
+            self.defaults[key] = value
+
+
+
 
         self._compute = Button(
             description="Compute",
