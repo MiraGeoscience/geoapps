@@ -7,4 +7,4 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-from .params import InducedPolarization3DParams
+# flake8: noqa

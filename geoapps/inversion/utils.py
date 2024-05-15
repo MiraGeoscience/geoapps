@@ -216,15 +216,13 @@ def tile_locations(
 
     if method == "kmeans":
         # Best for smaller problems
-
-        np.random.seed(0)
         # Cluster
         # TODO turn off filter once sklearn has dealt with the issue causing the warning
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             from sklearn.cluster import KMeans
 
-            cluster = KMeans(n_clusters=n_tiles, n_init="auto")
+            cluster = KMeans(n_clusters=n_tiles, random_state=0, n_init="auto")
             cluster.fit_predict(locations[:, :2])
 
         labels = cluster.labels_

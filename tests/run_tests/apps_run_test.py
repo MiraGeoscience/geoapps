@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import base64
+import pathlib
 import uuid
 from pathlib import Path
 
@@ -35,8 +36,7 @@ from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
-
-from .. import PROJECT
+from tests import PROJECT
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -463,7 +463,21 @@ def test_edge_detection(tmp_path: Path):
 
 def test_export():
     app = Export(geoh5=PROJECT)
+
+    # Test exporting mesh
+    model_uid = uuid.UUID("eddc5be1-4753-4a41-99a0-c8f11a252e32")
+    app.objects.value = uuid.UUID("7450be38-1327-4336-a9e4-5cff587b6715")
+    app.data.value = [model_uid]
+    app.file_type.value = "UBC format"
     app.trigger.click()
+
+    assert pathlib.Path(
+        app.export_directory.value + app.export_as.value + ".msh"
+    ).exists()
+    assert pathlib.Path(
+        app.export_directory.value + app.data.uid_name_map[model_uid] + ".mod"
+    ).exists()
+
     # TODO write all the files types and check that appropriate files are written
 
 

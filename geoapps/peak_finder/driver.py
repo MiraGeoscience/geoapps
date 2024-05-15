@@ -14,12 +14,12 @@ import sys
 import numpy as np
 from dask import compute, delayed
 from dask.diagnostics import ProgressBar
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points
 from geoh5py.shared.utils import fetch_active_workspace
 from tqdm import tqdm
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.peak_finder.constants import validations
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.peak_finder.utils import default_groups_from_property_group, find_anomalies

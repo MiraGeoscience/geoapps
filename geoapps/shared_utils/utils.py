@@ -281,8 +281,11 @@ def downsample_grid(
 
     """
 
-    u_diff = lambda u: np.unique(np.diff(u, axis=1))[0]
-    v_diff = lambda v: np.unique(np.diff(v, axis=0))[0]
+    def u_diff(u):
+        return np.unique(np.diff(u, axis=1))[0]
+
+    def v_diff(v):
+        return np.unique(np.diff(v, axis=0))[0]
 
     du = np.linalg.norm(np.c_[u_diff(xg), u_diff(yg)])
     dv = np.linalg.norm(np.c_[v_diff(xg), v_diff(yg)])
@@ -542,9 +545,11 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
         ) from exc
 
     outfile = group.get_entity("SimPEG.out")[0]
-    out = [l for l in outfile.values.decode("utf-8").replace("\r", "").split("\n")][:-1]
+    out = [
+        line for line in outfile.values.decode("utf-8").replace("\r", "").split("\n")
+    ][:-1]
     cols = out.pop(0).split(" ")
-    out = [[string_to_numeric(k) for k in l.split(" ")] for l in out]
+    out = [[string_to_numeric(k) for k in line.split(" ")] for line in out]
     out = dict(zip(cols, list(map(list, zip(*out)))))
 
     return out

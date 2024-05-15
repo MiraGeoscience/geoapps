@@ -26,9 +26,6 @@ set PIP_NO_DEPS=1
 
 set PY_VER=3.10
 
-:: use test-pypi to get development versions if needed
-set PIP_EXTRA_INDEX_URL=https://test.pypi.org/simple/
-
 set env_path=%project_dir%\.conda-env
 call !MY_CONDA_EXE! activate base ^
   && call !MY_CONDA_EXE! env update --solver libmamba -p %env_path% --file %project_dir%\environments\py-%PY_VER%-win-64-dev.conda.lock.yml
@@ -36,13 +33,6 @@ call !MY_CONDA_EXE! activate base ^
 if !errorlevel! neq 0 (
   pause
   exit /B !errorlevel!
-)
-
-if exist %project_dir%\..\geoh5py\ (
-  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\geoh5py
-)
-if exist %project_dir%\..\param-sweeps\ (
-  call !MY_CONDA_EXE! run -p %env_path% pip install --upgrade --force-reinstall -e %project_dir%\..\param-sweeps
 )
 
 if !errorlevel! neq 0 (

@@ -31,11 +31,11 @@ from geoh5py.objects import (
     TipperReceivers,
 )
 from geoh5py.workspace import Workspace
+from octree_creation_app.driver import OctreeDriver
 from scipy.spatial import Delaunay
 from SimPEG import utils
 
 from geoapps.driver_base.utils import active_from_xyz, treemesh_2_octree
-from geoapps.octree_creation.driver import OctreeDriver
 from geoapps.utils.models import get_drape_model
 
 
@@ -479,8 +479,10 @@ def check_target(output: dict, target: dict, tolerance=0.1):
     :param tolerance: Tolerance between output and target measured as: |a-b|/b
     """
     print(
-        f"'data_norm': {np.linalg.norm(output['data'])}, 'phi_d': {output['phi_d'][1]}, 'phi_m': {output['phi_m'][1]}"
+        f"Output: 'data_norm': {np.linalg.norm(output['data'])}, 'phi_d': {output['phi_d'][1]}, 'phi_m': {output['phi_m'][1]}"
     )
+    print(f"Target: {target}")
+
     if any(np.isnan(output["data"])):
         warnings.warn(
             "Skipping data norm comparison due to nan (used to bypass lone faulty test run in GH actions)."

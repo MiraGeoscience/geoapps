@@ -28,10 +28,10 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
 from notebook import notebookapp
 from plotly import graph_objects as go
+from simpeg_drivers import InversionBaseParams
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
@@ -336,17 +336,16 @@ class InversionApp(BaseDashApplication):
             Output(component_id="window_center_y", component_property="max"),
             Output(component_id="window_width", component_property="max"),
             Output(component_id="window_height", component_property="max"),
+            Output(component_id="window_center_x", component_property="value"),
+            Output(component_id="window_center_y", component_property="value"),
+            Output(component_id="window_width", component_property="value"),
+            Output(component_id="window_height", component_property="value"),
             Input(component_id="data_object", component_property="value"),
         )(self.set_bounding_box)
         # Update plot
         self.app.callback(
             Output(component_id="plot", component_property="figure"),
             Output(component_id="data_count", component_property="children"),
-            Output(component_id="window_center_x", component_property="value"),
-            Output(component_id="window_center_y", component_property="value"),
-            Output(component_id="window_width", component_property="value"),
-            Output(component_id="window_height", component_property="value"),
-            Output(component_id="fix_aspect_ratio", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
             Input(component_id="plot", component_property="relayoutData"),
@@ -506,7 +505,7 @@ class InversionApp(BaseDashApplication):
             options = "Model"
             data = str(val)
             const = None
-        elif (type(val) == float) or (type(val) == int):
+        elif (type(val) == float) or (type(val) == int):  # noqa: E721
             options = "Constant"
             data = None
             const = val
@@ -761,8 +760,8 @@ class InversionApp(BaseDashApplication):
 
                 # Get uncertainty value
                 if comp + "_uncertainty" in ui_json_data and (
-                    (type(ui_json_data[comp + "_uncertainty"]) == float)
-                    or (type(ui_json_data[comp + "_uncertainty"]) == int)
+                    (type(ui_json_data[comp + "_uncertainty"]) == float)  # noqa: E721
+                    or (type(ui_json_data[comp + "_uncertainty"]) == int)  # noqa: E721
                 ):
                     uncertainty_type = "Floor"
                     uncertainty_floor = ui_json_data[comp + "_uncertainty"]
@@ -886,7 +885,7 @@ class InversionApp(BaseDashApplication):
         if is_uuid(object_uid):
             obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
         if isinstance(obj, Grid2D):
             lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
             lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
@@ -894,7 +893,7 @@ class InversionApp(BaseDashApplication):
             lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
             lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
 
         width = lim_x[1] - lim_x[0]
         height = lim_y[1] - lim_y[0]
@@ -913,6 +912,10 @@ class InversionApp(BaseDashApplication):
             window_center_x_max,
             window_center_y_min,
             window_center_y_max,
+            window_width_max,
+            window_height_max,
+            (window_center_x_min + window_center_x_max) / 2.0,
+            (window_center_y_min + window_center_y_max) / 2.0,
             window_width_max,
             window_height_max,
         )
@@ -1130,7 +1133,7 @@ class InversionApp(BaseDashApplication):
         resolution: float | int,
         colorbar: list,
         fix_aspect_ratio: list,
-    ) -> (go.Figure, str, float, float, float, float, list):
+    ) -> (go.Figure, str):
         """
         Dash version of the plot_selection function in base/plot.
 
@@ -1161,11 +1164,6 @@ class InversionApp(BaseDashApplication):
             return (
                 go.Figure(),
                 data_count,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
             )
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
@@ -1190,11 +1188,6 @@ class InversionApp(BaseDashApplication):
                 return (
                     figure,
                     data_count,
-                    no_update,
-                    no_update,
-                    no_update,
-                    no_update,
-                    no_update,
                 )
         else:
             # Construct figure from existing figure to keep bounds and plot layout.
@@ -1263,37 +1256,7 @@ class InversionApp(BaseDashApplication):
                 )
                 data_count += f"{count}"
 
-            if (
-                "plot" in triggers
-                or center_x is None
-                or center_y is None
-                or width is None
-                or height is None
-            ):
-                if figure["layout"]["xaxis"]["autorange"]:
-                    x = np.array(figure["data"][0]["x"])
-                    x_range = [np.amin(x), np.amax(x)]
-                elif figure["layout"]["xaxis"]["range"] is not None:
-                    x_range = figure["layout"]["xaxis"]["range"]
-                else:
-                    figure["layout"]["xaxis"]["autorange"] = True
-                    x = np.array(figure["data"][0]["x"])
-                    x_range = [np.amin(x), np.amax(x)]
-                width = x_range[1] - x_range[0]
-                center_x = x_range[0] + (width / 2)
-                if figure["layout"]["yaxis"]["autorange"]:
-                    y = np.array(figure["data"][0]["y"])
-                    y_range = [np.amin(y), np.amax(y)]
-                elif figure["layout"]["yaxis"]["range"] is not None:
-                    y_range = figure["layout"]["yaxis"]["range"]
-                else:
-                    figure["layout"]["yaxis"]["autorange"] = True
-                    y = np.array(figure["data"][0]["y"])
-                    y_range = [np.amin(y), np.amax(y)]
-                height = y_range[1] - y_range[0]
-                center_y = y_range[0] + (height / 2)
-
-        return figure, data_count, center_x, center_y, width, height, fix_aspect_ratio
+        return figure, data_count
 
     def get_general_inversion_params(
         self,

@@ -28,6 +28,7 @@ import numpy as np
 from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
@@ -37,7 +38,6 @@ from geoh5py.workspace import Workspace
 from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets  # pylint: disable=E0401
 
 from geoapps.base.layout import object_selection_layout
-from geoapps.driver_base.params import BaseParams
 
 
 class BaseDashApplication:
@@ -199,7 +199,10 @@ class BaseDashApplication:
         # Loop through self.params and update self.params with locals_dict.
         for key in self.params.to_dict():
             if key in update_dict:
-                if bool in validations[key]["types"] and type(update_dict[key]) == list:
+                if (
+                    bool in validations[key]["types"]
+                    and type(update_dict[key]) == list  # noqa: E721
+                ):  # noqa: E721
                     # Convert from dash component checklist to bool
                     if not update_dict[key]:
                         output_dict[key] = False
@@ -208,7 +211,7 @@ class BaseDashApplication:
                 elif (
                     float in validations[key]["types"]
                     and int not in validations[key]["types"]
-                    and type(update_dict[key]) == int
+                    and type(update_dict[key]) == int  # noqa: E721
                 ):
                     # Checking for values that Dash has given as int when they should be floats.
                     output_dict[key] = float(update_dict[key])
@@ -533,13 +536,20 @@ class ObjectSelection:
         :param app_name: App name to display as Qt window title.
         :param port: Port where the dash app has been launched.
         """
-        app = QtWidgets.QApplication(sys.argv)
-        browser = QtWebEngineWidgets.QWebEngineView()
+        app = QtWidgets.QApplication(sys.argv)  # pylint: disable=c-extension-no-member
+        browser = (
+            QtWebEngineWidgets.QWebEngineView()  # pylint: disable=c-extension-no-member
+        )
 
         browser.setWindowTitle(app_name)
-        browser.load(QtCore.QUrl("http://127.0.0.1:" + str(port)))
+        localhost_url = QtCore.QUrl(  # pylint: disable=c-extension-no-member
+            "http://127.0.0.1:" + str(port)
+        )
+        browser.load(localhost_url)
         # Brings Qt window to the front
-        browser.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        browser.setWindowFlags(
+            QtCore.Qt.WindowStaysOnTopHint  # pylint: disable=c-extension-no-member
+        )
         # Setting window size
         browser.resize(1200, 800)
         browser.show()
@@ -659,7 +669,7 @@ class ObjectSelection:
     def param_class(self, val):
         if not issubclass(val, BaseParams):
             raise TypeError(
-                "Value for attribute `param_class` should be a subclass of :obj:`geoapps.driver_base.BaseParams`"
+                "Value for attribute `param_class` should be a subclass of :obj:`simpeg_drivers.params.BaseParams`"
             )
         self._param_class = val
 
