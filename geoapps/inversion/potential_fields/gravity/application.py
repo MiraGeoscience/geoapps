@@ -11,6 +11,10 @@
 from __future__ import annotations
 
 import pathlib
+import uuid
+
+from geoh5py.shared.exceptions import AssociationValidationError
+from simpeg_drivers.potential_fields.gravity.params import GravityParams
 
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.gravity.constants import app_initializer
@@ -19,7 +23,6 @@ from geoapps.inversion.potential_fields.gravity.layout import (
     gravity_inversion_params,
     gravity_layout,
 )
-from geoapps.inversion.potential_fields.gravity.params import GravityParams
 
 
 class GravityApp(InversionApp):
@@ -38,7 +41,17 @@ class GravityApp(InversionApp):
             self.params = self._param_class(ui_json)
         else:
             app_initializer.update(kwargs)
-            self.params = self._param_class(**app_initializer)
+
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
+
             extras = {
                 key: value
                 for key, value in app_initializer.items()

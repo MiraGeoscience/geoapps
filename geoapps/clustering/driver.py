@@ -17,15 +17,14 @@ from geoh5py.workspace import Workspace
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
-
 import numpy as np
 import pandas as pd
+from geoapps_utils.driver.driver import BaseDriver
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
 from geoapps.clustering.constants import validations
 from geoapps.clustering.params import ClusteringParams
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.colors import UNIQUE_COLORS
 from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils.statistics import random_sampling

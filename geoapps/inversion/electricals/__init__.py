@@ -7,7 +7,6 @@
 #  (see LICENSE file at the root of this source code package).                 '
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
-from __future__ import annotations
+# flake8: noqa
 
-from .direct_current.three_dimensions import DirectCurrent3DParams
-from .induced_polarization.three_dimensions.params import InducedPolarization3DParams
+from __future__ import annotations

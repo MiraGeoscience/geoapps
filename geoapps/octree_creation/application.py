@@ -19,15 +19,16 @@ from time import time
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
+from octree_creation_app.driver import OctreeDriver
+from octree_creation_app.params import OctreeParams
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.octree_creation.constants import app_initializer
-from geoapps.octree_creation.driver import OctreeDriver
-from geoapps.octree_creation.params import OctreeParams
 from geoapps.utils import warn_module_not_found
 
 with warn_module_not_found():
@@ -66,7 +67,15 @@ class OctreeMesh(ObjectDataSelection):
         if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
-            self.params = self._param_class(**app_initializer)
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
 
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
@@ -335,15 +344,9 @@ class OctreeMesh(ObjectDataSelection):
                     attr_name,
                     Text(description=key.capitalize(), value=value),
                 )
-            elif "type" in key:
+            elif "horizon" in key:
                 setattr(
-                    self,
-                    attr_name,
-                    Dropdown(
-                        description=key.capitalize(),
-                        options=["surface", "radial"],
-                        value=value,
-                    ),
+                    self, attr_name, Checkbox(description=key.capitalize(), value=value)
                 )
             elif "distance" in key:
                 setattr(

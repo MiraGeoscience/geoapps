@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from SimPEG.survey import BaseSurvey
 
 if TYPE_CHECKING:
-    from geoapps.inversion.components.data import InversionData
+    from simpeg_drivers.components import InversionData
 
 from collections.abc import Callable
 

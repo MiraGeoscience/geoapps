@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from time import time
+from uuid import UUID
 
 import numpy
 from geoh5py.ui_json.utils import monitored_directory_copy
@@ -27,7 +28,7 @@ with warn_module_not_found():
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
+    "objects": UUID("{79b719bc-d996-4f52-9af0-10aa9c7bb941}"),
     "data": ["Al2O3", "CaO"],
     "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",
 }
@@ -105,7 +106,7 @@ class Calculator(ObjectDataSelection):
         """
         Evaluate the expression and output the result to geoh5
         """
-        var = self.var  # pylint: disable=unused-variable
+        var = self.var  # pylint: disable=unused-variable  # noqa: F841
         obj = self.workspace.get_entity(self.objects.value)[0]
 
         if obj is None:

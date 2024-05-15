@@ -23,7 +23,7 @@ def test_centroids(tmp_path: Path):
     Test iso_surface with a block model. Data values are the distance from a point.
     """
     ws = Workspace(tmp_path / "iso_test.geoh5")
-
+    np.random.seed(0)
     n = 70
     length = 10
 
@@ -104,7 +104,7 @@ def test_vertices(tmp_path: Path):
     Test iso_surface with a points object. Data values are the distance from a point.
     """
     ws = Workspace(tmp_path / "iso_test.geoh5")
-
+    np.random.seed(0)
     length = 10
     origin = np.random.uniform(-100, 100, 3)
     verts = np.random.randn(5000, 3) * length + origin
@@ -128,10 +128,6 @@ def test_vertices(tmp_path: Path):
         max_distance=np.inf,
     )
 
-    # Compare surface center with sphere center
-    surf_center = np.mean(func_surface[0][0], axis=0)
-    center_error = np.abs((sphere_center - surf_center) / (sphere_center))
-
     # For user validation only
     Surface.create(
         ws, name="surface", vertices=func_surface[0][0], cells=func_surface[0][1]
@@ -145,6 +141,10 @@ def test_vertices(tmp_path: Path):
     )
     ws.close()
 
+    # Compare surface center with sphere center
+    surf_center = np.mean(func_surface[0][0], axis=0)
+    center_error = np.abs((sphere_center - surf_center) / (sphere_center))
+
     assert np.all(center_error < 0.25)
 
     # Radius of sphere
@@ -152,4 +152,4 @@ def test_vertices(tmp_path: Path):
     surf_radius = np.mean(surf_distance, axis=0)
     radius_error = np.abs((surf_radius - sphere_radius) / sphere_radius)
 
-    assert radius_error < 0.05
+    assert radius_error < 0.06

@@ -9,11 +9,13 @@
 
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from time import time
 
 from geoh5py.objects import ObjectBase
 from geoh5py.objects.object_base import Entity
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
@@ -41,7 +43,15 @@ class DataInterpolation(ObjectDataSelection):
         if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))
         else:
-            self.params = self._param_class(**app_initializer)
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
 
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from uuid import UUID
 
 import discretize
 import numpy as np
@@ -37,10 +38,10 @@ from .utils import export_curve_2_shapefile, object_2_dataframe
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "data": [
-        "{44822654-b6ae-45b0-8886-2d845f80f422}",
-        "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+        UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+        UUID("{53e59b2b-c2ae-4b77-923b-23e06d874e62}"),
     ],
     "epsg_code": "EPSG:26914",
     "file_type": "geotiff",
@@ -293,7 +294,7 @@ class Export(ObjectDataSelection):
                     + ".mod"
                 ] = item[ind]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
-            mesh.writeUBC(
+            mesh.write_UBC(
                 name,
                 models=models,
             )
@@ -316,7 +317,7 @@ class Export(ObjectDataSelection):
                 entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
             ]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
-            mesh.writeUBC(name)
+            mesh.write_UBC(name)
             print(f"Mesh saved to {name}")
 
             if any(data_values):
