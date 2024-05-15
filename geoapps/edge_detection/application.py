@@ -83,12 +83,7 @@ class EdgeDetectionApp(PlotSelection2D):
     _object_types = (Grid2D,)
     _param_class = Parameters
 
-    def __init__(
-        self,
-        ui_json=None,
-        plot_result=True,
-        geoh5: str | None = None
-    ):
+    def __init__(self, ui_json=None, plot_result=True, geoh5: str | None = None):
 
         defaults = {}
 
@@ -106,14 +101,12 @@ class EdgeDetectionApp(PlotSelection2D):
                 defaults = INITIALIZER.copy()
             else:
                 defaults = {}
-                warnings.warn("Geoapps is missing 'FlinFlon.geoh5' file in the assets folder.")
-
+                warnings.warn(
+                    "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
+                )
 
         for key, value in defaults.items():
             self.defaults[key] = value
-
-
-
 
         self._compute = Button(
             description="Compute",
