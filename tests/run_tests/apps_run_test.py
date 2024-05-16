@@ -36,6 +36,7 @@ from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
+from geoapps import assets_path
 from tests import PROJECT
 
 # import pytest
@@ -459,6 +460,24 @@ def test_edge_detection(tmp_path: Path):
             )
             == 1
         )
+
+
+def test_edge_detection_workspace_options():
+    app = EdgeDetectionApp(plot_result=False)
+    flin_flon = assets_path() / "FlinFlon.geoh5"
+    assert app.workspace.h5file == flin_flon  # Uses flinflon
+    app.workspace.close()
+
+    h5file = str(assets_path() / "FlinFlon_dcip.geoh5")
+    app = EdgeDetectionApp(geoh5=h5file, plot_result=False)
+    assert str(app.workspace.h5file) == h5file  # Hardwires to dcip
+    app.workspace.close()
+
+    h5file = str(assets_path() / "FlinFlon_borked.geoh5")
+    with pytest.warns(match="Path provided in 'geoh5' argument does not exist."):
+        app = EdgeDetectionApp(geoh5=h5file, plot_result=False)
+    assert app.workspace.h5file == flin_flon  # Falls back on flinflon
+    app.workspace.close()
 
 
 def test_export():
