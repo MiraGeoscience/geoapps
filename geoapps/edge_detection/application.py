@@ -15,15 +15,8 @@ from time import time
 from uuid import UUID
 
 from curve_apps.edge_detection.driver import EdgeDetectionDriver
-from curve_apps.edge_detection.params import (
-    DetectionParameters,
-    Parameters,
-    SourceParameters,
-)
-from curve_apps.params import OutputParameters
-from geoh5py import Workspace
+from curve_apps.edge_detection.params import Parameters
 from geoh5py.objects import Grid2D, ObjectBase
-from geoh5py.shared import Entity
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
@@ -33,20 +26,21 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
 with warn_module_not_found():
-    from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
+    from ipywidgets import (
+        Button,
+        FloatSlider,
+        HBox,
+        IntSlider,
+        Layout,
+        Text,
+        VBox,
+        Widget,
+    )
 
 with warn_module_not_found():
     from matplotlib import collections
 
 from geoapps import assets_path
-
-INITIALIZER = {
-    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
-    "sigma": 0.5,
-    "export_as": "Edges",
-}
 
 # with Workspace(str(assets_path() / "FlinFlon.geoh5")) as flinflon:
 #     objects = flinflon.get_entity("Gravity_Magnetics_drape60m")[0]
@@ -60,6 +54,20 @@ INITIALIZER = {
 #             data=data,
 #         ),
 #     )
+
+INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "line_length": 1,
+    "line_gap": 1,
+    "sigma": 0.5,
+    "threshold": 1,
+    "window_size": None,
+    "merge_length": None,
+    "export_as": "Edges",
+    "out_group": None,
+}
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -246,6 +254,12 @@ class EdgeDetectionApp(PlotSelection2D):
         """IntSlider"""
         return self._window_size
 
+    def is_computational(self, attr):
+        """True if app attribute is required for the driver (belongs in params)."""
+        out = isinstance(getattr(self, attr), Widget)
+        fields = list(self._param_class.model_fields["input_file"].default.data)
+        return out & (attr.lstrip("_") in fields)
+
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
         temp_geoh5 = f"{string_name(param_dict.get('export_as'))}_{time():.0f}.geoh5"
@@ -283,22 +297,15 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
+        print(param_dict)
+        print(param_dict["objects"].workspace.geoh5)
         if param_dict.get("objects", None) is None:
             return
 
-        with fetch_active_workspace(self.workspace, mode="r+"):
+        with self.workspace.open(mode="r+"):
             param_dict["geoh5"] = self.workspace
-            detection = DetectionParameters(**param_dict)
-            source = SourceParameters(**param_dict)
-            output = OutputParameters(**param_dict)
-            new_params = Parameters(
-                detection=detection,
-                output=output,
-                source=source,
-                **param_dict,
-            )
+            new_params = Parameters.build(param_dict)
             self.refresh.value = False
-
             (
                 vertices,
                 cells,
