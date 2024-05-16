@@ -42,19 +42,6 @@ with warn_module_not_found():
 
 from geoapps import assets_path
 
-# with Workspace(str(assets_path() / "FlinFlon.geoh5")) as flinflon:
-#     objects = flinflon.get_entity("Gravity_Magnetics_drape60m")[0]
-#     data = objects.get_data("Airborne_TMI")[0]
-#     INITIALIZER = Parameters(
-#         geoh5=flinflon,
-#         detection=DetectionParameters(sigma=0.5),
-#         output=OutputParameters(export_as="Edges"),
-#         source=SourceParameters(
-#             objects=objects,
-#             data=data,
-#         ),
-#     )
-
 INITIALIZER = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
@@ -166,14 +153,12 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
-
         super().__init__(plot_result=plot_result, **self.defaults)
 
         # Make changes to trigger warning color
         self.trigger.description = "Export"
         self.trigger.on_click(self.trigger_click)
         self.trigger.button_style = "success"
-
         self.compute.click()
 
     @property
@@ -297,13 +282,11 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
-        print(param_dict)
-        print(param_dict["objects"].workspace.geoh5)
         if param_dict.get("objects", None) is None:
             return
 
-        with self.workspace.open(mode="r+"):
-            param_dict["geoh5"] = self.workspace
+        with fetch_active_workspace(self.workspace, mode="r+") as ws:
+            param_dict["geoh5"] = ws
             new_params = Parameters.build(param_dict)
             self.refresh.value = False
             (
