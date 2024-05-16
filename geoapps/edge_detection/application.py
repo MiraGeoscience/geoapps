@@ -100,8 +100,7 @@ class EdgeDetectionApp(PlotSelection2D):
                     "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
                 )
 
-        for key, value in defaults.items():
-            self.defaults[key] = value
+        self.defaults.update(defaults)
 
         self._compute = Button(
             description="Compute",
