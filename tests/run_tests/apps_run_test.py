@@ -24,6 +24,7 @@ from geoh5py.data import FilenameData
 from geoh5py.objects import Curve, Surface
 from geoh5py.workspace import Workspace
 
+from geoapps import assets_path
 from geoapps.block_model_creation.application import BlockModelCreation
 from geoapps.calculator import Calculator
 from geoapps.clustering import ClusteringParams
@@ -36,7 +37,6 @@ from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
-from geoapps import assets_path
 from tests import PROJECT
 
 # import pytest
