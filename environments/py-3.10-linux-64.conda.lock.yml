@@ -129,7 +129,7 @@ dependencies:
   - libasprintf-devel=0.22.5=h661eb56_2
   - libavif16=1.0.4=hfa3d5b6_3
   - libblas=3.9.0=16_linux64_mkl
-  - libboost-headers=1.84.0=ha770c72_2
+  - libboost-headers=1.85.0=ha770c72_1
   - libbrotlicommon=1.1.0=hd590300_1
   - libbrotlidec=1.1.0=hd590300_1
   - libbrotlienc=1.1.0=hd590300_1
@@ -208,7 +208,7 @@ dependencies:
   - mistune=3.0.2=pyhd8ed1ab_0
   - mkl=2022.1.0=h84fe81f_915
   - mpg123=1.32.6=h59595ed_0
-  - msgpack-python=1.0.7=py310hd41b1e2_0
+  - msgpack-python=1.0.8=py310h25c7140_0
   - munch=4.0.0=pyhd8ed1ab_0
   - munkres=1.1.4=pyh9f0ad1d_0
   - mysql-common=8.0.33=hf1915f5_6
@@ -242,7 +242,7 @@ dependencies:
   - pip=24.0=pyhd8ed1ab_0
   - pixman=0.43.2=h59595ed_0
   - pkgutil-resolve-name=1.3.10=pyhd8ed1ab_1
-  - platformdirs=4.2.1=pyhd8ed1ab_0
+  - platformdirs=4.2.2=pyhd8ed1ab_0
   - plotly=5.19.0=pyhd8ed1ab_0
   - ply=3.11=pyhd8ed1ab_2
   - pooch=1.8.1=pyhd8ed1ab_0
@@ -289,7 +289,7 @@ dependencies:
   - retrying=1.3.3=py_2
   - rpds-py=0.18.1=py310he421c4c_0
   - scikit-image=0.20.0=py310h9b08913_1
-  - scikit-learn=1.4.2=py310h1fdf081_0
+  - scikit-learn=1.4.2=py310h981052a_1
   - scipy=1.10.1=py310ha4c1d20_3
   - send2trash=1.8.3=pyh0d859eb_0
   - setuptools=69.5.1=pyhd8ed1ab_0
@@ -376,11 +376,11 @@ dependencies:
       - curve-apps === 0.1.0rc2 --hash=sha256:46b2b5daccadc9ab5e962c2885af0cb0d84921bec24eb75654eb1f2c3c87faf8
       - geoapps-utils === 0.3.0rc3 --hash=sha256:1910d089ee3c0c75cf6e1ed04072adb62d1d9ae8cf697bc100084df36f08f90f
       - geoh5py === 0.9.0rc3 --hash=sha256:0dca13f0f5b4efb3d18c1384f2e7e95eea3684af2f5f6f3403c5252b4b2cd5dd
-      - mira-simpeg === 0.19.0.8rc1 --hash=sha256:5c0b189724eb645112a304e85e64b9b0732734b46b7f0c55d4550d17261af630
+      - mira-simpeg === 0.19.0.8rc3 --hash=sha256:d938a18468b8fad41057af548e3bf8c035a77d31718e7ac832a881349f5b7eea
       - octree-creation-app === 0.1.0rc2 --hash=sha256:55aefbc40ce086f38652dfe73fa8d2354c3e214e37028504ea57f27819df215e
       - param-sweeps === 0.1.7rc2 --hash=sha256:6666d31b8f8efeda93aab97bfdae5e8f2e01727234e55fd9f3c219f8e7b8eebd
       - simpeg-archive === 0.11.0.dev6 --hash=sha256:ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
-      - simpeg-drivers === 0.1.0b4 --hash=sha256:44d90f8d2705b22763e586a305154dbb4284058b7e2dc62504cafd560f3a99eb
+      - simpeg-drivers === 0.1.0b6 --hash=sha256:68e5c54ef7937129560ffd4b9509d1965c462344cc25ba60a0d944044f5f037d
 
 variables:
   KMP_WARNINGS: 0
