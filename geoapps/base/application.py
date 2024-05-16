@@ -499,11 +499,19 @@ class BaseApplication:
         )
         self.export_directory._apply_selection()  # pylint: disable=protected-access
 
+    def is_computational(self, attr):
+        """True if app attribute is required for the driver (belongs in params)."""
+        return isinstance(getattr(self, attr), Widget) & hasattr(self.params, attr)
+
     def get_param_dict(self):
+        """Return a dictionary of parameters and their associated widget values."""
+
         param_dict = {}
         for key in self.__dict__:
+
             try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+
+                if self.is_computational(key):
                     value = getattr(self, key).value
                     if key[0] == "_":
                         key = key[1:]

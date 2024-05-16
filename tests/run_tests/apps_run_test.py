@@ -24,6 +24,7 @@ from geoh5py.data import FilenameData
 from geoh5py.objects import Curve, Surface
 from geoh5py.workspace import Workspace
 
+from geoapps import assets_path
 from geoapps.block_model_creation.application import BlockModelCreation
 from geoapps.calculator import Calculator
 from geoapps.clustering import ClusteringParams
@@ -459,6 +460,24 @@ def test_edge_detection(tmp_path: Path):
             )
             == 1
         )
+
+
+def test_edge_detection_workspace_options():
+    app = EdgeDetectionApp(plot_result=False)
+    flin_flon = assets_path() / "FlinFlon.geoh5"
+    assert app.workspace.h5file == flin_flon  # Uses flinflon
+    app.workspace.close()
+
+    h5file = str(assets_path() / "FlinFlon_dcip.geoh5")
+    app = EdgeDetectionApp(geoh5=h5file, plot_result=False)
+    assert str(app.workspace.h5file) == h5file  # Hardwires to dcip
+    app.workspace.close()
+
+    h5file = str(assets_path() / "FlinFlon_borked.geoh5")
+    with pytest.warns(match="Path provided in 'geoh5' argument does not exist."):
+        app = EdgeDetectionApp(geoh5=h5file, plot_result=False)
+    assert app.workspace.h5file == flin_flon  # Falls back on flinflon
+    app.workspace.close()
 
 
 def test_export():

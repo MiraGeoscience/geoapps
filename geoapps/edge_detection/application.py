@@ -9,30 +9,52 @@
 
 from __future__ import annotations
 
-import uuid
+import warnings
 from pathlib import Path
 from time import time
+from uuid import UUID
 
-import numpy as np
+from curve_apps.edge_detection.driver import EdgeDetectionDriver
+from curve_apps.edge_detection.params import Parameters
 from geoh5py.objects import Grid2D, ObjectBase
-from geoh5py.shared import Entity
-from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
-from geoapps.edge_detection.constants import app_initializer
-from geoapps.edge_detection.driver import EdgeDetectionDriver
-from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
 with warn_module_not_found():
-    from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
+    from ipywidgets import (
+        Button,
+        FloatSlider,
+        HBox,
+        IntSlider,
+        Layout,
+        Text,
+        VBox,
+        Widget,
+    )
 
 with warn_module_not_found():
     from matplotlib import collections
+
+from geoapps import assets_path
+
+INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "line_length": 1,
+    "line_gap": 1,
+    "sigma": 0.5,
+    "threshold": 1,
+    "window_size": None,
+    "merge_length": None,
+    "export_as": "Edges",
+    "out_group": None,
+}
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -54,28 +76,31 @@ class EdgeDetectionApp(PlotSelection2D):
     """
 
     _object_types = (Grid2D,)
-    _param_class = EdgeDetectionParams
+    _param_class = Parameters
 
-    def __init__(self, ui_json=None, plot_result=True, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
-        else:
-            try:
-                self.params = self._param_class(**app_initializer)
+    def __init__(self, ui_json=None, plot_result=True, geoh5: str | None = None):
 
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
+        defaults = {}
 
-                self.params = self._param_class(**app_initializer)
-
-        for key, value in self.params.to_dict().items():
-            if isinstance(value, Entity):
-                self.defaults[key] = value.uid
+        if isinstance(geoh5, str):
+            if Path(geoh5).exists():
+                defaults = {"geoh5": geoh5}
             else:
-                self.defaults[key] = value
+                warnings.warn("Path provided in 'geoh5' argument does not exist.")
+
+        if ui_json is not None and Path(ui_json).exists():
+            defaults = InputFile.read_ui_json(ui_json).data
+
+        if not defaults:
+            if Path(INITIALIZER["geoh5"]).exists():
+                defaults = INITIALIZER.copy()
+            else:
+                defaults = {}
+                warnings.warn(
+                    "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
+                )
+
+        self.defaults.update(defaults)
 
         self._compute = Button(
             description="Compute",
@@ -127,15 +152,23 @@ class EdgeDetectionApp(PlotSelection2D):
         )
         self.data.observe(self.update_name, names="value")
         self.compute.on_click(self.compute_trigger)
-
         super().__init__(plot_result=plot_result, **self.defaults)
 
         # Make changes to trigger warning color
         self.trigger.description = "Export"
         self.trigger.on_click(self.trigger_click)
         self.trigger.button_style = "success"
-
         self.compute.click()
+
+    @property
+    def params(self):
+        return self._params
+
+    @params.setter
+    def params(self, val):
+        if not isinstance(val, Parameters):
+            raise TypeError("Input parameters must be of type Parameters.")
+        self._params = val
 
     @property
     def compute(self):
@@ -205,6 +238,12 @@ class EdgeDetectionApp(PlotSelection2D):
         """IntSlider"""
         return self._window_size
 
+    def is_computational(self, attr):
+        """True if app attribute is required for the driver (belongs in params)."""
+        out = isinstance(getattr(self, attr), Widget)
+        fields = list(self._param_class.model_fields["input_file"].default.data)
+        return out & (attr.lstrip("_") in fields)
+
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
         temp_geoh5 = f"{string_name(param_dict.get('export_as'))}_{time():.0f}.geoh5"
@@ -224,8 +263,10 @@ class EdgeDetectionApp(PlotSelection2D):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = EdgeDetectionParams(**param_dict)
-            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+            new_params = Parameters.build(param_dict)
+            new_params.input_file.write_ui_json(
+                name=temp_geoh5.replace(".geoh5", ".ui.json")
+            )
             driver = EdgeDetectionDriver(new_params)
             driver.run()
 
@@ -240,21 +281,23 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
-        param_dict["geoh5"] = self.workspace
-
         if param_dict.get("objects", None) is None:
             return
 
-        with fetch_active_workspace(self.workspace):
-            new_params = EdgeDetectionParams(**param_dict)
+        with fetch_active_workspace(self.workspace, mode="r+") as ws:
+            param_dict["geoh5"] = ws
+            new_params = Parameters.build(param_dict)
             self.refresh.value = False
             (
                 vertices,
-                _,
-            ) = EdgeDetectionDriver.get_edges(*new_params.edge_args())
+                cells,
+            ) = EdgeDetectionDriver.get_edges(
+                new_params.source.objects,
+                new_params.source.data,
+                new_params.detection,
+            )
+            segments = [vertices[c, :2] for c in cells]
             self.collections = [
-                collections.LineCollection(
-                    np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2
-                )
+                collections.LineCollection(segments, colors="k", linewidths=2)
             ]
             self.refresh.value = True

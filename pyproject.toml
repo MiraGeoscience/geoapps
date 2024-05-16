@@ -83,6 +83,8 @@ param-sweeps = {version = "~0.1.7rc2", source = "pypi", allow-prereleases = true
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
 #param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz#sha256="}
 
+curve-apps = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
+
 octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/release/0.1.0.zip#sha256="}
