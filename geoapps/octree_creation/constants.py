@@ -18,10 +18,10 @@ app_initializer = {
     "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
     "Refinement A levels": "4, 4, 4",
-    "Refinement A type": "radial",
-    "Refinement A distance": 1000.0,
+    "Refinement A horizon": False,
+    "Refinement A distance": None,
     "Refinement B object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
     "Refinement B levels": "0, 0, 4",
-    "Refinement B type": "surface",
+    "Refinement B horizon": True,
     "Refinement B distance": 1200.0,
 }
