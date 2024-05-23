@@ -241,7 +241,7 @@ class EdgeDetectionApp(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        fields = list(self._param_class.model_fields["input_file"].default.data)
+        fields = list(self._param_class.model_construct().input_file.data)
         return out & (attr.lstrip("_") in fields)
 
     def trigger_click(self, _):
