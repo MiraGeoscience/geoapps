@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: a7f7dc369ae24dac319d853c948e14de37f8daac58562dec72b8ca991a00d461
-    linux-64: f102402801a200ffb7e10488adb1cc6dd24fd2fcffc8b96f944d3ab74869eb3f
+    win-64: 922100050e8018143f1eab324c3a2a2e9fb4737ac9b1c694822196cc835f2b09
+    linux-64: 24620710851e16f8f02d6934f78f91b432d113ebf77ecf358b90ad8511e667c0
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -3022,10 +3022,10 @@ package:
   manager: conda
   platform: win-64
   dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/win-64/intel-openmp-2024.1.0-h57928b3_965.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/intel-openmp-2024.1.0-h57928b3_966.conda
   hash:
-    md5: c66eb2fd33b999ccc258aef85689758e
-    sha256: 7b029e476ad6d401d645636ee3e4b40130bfcc9534f7415209dd5b666c6dd292
+    md5: 35d7ea07ad6c878bd7240d2d6c1b8657
+    sha256: 77465396f2636c8b3b3a587f1636ee35c17a73e2a2c7e0ea0957b05f84704cf3
   category: main
   optional: false
 - name: ipyfilechooser
@@ -10337,31 +10337,31 @@ package:
   category: main
   optional: false
 - name: tifffile
-  version: 2024.5.10
+  version: 2024.5.22
   manager: conda
   platform: linux-64
   dependencies:
     imagecodecs: '>=2023.8.12'
     numpy: '>=1.19.2'
     python: '>=3.9'
-  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2024.5.10-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2024.5.22-pyhd8ed1ab_0.conda
   hash:
-    md5: 125438a8b679e4c08ee8f244177216c9
-    sha256: e64d5a4d49854ebc12469caa8c4138f959cb32f43a1541a358a6db4c406e8f9b
+    md5: 3930cabe8ca8c8594026fa8768cae75c
+    sha256: 9481c766e09829cc8c3ab99f6f8a2392988df53c1579ecb327e4933feede147d
   category: main
   optional: false
 - name: tifffile
-  version: 2024.5.10
+  version: 2024.5.22
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.9'
     numpy: '>=1.19.2'
     imagecodecs: '>=2023.8.12'
-  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2024.5.10-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/tifffile-2024.5.22-pyhd8ed1ab_0.conda
   hash:
-    md5: 125438a8b679e4c08ee8f244177216c9
-    sha256: e64d5a4d49854ebc12469caa8c4138f959cb32f43a1541a358a6db4c406e8f9b
+    md5: 3930cabe8ca8c8594026fa8768cae75c
+    sha256: 9481c766e09829cc8c3ab99f6f8a2392988df53c1579ecb327e4933feede147d
   category: main
   optional: false
 - name: tiledb
@@ -11834,12 +11834,12 @@ package:
     scipy: '>=1.10.1,<1.11.0'
     tifffile: 2024.2.12
     tqdm: '>=4.66.1,<4.67.0'
-  url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/GEOPY-1527.zip
+  url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.zip
   hash: {}
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/GEOPY-1527.zip
+    url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.zip
   optional: false
 - name: curve-apps
   version: 0.2.0a1
@@ -11857,12 +11857,12 @@ package:
     scipy: '>=1.10.1,<1.11.0'
     tifffile: 2024.2.12
     tqdm: '>=4.66.1,<4.67.0'
-  url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/GEOPY-1527.zip
+  url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.zip
   hash: {}
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/GEOPY-1527.zip
+    url: https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.zip
   optional: false
 - name: geoapps-utils
   version: 0.4.0a1
