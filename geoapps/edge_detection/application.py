@@ -241,7 +241,7 @@ class EdgeDetectionApp(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        fields = list(self._param_class.model_fields["input_file"].default.data)
+        fields = list(self._param_class.model_construct().input_file.data)
         return out & (attr.lstrip("_") in fields)
 
     def trigger_click(self, _):
@@ -284,20 +284,24 @@ class EdgeDetectionApp(PlotSelection2D):
         if param_dict.get("objects", None) is None:
             return
 
-        with fetch_active_workspace(self.workspace, mode="r+") as ws:
-            param_dict["geoh5"] = ws
-            new_params = Parameters.build(param_dict)
-            self.refresh.value = False
-            (
-                vertices,
-                cells,
-            ) = EdgeDetectionDriver.get_edges(
-                new_params.source.objects,
-                new_params.source.data,
-                new_params.detection,
-            )
-            segments = [vertices[c, :2] for c in cells]
-            self.collections = [
-                collections.LineCollection(segments, colors="k", linewidths=2)
-            ]
-            self.refresh.value = True
+        param_dict["geoh5"] = self.workspace
+        new_params = Parameters.build(param_dict)
+        self.refresh.value = False
+        canny_grid = EdgeDetectionDriver.get_canny_edges(
+            new_params.source.objects,
+            new_params.source.data,
+            new_params.detection,
+        )
+        (
+            vertices,
+            cells,
+        ) = EdgeDetectionDriver.get_edges(
+            new_params.source.objects,
+            canny_grid,
+            new_params.detection,
+        )
+        segments = [vertices[c, :2] for c in cells]
+        self.collections = [
+            collections.LineCollection(segments, colors="k", linewidths=2)
+        ]
+        self.refresh.value = True
