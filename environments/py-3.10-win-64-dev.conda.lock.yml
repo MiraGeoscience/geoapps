@@ -43,7 +43,7 @@ dependencies:
   - colorama=0.4.6=pyhd8ed1ab_0
   - comm=0.2.2=pyhd8ed1ab_0
   - contourpy=1.2.1=py310h232114e_0
-  - coverage=7.5.1=py310ha8f682b_0
+  - coverage=7.5.2=py310ha8f682b_0
   - cycler=0.12.1=pyhd8ed1ab_0
   - cytoolz=0.12.3=py310h8d17308_0
   - dash=2.12.1=pyhd8ed1ab_0
@@ -73,7 +73,7 @@ dependencies:
   - fontconfig=2.14.2=hbde0cde_0
   - fonts-conda-ecosystem=1=0
   - fonts-conda-forge=1=0
-  - fonttools=4.51.0=py310h8d17308_0
+  - fonttools=4.52.4=py310ha8f682b_0
   - freetype=2.12.1=hdaf720e_2
   - freexl=2.0.0=h8276f4a_0
   - fsspec=2022.11.0=pyhd8ed1ab_0
@@ -91,7 +91,7 @@ dependencies:
   - gstreamer=1.22.7=hb4038d2_0
   - h5py=3.11.0=nompi_py310h2b0be38_101
   - hdf4=4.2.15=h5557f11_7
-  - hdf5=1.14.3=nompi_h73e8ff5_101
+  - hdf5=1.14.3=nompi_h2b43c12_102
   - icu=73.2=h63175ca_0
   - idna=3.7=pyhd8ed1ab_0
   - imagecodecs=2024.1.1=py310h32f22c9_2
@@ -179,7 +179,7 @@ dependencies:
   - libxml2=2.12.7=h283a6d9_0
   - libxslt=1.1.39=h3df6e99_0
   - libzip=1.10.1=h1d365fa_3
-  - libzlib=1.2.13=hcfcfb64_5
+  - libzlib=1.2.13=h2466b09_6
   - libzopfli=1.0.3=h0e60522_0
   - linkify-it-py=2.0.3=pyhd8ed1ab_0
   - llvmlite=0.42.0=py310hb84602e_1
@@ -367,7 +367,7 @@ dependencies:
   - zfp=1.0.1=h63175ca_0
   - zict=3.0.0=pyhd8ed1ab_0
   - zipp=3.17.0=pyhd8ed1ab_0
-  - zlib=1.2.13=hcfcfb64_5
+  - zlib=1.2.13=h2466b09_6
   - zlib-ng=2.0.7=hcfcfb64_0
   - zstd=1.5.6=h0ea2cb4_0
   - pip:
