@@ -14,8 +14,8 @@ from pathlib import Path
 from time import time
 from uuid import UUID
 
-from curve_apps.edge_detection.driver import EdgeDetectionDriver
-from curve_apps.edge_detection.params import Parameters
+from curve_apps.edge_detection.driver import EdgesDriver
+from curve_apps.edge_detection.params import EdgeParameters
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
@@ -76,7 +76,7 @@ class EdgeDetectionApp(PlotSelection2D):
     """
 
     _object_types = (Grid2D,)
-    _param_class = Parameters
+    _param_class = EdgeParameters
 
     def __init__(self, ui_json=None, plot_result=True, geoh5: str | None = None):
 
@@ -167,7 +167,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     @params.setter
     def params(self, val):
-        if not isinstance(val, Parameters):
+        if not isinstance(val, EdgeParameters):
             raise TypeError("Input parameters must be of type Parameters.")
         self._params = val
 
@@ -242,7 +242,8 @@ class EdgeDetectionApp(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        fields = list(self._param_class.model_fields["input_file"].default.data)
+        ifile = InputFile.read_ui_json(EdgeParameters.default_ui_json, validate=False)
+        fields = list(ifile.data)
         return out & (attr.lstrip("_") in fields)
 
     def trigger_click(self, _):
@@ -264,11 +265,11 @@ class EdgeDetectionApp(PlotSelection2D):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = Parameters.build(param_dict)
+            new_params = EdgeParameters.build(param_dict)
             new_params.input_file.write_ui_json(
                 name=temp_geoh5.replace(".geoh5", ".ui.json")
             )
-            driver = EdgeDetectionDriver(new_params)
+            driver = EdgesDriver(new_params)
             driver.run()
 
         if self.live_link.value:
@@ -287,14 +288,16 @@ class EdgeDetectionApp(PlotSelection2D):
 
         with fetch_active_workspace(self.workspace, mode="r+") as ws:
             param_dict["geoh5"] = ws
-            new_params = Parameters.build(param_dict)
+            new_params = EdgeParameters.build(param_dict)
             self.refresh.value = False
-            (
-                vertices,
-                cells,
-            ) = EdgeDetectionDriver.get_edges(
+            canny_grid = EdgesDriver.get_canny_edges(
                 new_params.source.objects,
                 new_params.source.data,
+                new_params.detection,
+            )
+            vertices, cells = EdgesDriver.get_edges(
+                new_params.source.objects,
+                canny_grid,
                 new_params.detection,
             )
             segments = [vertices[c, :2] for c in cells]
