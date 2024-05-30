@@ -12,8 +12,7 @@ from uuid import UUID
 from geoapps import assets_path
 
 app_initializer = {
-    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"),
-    "data": UUID("{b834a590-dea9-48cb-abe3-8c714bb0bb7c}"),
-    "line_field": UUID("{90b1d710-8a0f-4f69-bd38-6c06c7a977ed}"),
+    "geoh5": str(assets_path() / "FlinFlon_tem.geoh5"),
+    "objects": UUID("{4667bf5a-b639-4fd0-8e04-c0e555f59f0e}"),
+    "group_a_data": UUID("{ca9b158a-9b39-409a-88d1-29b965c357a3}"),
 }

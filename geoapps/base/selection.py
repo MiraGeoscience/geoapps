@@ -273,6 +273,31 @@ class ObjectDataSelection(BaseApplication):
         else:
             return None, None
 
+    def get_data_list(self, add_groups: bool | str, add_xyz: bool) -> list[list]:
+        """Get a list of UUIDs and names of data associated with the object."""
+        obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+
+        options = [["", None]]
+
+        if (add_groups or add_groups == "only") and obj.property_groups:
+            options = (
+                options
+                + [["-- Groups --", None]]
+                + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
+            )
+
+        if add_groups != "only":
+            options += [["--- Channels ---", None]]
+
+            children = sorted_children_dict(obj)
+            excl = ["visual parameter"]
+            options += [[k, v] for k, v in children.items() if k.lower() not in excl]
+
+            if add_xyz:
+                options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
+
+        return options
+
     def update_data_list(self, _):
         refresh = self.refresh.value
         self.refresh.value = False
@@ -283,27 +308,7 @@ class ObjectDataSelection(BaseApplication):
                 self.refresh.value = refresh
                 return
 
-            options = [["", None]]
-
-            if (self.add_groups or self.add_groups == "only") and obj.property_groups:
-                options = (
-                    options
-                    + [["-- Groups --", None]]
-                    + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
-                )
-
-            if self.add_groups != "only":
-                options += [["--- Channels ---", None]]
-
-                children = sorted_children_dict(obj)
-                excl = ["visual parameter"]
-                options += [
-                    [k, v] for k, v in children.items() if k.lower() not in excl
-                ]
-
-                if self.add_xyz:
-                    options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
-
+            options = self.get_data_list(self.add_groups, self.add_xyz)
             value = self.data.value
             self.data.options = options
 

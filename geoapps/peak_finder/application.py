@@ -13,10 +13,12 @@ import uuid
 from pathlib import Path
 
 from geoapps_utils.application.dash_application import ObjectSelection
+from geoh5py.data import ReferencedData
+from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
 from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.ui_json import InputFile
-from ipywidgets import VBox
+from ipywidgets import Dropdown, VBox
 from peak_finder.application import PeakFinder as DashPeakFinder
 from peak_finder.params import PeakFinderParams
 
@@ -54,9 +56,38 @@ class PeakFinder(ObjectDataSelection):
             else:
                 self.defaults[key] = value
 
+        self.group_a_data = self.data
+
+        self.line_field = Dropdown(description="Line", options=[["", None]])
         super().__init__(**self.defaults)
-        self.trigger.description = "Launch Application"
+
+        self._objects.observe(self.update_line_list, names="value")
+        self.update_line_list(None)
+
+        self.trigger.description = "Launch Dash App"
         self.trigger.on_click(self.trigger_click)
+
+    def update_line_list(self, _):
+        refresh = self.refresh.value
+        self.refresh.value = False
+        if getattr(self, "_workspace", None) is not None:
+            obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+            if obj is None or getattr(obj, "get_data_list", None) is None:
+                self.line_field.options = [["", None]]
+                self.refresh.value = refresh
+                return
+
+            options = self.get_data_list(False, False)
+            reference_options = [["", None]] + [
+                [name, uid]
+                for name, uid in options
+                if isinstance(self._workspace.get_entity(uid)[0], ReferencedData)
+            ]
+
+            self.line_field.options = reference_options
+
+        else:
+            self.line_field.options = []
 
     @property
     def main(self):
@@ -65,6 +96,7 @@ class PeakFinder(ObjectDataSelection):
                 [
                     self.project_panel,
                     self.data_panel,
+                    self.line_field,
                     self.output_panel,
                 ]
             )
