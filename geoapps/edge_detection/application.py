@@ -14,8 +14,8 @@ from pathlib import Path
 from time import time
 from uuid import UUID
 
-from curve_apps.edge_detection.driver import EdgesDriver
-from curve_apps.edge_detection.params import EdgeParameters
+from curve_apps.edges.driver import EdgesDriver
+from curve_apps.edges.params import EdgeParameters
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
