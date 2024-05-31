@@ -241,7 +241,9 @@ class EdgeDetectionApp(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        ifile = InputFile.read_ui_json(EdgeParameters.default_ui_json, validate=False)
+        ifile = InputFile.read_ui_json(
+            self._param_class.default_ui_json, validate=False
+        )
         fields = list(ifile.data)
         return out & (attr.lstrip("_") in fields)
 

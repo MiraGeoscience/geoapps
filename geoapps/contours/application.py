@@ -9,21 +9,41 @@
 
 from __future__ import annotations
 
-import uuid
+import warnings
 from pathlib import Path
 from time import time
+from uuid import UUID
 
-from geoh5py.objects.object_base import Entity, ObjectBase
-from geoh5py.shared.exceptions import AssociationValidationError
+from curve_apps.contours.driver import ContoursDriver
+from curve_apps.contours.params import ContourParameters
+from geoh5py.objects import Grid2D
+from geoh5py.objects.object_base import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json.input_file import InputFile
-from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox
+from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, Widget
 
+from geoapps import assets_path
 from geoapps.base.plot import PlotSelection2D
-from geoapps.contours.constants import app_initializer
-from geoapps.contours.driver import ContoursDriver
-from geoapps.contours.params import ContoursParams
+from geoapps.inversion.components.preprocessing import grid_to_points
+from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
+
+INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "interval_min": -400.0,
+    "interval_max": 2000.0,
+    "interval_spacing": 100.0,
+    "fixed_contours": "-240",
+    "resolution": 50.0,
+    "ga_group_name": "Contours",
+    "window_azimuth": -20.0,
+    "window_center_x": 315566.45,
+    "window_center_y": 6070767.72,
+    "window_width": 4401.30,
+    "window_height": 6811.12,
+}
 
 
 class ContourValues(PlotSelection2D):
@@ -31,28 +51,31 @@ class ContourValues(PlotSelection2D):
     Application for 2D contouring of spatial data.
     """
 
-    _param_class = ContoursParams
+    _param_class = ContourParameters
 
-    def __init__(self, ui_json=None, plot_result=True, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
-        else:
-            try:
-                self.params = self._param_class(**app_initializer)
+    def __init__(self, ui_json=None, plot_result=True, geoh5: str | None = None):
 
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
+        defaults = {}
 
-                self.params = self._param_class(**app_initializer)
-
-        for key, value in self.params.to_dict().items():
-            if isinstance(value, Entity):
-                self.defaults[key] = value.uid
+        if isinstance(geoh5, str):
+            if Path(geoh5).exists():
+                defaults = {"geoh5": geoh5}
             else:
-                self.defaults[key] = value
+                warnings.warn("Path provided in 'geoh5' argument does not exist.")
+
+        if ui_json is not None and Path(ui_json).exists():
+            defaults = InputFile.read_ui_json(ui_json).data
+
+        if not defaults:
+            if Path(INITIALIZER["geoh5"]).exists():
+                defaults = INITIALIZER.copy()
+            else:
+                defaults = {}
+                warnings.warn(
+                    "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
+                )
+
+        self.defaults.update(defaults)
 
         self.defaults["fixed_contours"] = (
             str(self.defaults["fixed_contours"]).replace("[", "").replace("]", "")
@@ -76,6 +99,16 @@ class ContourValues(PlotSelection2D):
         self.trigger.on_click(self.trigger_click)
         self.trigger.description = "Export"
         self.trigger.button_style = "danger"
+
+    @property
+    def params(self):
+        return self._params
+
+    @params.setter
+    def params(self, val):
+        if not isinstance(val, ContourParameters):
+            raise TypeError("Input parameters must be of type ContourParameters.")
+        self._params = val
 
     @property
     def export_as(self):
@@ -125,27 +158,20 @@ class ContourValues(PlotSelection2D):
             )
         return self._main
 
-    def update_contours(self):
-        """
-        Assign
-        """
-        if self.data.value is not None:
-            self.export_as.value = (
-                self.data.uid_name_map[self.data.value]
-                + "_"
-                + ContoursDriver.get_contour_string(
-                    self.interval_min,
-                    self.interval_max,
-                    self.interval_spacing,
-                    self.fixed_contours,
-                )
-            )
-
     def update_name(self, _):
         if self.data.value is not None:
             self.export_as.value = self.data.uid_name_map[self.data.value]
         else:
             self.export_as.value = "Contours"
+
+    def is_computational(self, attr):
+        """True if app attribute is required for the driver (belongs in params)."""
+        out = isinstance(getattr(self, attr), Widget)
+        ifile = InputFile.read_ui_json(
+            self._param_class.default_ui_json, validate=False
+        )
+        fields = list(ifile.data)
+        return out & (attr.lstrip("_") in fields)
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
@@ -166,8 +192,33 @@ class ContourValues(PlotSelection2D):
                 if self.live_link.value:
                     param_dict["monitoring_directory"] = self.monitoring_directory
 
-                new_params = ContoursParams(**param_dict)
-                new_params.write_input_file()
+                if isinstance(param_dict["objects"], Grid2D):
+                    param_dict["objects"] = grid_to_points(param_dict["objects"])
+
+                x = param_dict["objects"].locations[:, 0]
+                y = param_dict["objects"].locations[:, 1]
+                window = {
+                    "center": [self.window_center_x.value, self.window_center_y.value],
+                    "size": [self.window_width.value, self.window_height.value],
+                }
+                indices = filter_xy(
+                    x,
+                    y,
+                    self.resolution.value,
+                    window=window,
+                    angle=self.window_azimuth.value,
+                )
+                param_dict["objects"] = param_dict["objects"].copy(mask=indices)
+                param_dict["data"] = param_dict["objects"].get_data(
+                    param_dict["data"].name
+                )[0]
+
+                print(param_dict["objects"].locations.shape)
+                print(param_dict["data"].values.shape)
+                new_params = ContourParameters.build(param_dict)
+                new_params.input_file.write_ui_json(
+                    name=temp_geoh5.replace(".geoh5", ".ui.json")
+                )
                 driver = ContoursDriver(new_params)
                 driver.run()
 
