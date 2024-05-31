@@ -37,7 +37,7 @@ from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.peak_finder.application import PeakFinder
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
-from tests import PROJECT
+from tests import PROJECT, PROJECT_TEM
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -506,6 +506,6 @@ def test_iso_surface(tmp_path: Path):
 
 
 def test_peak_finder():
-    app = PeakFinder()
-    app.line_field.value = uuid.UUID("{90b1d710-8a0f-4f69-bd38-6c06c7a977ed}")
-    assert app.data.value == uuid.UUID("{b834a590-dea9-48cb-abe3-8c714bb0bb7c}")
+    app = PeakFinder(geoh5=PROJECT_TEM)
+    assert app.objects.value == uuid.UUID("{34698019-cde6-4b43-8d53-a040b25c989a}")
+    assert app.data.value == uuid.UUID("{22a9cf91-5cff-42b5-8bbb-2f1c6a559204}")
