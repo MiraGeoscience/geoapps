@@ -59,7 +59,8 @@ class ContourValues(PlotSelection2D):
 
         if isinstance(geoh5, str):
             if Path(geoh5).exists():
-                defaults = {"geoh5": geoh5}
+                # defaults = {"geoh5": geoh5}
+                defaults = dict(INITIALIZER, **{"geoh5": geoh5})
             else:
                 warnings.warn("Path provided in 'geoh5' argument does not exist.")
 
@@ -213,8 +214,6 @@ class ContourValues(PlotSelection2D):
                     param_dict["data"].name
                 )[0]
 
-                print(param_dict["objects"].locations.shape)
-                print(param_dict["data"].values.shape)
                 new_params = ContourParameters.build(param_dict)
                 new_params.input_file.write_ui_json(
                     name=temp_geoh5.replace(".geoh5", ".ui.json")

@@ -167,9 +167,8 @@ def test_contour_values(tmp_path: Path):
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
-        output = workspace.get_entity("contours")[0]
-        assert output.n_vertices == 2655, "Change in output. Need to verify."
-        output = workspace.get_entity("Contours")[0]
+        output = [k for k in workspace.objects if isinstance(k, Curve)][0]
+        assert output.n_vertices == 5025, "Change in output. Need to verify."
         assert np.sum([isinstance(c, FilenameData) for c in output.children]) == 1
 
 
