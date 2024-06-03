@@ -27,7 +27,7 @@ dependencies:
   - bzip2=1.0.8=hcfcfb64_5
   - c-ares=1.28.1=hcfcfb64_0
   - c-blosc2=2.14.3=h183a6f4_0
-  - ca-certificates=2024.2.2=h56e8100_0
+  - ca-certificates=2024.6.2=h56e8100_0
   - cached-property=1.5.2=hd8ed1ab_1
   - cached_property=1.5.2=pyha770c72_1
   - cairo=1.18.0=h1fef639_0
@@ -73,7 +73,7 @@ dependencies:
   - fontconfig=2.14.2=hbde0cde_0
   - fonts-conda-ecosystem=1=0
   - fonts-conda-forge=1=0
-  - fonttools=4.52.4=py310ha8f682b_0
+  - fonttools=4.53.0=py310ha8f682b_0
   - freetype=2.12.1=hdaf720e_2
   - freexl=2.0.0=h8276f4a_0
   - fsspec=2022.11.0=pyhd8ed1ab_0
@@ -91,7 +91,7 @@ dependencies:
   - gstreamer=1.22.7=hb4038d2_0
   - h5py=3.11.0=nompi_py310h2b0be38_101
   - hdf4=4.2.15=h5557f11_7
-  - hdf5=1.14.3=nompi_h2b43c12_102
+  - hdf5=1.14.3=nompi_h2b43c12_103
   - icu=73.2=h63175ca_0
   - idna=3.7=pyhd8ed1ab_0
   - imagecodecs=2024.1.1=py310h32f22c9_2
@@ -197,7 +197,7 @@ dependencies:
   - mccabe=0.7.0=pyhd8ed1ab_0
   - mdit-py-plugins=0.4.1=pyhd8ed1ab_0
   - mdurl=0.1.2=pyhd8ed1ab_0
-  - minizip=4.0.5=h5bed578_0
+  - minizip=4.0.6=hb638d1e_0
   - mistune=3.0.2=pyhd8ed1ab_0
   - mkl=2022.1.0=h6a75c08_874
   - msgpack-python=1.0.8=py310hc19bc0b_0
@@ -337,8 +337,8 @@ dependencies:
   - tornado=6.1=py310he2412df_3
   - tqdm=4.66.4=pyhd8ed1ab_0
   - traitlets=5.9.0=pyhd8ed1ab_0
-  - typing-extensions=4.11.0=hd8ed1ab_0
-  - typing_extensions=4.11.0=pyha770c72_0
+  - typing-extensions=4.12.1=hd8ed1ab_0
+  - typing_extensions=4.12.1=pyha770c72_0
   - tzdata=2024a=h0c530f3_0
   - uc-micro-py=1.0.3=pyhd8ed1ab_0
   - ucrt=10.0.22621.0=h57928b3_0

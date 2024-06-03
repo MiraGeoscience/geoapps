@@ -28,7 +28,7 @@ dependencies:
   - bzip2=1.0.8=hd590300_5
   - c-ares=1.28.1=hd590300_0
   - c-blosc2=2.14.3=hb4ffafa_0
-  - ca-certificates=2024.2.2=hbcca054_0
+  - ca-certificates=2024.6.2=hbcca054_0
   - cached-property=1.5.2=hd8ed1ab_1
   - cached_property=1.5.2=pyha770c72_1
   - cairo=1.18.0=h3faef2a_0
@@ -71,7 +71,7 @@ dependencies:
   - fontconfig=2.14.2=h14ed4e7_0
   - fonts-conda-ecosystem=1=0
   - fonts-conda-forge=1=0
-  - fonttools=4.52.4=py310hc51659f_0
+  - fonttools=4.53.0=py310hc51659f_0
   - freetype=2.12.1=h267a509_2
   - freexl=2.0.0=h743c826_0
   - fsspec=2022.11.0=pyhd8ed1ab_0
@@ -90,7 +90,7 @@ dependencies:
   - h5py=3.11.0=nompi_py310hf054cd7_101
   - harfbuzz=8.3.0=h3d44ed6_0
   - hdf4=4.2.15=h2a13503_7
-  - hdf5=1.14.3=nompi_hdf9ad27_102
+  - hdf5=1.14.3=nompi_hdf9ad27_103
   - icu=73.2=h59595ed_0
   - idna=3.7=pyhd8ed1ab_0
   - imagecodecs=2024.1.1=py310h0c5f7e8_2
@@ -204,7 +204,7 @@ dependencies:
   - markupsafe=2.1.5=py310h2372a71_0
   - matplotlib-base=3.7.3=py310h62c0568_0
   - matplotlib-inline=0.1.7=pyhd8ed1ab_0
-  - minizip=4.0.5=h0ab5242_0
+  - minizip=4.0.6=h9d307f2_0
   - mistune=3.0.2=pyhd8ed1ab_0
   - mkl=2022.1.0=h84fe81f_915
   - mpg123=1.32.6=h59595ed_0
@@ -316,8 +316,8 @@ dependencies:
   - tornado=6.1=py310h5764c6d_3
   - tqdm=4.66.4=pyhd8ed1ab_0
   - traitlets=5.9.0=pyhd8ed1ab_0
-  - typing-extensions=4.11.0=hd8ed1ab_0
-  - typing_extensions=4.11.0=pyha770c72_0
+  - typing-extensions=4.12.1=hd8ed1ab_0
+  - typing_extensions=4.12.1=pyha770c72_0
   - tzcode=2024a=h3f72095_0
   - tzdata=2024a=h0c530f3_0
   - unicodedata2=15.1.0=py310h2372a71_0
