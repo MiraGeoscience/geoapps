@@ -22,10 +22,11 @@ from geoh5py.shared.utils import (
     dict_mapper,
     entity2uuid,
     fetch_active_workspace,
+    list2str,
     str2uuid,
 )
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import list2str, monitored_directory_copy
+from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from traitlets import TraitError
 
