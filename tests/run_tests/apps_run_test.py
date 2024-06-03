@@ -37,7 +37,7 @@ from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
-from tests import PROJECT
+from tests import PROJECT  # pylint: disable=no-name-in-module
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -168,7 +168,9 @@ def test_contour_values(tmp_path: Path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = [k for k in workspace.objects if isinstance(k, Curve)][0]
-        assert output.n_vertices == 5025, "Change in output. Need to verify."
+        assert output.n_vertices in [5023, 5025], "Change in output. Need to verify."
+        # TODO the double value here is due to package conflicts locally and on github
+        # Once we switch from matplotlib to scikit-image, this should be a single value.
         assert np.sum([isinstance(c, FilenameData) for c in output.children]) == 1
 
 
