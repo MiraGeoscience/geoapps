@@ -18,10 +18,12 @@ from pathlib import Path
 
 import numpy as np
 import pytest
+from curve_apps import assets_path as curve_apps_assets_path
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 from geoh5py.data import FilenameData
 from geoh5py.objects import Curve, Surface
+from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 
 from geoapps import assets_path
@@ -37,7 +39,7 @@ from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
-from tests import PROJECT
+from tests import PROJECT  # pylint: disable=no-name-in-module
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -156,20 +158,41 @@ def test_coordinate_transformation(tmp_path: Path):
         assert len(workspace.objects) == 4, "Coordinate transform failed."
 
 
-def test_contour_values(tmp_path: Path):
+def test_geoh5_as_contour_argument(tmp_path):
+    geoh5 = Workspace(tmp_path / "test.geoh5")
+    ContourValues(geoh5=geoh5, plot_result=False)
+
+
+def test_contour_values(tmp_path):
     temp_workspace = tmp_path / "contour.geoh5"
     with Workspace(temp_workspace) as workspace:
-        GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[0].copy(
-            parent=workspace
+        objects = GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
+            0
+        ]
+        objects.copy(parent=workspace, copy_children=True)
+        data = workspace.get_entity(
+            uuid.UUID("{44822654-b6ae-45b0-8886-2d845f80f422}")
+        )[0]
+        ifile = InputFile.read_ui_json(
+            curve_apps_assets_path() / "uijson/contours.ui.json", validate=False
         )
+        ifile.set_data_value("geoh5", workspace)
+        ifile.set_data_value("objects", objects)
+        ifile.set_data_value("data", data)
+        ifile.set_data_value("interval_min", -400.0)
+        ifile.set_data_value("interval_max", 2000.0)
+        ifile.set_data_value("interval_spacing", 100.0)
+        ifile.set_data_value("fixed_contours", "-240")
 
-    app = ContourValues(geoh5=str(temp_workspace), plot_result=False)
+    # app = ContourValues(geoh5=str(temp_workspace), plot_result=False)
+    app = ContourValues(ui_json=ifile, plot_result=False)
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
-        output = workspace.get_entity("contours")[0]
-        assert output.n_vertices == 2655, "Change in output. Need to verify."
-        output = workspace.get_entity("Contours")[0]
+        output = [k for k in workspace.objects if isinstance(k, Curve)][0]
+        assert output.n_vertices in [14617, 14620], "Change in output. Need to verify."
+        # TODO the double value here is due to package conflicts locally and on github
+        # Once we switch from matplotlib to scikit-image, this should be a single value.
         assert np.sum([isinstance(c, FilenameData) for c in output.children]) == 1
 
 

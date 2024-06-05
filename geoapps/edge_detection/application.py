@@ -22,6 +22,7 @@ from geoh5py.ui_json import InputFile
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
+from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
@@ -41,20 +42,6 @@ with warn_module_not_found():
     from matplotlib import collections
 
 from geoapps import assets_path
-
-INITIALIZER = {
-    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
-    "line_length": 1,
-    "line_gap": 1,
-    "sigma": 0.5,
-    "threshold": 1,
-    "window_size": None,
-    "merge_length": None,
-    "export_as": "Edges",
-    "out_group": None,
-}
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -77,6 +64,19 @@ class EdgeDetectionApp(PlotSelection2D):
 
     _object_types = (Grid2D,)
     _param_class = EdgeParameters
+    initializer = {
+        "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+        "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+        "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+        "line_length": 1,
+        "line_gap": 1,
+        "sigma": 0.5,
+        "threshold": 1,
+        "window_size": None,
+        "merge_length": None,
+        "export_as": "Edges",
+        "out_group": None,
+    }
 
     def __init__(self, ui_json=None, plot_result=True, geoh5: str | None = None):
 
@@ -92,8 +92,8 @@ class EdgeDetectionApp(PlotSelection2D):
             defaults = InputFile.read_ui_json(ui_json).data
 
         if not defaults:
-            if Path(INITIALIZER["geoh5"]).exists():
-                defaults = INITIALIZER.copy()
+            if Path(self.initializer["geoh5"]).exists():
+                defaults = self.initializer.copy()
             else:
                 defaults = {}
                 warnings.warn(
@@ -241,9 +241,7 @@ class EdgeDetectionApp(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        ifile = InputFile.read_ui_json(EdgeParameters.default_ui_json, validate=False)
-        fields = list(ifile.data)
-        return out & (attr.lstrip("_") in fields)
+        return out & (attr.lstrip("_") in self.initializer)
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
@@ -263,6 +261,24 @@ class EdgeDetectionApp(PlotSelection2D):
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
+
+            x = param_dict["objects"].locations[:, 0]
+            y = param_dict["objects"].locations[:, 1]
+            window = {
+                "center": [self.window_center_x.value, self.window_center_y.value],
+                "size": [self.window_width.value, self.window_height.value],
+            }
+            indices = filter_xy(
+                x,
+                y,
+                self.resolution.value,
+                window=window,
+                angle=self.window_azimuth.value,
+            )
+            param_dict["objects"] = param_dict["objects"].copy(mask=indices)
+            param_dict["data"] = param_dict["objects"].get_data(
+                param_dict["data"].name
+            )[0]
 
             new_params = EdgeParameters.build(param_dict)
             new_params.input_file.write_ui_json(
