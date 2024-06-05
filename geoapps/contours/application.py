@@ -82,7 +82,6 @@ class ContourValues(PlotSelection2D):
             if Path(INITIALIZER["geoh5"]).exists():
                 defaults = INITIALIZER.copy()
             else:
-                defaults = {}
                 warnings.warn(
                     "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
                 )
