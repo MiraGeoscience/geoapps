@@ -53,19 +53,30 @@ class ContourValues(PlotSelection2D):
 
     _param_class = ContourParameters
 
-    def __init__(self, ui_json=None, plot_result=True, geoh5: str | None = None):
+    def __init__(
+        self,
+        ui_json: InputFile | str | None = None,
+        plot_result=True,
+        geoh5: str | None = None,
+    ):
 
         defaults = {}
 
         if isinstance(geoh5, str):
             if Path(geoh5).exists():
-                # defaults = {"geoh5": geoh5}
-                defaults = dict(INITIALIZER, **{"geoh5": geoh5})
+                defaults = {"geoh5": geoh5}
             else:
                 warnings.warn("Path provided in 'geoh5' argument does not exist.")
 
-        if ui_json is not None and Path(ui_json).exists():
-            defaults = InputFile.read_ui_json(ui_json).data
+        if ui_json is not None:
+            if isinstance(ui_json, str):
+                if not Path(ui_json).exists():
+                    raise FileNotFoundError(
+                        f"Provided uijson path {ui_json} not does not exist."
+                    )
+                defaults = InputFile.read_ui_json(ui_json).data
+            elif isinstance(ui_json, InputFile):
+                defaults = ui_json.data
 
         if not defaults:
             if Path(INITIALIZER["geoh5"]).exists():
