@@ -28,23 +28,6 @@ from geoapps.inversion.components.preprocessing import grid_to_points
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
 
-INITIALIZER = {
-    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
-    "interval_min": -400.0,
-    "interval_max": 2000.0,
-    "interval_spacing": 100.0,
-    "fixed_contours": "-240",
-    "resolution": 50.0,
-    "ga_group_name": "Contours",
-    "window_azimuth": -20.0,
-    "window_center_x": 315566.45,
-    "window_center_y": 6070767.72,
-    "window_width": 4401.30,
-    "window_height": 6811.12,
-}
-
 
 class ContourValues(PlotSelection2D):
     """
@@ -52,6 +35,19 @@ class ContourValues(PlotSelection2D):
     """
 
     _param_class = ContourParameters
+    initializer = {
+        "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+        "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+        "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+        "interval_min": -400.0,
+        "interval_max": 2000.0,
+        "interval_spacing": 100.0,
+        "fixed_contours": "-240",
+        "resolution": 50.0,
+        "z_value": False,
+        "export_as": "Contours",
+        "out_group": None,
+    }
 
     def __init__(
         self,
@@ -79,8 +75,8 @@ class ContourValues(PlotSelection2D):
                 defaults = ui_json.data
 
         if not defaults:
-            if Path(INITIALIZER["geoh5"]).exists():
-                defaults = INITIALIZER.copy()
+            if Path(self.initializer["geoh5"]).exists():
+                defaults = self.initializer.copy()
             else:
                 warnings.warn(
                     "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
@@ -178,11 +174,7 @@ class ContourValues(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        ifile = InputFile.read_ui_json(
-            self._param_class.default_ui_json, validate=False
-        )
-        fields = list(ifile.data)
-        return out & (attr.lstrip("_") in fields)
+        return out & (attr.lstrip("_") in self.initializer)
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
