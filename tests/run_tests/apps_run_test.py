@@ -164,7 +164,6 @@ def test_geoh5_as_contour_argument(tmp_path):
 
 
 def test_contour_values(tmp_path):
-
     temp_workspace = tmp_path / "contour.geoh5"
     with Workspace(temp_workspace) as workspace:
         objects = GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
@@ -191,7 +190,7 @@ def test_contour_values(tmp_path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = [k for k in workspace.objects if isinstance(k, Curve)][0]
-        assert output.n_vertices == 14617, "Change in output. Need to verify."
+        assert output.n_vertices in [14617, 14620], "Change in output. Need to verify."
         # TODO the double value here is due to package conflicts locally and on github
         # Once we switch from matplotlib to scikit-image, this should be a single value.
         assert np.sum([isinstance(c, FilenameData) for c in output.children]) == 1
