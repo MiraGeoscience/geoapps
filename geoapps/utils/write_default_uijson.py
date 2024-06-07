@@ -51,7 +51,6 @@ from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.iso_surfaces.params import IsoSurfacesParams
-from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
 active_data_channels = [
@@ -311,7 +310,6 @@ def write_default_uijson(path: str | Path, use_initializers=False):
             forward_only=False, validate=False, **joint_cross_gradient_init
         ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
-        "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
         "scatter.ui.json": ScatterPlotParams(validate=False, **scatter_init),
         "interpolation.ui.json": DataInterpolationParams(validate=False, **interp_init),
         "block_model_creation.ui.json": BlockModelParams(validate=False, **block_init),

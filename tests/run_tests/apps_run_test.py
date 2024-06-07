@@ -34,9 +34,10 @@ from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
 from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
+from geoapps.peak_finder.application import PeakFinder
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
-from tests import PROJECT
+from tests import PROJECT, PROJECT_TEM
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -502,3 +503,9 @@ def test_iso_surface(tmp_path: Path):
 
     with pytest.warns(UserWarning, match="The following levels were"):
         app.trigger_click(None)
+
+
+def test_peak_finder():
+    app = PeakFinder(geoh5=PROJECT_TEM)
+    assert app.objects.value == uuid.UUID("{34698019-cde6-4b43-8d53-a040b25c989a}")
+    assert app.data.value == uuid.UUID("{22a9cf91-5cff-42b5-8bbb-2f1c6a559204}")

@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 0b34a9e015f20035b684a43b3b65c3deb7458d1050d048b4895f3298c10a2a3e
-    linux-64: 8e0093294f523607f56e463b8b6741414dff027a506f51a4c13e46676579480c
+    win-64: 5ed64a00ce14add364c0df503e29ddf527fdf2754fadc1100463d4b563935e86
+    linux-64: 7d3079181ba1ebdda71c4f9ba6c21a4923e74239c0f10647dfb2692249332b2b
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -11818,6 +11818,48 @@ package:
     sha256: 768e30dc513568491818fb068ee867c57c514b553915536da09e5d10b4ebf3c3
   category: main
   optional: false
+- name: curve-apps
+  version: 0.1.0rc3
+  manager: pip
+  platform: linux-64
+  dependencies:
+    pillow: '>=10.3.0,<10.4.0'
+    geoapps-utils: '>=0.3.0rc5,<0.4.0'
+    geoh5py: '>=0.9.0rc5,<0.10.0'
+    h5py: '>=3.2.1,<4.0.0'
+    numpy: '>=1.23.5,<1.24.0'
+    pydantic: '>=2.5.2,<2.6.0'
+    pywavelets: '>=1.4.1,<1.5.0'
+    scikit-image: '>=0.20.0,<0.21.0'
+    scipy: '>=1.10.1,<1.11.0'
+    tifffile: 2024.2.12
+    tqdm: '>=4.66.1,<4.67.0'
+  url: https://mirageoscienceltd.jfrog.io/artifactory/api/pypi/analyst-pypi-local/curve-apps/0.1.0rc3/curve_apps-0.1.0rc3-py3-none-any.whl
+  hash:
+    sha256: 250bea466529ddb5c16fb905e8c84d00565895963248d5c03dd03e64392962b9
+  category: main
+  optional: false
+- name: curve-apps
+  version: 0.1.0rc3
+  manager: pip
+  platform: win-64
+  dependencies:
+    pillow: '>=10.3.0,<10.4.0'
+    geoapps-utils: '>=0.3.0rc5,<0.4.0'
+    geoh5py: '>=0.9.0rc5,<0.10.0'
+    h5py: '>=3.2.1,<4.0.0'
+    numpy: '>=1.23.5,<1.24.0'
+    pydantic: '>=2.5.2,<2.6.0'
+    pywavelets: '>=1.4.1,<1.5.0'
+    scikit-image: '>=0.20.0,<0.21.0'
+    scipy: '>=1.10.1,<1.11.0'
+    tifffile: 2024.2.12
+    tqdm: '>=4.66.1,<4.67.0'
+  url: https://mirageoscienceltd.jfrog.io/artifactory/api/pypi/analyst-pypi-local/curve-apps/0.1.0rc3/curve_apps-0.1.0rc3-py3-none-any.whl
+  hash:
+    sha256: 250bea466529ddb5c16fb905e8c84d00565895963248d5c03dd03e64392962b9
+  category: main
+  optional: false
 - name: geoapps-utils
   version: 0.3.0rc5
   manager: pip
@@ -11982,6 +12024,52 @@ package:
   url: https://mirageoscienceltd.jfrog.io/artifactory/api/pypi/analyst-pypi-local/param-sweeps/0.1.7rc2/param_sweeps-0.1.7rc2-py3-none-any.whl
   hash:
     sha256: 6666d31b8f8efeda93aab97bfdae5e8f2e01727234e55fd9f3c219f8e7b8eebd
+  category: main
+  optional: false
+- name: peak-finder-app
+  version: 0.1.0rc2
+  manager: pip
+  platform: linux-64
+  dependencies:
+    pillow: '>=10.3.0,<10.4.0'
+    curve-apps: '>=0.1.0rc3,<0.2.0'
+    dask: '>=2022.10.0,<2022.11.0'
+    distributed: '>=2022.10.0,<2022.11.0'
+    geoapps-utils: '>=0.3.0rc5,<0.4.0'
+    geoh5py: '>=0.9.0rc5,<0.10.0'
+    h5py: '>=3.2.1,<4.0.0'
+    numpy: '>=1.23.5,<1.24.0'
+    plotly: '>=5.19.0,<5.20.0'
+    pydantic: '>=2.5.2,<2.6.0'
+    scikit-image: '>=0.20.0,<0.21.0'
+    scipy: '>=1.10.1,<1.11.0'
+    tqdm: '>=4.66.1,<5.0.0'
+  url: https://mirageoscienceltd.jfrog.io/artifactory/api/pypi/analyst-pypi-local/peak-finder-app/0.1.0rc2/peak_finder_app-0.1.0rc2-py3-none-any.whl
+  hash:
+    sha256: 5c7d9e201c614c045938c75e49243956e677165f740481c783e232e735a3191f
+  category: main
+  optional: false
+- name: peak-finder-app
+  version: 0.1.0rc2
+  manager: pip
+  platform: win-64
+  dependencies:
+    pillow: '>=10.3.0,<10.4.0'
+    curve-apps: '>=0.1.0rc3,<0.2.0'
+    dask: '>=2022.10.0,<2022.11.0'
+    distributed: '>=2022.10.0,<2022.11.0'
+    geoapps-utils: '>=0.3.0rc5,<0.4.0'
+    geoh5py: '>=0.9.0rc5,<0.10.0'
+    h5py: '>=3.2.1,<4.0.0'
+    numpy: '>=1.23.5,<1.24.0'
+    plotly: '>=5.19.0,<5.20.0'
+    pydantic: '>=2.5.2,<2.6.0'
+    scikit-image: '>=0.20.0,<0.21.0'
+    scipy: '>=1.10.1,<1.11.0'
+    tqdm: '>=4.66.1,<5.0.0'
+  url: https://mirageoscienceltd.jfrog.io/artifactory/api/pypi/analyst-pypi-local/peak-finder-app/0.1.0rc2/peak_finder_app-0.1.0rc2-py3-none-any.whl
+  hash:
+    sha256: 5c7d9e201c614c045938c75e49243956e677165f740481c783e232e735a3191f
   category: main
   optional: false
 - name: simpeg-archive
