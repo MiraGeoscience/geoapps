@@ -84,7 +84,7 @@ param-sweeps = {version = "~0.1.7rc2", source = "pypi", allow-prereleases = true
 #param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
 #param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz#sha256="}
 
-octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
+octree-creation-app = {version = "~0.1.0rc3", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/release/0.1.0.zip#sha256="}
 #octree-creation-app = {url = "http://localhost:8888/octree-creation-app.tar.gz#sha256="}
@@ -95,7 +95,7 @@ geoapps-utils = {version = "~0.3.0rc5", source = "pypi", allow-prereleases = tru
 #geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/release/0.3.0.zip#sha256="}
 #geoapps-utils = {url = "http://localhost:8888/geoapps-utils.tar.gz#sha256="}
 
-simpeg-drivers = {version = "~0.1.0b7", source = "pypi", allow-prereleases = true}
+simpeg-drivers = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 #simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.zip#sha256="}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz#sha256="}
 
