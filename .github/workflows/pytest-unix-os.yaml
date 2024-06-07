@@ -21,9 +21,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-env:
-  source_dir: simpeg_drivers
-
 jobs:
   pytest:
     name: pytest (Unix)
@@ -53,5 +50,4 @@ jobs:
           environment-name: test_env
           cache-downloads: true
       - name: pytest
-        run: |
-          pytest --cov=${source_dir} --cov-report=xml --cov-branch
+        run: pytest --cov --cov-report=xml

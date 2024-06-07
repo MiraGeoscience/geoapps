@@ -21,9 +21,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-env:
-  source_dir: simpeg_drivers
-
 jobs:
   pytest:
     name: pytest (Windows)
@@ -53,8 +50,7 @@ jobs:
           init-shell: powershell
           cache-downloads: true
       - name: pytest
-        run: |
-          pytest --cov=${source_dir} --cov-report=xml --cov-branch
+        run: pytest --cov --cov-report=xml
       - name: Codecov
         if: ${{ success() && matrix.python_ver == '3.10' }}
         uses: codecov/codecov-action@v4
