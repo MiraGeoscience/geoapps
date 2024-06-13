@@ -16,10 +16,13 @@ from uuid import UUID
 
 from curve_apps.edges.driver import EdgesDriver
 from curve_apps.edges.params import EdgeParameters
+from geoh5py import Workspace
+from geoh5py.data import FloatData
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.shared_utils.utils import filter_xy
@@ -40,8 +43,6 @@ with warn_module_not_found():
 
 with warn_module_not_found():
     from matplotlib import collections
-
-from geoapps import assets_path
 
 
 class EdgeDetectionApp(PlotSelection2D):
@@ -64,7 +65,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     _object_types = (Grid2D,)
     _param_class = EdgeParameters
-    initializer = {
+    _initializer = {
         "geoh5": str(assets_path() / "FlinFlon.geoh5"),
         "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
         "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
@@ -84,18 +85,24 @@ class EdgeDetectionApp(PlotSelection2D):
 
         if isinstance(geoh5, str):
             if Path(geoh5).exists():
-                defaults = {"geoh5": geoh5}
+                defaults["geoh5"] = geoh5
             else:
                 warnings.warn("Path provided in 'geoh5' argument does not exist.")
 
-        if ui_json is not None and Path(ui_json).exists():
-            defaults = InputFile.read_ui_json(ui_json).data
+        if ui_json is not None:
+            if isinstance(ui_json, str):
+                if not Path(ui_json).exists():
+                    raise FileNotFoundError(
+                        f"Provided uijson path {ui_json} not does not exist."
+                    )
+                defaults = InputFile.read_ui_json(ui_json).data
+            elif isinstance(ui_json, InputFile):
+                defaults = ui_json.data
 
         if not defaults:
-            if Path(self.initializer["geoh5"]).exists():
-                defaults = self.initializer.copy()
+            if Path(self._initializer["geoh5"]).exists():
+                defaults = self._initializer.copy()
             else:
-                defaults = {}
                 warnings.warn(
                     "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
                 )
@@ -241,7 +248,7 @@ class EdgeDetectionApp(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        return out & (attr.lstrip("_") in self.initializer)
+        return out & (attr.lstrip("_") in self._initializer)
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
@@ -249,36 +256,17 @@ class EdgeDetectionApp(PlotSelection2D):
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
-        with fetch_active_workspace(ws) as workspace:
-            with fetch_active_workspace(self.workspace):
-                for key, value in param_dict.items():
-                    if isinstance(value, ObjectBase):
-                        param_dict[key] = value.copy(
-                            parent=workspace, copy_children=True
-                        )
 
-            param_dict["geoh5"] = workspace
+        with fetch_active_workspace(ws) as new_workspace:
 
+            param_dict["geoh5"] = new_workspace
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            x = param_dict["objects"].locations[:, 0]
-            y = param_dict["objects"].locations[:, 1]
-            window = {
-                "center": [self.window_center_x.value, self.window_center_y.value],
-                "size": [self.window_width.value, self.window_height.value],
-            }
-            indices = filter_xy(
-                x,
-                y,
-                self.resolution.value,
-                window=window,
-                angle=self.window_azimuth.value,
-            )
-            param_dict["objects"] = param_dict["objects"].copy(mask=indices)
-            param_dict["data"] = param_dict["objects"].get_data(
-                param_dict["data"].name
-            )[0]
+            with fetch_active_workspace(self.workspace):
+                param_dict["objects"], param_dict["data"] = self.get_local_window_data(
+                    param_dict["objects"], param_dict["data"], workspace=new_workspace
+                )
 
             new_params = EdgeParameters.build(param_dict)
             new_params.input_file.write_ui_json(
@@ -289,6 +277,29 @@ class EdgeDetectionApp(PlotSelection2D):
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
+
+    def get_local_window_data(
+        self, entity: ObjectBase, data: FloatData, workspace: Workspace
+    ) -> tuple[ObjectBase, FloatData]:
+        """Apply the apps window to object and data."""
+
+        window = {
+            "center": [self.window_center_x.value, self.window_center_y.value],
+            "size": [self.window_width.value, self.window_height.value],
+        }
+
+        indices = filter_xy(
+            entity.locations[:, 0],
+            entity.locations[:, 1],
+            self.resolution.value,
+            window=window,
+            angle=self.window_azimuth.value,
+        )
+
+        entity = entity.copy(parent=workspace, mask=indices, copy_children=False)
+        data = data.copy(parent=entity, mask=indices)
+
+        return entity, data
 
     def update_name(self, _):
         if self.data.value is not None:
@@ -301,22 +312,26 @@ class EdgeDetectionApp(PlotSelection2D):
         if param_dict.get("objects", None) is None:
             return
 
-        with fetch_active_workspace(self.workspace, mode="r+") as ws:
-            param_dict["geoh5"] = ws
-            new_params = EdgeParameters.build(param_dict)
-            self.refresh.value = False
-            canny_grid = EdgesDriver.get_canny_edges(
-                new_params.source.objects,
-                new_params.source.data,
-                new_params.detection,
-            )
-            vertices, cells = EdgesDriver.get_edges(
-                new_params.source.objects,
-                canny_grid,
-                new_params.detection,
-            )
-            segments = [vertices[c, :2] for c in cells]
-            self.collections = [
-                collections.LineCollection(segments, colors="k", linewidths=2)
-            ]
-            self.refresh.value = True
+        ws = Workspace()
+        param_dict["geoh5"] = ws
+        entity, data = self.get_local_window_data(
+            param_dict["objects"], param_dict["data"], workspace=ws
+        )
+        new_params = EdgeParameters.build(param_dict)
+        self.refresh.value = False
+
+        canny_grid = EdgesDriver.get_canny_edges(
+            entity,
+            data,
+            new_params.detection,
+        )
+        vertices, cells = EdgesDriver.get_edges(
+            entity,
+            canny_grid,
+            new_params.detection,
+        )
+        segments = [vertices[c, :2] for c in cells]
+        self.collections = [
+            collections.LineCollection(segments, colors="k", linewidths=2)
+        ]
+        self.refresh.value = True
