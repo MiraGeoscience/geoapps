@@ -25,6 +25,7 @@ from geoh5py.data import FilenameData
 from geoh5py.objects import Curve, Surface
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
+from surface_apps import assets_path as surface_apps_assets_path
 
 from geoapps import assets_path
 from geoapps.block_model_creation.application import BlockModelCreation
@@ -526,16 +527,31 @@ def test_export():
 def test_iso_surface(tmp_path: Path):
     temp_workspace = tmp_path / "contour.geoh5"
     with Workspace(temp_workspace) as workspace:
-        for uid in [
-            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-        ]:
-            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
+        objects = GEOH5.get_entity(uuid.UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"))[
+            0
+        ]
+        objects.copy(parent=workspace, copy_children=True)
+        data = workspace.get_entity(
+            uuid.UUID("{f3e36334-be0a-4210-b13e-06933279de25}")
+        )[0]
+        ifile = InputFile.read_ui_json(
+            surface_apps_assets_path() / "uijson/iso_surfaces.ui.json", validate=False
+        )
+        ifile.set_data_value("geoh5", workspace)
+        ifile.set_data_value("objects", objects)
+        ifile.set_data_value("data", data)
+        ifile.set_data_value("max_distance", 500.0)
+        ifile.set_data_value("resolution", 50.0)
+        ifile.set_data_value("interval_min", 0.005)
+        ifile.set_data_value("interval_max", 0.02)
+        ifile.set_data_value("interval_spacing", 0.005)
+        ifile.set_data_value("out_group", "test_iso")
 
-    app = IsoSurface(geoh5=str(temp_workspace))
+    app = IsoSurface(ui_json=ifile)
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
-        group = workspace.get_entity("Isosurface")[0]
+        group = workspace.get_entity("test_iso")[0]
         assert len(group.children) == 5
         assert np.sum([isinstance(c, FilenameData) for c in group.children]) == 1
         assert np.sum([isinstance(c, Surface) for c in group.children]) == 4

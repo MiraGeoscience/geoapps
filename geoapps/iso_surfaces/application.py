@@ -9,20 +9,21 @@
 
 from __future__ import annotations
 
-import uuid
+import warnings
 from pathlib import Path
 from time import time
+from uuid import UUID
 
-from geoh5py.shared import Entity
-from geoh5py.shared.exceptions import AssociationValidationError
-from geoh5py.shared.utils import uuid2entity
+from geoh5py.objects import ObjectBase
+from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
+from surface_apps.iso_surfaces.driver import IsoSurfacesDriver
+from surface_apps.iso_surfaces.params import IsoSurfaceParameters
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.iso_surfaces.constants import app_initializer
-from geoapps.iso_surfaces.driver import IsoSurfacesDriver
-from geoapps.iso_surfaces.params import IsoSurfacesParams
+from geoapps.utils.formatters import string_name
 from geoapps.utils.importing import warn_module_not_found
 
 with warn_module_not_found():
@@ -35,30 +36,52 @@ class IsoSurface(ObjectDataSelection):
     a pseudo 3D conductivity model on surface.
     """
 
-    _param_class = IsoSurfacesParams
+    _param_class = IsoSurfaceParameters
     _add_groups = False
     _select_multiple = False
+    _initializer = {
+        "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+        "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
+        "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
+        "max_distance": 500.0,
+        "resolution": 50.0,
+        "interval_min": 0.005,
+        "interval_max": 0.02,
+        "interval_spacing": 0.005,
+        "fixed_contours": "",
+        "export_as": "Iso_Iteration_7_model",
+        "out_group": None,
+    }
 
-    def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
-        if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
-        else:
-            try:
-                self.params = self._param_class(**app_initializer)
+    def __init__(self, ui_json=None, geoh5: str | None = None):
 
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
+        defaults = {}
 
-                self.params = self._param_class(**app_initializer)
-
-        for key, value in self.params.to_dict().items():
-            if isinstance(value, Entity):
-                self.defaults[key] = value.uid
+        if isinstance(geoh5, str):
+            if Path(geoh5).exists():
+                defaults["geoh5"] = geoh5
             else:
-                self.defaults[key] = value
+                warnings.warn("Path provided in 'geoh5' argument does not exist.")
+
+        if ui_json is not None:
+            if isinstance(ui_json, str):
+                if not Path(ui_json).exists():
+                    raise FileNotFoundError(
+                        f"Provided uijson path {ui_json} not does not exist."
+                    )
+                defaults = InputFile.read_ui_json(ui_json).data
+            elif isinstance(ui_json, InputFile):
+                defaults = ui_json.data
+
+        if not defaults:
+            if Path(self._initializer["geoh5"]).exists():
+                defaults = self._initializer.copy()
+            else:
+                warnings.warn(
+                    "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
+                )
+
+        self.defaults.update(defaults)
 
         self._max_distance = FloatText(
             description="Max Interpolation Distance (m):",
@@ -82,7 +105,7 @@ class IsoSurface(ObjectDataSelection):
             continuous_update=False,
         )
         self._export_as = Text("Iso_", description="Surface:")
-        self.ga_group_name.value = "ISO"
+        self.ga_group_name.value = self.defaults["out_group"] or "ISO"
         self.data.observe(self.data_change, names="value")
         self.data.description = "Value fields: "
         self.trigger.on_click(self.trigger_click)
@@ -99,48 +122,41 @@ class IsoSurface(ObjectDataSelection):
         )
         self.output_panel = VBox([self.export_as, self.output_panel])
 
-    def trigger_click(self, _) -> str:
-        temp_geoh5 = f"Isosurface_{time():.0f}.geoh5"
+    def is_computational(self, attr):
+        """True if app attribute is required for the driver (belongs in params)."""
+        out = isinstance(getattr(self, attr), Widget)
+        return out & (attr.lstrip("_") in self._initializer)
+
+    def trigger_click(self, _):
+        param_dict = self.get_param_dict()
+        temp_geoh5 = f"{string_name(param_dict.get('export_as'))}_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
-        with ws as new_workspace:
-            with self.workspace.open(mode="r") as input_ws:
-                param_dict = {}
-                for key in self.__dict__:
-                    try:
-                        if isinstance(getattr(self, key), Widget) and hasattr(
-                            self.params, key
-                        ):
-                            value = getattr(self, key).value
-                            if key[0] == "_":
-                                key = key[1:]
-                            param_dict[key] = uuid2entity(value, input_ws)
 
-                    except AttributeError:
-                        continue
-
-                param_dict["objects"] = param_dict["objects"].copy(
-                    parent=new_workspace, copy_children=False
-                )
-                param_dict["data"] = param_dict["data"].copy(
-                    parent=param_dict["objects"]
-                )
+        with fetch_active_workspace(ws) as new_workspace:
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=new_workspace, copy_children=True
+                        )
 
             param_dict["geoh5"] = new_workspace
+            param_dict["out_group"] = self.ga_group_name.value
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = IsoSurfacesParams(**param_dict)
-            new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
+            new_params = IsoSurfaceParameters.build(param_dict)
+            new_params.input_file.write_ui_json(
+                name=temp_geoh5.replace(".geoh5", ".ui.json")
+            )
             driver = IsoSurfacesDriver(new_params)
             driver.run()
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
-
-        return new_workspace.h5file
 
     def data_change(self, _):
         if self.data.value:
