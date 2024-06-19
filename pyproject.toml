@@ -58,7 +58,7 @@ numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 pandas = "~2.2.1"  # also in simpeg
 scikit-image = "~0.20.0"
 scikit-learn = "~1.4.0"  # also in simpeg
-scipy = "~1.10.0"
+scipy = "~1.13"
 tqdm = "^4.66.1"  # also in las-geoh5
 
 ## dependencies for UI
@@ -86,7 +86,7 @@ param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/re
 #curve-apps = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 curve-apps = {url = "https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.zip"}
 
-surface-apps = {url = "https://github.com/MiraGeoscience/surface-apps/archive/refs/heads/develop.zip"}
+surface-apps = {url = "https://github.com/MiraGeoscience/surface-apps/archive/refs/heads/release/0.1.0.zip"}
 
 #octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
@@ -113,7 +113,7 @@ mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/head
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 #---------------------------------------------------------------------------------
-Pillow = "~10.1.0"  # from geoh5py
+Pillow = "~10.3"  # from geoh5py
 empymod = "~2.2.1"  # from simpeg and geoana
 geoana = "~0.4.0"  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
