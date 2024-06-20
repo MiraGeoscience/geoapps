@@ -117,7 +117,7 @@ Pillow = "~10.3"  # from geoh5py
 empymod = "~2.2.1"  # from simpeg and geoana
 geoana = "~0.4.0"  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
-mkl = "2022.1.*"  # from simpeg
+mkl = "~2023.2.*"  # from simpeg
 properties = "~0.6.0"  # from simpeg-archive
 pydantic = "~2.5.2"  # from geoapps-utils, octrree-creation-app
 pydiso = "~0.0.3"  # from simpeg
@@ -127,6 +127,7 @@ zarr = "~2.14.2"  # from simpeg[dask], simpeg-drivers
 # force some versions to resolve incompatible resolution between PyPI and Conda
 #-------------------------------------------------------------------------------
 tzdata = "2023.4"  # through pandas from SimPEG (constraint copied from simpeg-drivers)
+tbb = "2021.12.0"
 
 ## about pip dependencies
 # to be specified to work with conda-lock
