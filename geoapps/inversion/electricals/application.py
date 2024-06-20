@@ -91,7 +91,7 @@ def inversion_defaults():
 
 class InversionApp(PlotSelection2D):
     """
-    Application for the inversion of potential field data using SimPEG
+    Application for the inversion of potential field data using simpeg
     """
 
     _param_class = DirectCurrent3DParams

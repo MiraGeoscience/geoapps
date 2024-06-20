@@ -14,12 +14,12 @@ import warnings
 import numpy as np
 from discretize import TreeMesh
 from scipy.spatial import ConvexHull, cKDTree
-from SimPEG.electromagnetics.frequency_domain.sources import (
+from simpeg.electromagnetics.frequency_domain.sources import (
     LineCurrent as FEMLineCurrent,
 )
-from SimPEG.electromagnetics.time_domain.sources import LineCurrent as TEMLineCurrent
-from SimPEG.survey import BaseSurvey
-from SimPEG.utils import mkvc
+from simpeg.electromagnetics.time_domain.sources import LineCurrent as TEMLineCurrent
+from simpeg.survey import BaseSurvey
+from simpeg.utils import mkvc
 
 from geoapps.utils.surveys import get_intersecting_cells, get_unique_locations
 

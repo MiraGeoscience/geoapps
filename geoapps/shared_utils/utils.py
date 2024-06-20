@@ -544,7 +544,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         ) from exc
 
-    outfile = group.get_entity("SimPEG.out")[0]
+    outfile = group.get_entity("simpeg.out")[0]
     out = [
         line for line in outfile.values.decode("utf-8").replace("\r", "").split("\n")
     ][:-1]
