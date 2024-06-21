@@ -104,7 +104,7 @@ simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archiv
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz#sha256="}
 
 #simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
-simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/fix_simpeg_import.zip"}
+simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip"}
 
 #mira-simpeg = {version = ">=0.19.0.8rc1,<0.19.0.8.post999", source = "pypi", allow-prereleases = true, extras = ["dask"]}
 mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/develop.zip", extras = ["dask"]}

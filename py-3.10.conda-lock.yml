@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: c97b8e623f66c1fe41f875fb70e35b72ab1504febad275c344f986000e72d1b1
-    linux-64: 76f62d9c24e9c8f5115c8b578183e594c781d64e979659e7e144665f8b011f99
+    win-64: 5e905a0b8d525d25f1f21e5c672dacd8356250f18211cdb352d277543a21f9de
+    linux-64: 356f8c04b7cb06f69b48f0adbf466a1cec002534edcec23937decceb30cf4ce0
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -12070,38 +12070,38 @@ package:
     url: https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.zip
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev4+geoapps.0.8.0
+  version: 0.11.0.dev6
   manager: pip
   platform: linux-64
   dependencies:
-    pymatsolver: '>=0.1.1'
     numpy: '>=1.7'
+    pymatsolver: '>=0.1.1'
+    properties: '>=0.3.1b2'
     discretize: '*'
     scipy: '>=0.13'
-    properties: '>=0.3.1b2'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/fix_simpeg_import.zip
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/fix_simpeg_import.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   optional: false
 - name: simpeg-archive
-  version: 0.9.1.dev4+geoapps.0.8.0
+  version: 0.11.0.dev6
   manager: pip
   platform: win-64
   dependencies:
-    pymatsolver: '>=0.1.1'
     numpy: '>=1.7'
+    pymatsolver: '>=0.1.1'
+    properties: '>=0.3.1b2'
     discretize: '*'
     scipy: '>=0.13'
-    properties: '>=0.3.1b2'
-  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/fix_simpeg_import.zip
+  url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
   source:
     type: url
-    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/fix_simpeg_import.zip
+    url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   optional: false
 - name: simpeg-drivers
   version: 0.2.0a1
