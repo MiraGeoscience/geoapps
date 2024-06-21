@@ -35,7 +35,7 @@ class ContourValues(PlotSelection2D):
     """
 
     _param_class = ContourParameters
-    initializer = {
+    _initializer = {
         "geoh5": str(assets_path() / "FlinFlon.geoh5"),
         "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
         "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
@@ -60,7 +60,7 @@ class ContourValues(PlotSelection2D):
 
         if isinstance(geoh5, str):
             if Path(geoh5).exists():
-                defaults = {"geoh5": geoh5}
+                defaults["geoh5"] = geoh5
             else:
                 warnings.warn("Path provided in 'geoh5' argument does not exist.")
 
@@ -75,18 +75,18 @@ class ContourValues(PlotSelection2D):
                 defaults = ui_json.data
 
         if not defaults:
-            if Path(self.initializer["geoh5"]).exists():
-                defaults = self.initializer.copy()
+            if Path(self._initializer["geoh5"]).exists():
+                defaults = self._initializer.copy()
             else:
                 warnings.warn(
                     "Geoapps is missing 'FlinFlon.geoh5' file in the assets folder."
                 )
 
         self.defaults.update(defaults)
-
         self.defaults["fixed_contours"] = (
             str(self.defaults["fixed_contours"]).replace("[", "").replace("]", "")
         )
+
         self._export_as = Text(value="Contours")
         self._z_value = Checkbox(
             value=False, indent=False, description="Assign Z from values"
@@ -174,7 +174,7 @@ class ContourValues(PlotSelection2D):
     def is_computational(self, attr):
         """True if app attribute is required for the driver (belongs in params)."""
         out = isinstance(getattr(self, attr), Widget)
-        return out & (attr.lstrip("_") in self.initializer)
+        return out & (attr.lstrip("_") in self._initializer)
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
@@ -182,15 +182,16 @@ class ContourValues(PlotSelection2D):
         ws, self.live_link.value = self.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
-        with fetch_active_workspace(self.workspace):
-            with ws as workspace:
+
+        with fetch_active_workspace(ws) as new_workspace:
+            with fetch_active_workspace(self.workspace):
                 for key, value in param_dict.items():
                     if isinstance(value, ObjectBase):
                         param_dict[key] = value.copy(
-                            parent=workspace, copy_children=True
+                            parent=new_workspace, copy_children=True
                         )
 
-                param_dict["geoh5"] = workspace
+                param_dict["geoh5"] = new_workspace
 
                 if self.live_link.value:
                     param_dict["monitoring_directory"] = self.monitoring_directory
