@@ -48,7 +48,6 @@ from geoapps import assets_path
 from geoapps.block_model_creation.params import BlockModelParams
 from geoapps.clustering.params import ClusteringParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
@@ -200,11 +199,6 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     peak_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     peak_init = peak_init if use_initializers else {}
 
-    from geoapps.iso_surfaces.constants import app_initializer as iso_init
-
-    iso_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
-    iso_init = iso_init if use_initializers else {}
-
     from geoapps.inversion.joint.joint_surveys.constants import (
         app_initializer as joint_surveys_init,
     )
@@ -304,7 +298,6 @@ def write_default_uijson(path: str | Path, use_initializers=False):
         "interpolation.ui.json": DataInterpolationParams(validate=False, **interp_init),
         "block_model_creation.ui.json": BlockModelParams(validate=False, **block_init),
         "cluster.ui.json": ClusteringParams(validate=False, **cluster_init),
-        "iso_surfaces.ui.json": IsoSurfacesParams(validate=False, **iso_init),
     }
 
     for filename, params in filedict.items():
