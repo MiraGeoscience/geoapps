@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from SimPEG.survey import BaseSurvey
+from simpeg.survey import BaseSurvey
 
 if TYPE_CHECKING:
     from simpeg_drivers.components import InversionData
@@ -244,7 +244,7 @@ def get_unique_locations(survey: BaseSurvey) -> np.ndarray:
     Get unique locations from a survey including sources and receivers when
     applicable.
 
-    :param: survey: SimPEG survey object.
+    :param: survey: simpeg survey object.
 
     :return: Array of unique locations.
     """

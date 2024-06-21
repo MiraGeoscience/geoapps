@@ -38,7 +38,7 @@ from geoapps.shared_utils.utils import downsample_grid, downsample_xy
 
 class InversionApp(BaseDashApplication):
     """
-    Application for the inversion of potential field data using SimPEG
+    Application for the inversion of potential field data using simpeg
     """
 
     _param_class = InversionBaseParams
@@ -1050,8 +1050,12 @@ class InversionApp(BaseDashApplication):
 
             if np.any(values):
                 # Update figure data.
-                figure["data"][0]["x"] = down_x
-                figure["data"][0]["y"] = down_y
+                figure["data"][0][
+                    "x"
+                ] = down_x  # pylint: disable=used-before-assignment
+                figure["data"][0][
+                    "y"
+                ] = down_y  # pylint: disable=used-before-assignment
                 figure["data"][0]["z"] = z
 
             # Get data count

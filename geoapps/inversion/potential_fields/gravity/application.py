@@ -27,7 +27,7 @@ from geoapps.inversion.potential_fields.gravity.layout import (
 
 class GravityApp(InversionApp):
     """
-    Application for the inversion of potential field data using SimPEG
+    Application for the inversion of potential field data using simpeg
     """
 
     _param_class = GravityParams

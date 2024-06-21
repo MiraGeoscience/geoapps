@@ -58,7 +58,7 @@ numpy = "~1.23.5"  # also geoh5py, simpeg and geoana
 pandas = "~2.2.1"  # also in simpeg
 scikit-image = "~0.20.0"
 scikit-learn = "~1.4.0"  # also in simpeg
-scipy = "~1.10.0"
+scipy = "~1.13"
 tqdm = "^4.66.1"  # also in las-geoh5
 
 ## dependencies for UI
@@ -86,6 +86,8 @@ param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/re
 #curve-apps = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 curve-apps = {url = "https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.zip"}
 
+surface-apps = {url = "https://github.com/MiraGeoscience/surface-apps/archive/refs/heads/release/0.1.0.zip"}
+
 #octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/develop.zip"}
@@ -101,8 +103,8 @@ geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/
 simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/develop.zip"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz#sha256="}
 
-simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
-#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
+#simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
+simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip"}
 
 #mira-simpeg = {version = ">=0.19.0.8rc1,<0.19.0.8.post999", source = "pypi", allow-prereleases = true, extras = ["dask"]}
 mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/develop.zip", extras = ["dask"]}
@@ -111,11 +113,11 @@ mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/head
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 #---------------------------------------------------------------------------------
-Pillow = "~10.1.0"  # from geoh5py
+Pillow = "~10.3"  # from geoh5py
 empymod = "~2.2.1"  # from simpeg and geoana
 geoana = "~0.4.0"  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
-mkl = "2022.1.*"  # from simpeg
+mkl = "~2023.2.*"  # from simpeg
 properties = "~0.6.0"  # from simpeg-archive
 pydantic = "~2.5.2"  # from geoapps-utils, octrree-creation-app
 pydiso = "~0.0.3"  # from simpeg
@@ -125,6 +127,7 @@ zarr = "~2.14.2"  # from simpeg[dask], simpeg-drivers
 # force some versions to resolve incompatible resolution between PyPI and Conda
 #-------------------------------------------------------------------------------
 tzdata = "2023.4"  # through pandas from SimPEG (constraint copied from simpeg-drivers)
+tbb = "2021.12.0"
 
 ## about pip dependencies
 # to be specified to work with conda-lock
