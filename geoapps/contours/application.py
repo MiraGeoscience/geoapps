@@ -192,6 +192,7 @@ class ContourValues(PlotSelection2D):
                         )
 
                 param_dict["geoh5"] = new_workspace
+                param_dict["conda_environment"] = "geoapps"
 
                 if self.live_link.value:
                     param_dict["monitoring_directory"] = self.monitoring_directory
