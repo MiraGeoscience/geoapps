@@ -84,9 +84,10 @@ param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/re
 #param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz#sha256="}
 
 #curve-apps = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
-curve-apps = {url = "https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.zip"}
+curve-apps = {url = "https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/GEOPY-1569.zip"}
 
-surface-apps = {url = "https://github.com/MiraGeoscience/surface-apps/archive/refs/heads/release/0.1.0.zip"}
+#surface-apps = {url = "https://github.com/MiraGeoscience/surface-apps/archive/refs/heads/release/0.1.0.zip"}
+surface-apps = {url = "https://github.com/MiraGeoscience/surface-apps/archive/refs/heads/GEOPY-1569.zip"}
 
 #octree-creation-app = {version = "~0.1.0rc2", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
