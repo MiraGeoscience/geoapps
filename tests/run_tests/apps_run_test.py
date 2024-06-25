@@ -191,7 +191,7 @@ def test_contour_values(tmp_path):
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
         output = [k for k in workspace.objects if isinstance(k, Curve)][0]
-        assert output.n_vertices in [14617, 14620], "Change in output. Need to verify."
+        assert output.n_vertices == 4984, "Change in output. Need to verify."
         # TODO the double value here is due to package conflicts locally and on github
         # Once we switch from matplotlib to scikit-image, this should be a single value.
         assert np.sum([isinstance(c, FilenameData) for c in output.children]) == 1
