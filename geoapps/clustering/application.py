@@ -52,7 +52,7 @@ class Clustering(ScatterPlots):
         self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)
         self.scatter_driver = ScatterPlotDriver(self.scatter_params)
 
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        external_stylesheets = None
         server = Flask(__name__)
         self.app = Dash(
             server=server,
