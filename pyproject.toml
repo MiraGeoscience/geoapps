@@ -129,6 +129,7 @@ zarr = "~2.14.2"  # from simpeg[dask], simpeg-drivers
 # force some versions to resolve incompatible resolution between PyPI and Conda
 #-------------------------------------------------------------------------------
 tzdata = "2023.4"  # through pandas from SimPEG (constraint copied from simpeg-drivers)
+tbb = { version = "2021.12.*", source = "pypi" }  # through mkl from SimPEG
 
 ## about pip dependencies
 # to be specified to work with conda-lock
