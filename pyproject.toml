@@ -77,40 +77,40 @@ pyside2 = "~5.15.2.1"  # also in geoapps-utils[dash]
 ## pip dependencies from Git repositories
 #----------------------------------------
 geoh5py = {version = "~0.9.0", source = "pypi", allow-prereleases = true}
-#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.zip#sha256="}
-#geoh5py = {url = "http://localhost:8888/geoh5py.tar.gz#sha256="}
+#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.tar.gz"}
+#geoh5py = {url = "http://localhost:8888/geoh5py.tar.gz"}
 
 param-sweeps = {version = "~0.1.7", source = "pypi", allow-prereleases = true}
-#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.zip#sha256="}
-#param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz#sha256="}
+#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.tar.gz"}
+#param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz"}
 
 octree-creation-app = {version = "~0.1.0", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
-#octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/release/0.1.0.zip#sha256="}
-#octree-creation-app = {url = "http://localhost:8888/octree-creation-app.tar.gz#sha256="}
+#octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/release/0.1.0.tar.gz"}
+#octree-creation-app = {url = "http://localhost:8888/octree-creation-app.tar.gz"}
 
 peak-finder-app = {version = "~0.1.0", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
-#peak-finder-app = {url = "https://github.com/MiraGeoscience/peak-finder-app/archive/refs/heads/release/0.1.0.zip#sha256="}
-#peak-finder-app = {url = "http://localhost:8888/octree-creation-app.tar.gz#sha256="}
+#peak-finder-app = {url = "https://github.com/MiraGeoscience/peak-finder-app/archive/refs/heads/release/0.1.0.tar.gz"}
+#peak-finder-app = {url = "http://localhost:8888/octree-creation-app.tar.gz"}
 
 
 ## geoapps-utils should have extras = ["dash"], but that break resolution by conda-lock
 geoapps-utils = {version = "~0.3.0", source = "pypi", allow-prereleases = true}
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
-#geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/release/0.3.0.zip#sha256="}
-#geoapps-utils = {url = "http://localhost:8888/geoapps-utils.tar.gz#sha256="}
+#geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/release/0.3.0.tar.gz"}
+#geoapps-utils = {url = "http://localhost:8888/geoapps-utils.tar.gz"}
 
 simpeg-drivers = {version = "~0.1.0", source = "pypi", allow-prereleases = true}
-#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.zip#sha256="}
-#simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz#sha256="}
+#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.tar.gz"}
+#simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz"}
 
 simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
-#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip#sha256="}
+#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz"}
 
 mira-simpeg = {version = ">=0.19.0.8,<0.19.0.8.post999", source = "pypi", allow-prereleases = true, extras = ["dask"]}
-#mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/0.19.0.8.zip#sha256=", extras = ["dask"]}
-#mira-simpeg = {url = "http://localhost:8888/mira-simpeg.tar.gz#sha256=", extras = ["dask"]}
+#mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/release/0.19.0.8.tar.gz", extras = ["dask"]}
+#mira-simpeg = {url = "http://localhost:8888/mira-simpeg.tar.gz", extras = ["dask"]}
 
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
@@ -134,8 +134,8 @@ tzdata = "2023.4"  # through pandas from SimPEG (constraint copied from simpeg-d
 # to be specified to work with conda-lock
 # - from PyPI: my_package = { version = "1.2.3", source = "pypi" }
 # - from URL:
-#   - for a tags:   my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.zip#sha256=" }
-#   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.zip#sha256=" }
+#   - for a tags:   my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/tags/VERSION_TAG.tar.gz" }
+#   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.tar.gz" }
 # Note - conda-lock does not support the syntax: my_package = { git = ... }
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 
