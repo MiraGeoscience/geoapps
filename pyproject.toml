@@ -119,7 +119,7 @@ h5py = "^3.2.1"  # from geoh5py
 intel-openmp = {source="pypi", version="2023.2.0"}
 matplotlib = "~3.7.1"  # from simpeg
 mkl = "2023.2.0"  # from simpeg
-numpy = "~1.26"  # also geoh5py, simpeg and geoana
+numpy = {source="pypi", version="~1.26"}  # also geoh5py, simpeg and geoana
 Pillow = "~10.3.0"  # from geoh5py
 pandas = "~2.2.1"  # from SimPEG, also used by targeting-workflow, petro-lingo
 pydantic = "^2.5.2"  # from geoh5py
@@ -127,7 +127,7 @@ pydiso = "~0.0.5"  # from simpeg
 pymatsolver = "~0.2.0"  # from simpeg
 scikit-learn = "~1.4.0"  # from SimPEG, also used by geo-unsup-mapper, petro-lingo
 scikit-image = "~0.20.0"
-scipy = "~1.14"
+scipy = {source="pypi", version="~1.14"}
 tqdm = "^4.66.1"  # from simpeg
 
 # force some versions to resolve incompatible resolution between PyPI and Conda

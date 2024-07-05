@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 6fca17fc3391ed4b1262763149296a957e1cb8328798c6809b81ecaabddc60c6
-    linux-64: 5d5f050e5fef5ec38e9b729b9555cf83dc3facfce91c4acc655e1aa79eb82dc4
+    win-64: 85d1de580387d6a500defdc5825a8856cbc9f845aeecce521f2141ad870e9555
+    linux-64: d6ea90ba44862a4ba19bfc0c6dffa51cde58f1cd74fba592ebb1b2f1672e944c
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -12085,10 +12085,10 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    numpy: '>=1.7'
-    discretize: '*'
     scipy: '>=0.13'
+    numpy: '>=1.7'
     properties: '>=0.3.1b2'
+    discretize: '*'
     pymatsolver: '>=0.1.1'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
@@ -12102,10 +12102,10 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    numpy: '>=1.7'
-    discretize: '*'
     scipy: '>=0.13'
+    numpy: '>=1.7'
     properties: '>=0.3.1b2'
+    discretize: '*'
     pymatsolver: '>=0.1.1'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
