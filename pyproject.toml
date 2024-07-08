@@ -53,8 +53,8 @@ dash = "~2.12"  # also in geoapps-utils[dash]
 dash-daq = "~0.5.0"
 flask = "~3.0.3"  # also in geoapps-utils[dash]
 ipyfilechooser = "~0.6.0"
-ipywidgets = "^7.6.5"
-notebook = "~6.4.0"
+ipywidgets = "^7.8.0"
+notebook = "^7.2.0"
 plotly = "~5.19.0"
 pyqtwebengine = "~5.15.2"  # also in geoapps-utils[dash]
 pyside2 = "~5.15.2.1"  # also in geoapps-utils[dash]
@@ -94,7 +94,7 @@ geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", re
 
 #simpeg-drivers = {version = "~0.1.0b4", source = "pypi", allow-prereleases = true}
 #simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/develop.zip"}
-simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "GEOPY-1569"}
+simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "GEOPY-1674"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz#sha256="}
 
 #simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
@@ -108,9 +108,9 @@ mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "deve
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 #---------------------------------------------------------------------------------
-dask = {version = "2022.10.*", extras = ["distributed"]}  # also in from simpeg[dask], simpeg-drivers
+dask = {version = "2024.6.*", extras = ["distributed"]}  # also in from simpeg[dask], simpeg-drivers
 discretize = "~0.10.0"  # also in simpeg, simpeg-drivers, octrree-creation-app
-distributed = "2022.10.*"  # because conda-lock doesn't take dask extras into account
+distributed = "2024.6.*"  # because conda-lock doesn't take dask extras into account
 fiona = "~1.9.2"
 fsspec = "2022.*"  # from simpeg[dask]
 gdal = "~3.6.3"
