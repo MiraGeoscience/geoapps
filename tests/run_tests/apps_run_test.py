@@ -160,7 +160,7 @@ def test_coordinate_transformation(tmp_path: Path):
 
 
 def test_geoh5_as_contour_argument(tmp_path):
-    geoh5 = Workspace(tmp_path / "test.geoh5")
+    geoh5 = Workspace.create(tmp_path / "test.geoh5")
     ContourValues(geoh5=geoh5, plot_result=False)
 
 

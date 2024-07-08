@@ -6,7 +6,7 @@ channels:
   - conda-forge
 dependencies:
   - annotated-types=0.7.0=pyhd8ed1ab_0
-  - ansi2html=1.9.1=py310h5588dad_0
+  - ansi2html=1.9.2=py310h5588dad_0
   - aom=3.7.1=h63175ca_0
   - argon2-cffi=23.1.0=pyhd8ed1ab_0
   - argon2-cffi-bindings=21.2.0=py310h8d17308_4
@@ -62,7 +62,7 @@ dependencies:
   - fontconfig=2.14.2=hbde0cde_0
   - fonts-conda-ecosystem=1=0
   - fonts-conda-forge=1=0
-  - fonttools=4.53.0=py310ha8f682b_0
+  - fonttools=4.53.1=py310ha8f682b_0
   - freetype=2.12.1=hdaf720e_2
   - freexl=2.0.0=h8276f4a_0
   - fsspec=2022.11.0=pyhd8ed1ab_0
@@ -94,7 +94,7 @@ dependencies:
   - ipykernel=6.29.5=pyh4bbf305_0
   - ipython=8.21.0=pyh7428d3b_0
   - ipython_genutils=0.2.0=pyhd8ed1ab_1
-  - ipywidgets=7.8.0=pyhd8ed1ab_0
+  - ipywidgets=7.8.2=pyhd8ed1ab_0
   - itsdangerous=2.2.0=pyhd8ed1ab_0
   - jedi=0.19.1=pyhd8ed1ab_0
   - jinja2=3.1.4=pyhd8ed1ab_0
@@ -104,7 +104,7 @@ dependencies:
   - jupyter_client=7.3.4=pyhd8ed1ab_0
   - jupyter_core=5.7.2=py310h5588dad_0
   - jupyterlab_pygments=0.3.0=pyhd8ed1ab_1
-  - jupyterlab_widgets=1.1.7=pyhd8ed1ab_0
+  - jupyterlab_widgets=1.1.8=pyhd8ed1ab_0
   - jxrlib=1.1=hcfcfb64_3
   - kealib=1.5.3=h6c43f9b_1
   - kiwisolver=1.4.5=py310h232114e_1
@@ -219,8 +219,8 @@ dependencies:
   - pthreads-win32=2.9.1=hfa6e2cd_3
   - pure_eval=0.2.2=pyhd8ed1ab_0
   - pycparser=2.22=pyhd8ed1ab_0
-  - pydantic=2.8.0=pyhd8ed1ab_0
-  - pydantic-core=2.20.0=py310hc226416_0
+  - pydantic=2.8.2=pyhd8ed1ab_0
+  - pydantic-core=2.20.1=py310hc226416_0
   - pydiso=0.0.5=py310hafb2880_1
   - pymatsolver=0.2.0=ha770c72_3
   - pymatsolver-base=0.2.0=pyh44b312d_3
@@ -251,7 +251,7 @@ dependencies:
   - rpds-py=0.18.1=py310hc226416_0
   - scikit-image=0.20.0=py310h1c4a608_1
   - scikit-learn=1.4.2=py310hf2a6c47_1
-  - scipy=1.14.0=py310h46043a1_0
+  - scipy=1.14.0=py310h46043a1_1
   - send2trash=1.8.3=pyh5737063_0
   - setuptools=70.1.1=pyhd8ed1ab_0
   - shapely=2.0.2=py310h839b4a8_0
@@ -265,7 +265,7 @@ dependencies:
   - svt-av1=1.7.0=h63175ca_0
   - tbb=2021.12.0=hc790b64_2
   - tblib=3.0.0=pyhd8ed1ab_0
-  - tenacity=8.4.2=pyhd8ed1ab_0
+  - tenacity=8.5.0=pyhd8ed1ab_0
   - terminado=0.18.1=pyh5737063_0
   - threadpoolctl=3.5.0=pyhc1e730c_0
   - tifffile=2024.7.2=pyhd8ed1ab_0
@@ -291,7 +291,7 @@ dependencies:
   - webencodings=0.5.1=pyhd8ed1ab_2
   - werkzeug=3.0.3=pyhd8ed1ab_0
   - wheel=0.43.0=pyhd8ed1ab_1
-  - widgetsnbextension=3.6.6=pyhd8ed1ab_0
+  - widgetsnbextension=3.6.7=pyhd8ed1ab_0
   - win_inet_pton=1.1.0=pyhd8ed1ab_6
   - winpty=0.4.3=4
   - xerces-c=3.2.5=h63175ca_0
