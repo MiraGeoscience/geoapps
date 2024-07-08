@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 6858f7273513637d2ad0f805485271f5d5b429e89a97cac726ccaefaf27d81cb
-    linux-64: 8d218de76290c11b09b2c3177e16b1c28fd77e34f86d092dba38e41942334915
+    win-64: 9a736a3c4ac16ad1a0e9ac44cd1058ad98cefa9840c93991b95e51b1dcb2c369
+    linux-64: 0550b9081c6b67473eff0ff8e1a600c9d0514d62ec40abf91e62e85e7db4162f
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -4645,11 +4645,11 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    mkl: '>=2023.2.0,<2024.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libblas-3.9.0-20_linux64_mkl.conda
+    libopenblas: '>=0.3.27,<1.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libblas-3.9.0-22_linux64_openblas.conda
   hash:
-    md5: 8bf521f6007b0b0eb91515a1165b5d85
-    sha256: 9e5f27fca79223a5d38ccdf4c468e798c3684ba01bdb6b4b44e61f2103a298eb
+    md5: 1a2a0cd3153464fee6646f3dd6dad9b8
+    sha256: 082b8ac20d43a7bbcdc28b3b1cd40e4df3a8b5daf0a2d23d68953a44d2d12c1b
   category: main
   optional: false
 - name: libblas
@@ -4787,10 +4787,10 @@ package:
   platform: linux-64
   dependencies:
     libblas: 3.9.0
-  url: https://conda.anaconda.org/conda-forge/linux-64/libcblas-3.9.0-20_linux64_mkl.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/libcblas-3.9.0-22_linux64_openblas.conda
   hash:
-    md5: 7a2972758a03adc92d856072c71c9170
-    sha256: 841b4d44e20e5207f4a74ca98176629ead5ba590384ed6b0fe3c8600248c9fef
+    md5: 4b31699e0ec5de64d5896e580389c9a1
+    sha256: da1b2faa017663c8f5555c1c5518e96ac4cd8e0be2a673c1c9e2cb8507c8fe46
   category: main
   optional: false
 - name: libcblas
@@ -5610,10 +5610,10 @@ package:
   platform: linux-64
   dependencies:
     libblas: 3.9.0
-  url: https://conda.anaconda.org/conda-forge/linux-64/liblapack-3.9.0-20_linux64_mkl.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/liblapack-3.9.0-22_linux64_openblas.conda
   hash:
-    md5: 4db0cd03efcdab535f6f066aca4cddbb
-    sha256: 21b4324dd65815f6b5a83c15f0b9a201434d0aa55eeecc37efce7ee70bbbf482
+    md5: b083767b6c877e24ee597d93b87ab838
+    sha256: db246341d42f9100d45adeb1a7ba8b1ef5b51ceb9056fd643e98046a3259fde6
   category: main
   optional: false
 - name: liblapack
@@ -5747,6 +5747,20 @@ package:
   hash:
     md5: 44a4d173e62c5ed6d715f18ae7c46b7a
     sha256: fcffdf32c620569738b85c98ddd25e1c84c8add80cd732743d90d469b7b532bb
+  category: main
+  optional: false
+- name: libopenblas
+  version: 0.3.27
+  manager: conda
+  platform: linux-64
+  dependencies:
+    libgcc-ng: '>=12'
+    libgfortran-ng: ''
+    libgfortran5: '>=12.3.0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libopenblas-0.3.27-pthreads_hac2b453_1.conda
+  hash:
+    md5: ae05ece66d3924ac3d48b4aa3fa96cec
+    sha256: 714cb82d7c4620ea2635a92d3df263ab841676c9b183d0c01992767bb2451c39
   category: main
   optional: false
 - name: libopus
@@ -9576,21 +9590,22 @@ package:
   category: main
   optional: false
 - name: rpds-py
-  version: 0.18.1
+  version: 0.19.0
   manager: conda
   platform: linux-64
   dependencies:
+    __glibc: '>=2.17,<3.0.a0'
     libgcc-ng: '>=12'
     python: '>=3.10,<3.11.0a0'
     python_abi: 3.10.*
-  url: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.18.1-py310he421c4c_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-0.19.0-py310h42e942d_0.conda
   hash:
-    md5: f12c9d4fccaae5cfc7f22adb0a71506f
-    sha256: b67df53e705727af50ddabafe2e97d827e5c60400359c979e8215f4fc0589ad7
+    md5: f7d048860e7ab5ab18c733d9ce7ecbd0
+    sha256: 9195cb82a745afc7a51b2ca32a2541fc4766c20bec3036000d52b25ebe93e5ed
   category: main
   optional: false
 - name: rpds-py
-  version: 0.18.1
+  version: 0.19.0
   manager: conda
   platform: win-64
   dependencies:
@@ -9599,10 +9614,10 @@ package:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.18.1-py310hc226416_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/rpds-py-0.19.0-py310hc226416_0.conda
   hash:
-    md5: cd1b4ba9096e55bc26dd46d2d1e27370
-    sha256: 2f2b04233ac47bd701578ac7a51788c9d43861c1975e0a73cd6e83e15c6d351f
+    md5: ff2d31d2d675feee0ab7d6f5360f9424
+    sha256: 1dbca9a739602ae19765ca6aacf06bfa2c2d1717173966b81c88f5c7c5fafc37
   category: main
   optional: false
 - name: scikit-image
@@ -12839,10 +12854,10 @@ package:
   platform: linux-64
   dependencies:
     discretize: '*'
-    numpy: '>=1.7'
-    pymatsolver: '>=0.1.1'
-    properties: '>=0.3.1b2'
     scipy: '>=0.13'
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
@@ -12856,10 +12871,10 @@ package:
   platform: win-64
   dependencies:
     discretize: '*'
-    numpy: '>=1.7'
-    pymatsolver: '>=0.1.1'
-    properties: '>=0.3.1b2'
     scipy: '>=0.13'
+    properties: '>=0.3.1b2'
+    pymatsolver: '>=0.1.1'
+    numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
@@ -12884,7 +12899,6 @@ package:
     intel-openmp: 2023.2.0
     matplotlib: '>=3.8.4,<3.9.0'
     mira-simpeg: 0.21.2.1a1
-    mkl: 2023.2.0
     numpy: '>=1.26.0,<1.27.0'
     octree-creation-app: 0.2.0a1
     pandas: '>=2.2.1,<2.3.0'
@@ -12898,13 +12912,13 @@ package:
     tqdm: '>=4.66.1,<5.0.0'
     tzdata: '>=2023.4.0,<2023.5.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@ea01936816ed06f570ab05b1b8529462bfffa324
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
   hash:
-    sha256: ea01936816ed06f570ab05b1b8529462bfffa324
+    sha256: f4ec3346176ecda120a327c255bb14fd8c72e488
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@ea01936816ed06f570ab05b1b8529462bfffa324
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
   optional: false
 - name: simpeg-drivers
   version: 0.2.0a1
@@ -12923,7 +12937,6 @@ package:
     intel-openmp: 2023.2.0
     matplotlib: '>=3.8.4,<3.9.0'
     mira-simpeg: 0.21.2.1a1
-    mkl: 2023.2.0
     numpy: '>=1.26.0,<1.27.0'
     octree-creation-app: 0.2.0a1
     pandas: '>=2.2.1,<2.3.0'
@@ -12937,13 +12950,13 @@ package:
     tqdm: '>=4.66.1,<5.0.0'
     tzdata: '>=2023.4.0,<2023.5.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@ea01936816ed06f570ab05b1b8529462bfffa324
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
   hash:
-    sha256: ea01936816ed06f570ab05b1b8529462bfffa324
+    sha256: f4ec3346176ecda120a327c255bb14fd8c72e488
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@ea01936816ed06f570ab05b1b8529462bfffa324
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
   optional: false
 - name: surface-apps
   version: 0.1.0a1

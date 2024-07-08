@@ -118,7 +118,6 @@ geoana = "~0.5.0"  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
 intel-openmp = {source="pypi", version="2023.2.0"}
 matplotlib = "~3.7.1"  # from simpeg
-mkl = "2023.2.0"  # from simpeg
 numpy = {source="pypi", version="~1.26"}  # also geoh5py, simpeg and geoana
 Pillow = "~10.3.0"  # from geoh5py
 pandas = "~2.2.1"  # from SimPEG, also used by targeting-workflow, petro-lingo
@@ -146,7 +145,6 @@ tzdata = "2023.4.*"  # through pandas from SimPEG
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 
 [tool.conda-lock.dependencies]
-libblas = "*=*mkl"  # because simpeg already brings in the MKL
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
