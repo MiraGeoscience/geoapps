@@ -26,7 +26,7 @@ from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
-from notebook import notebookapp
+from jupyter_server import serverapp
 from plotly import graph_objects as go
 from simpeg_drivers import InversionBaseParams
 
@@ -473,9 +473,10 @@ class InversionApp(BaseDashApplication):
         """
         # Get a notebook port that is running from the index page.
         nb_port = None
-        servers = list(notebookapp.list_running_servers())
+        servers = list(serverapp.list_running_servers())
+        print(servers)
         for s in servers:
-            if s["notebook_dir"] == str(Path("../../../").resolve()):
+            if s["root_dir"] == str(Path("../../../").resolve()):
                 nb_port = s["port"]
                 break
 

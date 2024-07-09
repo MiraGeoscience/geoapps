@@ -13,7 +13,7 @@ import importlib.util
 import logging
 from pathlib import Path
 
-from notebook.notebookapp import main as notebook_main
+from notebook.app import main as notebook_main
 
 
 def main():
