@@ -3634,7 +3634,7 @@ package:
   category: main
   optional: false
 - name: jsonschema
-  version: 4.22.0
+  version: 4.23.0
   manager: conda
   platform: linux-64
   dependencies:
@@ -3645,14 +3645,14 @@ package:
     python: '>=3.8'
     referencing: '>=0.28.4'
     rpds-py: '>=0.7.1'
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.22.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.23.0-pyhd8ed1ab_0.conda
   hash:
-    md5: b9661a4b1200d6bc7d8a4cdafdc91468
-    sha256: 57a466e8c42635d8e930fa065dc6e461f4215aa259ab03873eacb03ddaeefc8a
+    md5: da304c192ad59975202859b367d0f6a2
+    sha256: 7d0c4c0346b26be9f220682b7c5c0d84606d48c6dbc36fc238e4452dda733aff
   category: main
   optional: false
 - name: jsonschema
-  version: 4.22.0
+  version: 4.23.0
   manager: conda
   platform: win-64
   dependencies:
@@ -3663,10 +3663,10 @@ package:
     jsonschema-specifications: '>=2023.03.6'
     referencing: '>=0.28.4'
     rpds-py: '>=0.7.1'
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.22.0-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-4.23.0-pyhd8ed1ab_0.conda
   hash:
-    md5: b9661a4b1200d6bc7d8a4cdafdc91468
-    sha256: 57a466e8c42635d8e930fa065dc6e461f4215aa259ab03873eacb03ddaeefc8a
+    md5: da304c192ad59975202859b367d0f6a2
+    sha256: 7d0c4c0346b26be9f220682b7c5c0d84606d48c6dbc36fc238e4452dda733aff
   category: main
   optional: false
 - name: jsonschema-specifications
@@ -3698,7 +3698,7 @@ package:
   category: main
   optional: false
 - name: jsonschema-with-format-nongpl
-  version: 4.22.0
+  version: 4.23.0
   manager: conda
   platform: linux-64
   dependencies:
@@ -3706,37 +3706,35 @@ package:
     idna: ''
     isoduration: ''
     jsonpointer: '>1.13'
-    jsonschema: '>=4.22.0,<4.22.1.0a0'
-    python: ''
+    jsonschema: '>=4.23.0,<4.23.1.0a0'
     rfc3339-validator: ''
     rfc3986-validator: '>0.1.0'
     uri-template: ''
-    webcolors: '>=1.11'
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-with-format-nongpl-4.22.0-pyhd8ed1ab_0.conda
+    webcolors: '>=24.6.0'
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-with-format-nongpl-4.23.0-hd8ed1ab_0.conda
   hash:
-    md5: 32ab666927ee17b9468c2c72bbd7ba1b
-    sha256: 3c98d791bebd477597fe083b3cec35132ac974c61ba1e481dc6c29fac78b419d
+    md5: 16b37612b3a2fd77f409329e213b530c
+    sha256: 007a0a506a0d1805b099629cb0ee743ad0afe7d9749e57339f32c168119e0139
   category: main
   optional: false
 - name: jsonschema-with-format-nongpl
-  version: 4.22.0
+  version: 4.23.0
   manager: conda
   platform: win-64
   dependencies:
-    python: ''
     idna: ''
     rfc3339-validator: ''
     uri-template: ''
     fqdn: ''
     isoduration: ''
     jsonpointer: '>1.13'
-    webcolors: '>=1.11'
     rfc3986-validator: '>0.1.0'
-    jsonschema: '>=4.22.0,<4.22.1.0a0'
-  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-with-format-nongpl-4.22.0-pyhd8ed1ab_0.conda
+    jsonschema: '>=4.23.0,<4.23.1.0a0'
+    webcolors: '>=24.6.0'
+  url: https://conda.anaconda.org/conda-forge/noarch/jsonschema-with-format-nongpl-4.23.0-hd8ed1ab_0.conda
   hash:
-    md5: 32ab666927ee17b9468c2c72bbd7ba1b
-    sha256: 3c98d791bebd477597fe083b3cec35132ac974c61ba1e481dc6c29fac78b419d
+    md5: 16b37612b3a2fd77f409329e213b530c
+    sha256: 007a0a506a0d1805b099629cb0ee743ad0afe7d9749e57339f32c168119e0139
   category: main
   optional: false
 - name: jupyter-book
@@ -3978,28 +3976,28 @@ package:
   platform: linux-64
   dependencies:
     anyio: '>=3.1.0'
-    argon2-cffi: ''
-    jinja2: ''
+    argon2-cffi: '>=21.1'
+    jinja2: '>=3.0.3'
     jupyter_client: '>=7.4.4'
     jupyter_core: '>=4.12,!=5.0.*'
     jupyter_events: '>=0.9.0'
-    jupyter_server_terminals: ''
+    jupyter_server_terminals: '>=0.4.4'
     nbconvert-core: '>=6.4.4'
     nbformat: '>=5.3.0'
-    overrides: ''
-    packaging: ''
-    prometheus_client: ''
+    overrides: '>=5.0'
+    packaging: '>=22.0'
+    prometheus_client: '>=0.9'
     python: '>=3.8'
     pyzmq: '>=24'
     send2trash: '>=1.8.2'
     terminado: '>=0.8.3'
     tornado: '>=6.2.0'
     traitlets: '>=5.6.0'
-    websocket-client: ''
-  url: https://conda.anaconda.org/conda-forge/noarch/jupyter_server-2.14.1-pyhd8ed1ab_0.conda
+    websocket-client: '>=1.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/jupyter_server-2.14.1-pyhd8ed1ab_1.conda
   hash:
-    md5: 174af03c6e6038edd32021a48aa003c4
-    sha256: 58628ef004ba0f754cc01b33199b6aefd94f5aed7fbf7afd2b796d8b5c4ef22c
+    md5: 74321d43533c8651d7ae758b90242cb9
+    sha256: 3b07e38bb67c022b8e40c8e73d6bb30f3768516f746cc9159233bc861e44fbef
   category: main
   optional: false
 - name: jupyter_server
@@ -4007,29 +4005,29 @@ package:
   manager: conda
   platform: win-64
   dependencies:
-    packaging: ''
-    jinja2: ''
-    prometheus_client: ''
-    websocket-client: ''
-    argon2-cffi: ''
-    overrides: ''
-    jupyter_server_terminals: ''
     python: '>=3.8'
     terminado: '>=0.8.3'
     jupyter_core: '>=4.12,!=5.0.*'
     tornado: '>=6.2.0'
+    jinja2: '>=3.0.3'
     pyzmq: '>=24'
     nbconvert-core: '>=6.4.4'
+    packaging: '>=22.0'
     jupyter_client: '>=7.4.4'
     nbformat: '>=5.3.0'
     traitlets: '>=5.6.0'
     anyio: '>=3.1.0'
     send2trash: '>=1.8.2'
     jupyter_events: '>=0.9.0'
-  url: https://conda.anaconda.org/conda-forge/noarch/jupyter_server-2.14.1-pyhd8ed1ab_0.conda
+    argon2-cffi: '>=21.1'
+    jupyter_server_terminals: '>=0.4.4'
+    overrides: '>=5.0'
+    prometheus_client: '>=0.9'
+    websocket-client: '>=1.7'
+  url: https://conda.anaconda.org/conda-forge/noarch/jupyter_server-2.14.1-pyhd8ed1ab_1.conda
   hash:
-    md5: 174af03c6e6038edd32021a48aa003c4
-    sha256: 58628ef004ba0f754cc01b33199b6aefd94f5aed7fbf7afd2b796d8b5c4ef22c
+    md5: 74321d43533c8651d7ae758b90242cb9
+    sha256: 3b07e38bb67c022b8e40c8e73d6bb30f3768516f746cc9159233bc861e44fbef
   category: main
   optional: false
 - name: jupyter_server_terminals
@@ -12854,10 +12852,10 @@ package:
   platform: linux-64
   dependencies:
     discretize: '*'
-    scipy: '>=0.13'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
     numpy: '>=1.7'
+    scipy: '>=0.13'
+    pymatsolver: '>=0.1.1'
+    properties: '>=0.3.1b2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
@@ -12871,10 +12869,10 @@ package:
   platform: win-64
   dependencies:
     discretize: '*'
-    scipy: '>=0.13'
-    properties: '>=0.3.1b2'
-    pymatsolver: '>=0.1.1'
     numpy: '>=1.7'
+    scipy: '>=0.13'
+    pymatsolver: '>=0.1.1'
+    properties: '>=0.3.1b2'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
@@ -12896,7 +12894,6 @@ package:
     geoapps-utils: 0.4.0a1
     geoh5py: 0.10.0a1
     h5py: '>=3.2.1,<4.0.0'
-    intel-openmp: 2023.2.0
     matplotlib: '>=3.8.4,<3.9.0'
     mira-simpeg: 0.21.2.1a1
     numpy: '>=1.26.0,<1.27.0'
@@ -12912,13 +12909,13 @@ package:
     tqdm: '>=4.66.1,<5.0.0'
     tzdata: '>=2023.4.0,<2023.5.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
   hash:
-    sha256: f4ec3346176ecda120a327c255bb14fd8c72e488
+    sha256: f538e125f504032b37650f2345bd165a565fbaae
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
   optional: false
 - name: simpeg-drivers
   version: 0.2.0a1
@@ -12934,7 +12931,6 @@ package:
     geoapps-utils: 0.4.0a1
     geoh5py: 0.10.0a1
     h5py: '>=3.2.1,<4.0.0'
-    intel-openmp: 2023.2.0
     matplotlib: '>=3.8.4,<3.9.0'
     mira-simpeg: 0.21.2.1a1
     numpy: '>=1.26.0,<1.27.0'
@@ -12950,13 +12946,13 @@ package:
     tqdm: '>=4.66.1,<5.0.0'
     tzdata: '>=2023.4.0,<2023.5.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
   hash:
-    sha256: f4ec3346176ecda120a327c255bb14fd8c72e488
+    sha256: f538e125f504032b37650f2345bd165a565fbaae
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
   optional: false
 - name: surface-apps
   version: 0.1.0a1

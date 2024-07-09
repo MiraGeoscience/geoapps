@@ -119,14 +119,14 @@ dependencies:
   - json-c=0.17=h7ab15ed_0
   - json5=0.9.25=pyhd8ed1ab_0
   - jsonpointer=3.0.0=py310hff52083_0
-  - jsonschema=4.22.0=pyhd8ed1ab_0
+  - jsonschema=4.23.0=pyhd8ed1ab_0
   - jsonschema-specifications=2023.12.1=pyhd8ed1ab_0
-  - jsonschema-with-format-nongpl=4.22.0=pyhd8ed1ab_0
+  - jsonschema-with-format-nongpl=4.23.0=hd8ed1ab_0
   - jupyter-lsp=2.2.5=pyhd8ed1ab_0
   - jupyter_client=8.6.2=pyhd8ed1ab_0
   - jupyter_core=5.7.2=py310hff52083_0
   - jupyter_events=0.10.0=pyhd8ed1ab_0
-  - jupyter_server=2.14.1=pyhd8ed1ab_0
+  - jupyter_server=2.14.1=pyhd8ed1ab_1
   - jupyter_server_terminals=0.5.3=pyhd8ed1ab_0
   - jupyterlab=4.2.3=pyhd8ed1ab_0
   - jupyterlab_pygments=0.3.0=pyhd8ed1ab_1
@@ -411,7 +411,7 @@ dependencies:
       - properties === 0.6.1
       - scooby === 0.10.0
       - simpeg-archive @ https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
-      - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers@f4ec3346176ecda120a327c255bb14fd8c72e488
+      - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
       - surface-apps @ git+https://github.com/MiraGeoscience/surface-apps@4dac9d9d9b234b0397a1f2e9ad194d4a19caa0a2
       - vectormath === 0.2.2
       - zarr === 2.14.2
