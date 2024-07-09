@@ -116,9 +116,9 @@ fsspec = "2022.*"  # from simpeg[dask]
 gdal = "~3.6.3"
 geoana = "~0.5.0"  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
-intel-openmp = {source="pypi", version="2023.2.0"}
 matplotlib = "~3.7.1"  # from simpeg
-numpy = {source="pypi", version="~1.26"}  # also geoh5py, simpeg and geoana
+mkl = "2023.2.*"  # from simpeg
+numpy = "~1.26"  # also geoh5py, simpeg and geoana
 Pillow = "~10.3.0"  # from geoh5py
 pandas = "~2.2.1"  # from SimPEG, also used by targeting-workflow, petro-lingo
 pydantic = "^2.5.2"  # from geoh5py
@@ -126,13 +126,7 @@ pydiso = "~0.0.5"  # from simpeg
 pymatsolver = "~0.2.0"  # from simpeg
 scikit-learn = "~1.4.0"  # from SimPEG, also used by geo-unsup-mapper, petro-lingo
 scikit-image = "~0.20.0"
-scipy = {source="pypi", version="~1.14"}
-tqdm = "^4.66.1"  # from simpeg
-
-# force some versions to resolve incompatible resolution between PyPI and Conda
-#-------------------------------------------------------------------------------
-tbb = "2021.12.*"  # through mkl from SimPEG
-tzdata = "2023.4.*"  # through pandas from SimPEG
+scipy = "~1.14"
 
 
 ## about pip dependencies
@@ -145,6 +139,7 @@ tzdata = "2023.4.*"  # through pandas from SimPEG
 #        while poetry2conda supports only { git = "...", tag = "..." }, and not { url = ... }
 
 [tool.conda-lock.dependencies]
+
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"

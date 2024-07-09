@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 9a736a3c4ac16ad1a0e9ac44cd1058ad98cefa9840c93991b95e51b1dcb2c369
-    linux-64: 0550b9081c6b67473eff0ff8e1a600c9d0514d62ec40abf91e62e85e7db4162f
+    win-64: b3c0672c19af89bf15fa189981d6f161b9c1d7eea477fc7e28f730b92ccad3f9
+    linux-64: e9887facecb5983da9b6fa5723cd5d80a69c859337b455355b8631c7132a9d31
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -1144,8 +1144,8 @@ package:
   hash:
     md5: 3faab06a954c2a04039983f2c4a50d99
     sha256: 2c1b2e9755ce3102bca8d69e8f26e4f087ece73f50418186aee7c74bef8e1698
-  category: main
-  optional: false
+  category: dev
+  optional: true
 - name: colorama
   version: 0.4.6
   manager: conda
@@ -1875,8 +1875,8 @@ package:
     python: '>=3.8'
     click: '>=8.1.3'
     jinja2: '>=3.1.2'
-    importlib-metadata: '>=3.6.0'
     itsdangerous: '>=2.1.2'
+    importlib-metadata: '>=3.6.0'
     blinker: '>=1.6.2'
     werkzeug: '>=3.0.0'
   url: https://conda.anaconda.org/conda-forge/noarch/flask-3.0.3-pyhd8ed1ab_0.conda
@@ -9007,27 +9007,27 @@ package:
   category: main
   optional: false
 - name: python-tzdata
-  version: '2023.4'
+  version: '2024.1'
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/python-tzdata-2023.4-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/python-tzdata-2024.1-pyhd8ed1ab_0.conda
   hash:
-    md5: c79cacf8a06a51552fc651652f170208
-    sha256: d2381037bf362c78654a8ece0e0f54715e09113448ddd7ed837f688536cbf176
+    md5: 98206ea9954216ee7540f0c773f2104d
+    sha256: 9da9a849d53705dee450b83507df1ca8ffea5f83bd21a215202221f1c492f8ad
   category: main
   optional: false
 - name: python-tzdata
-  version: '2023.4'
+  version: '2024.1'
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/python-tzdata-2023.4-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/python-tzdata-2024.1-pyhd8ed1ab_0.conda
   hash:
-    md5: c79cacf8a06a51552fc651652f170208
-    sha256: d2381037bf362c78654a8ece0e0f54715e09113448ddd7ed837f688536cbf176
+    md5: 98206ea9954216ee7540f0c773f2104d
+    sha256: 9da9a849d53705dee450b83507df1ca8ffea5f83bd21a215202221f1c492f8ad
   category: main
   optional: false
 - name: python_abi
@@ -11071,32 +11071,6 @@ package:
     sha256: 3835993b73c51cc2182e6db7e02ff8e789a15a6c99d58b3b5201fd9b2d7819df
   category: main
   optional: false
-- name: tqdm
-  version: 4.66.4
-  manager: conda
-  platform: linux-64
-  dependencies:
-    colorama: ''
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/tqdm-4.66.4-pyhd8ed1ab_0.conda
-  hash:
-    md5: e74cd796e70a4261f86699ee0a3a7a24
-    sha256: 75342f40a69e434a1a23003c3e254a95dca695fb14955bc32f1819cd503964b2
-  category: main
-  optional: false
-- name: tqdm
-  version: 4.66.4
-  manager: conda
-  platform: win-64
-  dependencies:
-    colorama: ''
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/tqdm-4.66.4-pyhd8ed1ab_0.conda
-  hash:
-    md5: e74cd796e70a4261f86699ee0a3a7a24
-    sha256: 75342f40a69e434a1a23003c3e254a95dca695fb14955bc32f1819cd503964b2
-  category: main
-  optional: false
 - name: traitlets
   version: 5.14.3
   manager: conda
@@ -12568,16 +12542,6 @@ package:
     type: url
     url: git+https://github.com/MiraGeoscience/geoh5py.git@21ce81d279c206ce0a279377168ce50e0a35d3d2
   optional: false
-- name: intel-openmp
-  version: 2023.2.0
-  manager: pip
-  platform: linux-64
-  dependencies: {}
-  url: https://files.pythonhosted.org/packages/e2/bb/00ce7622dfc2d500f8a8489d13e07b93ac8d5a44cc748905bb7f494e591e/intel_openmp-2023.2.0-py2.py3-none-manylinux1_x86_64.whl
-  hash:
-    sha256: 5a604c4c9413640074b22bd444dbf27979ebb9c4fd0344a81f003f392171e56e
-  category: main
-  optional: false
 - name: llvmlite
   version: 0.43.0
   manager: pip
@@ -12596,44 +12560,6 @@ package:
   url: https://files.pythonhosted.org/packages/f2/26/b5478037c453554a61625ef1125f7e12bb1429ae11c6376f47beba9b0179/llvmlite-0.43.0-cp310-cp310-win_amd64.whl
   hash:
     sha256: 14f0e4bf2fd2d9a75a3534111e8ebeb08eda2f33e9bdd6dfa13282afacdde0ed
-  category: main
-  optional: false
-- name: matplotlib
-  version: 3.8.4
-  manager: pip
-  platform: linux-64
-  dependencies:
-    contourpy: '>=1.0.1'
-    cycler: '>=0.10'
-    fonttools: '>=4.22.0'
-    kiwisolver: '>=1.3.1'
-    numpy: '>=1.21'
-    packaging: '>=20.0'
-    pillow: '>=8'
-    pyparsing: '>=2.3.1'
-    python-dateutil: '>=2.7'
-  url: https://files.pythonhosted.org/packages/d6/07/061f97211f942101070a46fecd813a6b1bd83590ed7b07c473cabd707fe7/matplotlib-3.8.4-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-  hash:
-    sha256: ecd79298550cba13a43c340581a3ec9c707bd895a6a061a78fa2524660482fc0
-  category: main
-  optional: false
-- name: matplotlib
-  version: 3.8.4
-  manager: pip
-  platform: win-64
-  dependencies:
-    contourpy: '>=1.0.1'
-    cycler: '>=0.10'
-    fonttools: '>=4.22.0'
-    kiwisolver: '>=1.3.1'
-    numpy: '>=1.21'
-    packaging: '>=20.0'
-    pillow: '>=8'
-    pyparsing: '>=2.3.1'
-    python-dateutil: '>=2.7'
-  url: https://files.pythonhosted.org/packages/62/5a/a5108ae3db37f35f8a2be8a57d62da327af239214c9661464ce09ee32d7d/matplotlib-3.8.4-cp310-cp310-win_amd64.whl
-  hash:
-    sha256: ac24233e8f2939ac4fd2919eed1e9c0871eac8057666070e94cbf0b33dd9c338
   category: main
   optional: false
 - name: mira-simpeg
@@ -12851,11 +12777,11 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    discretize: '*'
-    numpy: '>=1.7'
-    scipy: '>=0.13'
     pymatsolver: '>=0.1.1'
     properties: '>=0.3.1b2'
+    discretize: '*'
+    scipy: '>=0.13'
+    numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
@@ -12868,11 +12794,11 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    discretize: '*'
-    numpy: '>=1.7'
-    scipy: '>=0.13'
     pymatsolver: '>=0.1.1'
     properties: '>=0.3.1b2'
+    discretize: '*'
+    scipy: '>=0.13'
+    numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
   category: main
@@ -12885,74 +12811,48 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pillow: '>=10.3.0,<10.4.0'
     dask: '>=2024.6.0,<2024.7.0'
     discretize: '>=0.10.0,<0.11.0'
     distributed: '>=2024.6.0,<2024.7.0'
-    fsspec: '>=2022.0.0,<2023.0.0'
-    geoana: '>=0.5.0,<0.6.0'
     geoapps-utils: 0.4.0a1
     geoh5py: 0.10.0a1
-    h5py: '>=3.2.1,<4.0.0'
-    matplotlib: '>=3.8.4,<3.9.0'
     mira-simpeg: 0.21.2.1a1
     numpy: '>=1.26.0,<1.27.0'
     octree-creation-app: 0.2.0a1
-    pandas: '>=2.2.1,<2.3.0'
     param-sweeps: 0.1.8a1
-    pydantic: '>=2.5.2,<3.0.0'
-    pydiso: '>=0.0.5,<0.1.0'
-    pymatsolver: '>=0.2.0,<0.3.0'
-    scikit-learn: '>=1.4.0,<1.5.0'
     scipy: '>=1.14.0,<1.15.0'
-    tbb: '>=2021.12.0,<2021.13.0'
-    tqdm: '>=4.66.1,<5.0.0'
-    tzdata: '>=2023.4.0,<2023.5.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
   hash:
-    sha256: f538e125f504032b37650f2345bd165a565fbaae
+    sha256: a399a3c4cddbdecf64cd99a39de8e86479585c92
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
   optional: false
 - name: simpeg-drivers
   version: 0.2.0a1
   manager: pip
   platform: win-64
   dependencies:
-    pillow: '>=10.3.0,<10.4.0'
     dask: '>=2024.6.0,<2024.7.0'
     discretize: '>=0.10.0,<0.11.0'
     distributed: '>=2024.6.0,<2024.7.0'
-    fsspec: '>=2022.0.0,<2023.0.0'
-    geoana: '>=0.5.0,<0.6.0'
     geoapps-utils: 0.4.0a1
     geoh5py: 0.10.0a1
-    h5py: '>=3.2.1,<4.0.0'
-    matplotlib: '>=3.8.4,<3.9.0'
     mira-simpeg: 0.21.2.1a1
     numpy: '>=1.26.0,<1.27.0'
     octree-creation-app: 0.2.0a1
-    pandas: '>=2.2.1,<2.3.0'
     param-sweeps: 0.1.8a1
-    pydantic: '>=2.5.2,<3.0.0'
-    pydiso: '>=0.0.5,<0.1.0'
-    pymatsolver: '>=0.2.0,<0.3.0'
-    scikit-learn: '>=1.4.0,<1.5.0'
     scipy: '>=1.14.0,<1.15.0'
-    tbb: '>=2021.12.0,<2021.13.0'
-    tqdm: '>=4.66.1,<5.0.0'
-    tzdata: '>=2023.4.0,<2023.5.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
   hash:
-    sha256: f538e125f504032b37650f2345bd165a565fbaae
+    sha256: a399a3c4cddbdecf64cd99a39de8e86479585c92
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@f538e125f504032b37650f2345bd165a565fbaae
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
   optional: false
 - name: surface-apps
   version: 0.1.0a1
@@ -12997,6 +12897,27 @@ package:
   source:
     type: url
     url: git+https://github.com/MiraGeoscience/surface-apps@4dac9d9d9b234b0397a1f2e9ad194d4a19caa0a2
+  optional: false
+- name: tqdm
+  version: 4.66.4
+  manager: pip
+  platform: linux-64
+  dependencies: {}
+  url: https://files.pythonhosted.org/packages/18/eb/fdb7eb9e48b7b02554e1664afd3bd3f117f6b6d6c5881438a0b055554f9b/tqdm-4.66.4-py3-none-any.whl
+  hash:
+    sha256: b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644
+  category: main
+  optional: false
+- name: tqdm
+  version: 4.66.4
+  manager: pip
+  platform: win-64
+  dependencies:
+    colorama: '*'
+  url: https://files.pythonhosted.org/packages/18/eb/fdb7eb9e48b7b02554e1664afd3bd3f117f6b6d6c5881438a0b055554f9b/tqdm-4.66.4-py3-none-any.whl
+  hash:
+    sha256: b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644
+  category: main
   optional: false
 - name: vectormath
   version: 0.2.2
