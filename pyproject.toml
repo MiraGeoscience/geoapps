@@ -129,25 +129,6 @@ simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "f
 mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "develop", extras = ["dask"]}
 #mira-simpeg = {url = "http://localhost:8888/mira-simpeg.tar.gz", extras = ["dask"]}
 
-
-## indirect dependencies, forcing them here for installation through Conda not pip
-#---------------------------------------------------------------------------------
-Pillow = "~10.3.0"  # from geoh5py
-empymod = "~2.2.1"  # from simpeg and geoana
-geoana = "~0.5.0"  # from simpeg
-h5py = "^3.2.1"  # from geoh5py
-mkl = "2023.2.0"  # from simpeg
-properties = "~0.6.0"  # from simpeg-archive
-pydantic = "^2.5.2"  # from geoh5py, geoapps-utils, octrree-creation-app
-pydiso = "~0.0.3"  # from simpeg
-pymatsolver = "~0.2.0"  # from simpeg
-zarr = "~2.14.2"  # from simpeg[dask], simpeg-drivers
-
-# force some versions to resolve incompatible resolution between PyPI and Conda
-#-------------------------------------------------------------------------------
-tbb = "2021.12.*"  # through mkl from SimPEG (constraint copied from simpeg-drivers)
-tzdata = "2023.4.*"  # through pandas from SimPEG (constraint copied from simpeg-drivers)
-
 ## about pip dependencies
 # to be specified to work with conda-lock
 # - from PyPI: my_package = { version = "1.2.3", source = "pypi" }
@@ -156,9 +137,6 @@ tzdata = "2023.4.*"  # through pandas from SimPEG (constraint copied from simpeg
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.tar.gz" }
 # - to actually lock on a revision: my_package = { git = "https://github.com/ORGANISATION/REPO.git", rev = "GIT_REV" }
 #   (where rev value is a tag, a branch name or a commit hash). Can also use ``branch`` or ``tag`` instead of ``rev``
-
-[tool.conda-lock.dependencies]
-libblas = "*=*mkl"  # because simpeg already brings in the MKL
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
@@ -175,6 +153,27 @@ tomli = "*"
 [tool.conda-lock]
 platforms = ['win-64', 'linux-64']
 channels = ['conda-forge']
+
+[tool.conda-lock.dependencies]
+libblas = "*=*mkl"  # because simpeg already brings in the MKL
+
+## indirect dependencies, forcing them here for installation through Conda not pip
+#---------------------------------------------------------------------------------
+Pillow = ">=10.3.0, <10.4.0"  # from geoh5py
+empymod = ">=2.2.1, <2.3.0"  # from simpeg and geoana
+geoana = ">=0.5.0, <0.6.0"  # from simpeg
+h5py = ">=3.2.1, <4.0.0"  # from geoh5py
+mkl = "2023.2, <2023.3"  # from simpeg
+properties = ">=0.6.0, <0.7.0"  # from simpeg-archive
+pydantic = ">=2.5.2, <3.0.0"  # from geoh5py, geoapps-utils, octrree-creation-app
+pydiso = ">=0.0.5, <0.1.0"  # from simpeg
+pymatsolver = ">=0.2.0, <0.3.0"  # from simpeg
+zarr = ">=2.14.2, <2.15.0"  # from simpeg[dask], simpeg-drivers
+
+# force some versions to resolve incompatible resolution between PyPI and Conda
+#-------------------------------------------------------------------------------
+tbb = "2021.12.*"  # through mkl from SimPEG (constraint copied from simpeg-drivers)
+python-tzdata = "2023.4.*"  # through pandas from SimPEG (constraint copied from simpeg-drivers)
 
 [tool.isort]
 profile = "black"
