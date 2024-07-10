@@ -143,6 +143,7 @@ class IsoSurface(ObjectDataSelection):
                         )
 
             param_dict["geoh5"] = new_workspace
+            param_dict["conda_environment"] = "geoapps"
             param_dict["out_group"] = self.ga_group_name.value
 
             if self.live_link.value:
