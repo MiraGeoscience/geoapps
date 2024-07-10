@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 78130073ebb607bfc30e96016c7200ae73abcdc198ef058d047f369424402322
-    linux-64: 5749ecbfbe455d9940bfb383d30fabb6fe09bbad34d6867d60994d50a53cacd5
+    win-64: 25c04b72ecf4391374d9f914013acbcd1121d774b3438ef5562ce762edc505b7
+    linux-64: 5dc3256b1fe732b56892d0e345792e406b6c928db50f64f3bb1926433627b5a9
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -12917,13 +12917,10 @@ package:
     properties: '>=0.3.1b2'
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
-  url: git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: 894db1029c876de39c0cac9365f259379568f9b5
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
   category: main
-  source:
-    type: url
-    url: git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
   optional: false
 - name: simpeg-archive
   version: 0.11.0.dev6
@@ -12935,13 +12932,10 @@ package:
     properties: '>=0.3.1b2'
     pymatsolver: '>=0.1.1'
     scipy: '>=0.13'
-  url: git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
+  url: https://files.pythonhosted.org/packages/ce/bf/835bfe4f5b90a9484b5ab434d6b0295bc9c8cc44d4c30c8a70cad61855a3/simpeg_archive-0.11.0.dev6-py2.py3-none-any.whl
   hash:
-    sha256: 894db1029c876de39c0cac9365f259379568f9b5
+    sha256: ddb2487b640846a6859afb6f9f33ec5a04e4e0d5572c690d4c1a88579a47adcb
   category: main
-  source:
-    type: url
-    url: git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
   optional: false
 - name: simpeg-drivers
   version: 0.2.0a1

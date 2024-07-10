@@ -117,9 +117,9 @@ geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", re
 simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "develop"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz"}
 
-#simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
+simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz"}
-simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
+#simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
 
 #mira-simpeg = {version = ">=0.21.2.1-alpha.1, <0.21.2.2.dev", source = "pypi", allow-prereleases = true}
 #mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/develop.tar.gz", extras = ["dask"]}
