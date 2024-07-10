@@ -63,7 +63,7 @@ class BlockModelCreation(BaseDashApplication):
 
         super().__init__()
 
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        external_stylesheets = None
         server = Flask(__name__)
         self.app = Dash(
             server=server,
