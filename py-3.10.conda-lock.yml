@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: b3c0672c19af89bf15fa189981d6f161b9c1d7eea477fc7e28f730b92ccad3f9
-    linux-64: e9887facecb5983da9b6fa5723cd5d80a69c859337b455355b8631c7132a9d31
+    win-64: 39484ab18ad32faf7fb6837bc49e331396a4456e6be53a5b96aa115f60b52504
+    linux-64: 2fe6f59e640561d58a1036498dcbcaa8c0f52d16809595bd914f9be3c2a1fb74
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -148,10 +148,10 @@ package:
     python_abi: 3.10.*
     setuptools: ''
     six: ''
-  url: https://conda.anaconda.org/conda-forge/linux-64/ansi2html-1.9.2-py310hff52083_0.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/ansi2html-1.9.2-py310hff52083_1.conda
   hash:
-    md5: 3388aa1074360412bbedaefb8245392e
-    sha256: 92e8d342e00b9c818201e51d86825745245424a374200c9ee2cbd52b442302f6
+    md5: f3bf0d8f93708127305c13f637697213
+    sha256: 24daa35c357aafd810c8c647dc1e8ff0b71b8a49cbee03068ad3da59deebb42f
   category: main
   optional: false
 - name: ansi2html
@@ -163,10 +163,10 @@ package:
     python_abi: 3.10.*
     setuptools: ''
     six: ''
-  url: https://conda.anaconda.org/conda-forge/win-64/ansi2html-1.9.2-py310h5588dad_0.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/ansi2html-1.9.2-py310h5588dad_1.conda
   hash:
-    md5: b440b9b9a530b6dcc8df77868afbb179
-    sha256: 438822cc0f06f650dbc5e25979d06e127d338b522473f7ce34ead9b89cae5af3
+    md5: 8c6881ed6381961760662bb7614bf140
+    sha256: 9c167b32cd534587b0411e2afc2f750c02b4ca664bda42ae2da7a3341a077cfc
   category: main
   optional: false
 - name: anyio
@@ -3893,8 +3893,8 @@ package:
     jupyter_core: '>=4.12,!=5.0.*'
     importlib_metadata: '>=4.8.3'
     traitlets: '>=5.3'
-    pyzmq: '>=23.0'
     tornado: '>=6.2'
+    pyzmq: '>=23.0'
   url: https://conda.anaconda.org/conda-forge/noarch/jupyter_client-8.6.2-pyhd8ed1ab_0.conda
   hash:
     md5: 3cdbb2fa84490e5fd44c9f9806c0d292
@@ -4660,28 +4660,6 @@ package:
   hash:
     md5: 6cad6cd2fbdeef4d651b8f752a4da960
     sha256: 34becfe991510be7b9ee05b4ae466c5a26a72af275c3071c1ca7e2308d3f7e64
-  category: main
-  optional: false
-- name: libboost-headers
-  version: 1.85.0
-  manager: conda
-  platform: linux-64
-  dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/linux-64/libboost-headers-1.85.0-ha770c72_2.conda
-  hash:
-    md5: a685407e4876ad2327fcfc0024b5e204
-    sha256: 77dd38f4d45a219839833371b610b6a12d0f85b1be73cc5e2e31b223795f6d75
-  category: main
-  optional: false
-- name: libboost-headers
-  version: 1.85.0
-  manager: conda
-  platform: win-64
-  dependencies: {}
-  url: https://conda.anaconda.org/conda-forge/win-64/libboost-headers-1.85.0-h57928b3_2.conda
-  hash:
-    md5: c2a76e7c4f594bbbc247ab3c063c4222
-    sha256: 7327e31dc122c8fa612ef33b5d21b6cac395235ab685524413f0f913a5da2d7a
   category: main
   optional: false
 - name: libbrotlicommon
@@ -5572,16 +5550,16 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    libboost-headers: ''
-    libexpat: '>=2.5.0,<3.0a0'
+    __glibc: '>=2.17,<3.0.a0'
+    libexpat: '>=2.6.2,<3.0a0'
     libgcc-ng: '>=12'
     libstdcxx-ng: '>=12'
-    libzlib: '>=1.2.13,<2.0.0a0'
-    uriparser: '>=0.9.7,<1.0a0'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libkml-1.3.0-h01aab08_1018.conda
+    libzlib: '>=1.3.1,<2.0a0'
+    uriparser: '>=0.9.8,<1.0a0'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libkml-1.3.0-hbbc8833_1019.conda
   hash:
-    md5: 3eb5f16bcc8a02892199aa63555c731f
-    sha256: f67fc0be886c7eac14dbce858bfcffbc90a55b598e897e513f0979dd2caad750
+    md5: d0c709fb86b5836c7c26d4c4b984402f
+    sha256: 09cb7b678b3706ab9e9f201de87dbf0604a3c1c28ea30c06c2ca3ecd6108404b
   category: main
   optional: false
 - name: libkml
@@ -5589,17 +5567,16 @@ package:
   manager: conda
   platform: win-64
   dependencies:
-    libboost-headers: ''
-    libexpat: '>=2.5.0,<3.0a0'
-    libzlib: '>=1.2.13,<2.0.0a0'
+    libexpat: '>=2.6.2,<3.0a0'
+    libzlib: '>=1.3.1,<2.0a0'
     ucrt: '>=10.0.20348.0'
-    uriparser: '>=0.9.7,<1.0a0'
+    uriparser: '>=0.9.8,<1.0a0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libkml-1.3.0-haf3e7a6_1018.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/libkml-1.3.0-h538826c_1019.conda
   hash:
-    md5: 950e8765b20b79ecbd296543f848b4ec
-    sha256: 74117fe100d9aa3aaab25eb705c44165f8ff6feec2e7c058212a3f5434f85d5f
+    md5: 6498f4379f2b9c79ec2b0df2677cf7b1
+    sha256: 490d9a4aaf6fede22d9568e93a7ffcdd2f66ebea468117c9fbc18b12a84167a1
   category: main
   optional: false
 - name: liblapack
@@ -9808,27 +9785,27 @@ package:
   category: main
   optional: false
 - name: setuptools
-  version: 70.1.1
+  version: 70.2.0
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-70.1.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-70.2.0-pyhd8ed1ab_0.conda
   hash:
-    md5: 985e9e86e1b0fc75a74a9bfab9309ef7
-    sha256: 34ecbc63df6052a320838335a0e594b60050c92de79254045e52095bc27dde03
+    md5: 10170a48c48cfe65eab923f76f982087
+    sha256: 354781a1ce4f8f229bf4a19fe48550d5f73d5b511df78a07b1b78fb2c78e52ad
   category: main
   optional: false
 - name: setuptools
-  version: 70.1.1
+  version: 70.2.0
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.8'
-  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-70.1.1-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/setuptools-70.2.0-pyhd8ed1ab_0.conda
   hash:
-    md5: 985e9e86e1b0fc75a74a9bfab9309ef7
-    sha256: 34ecbc63df6052a320838335a0e594b60050c92de79254045e52095bc27dde03
+    md5: 10170a48c48cfe65eab923f76f982087
+    sha256: 354781a1ce4f8f229bf4a19fe48550d5f73d5b511df78a07b1b78fb2c78e52ad
   category: main
   optional: false
 - name: shapely
@@ -10994,27 +10971,27 @@ package:
   category: dev
   optional: true
 - name: tomlkit
-  version: 0.12.5
+  version: 0.13.0
   manager: conda
   platform: linux-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/tomlkit-0.12.5-pyha770c72_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/tomlkit-0.13.0-pyha770c72_0.conda
   hash:
-    md5: e5dde5caf905e9d95895e05f94967e14
-    sha256: 5117eff35992d896ca177dfffc08be8a9b3bf3d306ddc3d8bf4b699cdf1e1b79
+    md5: 810ba6f354ddef812d0ddc4669cc8de6
+    sha256: 8e61623213c620776f1328da4bee03f8828dbf2730f1a4fbd9b8af5398f5848e
   category: dev
   optional: true
 - name: tomlkit
-  version: 0.12.5
+  version: 0.13.0
   manager: conda
   platform: win-64
   dependencies:
-    python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/tomlkit-0.12.5-pyha770c72_0.conda
+    python: '>=3.8'
+  url: https://conda.anaconda.org/conda-forge/noarch/tomlkit-0.13.0-pyha770c72_0.conda
   hash:
-    md5: e5dde5caf905e9d95895e05f94967e14
-    sha256: 5117eff35992d896ca177dfffc08be8a9b3bf3d306ddc3d8bf4b699cdf1e1b79
+    md5: 810ba6f354ddef812d0ddc4669cc8de6
+    sha256: 8e61623213c620776f1328da4bee03f8828dbf2730f1a4fbd9b8af5398f5848e
   category: dev
   optional: true
 - name: toolz
@@ -12388,13 +12365,13 @@ package:
     scipy: '>=1.14.0,<1.15.0'
     tifffile: 2024.2.12
     tqdm: '>=4.66.1,<4.67.0'
-  url: git+https://github.com/MiraGeoscience/curve-apps@ad6bbbc62ebace5510bcb3626decb7a396968765
+  url: git+https://github.com/MiraGeoscience/curve-apps@e33b5e4563e2b060c1c1e1b1d8f190ee408ba4ae
   hash:
-    sha256: ad6bbbc62ebace5510bcb3626decb7a396968765
+    sha256: e33b5e4563e2b060c1c1e1b1d8f190ee408ba4ae
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/curve-apps@ad6bbbc62ebace5510bcb3626decb7a396968765
+    url: git+https://github.com/MiraGeoscience/curve-apps@e33b5e4563e2b060c1c1e1b1d8f190ee408ba4ae
   optional: false
 - name: curve-apps
   version: 0.2.0a1
@@ -12412,13 +12389,13 @@ package:
     scipy: '>=1.14.0,<1.15.0'
     tifffile: 2024.2.12
     tqdm: '>=4.66.1,<4.67.0'
-  url: git+https://github.com/MiraGeoscience/curve-apps@ad6bbbc62ebace5510bcb3626decb7a396968765
+  url: git+https://github.com/MiraGeoscience/curve-apps@e33b5e4563e2b060c1c1e1b1d8f190ee408ba4ae
   hash:
-    sha256: ad6bbbc62ebace5510bcb3626decb7a396968765
+    sha256: e33b5e4563e2b060c1c1e1b1d8f190ee408ba4ae
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/curve-apps@ad6bbbc62ebace5510bcb3626decb7a396968765
+    url: git+https://github.com/MiraGeoscience/curve-apps@e33b5e4563e2b060c1c1e1b1d8f190ee408ba4ae
   optional: false
 - name: empymod
   version: 2.3.1
@@ -12481,13 +12458,13 @@ package:
     numpy: '>=1.26.0,<1.27.0'
     pydantic: '>=2.5.2,<3.0.0'
     scipy: '>=1.14.0,<1.15.0'
-  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@03aa505b3957dd543be737d637760dc77a79bec7
+  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@7ca41cbb8d13463e28aec287ef556d131676d0f3
   hash:
-    sha256: 03aa505b3957dd543be737d637760dc77a79bec7
+    sha256: 7ca41cbb8d13463e28aec287ef556d131676d0f3
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@03aa505b3957dd543be737d637760dc77a79bec7
+    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@7ca41cbb8d13463e28aec287ef556d131676d0f3
   optional: false
 - name: geoapps-utils
   version: 0.4.0a1
@@ -12500,13 +12477,13 @@ package:
     numpy: '>=1.26.0,<1.27.0'
     pydantic: '>=2.5.2,<3.0.0'
     scipy: '>=1.14.0,<1.15.0'
-  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@03aa505b3957dd543be737d637760dc77a79bec7
+  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@7ca41cbb8d13463e28aec287ef556d131676d0f3
   hash:
-    sha256: 03aa505b3957dd543be737d637760dc77a79bec7
+    sha256: 7ca41cbb8d13463e28aec287ef556d131676d0f3
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@03aa505b3957dd543be737d637760dc77a79bec7
+    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@7ca41cbb8d13463e28aec287ef556d131676d0f3
   optional: false
 - name: geoh5py
   version: 0.10.0a1
@@ -12777,10 +12754,10 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pymatsolver: '>=0.1.1'
     properties: '>=0.3.1b2'
-    discretize: '*'
     scipy: '>=0.13'
+    pymatsolver: '>=0.1.1'
+    discretize: '*'
     numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
@@ -12794,10 +12771,10 @@ package:
   manager: pip
   platform: win-64
   dependencies:
-    pymatsolver: '>=0.1.1'
     properties: '>=0.3.1b2'
-    discretize: '*'
     scipy: '>=0.13'
+    pymatsolver: '>=0.1.1'
+    discretize: '*'
     numpy: '>=1.7'
   url: https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.zip
   hash: {}
@@ -12822,13 +12799,13 @@ package:
     param-sweeps: 0.1.8a1
     scipy: '>=1.14.0,<1.15.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@fd8be7e934cabd6725de99d71e24d62c6a60814d
   hash:
-    sha256: a399a3c4cddbdecf64cd99a39de8e86479585c92
+    sha256: fd8be7e934cabd6725de99d71e24d62c6a60814d
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@fd8be7e934cabd6725de99d71e24d62c6a60814d
   optional: false
 - name: simpeg-drivers
   version: 0.2.0a1
@@ -12846,13 +12823,13 @@ package:
     param-sweeps: 0.1.8a1
     scipy: '>=1.14.0,<1.15.0'
     zarr: '>=2.14.2,<2.15.0'
-  url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
+  url: git+https://github.com/MiraGeoscience/simpeg-drivers@fd8be7e934cabd6725de99d71e24d62c6a60814d
   hash:
-    sha256: a399a3c4cddbdecf64cd99a39de8e86479585c92
+    sha256: fd8be7e934cabd6725de99d71e24d62c6a60814d
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/simpeg-drivers@a399a3c4cddbdecf64cd99a39de8e86479585c92
+    url: git+https://github.com/MiraGeoscience/simpeg-drivers@fd8be7e934cabd6725de99d71e24d62c6a60814d
   optional: false
 - name: surface-apps
   version: 0.1.0a1

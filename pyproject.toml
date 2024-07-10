@@ -94,7 +94,7 @@ geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", re
 
 #simpeg-drivers = {version = "~0.1.0b4", source = "pypi", allow-prereleases = true}
 #simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/develop.zip"}
-simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "GEOPY-1674"}
+simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "develop"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz#sha256="}
 
 #simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
