@@ -471,15 +471,54 @@ class BaseApplication:
             self.h5file = value
 
     def trigger_click(self, _):
+        new_params = self.collect_parameter_values()
+        new_params.write_input_file(name=new_params.ga_group_name)
+        self.run(new_params)
+
+        if self.live_link.value:
+            print("Live link active. Check your ANALYST session for new mesh.")
+
+    def collect_parameter_values(self):
+        param_dict = {}
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget):
-                    setattr(self.params, key, getattr(self, key).value)
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
             except AttributeError:
                 continue
 
-        self.params.write_input_file(name=self.params.ga_group_name)
-        self.run(self.params)
+        temp_geoh5 = f"{self.ga_group_name.value}_{time.time():.0f}.geoh5"
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
+            param_dict["geoh5"] = new_workspace
+
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        obj = new_workspace.get_entity(value.uid)[0]
+                        if obj is None:
+                            obj = value.copy(parent=new_workspace, copy_children=True)
+                        param_dict[key] = obj
+
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
+
+        new_params = type(self.params)(**param_dict)
+
+        return new_params
 
     @classmethod
     def run(cls, params: BaseParams):

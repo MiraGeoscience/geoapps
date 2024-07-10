@@ -58,7 +58,7 @@ class InversionApp(BaseDashApplication):
                 self.params.inversion_type.title().replace(" ", "") + "Inversion"
             )
 
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        external_stylesheets = None
         server = Flask(__name__)
         self.app = Dash(
             server=server,
@@ -1048,7 +1048,6 @@ class InversionApp(BaseDashApplication):
 
                 z = new_values.T[downsampled_index]
 
-            if np.any(values):
                 # Update figure data.
                 figure["data"][0][
                     "x"
