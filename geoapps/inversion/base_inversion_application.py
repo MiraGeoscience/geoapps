@@ -474,7 +474,7 @@ class InversionApp(BaseDashApplication):
         # Get a notebook port that is running from the index page.
         nb_port = None
         servers = list(serverapp.list_running_servers())
-        print(servers)
+
         for s in servers:
             if s["root_dir"] == str(Path("../../../").resolve()):
                 nb_port = s["port"]
