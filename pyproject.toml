@@ -105,7 +105,7 @@ octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #peak-finder-app = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
 #peak-finder-app = {url = "https://github.com/MiraGeoscience/peak-finder-app/archive/refs/heads/develop.tar.gz"}
-peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "GEOPY-1636"}
+peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "develop"}
 #peak-finder-app = {url = "http://localhost:8888/peak-finder-app.tar.gz"}
 
 ## geoapps-utils should have extras = ["dash"], but that break resolution by conda-lock
