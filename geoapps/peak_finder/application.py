@@ -21,8 +21,8 @@ from ipywidgets import Dropdown, VBox
 from peak_finder.application import PeakFinder as DashPeakFinder
 from peak_finder.params import PeakFinderParams
 
-from geoapps.base.selection import ObjectDataSelection
 from geoapps.base.dash_application import ObjectSelection
+from geoapps.base.selection import ObjectDataSelection
 from geoapps.peak_finder.constants import app_initializer
 
 
