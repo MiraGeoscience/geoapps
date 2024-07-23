@@ -109,7 +109,7 @@ peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git"
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #geoapps-utils = {version = "~0.4.0-alpha.1", source = "pypi", allow-prereleases = true}
 #geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/develop.tar.gz"}
-geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "GEOPY-1681"}
+geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
 #geoapps-utils = {url = "http://localhost:8888/geoapps-utils.tar.gz"}
 
 #simpeg-drivers = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
