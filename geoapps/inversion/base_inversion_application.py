@@ -1050,12 +1050,8 @@ class InversionApp(BaseDashApplication):
                 z = new_values.T[downsampled_index]
 
                 # Update figure data.
-                figure["data"][0][
-                    "x"
-                ] = down_x  # pylint: disable=used-before-assignment
-                figure["data"][0][
-                    "y"
-                ] = down_y  # pylint: disable=used-before-assignment
+                figure["data"][0]["x"] = down_x  # pylint: disable=used-before-assignment
+                figure["data"][0]["y"] = down_y  # pylint: disable=used-before-assignment
                 figure["data"][0]["z"] = z
 
             # Get data count

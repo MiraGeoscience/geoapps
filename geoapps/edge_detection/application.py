@@ -80,7 +80,6 @@ class EdgeDetectionApp(PlotSelection2D):
     }
 
     def __init__(self, ui_json=None, plot_result=True, geoh5: str | None = None):
-
         defaults = {}
 
         if isinstance(geoh5, str):
@@ -258,7 +257,6 @@ class EdgeDetectionApp(PlotSelection2D):
         )
 
         with fetch_active_workspace(ws) as new_workspace:
-
             param_dict["geoh5"] = new_workspace
             param_dict["conda_environment"] = "geoapps"
 

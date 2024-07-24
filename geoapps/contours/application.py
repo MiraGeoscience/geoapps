@@ -55,7 +55,6 @@ class ContourValues(PlotSelection2D):
         plot_result=True,
         geoh5: str | None = None,
     ):
-
         defaults = {}
 
         if isinstance(geoh5, str):

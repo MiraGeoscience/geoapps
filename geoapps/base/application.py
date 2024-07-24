@@ -553,9 +553,7 @@ class BaseApplication:
 
         param_dict = {}
         for key in self.__dict__:
-
             try:
-
                 if self.is_computational(key):
                     value = getattr(self, key).value
                     if key[0] == "_":

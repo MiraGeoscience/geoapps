@@ -54,7 +54,6 @@ class IsoSurface(ObjectDataSelection):
     }
 
     def __init__(self, ui_json=None, geoh5: str | None = None):
-
         defaults = {}
 
         if isinstance(geoh5, str):
