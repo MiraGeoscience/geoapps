@@ -25,7 +25,7 @@ dependencies:
   - brotli-bin=1.1.0=hcfcfb64_1
   - brotli-python=1.1.0=py310h00ffb61_1
   - bzip2=1.0.8=h2466b09_7
-  - c-ares=1.32.2=h2466b09_0
+  - c-ares=1.32.3=h2466b09_0
   - c-blosc2=2.14.3=h183a6f4_0
   - ca-certificates=2024.7.4=h56e8100_0
   - cached-property=1.5.2=hd8ed1ab_1
@@ -98,8 +98,8 @@ dependencies:
   - idna=3.7=pyhd8ed1ab_0
   - imagecodecs=2024.1.1=py310h32f22c9_2
   - imageio=2.34.2=pyh12aca89_0
-  - importlib-metadata=8.0.0=pyha770c72_0
-  - importlib_metadata=8.0.0=hd8ed1ab_0
+  - importlib-metadata=8.2.0=pyha770c72_0
+  - importlib_metadata=8.2.0=hd8ed1ab_0
   - importlib_resources=6.4.0=pyhd8ed1ab_0
   - intel-openmp=2023.2.0=h57928b3_50497
   - ipyfilechooser=0.6.0=pyhd8ed1ab_0
@@ -147,7 +147,7 @@ dependencies:
   - libclang=15.0.7=default_h3a3e6c3_5
   - libclang13=15.0.7=default_hf64faad_5
   - libcrc32c=1.1.2=h0e60522_0
-  - libcurl=8.8.0=hd5e4a3a_1
+  - libcurl=8.9.0=h18fefc2_0
   - libdeflate=1.19=hcfcfb64_0
   - libdlf=0.2.0=pyhd8ed1ab_0
   - libexpat=2.6.2=h63175ca_0
@@ -275,7 +275,7 @@ dependencies:
   - retrying=1.3.3=pyhd8ed1ab_3
   - rfc3339-validator=0.1.4=pyhd8ed1ab_0
   - rfc3986-validator=0.1.1=pyh9f0ad1d_0
-  - rpds-py=0.19.0=py310hc226416_0
+  - rpds-py=0.19.1=py310hc226416_0
   - scikit-image=0.20.0=py310h1c4a608_1
   - scikit-learn=1.4.2=py310hf2a6c47_1
   - scipy=1.14.0=py310h46043a1_1
@@ -296,7 +296,7 @@ dependencies:
   - tenacity=8.5.0=pyhd8ed1ab_0
   - terminado=0.18.1=pyh5737063_0
   - threadpoolctl=3.5.0=pyhc1e730c_0
-  - tifffile=2024.7.21=pyhd8ed1ab_0
+  - tifffile=2024.7.24=pyhd8ed1ab_0
   - tiledb=2.16.3=hbf04793_3
   - tinycss2=1.3.0=pyhd8ed1ab_0
   - tk=8.6.13=h5226925_1
@@ -345,11 +345,11 @@ dependencies:
   - pip:
       - curve-apps @ git+https://github.com/MiraGeoscience/curve-apps.git@0a926ed3d082acec84f3e6e43bef2385c7506629
       - geoapps-utils @ git+https://github.com/MiraGeoscience/geoapps-utils.git@e0cc6f5178fec820647f088f348a2f8db81c58a2
-      - geoh5py @ git+https://github.com/MiraGeoscience/geoh5py.git@21ce81d279c206ce0a279377168ce50e0a35d3d2
+      - geoh5py @ git+https://github.com/MiraGeoscience/geoh5py.git@b5064fb631056dcaa57e379719e923fcd1195f6b
       - mira-simpeg @ git+https://github.com/MiraGeoscience/simpeg@b643f1cb9a9fee76b5e4bd7ed4f1b7a65d1646ec
       - octree-creation-app @ git+https://github.com/MiraGeoscience/octree-creation-app.git@7248a2568f3a3fd9b69b14da0b7257c7eeec2ac8
       - param-sweeps @ git+https://github.com/MiraGeoscience/param-sweeps.git@24e15f3ecd3b86851087a395966cbf828ce6570f
-      - peak-finder-app @ git+https://github.com/MiraGeoscience/peak-finder-app@49402691f9ead33d033e079d368574bce16992fd
+      - peak-finder-app @ git+https://github.com/MiraGeoscience/peak-finder-app@c04681ec146addb06203fdaa7c25172e9107b4d7
       - simpeg-archive @ git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
       - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers@91a19e5aee68c7f0ced237689b74e0fd0f7c8585
       - surface-apps @ git+https://github.com/MiraGeoscience/surface-apps@134650c62e53c29c2f0c81144bed6b3c6ef26715
