@@ -463,7 +463,7 @@ dependencies:
       - mira-simpeg @ git+https://github.com/MiraGeoscience/simpeg@b643f1cb9a9fee76b5e4bd7ed4f1b7a65d1646ec
       - octree-creation-app @ git+https://github.com/MiraGeoscience/octree-creation-app.git@7248a2568f3a3fd9b69b14da0b7257c7eeec2ac8
       - param-sweeps @ git+https://github.com/MiraGeoscience/param-sweeps.git@24e15f3ecd3b86851087a395966cbf828ce6570f
-      - peak-finder-app @ git+https://github.com/MiraGeoscience/peak-finder-app@c04681ec146addb06203fdaa7c25172e9107b4d7
+      - peak-finder-app @ git+https://github.com/MiraGeoscience/peak-finder-app@649ef5b47c4230b78f4044781d794202c89c0dbe
       - simpeg-archive @ git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
       - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers@91a19e5aee68c7f0ced237689b74e0fd0f7c8585
       - surface-apps @ git+https://github.com/MiraGeoscience/surface-apps@134650c62e53c29c2f0c81144bed6b3c6ef26715

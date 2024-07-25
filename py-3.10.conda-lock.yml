@@ -12878,13 +12878,13 @@ package:
     plotly: '>=5.19.0,<5.20.0'
     scipy: '>=1.14.0,<1.15.0'
     tqdm: '>=4.66.1,<5.0.0'
-  url: git+https://github.com/MiraGeoscience/peak-finder-app@c04681ec146addb06203fdaa7c25172e9107b4d7
+  url: git+https://github.com/MiraGeoscience/peak-finder-app@649ef5b47c4230b78f4044781d794202c89c0dbe
   hash:
-    sha256: c04681ec146addb06203fdaa7c25172e9107b4d7
+    sha256: 649ef5b47c4230b78f4044781d794202c89c0dbe
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/peak-finder-app@c04681ec146addb06203fdaa7c25172e9107b4d7
+    url: git+https://github.com/MiraGeoscience/peak-finder-app@649ef5b47c4230b78f4044781d794202c89c0dbe
   optional: false
 - name: peak-finder-app
   version: 0.2.0a1
@@ -12900,13 +12900,13 @@ package:
     plotly: '>=5.19.0,<5.20.0'
     scipy: '>=1.14.0,<1.15.0'
     tqdm: '>=4.66.1,<5.0.0'
-  url: git+https://github.com/MiraGeoscience/peak-finder-app@c04681ec146addb06203fdaa7c25172e9107b4d7
+  url: git+https://github.com/MiraGeoscience/peak-finder-app@649ef5b47c4230b78f4044781d794202c89c0dbe
   hash:
-    sha256: c04681ec146addb06203fdaa7c25172e9107b4d7
+    sha256: 649ef5b47c4230b78f4044781d794202c89c0dbe
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/peak-finder-app@c04681ec146addb06203fdaa7c25172e9107b4d7
+    url: git+https://github.com/MiraGeoscience/peak-finder-app@649ef5b47c4230b78f4044781d794202c89c0dbe
   optional: false
 - name: simpeg-archive
   version: 0.11.0.dev6
