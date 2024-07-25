@@ -12,7 +12,6 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-from geoapps_utils.application.dash_application import ObjectSelection
 from geoh5py.data import ReferencedData
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
@@ -22,6 +21,7 @@ from ipywidgets import Dropdown, VBox
 from peak_finder.application import PeakFinder as DashPeakFinder
 from peak_finder.params import PeakFinderParams
 
+from geoapps.base.dash_application import ObjectSelection
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.peak_finder.constants import app_initializer
 
