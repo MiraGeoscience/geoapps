@@ -30,7 +30,7 @@ jobs:
     name: Static analysis
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-static_analysis.yml@main
     with:
-      package_manager: '${{ github.env.package_manager }}'
+      package_manager: 'conda'
       app_name: ${{ github.env.app_name }}
       python_vers: '3.10'
       shell_type: 'bash -l {0}'
@@ -38,7 +38,7 @@ jobs:
     name: Pytest on Windows
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@main
     with:
-      package_manager: '${{ github.env.package_manager }}'
+      package_manager: 'conda'
       python_ver: '["3.10"]'
       cache_number: 1
       codecov_reference_python_ver: '3.10'
@@ -48,7 +48,7 @@ jobs:
     name: Pytest on Unix OS
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@main
     with:
-      package_manager: '${{ github.env.package_manager }}'
+      package_manager: 'conda'
       python_ver: '["3.10"]'
       os: '["ubuntu-latest"]'
       cache_number: 1
