@@ -1,0 +1,55 @@
+name: Python analysis
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - develop
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
+  push:
+    branches:
+      - develop
+      - main
+      - release/**
+      - feature/**
+      - hotfix/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  app_name: 'geoapps'
+  package_manager: 'conda'
+
+jobs:
+  call-workflow-static-analysis:
+    name: Static analysis
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-static_analysis.yml@main
+    with:
+      package_manager: ${{ github.env.package_manager }}
+      app_name: ${{ github.env.app_name }}
+      python_vers: '3.10'
+      shell_type: 'bash -l {0}'
+  call-workflow-pytest-on-windows:
+    name: Pytest on Windows
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@main
+    with:
+      package_manager: ${{ github.env.package_manager }}
+      python_ver: '["3.10"]'
+      cache_number: 1
+      codecov_reference_python_ver: '3.10'
+      shell_type: 'bash -l {0}'
+    secrets: inherit
+  call-workflow-pytest-on-unix-os:
+    name: Pytest on Unix OS
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@main
+    with:
+      package_manager: ${{ github.env.package_manager }}
+      python_ver: '["3.10"]'
+      os: '["ubuntu-latest"]'
+      cache_number: 1
+      shell_type: 'bash -l {0}'
