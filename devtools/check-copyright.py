@@ -15,6 +15,7 @@ import re
 import sys
 from datetime import date
 
+
 if __name__ == "__main__":
     current_year = date.today().year
     copyright_re = re.compile(

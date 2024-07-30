@@ -122,7 +122,7 @@ class BaseParams:
         """Update parameters with dictionary contents."""
         params_dict = self.input_file.numify(params_dict)
         if params_dict.get("geoh5", None) is not None and self.input_file.geoh5 is None:
-            setattr(self, "geoh5", params_dict.pop("geoh5"))
+            self.geoh5 = params_dict.pop("geoh5")
 
         with fetch_active_workspace(self.geoh5):
             params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
@@ -242,7 +242,9 @@ class BaseParams:
                     # TODO Create a geoh5py validation for "allof" -> ["object", "levels", "type", "distance"]
                     free_parameter_dict[group] = {}
                     forms = utils.collect(self.ui_json, "group", group)
-                    for label, key in zip(forms, self._free_parameter_keys):
+                    for label, key in zip(
+                        forms, self._free_parameter_keys, strict=False
+                    ):
                         if key not in label.lower():
                             raise ValueError(
                                 f"Malformed input refinement group {group}. "

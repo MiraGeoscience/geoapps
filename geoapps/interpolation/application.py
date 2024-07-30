@@ -26,6 +26,7 @@ from geoapps.interpolation.driver import DataInterpolationDriver
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.utils import warn_module_not_found
 
+
 with warn_module_not_found():
     from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, VBox
 

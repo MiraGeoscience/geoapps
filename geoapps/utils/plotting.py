@@ -20,6 +20,7 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils import warn_module_not_found
 
+
 with warn_module_not_found():
     from matplotlib import colors
     from matplotlib import pyplot as plt
@@ -267,7 +268,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         axis.set_xlim([x.min() - width * 0.1, x.max() + width * 0.1])
         axis.set_ylim([y.min() - height * 0.1, y.max() + height * 0.1])
 
-    if "colorbar" in kwargs and kwargs["colorbar"]:
+    if kwargs.get("colorbar"):
         plt.colorbar(out, ax=axis)
 
     line_selection = np.zeros_like(indices, dtype=bool)
@@ -363,13 +364,19 @@ def plot_profile_data_selection(
                             yy[-1],
                             yerr=uncertainties[i][0] * np.abs(yy[-1])
                             + uncertainties[i][1],
-                            color=[c + i * i for c, i in zip(color, c_increment)],
+                            color=[
+                                c + i * i
+                                for c, i in zip(color, c_increment, strict=False)
+                            ],
                         )
                     else:
                         ax.plot(
                             xx[-1],
                             yy[-1],
-                            color=[c + i * i for c, i in zip(color, c_increment)],
+                            color=[
+                                c + i * i
+                                for c, i in zip(color, c_increment, strict=False)
+                            ],
                         )
                     legend.append(field)
 

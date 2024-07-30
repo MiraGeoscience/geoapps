@@ -103,7 +103,7 @@ class DataInterpolationDriver(BaseDriver):
                 return_indices=True,
             )
 
-            for key, val in zip(list(values.keys()), vals):
+            for key, val in zip(list(values.keys()), vals, strict=False):
                 values_interp[key] = val
                 sign[key] = sign[key][ind_inv[:, 0]]
 

@@ -20,6 +20,7 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.workspace import sorted_children_dict
 
+
 with warn_module_not_found():
     import ipywidgets as widgets
     from ipywidgets import Dropdown, FloatText, SelectMultiple, VBox

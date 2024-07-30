@@ -201,7 +201,7 @@ class BaseDashApplication:
             if key in update_dict:
                 if (
                     bool in validations[key]["types"] and type(update_dict[key]) == list  # noqa: E721
-                ):  # noqa: E721
+                ):
                     # Convert from dash component checklist to bool
                     if not update_dict[key]:
                         output_dict[key] = False

@@ -9,6 +9,7 @@
 
 from geoapps import assets_path
 
+
 PROJECT = assets_path() / "FlinFlon.geoh5"
 PROJECT_DCIP = assets_path() / "FlinFlon_dcip.geoh5"
 PROJECT_TEM = assets_path() / "FlinFlon_airborne_tem.geoh5"
