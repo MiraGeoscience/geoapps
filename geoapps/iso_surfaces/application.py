@@ -26,6 +26,7 @@ from geoapps.base.selection import ObjectDataSelection
 from geoapps.utils.formatters import string_name
 from geoapps.utils.importing import warn_module_not_found
 
+
 with warn_module_not_found():
     from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 

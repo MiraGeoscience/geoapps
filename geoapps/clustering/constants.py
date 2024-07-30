@@ -18,6 +18,7 @@ import geoapps
 from geoapps import assets_path
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
 
+
 defaults = {
     "version": geoapps.__version__,
     "title": "Clustering",

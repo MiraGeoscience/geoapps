@@ -60,6 +60,7 @@ from geoapps.utils.workspace import sorted_children_dict
 
 from . import PROJECT
 
+
 geoh5 = Workspace(PROJECT)
 
 
@@ -355,7 +356,7 @@ def test_rectangular_block():
     assert [0.0, pos, 5.0] in vertices
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "center", -180.0)
+        block.center = -180.0
 
     assert "Input value for 'center' must be a list of floats len(3)." in str(error)
 
@@ -366,7 +367,7 @@ def test_rectangular_block():
         assert f"Input value for '{attr}' must be a float >0." in str(error)
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "dip", -180.0)
+        block.dip = -180.0
 
     assert (
         "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
@@ -374,7 +375,7 @@ def test_rectangular_block():
     )
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "azimuth", -450.0)
+        block.azimuth = -450.0
 
     assert (
         "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
@@ -382,7 +383,7 @@ def test_rectangular_block():
     )
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "reference", "abc")
+        block.reference = "abc"
 
     assert (
         "Input value for 'reference' point should be a str from ['center', 'top']."
@@ -436,7 +437,7 @@ def test_sorted_alphanumeric_list():
     ]
 
     sorted_list = sorted_alphanumeric_list(random.sample(test, len(test)))
-    assert all(elem == tester for elem, tester in zip(sorted_list, test))
+    assert all(elem == tester for elem, tester in zip(sorted_list, test, strict=False))
 
 
 def test_no_warn_module_not_found(recwarn):
@@ -664,9 +665,7 @@ def test_treemesh_2_octree(tmp_path: Path):
         mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
         omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
         assert omesh.n_cells == mesh.n_cells
-        assert np.all(
-            (omesh.centroids - mesh.cell_centers[getattr(mesh, "_ubc_order")]) < 1e-14
-        )
+        assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)
         expected_refined_cells = [
             (0, 0, 6),
             (0, 0, 7),

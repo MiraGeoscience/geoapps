@@ -42,6 +42,7 @@ from tests import (  # pylint: disable=no-name-in-module
     PROJECT_TEM,
 )
 
+
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
 
@@ -208,7 +209,7 @@ def test_dc_inversion(tmp_path: Path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
 
     params_reload = DirectCurrent3DParams(ifile)
 
@@ -288,7 +289,7 @@ def test_ip_inversion(tmp_path: Path):
                 setattr(app, param, value)
 
         app.write_trigger(None)
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
     params_reload = InducedPolarization3DParams(ifile)
 
     for param, value in changes.items():

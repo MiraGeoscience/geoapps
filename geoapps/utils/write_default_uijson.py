@@ -50,6 +50,7 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
+
 active_data_channels = [
     "z_real_channel",
     "z_imag_channel",
