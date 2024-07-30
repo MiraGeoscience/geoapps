@@ -175,11 +175,40 @@ tomli = "*"
 platforms = ['win-64', 'linux-64']
 channels = ['conda-forge']
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+target-version = "py310"
 
-[tool.black]
-# defaults are just fine
+[tool.ruff.lint]
+ignore = [
+    "B028",  # no-explicit-stacklevel for warnings.warn()
+    "E501",  # line-too-long - code is reformatted (do not care about comments and docstring)
+    "F401",  # unsused-import - covered by pycln
+]
+select = [
+    "A",  # flake8-builtins
+    "B",  # flake8-bugbear
+    "B006",  # Do not use mutable data structures for argument defaults
+    "B9",  # flake8-bugbear opiniated warnings
+    "BLE",  # flake8-blind-except
+    "C4",  # flake8-comprehensions
+    "C9",  # mccabe
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "RUF",  # ruff rules
+    "TID", # flake8-tidy-imports
+    "UP",  # pyupgrade
+    "W",  # pycodestyle warnings
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 18
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.format]
+# default formatting is just fine
 
 [tool.mypy]
 warn_unused_configs = true
