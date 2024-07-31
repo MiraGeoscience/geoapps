@@ -194,6 +194,7 @@ ignore = [
     "C901", # TO DO
     "RUF012", # TO DO
     "RUF013", # TO DO
+    "RUF015", # TO DO
     "UP038", # TO DO
     "TID252", # TO DO
 ]
