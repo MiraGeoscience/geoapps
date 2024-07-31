@@ -33,7 +33,6 @@ jobs:
       package_manager: 'conda'
       app_name: ${{ github.env.app_name }}
       python_vers: '3.10'
-      shell_type: 'bash -l {0}'
   call-workflow-pytest-on-windows:
     name: Pytest on Windows
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@main
@@ -42,8 +41,8 @@ jobs:
       python_ver: '["3.10"]'
       cache_number: 1
       codecov_reference_python_ver: '3.10'
-      shell_type: 'bash -l {0}'
-    secrets: inherit
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   call-workflow-pytest-on-unix-os:
     name: Pytest on Unix OS
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@main
@@ -52,4 +51,3 @@ jobs:
       python_ver: '["3.10"]'
       os: '["ubuntu-latest"]'
       cache_number: 1
-      shell_type: 'bash -l {0}'
