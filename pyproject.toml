@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "geoapps"
-version = "0.12.0-beta.1"
+version = "0.12.0-beta.2"
 
 description = "Open-sourced Applications in Geoscience"
 authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
@@ -80,8 +80,8 @@ geoh5py = {version = "~0.9.0", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.tar.gz"}
 #geoh5py = {url = "http://localhost:8888/geoh5py.tar.gz"}
 
-param-sweeps = {version = "~0.1.7", source = "pypi", allow-prereleases = true}
-#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.7.tar.gz"}
+param-sweeps = {version = "~0.1.8", source = "pypi", allow-prereleases = true}
+#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/release/0.1.8.zip"}
 #param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz"}
 
 octree-creation-app = {version = "~0.1.0", source = "pypi", allow-prereleases = true}
@@ -101,8 +101,8 @@ geoapps-utils = {version = "~0.3.0", source = "pypi", allow-prereleases = true}
 #geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/release/0.3.0.tar.gz"}
 #geoapps-utils = {url = "http://localhost:8888/geoapps-utils.tar.gz"}
 
-simpeg-drivers = {version = "~0.1.0", source = "pypi", allow-prereleases = true}
-#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.0.tar.gz"}
+simpeg-drivers = {version = "~0.1.1", source = "pypi", allow-prereleases = true}
+#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.1.zip"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz"}
 
 simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
