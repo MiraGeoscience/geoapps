@@ -12683,38 +12683,34 @@ package:
   manager: pip
   platform: linux-64
   dependencies:
-    pillow: '>=10.3.0,<10.4.0'
     geoh5py: 0.10.0a1
-    h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.26.0,<1.27.0'
     pydantic: '>=2.5.2,<3.0.0'
     scipy: '>=1.14.0,<1.15.0'
-  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@b0e207359035ddee868c2b334fabffe5c09063ed
+  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@a2683a86e7aab9fabf106210520ee8cbfbbee974
   hash:
-    sha256: b0e207359035ddee868c2b334fabffe5c09063ed
+    sha256: a2683a86e7aab9fabf106210520ee8cbfbbee974
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@b0e207359035ddee868c2b334fabffe5c09063ed
+    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@a2683a86e7aab9fabf106210520ee8cbfbbee974
   optional: false
 - name: geoapps-utils
   version: 0.4.0a1
   manager: pip
   platform: win-64
   dependencies:
-    pillow: '>=10.3.0,<10.4.0'
     geoh5py: 0.10.0a1
-    h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.26.0,<1.27.0'
     pydantic: '>=2.5.2,<3.0.0'
     scipy: '>=1.14.0,<1.15.0'
-  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@b0e207359035ddee868c2b334fabffe5c09063ed
+  url: git+https://github.com/MiraGeoscience/geoapps-utils.git@a2683a86e7aab9fabf106210520ee8cbfbbee974
   hash:
-    sha256: b0e207359035ddee868c2b334fabffe5c09063ed
+    sha256: a2683a86e7aab9fabf106210520ee8cbfbbee974
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@b0e207359035ddee868c2b334fabffe5c09063ed
+    url: git+https://github.com/MiraGeoscience/geoapps-utils.git@a2683a86e7aab9fabf106210520ee8cbfbbee974
   optional: false
 - name: geoh5py
   version: 0.10.0a1
