@@ -15,8 +15,8 @@
 version: 1
 metadata:
   content_hash:
-    win-64: 08e2922401efef540c92f071e79827775c3bd848c0d6578a07a75eaface4b259
-    linux-64: 9da4f01fb528e0aa0274da8e261d02d9d00d99c5233d781d8fd02c994523b660
+    win-64: 78130073ebb607bfc30e96016c7200ae73abcdc198ef058d047f369424402322
+    linux-64: 5749ecbfbe455d9940bfb383d30fabb6fe09bbad34d6867d60994d50a53cacd5
   channels:
   - url: conda-forge
     used_env_vars: []
@@ -12651,13 +12651,13 @@ package:
     scikit-image: '>=0.20.0,<0.21.0'
     scipy: '>=1.14.0,<1.15.0'
     tqdm: '>=4.66.1,<4.67.0'
-  url: git+https://github.com/MiraGeoscience/curve-apps@2a33db242137f230dba172428fb2a33e17d7d741
+  url: git+https://github.com/MiraGeoscience/curve-apps.git@2a33db242137f230dba172428fb2a33e17d7d741
   hash:
     sha256: 2a33db242137f230dba172428fb2a33e17d7d741
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/curve-apps@2a33db242137f230dba172428fb2a33e17d7d741
+    url: git+https://github.com/MiraGeoscience/curve-apps.git@2a33db242137f230dba172428fb2a33e17d7d741
   optional: false
 - name: curve-apps
   version: 0.2.0a1
@@ -12671,13 +12671,13 @@ package:
     scikit-image: '>=0.20.0,<0.21.0'
     scipy: '>=1.14.0,<1.15.0'
     tqdm: '>=4.66.1,<4.67.0'
-  url: git+https://github.com/MiraGeoscience/curve-apps@2a33db242137f230dba172428fb2a33e17d7d741
+  url: git+https://github.com/MiraGeoscience/curve-apps.git@2a33db242137f230dba172428fb2a33e17d7d741
   hash:
     sha256: 2a33db242137f230dba172428fb2a33e17d7d741
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/curve-apps@2a33db242137f230dba172428fb2a33e17d7d741
+    url: git+https://github.com/MiraGeoscience/curve-apps.git@2a33db242137f230dba172428fb2a33e17d7d741
   optional: false
 - name: geoapps-utils
   version: 0.4.0a1
@@ -12864,6 +12864,50 @@ package:
   source:
     type: url
     url: git+https://github.com/MiraGeoscience/param-sweeps.git@8263b65c79cbc80058bd153f3e8231e73992dccd
+  optional: false
+- name: peak-finder-app
+  version: 0.2.0a1
+  manager: pip
+  platform: linux-64
+  dependencies:
+    curve-apps: 0.2.0a1
+    dask: '>=2024.6.0,<2024.7.0'
+    distributed: '>=2024.6.0,<2024.7.0'
+    geoapps-utils: 0.4.0a1
+    geoh5py: 0.10.0a1
+    numpy: '>=1.26.0,<1.27.0'
+    plotly: '>=5.19.0,<5.20.0'
+    scipy: '>=1.14.0,<1.15.0'
+    tqdm: '>=4.66.1,<5.0.0'
+  url: git+https://github.com/MiraGeoscience/peak-finder-app@8497ec8753bdced6cb29e167fbae256722526a29
+  hash:
+    sha256: 8497ec8753bdced6cb29e167fbae256722526a29
+  category: main
+  source:
+    type: url
+    url: git+https://github.com/MiraGeoscience/peak-finder-app@8497ec8753bdced6cb29e167fbae256722526a29
+  optional: false
+- name: peak-finder-app
+  version: 0.2.0a1
+  manager: pip
+  platform: win-64
+  dependencies:
+    curve-apps: 0.2.0a1
+    dask: '>=2024.6.0,<2024.7.0'
+    distributed: '>=2024.6.0,<2024.7.0'
+    geoapps-utils: 0.4.0a1
+    geoh5py: 0.10.0a1
+    numpy: '>=1.26.0,<1.27.0'
+    plotly: '>=5.19.0,<5.20.0'
+    scipy: '>=1.14.0,<1.15.0'
+    tqdm: '>=4.66.1,<5.0.0'
+  url: git+https://github.com/MiraGeoscience/peak-finder-app@8497ec8753bdced6cb29e167fbae256722526a29
+  hash:
+    sha256: 8497ec8753bdced6cb29e167fbae256722526a29
+  category: main
+  source:
+    type: url
+    url: git+https://github.com/MiraGeoscience/peak-finder-app@8497ec8753bdced6cb29e167fbae256722526a29
   optional: false
 - name: simpeg-archive
   version: 0.11.0.dev6
