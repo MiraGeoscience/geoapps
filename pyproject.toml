@@ -61,15 +61,15 @@ scipy = "~1.14.0"  # also in geoapps-utils
 
 ## dependencies for UI
 #---------------------
-dash = "~2.12"  # also in geoapps-utils[dash]
+dash = "~2.12"
 dash-daq = "~0.5.0"
-flask = "~3.0.3"  # also in geoapps-utils[dash]
+flask = "~3.0.3"
 ipyfilechooser = "~0.6.0"
 ipywidgets = "^7.8.0"
 notebook = "^7.2.0"
 plotly = "~5.19.0"
-pyqtwebengine = "~5.15.2"  # also in geoapps-utils[dash]
-pyside2 = "~5.15.2.1"  # also in geoapps-utils[dash]
+pyqtwebengine = "~5.15.2"
+pyside2 = "~5.15.2.1"
 
 ## pip dependencies from Git repositories
 #----------------------------------------
@@ -93,7 +93,6 @@ surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev 
 #peak-finder-app = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
 #peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "develop"}
 
-## geoapps-utils should have extras = ["dash"], but that break resolution by conda-lock
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #geoapps-utils = {version = "~0.4.0-alpha.1", source = "pypi", allow-prereleases = true}
 #geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
