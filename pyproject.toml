@@ -76,7 +76,7 @@ pyside2 = "~5.15.2.1"  # also in geoapps-utils[dash]
 #geoh5py = {version = "~0.10.0-alpha.1", source = "pypi", allow-prereleases = true}
 geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "develop"}
 
-#param-sweeps = {version = "~0.1.8", source = "pypi", allow-prereleases = true}
+#param-sweeps = {version = "~0.1.8-alpha.1", source = "pypi", allow-prereleases = true}
 param-sweeps = {git = "https://github.com/MiraGeoscience/param-sweeps.git", rev = "develop"}
 
 #curve-apps = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
@@ -87,16 +87,16 @@ surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev 
 
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #octree-creation-app = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "develop"}
+#octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "develop"}
 
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #peak-finder-app = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "develop"}
+#peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "develop"}
 
 ## geoapps-utils should have extras = ["dash"], but that break resolution by conda-lock
 # already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #geoapps-utils = {version = "~0.4.0-alpha.1", source = "pypi", allow-prereleases = true}
-geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
+#geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
 
 #simpeg-drivers = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
 simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "develop"}
