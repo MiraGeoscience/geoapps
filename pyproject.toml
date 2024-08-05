@@ -61,70 +61,47 @@ scipy = "~1.14.0"  # also in geoapps-utils
 
 ## dependencies for UI
 #---------------------
-dash = "~2.12"  # also in geoapps-utils[dash]
+dash = "~2.12"
 dash-daq = "~0.5.0"
-flask = "~3.0.3"  # also in geoapps-utils[dash]
+flask = "~3.0.3"
 ipyfilechooser = "~0.6.0"
 ipywidgets = "^7.8.0"
 notebook = "^7.2.0"
 plotly = "~5.19.0"
-pyqtwebengine = "~5.15.2"  # also in geoapps-utils[dash]
-pyside2 = "~5.15.2.1"  # also in geoapps-utils[dash]
+pyqtwebengine = "~5.15.2"
+pyside2 = "~5.15.2.1"
 
 ## pip dependencies from Git repositories
 #----------------------------------------
 #geoh5py = {version = "~0.10.0-alpha.1", source = "pypi", allow-prereleases = true}
-#geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/develop.tar.gz"}
 geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "develop"}
-#geoh5py = {url = "http://localhost:8888/geoh5py.tar.gz"}
 
 #param-sweeps = {version = "~0.1.8-alpha.1", source = "pypi", allow-prereleases = true}
-#param-sweeps = {url = "https://github.com/MiraGeoscience/param-sweeps/archive/refs/heads/develop.tar.gz"}
 param-sweeps = {git = "https://github.com/MiraGeoscience/param-sweeps.git", rev = "develop"}
-#param-sweeps = {url = "http://localhost:8888/param-sweeps.tar.gz"}
 
 #curve-apps = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-#curve-apps = {url = "https://github.com/MiraGeoscience/curve-apps/archive/refs/heads/develop.tar.gz"}
 curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "develop"}
-#curve-apps = {url = "http://localhost:8888/curve-apps.tar.gz"}
 
 #surface-apps = {version = "~0.1.0-alpha.1", source = "pypi", allow-prereleases = true}
-#surface-apps = {url = "https://github.com/MiraGeoscience/surface-apps/archive/refs/heads/release/0.1.0.tar.gz"}
 surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "release/0.1.0"}
-#surface-apps = {url = "http://localhost:8888/surface-apps.tar.gz"}
 
-# already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #octree-creation-app = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-#octree-creation-app = {url = "https://github.com/MiraGeoscience/octree-creation-app/archive/refs/heads/develop.tar.gz"}
 octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "develop"}
-#octree-creation-app = {url = "http://localhost:8888/octree-creation-app.tar.gz"}
 
-# already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #peak-finder-app = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-#peak-finder-app = {url = "https://github.com/MiraGeoscience/peak-finder-app/archive/refs/heads/develop.tar.gz"}
 peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "develop"}
-#peak-finder-app = {url = "http://localhost:8888/peak-finder-app.tar.gz"}
 
-## geoapps-utils should have extras = ["dash"], but that break resolution by conda-lock
-# already through simpeg-driver: do need to repeat until on PyPI, or conda-lock fails to resolve
 #geoapps-utils = {version = "~0.4.0-alpha.1", source = "pypi", allow-prereleases = true}
-#geoapps-utils = {url = "https://github.com/MiraGeoscience/geoapps-utils/archive/refs/heads/develop.tar.gz"}
 geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
-#geoapps-utils = {url = "http://localhost:8888/geoapps-utils.tar.gz"}
 
 #simpeg-drivers = {version = "~0.2.0-alpha.1", source = "pypi", allow-prereleases = true}
-#simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/develop.tar.gz"}
 simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "develop"}
-#simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz"}
 
 #simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
-#simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz"}
 simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
 
 #mira-simpeg = {version = ">=0.21.2.1-alpha.1, <0.21.2.2.dev", source = "pypi", allow-prereleases = true}
-#mira-simpeg = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/develop.tar.gz", extras = ["dask"]}
 mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "develop", extras = ["dask"]}
-#mira-simpeg = {url = "http://localhost:8888/mira-simpeg.tar.gz", extras = ["dask"]}
 
 ## about pip dependencies
 # to be specified to work with conda-lock
