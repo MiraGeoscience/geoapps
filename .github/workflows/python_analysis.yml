@@ -52,3 +52,4 @@ jobs:
       python_ver: '["3.10"]'
       os: '["ubuntu-latest"]'
       cache_number: 1
+      lfs: true
