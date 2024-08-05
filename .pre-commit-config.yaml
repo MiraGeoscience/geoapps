@@ -22,15 +22,15 @@ repos:
     -   id: isort
         additional_dependencies: [tomli]  # to read config from pyproject.toml
 -   repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 24.8.0
     hooks:
     -   id: black
 -   repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.1.1
     hooks:
     -   id: flake8
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.17.0
     hooks:
     -   id: pyupgrade
         args: [--py310-plus]
@@ -77,7 +77,7 @@ repos:
         entry: python devtools/git_message_hook.py --check
         language: python
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.3.0
     hooks:
     -   id: codespell
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb|^THIRD_PARTY_SOFTWARE\.rst)$
@@ -111,7 +111,7 @@ repos:
         exclude_types: [jupyter]
         exclude: ^docs/.*/images/
 -   repo: https://github.com/rstcheck/rstcheck
-    rev: v6.2.0
+    rev: v6.2.4
     hooks:
     -   id: rstcheck
         exclude: ^THIRD_PARTY_SOFTWARE.rst$
