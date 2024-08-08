@@ -61,6 +61,8 @@ from geoapps.utils.workspace import sorted_children_dict
 from . import PROJECT
 
 
+# pylint: disable=protected-access
+
 geoh5 = Workspace(PROJECT)
 
 
