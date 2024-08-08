@@ -366,7 +366,7 @@ def plot_profile_data_selection(
                             + uncertainties[i][1],
                             color=[
                                 c + i * i
-                                for c, i in zip(color, c_increment, strict=False)
+                                for c, i in zip(color, c_increment, strict=True)
                             ],
                         )
                     else:
@@ -375,7 +375,7 @@ def plot_profile_data_selection(
                             yy[-1],
                             color=[
                                 c + i * i
-                                for c, i in zip(color, c_increment, strict=False)
+                                for c, i in zip(color, c_increment, strict=True)
                             ],
                         )
                     legend.append(field)

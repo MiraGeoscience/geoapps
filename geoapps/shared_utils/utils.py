@@ -463,7 +463,7 @@ def octree_2_treemesh(mesh):
     small_cell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
     n_cell_dim = [mesh.u_count, mesh.v_count, mesh.w_count]
     cell_sizes = [
-        np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell, strict=False)
+        np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell, strict=True)
     ]
     u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
     h1, h2, h3 = (np.abs(h) for h in cell_sizes)
@@ -552,7 +552,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     ][:-1]
     cols = out.pop(0).split(" ")
     out = [[string_to_numeric(k) for k in line.split(" ")] for line in out]
-    out = dict(zip(cols, list(map(list, zip(*out, strict=False))), strict=False))
+    out = dict(zip(cols, list(map(list, zip(*out, strict=True))), strict=True))
 
     return out
 

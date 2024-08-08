@@ -178,15 +178,15 @@ def slice_and_map(obj: np.ndarray, slicer: np.ndarray | Callable):
     if isinstance(slicer, np.ndarray):
         if slicer.dtype == bool:
             sliced_object = obj[slicer]
-            g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj)), strict=False))
+            g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj)), strict=True))
         else:
             sliced_object = obj[slicer]
-            g2l = dict(zip(slicer, np.arange(len(slicer)), strict=False))
+            g2l = dict(zip(slicer, np.arange(len(slicer)), strict=True))
 
     elif callable(slicer):
         slicer = np.array([slicer(k) for k in obj])
         sliced_object = obj[slicer]
-        g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj)), strict=False))
+        g2l = dict(zip(np.where(slicer)[0], np.arange(len(obj)), strict=True))
 
     return sliced_object, g2l
 

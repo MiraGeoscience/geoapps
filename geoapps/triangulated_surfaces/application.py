@@ -346,14 +346,14 @@ class Surface2D(ObjectDataSelection):
                 )
 
                 if len(self.models) > 0:
-                    for uid, model in zip(self.data.value, self.models, strict=False):
+                    for uid, model in zip(self.data.value, self.models, strict=True):
                         surface.add_data(
                             {
                                 self.data.uid_name_map[uid]: {"values": model},
                             }
                         )
             else:
-                for data_obj, model in zip(data_list, self.models, strict=False):
+                for data_obj, model in zip(data_list, self.models, strict=True):
                     surface.add_data(
                         {
                             data_obj.name: {"values": model},
