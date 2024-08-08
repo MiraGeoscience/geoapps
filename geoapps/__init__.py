@@ -34,5 +34,5 @@ def assets_path() -> Path:
     assets_folder = parent.parent / folder_name
     if not assets_folder.is_dir():
         raise RuntimeError(f"Assets folder not found: {assets_folder}")
-
+    print(assets_folder)  # Temporaty DEBUG
     return assets_folder

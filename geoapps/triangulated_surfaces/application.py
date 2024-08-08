@@ -27,6 +27,7 @@ from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
+
 with warn_module_not_found():
     from ipywidgets import (
         FloatText,
@@ -345,14 +346,14 @@ class Surface2D(ObjectDataSelection):
                 )
 
                 if len(self.models) > 0:
-                    for uid, model in zip(self.data.value, self.models):
+                    for uid, model in zip(self.data.value, self.models, strict=True):
                         surface.add_data(
                             {
                                 self.data.uid_name_map[uid]: {"values": model},
                             }
                         )
             else:
-                for data_obj, model in zip(data_list, self.models):
+                for data_obj, model in zip(data_list, self.models, strict=True):
                     surface.add_data(
                         {
                             data_obj.name: {"values": model},

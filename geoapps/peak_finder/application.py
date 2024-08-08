@@ -35,7 +35,6 @@ class PeakFinder(ObjectDataSelection):
     _add_groups = "only"
 
     def __init__(self, ui_json=None, **kwargs):
-
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
             self.params = self._param_class(InputFile(ui_json))

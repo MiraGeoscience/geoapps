@@ -17,6 +17,7 @@ from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 import geoapps
 from geoapps import assets_path
 
+
 defaults = {
     "version": geoapps.__version__,
     "title": "Data Transfer",

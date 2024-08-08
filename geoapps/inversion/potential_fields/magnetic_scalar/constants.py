@@ -14,6 +14,7 @@ from uuid import UUID
 
 from geoapps import assets_path
 
+
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "monitoring_directory": str((assets_path() / "Temp").resolve()),

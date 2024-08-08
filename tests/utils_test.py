@@ -60,6 +60,9 @@ from geoapps.utils.workspace import sorted_children_dict
 
 from . import PROJECT
 
+
+# pylint: disable=protected-access
+
 geoh5 = Workspace(PROJECT)
 
 
@@ -355,7 +358,7 @@ def test_rectangular_block():
     assert [0.0, pos, 5.0] in vertices
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "center", -180.0)
+        block.center = -180.0
 
     assert "Input value for 'center' must be a list of floats len(3)." in str(error)
 
@@ -366,7 +369,7 @@ def test_rectangular_block():
         assert f"Input value for '{attr}' must be a float >0." in str(error)
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "dip", -180.0)
+        block.dip = -180.0
 
     assert (
         "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
@@ -374,7 +377,7 @@ def test_rectangular_block():
     )
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "azimuth", -450.0)
+        block.azimuth = -450.0
 
     assert (
         "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
@@ -382,7 +385,7 @@ def test_rectangular_block():
     )
 
     with pytest.raises(ValueError) as error:
-        setattr(block, "reference", "abc")
+        block.reference = "abc"
 
     assert (
         "Input value for 'reference' point should be a str from ['center', 'top']."
@@ -436,7 +439,7 @@ def test_sorted_alphanumeric_list():
     ]
 
     sorted_list = sorted_alphanumeric_list(random.sample(test, len(test)))
-    assert all(elem == tester for elem, tester in zip(sorted_list, test))
+    assert all(elem == tester for elem, tester in zip(sorted_list, test, strict=False))
 
 
 def test_no_warn_module_not_found(recwarn):
@@ -664,9 +667,7 @@ def test_treemesh_2_octree(tmp_path: Path):
         mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
         omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
         assert omesh.n_cells == mesh.n_cells
-        assert np.all(
-            (omesh.centroids - mesh.cell_centers[getattr(mesh, "_ubc_order")]) < 1e-14
-        )
+        assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)
         expected_refined_cells = [
             (0, 0, 6),
             (0, 0, 7),
@@ -805,8 +806,9 @@ def test_filter_xy():
     }
     # Test the windowing functionality
     w_mask = filter_xy(x_grid, y_grid, window=window)
-    x_grid_test, y_grid_test = x_grid[w_mask].reshape(5, 9), y_grid[w_mask].reshape(
-        5, 9
+    x_grid_test, y_grid_test = (
+        x_grid[w_mask].reshape(5, 9),
+        y_grid[w_mask].reshape(5, 9),
     )
     np.testing.assert_allclose(
         x_grid_test, np.meshgrid(np.arange(1, 10), np.arange(3, 8))[0]
@@ -817,8 +819,9 @@ def test_filter_xy():
 
     # Test the downsampling functionality
     ds_mask = filter_xy(x_grid, y_grid, distance=2)
-    x_grid_test, y_grid_test = x_grid[ds_mask].reshape(6, 6), y_grid[ds_mask].reshape(
-        6, 6
+    x_grid_test, y_grid_test = (
+        x_grid[ds_mask].reshape(6, 6),
+        y_grid[ds_mask].reshape(6, 6),
     )
     np.testing.assert_allclose(np.diff(x_grid_test, axis=1), np.full((6, 5), 2))
     np.testing.assert_allclose(np.diff(y_grid_test, axis=0), np.full((5, 6), 2))
@@ -826,9 +829,10 @@ def test_filter_xy():
     # Test the combo functionality
     comb_mask = filter_xy(x_grid, y_grid, distance=2, window=window)
     assert np.all(comb_mask == (w_mask & ds_mask))
-    x_grid_test, y_grid_test = x_grid[comb_mask].reshape(2, 4), y_grid[
-        comb_mask
-    ].reshape(2, 4)
+    x_grid_test, y_grid_test = (
+        x_grid[comb_mask].reshape(2, 4),
+        y_grid[comb_mask].reshape(2, 4),
+    )
     assert np.all((x_grid_test >= 1) & (x_grid_test <= 9))
     assert np.all((y_grid_test >= 3) & (y_grid_test <= 7))
     np.testing.assert_allclose(np.diff(x_grid_test, axis=1), np.full((2, 3), 2))
@@ -838,8 +842,9 @@ def test_filter_xy():
     combo_mask = filter_xy(x_grid_rot, y_grid_rot, distance=2, window=window, angle=-30)
     xg_test, yg_test = x_grid_rot[comb_mask], y_grid_rot[comb_mask]
     xy_rot = rotate_xyz(np.c_[xg_test, yg_test], [5, 5], -30)
-    x_grid_rot_test, y_grid_rot_test = xy_rot[:, 0].reshape(2, 4), xy_rot[:, 1].reshape(
-        2, 4
+    x_grid_rot_test, y_grid_rot_test = (
+        xy_rot[:, 0].reshape(2, 4),
+        xy_rot[:, 1].reshape(2, 4),
     )
     assert np.all((x_grid_rot_test >= 1) & (x_grid_rot_test <= 9))
     assert np.all((y_grid_rot_test >= 3) & (y_grid_rot_test <= 7))

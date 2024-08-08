@@ -24,6 +24,7 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
+
 with warn_module_not_found():
     from matplotlib import pyplot as plt
 
@@ -31,10 +32,11 @@ with warn_module_not_found():
     from osgeo import osr
 
 with warn_module_not_found():
-    from ipywidgets.widgets import HBox, VBox
     from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
+    from ipywidgets.widgets import HBox, VBox
 
 from .utils import export_curve_2_shapefile, object_2_dataframe
+
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),

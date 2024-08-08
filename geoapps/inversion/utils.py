@@ -86,7 +86,7 @@ def calculate_2D_trend(
 
     polynomial = []
     xx, yy = np.triu_indices(order + 1)
-    for x, y in zip(xx, yy):
+    for x, y in zip(xx, yy, strict=True):
         polynomial.append(
             (loc_xy[:, 0] - center_x) ** float(x)
             * (loc_xy[:, 1] - center_y) ** float(y - x)
@@ -101,7 +101,7 @@ def calculate_2D_trend(
 
     params, _, _, _ = np.linalg.lstsq(polynomial, values, rcond=None)
     data_trend = np.zeros(points.shape[0])
-    for count, (x, y) in enumerate(zip(xx, yy)):
+    for count, (x, y) in enumerate(zip(xx, yy, strict=True)):
         data_trend += (
             params[count]
             * (points[:, 0] - center_x) ** float(x)
