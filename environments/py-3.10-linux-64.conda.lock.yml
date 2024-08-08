@@ -20,7 +20,7 @@ dependencies:
   - asttokens=2.4.1=pyhd8ed1ab_0
   - async-lru=2.0.4=pyhd8ed1ab_0
   - attr=2.5.1=h166bdaf_1
-  - attrs=23.2.0=pyh71513ae_0
+  - attrs=24.2.0=pyh71513ae_0
   - babel=2.14.0=pyhd8ed1ab_0
   - beautifulsoup4=4.12.3=pyha770c72_0
   - bleach=6.1.0=pyhd8ed1ab_0
@@ -38,7 +38,7 @@ dependencies:
   - cached_property=1.5.2=pyha770c72_1
   - cairo=1.18.0=h3faef2a_0
   - certifi=2024.7.4=pyhd8ed1ab_0
-  - cffi=1.16.0=py310h2fee648_0
+  - cffi=1.17.0=py310h2fdcea3_0
   - cfitsio=4.2.0=hd9d235c_0
   - charls=2.4.2=h59595ed_0
   - charset-normalizer=3.3.2=pyhd8ed1ab_0
@@ -56,7 +56,7 @@ dependencies:
   - dask-core=2024.6.2=pyhd8ed1ab_0
   - dav1d=1.2.1=hd590300_0
   - dbus=1.13.6=h5008d03_3
-  - debugpy=1.8.3=py310hea249c9_0
+  - debugpy=1.8.5=py310hea249c9_0
   - decorator=5.1.1=pyhd8ed1ab_0
   - defusedxml=0.7.1=pyhd8ed1ab_0
   - discretize=0.10.0=py310hcb52e73_1
@@ -299,8 +299,8 @@ dependencies:
   - python_abi=3.10=4_cp310
   - pytz=2024.1=pyhd8ed1ab_0
   - pywavelets=1.6.0=py310h261611a_0
-  - pyyaml=6.0.1=py310h2372a71_1
-  - pyzmq=26.0.3=py310h6883aea_0
+  - pyyaml=6.0.2=py310h5b4e0ec_0
+  - pyzmq=26.1.0=py310h7d2b5bf_0
   - qt-main=5.15.8=h82b777d_17
   - qt-webengine=5.15.8=h75ea521_4
   - rav1e=0.6.6=he8a937b_2
@@ -311,7 +311,7 @@ dependencies:
   - retrying=1.3.3=pyhd8ed1ab_3
   - rfc3339-validator=0.1.4=pyhd8ed1ab_0
   - rfc3986-validator=0.1.1=pyh9f0ad1d_0
-  - rpds-py=0.19.1=py310h42e942d_0
+  - rpds-py=0.20.0=py310h42e942d_0
   - scikit-image=0.20.0=py310h9b08913_1
   - scikit-learn=1.4.2=py310h981052a_1
   - scipy=1.14.0=py310h93e2701_1
@@ -339,7 +339,7 @@ dependencies:
   - toml=0.10.2=pyhd8ed1ab_0
   - toolz=0.12.1=pyhd8ed1ab_0
   - tornado=6.4.1=py310hc51659f_0
-  - tqdm=4.66.4=pyhd8ed1ab_0
+  - tqdm=4.66.5=pyhd8ed1ab_0
   - traitlets=5.14.3=pyhd8ed1ab_0
   - types-python-dateutil=2.9.0.20240316=pyhd8ed1ab_0
   - typing-extensions=4.12.2=hd8ed1ab_0
@@ -357,7 +357,7 @@ dependencies:
   - webencodings=0.5.1=pyhd8ed1ab_2
   - websocket-client=1.8.0=pyhd8ed1ab_0
   - werkzeug=3.0.3=pyhd8ed1ab_0
-  - wheel=0.43.0=pyhd8ed1ab_1
+  - wheel=0.44.0=pyhd8ed1ab_0
   - widgetsnbextension=3.6.8=pyhd8ed1ab_0
   - xcb-util=0.4.0=hd590300_1
   - xcb-util-image=0.4.0=h8ee46fc_1
@@ -404,14 +404,14 @@ dependencies:
   - zstd=1.5.6=ha6fb4c9_0
   - pip:
       - curve-apps @ git+https://github.com/MiraGeoscience/curve-apps.git@2a33db242137f230dba172428fb2a33e17d7d741
-      - geoapps-utils @ git+https://github.com/MiraGeoscience/geoapps-utils.git@2bc1ea4dbea2a026ec37eb00180e8ed4423a9f6a
+      - geoapps-utils @ git+https://github.com/MiraGeoscience/geoapps-utils.git@32e22d726e8158082e32ce0c2d2a1d7b9fcbce11
       - geoh5py @ git+https://github.com/MiraGeoscience/geoh5py.git@f95bdfb2ab74f30b0d0d67abc398370c261d1823
       - mira-simpeg @ git+https://github.com/MiraGeoscience/simpeg@5cf52f6d8d0cd9ccb36ffc26eb3196e9fc37b4d9
       - octree-creation-app @ git+https://github.com/MiraGeoscience/octree-creation-app.git@a88c1e341d173bd26f4f321c47433c6964aa24f4
-      - param-sweeps @ git+https://github.com/MiraGeoscience/param-sweeps.git@8263b65c79cbc80058bd153f3e8231e73992dccd
+      - param-sweeps @ git+https://github.com/MiraGeoscience/param-sweeps.git@ec6a4381a2148e941499c006d885e39989055004
       - peak-finder-app @ git+https://github.com/MiraGeoscience/peak-finder-app@8497ec8753bdced6cb29e167fbae256722526a29
       - simpeg-archive @ git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
-      - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers@2324a5930ce53218717af00b166a01e1f4befab3
+      - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers@140f2c3d58798092cee6255742752011d810ccf3
       - surface-apps @ git+https://github.com/MiraGeoscience/surface-apps@134650c62e53c29c2f0c81144bed6b3c6ef26715
 
 variables:
