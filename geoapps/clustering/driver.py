@@ -220,7 +220,7 @@ class ClusteringDriver(BaseDriver):
             self.params.geoh5,
         )
         full_scales_dict = dict(
-            zip(self.params.data_subset, self.params.full_scales, strict=True)
+            zip(self.params.data_subset, self.params.full_scales, strict=False)
         )
         kmeans, _ = ClusteringDriver.run_clustering(
             self.params.n_clusters,
