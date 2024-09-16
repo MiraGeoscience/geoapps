@@ -6,7 +6,7 @@ on:
 
 jobs:
   call-workflow-create-jira-issue:
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-issue_to_jira.yml@main
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-issue_to_jira.yml@DEVOPS-466
     secrets: inherit
     with:
-      project_key: 'GEOPY'
+      project-key: 'GEOPY'

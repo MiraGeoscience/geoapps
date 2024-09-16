@@ -21,35 +21,31 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-env:
-  app_name: 'geoapps'
-  package_manager: 'conda'
-
 jobs:
   call-workflow-static-analysis:
     name: Static analysis
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-static_analysis.yml@main
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-static_analysis.yml@DEVOPS-466
     with:
-      package_manager: 'conda'
-      app_name: ${{ github.env.app_name }}
-      python_vers: '3.10'
+      package-manager: 'conda'
+      app-name: 'geoapps'
+      python-version: '3.10'
   call-workflow-pytest-on-windows:
     name: Pytest on Windows
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@main
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@DEVOPS-466
     with:
-      package_manager: 'conda'
-      python_ver: '["3.10"]'
-      cache_number: 1
-      codecov_reference_python_ver: '3.10'
+      package-manager: 'conda'
+      python-versions: '["3.10"]'
+      cache-number: 1
+      codecov-reference-python-version: '3.10'
       lfs: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   call-workflow-pytest-on-unix-os:
     name: Pytest on Unix OS
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@main
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@DEVOPS-466
     with:
-      package_manager: 'conda'
-      python_ver: '["3.10"]'
+      package-manager: 'conda'
+      python-versions: '["3.10"]'
       os: '["ubuntu-latest"]'
-      cache_number: 1
+      cache-number: 1
       lfs: true
