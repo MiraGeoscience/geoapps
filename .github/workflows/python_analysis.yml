@@ -16,6 +16,7 @@ on:
       - release/**
       - feature/**
       - hotfix/**
+      - DEVOPS-471 # TODO: Temporary until DEVOPS-471 is merged
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -31,7 +32,7 @@ jobs:
       python-version: '3.10'
   call-workflow-pytest-on-windows:
     name: Pytest on Windows
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@DEVOPS-466
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@DEVOPS-471
     with:
       package-manager: 'conda'
       python-versions: '["3.10"]'
@@ -42,7 +43,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   call-workflow-pytest-on-unix-os:
     name: Pytest on Unix OS
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@DEVOPS-466
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@DEVOPS-471
     with:
       package-manager: 'conda'
       python-versions: '["3.10"]'
