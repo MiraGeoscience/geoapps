@@ -9,6 +9,7 @@ on:
       - release/**
       - feature/**
       - hotfix/**
+      - DEVOPS-466 # Temporary branch for testing
   push:
     branches:
       - develop
@@ -29,23 +30,15 @@ jobs:
       package-manager: 'conda'
       app-name: 'geoapps'
       python-version: '3.10'
-  call-workflow-pytest-on-windows:
-    name: Pytest on Windows
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_windows.yml@DEVOPS-466
+  call-workflow-pytest:
+    name: Pytest
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@DEVOPS-471
     with:
       package-manager: 'conda'
       python-versions: '["3.10"]'
+      os: '["ubuntu-latest", "windows-latest"]'
       cache-number: 1
       codecov-reference-python-version: '3.10'
       lfs: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-  call-workflow-pytest-on-unix-os:
-    name: Pytest on Unix OS
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest_unix_os.yml@DEVOPS-466
-    with:
-      package-manager: 'conda'
-      python-versions: '["3.10"]'
-      os: '["ubuntu-latest"]'
-      cache-number: 1
-      lfs: true
