@@ -30,7 +30,7 @@ jobs:
       package-manager: 'conda'
       app-name: 'geoapps'
       python-version: '3.10'
-  call-workflow-pytest-on:
+  call-workflow-pytest:
     name: Pytest
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@DEVOPS-471
     with:
