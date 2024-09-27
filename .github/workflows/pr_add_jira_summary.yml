@@ -2,7 +2,7 @@ name: Add JIRA issue summary
 
 on:
   pull_request_target:
-    types: [opened]
+    types: [opened, synchronize]
 
 jobs:
   call-workflow-add-jira-issue-summary:

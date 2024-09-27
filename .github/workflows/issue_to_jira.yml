@@ -9,4 +9,4 @@ jobs:
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-issue_to_jira.yml@main
     secrets: inherit
     with:
-      project_key: 'GEOPY'
+      project-key: 'GEOPY'
