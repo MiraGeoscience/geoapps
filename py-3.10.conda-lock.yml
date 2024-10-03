@@ -20,8 +20,6 @@ metadata:
   channels:
   - url: conda-forge
     used_env_vars: []
-  - url: nodefaults
-    used_env_vars: []
   platforms:
   - win-64
   - linux-64
@@ -3418,7 +3416,7 @@ package:
   category: main
   optional: false
 - name: ipython
-  version: 8.27.0
+  version: 8.28.0
   manager: conda
   platform: linux-64
   dependencies:
@@ -3435,14 +3433,14 @@ package:
     stack_data: ''
     traitlets: '>=5.13.0'
     typing_extensions: '>=4.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.27.0-pyh707e725_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.28.0-pyh707e725_0.conda
   hash:
-    md5: 0ed09f0c0f62f50b4b7dd2744af13629
-    sha256: 4eaa22b1afdbd0076ab1cc8da99d9c62f5c5f14cd0a30ff99c133e22f2db5a58
+    md5: 7142a7dff2a47e40b55d304decadd78a
+    sha256: b18adc659d43fc8eef026312a74cd39944ffe9d8decee71ec60a1974fb8ec86c
   category: main
   optional: false
 - name: ipython
-  version: 8.27.0
+  version: 8.28.0
   manager: conda
   platform: win-64
   dependencies:
@@ -3459,10 +3457,10 @@ package:
     prompt-toolkit: '>=3.0.41,<3.1.0'
     traitlets: '>=5.13.0'
     typing_extensions: '>=4.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.27.0-pyh7428d3b_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/ipython-8.28.0-pyh7428d3b_0.conda
   hash:
-    md5: d7f3d6377b3988475bd1fa6493b7b115
-    sha256: 2826fae9530bf5ea53b3b825483d9bd1c01b5635aebc37e0f56003bab434ade6
+    md5: 4df2592ebe3672f282a02c557db209ee
+    sha256: 8d2480d5593854e6bd994329a0b1819d39b35c5ee9e85043737df962f236a948
   category: main
   optional: false
 - name: ipython_genutils
@@ -6562,11 +6560,12 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    libgcc-ng: '>=12'
-  url: https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.3.1-h4ab18f5_1.conda
+    __glibc: '>=2.17,<3.0.a0'
+    libgcc: '>=13'
+  url: https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.3.1-hb9d3cd8_2.conda
   hash:
-    md5: 57d7dc60e9325e3de37ff8dffd18e814
-    sha256: adf6096f98b537a11ae3729eaa642b0811478f0ea0402ca67b5108fe2cb0010d
+    md5: edb0dca6bc32e4f4789199455a1dbeb8
+    sha256: d4bfe88d7cb447768e31650f06257995601f89076080e76df55e3112d4e47dc4
   category: main
   optional: false
 - name: libzlib
@@ -6577,10 +6576,10 @@ package:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/libzlib-1.3.1-h2466b09_1.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/libzlib-1.3.1-h2466b09_2.conda
   hash:
-    md5: d4483ca8afc57ddf1f6dded53b36c17f
-    sha256: b13846a54a15243e15f96fec06b526d8155adc6a1ac2b6ed47a88f6a71a94b68
+    md5: 41fbfac52c601159df6c01f875de31b9
+    sha256: ba945c6493449bed0e6e29883c4943817f7c79cbff52b83360f7b341277c6402
   category: main
   optional: false
 - name: libzopfli
@@ -11297,27 +11296,27 @@ package:
   category: main
   optional: false
 - name: tomli
-  version: 2.0.1
+  version: 2.0.2
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5844808ffab9ebdb694585b50ba02a96
-    sha256: 4cd48aba7cd026d17e86886af48d0d2ebc67ed36f87f6534f4b67138f5a5a58f
+    md5: e977934e00b355ff55ed154904044727
+    sha256: 5e742ba856168b606ac3c814d247657b1c33b8042371f1a08000bdc5075bc0cc
   category: dev
   optional: true
 - name: tomli
-  version: 2.0.1
+  version: 2.0.2
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.7'
-  url: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.1-pyhd8ed1ab_0.tar.bz2
+  url: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.2-pyhd8ed1ab_0.conda
   hash:
-    md5: 5844808ffab9ebdb694585b50ba02a96
-    sha256: 4cd48aba7cd026d17e86886af48d0d2ebc67ed36f87f6534f4b67138f5a5a58f
+    md5: e977934e00b355ff55ed154904044727
+    sha256: 5e742ba856168b606ac3c814d247657b1c33b8042371f1a08000bdc5075bc0cc
   category: dev
   optional: true
 - name: tomlkit
@@ -11450,27 +11449,27 @@ package:
   category: main
   optional: false
 - name: types-python-dateutil
-  version: 2.9.0.20240906
+  version: 2.9.0.20241003
   manager: conda
   platform: linux-64
   dependencies:
     python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/types-python-dateutil-2.9.0.20240906-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/types-python-dateutil-2.9.0.20241003-pyhff2d567_0.conda
   hash:
-    md5: 07c483202a209cd23594b62b3451045e
-    sha256: 737fecb4b6f85a6a85f3fff6cdf5e90c5922b468e036b98f6c1559780cb79664
+    md5: 3d326f8a2aa2d14d51d8c513426b5def
+    sha256: 8489af986daebfbcd13d3748ba55431259206e37f184ab42a57e107fecd85e02
   category: main
   optional: false
 - name: types-python-dateutil
-  version: 2.9.0.20240906
+  version: 2.9.0.20241003
   manager: conda
   platform: win-64
   dependencies:
     python: '>=3.6'
-  url: https://conda.anaconda.org/conda-forge/noarch/types-python-dateutil-2.9.0.20240906-pyhd8ed1ab_0.conda
+  url: https://conda.anaconda.org/conda-forge/noarch/types-python-dateutil-2.9.0.20241003-pyhff2d567_0.conda
   hash:
-    md5: 07c483202a209cd23594b62b3451045e
-    sha256: 737fecb4b6f85a6a85f3fff6cdf5e90c5922b468e036b98f6c1559780cb79664
+    md5: 3d326f8a2aa2d14d51d8c513426b5def
+    sha256: 8489af986daebfbcd13d3748ba55431259206e37f184ab42a57e107fecd85e02
   category: main
   optional: false
 - name: typing-extensions
@@ -12673,12 +12672,13 @@ package:
   manager: conda
   platform: linux-64
   dependencies:
-    libgcc-ng: '>=12'
+    __glibc: '>=2.17,<3.0.a0'
+    libgcc: '>=13'
     libzlib: 1.3.1
-  url: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.3.1-h4ab18f5_1.conda
+  url: https://conda.anaconda.org/conda-forge/linux-64/zlib-1.3.1-hb9d3cd8_2.conda
   hash:
-    md5: 9653f1bf3766164d0e65fa723cabbc54
-    sha256: cee16ab07a11303de721915f0a269e8c7a54a5c834aa52f74b1cc3a59000ade8
+    md5: c9f075ab2f33b3bbee9e62d4ad0a6cd8
+    sha256: 5d7c0e5f0005f74112a34a7425179f4eb6e73c92f5d109e6af4ddeca407c92ab
   category: main
   optional: false
 - name: zlib
@@ -12690,10 +12690,10 @@ package:
     ucrt: '>=10.0.20348.0'
     vc: '>=14.2,<15'
     vc14_runtime: '>=14.29.30139'
-  url: https://conda.anaconda.org/conda-forge/win-64/zlib-1.3.1-h2466b09_1.conda
+  url: https://conda.anaconda.org/conda-forge/win-64/zlib-1.3.1-h2466b09_2.conda
   hash:
-    md5: f8e0a35bf6df768ad87ed7bbbc36ab04
-    sha256: 76409556e6c7cb91991cd94d7fc853c9272c2872bd7e3573ff35eb33d6fca5be
+    md5: be60c4e8efa55fddc17b4131aa47acbd
+    sha256: 8c688797ba23b9ab50cef404eca4d004a948941b6ee533ead0ff3bf52012528c
   category: main
   optional: false
 - name: zlib-ng
@@ -12869,13 +12869,13 @@ package:
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.26.0,<1.27.0'
     pydantic: '>=2.5.2,<3.0.0'
-  url: git+https://github.com/MiraGeoscience/geoh5py.git@1d057e0dd3c7cec71e2d39e4f0a6283f12ef140c
+  url: git+https://github.com/MiraGeoscience/geoh5py.git@4ce32f10547b08865b488aa27340b838e615bc7f
   hash:
-    sha256: 1d057e0dd3c7cec71e2d39e4f0a6283f12ef140c
+    sha256: 4ce32f10547b08865b488aa27340b838e615bc7f
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/geoh5py.git@1d057e0dd3c7cec71e2d39e4f0a6283f12ef140c
+    url: git+https://github.com/MiraGeoscience/geoh5py.git@4ce32f10547b08865b488aa27340b838e615bc7f
   optional: false
 - name: geoh5py
   version: 0.10.0a1
@@ -12886,13 +12886,13 @@ package:
     h5py: '>=3.2.1,<4.0.0'
     numpy: '>=1.26.0,<1.27.0'
     pydantic: '>=2.5.2,<3.0.0'
-  url: git+https://github.com/MiraGeoscience/geoh5py.git@1d057e0dd3c7cec71e2d39e4f0a6283f12ef140c
+  url: git+https://github.com/MiraGeoscience/geoh5py.git@4ce32f10547b08865b488aa27340b838e615bc7f
   hash:
-    sha256: 1d057e0dd3c7cec71e2d39e4f0a6283f12ef140c
+    sha256: 4ce32f10547b08865b488aa27340b838e615bc7f
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/geoh5py.git@1d057e0dd3c7cec71e2d39e4f0a6283f12ef140c
+    url: git+https://github.com/MiraGeoscience/geoh5py.git@4ce32f10547b08865b488aa27340b838e615bc7f
   optional: false
 - name: mira-simpeg
   version: 0.21.2.1.dev19+ge4effeea8
@@ -13150,13 +13150,13 @@ package:
     scikit-image: '>=0.20.0,<0.21.0'
     scipy: '>=1.14.0,<1.15.0'
     tqdm: '>=4.66.1,<4.67.0'
-  url: git+https://github.com/MiraGeoscience/surface-apps@a409b9c25e1f6da730aba6e8b6891518193af22a
+  url: git+https://github.com/MiraGeoscience/surface-apps@73dd9093b94b68584a7022872b8e52b69dad163c
   hash:
-    sha256: a409b9c25e1f6da730aba6e8b6891518193af22a
+    sha256: 73dd9093b94b68584a7022872b8e52b69dad163c
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/surface-apps@a409b9c25e1f6da730aba6e8b6891518193af22a
+    url: git+https://github.com/MiraGeoscience/surface-apps@73dd9093b94b68584a7022872b8e52b69dad163c
   optional: false
 - name: surface-apps
   version: 0.1.0a1
@@ -13170,11 +13170,11 @@ package:
     scikit-image: '>=0.20.0,<0.21.0'
     scipy: '>=1.14.0,<1.15.0'
     tqdm: '>=4.66.1,<4.67.0'
-  url: git+https://github.com/MiraGeoscience/surface-apps@a409b9c25e1f6da730aba6e8b6891518193af22a
+  url: git+https://github.com/MiraGeoscience/surface-apps@73dd9093b94b68584a7022872b8e52b69dad163c
   hash:
-    sha256: a409b9c25e1f6da730aba6e8b6891518193af22a
+    sha256: 73dd9093b94b68584a7022872b8e52b69dad163c
   category: main
   source:
     type: url
-    url: git+https://github.com/MiraGeoscience/surface-apps@a409b9c25e1f6da730aba6e8b6891518193af22a
+    url: git+https://github.com/MiraGeoscience/surface-apps@73dd9093b94b68584a7022872b8e52b69dad163c
   optional: false

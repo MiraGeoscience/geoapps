@@ -4,7 +4,6 @@
 
 channels:
   - conda-forge
-  - nodefaults
 dependencies:
   - accessible-pygments=0.0.5=pyhd8ed1ab_0
   - alabaster=0.7.16=pyhd8ed1ab_0
@@ -116,7 +115,7 @@ dependencies:
   - intel-openmp=2023.2.0=h57928b3_50497
   - ipyfilechooser=0.6.0=pyhd8ed1ab_0
   - ipykernel=6.29.5=pyh4bbf305_0
-  - ipython=8.27.0=pyh7428d3b_0
+  - ipython=8.28.0=pyh7428d3b_0
   - ipython_genutils=0.2.0=pyhd8ed1ab_1
   - ipywidgets=7.8.4=pyhd8ed1ab_0
   - isoduration=20.11.0=pyhd8ed1ab_0
@@ -202,7 +201,7 @@ dependencies:
   - libxml2=2.12.7=h0f24e4e_4
   - libxslt=1.1.39=h3df6e99_0
   - libzip=1.11.1=h25f2845_0
-  - libzlib=1.3.1=h2466b09_1
+  - libzlib=1.3.1=h2466b09_2
   - libzopfli=1.0.3=h0e60522_0
   - linkify-it-py=2.0.3=pyhd8ed1ab_0
   - llvmlite=0.43.0=py310h0288bfe_1
@@ -356,13 +355,13 @@ dependencies:
   - tinycss2=1.3.0=pyhd8ed1ab_0
   - tk=8.6.13=h5226925_1
   - toml=0.10.2=pyhd8ed1ab_0
-  - tomli=2.0.1=pyhd8ed1ab_0
+  - tomli=2.0.2=pyhd8ed1ab_0
   - tomlkit=0.13.2=pyha770c72_0
   - toolz=0.12.1=pyhd8ed1ab_0
   - tornado=6.4.1=py310ha8f682b_1
   - tqdm=4.66.5=pyhd8ed1ab_0
   - traitlets=5.14.3=pyhd8ed1ab_0
-  - types-python-dateutil=2.9.0.20240906=pyhd8ed1ab_0
+  - types-python-dateutil=2.9.0.20241003=pyhff2d567_0
   - typing-extensions=4.12.2=hd8ed1ab_0
   - typing_extensions=4.12.2=pyha770c72_0
   - typing_utils=0.1.0=pyhd8ed1ab_0
@@ -396,21 +395,21 @@ dependencies:
   - zfp=1.0.1=he0c23c2_2
   - zict=3.0.0=pyhd8ed1ab_0
   - zipp=3.20.2=pyhd8ed1ab_0
-  - zlib=1.3.1=h2466b09_1
+  - zlib=1.3.1=h2466b09_2
   - zlib-ng=2.0.7=hcfcfb64_0
   - zstandard=0.23.0=py310he5e10e1_1
   - zstd=1.5.6=h0ea2cb4_0
   - pip:
       - curve-apps @ git+https://github.com/MiraGeoscience/curve-apps.git@129d63c14e29040cc1cff0acbe38cc36481a21c7
       - geoapps-utils @ git+https://github.com/MiraGeoscience/geoapps-utils.git@693a3f3f2521b10997abf9d4796ea5bbbd54acff
-      - geoh5py @ git+https://github.com/MiraGeoscience/geoh5py.git@1d057e0dd3c7cec71e2d39e4f0a6283f12ef140c
+      - geoh5py @ git+https://github.com/MiraGeoscience/geoh5py.git@4ce32f10547b08865b488aa27340b838e615bc7f
       - mira-simpeg @ git+https://github.com/MiraGeoscience/simpeg@e4effeea85a290af87d1f1deaf204a47894cff10
       - octree-creation-app @ git+https://github.com/MiraGeoscience/octree-creation-app.git@3a1e73a4a657335496b116a690fac6884019f13b
       - param-sweeps @ git+https://github.com/MiraGeoscience/param-sweeps.git@1ad6378120dde7c075cf989283e6a977800d2158
       - peak-finder-app @ git+https://github.com/MiraGeoscience/peak-finder-app@db1b8e044251fd7b029cbc51f4b18d040bcedf48
       - simpeg-archive @ git+https://github.com/MiraGeoscience/simpeg@894db1029c876de39c0cac9365f259379568f9b5
       - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers@95cf8ed658369fb74364208ef554138886a8f556
-      - surface-apps @ git+https://github.com/MiraGeoscience/surface-apps@a409b9c25e1f6da730aba6e8b6891518193af22a
+      - surface-apps @ git+https://github.com/MiraGeoscience/surface-apps@73dd9093b94b68584a7022872b8e52b69dad163c
 
 variables:
   KMP_WARNINGS: 0
