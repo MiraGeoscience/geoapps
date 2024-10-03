@@ -109,10 +109,10 @@ class Surface2D(ObjectDataSelection):
 
         _, elevations = self.elevations.get_selected_entities()
 
-        if hasattr(obj, "centroids"):
-            locations = obj.centroids
-        else:
+        if hasattr(obj, "vertices"):
             locations = obj.vertices
+        else:
+            locations = obj.centroids
 
         if self.z_option.value == "depth":
             if self.topography.options.value == "Object":
