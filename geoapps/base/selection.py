@@ -469,7 +469,7 @@ class LineOptions(ObjectDataSelection):
         if data and getattr(data[0], "values", None) is not None:
             if isinstance(data[0], ReferencedData):
                 self.lines.options = [["", None]] + [
-                    [v, k] for k, v in data[0].value_map.map.items()
+                    [v, int(k)] for k, v in data[0].value_map().items()
                 ]
             else:
                 self.lines.options = [["", None]]
