@@ -14,6 +14,7 @@ from pathlib import Path
 from time import time
 from uuid import UUID
 
+from geoh5py.groups import UIJsonGroup
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
@@ -144,7 +145,8 @@ class IsoSurface(ObjectDataSelection):
 
             param_dict["geoh5"] = new_workspace
             param_dict["conda_environment"] = "geoapps"
-            param_dict["out_group"] = self.ga_group_name.value
+            group = UIJsonGroup.create(new_workspace, name=self.ga_group_name.value)
+            param_dict["out_group"] = group
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory

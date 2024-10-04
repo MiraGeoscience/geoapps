@@ -52,9 +52,7 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
     if isinstance(entity, UUID):
         entity = workspace.get_entity(entity)[0]
 
-    if hasattr(entity, "centroids"):
-        locations = entity.centroids
-    elif hasattr(entity, "vertices"):
+    if hasattr(entity, "vertices"):
         if isinstance(entity, BaseElectrode):
             potentials = entity.potential_electrodes
             locations = np.mean(
@@ -66,6 +64,8 @@ def get_locations(workspace: Workspace, entity: UUID | Entity):
             )
         else:
             locations = entity.vertices
+    elif hasattr(entity, "centroids"):
+        locations = entity.centroids
 
     elif getattr(entity, "parent", None) is not None and entity.parent is not None:
         locations = get_locations(workspace, entity.parent)

@@ -187,7 +187,6 @@ def test_contour_values(tmp_path):
         ifile.set_data_value("interval_spacing", 100.0)
         ifile.set_data_value("fixed_contours", "-240")
 
-    # app = ContourValues(geoh5=str(temp_workspace), plot_result=False)
     app = ContourValues(ui_json=ifile, plot_result=False)
     app.trigger_click(None)
 
@@ -196,7 +195,9 @@ def test_contour_values(tmp_path):
         assert output.n_vertices == 4984, "Change in output. Need to verify."
         # TODO the double value here is due to package conflicts locally and on github
         # Once we switch from matplotlib to scikit-image, this should be a single value.
-        assert np.sum([isinstance(c, FilenameData) for c in output.children]) == 1
+        assert (
+            np.sum([isinstance(c, FilenameData) for c in output.parent.children]) == 1
+        )
 
 
 def test_create_surface(tmp_path: Path):
@@ -547,13 +548,12 @@ def test_iso_surface(tmp_path: Path):
         ifile.set_data_value("interval_min", 0.005)
         ifile.set_data_value("interval_max", 0.02)
         ifile.set_data_value("interval_spacing", 0.005)
-        ifile.set_data_value("out_group", "test_iso")
 
     app = IsoSurface(ui_json=ifile)
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
-        group = workspace.get_entity("test_iso")[0]
+        group = workspace.get_entity("ISO")[0]
         assert len(group.children) == 5
         assert np.sum([isinstance(c, FilenameData) for c in group.children]) == 1
         assert np.sum([isinstance(c, Surface) for c in group.children]) == 4

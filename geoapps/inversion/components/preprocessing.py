@@ -14,7 +14,7 @@ import uuid
 import numpy as np
 from geoh5py import Workspace
 from geoh5py.data import Data, NumericData
-from geoh5py.objects import Grid2D, ObjectBase, Points, PotentialElectrode
+from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, PotentialElectrode
 from geoh5py.shared.utils import is_uuid
 
 from geoapps.inversion.utils import calculate_2D_trend
@@ -111,11 +111,12 @@ def window_data(
         name=data_object.name + "_processed",
     )
 
-    if (
-        not isinstance(data_object, PotentialElectrode)
-        and getattr(data_object, "parts", None) is not None
+    if isinstance(data_object, Curve) and not isinstance(
+        data_object, PotentialElectrode
     ):
-        new_data_object.parts = data_object.parts[mask]
+        new_data_object._parts = data_object.parts[mask]  # pylint: disable=protected-access
+        new_data_object._cells = None  # pylint: disable=protected-access
+        new_data_object.cells = None
 
     # Update data dict
     for comp in components:
