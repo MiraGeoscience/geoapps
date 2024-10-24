@@ -38,7 +38,7 @@ jobs:
       os: '["ubuntu-latest", "windows-latest"]'
       cache-number: 1
       codecov-reference-python-version: '3.10'
-      codecov-reference-os: '["windows-latest", "ubuntu-latest"]'
+      codecov-reference-os: '["windows-latest"]'
       lfs: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
