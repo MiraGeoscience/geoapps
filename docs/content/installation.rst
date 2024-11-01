@@ -2,7 +2,7 @@
 Getting Started
 ===============
 
-Whether you are developer or an end-user, this page will help you get started with the **geoapps**.
+Whether you are a developer or an end-user, this page will help you get started with the **geoapps**.
 
 .. contents::
 
@@ -15,7 +15,7 @@ Installation
 Install Conda
 ~~~~~~~~~~~~~
 
-Install Conda for Python 3.9 or higher. Follow this link to download its Windows installer (~140 MB of disk space):
+Install Conda for Python 3.10 or higher. Follow this link to download its Windows installer (~140 MB of disk space):
 
 `Miniforge <https://github.com/conda-forge/miniforge#download>`_ `(Windows x86_64) <https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Windows-x86_64.exe>`_
 
@@ -27,7 +27,7 @@ Install Conda for Python 3.9 or higher. Follow this link to download its Windows
     :align: center
     :width: 200
 
-Registering the Conda distribution as the default Python 3.10 interpreter is totally optional.
+Registering the Conda distribution as the default Python 3.10 interpreter is optional.
 Preferably uncheck that box if you already have Python 3 installed on your system.
 
 .. note:: We recommend installing **Miniforge**: beyond being smaller,
