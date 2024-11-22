@@ -4,9 +4,13 @@ version = "0.13.0-alpha.1"
 
 description = "Open-sourced Applications in Geoscience"
 authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
+maintainers = [
+    "Benjamin Kary <benjamink@mirageoscience.com>",
+    "Dominique Fournier <dominiquef@mirageoscience.com>",
+]
 repository = "https://github.com/MiraGeoscience/geoapps"
-documentation = "https://geoapps.readthedocs.io/en/latest/"
-homepage = "https://mirageoscience.com"
+documentation = "https://mirageoscience-geoapps.readthedocs-hosted.com/"
+homepage = "https://www.mirageoscience.com/mining-industry-software/python-integration/"
 readme = "README.rst"
 
 packages = [
