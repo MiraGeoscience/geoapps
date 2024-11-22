@@ -1,9 +1,9 @@
 |coverage| |precommit_ci| |docs| |style| |version| |pyversions|
 
 
-.. |docs| image:: https://readthedocs.org/projects/geoapps/badge/
+.. |docs| image:: https://readthedocs.com/projects/mirageoscience-geoapps/badge/?version=latest
     :alt: Documentation Status
-    :target: https://geoapps.readthedocs.io/en/latest/?badge=latest
+    :target: https://mirageoscience-geoapps.readthedocs-hosted.com/en/latest/?badge=latest
 
 .. |coverage| image:: https://codecov.io/gh/MiraGeoscience/geoapps/branch/main/graph/badge.svg
     :alt: Code coverage
@@ -47,9 +47,9 @@ applications in geoscience. Users will be able to directly leverage the powerful
 Links
 ^^^^^
 
-- `Download the latest <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_
-- `Getting started <https://geoapps.readthedocs.io/en/latest/content/installation.html#installation>`_
-- `Documentation <https://geoapps.readthedocs.io/en/latest/index.html>`_
+- `Download the latest stable version at <https://github.com/MiraGeoscience/geoapps/archive/main.zip>`_
+- `Getting started <https://mirageoscience-geoapps.readthedocs-hosted.com/en/stable/content/installation.html#installation>`_
+- `Documentation <https://mirageoscience-geoapps.readthedocs-hosted.com/en/stable/index.html>`_
 
 
 Current sponsors

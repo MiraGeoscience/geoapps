@@ -259,7 +259,7 @@ Installation Updates
 ^^^^^^^^^^^^^^^^^^^^
 
 Some changes have been made on the installation routine and dependencies.
-Please visit the `Getting Started <https://geoapps.readthedocs.io/en/latest/content/installation.html) page for details>`_.
+Please visit the `Getting Started <https://mirageoscience-geoapps.readthedocs-hosted.com/en/latest/content/installation.html) page for details>`_.
 
 
 
