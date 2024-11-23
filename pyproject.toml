@@ -73,39 +73,39 @@ ipywidgets = "^7.8.0"
 notebook = "^7.2.0"
 plotly = "~5.19.0"
 pyqtwebengine = "~5.15.2"
-pyside2 = "~5.15.2.1"
+pyside2 = "5.15.*"  # from targeting-workflow, geo-unsup-mappper, peak-finder-app
 
 ## pip dependencies from Git repositories
 #----------------------------------------
-#geoh5py = {version = ">=0.10.0b.1, <0.11.0a.dev", source = "pypi", allow-prereleases = true}
-geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "release/0.10.0"}
+geoh5py = {version = ">=0.10.0b3, <0.11.0a.dev", source = "pypi", allow-prereleases = true}
+#geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "release/0.10.0"}
 
-#param-sweeps = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-param-sweeps = {git = "https://github.com/MiraGeoscience/param-sweeps.git", rev = "release/0.2.0"}
+param-sweeps = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+#param-sweeps = {git = "https://github.com/MiraGeoscience/param-sweeps.git", rev = "release/0.2.0"}
 
-#curve-apps = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "release/0.2.0"}
+curve-apps = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+#curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "release/0.2.0"}
 
 #surface-apps = {version = ">=0.1.0b1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
 surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "release/0.1.0"}
 
-#octree-creation-app = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "release/0.2.0"}
+octree-creation-app = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+#octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "release/0.2.0"}
 
-#peak-finder-app = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+#peak-finder-app = {version = ">=0.2.0b3, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "release/0.2.0"}
 
-#geoapps-utils = {version = ">=0.4.0b1, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
-geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "release/0.4.0"}
+geoapps-utils = {version = ">=0.4.0b1, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
+#geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "release/0.4.0"}
 
-#simpeg-drivers = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+#simpeg-drivers = {version = ">=0.2.0b2, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "release/0.2.0"}
 
 simpeg-archive = {version = ">=0.11.0.1, <0.11.0.2", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
 
-#mira-simpeg = {version = ">=0.21.2.1b1, <0.21.2.2a.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
-mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "release/0.21.2.1", extras = ["dask"]}
+mira-simpeg = {version = ">=0.21.2.1b2, <0.21.2.2a.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
+#mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "release/0.21.2.1", extras = ["dask"]}
 
 ## about pip dependencies
 # to be specified to work with conda-lock
@@ -139,10 +139,11 @@ zarr = ">=2.14.2, <2.15.0"  # from simpeg[dask], simpeg-drivers
 #-------------------------------------------------------------------------------
 tbb = "2021.12.*"  # through mkl from SimPEG (constraint copied from simpeg-drivers)
 python-tzdata = "2023.4.*"  # through pandas from SimPEG (constraint copied from simpeg-drivers)
+# Note: see pyside2 = "5.15.*" above: allow Conda to resolve to a higher existing version than in PyPI
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
-jupyter-book = "^0.13"
+jupyter-book = "*"
 jupytext = "^1.14"
 pylint = "*"
 pytest = "*"
