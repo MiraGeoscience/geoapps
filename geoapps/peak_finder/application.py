@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -12,7 +12,6 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-from geoapps_utils.application.dash_application import ObjectSelection
 from geoh5py.data import ReferencedData
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
@@ -20,6 +19,7 @@ from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.ui_json import InputFile
 from ipywidgets import Dropdown, VBox
 from peak_finder.application import PeakFinder as DashPeakFinder
+from peak_finder.dash_application import ObjectSelection
 from peak_finder.params import PeakFinderParams
 
 from geoapps.base.selection import ObjectDataSelection
@@ -38,7 +38,7 @@ class PeakFinder(ObjectDataSelection):
 
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
+            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
         else:
             try:
                 self.params = self._param_class(**app_initializer)
