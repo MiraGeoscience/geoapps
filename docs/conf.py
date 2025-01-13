@@ -16,6 +16,7 @@ import os
 import sys
 import shutil
 import plotly.io as pio
+from datetime import datetime
 
 pio.renderers.default = "sphinx_gallery"
 
@@ -94,6 +95,8 @@ master_doc = "index"
 # General information about the project.
 project = "geoapps v0.12.0-beta.2"
 
+project_copyright = "%Y, Mira Geoscience Ltd"
+author = "Mira Geoscience Ltd."
 
 # The short X.Y version.
 version = "0.12.0"
@@ -394,3 +397,12 @@ sys.path.append(os.getcwd())
 
 # TODO: build the source
 # sphinx-apidoc --templatedir templates/ -o content/api/ ../mirageoscience-apps
+
+
+def get_copyright_notice():
+    return f"Copyright {datetime.now().strftime(project_copyright)}"
+
+
+rst_epilog = f"""
+.. |copyright_notice| replace:: {get_copyright_notice()}.
+"""
