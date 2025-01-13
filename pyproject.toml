@@ -167,6 +167,7 @@ ignore = [
     "B028",  # no-explicit-stacklevel for warnings.warn()
     "E501",  # line-too-long - code is reformatted (do not care about comments and docstring)
     "F401",  # unsused-import - covered by pycln
+    "A005", # TO DO (stdlib-module-shadowing: Module shadows a Python standard-library module)
     "RUF005", # TO DO
     "B007", # TO DO
     "B011", # TO DO
