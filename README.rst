@@ -1,12 +1,3 @@
-# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
-#                                                                              '
-#  This file is part of geoapps.                                               '
-#                                                                              '
-#  geoapps is distributed under the terms and conditions of the MIT License    '
-#  (see LICENSE file at the root of this source code package).                 '
-# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
 |coverage| |precommit_ci| |docs| |style| |version| |pyversions|
 
 
@@ -176,7 +167,7 @@ License
 ^^^^^^^
 MIT License
 
-Copyright (c) 2024 Mira Geoscience
+Copyright (c) 2020-2025 Mira Geoscience
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

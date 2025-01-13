@@ -1,12 +1,3 @@
-# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
-#                                                                              '
-#  This file is part of geoapps.                                               '
-#                                                                              '
-#  geoapps is distributed under the terms and conditions of the MIT License    '
-#  (see LICENSE file at the root of this source code package).                 '
-# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-
 Setup for development
 =====================
 
@@ -369,11 +360,6 @@ Here is a suggestion for some plugins you can install in PyCharm.
 .. _.pre-commit-config.yaml: .pre-commit-config.yaml
 
 
-License
-^^^^^^^
-# TODO: ADD LICENSE TERMS
-
-
 Copyright
 ^^^^^^^^^
-Copyright (c) 2024 Mira Geoscience Ltd.
+Copyright (c) 2020-2025 Mira Geoscience Ltd.
