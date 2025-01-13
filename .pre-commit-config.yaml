@@ -24,7 +24,9 @@ repos:
         -   --fix
         -   --exit-non-zero-on-fix
 #        -   --unsafe-fixes
+        exclude_types: [jupyter]
     -   id: ruff-format
+        exclude_types: [jupyter]
 #-   repo: https://github.com/pre-commit/mirrors-mypy  # TODO: fix mypy errors
 #    rev: v1.10.0
 #    hooks:
@@ -74,6 +76,7 @@ repos:
     -   id: check-toml
     -   id: check-yaml
     -   id: check-added-large-files
+#        args: [--enforce-all]
     -   id: check-case-conflict
     -   id: check-merge-conflict
     -   id: debug-statements
