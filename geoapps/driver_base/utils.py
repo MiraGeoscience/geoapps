@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -57,8 +57,8 @@ def running_mean(
 
 
 def treemesh_2_octree(workspace, treemesh, **kwargs):
-    index_array, levels = getattr(treemesh, "_ubc_indArr")
-    ubc_order = getattr(treemesh, "_ubc_order")
+    index_array, levels = treemesh._ubc_indArr
+    ubc_order = treemesh._ubc_order
 
     index_array = index_array[ubc_order] - 1
     levels = levels[ubc_order]

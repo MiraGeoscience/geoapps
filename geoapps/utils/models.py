@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -85,10 +85,8 @@ def drape_to_octree(
             if method == "nearest":
                 octree_model.append(datum[0].values)
             else:
-                lookup_inds = (
-                    mesh._get_containing_cell_indexes(  # pylint: disable=W0212
-                        model.centroids
-                    )
+                lookup_inds = mesh._get_containing_cell_indexes(  # pylint: disable=W0212
+                    model.centroids
                 )
                 octree_model[lookup_inds] = datum[0].values
 

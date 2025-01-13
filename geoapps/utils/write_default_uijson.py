@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -52,6 +52,7 @@ from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.scatter_plot.params import ScatterPlotParams
+
 
 active_data_channels = [
     "z_real_channel",

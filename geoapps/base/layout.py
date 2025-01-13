@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 from dash import dcc, html
+
 
 workspace_layout = html.Div(
     [

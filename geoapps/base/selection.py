@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -19,6 +19,7 @@ from geoapps.base.application import BaseApplication
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.workspace import sorted_children_dict
+
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -89,9 +90,9 @@ class ObjectDataSelection(BaseApplication):
 
     @data.setter
     def data(self, value):
-        assert isinstance(
-            value, (Dropdown, SelectMultiple)
-        ), f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
+        assert isinstance(value, (Dropdown, SelectMultiple)), (
+            f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
+        )
         self._data = value
 
     @property
@@ -143,9 +144,9 @@ class ObjectDataSelection(BaseApplication):
             entity_types = tuple(entity_types)
 
         for entity_type in entity_types:
-            assert issubclass(
-                entity_type, ObjectBase
-            ), f"Provided object_types must be instances of {ObjectBase}"
+            assert issubclass(entity_type, ObjectBase), (
+                f"Provided object_types must be instances of {ObjectBase}"
+            )
 
         self._object_types = entity_types
 
@@ -165,9 +166,9 @@ class ObjectDataSelection(BaseApplication):
             entity_types = tuple(entity_types)
 
         for entity_type in entity_types:
-            assert issubclass(
-                entity_type, ObjectBase
-            ), f"Provided exclusion_types must be instances of {ObjectBase}"
+            assert issubclass(entity_type, ObjectBase), (
+                f"Provided exclusion_types must be instances of {ObjectBase}"
+            )
 
         self._exclusion_types = tuple(entity_types)
 
@@ -190,9 +191,9 @@ class ObjectDataSelection(BaseApplication):
             values = [values]
 
         for value in values:
-            assert isinstance(
-                value, str
-            ), f"Labels to find must be strings. Value {value} of type {type(value)} provided"
+            assert isinstance(value, str), (
+                f"Labels to find must be strings. Value {value} of type {type(value)} provided"
+            )
         self._find_label = values
 
     @property
@@ -233,9 +234,9 @@ class ObjectDataSelection(BaseApplication):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -458,9 +459,9 @@ class LineOptions(ObjectDataSelection):
 
     @multiple_lines.setter
     def multiple_lines(self, value):
-        assert isinstance(
-            value, bool
-        ), f"'multiple_lines' property must be of type {bool}"
+        assert isinstance(value, bool), (
+            f"'multiple_lines' property must be of type {bool}"
+        )
         self._multiple_lines = value
 
     def update_line_list(self, _):

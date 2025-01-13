@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -62,8 +62,7 @@ def calculate_2D_trend(
     """
     if not isinstance(order, int) or order < 0:
         raise ValueError(
-            "Polynomial 'order' should be an integer > 0. "
-            f"Value of {order} provided."
+            f"Polynomial 'order' should be an integer > 0. Value of {order} provided."
         )
 
     ind_nan = ~np.isnan(values)
@@ -77,7 +76,7 @@ def calculate_2D_trend(
         values = values[hull.vertices]
     elif not method == "all":
         raise ValueError(
-            "'method' must be either 'all', or 'perimeter'. " f"Value {method} provided"
+            f"'method' must be either 'all', or 'perimeter'. Value {method} provided"
         )
 
     # Compute center of mass
@@ -86,7 +85,7 @@ def calculate_2D_trend(
 
     polynomial = []
     xx, yy = np.triu_indices(order + 1)
-    for x, y in zip(xx, yy):
+    for x, y in zip(xx, yy, strict=False):
         polynomial.append(
             (loc_xy[:, 0] - center_x) ** float(x)
             * (loc_xy[:, 1] - center_y) ** float(y - x)
@@ -101,7 +100,7 @@ def calculate_2D_trend(
 
     params, _, _, _ = np.linalg.lstsq(polynomial, values, rcond=None)
     data_trend = np.zeros(points.shape[0])
-    for count, (x, y) in enumerate(zip(xx, yy)):
+    for count, (x, y) in enumerate(zip(xx, yy, strict=False)):
         data_trend += (
             params[count]
             * (points[:, 0] - center_x) ** float(x)

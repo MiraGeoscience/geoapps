@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -24,6 +24,7 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
+
 with warn_module_not_found():
     from matplotlib import pyplot as plt
 
@@ -31,10 +32,11 @@ with warn_module_not_found():
     from osgeo import osr
 
 with warn_module_not_found():
-    from ipywidgets.widgets import HBox, VBox
     from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
+    from ipywidgets.widgets import HBox, VBox
 
 from .utils import export_curve_2_shapefile, object_2_dataframe
+
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
@@ -205,9 +207,9 @@ class Export(ObjectDataSelection):
         )
 
     def _export_shapefile(self, entity):
-        assert isinstance(
-            entity, Curve
-        ), f"Only Curve objects are support for type {self.file_type.value}"
+        assert isinstance(entity, Curve), (
+            f"Only Curve objects are support for type {self.file_type.value}"
+        )
 
         if self.data.value:
             for key in self.data.value:
@@ -276,9 +278,9 @@ class Export(ObjectDataSelection):
                 print(f"Object saved to {name}")
 
     def _export_ubc(self, entity, data_values):
-        assert isinstance(
-            entity, (Octree, BlockModel)
-        ), "Export available for BlockModel or octree only"
+        assert isinstance(entity, (Octree, BlockModel)), (
+            "Export available for BlockModel or octree only"
+        )
         if isinstance(entity, Octree):
             mesh = octree_2_treemesh(entity)
 

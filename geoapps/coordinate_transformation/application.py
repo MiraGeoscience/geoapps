@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -26,6 +26,7 @@ from geoapps.utils.plotting import plot_plan_data_selection
 
 from ..base.application import BaseApplication
 
+
 with warn_module_not_found():
     from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
 
@@ -33,6 +34,7 @@ with warn_module_not_found():
     from fiona.transform import transform
 
 from uuid import UUID
+
 
 with warn_module_not_found():
     from osgeo import gdal, osr

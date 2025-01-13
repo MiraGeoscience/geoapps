@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -27,6 +27,7 @@ from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
+
 
 with warn_module_not_found():
     from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
@@ -59,7 +60,7 @@ class EdgeDetectionApp(PlotSelection2D):
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
+            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
         else:
             try:
                 self.params = self._param_class(**app_initializer)

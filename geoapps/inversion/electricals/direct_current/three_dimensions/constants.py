@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -12,6 +12,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from geoapps import assets_path
+
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon_dcip.geoh5"),

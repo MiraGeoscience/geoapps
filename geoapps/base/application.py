@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -22,14 +22,16 @@ from geoh5py.shared.utils import (
     dict_mapper,
     entity2uuid,
     fetch_active_workspace,
+    list2str,
     str2uuid,
 )
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import list2str, monitored_directory_copy
+from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from traitlets import TraitError
 
 from geoapps.utils import warn_module_not_found
+
 
 with warn_module_not_found():
     from ipyfilechooser import FileChooser
@@ -141,7 +143,7 @@ class BaseApplication:
                             if isinstance(widget, Text):
                                 value = list2str(value)
 
-                            setattr(widget, "value", value)
+                            widget.value = value
                             if hasattr(widget, "style"):
                                 widget.style = {"description_width": "initial"}
 
@@ -177,7 +179,7 @@ class BaseApplication:
                 self.geoh5.close()
 
             if extension == ".json" and getattr(self, "_param_class", None) is not None:
-                self.params = getattr(self, "_param_class")(
+                self.params = self._param_class(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.refresh.value = False
@@ -219,7 +221,7 @@ class BaseApplication:
                 )
 
             if getattr(self, "_params", None) is not None:
-                setattr(self.params, "monitoring_directory", self.monitoring_directory)
+                self.params.monitoring_directory = self.monitoring_directory
             self.monitoring_panel.children[0].value = "Monitoring path:"
         else:
             self.monitoring_panel.children[0].value = "Save to:"
@@ -383,9 +385,9 @@ class BaseApplication:
 
     @params.setter
     def params(self, params: BaseParams):
-        assert isinstance(
-            params, BaseParams
-        ), f"Input parameters must be an instance of {BaseParams}"
+        assert isinstance(params, BaseParams), (
+            f"Input parameters must be an instance of {BaseParams}"
+        )
 
         self._params = params
 
@@ -426,9 +428,9 @@ class BaseApplication:
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
 
     @property

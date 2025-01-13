@@ -2,7 +2,7 @@
 default_language_version:
     python: python3
 exclude: (^docs/(conf.py|_ext/))
-default_stages: [commit,push]
+default_stages: [pre-commit,pre-push]
 fail_fast: false
 
 ci:
@@ -12,44 +12,45 @@ ci:
 
 repos:
 -   repo: https://github.com/hadialqattan/pycln
-    rev: v2.4.0
+    rev: v2.5.0
     hooks:
     -   id: pycln
         args: [--config=pyproject.toml]
--   repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.1
     hooks:
-    -   id: isort
-        additional_dependencies: [tomli]  # to read config from pyproject.toml
--   repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-    -   id: black
--   repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
-    hooks:
-    -   id: flake8
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
-    hooks:
-    -   id: pyupgrade
-        args: [--py310-plus]
+    -   id: ruff
+        args:
+        -   --fix
+        -   --exit-non-zero-on-fix
+#        -   --unsafe-fixes
+        exclude_types: [jupyter]
+    -   id: ruff-format
+        exclude_types: [jupyter]
 #-   repo: https://github.com/pre-commit/mirrors-mypy  # TODO: fix mypy errors
 #    rev: v1.10.0
 #    hooks:
 #    -   id: mypy
 #        additional_dependencies: [
-#            numpy==1.26.*,  # pre-commit CI does not provide numpy 1.23.*
+#            numpy==1.26.*,
 #            types-toml,
 #            types-PyYAML,
 #            tomli  # to read config from pyproject.toml
 #        ]
 #        exclude: ^(docs|geoapps-assets)/
 -   repo: https://github.com/codingjoe/relint
-    rev: 3.1.1
+    rev: 3.3.1
     hooks:
     -   id: relint
         args: [-W]  # to fail on warnings
+-   repo: https://github.com/MiraGeoscience/pre-commit-hooks
+    rev: v1.1.0
+    hooks:
+    -   id: check-copyright
+        files: (^package\.rst|^LICENSE|^README(|-dev)\.rst|\.py|\.pyi)$
+        exclude: (^\.|^docs/)
+    -   id: prepare-commit-msg
+    -   id: check-commit-msg
 -   repo: local
     hooks:
     -   id: pylint
@@ -59,31 +60,14 @@ repos:
         require_serial: true  # pylint does its own parallelism
         types: [python]
         exclude: ^(devtools|docs)/
-    -   id: check-copyright
-        name: Check copyright
-        entry: python devtools/check-copyright.py
-        language: python
-        types: [text]
-        files: (^LICENSE|^README(|-dev).rst|\.py|\.pyi)$
-        exclude: (^\.|^docs/)
-    -   id: prepare-commit-msg
-        stages: [prepare-commit-msg]
-        name: Prepare commit message
-        entry: python devtools/git_message_hook.py --prepare
-        language: python
-    -   id: check-commit-msg
-        stages: [commit-msg]
-        name: Check commit message
-        entry: python devtools/git_message_hook.py --check
-        language: python
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.3.0
     hooks:
     -   id: codespell
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb|^THIRD_PARTY_SOFTWARE\.rst)$
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
     -   id: trailing-whitespace
         exclude: \.mdj$
@@ -91,7 +75,8 @@ repos:
         exclude_types: [jupyter]
     -   id: check-toml
     -   id: check-yaml
-#    -   id: check-added-large-files # crashing on some configuration. To be investigated
+    -   id: check-added-large-files
+#        args: [--enforce-all]
     -   id: check-case-conflict
     -   id: check-merge-conflict
     -   id: debug-statements
@@ -111,7 +96,7 @@ repos:
         exclude_types: [jupyter]
         exclude: ^docs/.*/images/
 -   repo: https://github.com/rstcheck/rstcheck
-    rev: v6.2.0
+    rev: v6.2.4
     hooks:
     -   id: rstcheck
         exclude: ^THIRD_PARTY_SOFTWARE.rst$

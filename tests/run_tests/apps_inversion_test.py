@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -41,6 +41,7 @@ from tests import (  # pylint: disable=no-name-in-module
     PROJECT_DCIP,
     PROJECT_TEM,
 )
+
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -208,7 +209,7 @@ def test_dc_inversion(tmp_path: Path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
 
     params_reload = DirectCurrent3DParams(ifile)
 
@@ -223,9 +224,9 @@ def test_dc_inversion(tmp_path: Path):
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert (
-            p_value == value
-        ), f"Side effect parameter {param} not saved and loaded correctly."
+        assert p_value == value, (
+            f"Side effect parameter {param} not saved and loaded correctly."
+        )
 
     # Test the groups
     groups = [
@@ -239,15 +240,15 @@ def test_dc_inversion(tmp_path: Path):
     for group in groups:
         if "Constant" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, 1.0)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Constant"
-            ), f"Property group {group} did not reset to 'Constant'"
+            assert getattr(app, "_" + group + "_group").options.value == "Constant", (
+                f"Property group {group} did not reset to 'Constant'"
+            )
 
         if "None" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, None)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "None"
-            ), f"Property group {group} did not reset to 'None'"
+            assert getattr(app, "_" + group + "_group").options.value == "None", (
+                f"Property group {group} did not reset to 'None'"
+            )
 
 
 def test_ip_inversion(tmp_path: Path):
@@ -288,7 +289,7 @@ def test_ip_inversion(tmp_path: Path):
                 setattr(app, param, value)
 
         app.write_trigger(None)
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
     params_reload = InducedPolarization3DParams(ifile)
 
     for param, value in changes.items():
@@ -297,16 +298,16 @@ def test_ip_inversion(tmp_path: Path):
         if param == "chargeability_channel":
             assert p_value != value and is_uuid(p_value)
         else:
-            assert (
-                p_value == value
-            ), f"Parameter {param} not saved and loaded correctly."
+            assert p_value == value, (
+                f"Parameter {param} not saved and loaded correctly."
+            )
 
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert (
-            p_value == value
-        ), f"Side effect parameter {param} not saved and loaded correctly."
+        assert p_value == value, (
+            f"Side effect parameter {param} not saved and loaded correctly."
+        )
 
     groups = [
         "topography",
@@ -320,15 +321,15 @@ def test_ip_inversion(tmp_path: Path):
     for group in groups:
         if "Constant" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, 1.0)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Constant"
-            ), f"Property group {group} did not reset to 'Constant'"
+            assert getattr(app, "_" + group + "_group").options.value == "Constant", (
+                f"Property group {group} did not reset to 'Constant'"
+            )
 
         if "None" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, None)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "None"
-            ), f"Property group {group} did not reset to 'None'"
+            assert getattr(app, "_" + group + "_group").options.value == "None", (
+                f"Property group {group} did not reset to 'None'"
+            )
 
 
 def test_em1d_inversion(tmp_path: Path):

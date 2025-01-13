@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -14,6 +14,7 @@ from uuid import UUID
 from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 import geoapps
+
 
 default_ui_json = {
     "forward_only": False,

@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -34,6 +34,7 @@ from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
 
 from ...base.application import BaseApplication
+
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -801,9 +802,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.sensor.workspace = workspace
@@ -1353,7 +1354,7 @@ class InversionApp(PlotSelection2D):
                 elif data["inversion_type"] == "magnetic scalar":
                     self._param_class = MagneticScalarParams
 
-                self.params = getattr(self, "_param_class")(
+                self.params = self._param_class(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 params = self.params.to_dict()

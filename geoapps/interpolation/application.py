@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -26,6 +26,7 @@ from geoapps.interpolation.driver import DataInterpolationDriver
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.utils import warn_module_not_found
 
+
 with warn_module_not_found():
     from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, VBox
 
@@ -41,7 +42,7 @@ class DataInterpolation(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
+            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
         else:
             try:
                 self.params = self._param_class(**app_initializer)
@@ -234,9 +235,9 @@ class DataInterpolation(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.out_object.options = self.objects.options

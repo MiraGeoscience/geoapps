@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -17,6 +17,7 @@ import plotly.express as px
 import geoapps
 from geoapps import assets_path
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
+
 
 defaults = {
     "version": geoapps.__version__,

@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -17,6 +17,7 @@ from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
 import geoapps
 from geoapps import assets_path
+
 
 defaults = {
     "version": geoapps.__version__,

@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -59,7 +59,9 @@ class ContoursDriver(BaseDriver):
         if contour_set is not None:
             vertices, cells, values = [], [], []
             count = 0
-            for segs, level in zip(contour_set.allsegs, contour_set.levels):
+            for segs, level in zip(
+                contour_set.allsegs, contour_set.levels, strict=False
+            ):
                 for poly in segs:
                     n_v = len(poly)
                     vertices.append(poly)
