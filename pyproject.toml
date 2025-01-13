@@ -86,8 +86,8 @@ param-sweeps = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prer
 curve-apps = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 #curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "release/0.2.0"}
 
-surface-apps = {version = ">=0.1.0rc1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
-#surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "release/0.1.0"}
+#surface-apps = {version = ">=0.1.0rc1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
+surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "release/0.1.0"}
 
 octree-creation-app = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 #octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "release/0.2.0"}
