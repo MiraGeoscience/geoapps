@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -62,8 +62,7 @@ def calculate_2D_trend(
     """
     if not isinstance(order, int) or order < 0:
         raise ValueError(
-            "Polynomial 'order' should be an integer > 0. "
-            f"Value of {order} provided."
+            f"Polynomial 'order' should be an integer > 0. Value of {order} provided."
         )
 
     ind_nan = ~np.isnan(values)
@@ -77,7 +76,7 @@ def calculate_2D_trend(
         values = values[hull.vertices]
     elif not method == "all":
         raise ValueError(
-            "'method' must be either 'all', or 'perimeter'. " f"Value {method} provided"
+            f"'method' must be either 'all', or 'perimeter'. Value {method} provided"
         )
 
     # Compute center of mass

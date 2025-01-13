@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "geoapps"
 version = "0.13.0-alpha.1"
-
+license = "MIT"
 description = "Open-sourced Applications in Geoscience"
-authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
+authors = ["Mira Geoscience <support@mirageoscience.com>"]
 maintainers = [
     "Benjamin Kary <benjamink@mirageoscience.com>",
     "Dominique Fournier <dominiquef@mirageoscience.com>",
@@ -165,6 +165,7 @@ ignore = [
     "B028",  # no-explicit-stacklevel for warnings.warn()
     "E501",  # line-too-long - code is reformatted (do not care about comments and docstring)
     "F401",  # unsused-import - covered by pycln
+    "A005", # TO DO (stdlib-module-shadowing: Module shadows a Python standard-library module)
     "RUF005", # TO DO
     "B007", # TO DO
     "B011", # TO DO

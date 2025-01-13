@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -243,7 +243,7 @@ class BaseParams:
                     free_parameter_dict[group] = {}
                     forms = utils.collect(self.ui_json, "group", group)
                     for label, key in zip(
-                        forms, self._free_parameter_keys, strict=True
+                        forms, self._free_parameter_keys, strict=False
                     ):
                         if key not in label.lower():
                             raise ValueError(
@@ -270,9 +270,9 @@ class BaseParams:
 
     @validations.setter
     def validations(self, validations: dict[str, Any]):
-        assert isinstance(
-            validations, dict
-        ), "Input value must be a dictionary of validations."
+        assert isinstance(validations, dict), (
+            "Input value must be a dictionary of validations."
+        )
         self._validations = validations
 
     @property

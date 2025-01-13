@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -317,9 +317,9 @@ class BaseDashApplication:
 
     @params.setter
     def params(self, params: BaseParams):
-        assert isinstance(
-            params, BaseParams
-        ), f"Input parameters must be an instance of {BaseParams}"
+        assert isinstance(params, BaseParams), (
+            f"Input parameters must be an instance of {BaseParams}"
+        )
 
         self._params = params
 

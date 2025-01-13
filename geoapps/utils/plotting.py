@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -409,9 +409,9 @@ def plotly_scatter(
     """
     Create a plotly.graph_objects.Mesh3D figure.
     """
-    assert (
-        getattr(points, "vertices", None) is not None
-    ), "Input object must have vertices"
+    assert getattr(points, "vertices", None) is not None, (
+        "Input object must have vertices"
+    )
 
     if figure is None:
         figure = go.FigureWidget()
@@ -490,9 +490,9 @@ def plotly_block_model(
     """
     Create a plotly.graph_objects.Mesh3D figure.
     """
-    assert isinstance(
-        block_model, BlockModel
-    ), f"Input block_model must be of type {Surface}"
+    assert isinstance(block_model, BlockModel), (
+        f"Input block_model must be of type {Surface}"
+    )
 
     if figure is None:
         figure = go.FigureWidget()

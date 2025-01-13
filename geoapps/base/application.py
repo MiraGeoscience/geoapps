@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -390,9 +390,9 @@ class BaseApplication:
 
     @params.setter
     def params(self, params: BaseParams):
-        assert isinstance(
-            params, BaseParams
-        ), f"Input parameters must be an instance of {BaseParams}"
+        assert isinstance(params, BaseParams), (
+            f"Input parameters must be an instance of {BaseParams}"
+        )
 
         self._params = params
 
@@ -433,9 +433,9 @@ class BaseApplication:
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
 
     @property

@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -556,15 +556,15 @@ def test_rotation_xyz():
     vec = np.c_[1, 0, 0]
     rot_vec = rotate_xyz(vec, [0, 0], 45)
 
-    assert (
-        np.linalg.norm(np.cross(rot_vec, [0.7071, 0.7071, 0])) < 1e-8
-    ), "Error on positive rotation about origin."
+    assert np.linalg.norm(np.cross(rot_vec, [0.7071, 0.7071, 0])) < 1e-8, (
+        "Error on positive rotation about origin."
+    )
 
     rot_vec = rotate_xyz(vec, [1, 1], -90)
 
-    assert (
-        np.linalg.norm(np.cross(rot_vec, [0, 1, 0])) < 1e-8
-    ), "Error on negative rotation about point."
+    assert np.linalg.norm(np.cross(rot_vec, [0, 1, 0])) < 1e-8, (
+        "Error on negative rotation about point."
+    )
 
 
 def test_running_mean():
@@ -575,12 +575,12 @@ def test_running_mean():
 
     mean_test = (vec[1:] + vec[:-1]) / 2
 
-    assert (
-        np.linalg.norm(mean_back[:-1] - mean_test) < 1e-12
-    ), "Backward averaging does not match expected values."
-    assert (
-        np.linalg.norm(mean_forw[1:] - mean_test) < 1e-12
-    ), "Forward averaging does not match expected values."
+    assert np.linalg.norm(mean_back[:-1] - mean_test) < 1e-12, (
+        "Backward averaging does not match expected values."
+    )
+    assert np.linalg.norm(mean_forw[1:] - mean_test) < 1e-12, (
+        "Forward averaging does not match expected values."
+    )
     assert (
         np.linalg.norm((mean_test[1:] + mean_test[:-1]) / 2 - mean_cent[1:-1]) < 1e-12
     ), "Centered averaging does not match expected values."
@@ -941,7 +941,7 @@ def test_get_neighbouring_cells():
     neighbours = get_neighbouring_cells(mesh, [ind])
 
     assert len(neighbours) == 3, "Incorrect number of neighbours axes returned."
-    assert all(
-        len(axis) == 2 for axis in neighbours
-    ), "Incorrect number of neighbours returned."
+    assert all(len(axis) == 2 for axis in neighbours), (
+        "Incorrect number of neighbours returned."
+    )
     assert np.allclose(np.r_[neighbours].flatten(), np.r_[76, 78, 75, 79, 73, 81])
