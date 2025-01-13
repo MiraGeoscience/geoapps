@@ -45,7 +45,7 @@ repos:
     rev: v1.0.1
     hooks:
     -   id: check-copyright
-        files: (^LICENSE|^README(|-dev).rst|\.py|\.pyi)$
+        files: (^package\.rst|^LICENSE|^README(|-dev)\.rst|\.py|\.pyi)$
         exclude: (^\.|^docs/)
     -   id: prepare-commit-msg
     -   id: check-commit-msg
