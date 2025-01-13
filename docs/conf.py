@@ -17,6 +17,7 @@ import sys
 import shutil
 import plotly.io as pio
 from datetime import datetime
+from packaging.version import Version
 
 pio.renderers.default = "sphinx_gallery"
 
@@ -93,16 +94,15 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "geoapps v0.12.0-beta.2"
+project = "geoapps"
 
 project_copyright = "%Y, Mira Geoscience Ltd"
 author = "Mira Geoscience Ltd."
 
-# The short X.Y version.
-version = "0.12.0"
 # The full version, including alpha/beta/rc tags.
 release = "0.12.0-beta.2"
-
+# The shorter X.Y.Z version.
+version = Version(release).base_version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -175,6 +175,10 @@ html_theme = "alabaster"
 # html_theme_options = {
 #   'display_github': 'True',
 # }
+
+html_theme_options = {
+    "description": f"version {release}",
+}
 
 # html_logo = 'images/mirageoscience-apps.png'
 
