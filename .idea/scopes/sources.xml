@@ -1,3 +1,3 @@
 <component name="DependencyValidationManager">
-  <scope name="sources" pattern="(file:geoapps//*||file:tests//*||file:geoapps-assets/__init__.py||file:README*.rst||file:devtools//*)&amp;&amp;!file:geoapps/simpegEM1D//*&amp;&amp;!file:geoapps/simpegPF//*&amp;&amp;!file:*.png&amp;&amp;!file:*.svg&amp;&amp;!file:*.jpg&amp;&amp;!file:*.gif&amp;&amp;!file:*//htmlcov//*&amp;&amp;!file:*//.*" />
+  <scope name="sources" pattern="(file:geoapps//*||file:devtools//*||file:examples//*||file:tests//*||file:geoapps-assets/__init__.py||file:meta.yaml||file:package.rst||file:pyproject.toml||file:README*.rst||file:devtools//*)&amp;&amp;!file:*.png&amp;&amp;!file:*.svg&amp;&amp;!file:*.jpg&amp;&amp;!file:*//htmlcov//*&amp;&amp;!file:*//.*" />
 </component>
