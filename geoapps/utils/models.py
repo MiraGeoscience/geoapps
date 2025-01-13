@@ -85,10 +85,8 @@ def drape_to_octree(
             if method == "nearest":
                 octree_model.append(datum[0].values)
             else:
-                lookup_inds = (
-                    mesh._get_containing_cell_indexes(  # pylint: disable=W0212
-                        model.centroids
-                    )
+                lookup_inds = mesh._get_containing_cell_indexes(  # pylint: disable=W0212
+                    model.centroids
                 )
                 octree_model[lookup_inds] = datum[0].values
 

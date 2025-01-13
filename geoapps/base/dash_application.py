@@ -200,9 +200,8 @@ class BaseDashApplication:
         for key in self.params.to_dict():
             if key in update_dict:
                 if (
-                    bool in validations[key]["types"]
-                    and type(update_dict[key]) == list  # noqa: E721
-                ):  # noqa: E721
+                    bool in validations[key]["types"] and type(update_dict[key]) == list  # noqa: E721
+                ):
                     # Convert from dash component checklist to bool
                     if not update_dict[key]:
                         output_dict[key] = False
@@ -319,9 +318,9 @@ class BaseDashApplication:
 
     @params.setter
     def params(self, params: BaseParams):
-        assert isinstance(
-            params, BaseParams
-        ), f"Input parameters must be an instance of {BaseParams}"
+        assert isinstance(params, BaseParams), (
+            f"Input parameters must be an instance of {BaseParams}"
+        )
 
         self._params = params
 

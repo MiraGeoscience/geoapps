@@ -15,6 +15,7 @@ from geoh5py.objects import Curve, Grid2D, Points, Surface
 
 import geoapps
 
+
 default_ui_json = {
     "forward_only": False,
     "topography_object": {

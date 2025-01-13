@@ -14,6 +14,7 @@ import numpy as np
 
 from geoapps.utils import warn_module_not_found
 
+
 with warn_module_not_found():
     from shapely.geometry import LineString, mapping
 

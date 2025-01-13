@@ -71,13 +71,13 @@ class DataInterpolationDriver(BaseDriver):
             for key in values_interp.keys():
                 if self.params.space == "Log":
                     values_interp[key] = sign[key] * np.exp(values_interp[key])
-                values_interp[key][
-                    np.isnan(values_interp[key])
-                ] = self.params.no_data_value
+                values_interp[key][np.isnan(values_interp[key])] = (
+                    self.params.no_data_value
+                )
                 if self.params.max_distance is not None:
-                    values_interp[key][
-                        rad > self.params.max_distance
-                    ] = self.params.no_data_value
+                    values_interp[key][rad > self.params.max_distance] = (
+                        self.params.no_data_value
+                    )
         elif self.params.method == "Inverse Distance":
             print("Computing inverse distance interpolation")
             # Inverse distance
@@ -103,7 +103,7 @@ class DataInterpolationDriver(BaseDriver):
                 return_indices=True,
             )
 
-            for key, val in zip(list(values.keys()), vals):
+            for key, val in zip(list(values.keys()), vals, strict=False):
                 values_interp[key] = val
                 sign[key] = sign[key][ind_inv[:, 0]]
 
@@ -152,9 +152,9 @@ class DataInterpolationDriver(BaseDriver):
             rad, _ = tree.query(xyz_out_orig[:, :2])
             for key in values_interp.keys():
                 if self.params.max_distance is not None:
-                    values_interp[key][
-                        rad > self.params.max_distance
-                    ] = self.params.no_data_value
+                    values_interp[key][rad > self.params.max_distance] = (
+                        self.params.no_data_value
+                    )
 
         for key in values_interp.keys():
             if dtype[key] == np.dtype("int32"):

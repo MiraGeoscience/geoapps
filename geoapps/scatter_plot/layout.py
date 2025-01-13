@@ -12,6 +12,7 @@ from __future__ import annotations
 import plotly.express as px
 from dash import dcc, html
 
+
 downsampling_layout = html.Div(
     [
         html.Div(

@@ -15,6 +15,7 @@ import uuid
 
 from geoh5py.workspace import Workspace
 
+
 os.environ["OMP_NUM_THREADS"] = "1"
 
 import numpy as np
@@ -218,7 +219,9 @@ class ClusteringDriver(BaseDriver):
             ast.literal_eval(self.params.data_subset),
             self.params.geoh5,
         )
-        full_scales_dict = dict(zip(self.params.data_subset, self.params.full_scales))
+        full_scales_dict = dict(
+            zip(self.params.data_subset, self.params.full_scales, strict=False)
+        )
         kmeans, _ = ClusteringDriver.run_clustering(
             self.params.n_clusters,
             dataframe,

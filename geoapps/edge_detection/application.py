@@ -28,6 +28,7 @@ from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
 
+
 with warn_module_not_found():
     from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
 

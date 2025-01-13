@@ -26,6 +26,7 @@ from geoapps.interpolation.driver import DataInterpolationDriver
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.utils import warn_module_not_found
 
+
 with warn_module_not_found():
     from ipywidgets import Dropdown, FloatText, HBox, Label, RadioButtons, VBox
 
@@ -234,9 +235,9 @@ class DataInterpolation(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.out_object.options = self.objects.options

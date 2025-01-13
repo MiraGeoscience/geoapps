@@ -31,6 +31,7 @@ from geoapps.base.selection import ObjectDataSelection
 from geoapps.octree_creation.constants import app_initializer
 from geoapps.utils import warn_module_not_found
 
+
 with warn_module_not_found():
     from ipywidgets import (
         Checkbox,
@@ -242,9 +243,9 @@ class OctreeMesh(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_choices()
 

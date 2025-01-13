@@ -53,6 +53,7 @@ from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.scatter_plot.params import ScatterPlotParams
 
+
 active_data_channels = [
     "z_real_channel",
     "z_imag_channel",

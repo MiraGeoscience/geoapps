@@ -221,7 +221,9 @@ def inversion(input_file):
         else:
             em_specs["tx_specs"]["type"] = "VMD"
 
-        for dat_uid, unc_uid in zip(data_group.properties, uncert_group.properties):
+        for dat_uid, unc_uid in zip(
+            data_group.properties, uncert_group.properties, strict=False
+        ):
             d_entity = workspace.get_entity(dat_uid)[0]
             u_entity = workspace.get_entity(unc_uid)[0]
             channels[d_entity.name] = True
@@ -667,7 +669,7 @@ def inversion(input_file):
     uncert = np.zeros(n_sounding * block)
     n_data = 0
 
-    for ind, (d, u) in enumerate(zip(data, uncertainties)):
+    for ind, (d, u) in enumerate(zip(data, uncertainties, strict=False)):
         dobs[ind::block] = d[win_ind][stn_id]
         uncert[ind::block] = u[win_ind][stn_id]
         n_data += dobs[ind::block].shape[0]

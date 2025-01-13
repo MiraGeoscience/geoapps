@@ -13,6 +13,7 @@ from uuid import UUID
 
 from geoapps import assets_path
 
+
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),

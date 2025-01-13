@@ -61,7 +61,7 @@ class IsoSurfacesDriver(BaseDriver):
 
             container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
             result = []
-            for surface, level in zip(surfaces, levels):
+            for surface, level in zip(surfaces, levels, strict=False):
                 if len(surface[0]) > 0 and len(surface[1]) > 0:
                     result += [
                         Surface.create(
@@ -74,7 +74,7 @@ class IsoSurfacesDriver(BaseDriver):
                     ]
             self.update_monitoring_directory(container)
 
-        print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
+        print(f"Isosurface completed. -> {len(surfaces)} surface(s) created.")
 
         return result
 

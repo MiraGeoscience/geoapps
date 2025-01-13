@@ -25,6 +25,7 @@ from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.utils.importing import warn_module_not_found
 
+
 with warn_module_not_found():
     from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
 

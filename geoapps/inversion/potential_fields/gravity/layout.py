@@ -11,6 +11,7 @@ from dash import html
 
 import geoapps.inversion.base_inversion_layout as base_layout
 
+
 component_list = [
     "gx",
     "gy",

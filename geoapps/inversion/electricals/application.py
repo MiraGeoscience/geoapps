@@ -45,6 +45,7 @@ from geoapps.inversion.potential_fields.application import (
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 
+
 with warn_module_not_found():
     import ipywidgets as widgets
     from ipywidgets.widgets import (
@@ -729,9 +730,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace
@@ -1200,7 +1201,7 @@ class InversionApp(PlotSelection2D):
                 elif data["inversion_type"] == "induced polarization 3d":
                     self._param_class = InducedPolarization3DParams
 
-                self.params = getattr(self, "_param_class")(
+                self.params = self._param_class(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.params.geoh5.open(mode="r")

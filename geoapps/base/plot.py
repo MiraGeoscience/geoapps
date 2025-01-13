@@ -21,6 +21,7 @@ from geoapps.shared_utils.utils import get_contours, rotate_xyz
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
 
+
 with warn_module_not_found():
     from matplotlib import pyplot as plt
 

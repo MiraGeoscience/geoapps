@@ -131,9 +131,9 @@ def weighted_average(
     n = np.min([xyz_in.shape[0], n])
     assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
 
-    assert all(
-        [vals.shape[0] == xyz_in.shape[0] for vals in values]
-    ), "Input 'values' must have the same shape as input 'locations'"
+    assert all([vals.shape[0] == xyz_in.shape[0] for vals in values]), (
+        "Input 'values' must have the same shape as input 'locations'"
+    )
 
     avg_values = []
     for value in values:
@@ -462,7 +462,9 @@ def octree_2_treemesh(mesh):
     tsw_corner = np.asarray(mesh.origin.tolist())
     small_cell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
     n_cell_dim = [mesh.u_count, mesh.v_count, mesh.w_count]
-    cell_sizes = [np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell)]
+    cell_sizes = [
+        np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell, strict=False)
+    ]
     u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
     h1, h2, h3 = (np.abs(h) for h in cell_sizes)
     x0 = tsw_corner + np.array([u_shift, v_shift, w_shift])
@@ -550,7 +552,7 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
     ][:-1]
     cols = out.pop(0).split(" ")
     out = [[string_to_numeric(k) for k in line.split(" ")] for line in out]
-    out = dict(zip(cols, list(map(list, zip(*out)))))
+    out = dict(zip(cols, list(map(list, zip(*out, strict=False))), strict=False))
 
     return out
 

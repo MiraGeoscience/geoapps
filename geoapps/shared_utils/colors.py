@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+
 UNIQUE_COLORS = [
     "#000000",
     "#FFFF00",
