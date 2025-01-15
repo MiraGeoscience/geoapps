@@ -9,7 +9,6 @@
 
 from __future__ import annotations
 
-import itertools
 import os
 import random
 from pathlib import Path
@@ -17,14 +16,20 @@ from pathlib import Path
 import geoh5py.objects
 import numpy as np
 import pytest
-from discretize import CylindricalMesh, TreeMesh
+from discretize import TreeMesh
 from discretize.utils import mesh_builder_xyz
+from geoapps_utils.utils.numerical import running_mean
 from geoh5py.objects import Curve, Grid2D, Points
 from geoh5py.workspace import Workspace
 from octree_creation_app.driver import OctreeDriver
-from simpeg_drivers.utils.utils import calculate_2D_trend
+from octree_creation_app.utils import treemesh_2_octree
+from simpeg_drivers.utils.utils import (
+    active_from_xyz,
+    calculate_2D_trend,
+    drape_to_octree,
+    get_drape_model,
+)
 
-from geoapps.driver_base.utils import active_from_xyz, running_mean, treemesh_2_octree
 from geoapps.shared_utils.utils import (
     densify_curve,
     downsample_grid,
@@ -33,19 +38,12 @@ from geoapps.shared_utils.utils import (
     filter_xy,
     get_locations,
     get_neighbouring_cells,
-    octree_2_treemesh,
     rotate_xyz,
     weighted_average,
     window_xy,
 )
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value, sorted_alphanumeric_list
-from geoapps.utils.models import (
-    RectangularBlock,
-    drape_to_octree,
-    floating_active,
-    get_drape_model,
-)
 from geoapps.utils.statistics import is_outlier
 from geoapps.utils.string import string_to_numeric
 from geoapps.utils.surveys import (
@@ -131,40 +129,6 @@ def test_drape_to_octree(tmp_path: Path):
     )
     data = octree.get_data("model_interp")[0].values
     assert np.allclose(np.array([10, 100]), np.unique(data[~np.isnan(data)]))
-
-
-def test_floating_active():
-    mesh = CylindricalMesh([[10] * 16, [np.pi] * 2], [0, 0])
-    with pytest.raises(
-        TypeError, match="Input mesh must be of type TreeMesh or TensorMesh."
-    ):
-        floating_active(mesh, np.zeros(mesh.n_cells))
-
-    # Test 3D case
-    mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
-    mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
-    centers = mesh.cell_centers
-    active = np.zeros(mesh.n_cells)
-    active[centers[:, 2] < 75] = 1
-    assert not floating_active(mesh, active)
-    active[49] = 1
-    assert floating_active(mesh, active)
-
-    # Test 2D case
-    mesh = TreeMesh([[10] * 16, [10] * 16], [0, 0])
-    mesh.insert_cells([100, 100], mesh.max_level, finalize=True)
-    centers = mesh.cell_centers
-    active = np.zeros(mesh.n_cells)
-    active[centers[:, 1] < 75] = 1
-    assert not floating_active(mesh, active)
-    active[21] = 1  # Small cells
-    assert floating_active(mesh, active)
-    active[21] = 0
-    active[23] = 1  # Large cell with hanging faces
-    assert floating_active(mesh, active)
-    active[21] = 0
-    active[27] = 1  # Corner cell
-    assert floating_active(mesh, active)
 
 
 def test_get_drape_model(tmp_path: Path):
@@ -295,102 +259,6 @@ def test_split_dcip_survey(tmp_path: Path):
 
         surveys = split_dcip_survey(potentials, line_id, workspace)
         assert len(surveys) == len(np.unique(line_id))
-
-
-def test_rectangular_block():
-    block = RectangularBlock(
-        center=[10.0, 10.0, 10.0],
-        length=10.0,
-        width=10.0,
-        depth=10.0,
-        dip=0.0,
-        azimuth=0.0,
-    )
-    vertices = block.vertices.tolist()
-    assert [15.0, 5.0, 5.0] in vertices
-    assert [15.0, 15.0, 5.0] in vertices
-    assert [5.0, 5.0, 5.0] in vertices
-    assert [5.0, 15.0, 5.0] in vertices
-    assert [15.0, 5.0, 15.0] in vertices
-    assert [15.0, 15.0, 15.0] in vertices
-    assert [5.0, 5.0, 15.0] in vertices
-    assert [5.0, 15.0, 15.0] in vertices
-
-    block = RectangularBlock(
-        center=[0.0, 0.0, 0.0], length=0.0, width=10.0, depth=0.0, dip=45.0, azimuth=0.0
-    )
-    pos = (5 * np.cos(np.deg2rad(45))).round(5)
-    vertices = block.vertices.round(5).tolist()
-    assert [pos, 0.0, pos] in vertices
-    assert [-pos, 0.0, -pos] in vertices
-
-    block = RectangularBlock(
-        center=[0.0, 0.0, 0.0],
-        length=0.0,
-        width=0.0,
-        depth=10.0,
-        dip=0.0,
-        azimuth=90.0,
-        reference="top",
-    )
-    vertices = block.vertices.round(5).tolist()
-    assert [0.0, 0.0, -10.0] in vertices
-    assert [0.0, 0.0, 0.0] in vertices
-
-    block = RectangularBlock(
-        center=[0.0, 0.0, 0.0],
-        length=10.0,
-        width=10.0,
-        depth=10.0,
-        dip=0.0,
-        azimuth=45.0,
-    )
-
-    pos = (10 * np.cos(np.deg2rad(45))).round(5)
-    vertices = block.vertices.round(5).tolist()
-    assert [0.0, -pos, -5.0] in vertices
-    assert [pos, 0.0, -5.0] in vertices
-    assert [-pos, 0.0, -5.0] in vertices
-    assert [0.0, pos, -5.0] in vertices
-    assert [0.0, -pos, 5.0] in vertices
-    assert [pos, 0.0, 5.0] in vertices
-    assert [-pos, 0.0, 5.0] in vertices
-    assert [0.0, pos, 5.0] in vertices
-
-    with pytest.raises(ValueError) as error:
-        block.center = -180.0
-
-    assert "Input value for 'center' must be a list of floats len(3)." in str(error)
-
-    for attr in ["length", "width", "depth"]:
-        with pytest.raises(ValueError) as error:
-            setattr(block, attr, -10.0)
-
-        assert f"Input value for '{attr}' must be a float >0." in str(error)
-
-    with pytest.raises(ValueError) as error:
-        block.dip = -180.0
-
-    assert (
-        "Input value for 'dip' must be a float on the interval [-90, 90] degrees."
-        in str(error)
-    )
-
-    with pytest.raises(ValueError) as error:
-        block.azimuth = -450.0
-
-    assert (
-        "Input value for 'azimuth' must be a float on the interval [-360, 360] degrees."
-        in str(error)
-    )
-
-    with pytest.raises(ValueError) as error:
-        block.reference = "abc"
-
-    assert (
-        "Input value for 'reference' point should be a str from ['center', 'top']."
-        in str(error)
-    )
 
 
 def test_find_value():
@@ -711,25 +579,6 @@ def test_drape_2_tensormesh(tmp_path: Path):
     new_tensor = drape_2_tensor(drape)
 
     assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
-
-
-def test_octree_2_treemesh(tmp_path: Path):
-    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make() as workspace:
-        mesh = TreeMesh([[10] * 4, [10] * 4, [10] * 4], [0, 0, 0])
-        mesh.insert_cells([5, 5, 5], mesh.max_level, finalize=True)
-        omesh = treemesh_2_octree(workspace, mesh)
-        for prod in itertools.product("uvw", repeat=3):
-            omesh.origin = [0, 0, 0]
-            for axis in "uvw":
-                attr = axis + "_cell_size"
-                setattr(omesh, attr, np.abs(getattr(omesh, attr)))
-            for axis in np.unique(prod):
-                attr = axis + "_cell_size"
-                setattr(omesh, attr, -1 * getattr(omesh, attr))
-                omesh.origin["xyz"["uvw".find(axis)]] = 40
-            tmesh = octree_2_treemesh(omesh)
-            assert np.all((tmesh.cell_centers - mesh.cell_centers) < 1e-14)
 
 
 def test_window_xy():
