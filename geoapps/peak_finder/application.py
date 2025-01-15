@@ -22,7 +22,6 @@ from peak_finder.application import PeakFinder as DashPeakFinder
 from peak_finder.dash_application import ObjectSelection
 from peak_finder.params import PeakFinderParams
 
-from geoapps.base.dash_application import ObjectSelection
 from geoapps.base.selection import ObjectDataSelection
 from geoapps.peak_finder.constants import app_initializer
 
@@ -107,4 +106,4 @@ class PeakFinder(ObjectDataSelection):
         Trigger the application
         """
         new_params = self.collect_parameter_values()
-        ObjectSelection.run("Peak Finder", DashPeakFinder, new_params.input_file)
+        ObjectSelection.run("Peak Finder", DashPeakFinder, new_params)
