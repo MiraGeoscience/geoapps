@@ -239,7 +239,7 @@ class InversionApp(PlotSelection2D):
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
             add_xyz=False,
-            receivers_offset_z=self.defaults["receivers_offset_z"],
+            receivers_offset_z=self.defaults.get("receivers_offset_z", 0.0),
             z_from_topo=self.defaults["z_from_topo"],
             receivers_radar_drape=self.defaults["receivers_radar_drape"],
         )
