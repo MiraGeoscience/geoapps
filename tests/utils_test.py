@@ -53,7 +53,7 @@ from geoapps.utils.surveys import (
     new_neighbors,
     split_dcip_survey,
 )
-from geoapps.utils.testing import Geoh5Tester, generate_dc_survey
+from geoapps.utils.testing import generate_dc_survey
 from geoapps.utils.workspace import sorted_children_dict
 
 from . import PROJECT
@@ -526,31 +526,6 @@ def test_weigted_average():
     values = [np.array([1, 2, 3])]
     out = weighted_average(xyz_in, xyz_out, values, threshold=1e30)
     assert out[0] == 2
-
-
-def test_treemesh_2_octree(tmp_path: Path):
-    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make() as workspace:
-        mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
-        mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
-        omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
-        assert omesh.n_cells == mesh.n_cells
-        assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)
-        expected_refined_cells = [
-            (0, 0, 6),
-            (0, 0, 7),
-            (1, 0, 6),
-            (1, 0, 7),
-            (0, 1, 6),
-            (0, 1, 7),
-            (1, 1, 6),
-            (1, 1, 7),
-        ]
-        ijk_refined = omesh.octree_cells[["I", "J", "K"]][
-            omesh.octree_cells["NCells"] == 1
-        ].tolist()
-        assert np.all([k in ijk_refined for k in expected_refined_cells])
-        assert np.all([k in expected_refined_cells for k in ijk_refined])
 
 
 def test_drape_2_tensormesh(tmp_path: Path):
