@@ -28,6 +28,7 @@ from geoh5py.shared.utils import (
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
+from simpeg_drivers.params import InversionBaseParams
 from traitlets import TraitError
 
 from geoapps.utils import warn_module_not_found
@@ -54,6 +55,7 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
+    _param_class: type[InversionBaseParams] | None = None
     _h5file = None
     _main = None
     _workspace = None
@@ -183,8 +185,8 @@ class BaseApplication:
         if isinstance(self.geoh5, Workspace):
             self.geoh5.close()
 
-        if extension == ".json" and getattr(self, "_param_class", None) is not None:
-            self.params = self._param_class(
+        if extension == ".json" and self._param_class is not None:
+            self.params = self._param_class(  # pylint: disable=not-callable
                 InputFile.read_ui_json(self.file_browser.selected)
             )
             self.refresh.value = False
