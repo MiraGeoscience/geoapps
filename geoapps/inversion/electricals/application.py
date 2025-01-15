@@ -241,7 +241,7 @@ class InversionApp(PlotSelection2D):
             add_xyz=False,
             receivers_offset_z=self.defaults.get("receivers_offset_z", 0.0),
             z_from_topo=self.defaults["z_from_topo"],
-            receivers_radar_drape=self.defaults["receivers_radar_drape"],
+            receivers_radar_drape=self.defaults.get("receivers_radar_drape", None),
         )
         self._alpha_s = widgets.FloatText(
             min=0,
