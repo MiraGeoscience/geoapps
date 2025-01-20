@@ -2,7 +2,7 @@
 default_language_version:
     python: python3
 exclude: (^docs/(conf.py|_ext/))
-default_stages: [commit,push]
+default_stages: [pre-commit,pre-push]
 fail_fast: false
 
 ci:
@@ -12,19 +12,21 @@ ci:
 
 repos:
 -   repo: https://github.com/hadialqattan/pycln
-    rev: v2.4.0
+    rev: v2.5.0
     hooks:
     -   id: pycln
         args: [--config=pyproject.toml]
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.5
+    rev: v0.9.1
     hooks:
     -   id: ruff
         args:
         -   --fix
         -   --exit-non-zero-on-fix
 #        -   --unsafe-fixes
+        exclude_types: [jupyter]
     -   id: ruff-format
+        exclude_types: [jupyter]
 #-   repo: https://github.com/pre-commit/mirrors-mypy  # TODO: fix mypy errors
 #    rev: v1.10.0
 #    hooks:
@@ -37,15 +39,15 @@ repos:
 #        ]
 #        exclude: ^(docs|geoapps-assets)/
 -   repo: https://github.com/codingjoe/relint
-    rev: 3.1.1
+    rev: 3.3.1
     hooks:
     -   id: relint
         args: [-W]  # to fail on warnings
 -   repo: https://github.com/MiraGeoscience/pre-commit-hooks
-    rev: v1.0.1
+    rev: v1.1.0
     hooks:
     -   id: check-copyright
-        files: (^LICENSE|^README(|-dev).rst|\.py|\.pyi)$
+        files: (^package\.rst|^LICENSE|^README(|-dev)\.rst|\.py|\.pyi)$
         exclude: (^\.|^docs/)
     -   id: prepare-commit-msg
     -   id: check-commit-msg
@@ -65,7 +67,7 @@ repos:
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb|^THIRD_PARTY_SOFTWARE\.rst)$
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
     -   id: trailing-whitespace
         exclude: \.mdj$
@@ -74,6 +76,7 @@ repos:
     -   id: check-toml
     -   id: check-yaml
     -   id: check-added-large-files
+#        args: [--enforce-all]
     -   id: check-case-conflict
     -   id: check-merge-conflict
     -   id: debug-statements

@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "geoapps"
 version = "0.13.0-alpha.1"
-
+license = "MIT"
 description = "Open-sourced Applications in Geoscience"
-authors = ["Mira Geoscience <dominiquef@mirageoscience.com>"]
+authors = ["Mira Geoscience <support@mirageoscience.com>"]
 maintainers = [
     "Benjamin Kary <benjamink@mirageoscience.com>",
     "Dominique Fournier <dominiquef@mirageoscience.com>",
@@ -77,34 +77,34 @@ pyside2 = "5.15.*"  # from targeting-workflow, geo-unsup-mappper, peak-finder-ap
 
 ## pip dependencies from Git repositories
 #----------------------------------------
-geoh5py = {version = ">=0.10.0b3, <0.11.0a.dev", source = "pypi", allow-prereleases = true}
+geoh5py = {version = ">=0.10.0rc1, <0.11.0a.dev", source = "pypi", allow-prereleases = true}
 #geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "release/0.10.0"}
 
-param-sweeps = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+param-sweeps = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 #param-sweeps = {git = "https://github.com/MiraGeoscience/param-sweeps.git", rev = "release/0.2.0"}
 
-curve-apps = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+curve-apps = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 #curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "release/0.2.0"}
 
-#surface-apps = {version = ">=0.1.0b1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
+#surface-apps = {version = ">=0.1.0rc1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
 surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "release/0.1.0"}
 
-octree-creation-app = {version = ">=0.2.0b1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+octree-creation-app = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 #octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "release/0.2.0"}
 
-#peak-finder-app = {version = ">=0.2.0b3, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "release/0.2.0"}
+peak-finder-app = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+#peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "release/0.2.0"}
 
-geoapps-utils = {version = ">=0.4.0b1, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
+geoapps-utils = {version = ">=0.4.0rc1, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
 #geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "release/0.4.0"}
 
-#simpeg-drivers = {version = ">=0.2.0b2, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "release/0.2.0"}
+simpeg-drivers = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
+#simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "release/0.2.0"}
 
 simpeg-archive = {version = ">=0.11.0.1, <0.11.0.2", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
 
-mira-simpeg = {version = ">=0.21.2.1b2, <0.21.2.2a.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
+mira-simpeg = {version = ">=0.21.2.1rc1, <0.21.2.2a.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
 #mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "release/0.21.2.1", extras = ["dask"]}
 
 ## about pip dependencies
@@ -165,6 +165,7 @@ ignore = [
     "B028",  # no-explicit-stacklevel for warnings.warn()
     "E501",  # line-too-long - code is reformatted (do not care about comments and docstring)
     "F401",  # unsused-import - covered by pycln
+    "A005", # TO DO (stdlib-module-shadowing: Module shadows a Python standard-library module)
     "RUF005", # TO DO
     "B007", # TO DO
     "B011", # TO DO

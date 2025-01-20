@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -131,9 +131,9 @@ def weighted_average(
     n = np.min([xyz_in.shape[0], n])
     assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
 
-    assert all(
-        [vals.shape[0] == xyz_in.shape[0] for vals in values]
-    ), "Input 'values' must have the same shape as input 'locations'"
+    assert all([vals.shape[0] == xyz_in.shape[0] for vals in values]), (
+        "Input 'values' must have the same shape as input 'locations'"
+    )
 
     avg_values = []
     for value in values:

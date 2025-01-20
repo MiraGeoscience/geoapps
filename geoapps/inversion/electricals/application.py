@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -239,9 +239,9 @@ class InversionApp(PlotSelection2D):
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
             add_xyz=False,
-            receivers_offset_z=self.defaults["receivers_offset_z"],
+            receivers_offset_z=self.defaults.get("receivers_offset_z", 0.0),
             z_from_topo=self.defaults["z_from_topo"],
-            receivers_radar_drape=self.defaults["receivers_radar_drape"],
+            receivers_radar_drape=self.defaults.get("receivers_radar_drape", None),
         )
         self._alpha_s = widgets.FloatText(
             min=0,
@@ -730,9 +730,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace

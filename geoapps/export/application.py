@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -207,9 +207,9 @@ class Export(ObjectDataSelection):
         )
 
     def _export_shapefile(self, entity):
-        assert isinstance(
-            entity, Curve
-        ), f"Only Curve objects are support for type {self.file_type.value}"
+        assert isinstance(entity, Curve), (
+            f"Only Curve objects are support for type {self.file_type.value}"
+        )
 
         if self.data.value:
             for key in self.data.value:
@@ -278,9 +278,9 @@ class Export(ObjectDataSelection):
                 print(f"Object saved to {name}")
 
     def _export_ubc(self, entity, data_values):
-        assert isinstance(
-            entity, (Octree, BlockModel)
-        ), "Export available for BlockModel or octree only"
+        assert isinstance(entity, (Octree, BlockModel)), (
+            "Export available for BlockModel or octree only"
+        )
         if isinstance(entity, Octree):
             mesh = octree_2_treemesh(entity)
 

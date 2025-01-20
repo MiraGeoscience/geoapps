@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -224,9 +224,9 @@ def test_dc_inversion(tmp_path: Path):
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert (
-            p_value == value
-        ), f"Side effect parameter {param} not saved and loaded correctly."
+        assert p_value == value, (
+            f"Side effect parameter {param} not saved and loaded correctly."
+        )
 
     # Test the groups
     groups = [
@@ -240,15 +240,15 @@ def test_dc_inversion(tmp_path: Path):
     for group in groups:
         if "Constant" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, 1.0)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Constant"
-            ), f"Property group {group} did not reset to 'Constant'"
+            assert getattr(app, "_" + group + "_group").options.value == "Constant", (
+                f"Property group {group} did not reset to 'Constant'"
+            )
 
         if "None" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, None)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "None"
-            ), f"Property group {group} did not reset to 'None'"
+            assert getattr(app, "_" + group + "_group").options.value == "None", (
+                f"Property group {group} did not reset to 'None'"
+            )
 
 
 def test_ip_inversion(tmp_path: Path):
@@ -298,16 +298,16 @@ def test_ip_inversion(tmp_path: Path):
         if param == "chargeability_channel":
             assert p_value != value and is_uuid(p_value)
         else:
-            assert (
-                p_value == value
-            ), f"Parameter {param} not saved and loaded correctly."
+            assert p_value == value, (
+                f"Parameter {param} not saved and loaded correctly."
+            )
 
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert (
-            p_value == value
-        ), f"Side effect parameter {param} not saved and loaded correctly."
+        assert p_value == value, (
+            f"Side effect parameter {param} not saved and loaded correctly."
+        )
 
     groups = [
         "topography",
@@ -321,15 +321,15 @@ def test_ip_inversion(tmp_path: Path):
     for group in groups:
         if "Constant" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, 1.0)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Constant"
-            ), f"Property group {group} did not reset to 'Constant'"
+            assert getattr(app, "_" + group + "_group").options.value == "Constant", (
+                f"Property group {group} did not reset to 'Constant'"
+            )
 
         if "None" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, None)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "None"
-            ), f"Property group {group} did not reset to 'None'"
+            assert getattr(app, "_" + group + "_group").options.value == "None", (
+                f"Property group {group} did not reset to 'None'"
+            )
 
 
 def test_em1d_inversion(tmp_path: Path):

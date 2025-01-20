@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -32,11 +32,10 @@ from geoh5py.objects import (
 )
 from geoh5py.workspace import Workspace
 from octree_creation_app.driver import OctreeDriver
+from octree_creation_app.utils import treemesh_2_octree
 from scipy.spatial import Delaunay
 from simpeg import utils
-
-from geoapps.driver_base.utils import active_from_xyz, treemesh_2_octree
-from geoapps.utils.models import get_drape_model
+from simpeg_drivers.utils.utils import active_from_xyz, get_drape_model
 
 
 class Geoh5Tester:

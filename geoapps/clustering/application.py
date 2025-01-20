@@ -1,5 +1,5 @@
 # ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-#  Copyright (c) 2024 Mira Geoscience Ltd.                                     '
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
 #                                                                              '
 #  This file is part of geoapps.                                               '
 #                                                                              '
@@ -740,7 +740,7 @@ class Clustering(ScatterPlots):
                     color_map[ii] = [
                         np.min([ii / (n_clusters - 1), 1]),
                         "rgb("
-                        + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
+                        + ",".join([f"{int(color[i : i + 2], 16)}" for i in (0, 2, 4)])
                         + ")",
                     ]
                 else:
