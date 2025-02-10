@@ -76,11 +76,11 @@ ipywidgets = "^7.6.5"
 notebook = "~6.4.0"
 plotly = "~5.19.0"
 pyqtwebengine = "~5.15.2"  # also in geoapps-utils[dash]
-pyside2 = "~5.15.2.1"  # also in geoapps-utils[dash]
+pyside2 = "~5.15.2"  # also in geoapps-utils[dash]
 
 ## pip dependencies from Git repositories
 #----------------------------------------
-geoh5py = {version = "~0.9.0", source = "pypi", allow-prereleases = true}
+geoh5py = {version = "~0.10.0", source = "pypi", allow-prereleases = true}
 #geoh5py = {url = "https://github.com/MiraGeoscience/geoh5py/archive/refs/heads/release/0.9.0.tar.gz"}
 #geoh5py = {url = "http://localhost:8888/geoh5py.tar.gz"}
 
@@ -109,7 +109,7 @@ simpeg-drivers = {version = "~0.1.1", source = "pypi", allow-prereleases = true}
 #simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.1.zip"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz"}
 
-simpeg-archive = {version = "~0.11.0.dev6", source = "pypi", allow-prereleases = true}
+simpeg-archive = {version = "~0.11.0", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz"}
 
 mira-simpeg = {version = ">=0.19.0.8,<0.19.0.8.post999", source = "pypi", allow-prereleases = true, extras = ["dask"]}
