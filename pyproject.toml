@@ -11,7 +11,7 @@ maintainers = [
 repository = "https://github.com/MiraGeoscience/geoapps"
 documentation = "https://mirageoscience-geoapps.readthedocs-hosted.com/"
 homepage = "https://www.mirageoscience.com/mining-industry-software/python-integration/"
-readme = "README.rst"
+readme = "package.rst"
 
 packages = [
     { include = "geoapps" },
