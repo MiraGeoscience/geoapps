@@ -17,6 +17,7 @@ import sys
 import shutil
 import plotly.io as pio
 from datetime import datetime
+from importlib.metadata import version
 from packaging.version import Version
 
 pio.renderers.default = "sphinx_gallery"
@@ -100,8 +101,8 @@ project_copyright = "%Y, Mira Geoscience Ltd"
 author = "Mira Geoscience Ltd."
 
 # The full version, including alpha/beta/rc tags.
-release = "0.12.0-beta.2"
-# The shorter X.Y.Z version.
+release = version("geo-unsup-mapper")
+# The short X.Y.Z version.
 version = Version(release).base_version
 
 # List of patterns, relative to source directory, that match files and
@@ -405,7 +406,6 @@ sys.path.append(os.getcwd())
 
 def get_copyright_notice():
     return f"Copyright {datetime.now().strftime(project_copyright)}"
-
 
 rst_epilog = f"""
 .. |copyright_notice| replace:: {get_copyright_notice()}.
