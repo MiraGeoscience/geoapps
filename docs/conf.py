@@ -101,7 +101,7 @@ project_copyright = "%Y, Mira Geoscience Ltd"
 author = "Mira Geoscience Ltd."
 
 # The full version, including alpha/beta/rc tags.
-release = version("geo-unsup-mapper")
+release = version("geoapps")
 # The short X.Y.Z version.
 version = Version(release).base_version
 
