@@ -64,9 +64,10 @@ scikit-image = "~0.20.0"
 scikit-learn = "~1.4.0"  # also in simpeg
 tqdm = "^4.66.1"  # also in las-geoh5
 numpy = "~1.26.0" # also in geoh5py, simpeg
+notebook = "~7.3.2"
+plotly = "~5.19.0"
 pydiso = "0.1.*"  # not imported, but required at runtime for simpeg
 scipy = "~1.14.0"
-plotly = "~5.19.0"
 
 ## dependencies for UI
 #---------------------
@@ -100,7 +101,7 @@ simpeg-drivers = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-pr
 #simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.1.zip"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz"}
 
-simpeg-archive = {version = "0.11.0.1", source = "pypi", allow-prereleases = true}
+simpeg-archive = {version = "~0.11.0", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz"}
 
 
