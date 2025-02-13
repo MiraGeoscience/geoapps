@@ -66,6 +66,7 @@ tqdm = "^4.66.1"  # also in las-geoh5
 numpy = "~1.26.0" # also in geoh5py, simpeg
 pydiso = "0.1.*"  # not imported, but required at runtime for simpeg
 scipy = "~1.14.0"
+plotly = "~5.19.0"
 
 ## dependencies for UI
 #---------------------
@@ -73,9 +74,6 @@ dash = "~2.12"  # also in geoapps-utils[dash]
 dash-daq = "~0.5.0"
 flask = "~3.0.3"  # also in geoapps-utils[dash]
 ipyfilechooser = "~0.6.0"
-ipywidgets = "^7.6.5"
-notebook = "~6.4.0"
-plotly = "~5.19.0"
 pyqtwebengine = "~5.15.2"  # also in geoapps-utils[dash]
 pyside2 = "~5.15.2"  # also in geoapps-utils[dash]
 
@@ -102,7 +100,7 @@ simpeg-drivers = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-pr
 #simpeg-drivers = {url = "https://github.com/MiraGeoscience/simpeg-drivers/archive/refs/heads/release/0.1.1.zip"}
 #simpeg-drivers = {url = "http://localhost:8888/simpeg-drivers.tar.gz"}
 
-simpeg-archive = {version = "~0.11.0", source = "pypi", allow-prereleases = true}
+simpeg-archive = {version = "0.11.0.1", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {url = "https://github.com/MiraGeoscience/simpeg/archive/refs/heads/feature/simpeg_archive.tar.gz"}
 
 
@@ -114,7 +112,7 @@ geoana = ">=0.5.0, <0.6.0"  # from simpeg
 h5py = "^3.2.1"  # from geoh5py
 mkl = "2023.2, <2024.1"  # from simpeg
 properties = "~0.6.0"  # from simpeg-archive
-pydantic = "~2.5.2"  # from geoapps-utils, octrree-creation-app
+pydantic = "^2.5.2"  # from geoapps-utils, octrree-creation-app
 pymatsolver = {version = "0.2.*", source = "pypi"}
 zarr = "~2.14.2"  # from simpeg[dask], simpeg-drivers
 
@@ -134,6 +132,11 @@ tbb = { version = "2021.12.*", source = "pypi" }  # through mkl from SimPEG
 
 [tool.conda-lock.dependencies]
 libblas = "*=*mkl"  # because simpeg already brings in the MKL
+ipywidgets = ">=8.1.0"
+widgetsnbextension = ">=4.0"
+jupyterlab = ">=4.3.0"
+jupyter_server = ">=2.15.0"
+jupyter_client = ">=8.6.0"
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
