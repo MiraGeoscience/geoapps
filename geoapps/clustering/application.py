@@ -837,7 +837,7 @@ class Clustering(ScatterPlots):
             if indices is not None:
                 indices = np.array(indices)
 
-            if color_maps == "kmeans" and kmeans is not None and kmeans != []:
+            if color_maps == "kmeans" and kmeans is not None and len(kmeans) > 0:
                 # Update color_maps
                 color_maps = Clustering.update_colormap(n_clusters, color_pickers)
             if color_maps is None:
