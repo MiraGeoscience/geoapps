@@ -13,7 +13,7 @@ import importlib.util
 import logging
 from pathlib import Path
 
-from notebook.notebookapp import main as notebook_main
+from notebook.app import main as notebook_main
 
 
 def main():
@@ -25,7 +25,6 @@ def main():
         logging.getLogger(__package__).error(
             "Could not find index.ipynb (looking in %s)", geoapps_root.resolve()
         )
-
     notebook_main([str(index_notebook.resolve())])
 
 
