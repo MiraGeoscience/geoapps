@@ -58,7 +58,6 @@ distributed = "2024.6.*"  # because conda-lock doesn't take dask extras into acc
 fiona = "~1.9.2"
 fsspec = "2022.*"  # also in simpeg
 gdal = "~3.6.3"
-matplotlib = "~3.7.1"  # also in simpeg and geoana
 pandas = "~2.2.1"  # also in simpeg
 scikit-image = "~0.20.0"
 scikit-learn = "~1.4.0"  # also in simpeg
@@ -138,6 +137,7 @@ widgetsnbextension = ">=4.0"
 jupyterlab = ">=4.3.0"
 jupyter_server = ">=2.15.0"
 jupyter_client = ">=8.6.0"
+matplotlib = ">=3.0.0"  # also in simpeg and geoana
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
