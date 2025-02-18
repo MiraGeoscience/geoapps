@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from SimPEG.survey import BaseSurvey
+from simpeg.survey import BaseSurvey
 
 
 if TYPE_CHECKING:

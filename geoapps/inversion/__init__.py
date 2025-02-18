@@ -13,7 +13,7 @@
 
 from __future__ import annotations
 
-from SimPEG import dask
+from simpeg import dask
 
 from simpeg_drivers.params import InversionBaseParams  # isort: skip
 from simpeg_drivers.constants import default_ui_json
