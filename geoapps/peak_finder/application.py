@@ -106,4 +106,4 @@ class PeakFinder(ObjectDataSelection):
         Trigger the application
         """
         new_params = self.collect_parameter_values()
-        ObjectSelection.run("Peak Finder", DashPeakFinder, new_params.input_file)
+        ObjectSelection.run("Peak Finder", DashPeakFinder, new_params)
