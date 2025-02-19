@@ -42,6 +42,7 @@ from geoapps.inversion.potential_fields.application import (
     MeshOctreeOptions,
     ModelOptions,
 )
+from geoapps.shared_utils.utils import DrapeOptions, WindowOptions
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 
@@ -239,9 +240,6 @@ class InversionApp(PlotSelection2D):
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
             add_xyz=False,
-            receivers_offset_z=self.defaults["receivers_offset_z"],
-            z_from_topo=self.defaults["z_from_topo"],
-            receivers_radar_drape=self.defaults["receivers_radar_drape"],
         )
         self._alpha_s = widgets.FloatText(
             min=0,
@@ -1101,9 +1099,11 @@ class InversionApp(PlotSelection2D):
                             param_dict[f"{key}_channel_bool"] = True
 
                 if self.receivers_radar_drape.value is not None:
-                    self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
-                        parent=new_obj
-                    )
+                    receiver_drape = self.workspace.get_entity(
+                        self.receivers_radar_drape.value
+                    )[0]
+                else:
+                    receiver_drape = None
 
             for key in self.__dict__:
                 if "resolution" in key:
@@ -1136,24 +1136,34 @@ class InversionApp(PlotSelection2D):
                             param_dict[sub_key.lstrip("_")] = value
 
             # Create new params object and write
-            param_dict["resolution"] = None  # No downsampling for dcip
             param_dict["geoh5"] = new_workspace
 
             if param_dict.get("reference_model", None) is None:
                 param_dict["reference_model"] = param_dict["starting_model"]
                 param_dict["alpha_s"] = 0.0
 
+            window_options = WindowOptions(
+                center_x=self.window_center_x.value,
+                center_y=self.window_center_y.value,
+                width=self.window_width.value,
+                height=self.window_height.value,
+                azimuth=self.window_azimuth.value,
+            )
+            drape_options = DrapeOptions(
+                topography_object=param_dict["topography_object"],
+                topography=param_dict["topography"],
+                z_from_topo=param_dict["z_from_topo"],
+                receivers_offset_z=param_dict["receivers_offset_z"],
+                receivers_radar_drape=receiver_drape,
+            )
+
             # Pre-processing
             update_dict = preprocess_data(
-                workspace=ws,
-                param_dict=param_dict,
-                resolution=None,
-                data_object=param_dict["data_object"],
-                window_center_x=self.window_center_x.value,
-                window_center_y=self.window_center_y.value,
-                window_width=self.window_width.value,
-                window_height=self.window_height.value,
-                window_azimuth=self.window_azimuth.value,
+                ws,
+                param_dict,
+                param_dict["data_object"],
+                window_options,
+                drape_options=drape_options,
             )
             param_dict.update(update_dict)
 

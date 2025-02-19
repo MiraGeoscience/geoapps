@@ -18,7 +18,7 @@ from scipy.spatial import cKDTree
 
 from geoapps.interpolation.constants import validations
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.shared_utils.utils import get_locations, weighted_average
+from geoapps.shared_utils.utils import weighted_average
 
 
 class DataInterpolationDriver(BaseDriver):
@@ -30,7 +30,7 @@ class DataInterpolationDriver(BaseDriver):
         self.params: DataInterpolationParams = params
 
     def run(self):
-        xyz = get_locations(self.params.geoh5, self.params.objects)
+        xyz = self.params.objects.locations
 
         if xyz is None:
             raise ValueError("Input object has no centroids or vertices.")
@@ -38,7 +38,7 @@ class DataInterpolationDriver(BaseDriver):
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
-        xyz_out = get_locations(self.params.geoh5, self.params.out_object)
+        xyz_out = self.params.out_object.locations
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
