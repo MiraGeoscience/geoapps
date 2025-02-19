@@ -31,7 +31,6 @@ from geoapps.shared_utils.utils import (
     downsample_xy,
     drape_2_tensor,
     filter_xy,
-    get_locations,
     get_neighbouring_cells,
     octree_2_treemesh,
     rotate_xyz,
@@ -881,27 +880,6 @@ def test_detrend_xy():
     with pytest.raises(ValueError) as excinfo:
         calculate_2D_trend(xy, nan_values, order=-2)
     assert "> 0. Value of -2" in str(excinfo.value)
-
-
-def test_get_locations(tmp_path: Path):
-    with Workspace.create(tmp_path / "test.geoh5") as workspace:
-        n_x, n_y = 10, 15
-        grid = Grid2D.create(
-            workspace,
-            origin=[0, 0, 0],
-            u_cell_size=20.0,
-            v_cell_size=30.0,
-            u_count=n_x,
-            v_count=n_y,
-            name="test_grid",
-            allow_move=False,
-        )
-        base_locs = get_locations(workspace, grid)
-
-        test_data = grid.add_data({"test_data": {"values": np.ones(10 * 15)}})
-        data_locs = get_locations(workspace, test_data)
-
-        np.testing.assert_array_equal(base_locs, data_locs)
 
 
 def test_densify_curve(tmp_path: Path):
