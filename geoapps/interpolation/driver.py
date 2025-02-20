@@ -142,12 +142,7 @@ class DataInterpolationDriver(BaseDriver):
         if self.params.xy_extent is not None and self.params.geoh5.get_entity(
             self.params.xy_extent
         ):
-            xy_ref = self.params.xy_extent
-            if hasattr(xy_ref, "centroids"):
-                xy_ref = xy_ref.centroids
-            elif hasattr(xy_ref, "vertices"):
-                xy_ref = xy_ref.vertices
-
+            xy_ref = self.params.xy_extent.locations
             tree = cKDTree(xy_ref[:, :2])
             rad, _ = tree.query(xyz_out_orig[:, :2])
             for key in values_interp.keys():

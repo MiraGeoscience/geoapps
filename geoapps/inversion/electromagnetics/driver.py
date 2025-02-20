@@ -588,10 +588,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(con_object, "centroids"):
-                grid = con_object.centroids
-            else:
-                grid = con_object.vertices
+            grid = con_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
@@ -615,10 +612,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(con_object, "centroids"):
-                grid = con_object.centroids
-            else:
-                grid = con_object.vertices
+            grid = con_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
@@ -640,10 +634,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(sus_object, "centroids"):
-                grid = sus_object.centroids
-            else:
-                grid = sus_object.vertices
+            grid = sus_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
