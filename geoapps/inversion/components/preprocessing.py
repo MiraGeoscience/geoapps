@@ -14,7 +14,7 @@ import uuid
 import numpy as np
 from geoh5py import Workspace
 from geoh5py.data import Data, NumericData
-from geoh5py.objects import Grid2D, ObjectBase, Points, PotentialElectrode
+from geoh5py.objects import Grid2D, ObjectBase, Points
 from geoh5py.shared.utils import is_uuid
 from scipy.interpolate import LinearNDInterpolator
 
@@ -96,11 +96,6 @@ def window_data(
         window=window,
         distance=resolution,
     )
-
-    if isinstance(data_object, PotentialElectrode):
-        vert_mask = np.zeros(data_object.n_vertices, dtype=bool)
-        vert_mask[data_object.cells[mask, :].ravel()] = True
-        mask = vert_mask
 
     new_data_object = data_object.copy(
         parent=data_object.workspace,
