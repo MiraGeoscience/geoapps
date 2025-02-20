@@ -99,8 +99,8 @@ def export_grid_2_geotiff(
 
     dataset = driver.Create(
         file_name,
-        grid2d.shape[0],
-        grid2d.shape[1],
+        int(grid2d.shape[0]),
+        int(grid2d.shape[1]),
         num_bands,
         encode_type,
     )

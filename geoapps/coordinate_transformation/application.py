@@ -13,6 +13,7 @@ import re
 from pathlib import Path
 from time import time
 
+import matplotlib.pyplot as plt
 import numpy
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
@@ -97,7 +98,6 @@ class CoordinateTransformation(ObjectDataSelection):
         """
         Run the coordinate transformation
         """
-        import matplotlib.pyplot as plt
 
         if self.wkt_in.value != "" and self.wkt_out.value != "":
             if self.plot_result:
