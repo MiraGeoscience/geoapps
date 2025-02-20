@@ -21,7 +21,6 @@ from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.constants import validations
 from geoapps.block_model_creation.params import BlockModelParams
-from geoapps.shared_utils.utils import get_locations
 
 
 class BlockModelDriver(BaseDriver):
@@ -147,7 +146,7 @@ class BlockModelDriver(BaseDriver):
         Create block model and add to self.params.geoh5.
         """
         with fetch_active_workspace(self.params.geoh5, mode="r+"):
-            xyz = get_locations(self.params.geoh5, self.params.objects)
+            xyz = self.params.objects.locations
             if xyz is None:
                 raise ValueError("Input object has no centroids or vertices.")
 

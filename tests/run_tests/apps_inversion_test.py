@@ -345,6 +345,15 @@ def test_em1d_inversion(tmp_path: Path):
                 "dbdt_z_uncert"
             ).uid
 
+            line_id = new_obj.add_data(
+                {
+                    "Line": {
+                        "values": new_obj.parts + 1,
+                        "type": "referenced",
+                        "value_map": {ii + 1: f"Line{ii + 1}" for ii in range(5)},
+                    }
+                }
+            )
     changes = {
         "objects": new_obj.uid,
         "data": data_group_uid,
@@ -359,6 +368,12 @@ def test_em1d_inversion(tmp_path: Path):
             getattr(app, param).value = value
         else:
             setattr(app, param, value)
+
+    for param, value in {
+        "data": line_id.uid,
+        "lines": [2, 3],
+    }.items():
+        getattr(app.lines, param).value = value
 
     for key, value in side_effects.items():
         assert getattr(app, key).value == value, f"Failed to change {key} with {value}."

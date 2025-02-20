@@ -1,8 +1,8 @@
-geoapps: Python applications for geoscientific problems
+Geoapps: Python applications for geoscientific problems
 =======================================================
 
 
-Welcome to **geoapps**! Where geoscientists meet to share open-source applications.
+Welcome to **Geoapps**! Where geoscientists meet to share open-source applications.
 
 In short
 ^^^^^^^^
@@ -30,6 +30,7 @@ Contents:
    content/howto.rst
    content/release_notes.rst
    content/feedback.rst
+   THIRD_PARTY_SOFTWARE
 
 
 License
