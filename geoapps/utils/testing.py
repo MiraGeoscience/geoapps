@@ -14,7 +14,7 @@ from pathlib import Path
 from uuid import UUID
 
 import numpy as np
-from discretize.utils import mesh_builder_xyz
+from discretize.utils import active_from_xyz, mesh_builder_xyz
 from geoh5py.objects import (
     AirborneFEMReceivers,
     AirborneFEMTransmitters,
@@ -35,7 +35,7 @@ from octree_creation_app.driver import OctreeDriver
 from octree_creation_app.utils import treemesh_2_octree
 from scipy.spatial import Delaunay
 from simpeg import utils
-from simpeg_drivers.utils.utils import active_from_xyz, get_drape_model
+from simpeg_drivers.utils.utils import get_drape_model
 
 
 class Geoh5Tester:
@@ -424,7 +424,6 @@ def setup_inversion_workspace(
             mesh,
             topography,
             levels=refinement,
-            diagonal_balance=False,
             finalize=False,
         )
 
@@ -433,7 +432,6 @@ def setup_inversion_workspace(
                 mesh,
                 vertices,
                 levels=[2],
-                diagonal_balance=False,
                 finalize=False,
             )
 

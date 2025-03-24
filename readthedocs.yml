@@ -5,6 +5,8 @@ build:
   tools:
     python: "mambaforge-22.9"
   jobs:
+    pre_build:
+      - "pip install . --no-deps"
     post_checkout:
       # Download and uncompress the binary
       # https://git-lfs.github.com/

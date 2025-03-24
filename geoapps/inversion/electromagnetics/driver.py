@@ -334,7 +334,7 @@ def inversion(input_file):
         for key, values in selection.items():
             line_data = workspace.get_entity(uuid.UUID(key))[0]
 
-            for line in values[0]:
+            for line in values:
                 line_ind = np.where(line_data.values == float(line))[0]
 
                 if len(line_ind) < 2:
@@ -482,7 +482,7 @@ def inversion(input_file):
     full_model_line_ids = []
     for key, values in selection.items():
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
-        for line in values[0]:
+        for line in values:
             line_ind = np.where(line_data.values[win_ind] == line)[0]
             n_sounding = len(line_ind)
             if n_sounding < 2:
@@ -503,7 +503,7 @@ def inversion(input_file):
             )
             pred_count += z_loc.shape[0]
 
-            if line != values[0][0]:
+            if line != values[0]:
                 prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
                     0, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
                 )
@@ -525,7 +525,7 @@ def inversion(input_file):
             cell_count += nZ * n_sounding
             full_model_line_ids.append(np.ones(nZ * n_sounding) * line)
 
-            if line != values[0][-1]:
+            if line != values[-1]:
                 prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
                     -1, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
                 )
@@ -553,7 +553,7 @@ def inversion(input_file):
                     "values": ghost_mat
                     @ np.hstack(full_model_line_ids).astype("uint32"),
                     "type": "referenced",
-                    "value_map": line_data.value_map.map,
+                    "value_map": line_data.value_map(),
                 }
             }
         )
@@ -570,7 +570,7 @@ def inversion(input_file):
                 "Line": {
                     "values": np.hstack(line_ids).astype("uint32"),
                     "type": "referenced",
-                    "value_map": line_data.value_map.map,
+                    "value_map": line_data.value_map(),
                 }
             }
         )
@@ -588,10 +588,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(con_object, "centroids"):
-                grid = con_object.centroids
-            else:
-                grid = con_object.vertices
+            grid = con_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
@@ -615,10 +612,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(con_object, "centroids"):
-                grid = con_object.centroids
-            else:
-                grid = con_object.vertices
+            grid = con_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
@@ -640,10 +634,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(sus_object, "centroids"):
-                grid = sus_object.centroids
-            else:
-                grid = sus_object.vertices
+            grid = sus_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)

@@ -33,12 +33,17 @@ from simpeg_drivers import InversionBaseParams
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.inversion.components.preprocessing import preprocess_data
-from geoapps.shared_utils.utils import downsample_grid, downsample_xy
+from geoapps.shared_utils.utils import (
+    DrapeOptions,
+    WindowOptions,
+    downsample_grid,
+    downsample_xy,
+)
 
 
 class InversionApp(BaseDashApplication):
     """
-    Application for the inversion of potential field data using simpeg
+    Application for the inversion of potential field data using SimPEG
     """
 
     _param_class = InversionBaseParams
@@ -474,7 +479,6 @@ class InversionApp(BaseDashApplication):
         # Get a notebook port that is running from the index page.
         nb_port = None
         servers = list(serverapp.list_running_servers())
-
         for s in servers:
             if s["root_dir"] == str(Path("../../../").resolve()):
                 nb_port = s["port"]
@@ -686,7 +690,7 @@ class InversionApp(BaseDashApplication):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
-            value = ui_json_data["receivers_radar_drape"]
+            value = ui_json_data.get("receivers_radar_drape", None)
             options = self.get_data_options(
                 ui_json_data,
                 object_uid,
@@ -1050,8 +1054,8 @@ class InversionApp(BaseDashApplication):
                 z = new_values.T[downsampled_index]
 
                 # Update figure data.
-                figure["data"][0]["x"] = down_x  # pylint: disable=used-before-assignment
-                figure["data"][0]["y"] = down_y  # pylint: disable=used-before-assignment
+                figure["data"][0]["x"] = down_x
+                figure["data"][0]["y"] = down_y
                 figure["data"][0]["z"] = z
 
             # Get data count
@@ -1390,18 +1394,6 @@ class InversionApp(BaseDashApplication):
             )
         )
 
-        # Move radar data to current workspace
-        if is_uuid(update_dict["receivers_radar_drape"]):
-            param_dict["receivers_radar_drape"] = self.workspace.get_entity(
-                uuid.UUID(update_dict["receivers_radar_drape"])
-            )[0]
-            if (
-                param_dict["receivers_radar_drape"] is not None
-                and new_workspace.get_entity(param_dict["receivers_radar_drape"].uid)[0]
-                is None
-            ):
-                param_dict["receivers_radar_drape"].copy(parent=data_object)
-
         # Move topography object and data into current workspace
         obj = self.workspace.get_entity(uuid.UUID(update_dict["topography_object"]))[0]
         param_dict["topography_object"] = new_workspace.get_entity(obj.uid)[0]
@@ -1577,9 +1569,6 @@ class InversionApp(BaseDashApplication):
 
         # Get dict of params from base dash application
         update_dict = {
-            "z_from_topo": z_from_topo,
-            "receivers_offset_z": receivers_offset_z,
-            "receivers_radar_drape": receivers_radar_drape,
             "forward_only": forward_only,
             "alpha_s": alpha_s,
             "length_scale_x": length_scale_x,
@@ -1637,11 +1626,9 @@ class InversionApp(BaseDashApplication):
 
             # Copy data object to workspace
             data_object = self.workspace.get_entity(uuid.UUID(data_object))[0]
-            param_dict["data_object"] = workspace.get_entity(data_object.uid)[0]
-            if param_dict["data_object"] is None:
-                param_dict["data_object"] = data_object.copy(
-                    parent=workspace, copy_children=False
-                )
+            param_dict["data_object"] = data_object.copy(
+                parent=workspace, copy_children=False
+            )
 
             # Add inversion specific params to param_dict
             param_dict.update(
@@ -1653,17 +1640,35 @@ class InversionApp(BaseDashApplication):
             if self._inversion_type == "dcip":
                 resolution = None  # No downsampling for dcip
 
+            window_options = WindowOptions(
+                center_x=window_center_x,
+                center_y=window_center_y,
+                width=window_width,
+                height=window_height,
+                azimuth=0.0,
+            )
+
+            if receivers_radar_drape is not None:
+                receivers_radar_drape = self.workspace.get_entity(
+                    uuid.UUID(receivers_radar_drape)
+                )[0]
+
+            drape_options = DrapeOptions(
+                topography_object=param_dict["topography_object"],
+                topography=param_dict["topography"],
+                z_from_topo=z_from_topo,
+                receivers_offset_z=receivers_offset_z,
+                receivers_radar_drape=receivers_radar_drape,
+            )
+
             # Pre-processing
             update_dict = preprocess_data(
-                workspace=workspace,
-                param_dict=param_dict,
+                workspace,
+                param_dict,
+                param_dict["data_object"],
+                window_options,
+                drape_options=drape_options,
                 resolution=resolution,
-                data_object=param_dict["data_object"],
-                window_center_x=window_center_x,
-                window_center_y=window_center_y,
-                window_width=window_width,
-                window_height=window_height,
-                window_azimuth=0.0,
                 ignore_values=ignore_values,
                 detrend_type=detrend_type,
                 detrend_order=detrend_order,
@@ -1676,7 +1681,7 @@ class InversionApp(BaseDashApplication):
                 path=monitoring_directory,
             )
 
-        return ["\nSaved to " + str(Path(monitoring_directory).resolve())]
+        return ["\nSaved to " + str(Path(monitoring_directory).resolve() / temp_geoh5)]
 
     def trigger_click(self, _):
         """

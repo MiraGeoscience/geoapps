@@ -25,7 +25,6 @@ def main():
         logging.getLogger(__package__).error(
             "Could not find index.ipynb (looking in %s)", geoapps_root.resolve()
         )
-
     notebook_main([str(index_notebook.resolve())])
 
 

@@ -108,21 +108,12 @@ class Surface2D(ObjectDataSelection):
             return
 
         _, elevations = self.elevations.get_selected_entities()
-
-        if hasattr(obj, "vertices"):
-            locations = obj.vertices
-        else:
-            locations = obj.centroids
+        locations = obj.locations
 
         if self.z_option.value == "depth":
             if self.topography.options.value == "Object":
                 topo_obj = self.workspace.get_entity(self.topography.objects.value)[0]
-
-                if hasattr(topo_obj, "centroids"):
-                    vertices = topo_obj.centroids.copy()
-                else:
-                    vertices = topo_obj.vertices.copy()
-
+                vertices = topo_obj.locations
                 topo_xy = vertices[:, :2]
 
                 try:
@@ -346,14 +337,14 @@ class Surface2D(ObjectDataSelection):
                 )
 
                 if len(self.models) > 0:
-                    for uid, model in zip(self.data.value, self.models, strict=True):
+                    for uid, model in zip(self.data.value, self.models, strict=False):
                         surface.add_data(
                             {
                                 self.data.uid_name_map[uid]: {"values": model},
                             }
                         )
             else:
-                for data_obj, model in zip(data_list, self.models, strict=True):
+                for data_obj, model in zip(data_list, self.models, strict=False):
                     surface.add_data(
                         {
                             data_obj.name: {"values": model},

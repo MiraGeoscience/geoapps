@@ -14,11 +14,12 @@ import uuid
 import numpy as np
 from geoh5py import Workspace
 from geoh5py.data import Data, NumericData
-from geoh5py.objects import Curve, Grid2D, ObjectBase, Points, PotentialElectrode
+from geoh5py.objects import Grid2D, ObjectBase, Points
 from geoh5py.shared.utils import is_uuid
+from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.inversion.utils import calculate_2D_trend
-from geoapps.shared_utils.utils import filter_xy, get_locations
+from geoapps.shared_utils.utils import DrapeOptions, WindowOptions, filter_xy
 
 
 # TODO replace with implementation in geoh5py v0.9.0
@@ -38,7 +39,6 @@ def window_data(
     data_object: ObjectBase,
     components: list[str],
     data_dict: dict,
-    workspace: Workspace,
     window_azimuth: float,
     window_center_x: float,
     window_center_y: float,
@@ -52,7 +52,6 @@ def window_data(
     :param data_object: Data object to be windowed.
     :param components: List of active data components.
     :param data_dict: Dictionary of data components and uncertainties.
-    :param workspace: Output workspace.
     :param window_azimuth: Azimuth of the window.
     :param window_center_x: X center of the window.
     :param window_center_y: Y center of the window.
@@ -74,7 +73,7 @@ def window_data(
         data_object = grid_to_points(data_object)
 
     # Get locations
-    locations = get_locations(workspace, data_object)
+    locations = data_object.locations
 
     # Get window
     window = {
@@ -98,11 +97,6 @@ def window_data(
         distance=resolution,
     )
 
-    if isinstance(data_object, PotentialElectrode):
-        vert_mask = np.zeros(data_object.n_vertices, dtype=bool)
-        vert_mask[data_object.cells[mask, :].ravel()] = True
-        mask = vert_mask
-
     new_data_object = data_object.copy(
         parent=data_object.workspace,
         copy_children=True,
@@ -110,13 +104,6 @@ def window_data(
         mask=mask,
         name=data_object.name + "_processed",
     )
-
-    if isinstance(data_object, Curve) and not isinstance(
-        data_object, PotentialElectrode
-    ):
-        new_data_object._parts = data_object.parts[mask]  # pylint: disable=protected-access
-        new_data_object._cells = None  # pylint: disable=protected-access
-        new_data_object.cells = None
 
     # Update data dict
     for comp in components:
@@ -128,13 +115,7 @@ def window_data(
                 data_dict[comp + "_uncertainty"]["name"]
             )[0].values
 
-    # Get new locations
-    if hasattr(new_data_object, "centroids"):
-        locations = new_data_object.centroids
-    elif hasattr(new_data_object, "vertices"):
-        locations = new_data_object.vertices
-
-    return new_data_object, data_dict, locations
+    return new_data_object, data_dict, new_data_object.locations
 
 
 def detrend_data(
@@ -217,6 +198,49 @@ def set_infinity_uncertainties(
     return data_dict
 
 
+def transform_elevation(
+    data_object: Points,
+    topography_object: Points | Grid2D,
+    topography: NumericData | None,
+    offset: float,
+    from_topo: bool,
+    radar_drape: NumericData | None,
+):
+    """
+    Transform elevation of the receivers based on topography if requested.
+
+    :param data_object: Data object to copy to new workspace.
+    :param topography_object: Topography object.
+    :param topography: Topography data for elevation.
+    :param offset: Offset to apply to elevation.
+    :param from_topo: Checkbox for getting z from topography.
+    :param radar_drape: Radar drape data.
+
+    :return: Updated data object.
+    """
+    elevations = data_object.locations[:, 2]
+
+    if from_topo:
+        dem = topography_object.locations
+        if topography is not None:
+            dem[:, 2] = topography.values
+
+        # Interpolate elevation from DEM
+        interp = LinearNDInterpolator(dem[:, :2], dem[:, 2])
+        elevations = interp(data_object.locations[:, :2])
+
+        if radar_drape is not None:
+            elevations += radar_drape.values
+
+    if offset != 0:
+        elevations += offset
+
+    # Update data object with new elevations
+    data_object.vertices = np.c_[data_object.locations[:, :2], elevations]
+
+    return data_object
+
+
 def parse_ignore_values(ignore_values: str, forward_only: bool) -> tuple[float, str]:
     """
     Returns an ignore value and type ('<', '>', or '=') from params data.
@@ -288,12 +312,9 @@ def preprocess_data(
     workspace: Workspace,
     param_dict: dict,
     data_object: ObjectBase,
-    resolution: float | None,
-    window_center_x: float,
-    window_center_y: float,
-    window_width: float,
-    window_height: float,
-    window_azimuth: float | None = None,
+    window_options: WindowOptions,
+    drape_options: DrapeOptions | None = None,
+    resolution: float | None = None,
     ignore_values: str | None = None,
     detrend_type: str | None = None,
     detrend_order: int | None = None,
@@ -301,17 +322,14 @@ def preprocess_data(
     data_dict: dict | None = None,
 ) -> dict:
     """
-    Window, detrend, and ignore values in data_object. Update data_dict with new data uids.
+    All data and object transformation not supported by the inversion driver.
 
     :param workspace: Parent workspace for data_object and data components.
     :param param_dict: Dictionary of params to run the inversion.
     :param data_object: Parent object for data components.
     :param resolution: Resolution for downsampling.
-    :param window_center_x: X center of the window.
-    :param window_center_y: Y center of the window.
-    :param window_width: Width of the window.
-    :param window_height: Height of the window.
-    :param window_azimuth: Azimuth of the window.
+    :param window_options: Windowing options.
+    :param drape_options: Topography options.
     :param ignore_values: Values to be ignored.
     :param detrend_type: Method to be used for the detrending.
     :param detrend_order: Order of the polynomial to be used for detrend.
@@ -328,12 +346,11 @@ def preprocess_data(
         data_object,
         components,
         data_dict,
-        workspace,
-        window_azimuth,
-        window_center_x,
-        window_center_y,
-        window_width,
-        window_height,
+        window_options.azimuth,
+        window_options.center_x,
+        window_options.center_y,
+        window_options.width,
+        window_options.height,
         resolution,
     )
 
@@ -355,6 +372,16 @@ def preprocess_data(
             locations,
         )
 
+    if drape_options is not None:
+        new_data_object = transform_elevation(
+            new_data_object,
+            drape_options.topography_object,
+            drape_options.topography,
+            drape_options.receivers_offset_z,
+            drape_options.z_from_topo,
+            drape_options.receivers_radar_drape,
+        )
+
     # Add processed data to data object
     update_dict = {}
     update_dict["data_object"] = new_data_object.uid
@@ -365,12 +392,5 @@ def preprocess_data(
             data = data_dict[key]
             if key in data_dict.keys():
                 update_dict[key] = new_data_object.get_entity(data["name"])[0].uid
-    # Update update_dict with new radar uid
-    if "receivers_radar_drape" in param_dict:
-        radar = param_dict["receivers_radar_drape"]
-        if radar is not None:
-            update_dict["receivers_radar_drape"] = new_data_object.get_entity(
-                radar.name
-            )[0].uid
 
     return update_dict

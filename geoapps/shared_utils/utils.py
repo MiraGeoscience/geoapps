@@ -10,13 +10,13 @@
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from uuid import UUID
 
 import numpy as np
 from discretize import TensorMesh, TreeMesh
+from geoh5py.data import FloatData
 from geoh5py.objects import Curve, DrapeModel
-from geoh5py.objects.surveys.direct_current import BaseElectrode
-from geoh5py.shared import Entity
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
@@ -31,46 +31,6 @@ def hex_to_rgb(hex_color):
     """
     code = hex_color.lstrip("#")
     return [int(code[i : i + 2], 16) for i in (0, 2, 4)]
-
-
-def get_locations(workspace: Workspace, entity: UUID | Entity):
-    """
-    Returns entity's centroids or vertices.
-
-    If no location data is found on the provided entity, the method will
-    attempt to call itself on its parent.
-
-    :param workspace: Geoh5py Workspace entity.
-    :param entity: Object or uuid of entity containing centroid or
-        vertex location data.
-
-    :return: Array shape(*, 3) of x, y, z location data
-
-    """
-    locations = None
-
-    if isinstance(entity, UUID):
-        entity = workspace.get_entity(entity)[0]
-
-    if hasattr(entity, "vertices"):
-        if isinstance(entity, BaseElectrode):
-            potentials = entity.potential_electrodes
-            locations = np.mean(
-                [
-                    potentials.vertices[potentials.cells[:, 0], :],
-                    potentials.vertices[potentials.cells[:, 1], :],
-                ],
-                axis=0,
-            )
-        else:
-            locations = entity.vertices
-    elif hasattr(entity, "centroids"):
-        locations = entity.centroids
-
-    elif getattr(entity, "parent", None) is not None and entity.parent is not None:
-        locations = get_locations(workspace, entity.parent)
-
-    return locations
 
 
 def get_neighbouring_cells(mesh: TreeMesh, indices: list | np.ndarray) -> tuple:
@@ -463,7 +423,7 @@ def octree_2_treemesh(mesh):
     small_cell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
     n_cell_dim = [mesh.u_count, mesh.v_count, mesh.w_count]
     cell_sizes = [
-        np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell, strict=True)
+        np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell, strict=False)
     ]
     u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
     h1, h2, h3 = (np.abs(h) for h in cell_sizes)
@@ -546,13 +506,13 @@ def get_inversion_output(h5file: str | Workspace, inversion_group: str | UUID):
             f"BaseInversion group {inversion_group} could not be found in the target geoh5 {h5file}"
         ) from exc
 
-    outfile = group.get_entity("simpeg.out")[0]
+    outfile = group.get_entity("SimPEG.out")[0]
     out = [
         line for line in outfile.values.decode("utf-8").replace("\r", "").split("\n")
     ][:-1]
     cols = out.pop(0).split(" ")
     out = [[string_to_numeric(k) for k in line.split(" ")] for line in out]
-    out = dict(zip(cols, list(map(list, zip(*out, strict=True))), strict=True))
+    out = dict(zip(cols, list(map(list, zip(*out, strict=False))), strict=False))
 
     return out
 
@@ -599,3 +559,29 @@ def resample_locations(locations: np.ndarray, increment: float) -> np.ndarray:
         resampled.append(interpolator(new_distances))
 
     return np.c_[resampled].T
+
+
+@dataclass
+class WindowOptions:
+    """
+    Parameters to window options for 2D data.
+    """
+
+    center_x: float
+    center_y: float
+    width: float
+    height: float
+    azimuth: float = 0.0
+
+
+@dataclass
+class DrapeOptions:
+    """
+    Parameters to change the receiver locations to drape on a topography surface.
+    """
+
+    topography_object: str
+    topography: str
+    z_from_topo: bool
+    receivers_offset_z: float
+    receivers_radar_drape: FloatData | None = None

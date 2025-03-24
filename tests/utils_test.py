@@ -16,17 +16,15 @@ from pathlib import Path
 import geoh5py.objects
 import numpy as np
 import pytest
-from discretize import TreeMesh
-from discretize.utils import mesh_builder_xyz
+from discretize import CylindricalMesh, TreeMesh
 from geoapps_utils.utils.numerical import running_mean
-from geoh5py.objects import Curve, Grid2D, Points
+from geoh5py.objects import Curve, Grid2D
 from geoh5py.workspace import Workspace
-from octree_creation_app.driver import OctreeDriver
 from octree_creation_app.utils import treemesh_2_octree
 from simpeg_drivers.utils.utils import (
-    active_from_xyz,
     calculate_2D_trend,
-    drape_to_octree,
+    drape_2_tensor,
+    floating_active,
     get_drape_model,
 )
 
@@ -34,9 +32,7 @@ from geoapps.shared_utils.utils import (
     densify_curve,
     downsample_grid,
     downsample_xy,
-    drape_2_tensor,
     filter_xy,
-    get_locations,
     get_neighbouring_cells,
     rotate_xyz,
     weighted_average,
@@ -53,82 +49,47 @@ from geoapps.utils.surveys import (
     new_neighbors,
     split_dcip_survey,
 )
-from geoapps.utils.testing import generate_dc_survey
+from geoapps.utils.testing import Geoh5Tester, generate_dc_survey
 from geoapps.utils.workspace import sorted_children_dict
 
 from . import PROJECT
 
 
-# pylint: disable=protected-access
-
 geoh5 = Workspace(PROJECT)
 
 
-def test_drape_to_octree(tmp_path: Path):
-    # create workspace with tmp_path
-    ws = Workspace.create(tmp_path / "test.geoh5")
+def test_floating_active():
+    mesh = CylindricalMesh([[10] * 16, [np.pi] * 2], [0, 0])
+    with pytest.raises(
+        TypeError, match="Input mesh must be of type TreeMesh or TensorMesh."
+    ):
+        floating_active(mesh, np.zeros(mesh.n_cells))
 
-    # Generate locs for 2 drape models
-    x = np.linspace(0, 10, 11)
-    y = np.array([0])
-    X, Y = np.meshgrid(x, y)
-    locs_1 = np.c_[X.flatten(), Y.flatten()]
-    locs_1 = np.c_[locs_1, np.zeros(locs_1.shape[0])]
+    # Test 3D case
+    mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
+    mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
+    centers = mesh.cell_centers
+    active = np.zeros(mesh.n_cells)
+    active[centers[:, 2] < 75] = 1
+    assert not floating_active(mesh, active)
+    active[49] = 1
+    assert floating_active(mesh, active)
 
-    y = np.array([5])
-    X, Y = np.meshgrid(x, y)
-    locs_2 = np.c_[X.flatten(), Y.flatten()]
-    locs_2 = np.c_[locs_2, locs_1[:, -1]]
-
-    # Generate topo
-    x = np.linspace(-5, 15, 21)
-    y = np.linspace(-5, 10, 16)
-    z = np.array([0])
-    X, Y, Z = np.meshgrid(x, y, z)
-    topo = np.c_[X.flatten(), Y.flatten(), Z.flatten()]
-
-    # Create drape models
-    h = [0.5, 0.5, 0.5]
-    depth_core = 2
-    pads = [5, 5, 5, 5, 2, 1]
-    exp_fact = 1.1
-    drape_1 = get_drape_model(ws, "line_1", locs_1, h, depth_core, pads, exp_fact)[0]
-    drape_1.add_data({"model": {"values": 10 * np.ones(drape_1.n_cells)}})
-    drape_2 = get_drape_model(ws, "line_2", locs_2, h, depth_core, pads, exp_fact)[0]
-    drape_2.add_data({"model": {"values": 100 * np.ones(drape_2.n_cells)}})
-
-    # Create octree model
-    locs = np.vstack([locs_1, locs_2])
-    tree = mesh_builder_xyz(
-        locs,
-        h,
-        depth_core=depth_core,
-        padding_distance=np.array(pads).reshape(3, 2).tolist(),
-        mesh_type="TREE",
-    )
-    tree = OctreeDriver.refine_tree_from_points(
-        tree, locs, levels=[4, 2], diagonal_balance=False, finalize=False
-    )
-    topography = Points.create(ws, vertices=topo)
-    tree = OctreeDriver.refine_tree_from_surface(
-        tree,
-        topography,
-        levels=[2, 2],
-        diagonal_balance=False,
-        finalize=True,
-    )
-    # interp and save common models into the octree
-    octree = treemesh_2_octree(ws, tree)
-    active = active_from_xyz(octree, topo)
-    octree = drape_to_octree(
-        octree,
-        [drape_1, drape_2],
-        children={"model_interp": ["model", "model"]},
-        active=active,
-        method="lookup",
-    )
-    data = octree.get_data("model_interp")[0].values
-    assert np.allclose(np.array([10, 100]), np.unique(data[~np.isnan(data)]))
+    # Test 2D case
+    mesh = TreeMesh([[10] * 16, [10] * 16], [0, 0])
+    mesh.insert_cells([100, 100], mesh.max_level, finalize=True)
+    centers = mesh.cell_centers
+    active = np.zeros(mesh.n_cells)
+    active[centers[:, 1] < 75] = 1
+    assert not floating_active(mesh, active)
+    active[21] = 1  # Small cells
+    assert floating_active(mesh, active)
+    active[21] = 0
+    active[23] = 1  # Large cell with hanging faces
+    assert floating_active(mesh, active)
+    active[21] = 0
+    active[27] = 1  # Corner cell
+    assert floating_active(mesh, active)
 
 
 def test_get_drape_model(tmp_path: Path):
@@ -528,6 +489,31 @@ def test_weigted_average():
     assert out[0] == 2
 
 
+def test_treemesh_2_octree(tmp_path: Path):
+    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
+    with geotest.make() as workspace:
+        mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
+        mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
+        omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
+        assert omesh.n_cells == mesh.n_cells
+        assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)  # pylint: disable=protected-access
+        expected_refined_cells = [
+            (0, 0, 6),
+            (0, 0, 7),
+            (1, 0, 6),
+            (1, 0, 7),
+            (0, 1, 6),
+            (0, 1, 7),
+            (1, 1, 6),
+            (1, 1, 7),
+        ]
+        ijk_refined = omesh.octree_cells[["I", "J", "K"]][
+            omesh.octree_cells["NCells"] == 1
+        ].tolist()
+        assert np.all([k in ijk_refined for k in expected_refined_cells])
+        assert np.all([k in expected_refined_cells for k in ijk_refined])
+
+
 def test_drape_2_tensormesh(tmp_path: Path):
     ws = Workspace.create(tmp_path / "test.geoh5")
     x = np.linspace(358600, 359500, 10)
@@ -707,27 +693,6 @@ def test_detrend_xy():
     with pytest.raises(ValueError) as excinfo:
         calculate_2D_trend(xy, nan_values, order=-2)
     assert "> 0. Value of -2" in str(excinfo.value)
-
-
-def test_get_locations(tmp_path: Path):
-    with Workspace.create(tmp_path / "test.geoh5") as workspace:
-        n_x, n_y = 10, 15
-        grid = Grid2D.create(
-            workspace,
-            origin=[0, 0, 0],
-            u_cell_size=20.0,
-            v_cell_size=30.0,
-            u_count=n_x,
-            v_count=n_y,
-            name="test_grid",
-            allow_move=False,
-        )
-        base_locs = get_locations(workspace, grid)
-
-        test_data = grid.add_data({"test_data": {"values": np.ones(10 * 15)}})
-        data_locs = get_locations(workspace, test_data)
-
-        np.testing.assert_array_equal(base_locs, data_locs)
 
 
 def test_densify_curve(tmp_path: Path):
