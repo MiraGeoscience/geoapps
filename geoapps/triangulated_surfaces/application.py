@@ -238,7 +238,7 @@ class Surface2D(ObjectDataSelection):
                 delaunay_2d.points[  # pylint: disable=unsupported-assignment-operation
                     :, 1
                 ] = np.ravel(z_locations)
-                indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
+                index = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
                 for i in range(3):
                     length = np.linalg.norm(
                         delaunay_2d.points[  # pylint: disable=unsubscriptable-object
@@ -249,10 +249,10 @@ class Surface2D(ObjectDataSelection):
                         ],
                         axis=1,
                     )
-                    indx *= length < self.max_distance.value
+                    index *= length < self.max_distance.value
 
                 # Remove the simplices too long
-                delaunay_2d.simplices = delaunay_2d.simplices[indx, :]
+                delaunay_2d.simplices = delaunay_2d.simplices[index, :]
                 model_vertices.append(
                     np.c_[
                         np.ravel(x_locations),
@@ -285,7 +285,7 @@ class Surface2D(ObjectDataSelection):
 
             delaunay_2d = Delaunay(locations[:, :2])
 
-            indx = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
+            index = np.ones(delaunay_2d.simplices.shape[0], dtype=bool)
             for i in range(3):
                 length = np.linalg.norm(
                     delaunay_2d.points[  # pylint: disable=unsubscriptable-object
@@ -296,10 +296,10 @@ class Surface2D(ObjectDataSelection):
                     ],
                     axis=1,
                 )
-                indx *= length < self.max_distance.value
+                index *= length < self.max_distance.value
 
             # Remove the simplices too long
-            delaunay_2d.simplices = delaunay_2d.simplices[indx, :]
+            delaunay_2d.simplices = delaunay_2d.simplices[index, :]
 
             model_vertices = np.c_[delaunay_2d.points, locations[:, 2]]
             model_cells = delaunay_2d.simplices
