@@ -3,7 +3,7 @@ name: geoapps-docs
 channels:
   - conda-forge
 dependencies:
-  - python=3.8
+  - python=3.10
   - pip=21.0.1
   - ipywidgets
   - ipykernel
