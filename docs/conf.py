@@ -163,7 +163,7 @@ edit_on_github_directory = "docs"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 html_theme = "alabaster"
 
 # otherwise, readthedocs.org uses their theme by default, so no need to specify it
