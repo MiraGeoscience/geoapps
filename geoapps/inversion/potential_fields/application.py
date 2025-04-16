@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -20,6 +22,7 @@ import numpy as np
 from geoh5py.data import Data
 from geoh5py.objects import Octree
 from geoh5py.shared import Entity
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
@@ -31,6 +34,7 @@ from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
 
 from ...base.application import BaseApplication
+
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -47,9 +51,9 @@ with warn_module_not_found():
         Widget,
     )
 
-from .gravity.params import GravityParams
-from .magnetic_scalar.params import MagneticScalarParams
-from .magnetic_vector.params import MagneticVectorParams
+from simpeg_drivers.potential_fields.gravity.params import GravityParams
+from simpeg_drivers.potential_fields.magnetic_scalar.params import MagneticScalarParams
+from simpeg_drivers.potential_fields.magnetic_vector.params import MagneticVectorParams
 
 
 def inversion_defaults():
@@ -104,7 +108,15 @@ class InversionApp(PlotSelection2D):
             ifile = InputFile.read_ui_json(ui_json)
             self.params = self._param_class(ifile, **kwargs)
         else:
-            self.params = self._param_class(**app_initializer)
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
         self.data_object = self.objects
 
         for key, value in self.params.to_dict().items():
@@ -790,9 +802,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         self.sensor.workspace = workspace
@@ -1342,7 +1354,7 @@ class InversionApp(PlotSelection2D):
                 elif data["inversion_type"] == "magnetic scalar":
                     self._param_class = MagneticScalarParams
 
-                self.params = getattr(self, "_param_class")(
+                self.params = self._param_class(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 params = self.params.to_dict()

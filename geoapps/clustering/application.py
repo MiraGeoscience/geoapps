@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: disable=W0613
 # pylint: disable=E0401
@@ -50,7 +52,7 @@ class Clustering(ScatterPlots):
         self.scatter_params = self._param_class(**self.params.to_dict(), validate=False)
         self.scatter_driver = ScatterPlotDriver(self.scatter_params)
 
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        external_stylesheets = None
         server = Flask(__name__)
         self.app = Dash(
             server=server,
@@ -400,7 +402,7 @@ class Clustering(ScatterPlots):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "ui_json_data":
             # Read in list of colors from ui.json.
-            if type(ui_json_data["color_pickers"]) == list:
+            if type(ui_json_data["color_pickers"]) == list:  # noqa: E721
                 full_list = ui_json_data["color_pickers"]
             else:
                 # Convert string to list.
@@ -738,7 +740,7 @@ class Clustering(ScatterPlots):
                     color_map[ii] = [
                         np.min([ii / (n_clusters - 1), 1]),
                         "rgb("
-                        + ",".join([f"{int(color[i:i + 2], 16)}" for i in (0, 2, 4)])
+                        + ",".join([f"{int(color[i : i + 2], 16)}" for i in (0, 2, 4)])
                         + ")",
                     ]
                 else:
@@ -835,7 +837,7 @@ class Clustering(ScatterPlots):
             if indices is not None:
                 indices = np.array(indices)
 
-            if color_maps == "kmeans" and kmeans is not None and kmeans != []:
+            if color_maps == "kmeans" and kmeans is not None and len(kmeans) > 0:
                 # Update color_maps
                 color_maps = Clustering.update_colormap(n_clusters, color_pickers)
             if color_maps is None:

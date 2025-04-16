@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -24,6 +26,7 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
+
 
 with warn_module_not_found():
     from ipywidgets import (
@@ -105,21 +108,12 @@ class Surface2D(ObjectDataSelection):
             return
 
         _, elevations = self.elevations.get_selected_entities()
-
-        if hasattr(obj, "centroids"):
-            locations = obj.centroids
-        else:
-            locations = obj.vertices
+        locations = obj.locations
 
         if self.z_option.value == "depth":
             if self.topography.options.value == "Object":
                 topo_obj = self.workspace.get_entity(self.topography.objects.value)[0]
-
-                if hasattr(topo_obj, "centroids"):
-                    vertices = topo_obj.centroids.copy()
-                else:
-                    vertices = topo_obj.vertices.copy()
-
+                vertices = topo_obj.locations
                 topo_xy = vertices[:, :2]
 
                 try:
@@ -274,7 +268,7 @@ class Surface2D(ObjectDataSelection):
         else:
             if elevations:  # Assumes non-property_group selection
                 z_values = elevations[0].values
-                ind = np.isnan(z_values) == False
+                ind = ~np.isnan(z_values)
                 locations = np.c_[locations[ind, :2], z_values[ind]]
             else:
                 ind = np.ones(locations.shape[0], dtype="bool")
@@ -343,14 +337,14 @@ class Surface2D(ObjectDataSelection):
                 )
 
                 if len(self.models) > 0:
-                    for uid, model in zip(self.data.value, self.models):
+                    for uid, model in zip(self.data.value, self.models, strict=False):
                         surface.add_data(
                             {
                                 self.data.uid_name_map[uid]: {"values": model},
                             }
                         )
             else:
-                for data_obj, model in zip(data_list, self.models):
+                for data_obj, model in zip(data_list, self.models, strict=False):
                     surface.add_data(
                         {
                             data_obj.name: {"values": model},
@@ -412,9 +406,9 @@ class Surface2D(ObjectDataSelection):
 
     @elevations.setter
     def elevations(self, value):
-        assert isinstance(
-            value, ObjectDataSelection
-        ), f"elevations must be an object of type {ObjectDataSelection}"
+        assert isinstance(value, ObjectDataSelection), (
+            f"elevations must be an object of type {ObjectDataSelection}"
+        )
         self._elevations = value
 
     @property
@@ -495,9 +489,9 @@ class Surface2D(ObjectDataSelection):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects

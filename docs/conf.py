@@ -16,6 +16,9 @@ import os
 import sys
 import shutil
 import plotly.io as pio
+from datetime import datetime
+from importlib.metadata import version
+from packaging.version import Version
 
 pio.renderers.default = "sphinx_gallery"
 
@@ -92,12 +95,15 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "geoapps v0.11.1"
+project = "geoapps"
 
-# The short X.Y version.
-version = "0.11.1"
+project_copyright = "%Y, Mira Geoscience Ltd"
+author = "Mira Geoscience Ltd."
+
 # The full version, including alpha/beta/rc tags.
-release = "0.11.1-post.1"
+release = version("geoapps")
+# The short X.Y.Z version.
+version = Version(release).base_version
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -157,7 +163,7 @@ edit_on_github_directory = "docs"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 html_theme = "alabaster"
 
 # otherwise, readthedocs.org uses their theme by default, so no need to specify it
@@ -170,6 +176,10 @@ html_theme = "alabaster"
 # html_theme_options = {
 #   'display_github': 'True',
 # }
+
+html_theme_options = {
+    "description": f"version {release}",
+}
 
 # html_logo = 'images/mirageoscience-apps.png'
 
@@ -392,3 +402,11 @@ sys.path.append(os.getcwd())
 
 # TODO: build the source
 # sphinx-apidoc --templatedir templates/ -o content/api/ ../mirageoscience-apps
+
+
+def get_copyright_notice():
+    return f"Copyright {datetime.now().strftime(project_copyright)}"
+
+rst_epilog = f"""
+.. |copyright_notice| replace:: {get_copyright_notice()}.
+"""

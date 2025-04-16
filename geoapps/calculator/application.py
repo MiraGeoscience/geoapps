@@ -1,14 +1,17 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 import re
 from time import time
+from uuid import UUID
 
 import numpy
 from geoh5py.ui_json.utils import monitored_directory_copy
@@ -19,20 +22,23 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.plotting import plot_plan_data_selection
 from geoapps.utils.workspace import sorted_children_dict
 
+
 with warn_module_not_found():
     from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
+    "objects": UUID("{79b719bc-d996-4f52-9af0-10aa9c7bb941}"),
     "data": ["Al2O3", "CaO"],
     "equation": "{NewChannel} = {Al2O3} + numpy.cos({CaO} / 30.0 * numpy.pi)",
 }
 
 
 class Calculator(ObjectDataSelection):
-    assert numpy  # to make sure numpy is imported here, as it is required to eval the equation
+    assert (
+        numpy
+    )  # to make sure numpy is imported here, as it is required to eval the equation
 
     _select_multiple = True
 
@@ -103,7 +109,7 @@ class Calculator(ObjectDataSelection):
         """
         Evaluate the expression and output the result to geoh5
         """
-        var = self.var  # pylint: disable=unused-variable
+        var = self.var  # pylint: disable=unused-variable  # noqa: F841
         obj = self.workspace.get_entity(self.objects.value)[0]
 
         if obj is None:

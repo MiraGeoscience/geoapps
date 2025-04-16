@@ -1,17 +1,18 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 import numpy as np
 import plotly.graph_objects as go
+from geoapps_utils.driver.driver import BaseDriver
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.scatter_plot.constants import validations
 from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils.plotting import format_axis, normalize, symlog

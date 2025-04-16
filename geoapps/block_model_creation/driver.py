@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ import sys
 
 import numpy as np
 from discretize.utils import mesh_utils
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.objects import BlockModel
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.workspace import Workspace
@@ -18,8 +21,6 @@ from scipy.spatial import cKDTree
 
 from geoapps.block_model_creation.constants import validations
 from geoapps.block_model_creation.params import BlockModelParams
-from geoapps.driver_base.driver import BaseDriver
-from geoapps.shared_utils.utils import get_locations
 
 
 class BlockModelDriver(BaseDriver):
@@ -47,9 +48,9 @@ class BlockModelDriver(BaseDriver):
         zmax = locs[:, -1].max()  # top of locs
         below_core_ind = (zmax - locs[:, -1]) > depth_core
         core_bottom_elev = zmax - depth_core
-        locs[
-            below_core_ind, -1
-        ] = core_bottom_elev  # sets locations below core to core bottom
+        locs[below_core_ind, -1] = (
+            core_bottom_elev  # sets locations below core to core bottom
+        )
         return locs
 
     @staticmethod
@@ -145,7 +146,7 @@ class BlockModelDriver(BaseDriver):
         Create block model and add to self.params.geoh5.
         """
         with fetch_active_workspace(self.params.geoh5, mode="r+"):
-            xyz = get_locations(self.params.geoh5, self.params.objects)
+            xyz = self.params.objects.locations
             if xyz is None:
                 raise ValueError("Input object has no centroids or vertices.")
 

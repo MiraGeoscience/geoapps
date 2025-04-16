@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -55,8 +57,8 @@ def running_mean(
 
 
 def treemesh_2_octree(workspace, treemesh, **kwargs):
-    index_array, levels = getattr(treemesh, "_ubc_indArr")
-    ubc_order = getattr(treemesh, "_ubc_order")
+    index_array, levels = treemesh._ubc_indArr  # pylint: disable=protected-access
+    ubc_order = treemesh._ubc_order  # pylint: disable=protected-access
 
     index_array = index_array[ubc_order] - 1
     levels = levels[ubc_order]

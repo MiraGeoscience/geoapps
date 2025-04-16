@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: skip-file
 
@@ -21,7 +23,7 @@ from geoh5py.objects import Curve, DrapeModel, Grid2D
 from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
-from scipy.sparse import csr_matrix, diags
+from scipy.sparse import csr_matrix
 from scipy.spatial import cKDTree
 from simpeg_archive import (
     DataMisfit,
@@ -219,7 +221,9 @@ def inversion(input_file):
         else:
             em_specs["tx_specs"]["type"] = "VMD"
 
-        for dat_uid, unc_uid in zip(data_group.properties, uncert_group.properties):
+        for dat_uid, unc_uid in zip(
+            data_group.properties, uncert_group.properties, strict=False
+        ):
             d_entity = workspace.get_entity(dat_uid)[0]
             u_entity = workspace.get_entity(unc_uid)[0]
             channels[d_entity.name] = True
@@ -330,7 +334,7 @@ def inversion(input_file):
         for key, values in selection.items():
             line_data = workspace.get_entity(uuid.UUID(key))[0]
 
-            for line in values[0]:
+            for line in values:
                 line_ind = np.where(line_data.values == float(line))[0]
 
                 if len(line_ind) < 2:
@@ -461,13 +465,10 @@ def inversion(input_file):
     out_group.add_comment(json.dumps(input_param, indent=4).strip(), author="input")
 
     hz = hz_min * expansion ** np.arange(n_cells)
-    CCz = -np.cumsum(hz) + hz / 2.0
-    top_hz = hz[0] / 2.0
     nZ = hz.shape[0]
 
     # Select data and downsample
     stn_id = []
-    model_vertices = []
     pred_count = 0
     line_ids = []
     data_ordering = []
@@ -481,7 +482,7 @@ def inversion(input_file):
     full_model_line_ids = []
     for key, values in selection.items():
         line_data: ReferencedData = workspace.get_entity(uuid.UUID(key))[0]
-        for line in values[0]:
+        for line in values:
             line_ind = np.where(line_data.values[win_ind] == line)[0]
             n_sounding = len(line_ind)
             if n_sounding < 2:
@@ -502,12 +503,12 @@ def inversion(input_file):
             )
             pred_count += z_loc.shape[0]
 
-            if line != values[0][0]:
+            if line != values[0]:
                 prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
                     0, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
                 )
 
-            K, I = np.meshgrid(
+            K, I = np.meshgrid(  # noqa: E741
                 np.arange(nZ), np.arange(column_count, column_count + n_sounding)
             )
 
@@ -524,7 +525,7 @@ def inversion(input_file):
             cell_count += nZ * n_sounding
             full_model_line_ids.append(np.ones(nZ * n_sounding) * line)
 
-            if line != values[0][-1]:
+            if line != values[-1]:
                 prisms, layers, column_count, cell_count, ghost_ind = append_ghost(
                     -1, xyz, z_loc, prisms, layers, column_count, cell_count, ghost_ind
                 )
@@ -552,7 +553,7 @@ def inversion(input_file):
                     "values": ghost_mat
                     @ np.hstack(full_model_line_ids).astype("uint32"),
                     "type": "referenced",
-                    "value_map": line_data.value_map.map,
+                    "value_map": line_data.value_map(),
                 }
             }
         )
@@ -569,7 +570,7 @@ def inversion(input_file):
                 "Line": {
                     "values": np.hstack(line_ids).astype("uint32"),
                     "type": "referenced",
-                    "value_map": line_data.value_map.map,
+                    "value_map": line_data.value_map(),
                 }
             }
         )
@@ -587,10 +588,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(con_object, "centroids"):
-                grid = con_object.centroids
-            else:
-                grid = con_object.vertices
+            grid = con_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
@@ -614,10 +612,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(con_object, "centroids"):
-                grid = con_object.centroids
-            else:
-                grid = con_object.vertices
+            grid = con_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
@@ -639,10 +634,7 @@ def inversion(input_file):
                 0
             ].values
 
-            if hasattr(sus_object, "centroids"):
-                grid = sus_object.centroids
-            else:
-                grid = sus_object.vertices
+            grid = sus_object.locations
 
             tree = cKDTree(grid)
             _, ind = tree.query(model.centroids)
@@ -668,7 +660,7 @@ def inversion(input_file):
     uncert = np.zeros(n_sounding * block)
     n_data = 0
 
-    for ind, (d, u) in enumerate(zip(data, uncertainties)):
+    for ind, (d, u) in enumerate(zip(data, uncertainties, strict=False)):
         dobs[ind::block] = d[win_ind][stn_id]
         uncert[ind::block] = u[win_ind][stn_id]
         n_data += dobs[ind::block].shape[0]
@@ -705,7 +697,7 @@ def inversion(input_file):
                 }
             }
         )
-        curve.add_data_to_group(d_i, f"Observed")
+        curve.add_data_to_group(d_i, "Observed")
         data_types[channel] = d_i.entity_type
 
     xyz = locations[stn_id, :]
@@ -744,7 +736,7 @@ def inversion(input_file):
             n_sounding
         )
         a = [em_specs["tx_specs"]["a"]] * n_sounding
-        I = [em_specs["tx_specs"]["I"]] * n_sounding
+        I = [em_specs["tx_specs"]["I"]] * n_sounding  # noqa: E741
 
         if em_specs["tx_specs"]["type"] == "VMD":
             offsets = np.linalg.norm(np.c_[offset_x, offset_y], axis=1).reshape((-1, 1))
@@ -963,7 +955,7 @@ def inversion(input_file):
         d_i = curve.add_data(
             {"Uncertainties_" + channel: {"association": "VERTEX", "values": temp}}
         )
-        curve.add_data_to_group(d_i, f"Uncertainties")
+        curve.add_data_to_group(d_i, "Uncertainties")
 
         uncert[ind::block][uncert_orig[ind::block] == np.inf] = np.inf
 

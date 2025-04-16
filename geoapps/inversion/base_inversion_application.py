@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: disable=W0613
 
@@ -24,14 +26,19 @@ from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
 from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
-from notebook import notebookapp
+from jupyter_server import serverapp
 from plotly import graph_objects as go
+from simpeg_drivers import InversionBaseParams
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.inversion import InversionBaseParams
 from geoapps.inversion.components.preprocessing import preprocess_data
-from geoapps.shared_utils.utils import downsample_grid, downsample_xy
+from geoapps.shared_utils.utils import (
+    DrapeOptions,
+    WindowOptions,
+    downsample_grid,
+    downsample_xy,
+)
 
 
 class InversionApp(BaseDashApplication):
@@ -56,7 +63,7 @@ class InversionApp(BaseDashApplication):
                 self.params.inversion_type.title().replace(" ", "") + "Inversion"
             )
 
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        external_stylesheets = None
         server = Flask(__name__)
         self.app = Dash(
             server=server,
@@ -334,17 +341,16 @@ class InversionApp(BaseDashApplication):
             Output(component_id="window_center_y", component_property="max"),
             Output(component_id="window_width", component_property="max"),
             Output(component_id="window_height", component_property="max"),
+            Output(component_id="window_center_x", component_property="value"),
+            Output(component_id="window_center_y", component_property="value"),
+            Output(component_id="window_width", component_property="value"),
+            Output(component_id="window_height", component_property="value"),
             Input(component_id="data_object", component_property="value"),
         )(self.set_bounding_box)
         # Update plot
         self.app.callback(
             Output(component_id="plot", component_property="figure"),
             Output(component_id="data_count", component_property="children"),
-            Output(component_id="window_center_x", component_property="value"),
-            Output(component_id="window_center_y", component_property="value"),
-            Output(component_id="window_width", component_property="value"),
-            Output(component_id="window_height", component_property="value"),
-            Output(component_id="fix_aspect_ratio", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
             Input(component_id="plot", component_property="figure"),
             Input(component_id="plot", component_property="relayoutData"),
@@ -472,9 +478,9 @@ class InversionApp(BaseDashApplication):
         """
         # Get a notebook port that is running from the index page.
         nb_port = None
-        servers = list(notebookapp.list_running_servers())
+        servers = list(serverapp.list_running_servers())
         for s in servers:
-            if s["notebook_dir"] == str(Path("../../../").resolve()):
+            if s["root_dir"] == str(Path("../../../").resolve()):
                 nb_port = s["port"]
                 break
 
@@ -504,7 +510,7 @@ class InversionApp(BaseDashApplication):
             options = "Model"
             data = str(val)
             const = None
-        elif (type(val) == float) or (type(val) == int):
+        elif (type(val) == float) or (type(val) == int):  # noqa: E721
             options = "Constant"
             data = None
             const = val
@@ -684,7 +690,7 @@ class InversionApp(BaseDashApplication):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
-            value = ui_json_data["receivers_radar_drape"]
+            value = ui_json_data.get("receivers_radar_drape", None)
             options = self.get_data_options(
                 ui_json_data,
                 object_uid,
@@ -759,8 +765,8 @@ class InversionApp(BaseDashApplication):
 
                 # Get uncertainty value
                 if comp + "_uncertainty" in ui_json_data and (
-                    (type(ui_json_data[comp + "_uncertainty"]) == float)
-                    or (type(ui_json_data[comp + "_uncertainty"]) == int)
+                    (type(ui_json_data[comp + "_uncertainty"]) == float)  # noqa: E721
+                    or (type(ui_json_data[comp + "_uncertainty"]) == int)  # noqa: E721
                 ):
                     uncertainty_type = "Floor"
                     uncertainty_floor = ui_json_data[comp + "_uncertainty"]
@@ -884,7 +890,7 @@ class InversionApp(BaseDashApplication):
         if is_uuid(object_uid):
             obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
         if isinstance(obj, Grid2D):
             lim_x[0], lim_x[1] = obj.centroids[:, 0].min(), obj.centroids[:, 0].max()
             lim_y[0], lim_y[1] = obj.centroids[:, 1].min(), obj.centroids[:, 1].max()
@@ -892,7 +898,7 @@ class InversionApp(BaseDashApplication):
             lim_x[0], lim_x[1] = obj.vertices[:, 0].min(), obj.vertices[:, 0].max()
             lim_y[0], lim_y[1] = obj.vertices[:, 1].min(), obj.vertices[:, 1].max()
         else:
-            return no_update, no_update, no_update, no_update, no_update, no_update
+            return tuple([no_update] * 10)
 
         width = lim_x[1] - lim_x[0]
         height = lim_y[1] - lim_y[0]
@@ -911,6 +917,10 @@ class InversionApp(BaseDashApplication):
             window_center_x_max,
             window_center_y_min,
             window_center_y_max,
+            window_width_max,
+            window_height_max,
+            (window_center_x_min + window_center_x_max) / 2.0,
+            (window_center_y_min + window_center_y_max) / 2.0,
             window_width_max,
             window_height_max,
         )
@@ -1043,7 +1053,6 @@ class InversionApp(BaseDashApplication):
 
                 z = new_values.T[downsampled_index]
 
-            if np.any(values):
                 # Update figure data.
                 figure["data"][0]["x"] = down_x
                 figure["data"][0]["y"] = down_y
@@ -1128,7 +1137,7 @@ class InversionApp(BaseDashApplication):
         resolution: float | int,
         colorbar: list,
         fix_aspect_ratio: list,
-    ) -> (go.Figure, str, float, float, float, float, list):
+    ) -> (go.Figure, str):
         """
         Dash version of the plot_selection function in base/plot.
 
@@ -1159,11 +1168,6 @@ class InversionApp(BaseDashApplication):
             return (
                 go.Figure(),
                 data_count,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
-                no_update,
             )
 
         obj = self.workspace.get_entity(uuid.UUID(object_uid))[0]
@@ -1188,11 +1192,6 @@ class InversionApp(BaseDashApplication):
                 return (
                     figure,
                     data_count,
-                    no_update,
-                    no_update,
-                    no_update,
-                    no_update,
-                    no_update,
                 )
         else:
             # Construct figure from existing figure to keep bounds and plot layout.
@@ -1261,37 +1260,7 @@ class InversionApp(BaseDashApplication):
                 )
                 data_count += f"{count}"
 
-            if (
-                "plot" in triggers
-                or center_x is None
-                or center_y is None
-                or width is None
-                or height is None
-            ):
-                if figure["layout"]["xaxis"]["autorange"]:
-                    x = np.array(figure["data"][0]["x"])
-                    x_range = [np.amin(x), np.amax(x)]
-                elif figure["layout"]["xaxis"]["range"] is not None:
-                    x_range = figure["layout"]["xaxis"]["range"]
-                else:
-                    figure["layout"]["xaxis"]["autorange"] = True
-                    x = np.array(figure["data"][0]["x"])
-                    x_range = [np.amin(x), np.amax(x)]
-                width = x_range[1] - x_range[0]
-                center_x = x_range[0] + (width / 2)
-                if figure["layout"]["yaxis"]["autorange"]:
-                    y = np.array(figure["data"][0]["y"])
-                    y_range = [np.amin(y), np.amax(y)]
-                elif figure["layout"]["yaxis"]["range"] is not None:
-                    y_range = figure["layout"]["yaxis"]["range"]
-                else:
-                    figure["layout"]["yaxis"]["autorange"] = True
-                    y = np.array(figure["data"][0]["y"])
-                    y_range = [np.amin(y), np.amax(y)]
-                height = y_range[1] - y_range[0]
-                center_y = y_range[0] + (height / 2)
-
-        return figure, data_count, center_x, center_y, width, height, fix_aspect_ratio
+        return figure, data_count
 
     def get_general_inversion_params(
         self,
@@ -1362,14 +1331,10 @@ class InversionApp(BaseDashApplication):
                         param_dict[comp + "_uncertainty"] = value["uncertainty_floor"]
                     elif value["uncertainty_type"] == "Channel":
                         if is_uuid(value["uncertainty_channel"]):
-                            param_dict[
-                                comp + "_uncertainty"
-                            ] = self.workspace.get_entity(
-                                uuid.UUID(value["uncertainty_channel"])
-                            )[
-                                0
-                            ].copy(
-                                parent=data_object, copy_children=False
+                            param_dict[comp + "_uncertainty"] = (
+                                self.workspace.get_entity(
+                                    uuid.UUID(value["uncertainty_channel"])
+                                )[0].copy(parent=data_object, copy_children=False)
                             )
             else:
                 param_dict[comp + "_channel_bool"] = False
@@ -1428,18 +1393,6 @@ class InversionApp(BaseDashApplication):
                 update_dict["forward_only"],
             )
         )
-
-        # Move radar data to current workspace
-        if is_uuid(update_dict["receivers_radar_drape"]):
-            param_dict["receivers_radar_drape"] = self.workspace.get_entity(
-                uuid.UUID(update_dict["receivers_radar_drape"])
-            )[0]
-            if (
-                param_dict["receivers_radar_drape"] is not None
-                and new_workspace.get_entity(param_dict["receivers_radar_drape"].uid)[0]
-                is None
-            ):
-                param_dict["receivers_radar_drape"].copy(parent=data_object)
 
         # Move topography object and data into current workspace
         obj = self.workspace.get_entity(uuid.UUID(update_dict["topography_object"]))[0]
@@ -1616,9 +1569,6 @@ class InversionApp(BaseDashApplication):
 
         # Get dict of params from base dash application
         update_dict = {
-            "z_from_topo": z_from_topo,
-            "receivers_offset_z": receivers_offset_z,
-            "receivers_radar_drape": receivers_radar_drape,
             "forward_only": forward_only,
             "alpha_s": alpha_s,
             "length_scale_x": length_scale_x,
@@ -1676,11 +1626,9 @@ class InversionApp(BaseDashApplication):
 
             # Copy data object to workspace
             data_object = self.workspace.get_entity(uuid.UUID(data_object))[0]
-            param_dict["data_object"] = workspace.get_entity(data_object.uid)[0]
-            if param_dict["data_object"] is None:
-                param_dict["data_object"] = data_object.copy(
-                    parent=workspace, copy_children=False
-                )
+            param_dict["data_object"] = data_object.copy(
+                parent=workspace, copy_children=False
+            )
 
             # Add inversion specific params to param_dict
             param_dict.update(
@@ -1692,17 +1640,35 @@ class InversionApp(BaseDashApplication):
             if self._inversion_type == "dcip":
                 resolution = None  # No downsampling for dcip
 
+            window_options = WindowOptions(
+                center_x=window_center_x,
+                center_y=window_center_y,
+                width=window_width,
+                height=window_height,
+                azimuth=0.0,
+            )
+
+            if receivers_radar_drape is not None:
+                receivers_radar_drape = self.workspace.get_entity(
+                    uuid.UUID(receivers_radar_drape)
+                )[0]
+
+            drape_options = DrapeOptions(
+                topography_object=param_dict["topography_object"],
+                topography=param_dict["topography"],
+                z_from_topo=z_from_topo,
+                receivers_offset_z=receivers_offset_z,
+                receivers_radar_drape=receivers_radar_drape,
+            )
+
             # Pre-processing
             update_dict = preprocess_data(
-                workspace=workspace,
-                param_dict=param_dict,
+                workspace,
+                param_dict,
+                param_dict["data_object"],
+                window_options,
+                drape_options=drape_options,
                 resolution=resolution,
-                data_object=param_dict["data_object"],
-                window_center_x=window_center_x,
-                window_center_y=window_center_y,
-                window_width=window_width,
-                window_height=window_height,
-                window_azimuth=0.0,
                 ignore_values=ignore_values,
                 detrend_type=detrend_type,
                 detrend_order=detrend_order,
@@ -1715,7 +1681,7 @@ class InversionApp(BaseDashApplication):
                 path=monitoring_directory,
             )
 
-        return ["\nSaved to " + str(Path(monitoring_directory).resolve())]
+        return ["\nSaved to " + str(Path(monitoring_directory).resolve() / temp_geoh5)]
 
     def trigger_click(self, _):
         """

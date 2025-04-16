@@ -1,10 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -84,10 +85,8 @@ def drape_to_octree(
             if method == "nearest":
                 octree_model.append(datum[0].values)
             else:
-                lookup_inds = (
-                    mesh._get_containing_cell_indexes(  # pylint: disable=W0212
-                        model.centroids
-                    )
+                lookup_inds = mesh._get_containing_cell_indexes(  # pylint: disable=W0212
+                    model.centroids
                 )
                 octree_model[lookup_inds] = datum[0].values
 
@@ -425,9 +424,9 @@ def truncate_locs_depths(locs: np.ndarray, depth_core: int) -> np.ndarray:
     zmax = locs[:, 2].max()  # top of locs
     below_core_ind = (zmax - locs[:, 2]) > depth_core
     core_bottom_elev = zmax - depth_core
-    locs[
-        below_core_ind, 2
-    ] = core_bottom_elev  # sets locations below core to core bottom
+    locs[below_core_ind, 2] = (
+        core_bottom_elev  # sets locations below core to core bottom
+    )
     return locs
 
 

@@ -1,19 +1,23 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 from copy import deepcopy
+from uuid import UUID
 
 import plotly.express as px
 
 import geoapps
 from geoapps import assets_path
 from geoapps.scatter_plot.constants import default_ui_json as base_default_ui_json
+
 
 defaults = {
     "version": geoapps.__version__,
@@ -97,26 +101,26 @@ validations = {}
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "monitoring_directory": str((assets_path() / "Temp").resolve()),
-    "objects": "{79b719bc-d996-4f52-9af0-10aa9c7bb941}",
-    "channel": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
-    "x": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
+    "objects": UUID("{79b719bc-d996-4f52-9af0-10aa9c7bb941}"),
+    "channel": UUID("{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"),
+    "x": UUID("{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"),
     "x_log": False,
     "x_min": -17.0,
     "x_max": 25.5,
-    "y": "{18c2560c-6161-468a-8571-5d9d59649535}",
+    "y": UUID("{18c2560c-6161-468a-8571-5d9d59649535}"),
     "y_log": True,
     "y_min": -17.0,
     "y_max": 29.8,
-    "z": "{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}",
+    "z": UUID("{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}"),
     "z_log": True,
     "z_min": -20.0,
     "z_max": 3200.0,
-    "color": "{94a150e8-16d9-4784-a7aa-e6271df3a3ef}",
+    "color": UUID("{94a150e8-16d9-4784-a7aa-e6271df3a3ef}"),
     "color_log": True,
     "color_min": -17.0,
     "color_max": 640.0,
     "color_maps": "kmeans",
-    "size": "{41d51965-3670-43ba-8a10-d399070689e3}",
+    "size": UUID("{41d51965-3670-43ba-8a10-d399070689e3}"),
     "size_log": False,
     "size_min": -17.0,
     "size_max": 24.8,

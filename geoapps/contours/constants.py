@@ -1,18 +1,22 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 from copy import deepcopy
+from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
 import geoapps
 from geoapps import assets_path
+
 
 defaults = {
     "version": geoapps.__version__,
@@ -115,21 +119,21 @@ default_ui_json.update(
         },
         "window_center_x": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Easting",
             "value": 0.0,
         },
         "window_center_y": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Northing",
             "value": 0.0,
         },
         "window_width": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Width",
             "min": 0.0,
@@ -137,7 +141,7 @@ default_ui_json.update(
         },
         "window_height": {
             "group": "Window",
-            "enabled": False,
+            "enabled": True,
             "main": True,
             "label": "Height",
             "min": 0.0,
@@ -175,8 +179,8 @@ validations = {}
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-    "data": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
     "interval_min": -400.0,
     "interval_max": 2000.0,
     "interval_spacing": 100.0,

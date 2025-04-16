@@ -1,23 +1,24 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 import sys
 
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.interpolation.constants import validations
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.shared_utils.utils import get_locations, weighted_average
+from geoapps.shared_utils.utils import weighted_average
 
 
 class DataInterpolationDriver(BaseDriver):
@@ -29,7 +30,7 @@ class DataInterpolationDriver(BaseDriver):
         self.params: DataInterpolationParams = params
 
     def run(self):
-        xyz = get_locations(self.params.geoh5, self.params.objects)
+        xyz = self.params.objects.locations
 
         if xyz is None:
             raise ValueError("Input object has no centroids or vertices.")
@@ -37,7 +38,7 @@ class DataInterpolationDriver(BaseDriver):
         # Create a tree for the input mesh
         tree = cKDTree(xyz)
 
-        xyz_out = get_locations(self.params.geoh5, self.params.out_object)
+        xyz_out = self.params.out_object.locations
         xyz_out_orig = xyz_out.copy()
 
         values, sign, dtype = {}, {}, {}
@@ -70,13 +71,13 @@ class DataInterpolationDriver(BaseDriver):
             for key in values_interp.keys():
                 if self.params.space == "Log":
                     values_interp[key] = sign[key] * np.exp(values_interp[key])
-                values_interp[key][
-                    np.isnan(values_interp[key])
-                ] = self.params.no_data_value
+                values_interp[key][np.isnan(values_interp[key])] = (
+                    self.params.no_data_value
+                )
                 if self.params.max_distance is not None:
-                    values_interp[key][
-                        rad > self.params.max_distance
-                    ] = self.params.no_data_value
+                    values_interp[key][rad > self.params.max_distance] = (
+                        self.params.no_data_value
+                    )
         elif self.params.method == "Inverse Distance":
             print("Computing inverse distance interpolation")
             # Inverse distance
@@ -102,7 +103,7 @@ class DataInterpolationDriver(BaseDriver):
                 return_indices=True,
             )
 
-            for key, val in zip(list(values.keys()), vals):
+            for key, val in zip(list(values.keys()), vals, strict=False):
                 values_interp[key] = val
                 sign[key] = sign[key][ind_inv[:, 0]]
 
@@ -141,19 +142,14 @@ class DataInterpolationDriver(BaseDriver):
         if self.params.xy_extent is not None and self.params.geoh5.get_entity(
             self.params.xy_extent
         ):
-            xy_ref = self.params.xy_extent
-            if hasattr(xy_ref, "centroids"):
-                xy_ref = xy_ref.centroids
-            elif hasattr(xy_ref, "vertices"):
-                xy_ref = xy_ref.vertices
-
+            xy_ref = self.params.xy_extent.locations
             tree = cKDTree(xy_ref[:, :2])
             rad, _ = tree.query(xyz_out_orig[:, :2])
             for key in values_interp.keys():
                 if self.params.max_distance is not None:
-                    values_interp[key][
-                        rad > self.params.max_distance
-                    ] = self.params.no_data_value
+                    values_interp[key][rad > self.params.max_distance] = (
+                        self.params.no_data_value
+                    )
 
         for key in values_interp.keys():
             if dtype[key] == np.dtype("int32"):

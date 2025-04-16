@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -13,6 +15,7 @@ import os
 import uuid
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 import numpy as np
 from geoh5py.data import Data
@@ -33,9 +36,11 @@ from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
 from geoapps.inversion.components.preprocessing import preprocess_data
+from geoapps.shared_utils.utils import WindowOptions
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.string import string_2_list
+
 
 with warn_module_not_found():
     from matplotlib import pyplot as plt
@@ -708,8 +713,8 @@ def inversion_defaults():
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{656acd40-25de-4865-814c-cb700f6ee51a}",
-    "data": "{2d165431-63bd-4e07-9db8-5b44acf8c9bf}",
+    "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "data": UUID("{2d165431-63bd-4e07-9db8-5b44acf8c9bf}"),
     "resolution": 50,
     "window_width": 1500,
     "window_height": 1500,
@@ -717,11 +722,11 @@ app_initializer = {
     "inversion_parameters": {"max_iterations": 25},
     "topography": {
         "options": "Object",
-        "objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-        "data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+        "objects": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+        "data": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
     },
     "lines": {
-        "data": "{b6927372-22d2-4ca1-9c23-372411ddc772}",
+        "data": UUID("{b6927372-22d2-4ca1-9c23-372411ddc772}"),
         "lines": [8, 9, 10, 11, 12],
     },
     "sensor": {"offset": "0, 0, 0", "options": "sensor location + (dx, dy, dz)"},
@@ -926,9 +931,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -1195,7 +1200,7 @@ class InversionApp(PlotSelection2D):
             "out_group": self.ga_group_name.value,
             "mesh": "Mesh",
             "system": self.system.value,
-            "lines": {str(self.lines.data.value): [self.lines.lines.value]},
+            "lines": {str(self.lines.data.value): self.lines.lines.value},
             "mesh 1D": [
                 self.mesh_1D.hz_min.value,
                 self.mesh_1D.hz_expansion.value,
@@ -1212,9 +1217,9 @@ class InversionApp(PlotSelection2D):
         if self.inversion_parameters.beta_start_options.value == "value":
             input_dict["initial_beta"] = self.inversion_parameters.beta_start.value
         else:
-            input_dict[
-                "initial_beta_ratio"
-            ] = self.inversion_parameters.beta_start.value
+            input_dict["initial_beta_ratio"] = (
+                self.inversion_parameters.beta_start.value
+            )
 
         input_dict["tol_cg"] = self.inversion_parameters.tol_cg.value
         input_dict["ignore_values"] = self.inversion_parameters.ignore_values.value
@@ -1455,39 +1460,37 @@ class InversionApp(PlotSelection2D):
                                 uuid.UUID(value["uncertainties"])
                             )[0].name
                         }
-                # Add lines to data_dict
-                components.append("lines")
-                line_data = list(input_dict["lines"].keys())[0]
-                data_dict["lines_channel"] = {
-                    "name": new_workspace.get_entity(uuid.UUID(line_data))[0].name
-                }
+
+            window_options = WindowOptions(
+                center_x=self.window_center_x.value,
+                center_y=self.window_center_y.value,
+                width=self.window_width.value,
+                height=self.window_height.value,
+                azimuth=self.window_azimuth.value,
+            )
 
             # Pre-processing
             update_dict = preprocess_data(
-                workspace=new_workspace,
-                param_dict=input_dict,
+                new_workspace,
+                input_dict,
+                data_object,
+                window_options,
+                drape_options=None,
                 resolution=self.resolution.value,
-                data_object=data_object,
-                window_center_x=self.window_center_x.value,
-                window_center_y=self.window_center_y.value,
-                window_width=self.window_width.value,
-                window_height=self.window_height.value,
-                window_azimuth=self.window_azimuth.value,
                 components=components,
                 data_dict=data_dict,
             )
             # Update input dict from pre-processing
+            line_data = new_workspace.get_entity(self.lines.data.value)[0]
             input_dict["data"]["name"] = str(update_dict["data_object"])
+            survey = new_workspace.get_entity(update_dict["data_object"])[0]
+            new_line_uid = survey.get_entity(line_data.name)[0].uid
+            input_dict["lines"] = {
+                str(new_line_uid): input_dict["lines"][str(line_data.uid)]
+            }
 
             if isinstance(input_dict["data"]["channels"], dict):
                 for comp in components:
-                    if comp == "lines":
-                        input_dict["lines"] = {
-                            str(update_dict["lines_channel"]): list(
-                                input_dict["lines"].values()
-                            )[0]
-                        }
-                        continue
                     if comp + "_channel" in update_dict:
                         input_dict["data"]["channels"][comp]["name"] = str(
                             update_dict[comp + "_channel"]
@@ -1497,18 +1500,10 @@ class InversionApp(PlotSelection2D):
                             update_dict[comp + "_uncertainty"]
                         )
             else:
-                survey = new_workspace.get_entity(update_dict["data_object"])[0]
                 new_group = survey.get_entity(data_group.name)[0]
                 input_dict["data"]["channels"] = str(new_group.uid)
                 new_group = survey.get_entity(uncert_group.name)[0]
                 input_dict["uncertainty_channel"] = str(new_group.uid)
-                line_data = self.workspace.get_entity(self.lines.data.value)[0]
-
-                if line_data:
-                    new_uid = survey.get_entity(line_data.name)[0].uid
-                    input_dict["lines"] = {
-                        str(new_uid): list(input_dict["lines"].values())[0]
-                    }
 
         input_dict["workspace"] = input_dict["save_to_geoh5"] = str(
             Path(new_workspace.h5file).resolve()

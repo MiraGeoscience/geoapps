@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -120,7 +122,7 @@ class BaseParams:
         """Update parameters with dictionary contents."""
         params_dict = self.input_file.numify(params_dict)
         if params_dict.get("geoh5", None) is not None and self.input_file.geoh5 is None:
-            setattr(self, "geoh5", params_dict.pop("geoh5"))
+            self.geoh5 = params_dict.pop("geoh5")
 
         with fetch_active_workspace(self.geoh5):
             params_dict = self.input_file.promote(params_dict)  # pylint: disable=W0212
@@ -240,7 +242,9 @@ class BaseParams:
                     # TODO Create a geoh5py validation for "allof" -> ["object", "levels", "type", "distance"]
                     free_parameter_dict[group] = {}
                     forms = utils.collect(self.ui_json, "group", group)
-                    for label, key in zip(forms, self._free_parameter_keys):
+                    for label, key in zip(
+                        forms, self._free_parameter_keys, strict=False
+                    ):
                         if key not in label.lower():
                             raise ValueError(
                                 f"Malformed input refinement group {group}. "
@@ -266,9 +270,9 @@ class BaseParams:
 
     @validations.setter
     def validations(self, validations: dict[str, Any]):
-        assert isinstance(
-            validations, dict
-        ), "Input value must be a dictionary of validations."
+        assert isinstance(validations, dict), (
+            "Input value must be a dictionary of validations."
+        )
         self._validations = validations
 
     @property
@@ -280,6 +284,7 @@ class BaseParams:
         if val is None:
             self._geoh5 = val
             return
+
         self.setter_validator(
             "geoh5",
             val,

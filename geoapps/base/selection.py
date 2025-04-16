@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ from geoapps.base.application import BaseApplication
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
 from geoapps.utils.workspace import sorted_children_dict
+
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -87,9 +90,9 @@ class ObjectDataSelection(BaseApplication):
 
     @data.setter
     def data(self, value):
-        assert isinstance(
-            value, (Dropdown, SelectMultiple)
-        ), f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
+        assert isinstance(value, (Dropdown, SelectMultiple)), (
+            f"'Objects' must be of type {Dropdown} or {SelectMultiple}"
+        )
         self._data = value
 
     @property
@@ -141,9 +144,9 @@ class ObjectDataSelection(BaseApplication):
             entity_types = tuple(entity_types)
 
         for entity_type in entity_types:
-            assert issubclass(
-                entity_type, ObjectBase
-            ), f"Provided object_types must be instances of {ObjectBase}"
+            assert issubclass(entity_type, ObjectBase), (
+                f"Provided object_types must be instances of {ObjectBase}"
+            )
 
         self._object_types = entity_types
 
@@ -163,9 +166,9 @@ class ObjectDataSelection(BaseApplication):
             entity_types = tuple(entity_types)
 
         for entity_type in entity_types:
-            assert issubclass(
-                entity_type, ObjectBase
-            ), f"Provided exclusion_types must be instances of {ObjectBase}"
+            assert issubclass(entity_type, ObjectBase), (
+                f"Provided exclusion_types must be instances of {ObjectBase}"
+            )
 
         self._exclusion_types = tuple(entity_types)
 
@@ -188,9 +191,9 @@ class ObjectDataSelection(BaseApplication):
             values = [values]
 
         for value in values:
-            assert isinstance(
-                value, str
-            ), f"Labels to find must be strings. Value {value} of type {type(value)} provided"
+            assert isinstance(value, str), (
+                f"Labels to find must be strings. Value {value} of type {type(value)} provided"
+            )
         self._find_label = values
 
     @property
@@ -231,9 +234,9 @@ class ObjectDataSelection(BaseApplication):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
 
         # Refresh the list of objects
@@ -271,6 +274,31 @@ class ObjectDataSelection(BaseApplication):
         else:
             return None, None
 
+    def get_data_list(self, add_groups: bool | str, add_xyz: bool) -> list[list]:
+        """Get a list of UUIDs and names of data associated with the object."""
+        obj: ObjectBase | None = self._workspace.get_entity(self.objects.value)[0]
+
+        options = [["", None]]
+
+        if (add_groups or add_groups == "only") and obj.property_groups:
+            options = (
+                options
+                + [["-- Groups --", None]]
+                + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
+            )
+
+        if add_groups != "only":
+            options += [["--- Channels ---", None]]
+
+            children = sorted_children_dict(obj)
+            excl = ["visual parameter"]
+            options += [[k, v] for k, v in children.items() if k.lower() not in excl]
+
+            if add_xyz:
+                options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
+
+        return options
+
     def update_data_list(self, _):
         refresh = self.refresh.value
         self.refresh.value = False
@@ -281,27 +309,7 @@ class ObjectDataSelection(BaseApplication):
                 self.refresh.value = refresh
                 return
 
-            options = [["", None]]
-
-            if (self.add_groups or self.add_groups == "only") and obj.property_groups:
-                options = (
-                    options
-                    + [["-- Groups --", None]]
-                    + [[p_g.name, p_g.uid] for p_g in obj.property_groups]
-                )
-
-            if self.add_groups != "only":
-                options += [["--- Channels ---", None]]
-
-                children = sorted_children_dict(obj)
-                excl = ["visual parameter"]
-                options += [
-                    [k, v] for k, v in children.items() if k.lower() not in excl
-                ]
-
-                if self.add_xyz:
-                    options += [["X", "X"], ["Y", "Y"], ["Z", "Z"]]
-
+            options = self.get_data_list(self.add_groups, self.add_xyz)
             value = self.data.value
             self.data.options = options
 
@@ -451,9 +459,9 @@ class LineOptions(ObjectDataSelection):
 
     @multiple_lines.setter
     def multiple_lines(self, value):
-        assert isinstance(
-            value, bool
-        ), f"'multiple_lines' property must be of type {bool}"
+        assert isinstance(value, bool), (
+            f"'multiple_lines' property must be of type {bool}"
+        )
         self._multiple_lines = value
 
     def update_line_list(self, _):
@@ -461,7 +469,7 @@ class LineOptions(ObjectDataSelection):
         if data and getattr(data[0], "values", None) is not None:
             if isinstance(data[0], ReferencedData):
                 self.lines.options = [["", None]] + [
-                    [v, k] for k, v in data[0].value_map.map.items()
+                    [v, int(k)] for k, v in data[0].value_map().items()
                 ]
             else:
                 self.lines.options = [["", None]]

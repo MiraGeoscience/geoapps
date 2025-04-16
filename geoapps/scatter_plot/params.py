@@ -1,18 +1,19 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 from copy import deepcopy
 
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
-
-from geoapps.driver_base.params import BaseParams
 
 from .constants import default_ui_json, defaults, validations
 
@@ -23,7 +24,7 @@ class ScatterPlotParams(BaseParams):
     """
 
     def __init__(self, input_file=None, **kwargs):
-        if self._default_ui_json is None:
+        if self._default_ui_json is None:  # pylint: disable=E0203
             self._default_ui_json = deepcopy(default_ui_json)
 
         self._defaults = deepcopy(defaults)

@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ import re
 from pathlib import Path
 from time import time
 
+import matplotlib.pyplot as plt
 import numpy
 from geoh5py.data import FloatData
 from geoh5py.groups import ContainerGroup
@@ -24,11 +27,15 @@ from geoapps.utils.plotting import plot_plan_data_selection
 
 from ..base.application import BaseApplication
 
+
 with warn_module_not_found():
     from ipywidgets import HBox, Layout, SelectMultiple, Text, Textarea, VBox
 
 with warn_module_not_found():
     from fiona.transform import transform
+
+from uuid import UUID
+
 
 with warn_module_not_found():
     from osgeo import gdal, osr
@@ -42,8 +49,8 @@ app_initializer = {
     "ga_group_name": "CoordinateTransformation",
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": [
-        "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
-        "{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}",
+        UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+        UUID("{bb208abb-dc1f-4820-9ea9-b8883e5ff2c6}"),
     ],
     "code_in": "EPSG:26914",
     "code_out": "EPSG:4326",
@@ -91,7 +98,6 @@ class CoordinateTransformation(ObjectDataSelection):
         """
         Run the coordinate transformation
         """
-        import matplotlib.pyplot as plt
 
         if self.wkt_in.value != "" and self.wkt_out.value != "":
             if self.plot_result:

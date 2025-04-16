@@ -1,14 +1,17 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 import re
 from pathlib import Path
+from uuid import UUID
 
 import discretize
 import numpy as np
@@ -21,6 +24,7 @@ from geoapps.utils import warn_module_not_found
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
 
+
 with warn_module_not_found():
     from matplotlib import pyplot as plt
 
@@ -28,17 +32,18 @@ with warn_module_not_found():
     from osgeo import osr
 
 with warn_module_not_found():
-    from ipywidgets.widgets import HBox, VBox
     from ipywidgets import Dropdown, FloatText, Layout, RadioButtons, Text, Textarea
+    from ipywidgets.widgets import HBox, VBox
 
 from .utils import export_curve_2_shapefile, object_2_dataframe
 
+
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
     "data": [
-        "{44822654-b6ae-45b0-8886-2d845f80f422}",
-        "{53e59b2b-c2ae-4b77-923b-23e06d874e62}",
+        UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+        UUID("{53e59b2b-c2ae-4b77-923b-23e06d874e62}"),
     ],
     "epsg_code": "EPSG:26914",
     "file_type": "geotiff",
@@ -202,9 +207,9 @@ class Export(ObjectDataSelection):
         )
 
     def _export_shapefile(self, entity):
-        assert isinstance(
-            entity, Curve
-        ), f"Only Curve objects are support for type {self.file_type.value}"
+        assert isinstance(entity, Curve), (
+            f"Only Curve objects are support for type {self.file_type.value}"
+        )
 
         if self.data.value:
             for key in self.data.value:
@@ -273,9 +278,9 @@ class Export(ObjectDataSelection):
                 print(f"Object saved to {name}")
 
     def _export_ubc(self, entity, data_values):
-        assert isinstance(
-            entity, (Octree, BlockModel)
-        ), "Export available for BlockModel or octree only"
+        assert isinstance(entity, (Octree, BlockModel)), (
+            "Export available for BlockModel or octree only"
+        )
         if isinstance(entity, Octree):
             mesh = octree_2_treemesh(entity)
 
@@ -291,7 +296,7 @@ class Export(ObjectDataSelection):
                     + ".mod"
                 ] = item[ind]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
-            mesh.writeUBC(
+            mesh.write_UBC(
                 name,
                 models=models,
             )
@@ -314,7 +319,7 @@ class Export(ObjectDataSelection):
                 entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
             ]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
-            mesh.writeUBC(name)
+            mesh.write_UBC(name)
             print(f"Mesh saved to {name}")
 
             if any(data_values):

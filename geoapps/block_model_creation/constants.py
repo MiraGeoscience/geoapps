@@ -1,18 +1,22 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 from copy import deepcopy
+from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
 import geoapps
 from geoapps import assets_path
+
 
 defaults = {
     "version": geoapps.__version__,
@@ -116,7 +120,7 @@ validations = {}
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "monitoring_directory": str((assets_path() / "Temp").resolve()),
-    "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
+    "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
     "cell_size_x": 50.0,
     "cell_size_y": 50.0,
     "cell_size_z": 50.0,

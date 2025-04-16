@@ -1,16 +1,20 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from time import time
 
 from geoh5py.shared import Entity
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import uuid2entity
 from geoh5py.ui_json import InputFile
 
@@ -20,6 +24,7 @@ from geoapps.iso_surfaces.constants import app_initializer
 from geoapps.iso_surfaces.driver import IsoSurfacesDriver
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.utils.importing import warn_module_not_found
+
 
 with warn_module_not_found():
     from ipywidgets import FloatText, HBox, Label, Text, VBox, Widget
@@ -38,9 +43,17 @@ class IsoSurface(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
+            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
         else:
-            self.params = self._param_class(**app_initializer)
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
 
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):

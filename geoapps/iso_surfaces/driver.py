@@ -1,10 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -12,6 +13,7 @@ import sys
 import warnings
 
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import BlockModel, ObjectBase, Surface
 from geoh5py.shared.utils import fetch_active_workspace
@@ -19,7 +21,6 @@ from scipy.interpolate import interp1d
 from skimage.measure import marching_cubes
 from tqdm import tqdm
 
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.iso_surfaces.constants import validations
 from geoapps.iso_surfaces.params import IsoSurfacesParams
 from geoapps.shared_utils.utils import get_contours, rotate_xyz, weighted_average
@@ -60,7 +61,7 @@ class IsoSurfacesDriver(BaseDriver):
 
             container = ContainerGroup.create(self.params.geoh5, name="Isosurface")
             result = []
-            for surface, level in zip(surfaces, levels):
+            for surface, level in zip(surfaces, levels, strict=False):
                 if len(surface[0]) > 0 and len(surface[1]) > 0:
                     result += [
                         Surface.create(
@@ -73,7 +74,7 @@ class IsoSurfacesDriver(BaseDriver):
                     ]
             self.update_monitoring_directory(container)
 
-        print("Isosurface completed. " f"-> {len(surfaces)} surface(s) created.")
+        print(f"Isosurface completed. -> {len(surfaces)} surface(s) created.")
 
         return result
 
@@ -175,8 +176,8 @@ class IsoSurfacesDriver(BaseDriver):
                 active[nan_verts] = nan_verts.shape[0]
                 _, inv_map = np.unique(active, return_inverse=True)
 
-                verts = verts[nan_verts == False, :]
-                faces = faces[rem_cells == False, :]
+                verts = verts[~nan_verts, :]
+                faces = faces[~rem_cells, :]
                 faces = inv_map[faces].astype("uint32")
 
                 vertices = []

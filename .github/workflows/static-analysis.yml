@@ -2,6 +2,7 @@ name: static analysis
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - develop
       - main
@@ -26,14 +27,16 @@ env:
 jobs:
   pylint:
     name: pylint
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
     env:
       PYTHONUTF8: 1
-      CONDA_LOCK_ENV_FILE: environments/conda-py-3.9-linux-64-dev.lock.yml
-      PIP_EXTRA_INDEX_URL: https://test.pypi.org/simple/
+      CONDA_CHANNEL_PRIORITY: strict
+      PIP_NO_DEPS: 1 # all dependencies are installed from conda
+      CONDA_LOCK_ENV_FILE: environments/py-3.10-linux-64-dev.conda.lock.yml
     steps:
       - uses: actions/checkout@v4
       - name: Setup conda env

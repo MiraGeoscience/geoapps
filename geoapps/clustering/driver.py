@@ -1,10 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -14,17 +15,17 @@ import uuid
 
 from geoh5py.workspace import Workspace
 
-os.environ["OMP_NUM_THREADS"] = "1"
 
+os.environ["OMP_NUM_THREADS"] = "1"
 
 import numpy as np
 import pandas as pd
+from geoapps_utils.driver.driver import BaseDriver
 from scipy.spatial import cKDTree
 from sklearn.cluster import KMeans
 
 from geoapps.clustering.constants import validations
 from geoapps.clustering.params import ClusteringParams
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.colors import UNIQUE_COLORS
 from geoapps.shared_utils.utils import hex_to_rgb
 from geoapps.utils.statistics import random_sampling
@@ -86,14 +87,31 @@ class ClusteringDriver(BaseDriver):
                 kmeans = KMeans(n_clusters=val, random_state=0, n_init=10).fit(
                     np.vstack(values).T
                 )
+                # Get the original labels and cluster centers
+                original_labels = kmeans.labels_
+                cluster_centers = kmeans.cluster_centers_
+
+                # Create a mapping from original labels to new labels based on sorted cluster centers
+                sorted_centroids_indices = np.argsort(cluster_centers.sum(axis=1))
+                label_mapping = {
+                    old_label: new_label
+                    for new_label, old_label in enumerate(sorted_centroids_indices)
+                }
+
+                # Apply the mapping to get new labels
+                new_labels = np.array(
+                    [label_mapping[label] for label in original_labels]
+                )
+
                 kmeans_dict = {
-                    "labels": kmeans.labels_.astype(float),
+                    "labels": new_labels.astype(float),
                     "inertia": kmeans.inertia_,
                 }
                 clusters[val] = kmeans_dict
 
         cluster_ids = clusters[n_clusters]["labels"].astype(float)
         kmeans = cluster_ids[mapping]
+
         return kmeans, clusters
 
     @staticmethod
@@ -201,7 +219,9 @@ class ClusteringDriver(BaseDriver):
             ast.literal_eval(self.params.data_subset),
             self.params.geoh5,
         )
-        full_scales_dict = dict(zip(self.params.data_subset, self.params.full_scales))
+        full_scales_dict = dict(
+            zip(self.params.data_subset, self.params.full_scales, strict=False)
+        )
         kmeans, _ = ClusteringDriver.run_clustering(
             self.params.n_clusters,
             dataframe,
@@ -227,7 +247,7 @@ class ClusteringDriver(BaseDriver):
                 colorpicker = color_pickers[ii]
                 color = colorpicker.lstrip("#")
                 group_map[ii + 1] = f"Cluster_{ii}"
-                color_map += [[ii + 1] + hex_to_rgb(color) + [1]]
+                color_map += [[ii + 1] + hex_to_rgb(color) + [0]]
 
             color_map = np.core.records.fromarrays(
                 np.vstack(color_map).T,

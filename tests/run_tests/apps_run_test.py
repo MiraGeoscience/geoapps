@@ -1,15 +1,18 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: disable=protected-access
 
 from __future__ import annotations
 
 import base64
+import pathlib
 import uuid
 from pathlib import Path
 
@@ -31,10 +34,11 @@ from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
 from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
+from geoapps.peak_finder.application import PeakFinder
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
+from tests import PROJECT, PROJECT_TEM
 
-from .. import PROJECT
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -418,13 +422,14 @@ def test_data_interpolation(tmp_path: Path):
 
 
 def test_edge_detection(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / "edge_detection.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}",
         ]:
             new_copy = GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
-            new_data = new_copy.add_data(
+            grid = new_copy.copy(copy_children=False)
+            new_data = grid.add_data(
                 {
                     "copy_data": {
                         "values": new_copy.children[0].values,
@@ -436,11 +441,13 @@ def test_edge_detection(tmp_path: Path):
     app = EdgeDetectionApp(plot_result=False)
     app._file_browser.reset(
         path=tmp_path,
-        filename="contour.geoh5",
+        filename="edge_detection.geoh5",
     )
     app._file_browser._apply_selection()
     app.file_browser_change(None)
+    app.objects.value = grid.uid
     app.data.value = new_data.uid
+    app.compute_trigger(None)
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -458,7 +465,21 @@ def test_edge_detection(tmp_path: Path):
 
 def test_export():
     app = Export(geoh5=PROJECT)
+
+    # Test exporting mesh
+    model_uid = uuid.UUID("eddc5be1-4753-4a41-99a0-c8f11a252e32")
+    app.objects.value = uuid.UUID("7450be38-1327-4336-a9e4-5cff587b6715")
+    app.data.value = [model_uid]
+    app.file_type.value = "UBC format"
     app.trigger.click()
+
+    assert pathlib.Path(
+        app.export_directory.value + app.export_as.value + ".msh"
+    ).exists()
+    assert pathlib.Path(
+        app.export_directory.value + app.data.uid_name_map[model_uid] + ".mod"
+    ).exists()
+
     # TODO write all the files types and check that appropriate files are written
 
 
@@ -483,3 +504,9 @@ def test_iso_surface(tmp_path: Path):
 
     with pytest.warns(UserWarning, match="The following levels were"):
         app.trigger_click(None)
+
+
+def test_peak_finder():
+    app = PeakFinder(geoh5=PROJECT_TEM)
+    assert app.objects.value == uuid.UUID("{34698019-cde6-4b43-8d53-a040b25c989a}")
+    assert app.data.value == uuid.UUID("{22a9cf91-5cff-42b5-8bbb-2f1c6a559204}")

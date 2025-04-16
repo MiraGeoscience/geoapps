@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -11,6 +13,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from warnings import warn
 
+from geoapps_utils.driver.params import BaseParams
 from geoh5py import Workspace
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile, monitored_directory_copy
@@ -19,7 +22,6 @@ from param_sweeps.generate import generate
 from semver import Version
 
 from geoapps import __version__
-from geoapps.driver_base.params import BaseParams
 
 
 class BaseDriver(ABC):

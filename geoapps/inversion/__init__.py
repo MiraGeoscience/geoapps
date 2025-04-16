@@ -1,18 +1,22 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+# flake8: noqa
 
 # isort: skip_file
 
 from __future__ import annotations
 
-from SimPEG import dask
+from simpeg import dask
 
-from geoapps.inversion.params import InversionBaseParams  # isort: skip
-from geoapps.inversion.constants import default_ui_json
+from simpeg_drivers.params import InversionBaseParams  # isort: skip
+from simpeg_drivers.constants import default_ui_json
 
 
 DRIVER_MAP = {

@@ -1,2 +1,5 @@
+*.pt filter=lfs diff=lfs merge=lfs -text
 *.geoh5 filter=lfs diff=lfs merge=lfs -text
+*.h5 filter=lfs diff=lfs merge=lfs -text
+*.min.js filter=lfs diff=lfs merge=lfs -text
 *.ipynb filter=lfs diff=lfs merge=lfs -text

@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: disable=W0212
 
@@ -20,22 +22,26 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
-
-from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
-from geoapps.inversion.electricals.direct_current.three_dimensions import (
+from simpeg_drivers.electricals.direct_current.three_dimensions import (
     DirectCurrent3DParams,
 )
-from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
+from simpeg_drivers.electricals.induced_polarization.three_dimensions import (
     InducedPolarization3DParams,
 )
+
+from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
 from geoapps.inversion.electromagnetics.application import (
     InversionApp as EMInversionApp,
 )
 from geoapps.inversion.potential_fields.magnetic_vector.application import (
     MagneticVectorApp,
 )
+from tests import (  # pylint: disable=no-name-in-module
+    PROJECT,
+    PROJECT_DCIP,
+    PROJECT_TEM,
+)
 
-from .. import PROJECT, PROJECT_DCIP, PROJECT_TEM
 
 # import pytest
 # pytest.skip("eliminating conflicting test.", allow_module_level=True)
@@ -47,12 +53,12 @@ def test_mag_inversion(tmp_path: Path):
 
     with Workspace(PROJECT) as ws:
         with Workspace(temp_workspace) as new_geoh5:
-            data_object = ws.get_entity(UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
+            data_object = ws.get_entity(UUID("{7aaf00be-adbf-4540-8333-8ac2c2a3c31a}"))[
                 0
             ]
             data_object.copy(parent=new_geoh5, copy_children=True)
 
-            mesh = ws.get_entity(UUID("{a8f3b369-10bd-4ca8-8bd6-2d2595bddbdf}"))[0]
+            mesh = ws.get_entity(UUID("{f6b08e3b-9a85-45ab-a487-4700e3ca1917}"))[0]
             mesh.copy(parent=new_geoh5, copy_children=True)
 
             topography_object = ws.get_entity(
@@ -72,7 +78,7 @@ def test_mag_inversion(tmp_path: Path):
             full_components = {
                 "tmi": {
                     "channel_bool": True,
-                    "channel": "{44822654-b6ae-45b0-8886-2d845f80f422}",
+                    "channel": "{a342e416-946a-4162-9604-6807ccb06073}",
                     "uncertainty_type": "Floor",
                     "uncertainty_floor": 1.0,
                     "uncertainty_channel": None,
@@ -181,7 +187,7 @@ def test_dc_inversion(tmp_path: Path):
             # dc object
             currents = ws.get_entity(UUID("{c2403ce5-ccfd-4d2f-9ffd-3867154cb871}"))[0]
             currents.copy(parent=new_geoh5)
-            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+            ws.get_entity(UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"))[0].copy(
                 parent=new_geoh5
             )
     changes = {
@@ -203,7 +209,7 @@ def test_dc_inversion(tmp_path: Path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
 
     params_reload = DirectCurrent3DParams(ifile)
 
@@ -218,9 +224,9 @@ def test_dc_inversion(tmp_path: Path):
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert (
-            p_value == value
-        ), f"Side effect parameter {param} not saved and loaded correctly."
+        assert p_value == value, (
+            f"Side effect parameter {param} not saved and loaded correctly."
+        )
 
     # Test the groups
     groups = [
@@ -234,15 +240,15 @@ def test_dc_inversion(tmp_path: Path):
     for group in groups:
         if "Constant" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, 1.0)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Constant"
-            ), f"Property group {group} did not reset to 'Constant'"
+            assert getattr(app, "_" + group + "_group").options.value == "Constant", (
+                f"Property group {group} did not reset to 'Constant'"
+            )
 
         if "None" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, None)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "None"
-            ), f"Property group {group} did not reset to 'None'"
+            assert getattr(app, "_" + group + "_group").options.value == "None", (
+                f"Property group {group} did not reset to 'None'"
+            )
 
 
 def test_ip_inversion(tmp_path: Path):
@@ -253,7 +259,7 @@ def test_ip_inversion(tmp_path: Path):
                 0
             ].copy(parent=new_geoh5)
             # Conductivity mesh + model
-            ws.get_entity(UUID("{da109284-aa8c-4824-a647-29951109b058}"))[0].copy(
+            ws.get_entity(UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"))[0].copy(
                 parent=new_geoh5
             )
 
@@ -265,10 +271,10 @@ def test_ip_inversion(tmp_path: Path):
         "topography_object": new_topo.uid,
         "z_from_topo": False,
         "forward_only": False,
-        "mesh": UUID("{da109284-aa8c-4824-a647-29951109b058}"),
+        "mesh": UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"),
         "inversion_type": "induced polarization 3d",
         "chargeability_channel": UUID("502e7256-aafa-4016-969f-5cc3a4f27315"),
-        "conductivity_model": UUID("d8846bc7-4c2f-4ced-bbf6-e0ebafd76826"),
+        "conductivity_model": UUID("a096af7c-12b1-4fd2-a95c-22611ea924c6"),
     }
     side_effects = {"starting_model": 1e-4}
     app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
@@ -283,7 +289,7 @@ def test_ip_inversion(tmp_path: Path):
                 setattr(app, param, value)
 
         app.write_trigger(None)
-    ifile = InputFile.read_ui_json(getattr(app, "_run_params").input_file.path_name)
+    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
     params_reload = InducedPolarization3DParams(ifile)
 
     for param, value in changes.items():
@@ -292,16 +298,16 @@ def test_ip_inversion(tmp_path: Path):
         if param == "chargeability_channel":
             assert p_value != value and is_uuid(p_value)
         else:
-            assert (
-                p_value == value
-            ), f"Parameter {param} not saved and loaded correctly."
+            assert p_value == value, (
+                f"Parameter {param} not saved and loaded correctly."
+            )
 
     for param, value in side_effects.items():
         p_value = getattr(params_reload, param)
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
-        assert (
-            p_value == value
-        ), f"Side effect parameter {param} not saved and loaded correctly."
+        assert p_value == value, (
+            f"Side effect parameter {param} not saved and loaded correctly."
+        )
 
     groups = [
         "topography",
@@ -315,15 +321,15 @@ def test_ip_inversion(tmp_path: Path):
     for group in groups:
         if "Constant" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, 1.0)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "Constant"
-            ), f"Property group {group} did not reset to 'Constant'"
+            assert getattr(app, "_" + group + "_group").options.value == "Constant", (
+                f"Property group {group} did not reset to 'Constant'"
+            )
 
         if "None" in getattr(app, "_" + group + "_group").options.options:
             setattr(app, group, None)
-            assert (
-                getattr(app, "_" + group + "_group").options.value == "None"
-            ), f"Property group {group} did not reset to 'None'"
+            assert getattr(app, "_" + group + "_group").options.value == "None", (
+                f"Property group {group} did not reset to 'None'"
+            )
 
 
 def test_em1d_inversion(tmp_path: Path):
@@ -339,6 +345,15 @@ def test_em1d_inversion(tmp_path: Path):
                 "dbdt_z_uncert"
             ).uid
 
+            line_id = new_obj.add_data(
+                {
+                    "Line": {
+                        "values": new_obj.parts + 1,
+                        "type": "referenced",
+                        "value_map": {ii + 1: f"Line{ii + 1}" for ii in range(5)},
+                    }
+                }
+            )
     changes = {
         "objects": new_obj.uid,
         "data": data_group_uid,
@@ -353,6 +368,12 @@ def test_em1d_inversion(tmp_path: Path):
             getattr(app, param).value = value
         else:
             setattr(app, param, value)
+
+    for param, value in {
+        "data": line_id.uid,
+        "lines": [2, 3],
+    }.items():
+        getattr(app.lines, param).value = value
 
     for key, value in side_effects.items():
         assert getattr(app, key).value == value, f"Failed to change {key} with {value}."

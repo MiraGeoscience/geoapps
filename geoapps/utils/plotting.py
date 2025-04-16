@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -17,6 +19,7 @@ from geoh5py.objects import BlockModel, Curve, Grid2D, Points, Surface
 
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils import warn_module_not_found
+
 
 with warn_module_not_found():
     from matplotlib import colors
@@ -70,7 +73,7 @@ def normalize(values):
     ind = ~np.isnan(values)
     values[ind] = np.abs(values[ind])
     values[ind] /= values[ind].max()
-    values[ind == False] = 0
+    values[~ind] = 0
     return values
 
 
@@ -110,7 +113,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
     :return line_selection:
     :return contour_set:
     """
-    indices = None
+    indices: np.array | None = None
     line_selection = None
     contour_set = None
     values = None
@@ -141,7 +144,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
     if "indices" in kwargs:
         indices = kwargs["indices"]
-        if isinstance(indices, np.ndarray) and np.all(indices == False):
+        if isinstance(indices, np.ndarray) and np.all(~indices):
             indices = None
 
     if isinstance(getattr(data, "values", None), np.ndarray) and not isinstance(
@@ -196,7 +199,8 @@ def plot_plan_data_selection(entity, data, **kwargs):
 
         if values is not None:
             values = np.asarray(values.reshape(entity.shape, order="F"), dtype=float)
-            values[indices == False] = np.nan
+            assert indices is not None
+            values[~indices] = np.nan  # pylint: disable=invalid-unary-operand-type
             values = values[ind_x, :][:, ind_y]
 
         if np.any(values):
@@ -264,7 +268,7 @@ def plot_plan_data_selection(entity, data, **kwargs):
         axis.set_xlim([x.min() - width * 0.1, x.max() + width * 0.1])
         axis.set_ylim([y.min() - height * 0.1, y.max() + height * 0.1])
 
-    if "colorbar" in kwargs and kwargs["colorbar"]:
+    if kwargs.get("colorbar"):
         plt.colorbar(out, ax=axis)
 
     line_selection = np.zeros_like(indices, dtype=bool)
@@ -360,13 +364,19 @@ def plot_profile_data_selection(
                             yy[-1],
                             yerr=uncertainties[i][0] * np.abs(yy[-1])
                             + uncertainties[i][1],
-                            color=[c + i * i for c, i in zip(color, c_increment)],
+                            color=[
+                                c + i * i
+                                for c, i in zip(color, c_increment, strict=False)
+                            ],
                         )
                     else:
                         ax.plot(
                             xx[-1],
                             yy[-1],
-                            color=[c + i * i for c, i in zip(color, c_increment)],
+                            color=[
+                                c + i * i
+                                for c, i in zip(color, c_increment, strict=False)
+                            ],
                         )
                     legend.append(field)
 
@@ -399,9 +409,9 @@ def plotly_scatter(
     """
     Create a plotly.graph_objects.Mesh3D figure.
     """
-    assert (
-        getattr(points, "vertices", None) is not None
-    ), "Input object must have vertices"
+    assert getattr(points, "vertices", None) is not None, (
+        "Input object must have vertices"
+    )
 
     if figure is None:
         figure = go.FigureWidget()
@@ -480,9 +490,9 @@ def plotly_block_model(
     """
     Create a plotly.graph_objects.Mesh3D figure.
     """
-    assert isinstance(
-        block_model, BlockModel
-    ), f"Input block_model must be of type {Surface}"
+    assert isinstance(block_model, BlockModel), (
+        f"Input block_model must be of type {Surface}"
+    )
 
     if figure is None:
         figure = go.FigureWidget()

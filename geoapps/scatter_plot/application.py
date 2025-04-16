@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: disable=W0613
 
@@ -55,7 +57,7 @@ class ScatterPlots(BaseDashApplication):
         super().__init__()
 
         # Start flask server
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        external_stylesheets = None
         server = Flask(__name__)
         self.app = Dash(
             server=server,
@@ -358,20 +360,25 @@ class ScatterPlots(BaseDashApplication):
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
         if trigger == "ui_json_data" or trigger == "":
-            x_min, x_max = ui_json_data.get("x_min", None), ui_json_data.get(
-                "x_max", None
+            x_min, x_max = (
+                ui_json_data.get("x_min", None),
+                ui_json_data.get("x_max", None),
             )
-            y_min, y_max = ui_json_data.get("y_min", None), ui_json_data.get(
-                "y_max", None
+            y_min, y_max = (
+                ui_json_data.get("y_min", None),
+                ui_json_data.get("y_max", None),
             )
-            z_min, z_max = ui_json_data.get("z_min", None), ui_json_data.get(
-                "z_max", None
+            z_min, z_max = (
+                ui_json_data.get("z_min", None),
+                ui_json_data.get("z_max", None),
             )
-            color_min, color_max = ui_json_data.get(
-                "color_min", None
-            ), ui_json_data.get("color_max", None)
-            size_min, size_max = ui_json_data.get("size_min", None), ui_json_data.get(
-                "size_max", None
+            color_min, color_max = (
+                ui_json_data.get("color_min", None),
+                ui_json_data.get("color_max", None),
+            )
+            size_min, size_max = (
+                ui_json_data.get("size_min", None),
+                ui_json_data.get("size_max", None),
             )
 
         elif trigger == "x":

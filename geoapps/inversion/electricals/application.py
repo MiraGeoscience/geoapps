@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -18,9 +20,16 @@ from time import time
 import numpy as np
 from geoh5py.data import Data
 from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
+from simpeg_drivers.electricals.direct_current.three_dimensions.params import (
+    DirectCurrent3DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.three_dimensions.params import (
+    InducedPolarization3DParams,
+)
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
@@ -29,18 +38,14 @@ from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer,
 )
-from geoapps.inversion.electricals.direct_current.three_dimensions.params import (
-    DirectCurrent3DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.three_dimensions.params import (
-    InducedPolarization3DParams,
-)
 from geoapps.inversion.potential_fields.application import (
     MeshOctreeOptions,
     ModelOptions,
 )
+from geoapps.shared_utils.utils import DrapeOptions, WindowOptions
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
+
 
 with warn_module_not_found():
     import ipywidgets as widgets
@@ -107,7 +112,17 @@ class InversionApp(PlotSelection2D):
             self.params = self._param_class(ui_json)
         else:
             app_initializer.update(kwargs)
-            self.params = self._param_class(**app_initializer)
+
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
+
             extras = {
                 key: value
                 for key, value in app_initializer.items()
@@ -225,9 +240,6 @@ class InversionApp(PlotSelection2D):
             object_types=self._object_types,
             exclusion_types=self._exclusion_types,
             add_xyz=False,
-            receivers_offset_z=self.defaults["receivers_offset_z"],
-            z_from_topo=self.defaults["z_from_topo"],
-            receivers_radar_drape=self.defaults["receivers_radar_drape"],
         )
         self._alpha_s = widgets.FloatText(
             min=0,
@@ -716,9 +728,9 @@ class InversionApp(PlotSelection2D):
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace
@@ -1087,9 +1099,11 @@ class InversionApp(PlotSelection2D):
                             param_dict[f"{key}_channel_bool"] = True
 
                 if self.receivers_radar_drape.value is not None:
-                    self.workspace.get_entity(self.receivers_radar_drape.value)[0].copy(
-                        parent=new_obj
-                    )
+                    receiver_drape = self.workspace.get_entity(
+                        self.receivers_radar_drape.value
+                    )[0]
+                else:
+                    receiver_drape = None
 
             for key in self.__dict__:
                 if "resolution" in key:
@@ -1122,24 +1136,34 @@ class InversionApp(PlotSelection2D):
                             param_dict[sub_key.lstrip("_")] = value
 
             # Create new params object and write
-            param_dict["resolution"] = None  # No downsampling for dcip
             param_dict["geoh5"] = new_workspace
 
             if param_dict.get("reference_model", None) is None:
                 param_dict["reference_model"] = param_dict["starting_model"]
                 param_dict["alpha_s"] = 0.0
 
+            window_options = WindowOptions(
+                center_x=self.window_center_x.value,
+                center_y=self.window_center_y.value,
+                width=self.window_width.value,
+                height=self.window_height.value,
+                azimuth=self.window_azimuth.value,
+            )
+            drape_options = DrapeOptions(
+                topography_object=param_dict["topography_object"],
+                topography=param_dict["topography"],
+                z_from_topo=param_dict["z_from_topo"],
+                receivers_offset_z=param_dict["receivers_offset_z"],
+                receivers_radar_drape=receiver_drape,
+            )
+
             # Pre-processing
             update_dict = preprocess_data(
-                workspace=ws,
-                param_dict=param_dict,
-                resolution=None,
-                data_object=param_dict["data_object"],
-                window_center_x=self.window_center_x.value,
-                window_center_y=self.window_center_y.value,
-                window_width=self.window_width.value,
-                window_height=self.window_height.value,
-                window_azimuth=self.window_azimuth.value,
+                ws,
+                param_dict,
+                param_dict["data_object"],
+                window_options,
+                drape_options=drape_options,
             )
             param_dict.update(update_dict)
 
@@ -1187,7 +1211,7 @@ class InversionApp(PlotSelection2D):
                 elif data["inversion_type"] == "induced polarization 3d":
                     self._param_class = InducedPolarization3DParams
 
-                self.params = getattr(self, "_param_class")(
+                self.params = self._param_class(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.params.geoh5.open(mode="r")

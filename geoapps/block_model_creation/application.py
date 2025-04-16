@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 # pylint: disable=W0613
 # pylint: disable=E0401
@@ -11,6 +13,7 @@
 from __future__ import annotations
 
 import os
+import uuid
 from pathlib import Path
 from time import time
 
@@ -19,6 +22,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from flask import Flask
 from geoh5py.objects.object_base import ObjectBase
+from geoh5py.shared.exceptions import AssociationValidationError
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -41,7 +45,15 @@ class BlockModelCreation(BaseDashApplication):
             self.params = self._param_class(ui_json)
         else:
             app_initializer.update(kwargs)
-            self.params = self._param_class(**app_initializer)
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
             extras = {
                 key: value
                 for key, value in app_initializer.items()
@@ -51,7 +63,7 @@ class BlockModelCreation(BaseDashApplication):
 
         super().__init__()
 
-        external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
+        external_stylesheets = None
         server = Flask(__name__)
         self.app = Dash(
             server=server,

@@ -1,14 +1,48 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
+
+from octree_creation_app.params import OctreeParams
+from simpeg_drivers.electricals.direct_current.pseudo_three_dimensions.params import (
+    DirectCurrentPseudo3DParams,
+)
+from simpeg_drivers.electricals.direct_current.three_dimensions import (
+    DirectCurrent3DParams,
+)
+from simpeg_drivers.electricals.direct_current.two_dimensions import (
+    DirectCurrent2DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.pseudo_three_dimensions.params import (
+    InducedPolarizationPseudo3DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.three_dimensions import (
+    InducedPolarization3DParams,
+)
+from simpeg_drivers.electricals.induced_polarization.two_dimensions import (
+    InducedPolarization2DParams,
+)
+from simpeg_drivers.electromagnetics.frequency_domain import (
+    FrequencyDomainElectromagneticsParams,
+)
+from simpeg_drivers.electromagnetics.time_domain import TimeDomainElectromagneticsParams
+from simpeg_drivers.joint.joint_cross_gradient import JointCrossGradientParams
+from simpeg_drivers.joint.joint_surveys import JointSurveysParams
+from simpeg_drivers.natural_sources import MagnetotelluricsParams, TipperParams
+from simpeg_drivers.potential_fields import (
+    GravityParams,
+    MagneticScalarParams,
+    MagneticVectorParams,
+)
 
 from geoapps import assets_path
 from geoapps.block_model_creation.params import BlockModelParams
@@ -16,42 +50,9 @@ from geoapps.clustering.params import ClusteringParams
 from geoapps.contours.params import ContoursParams
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.inversion.electricals.direct_current.pseudo_three_dimensions.params import (
-    DirectCurrentPseudo3DParams,
-)
-from geoapps.inversion.electricals.direct_current.three_dimensions import (
-    DirectCurrent3DParams,
-)
-from geoapps.inversion.electricals.direct_current.two_dimensions import (
-    DirectCurrent2DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.pseudo_three_dimensions.params import (
-    InducedPolarizationPseudo3DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.three_dimensions import (
-    InducedPolarization3DParams,
-)
-from geoapps.inversion.electricals.induced_polarization.two_dimensions import (
-    InducedPolarization2DParams,
-)
-from geoapps.inversion.electromagnetics.frequency_domain import (
-    FrequencyDomainElectromagneticsParams,
-)
-from geoapps.inversion.electromagnetics.time_domain import (
-    TimeDomainElectromagneticsParams,
-)
-from geoapps.inversion.joint.joint_cross_gradient import JointCrossGradientParams
-from geoapps.inversion.joint.joint_surveys import JointSurveysParams
-from geoapps.inversion.natural_sources import MagnetotelluricsParams, TipperParams
-from geoapps.inversion.potential_fields import (
-    GravityParams,
-    MagneticScalarParams,
-    MagneticVectorParams,
-)
 from geoapps.iso_surfaces.params import IsoSurfacesParams
-from geoapps.octree_creation.params import OctreeParams
-from geoapps.peak_finder.params import PeakFinderParams
 from geoapps.scatter_plot.params import ScatterPlotParams
+
 
 active_data_channels = [
     "z_real_channel",
@@ -75,14 +76,14 @@ active_data_channels = [
 
 
 def write_default_uijson(path: str | Path, use_initializers=False):
-    from geoapps.inversion.potential_fields.gravity.constants import (
+    from simpeg_drivers.potential_fields.gravity.constants import (
         app_initializer as grav_init,
     )
 
     grav_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
     grav_init = grav_init if use_initializers else {}
 
-    from geoapps.inversion.potential_fields.magnetic_scalar.constants import (
+    from simpeg_drivers.potential_fields.magnetic_scalar.constants import (
         app_initializer as mag_init,
     )
 
@@ -162,8 +163,9 @@ def write_default_uijson(path: str | Path, use_initializers=False):
     tipper_init["geoh5"] = str(assets_path() / "FlinFlon_natural_sources.geoh5")
     tipper_init = tipper_init if use_initializers else {}
 
+    from octree_creation_app.constants import template_dict
+
     from geoapps.octree_creation.constants import app_initializer as oct_init
-    from geoapps.octree_creation.constants import template_dict
 
     if use_initializers:
         oct_init["geoh5"] = str(assets_path() / "FlinFlon.geoh5")
@@ -309,7 +311,6 @@ def write_default_uijson(path: str | Path, use_initializers=False):
             forward_only=False, validate=False, **joint_cross_gradient_init
         ),
         "octree_mesh.ui.json": OctreeParams(validate=False, **oct_init),
-        "peak_finder.ui.json": PeakFinderParams(validate=False, **peak_init),
         "scatter.ui.json": ScatterPlotParams(validate=False, **scatter_init),
         "interpolation.ui.json": DataInterpolationParams(validate=False, **interp_init),
         "block_model_creation.ui.json": BlockModelParams(validate=False, **block_init),

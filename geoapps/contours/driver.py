@@ -1,16 +1,18 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
-
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 import sys
 
 import numpy as np
+from geoapps_utils.driver.driver import BaseDriver
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, Points, Surface
 from matplotlib.pyplot import axes
@@ -18,7 +20,6 @@ from scipy.interpolate import LinearNDInterpolator
 
 from geoapps.contours.constants import validations
 from geoapps.contours.params import ContoursParams
-from geoapps.driver_base.driver import BaseDriver
 from geoapps.shared_utils.utils import get_contours
 from geoapps.utils.formatters import string_name
 from geoapps.utils.plotting import plot_plan_data_selection
@@ -58,7 +59,9 @@ class ContoursDriver(BaseDriver):
         if contour_set is not None:
             vertices, cells, values = [], [], []
             count = 0
-            for segs, level in zip(contour_set.allsegs, contour_set.levels):
+            for segs, level in zip(
+                contour_set.allsegs, contour_set.levels, strict=False
+            ):
                 for poly in segs:
                     n_v = len(poly)
                     vertices.append(poly)

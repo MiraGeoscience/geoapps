@@ -1,18 +1,22 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 from copy import deepcopy
+from uuid import UUID
 
 from geoh5py.ui_json.constants import default_ui_json as base_ui_json
 
 import geoapps
 from geoapps import assets_path
+
 
 defaults = {
     "version": geoapps.__version__,
@@ -202,15 +206,15 @@ validations = {}
 
 app_initializer = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-    "objects": "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
-    "data": "{f3e36334-be0a-4210-b13e-06933279de25}",
+    "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
+    "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
     "max_distance": 2e3,
     "max_depth": 1e3,
     "no_data_value": 1e-8,
-    "out_object": "{7450be38-1327-4336-a9e4-5cff587b6715}",
+    "out_object": UUID("{7450be38-1327-4336-a9e4-5cff587b6715}"),
     "skew_angle": 0.0,
     "skew_factor": 1.0,
     "space": "Linear",
-    "topography_objects": "{ab3c2083-6ea8-4d31-9230-7aad3ec09525}",
-    "topography_data": "{a603a762-f6cb-4b21-afda-3160e725bf7d}",
+    "topography_objects": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography_data": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
 }

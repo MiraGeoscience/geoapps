@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -13,21 +15,23 @@ import uuid
 from pathlib import Path
 from shutil import copyfile
 
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import (
     dict_mapper,
     entity2uuid,
     fetch_active_workspace,
+    list2str,
     str2uuid,
 )
 from geoh5py.ui_json import InputFile
-from geoh5py.ui_json.utils import list2str, monitored_directory_copy
+from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from traitlets import TraitError
 
-from geoapps.driver_base.params import BaseParams
 from geoapps.utils import warn_module_not_found
+
 
 with warn_module_not_found():
     from ipyfilechooser import FileChooser
@@ -61,6 +65,7 @@ class BaseApplication:
     _figure = None
     _refresh = None
     _params: BaseParams | None = None
+    _param_class: type[BaseParams] | None = None
     _defaults: dict | None = None
     plot_result = False
 
@@ -139,7 +144,7 @@ class BaseApplication:
                             if isinstance(widget, Text):
                                 value = list2str(value)
 
-                            setattr(widget, "value", value)
+                            widget.value = value
                             if hasattr(widget, "style"):
                                 widget.style = {"description_width": "initial"}
 
@@ -174,8 +179,8 @@ class BaseApplication:
             if isinstance(self.geoh5, Workspace):
                 self.geoh5.close()
 
-            if extension == ".json" and getattr(self, "_param_class", None) is not None:
-                self.params = getattr(self, "_param_class")(
+            if extension == ".json" and self._param_class is not None:
+                self.params = self._param_class.build(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.refresh.value = False
@@ -217,7 +222,7 @@ class BaseApplication:
                 )
 
             if getattr(self, "_params", None) is not None:
-                setattr(self.params, "monitoring_directory", self.monitoring_directory)
+                self.params.monitoring_directory = self.monitoring_directory
             self.monitoring_panel.children[0].value = "Monitoring path:"
         else:
             self.monitoring_panel.children[0].value = "Save to:"
@@ -381,9 +386,9 @@ class BaseApplication:
 
     @params.setter
     def params(self, params: BaseParams):
-        assert isinstance(
-            params, BaseParams
-        ), f"Input parameters must be an instance of {BaseParams}"
+        assert isinstance(params, BaseParams), (
+            f"Input parameters must be an instance of {BaseParams}"
+        )
 
         self._params = params
 
@@ -424,9 +429,9 @@ class BaseApplication:
 
     @workspace.setter
     def workspace(self, workspace):
-        assert isinstance(
-            workspace, Workspace
-        ), f"Workspace must be of class {Workspace}"
+        assert isinstance(workspace, Workspace), (
+            f"Workspace must be of class {Workspace}"
+        )
         self.base_workspace_changes(workspace)
 
     @property
@@ -463,15 +468,54 @@ class BaseApplication:
             self.h5file = value
 
     def trigger_click(self, _):
+        new_params = self.collect_parameter_values()
+        new_params.write_input_file(name=new_params.ga_group_name)
+        self.run(new_params)
+
+        if self.live_link.value:
+            print("Live link active. Check your ANALYST session for new mesh.")
+
+    def collect_parameter_values(self):
+        param_dict = {}
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget):
-                    setattr(self.params, key, getattr(self, key).value)
+                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                    value = getattr(self, key).value
+                    if key[0] == "_":
+                        key = key[1:]
+
+                    if (
+                        isinstance(value, uuid.UUID)
+                        and self.workspace.get_entity(value)[0] is not None
+                    ):
+                        value = self.workspace.get_entity(value)[0]
+
+                    param_dict[key] = value
+
             except AttributeError:
                 continue
 
-        self.params.write_input_file(name=self.params.ga_group_name)
-        self.run(self.params)
+        temp_geoh5 = f"{self.ga_group_name.value}_{time.time():.0f}.geoh5"
+        ws, self.live_link.value = BaseApplication.get_output_workspace(
+            self.live_link.value, self.export_directory.selected_path, temp_geoh5
+        )
+        with ws as new_workspace:
+            param_dict["geoh5"] = new_workspace
+
+            with fetch_active_workspace(self.workspace):
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        obj = new_workspace.get_entity(value.uid)[0]
+                        if obj is None:
+                            obj = value.copy(parent=new_workspace, copy_children=True)
+                        param_dict[key] = obj
+
+            if self.live_link.value:
+                param_dict["monitoring_directory"] = self.monitoring_directory
+
+        new_params = type(self.params)(**param_dict)
+
+        return new_params
 
     @classmethod
     def run(cls, params: BaseParams):
@@ -516,6 +560,7 @@ class BaseApplication:
 
             except AttributeError:
                 continue
+
         return param_dict
 
 

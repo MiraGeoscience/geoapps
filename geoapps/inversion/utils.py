@@ -1,9 +1,11 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
@@ -12,12 +14,12 @@ import warnings
 import numpy as np
 from discretize import TreeMesh
 from scipy.spatial import ConvexHull, cKDTree
-from SimPEG.electromagnetics.frequency_domain.sources import (
+from simpeg.electromagnetics.frequency_domain.sources import (
     LineCurrent as FEMLineCurrent,
 )
-from SimPEG.electromagnetics.time_domain.sources import LineCurrent as TEMLineCurrent
-from SimPEG.survey import BaseSurvey
-from SimPEG.utils import mkvc
+from simpeg.electromagnetics.time_domain.sources import LineCurrent as TEMLineCurrent
+from simpeg.survey import BaseSurvey
+from simpeg.utils import mkvc
 
 from geoapps.utils.surveys import get_intersecting_cells, get_unique_locations
 
@@ -60,8 +62,7 @@ def calculate_2D_trend(
     """
     if not isinstance(order, int) or order < 0:
         raise ValueError(
-            "Polynomial 'order' should be an integer > 0. "
-            f"Value of {order} provided."
+            f"Polynomial 'order' should be an integer > 0. Value of {order} provided."
         )
 
     ind_nan = ~np.isnan(values)
@@ -75,7 +76,7 @@ def calculate_2D_trend(
         values = values[hull.vertices]
     elif not method == "all":
         raise ValueError(
-            "'method' must be either 'all', or 'perimeter'. " f"Value {method} provided"
+            f"'method' must be either 'all', or 'perimeter'. Value {method} provided"
         )
 
     # Compute center of mass
@@ -84,7 +85,7 @@ def calculate_2D_trend(
 
     polynomial = []
     xx, yy = np.triu_indices(order + 1)
-    for x, y in zip(xx, yy):
+    for x, y in zip(xx, yy, strict=False):
         polynomial.append(
             (loc_xy[:, 0] - center_x) ** float(x)
             * (loc_xy[:, 1] - center_y) ** float(y - x)
@@ -99,7 +100,7 @@ def calculate_2D_trend(
 
     params, _, _, _ = np.linalg.lstsq(polynomial, values, rcond=None)
     data_trend = np.zeros(points.shape[0])
-    for count, (x, y) in enumerate(zip(xx, yy)):
+    for count, (x, y) in enumerate(zip(xx, yy, strict=False)):
         data_trend += (
             params[count]
             * (points[:, 0] - center_x) ** float(x)
@@ -214,15 +215,13 @@ def tile_locations(
 
     if method == "kmeans":
         # Best for smaller problems
-
-        np.random.seed(0)
         # Cluster
         # TODO turn off filter once sklearn has dealt with the issue causing the warning
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
             from sklearn.cluster import KMeans
 
-            cluster = KMeans(n_clusters=n_tiles, n_init="auto")
+            cluster = KMeans(n_clusters=n_tiles, random_state=0, n_init="auto")
             cluster.fit_predict(locations[:, :2])
 
         labels = cluster.labels_

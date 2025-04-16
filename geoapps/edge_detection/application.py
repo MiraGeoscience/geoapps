@@ -1,18 +1,22 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from time import time
 
 import numpy as np
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared import Entity
+from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 
@@ -23,6 +27,7 @@ from geoapps.edge_detection.driver import EdgeDetectionDriver
 from geoapps.edge_detection.params import EdgeDetectionParams
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.formatters import string_name
+
 
 with warn_module_not_found():
     from ipywidgets import Button, FloatSlider, HBox, IntSlider, Layout, Text, VBox
@@ -55,9 +60,17 @@ class EdgeDetectionApp(PlotSelection2D):
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(InputFile(ui_json))
+            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
         else:
-            self.params = self._param_class(**app_initializer)
+            try:
+                self.params = self._param_class(**app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class(**app_initializer)
 
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):
@@ -195,7 +208,7 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def trigger_click(self, _):
         param_dict = self.get_param_dict()
-        temp_geoh5 = f"{string_name(self.params.export_as)}_{time():.0f}.geoh5"
+        temp_geoh5 = f"{string_name(param_dict.get('export_as'))}_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
         )
@@ -228,16 +241,18 @@ class EdgeDetectionApp(PlotSelection2D):
 
     def compute_trigger(self, _):
         param_dict = self.get_param_dict()
-        param_dict["geoh5"] = self.params.geoh5
+        param_dict["geoh5"] = self.workspace
 
-        with fetch_active_workspace(self.params.geoh5):
-            self.params.update(param_dict)
+        if param_dict.get("objects", None) is None:
+            return
 
+        with fetch_active_workspace(self.workspace):
+            new_params = EdgeDetectionParams(**param_dict)
             self.refresh.value = False
             (
                 vertices,
                 _,
-            ) = EdgeDetectionDriver.get_edges(*self.params.edge_args())
+            ) = EdgeDetectionDriver.get_edges(*new_params.edge_args())
             self.collections = [
                 collections.LineCollection(
                     np.reshape(vertices[:, :2], (-1, 2, 2)), colors="k", linewidths=2

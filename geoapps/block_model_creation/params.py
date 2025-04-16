@@ -1,14 +1,17 @@
-#  Copyright (c) 2024 Mira Geoscience Ltd.
-#
-#  This file is part of geoapps.
-#
-#  geoapps is distributed under the terms and conditions of the MIT License
-#  (see LICENSE file at the root of this source code package).
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+#  Copyright (c) 2024-2025 Mira Geoscience Ltd.                                '
+#                                                                              '
+#  This file is part of geoapps.                                               '
+#                                                                              '
+#  geoapps is distributed under the terms and conditions of the MIT License    '
+#  (see LICENSE file at the root of this source code package).                 '
+# ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 from __future__ import annotations
 
 from copy import deepcopy
 
+from geoapps_utils.driver.params import BaseParams
 from geoh5py.objects import ObjectBase
 
 from geoapps.block_model_creation.constants import (
@@ -16,7 +19,6 @@ from geoapps.block_model_creation.constants import (
     defaults,
     validations,
 )
-from geoapps.driver_base.params import BaseParams
 
 
 class BlockModelParams(BaseParams):
