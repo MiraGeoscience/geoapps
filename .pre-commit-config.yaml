@@ -11,6 +11,11 @@ ci:
     autoupdate_schedule: monthly
 
 repos:
+-   repo: https://github.com/python-poetry/poetry
+    rev: 2.1.3
+    hooks:
+    -   id: poetry-check
+        args: [--lock]
 -   repo: https://github.com/hadialqattan/pycln
     rev: v2.5.0
     hooks:
