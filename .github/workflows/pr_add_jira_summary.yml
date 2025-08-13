@@ -1,4 +1,7 @@
 name: Add JIRA issue summary
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   pull_request_target:
