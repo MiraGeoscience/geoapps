@@ -50,7 +50,7 @@ classifiers = [
 start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["apps"] }
 
 [tool.poetry.dependencies]
-python = "^3.10, <3.11"  # limited to 3.10 because of PySide2
+python = "^3.10, <3.11"
 
 fiona = "~1.9.2"
 gdal = "~3.6.3"

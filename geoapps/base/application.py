@@ -67,6 +67,7 @@ class BaseApplication:
     _figure = None
     _refresh = None
     _params: BaseParams | None = None
+    _param_class: type[BaseParams] | None = None
     _defaults: dict | None = None
     plot_result = False
 
@@ -186,7 +187,7 @@ class BaseApplication:
             self.geoh5.close()
 
         if extension == ".json" and self._param_class is not None:
-            self.params = self._param_class(  # pylint: disable=not-callable
+            self.params = self._param_class.build(
                 InputFile.read_ui_json(self.file_browser.selected)
             )
             self.refresh.value = False
