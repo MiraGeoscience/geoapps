@@ -12,8 +12,9 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == 'MiraGeoscience/geoapps'  # do not run on repository forks
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-issue_to_jira.yml@main
     secrets:
-      JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
-      JIRA_URL: ${{ secrets.JIRA_URL }}
+      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
     with:
       project-key: 'GEOPY'
       components: '[{"name": "geoapps"}]'
