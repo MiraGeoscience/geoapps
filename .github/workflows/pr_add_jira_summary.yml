@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   call-workflow-add-jira-issue-summary:
-    if: github.event.pull_request.head.repo.full_name == 'MiraGeoscience/geoapps'  # do not run on repository forks
+    if: startsWith(github.event.pull_request.head.repo.full_name, 'MiraGeoscience/')  # run if PR originates from the Mira repo only
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-pr_add_jira_summary.yml@main
     permissions:
       contents: read
