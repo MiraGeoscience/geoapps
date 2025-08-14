@@ -9,7 +9,7 @@ on:
 
 jobs:
   call-workflow-create-jira-issue:
-    if: github.event.pull_request.head.repo.full_name == 'MiraGeoscience/geoapps'  # do not run on repository forks
+    if: github.repository == 'MiraGeoscience/geoapps'  # do not run on repository forks
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-issue_to_jira.yml@main
     secrets:
       JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
