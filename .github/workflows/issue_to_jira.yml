@@ -1,4 +1,7 @@
 name: Create JIRA issue
+permissions:
+  contents: read
+  issues: write
 
 on:
   issues:
@@ -6,8 +9,12 @@ on:
 
 jobs:
   call-workflow-create-jira-issue:
+    if: startsWith(github.repository, 'MiraGeoscience/')  # run on the Mira repo only
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-issue_to_jira.yml@main
-    secrets: inherit
+    secrets:
+      JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
     with:
       project-key: 'GEOPY'
       components: '[{"name": "geoapps"}]'
