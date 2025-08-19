@@ -24,21 +24,28 @@ concurrency:
 jobs:
   call-workflow-static-analysis:
     name: Static analysis
+    permissions:
+      contents: read
+      pull-requests: read
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-static_analysis.yml@main
     with:
       package-manager: 'conda'
       app-name: 'geoapps'
       python-version: '3.10'
+
   call-workflow-pytest:
     name: Pytest
+    permissions:
+      contents: read
+      pull-requests: read
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@main
     with:
       package-manager: 'conda'
       python-versions: '["3.10"]'
       os: '["ubuntu-latest", "windows-latest"]'
+      lfs: true
       cache-number: 1
       codecov-reference-python-version: '3.10'
       codecov-reference-os: '["windows-latest"]'
-      lfs: true
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
