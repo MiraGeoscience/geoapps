@@ -56,37 +56,35 @@ fiona = "~1.9.2"
 gdal = "~3.6.3"
 matplotlib = "~3.8.4"  # also in simpeg and geoana
 
-dask = {version = "2024.6.*", extras = ["distributed"]}  # also in simpeg[dask]
+dask = {version = "2025.3.*", extras = ["distributed"]}  # also in simpeg[dask]
 discretize = "0.11.*"  # also in simpeg, octree-creation-app
-distributed = "2024.6.*"  # because conda-lock doesn't take dask extras into account
 numpy = "~1.26.0" # also in geoh5py, simpeg
 scipy = "~1.14.0"
 
-# solvers for simpeg: not imported, but at least one required at runtime
-pydiso = ">=0.1.0, <0.2.dev"
-python-mumps = ">=0.0.3, <0.0.4.dev"
-
 ## dependencies for UI
 #---------------------
-dash = "~2.12"
+dash = "^2.12"
 dash-daq = "0.5.*"
 flask = "~3.0.3"
 ipyfilechooser = "0.6.*"
 ipywidgets = "^7.8.0"
-pyqtwebengine = "~5.15.2"
-pyside2 = "5.15.*"  # from targeting-workflow, geo-unsup-mappper, peak-finder-app
-tqdm = "^4.66.1"  # also in las-geoh5
+tqdm = "^4.66.1"
 notebook = "~7.3.2"
 plotly = "~5.19.0"
 
+# Note about packages for pyside2 and pyqtwebengine:
+#   - latest version for pip packages is 5.12.2, while Conda has more recent 5.* versions
+#   - pip packages only exists for python < 3.11, while Conda has them for Python 3.11 and 3.12
+#   - limit below to Python < 3.11 is ignored by conda-lock,
+#   => conda-lock resolves to the latest version available in conda-forge for any Python versions
+#      and this dependency definition is still compatible for a pip install
+pyqtwebengine = {version = ">=5.15.2, <5.16.dev", python = "<3.11"}  # also in peak-finder-app
+pyside2 = {version = ">=5.15.2, <5.16.dev", python = "<3.11"}  # also in peak-finder-app
 
 ## pip dependencies from Git repositories
 #----------------------------------------
 #geoh5py = {version = ">=0.10.0rc1, <0.11.0a.dev", source = "pypi", allow-prereleases = true}
 geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "develop"}
-
-#param-sweeps = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-param-sweeps = {git = "https://github.com/MiraGeoscience/param-sweeps.git", rev = "develop"}
 
 #curve-apps = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
 curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "develop"}
@@ -124,35 +122,32 @@ mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "deve
 
 [tool.conda-lock.dependencies]
 libblas = "*=*mkl"  # because simpeg already brings in the MKL
-ipywidgets = ">=8.1.0"
-widgetsnbextension = ">=4.0"
+widgetsnbextension = "*"
 jupyterlab = ">=4.3.0"
 jupyter_server = ">=2.15.0"
 jupyter_client = ">=8.6.0"
-matplotlib = ">=3.0.0"  # also in simpeg and geoana
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 #---------------------------------------------------------------------------------
+bokeh = ">=3.6.0, <3.7.dev"  # from simpeg
+distributed = "2025.3.*"  # because conda-lock doesn't take dask extras into account
 empymod = ">=2.2.1, <2.3.dev"  # from simpeg and geoana
-bokeh = ">=3.6.0, <3.7.0"  # from simpeg
 fsspec = "2022.*"  # from simpeg[dask]
 geoana = ">=0.7.0, <0.8.dev"  # from simpeg
 h5py = ">=3.2.1, <4.0.dev"  # from geoh5py
-matplotlib-base = ">=3.8.4, <3.9.dev"  # from simpeg
-mkl = "2023.2, <2024.1"
 pandas = ">=2.2.1, <2.3.dev"  # from SimPEG, also used by targeting-workflow, petro-lingo
 Pillow = ">=10.3.0, <10.4.dev"  # from geoh5py
+properties = ">=0.6.1, <0.7.dev"  # from simpeg-archive
 pydantic = ">=2.5.2, <3.0.dev"  # from geoh5py, geoapps-utils
+pydiso = ">=0.1.0, <0.2.dev"  # from simpeg-drivers (solver for SimPEG)
 pymatsolver = ">=0.3.0, <0.4.dev"  # from simpeg
-scikit-learn = ">=1.4.0, <1.5.dev"  # from SimPEG, also used by geo-unsup-mapper, petro-lingo
-scikit-image = ">=0.24.0, <0.25.0"  # from curve-apps, peak-finder-app
-tqdm = ">=4.66.1, <5.0.dev"  # from simpeg
+python-mumps = ">=0.0.3, <0.0.4.dev"  # from simpeg-drivers (solver for SimPEG)
+Rtree = ">=1.2.0, <1.3.dev"  # from simpeg-drivers
+scikit-image = ">=0.24.0, <0.25.dev"  # from curve-apps, peak-finder-app
+scikit-learn = ">=1.6.0, <1.7.dev"  # from SimPEG, also used by geo-unsup-mapper, petro-lingo
+trimesh = ">=4.1.3, <4.2.dev"  # from simpeg-drivers
 zarr = ">=2.14.2, <2.15.dev"  # from simpeg[dask]
 
-# force some versions to resolve incompatible resolution between PyPI and Conda
-#------------------------------------------------------------------------------
-tbb = "2021.12.*"  # through mkl from SimPEG
-python-tzdata = "2023.4.*"  # through pandas from SimPEG
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
