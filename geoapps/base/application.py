@@ -28,7 +28,7 @@ from geoh5py.shared.utils import (
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from simpeg_drivers.params import InversionBaseParams
+from simpeg_drivers.options import BaseInversionOptions
 from traitlets import TraitError
 
 from geoapps.utils import warn_module_not_found
@@ -55,7 +55,7 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
-    _param_class: type[InversionBaseParams] | None = None
+    _param_class: type[BaseInversionOptions] | None = None
     _h5file = None
     _main = None
     _workspace = None

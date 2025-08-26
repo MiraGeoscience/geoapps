@@ -28,7 +28,7 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.workspace import Workspace
 from jupyter_server import serverapp
 from plotly import graph_objects as go
-from simpeg_drivers import InversionBaseParams
+from simpeg_drivers.options import BaseInversionOptions
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -46,7 +46,7 @@ class InversionApp(BaseDashApplication):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = InversionBaseParams
+    _param_class = BaseInversionOptions
     _inversion_type = None
     _inversion_params = {}
     _run_params = None

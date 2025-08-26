@@ -51,9 +51,11 @@ with warn_module_not_found():
         Widget,
     )
 
-from simpeg_drivers.potential_fields.gravity.params import GravityParams
-from simpeg_drivers.potential_fields.magnetic_scalar.params import MagneticScalarParams
-from simpeg_drivers.potential_fields.magnetic_vector.params import MagneticVectorParams
+from simpeg_drivers.potential_fields.gravity.options import GravityInversionOptions
+from simpeg_drivers.potential_fields.magnetic_scalar.options import (
+    MagneticInversionOptions,
+)
+from simpeg_drivers.potential_fields.magnetic_vector.options import MVIInversionOptions
 
 
 def inversion_defaults():
@@ -94,7 +96,7 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using simpeg
     """
 
-    _param_class = MagneticVectorParams
+    _param_class = MVIInversionOptions
     _select_multiple = True
     _add_groups = False
     _run_params = None
@@ -106,17 +108,17 @@ class InversionApp(PlotSelection2D):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
             ifile = InputFile.read_ui_json(ui_json)
-            self.params = self._param_class(ifile, **kwargs)
+            self.params = self._param_class.build(ifile, **kwargs)
         else:
             try:
-                self.params = self._param_class(**app_initializer)
+                self.params = self._param_class.build(app_initializer)
 
             except AssociationValidationError:
                 for key, value in app_initializer.items():
                     if isinstance(value, uuid.UUID):
                         app_initializer[key] = None
 
-                self.params = self._param_class(**app_initializer)
+                self.params = self._param_class.build(app_initializer)
         self.data_object = self.objects
 
         for key, value in self.params.to_dict().items():
@@ -871,20 +873,20 @@ class InversionApp(PlotSelection2D):
         Change the application on change of system
         """
         if self.inversion_type.value == "magnetic vector" and not isinstance(
-            self.params, MagneticVectorParams
+            self.params, MVIInversionOptions
         ):
-            self._param_class = MagneticVectorParams
+            self._param_class = MVIInversionOptions
 
         elif self.inversion_type.value == "magnetic scalar" and not isinstance(
-            self.params, MagneticScalarParams
+            self.params, MagneticInversionOptions
         ):
-            self._param_class = MagneticScalarParams
+            self._param_class = MagneticInversionOptions
         elif self.inversion_type.value == "gravity" and not isinstance(
-            self.params, GravityParams
+            self.params, GravityInversionOptions
         ):
-            self._param_class = GravityParams
+            self._param_class = GravityInversionOptions
 
-        self.params = self._param_class(validate=False, verbose=False)
+        self.params = self._param_class.model_construct()
 
         if getattr(self.params, "_out_group", None) is not None:
             self.ga_group_name.value = self.params.out_group.name
@@ -1319,7 +1321,8 @@ class InversionApp(PlotSelection2D):
         Trigger the inversion.
         """
         if not isinstance(
-            params, (MagneticVectorParams, MagneticScalarParams, GravityParams)
+            params,
+            (MVIInversionOptions, MagneticInversionOptions, GravityInversionOptions),
         ):
             raise TypeError(
                 "Parameter 'inversion_type' must be one of "
@@ -1348,13 +1351,13 @@ class InversionApp(PlotSelection2D):
                     data = json.load(f)
 
                 if data["inversion_type"] == "gravity":
-                    self._param_class = GravityParams
+                    self._param_class = GravityInversionOptions
                 elif data["inversion_type"] == "magnetic vector":
-                    self._param_class = MagneticVectorParams
+                    self._param_class = MVIInversionOptions
                 elif data["inversion_type"] == "magnetic scalar":
-                    self._param_class = MagneticScalarParams
+                    self._param_class = MagneticInversionOptions
 
-                self.params = self._param_class(
+                self.params = self._param_class.build(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 params = self.params.to_dict()

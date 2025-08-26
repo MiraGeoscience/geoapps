@@ -24,11 +24,11 @@ from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from simpeg_drivers.electricals.direct_current.three_dimensions.params import (
-    DirectCurrent3DParams,
+from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
+    DC3DInversionOptions,
 )
-from simpeg_drivers.electricals.induced_polarization.three_dimensions.params import (
-    InducedPolarization3DParams,
+from simpeg_drivers.electricals.induced_polarization.three_dimensions.options import (
+    IP3DInversionOptions,
 )
 
 from geoapps.base.application import BaseApplication
@@ -96,7 +96,7 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = DirectCurrent3DParams
+    _param_class = DC3DInversionOptions
     _select_multiple = True
     _add_groups = False
     _sensor = None
@@ -109,19 +109,19 @@ class InversionApp(PlotSelection2D):
 
     def __init__(self, ui_json=None, plot_result=True, **kwargs):
         if ui_json is not None and Path(ui_json.path).exists():
-            self.params = self._param_class(ui_json)
+            self.params = self._param_class.build(ui_json)
         else:
             app_initializer.update(kwargs)
 
             try:
-                self.params = self._param_class(**app_initializer)
+                self.params = self._param_class.build(**app_initializer)
 
             except AssociationValidationError:
                 for key, value in app_initializer.items():
                     if isinstance(value, uuid.UUID):
                         app_initializer[key] = None
 
-                self.params = self._param_class(**app_initializer)
+                self.params = self._param_class.build(**app_initializer)
 
             extras = {
                 key: value
@@ -777,22 +777,22 @@ class InversionApp(PlotSelection2D):
         """
         params = self.params.to_dict()
         if self.inversion_type.value == "direct current 3d" and not isinstance(
-            self.params, DirectCurrent3DParams
+            self.params, DC3DInversionOptions
         ):
-            self._param_class = DirectCurrent3DParams
+            self._param_class = DC3DInversionOptions
             params["inversion_type"] = "direct current 3d"
             params["out_group"] = "DCInversion"
             self.option_choices.options = list(self.inversion_options)[1:]
 
         elif self.inversion_type.value == "induced polarization 3d" and not isinstance(
-            self.params, InducedPolarization3DParams
+            self.params, IP3DInversionOptions
         ):
-            self._param_class = InducedPolarization3DParams
+            self._param_class = IP3DInversionOptions
             params["inversion_type"] = "induced polarization 3d"
             params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options)
 
-        self.params = self._param_class(
+        self.params = self._param_class.build(
             # validator_opts={"ignore_requirements": True}
         )
 
@@ -1178,7 +1178,7 @@ class InversionApp(PlotSelection2D):
 
     @staticmethod
     def run(params):
-        if not isinstance(params, (DirectCurrent3DParams, InducedPolarization3DParams)):
+        if not isinstance(params, (DC3DInversionOptions, IP3DInversionOptions)):
             raise TypeError(
                 "Parameter 'inversion_type' must be one of "
                 "'direct current 3d' or 'induced polarization 3d'"
@@ -1206,12 +1206,12 @@ class InversionApp(PlotSelection2D):
                     data = json.load(f)
 
                 if data["inversion_type"] == "direct current 3d":
-                    self._param_class = DirectCurrent3DParams
+                    self._param_class = DC3DInversionOptions
 
                 elif data["inversion_type"] == "induced polarization 3d":
-                    self._param_class = InducedPolarization3DParams
+                    self._param_class = IP3DInversionOptions
 
-                self.params = self._param_class(
+                self.params = self._param_class.build(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.params.geoh5.open(mode="r")

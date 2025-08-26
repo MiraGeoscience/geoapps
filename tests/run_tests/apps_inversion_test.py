@@ -22,11 +22,11 @@ from geoh5py.shared.utils import is_uuid
 from geoh5py.ui_json.input_file import InputFile
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
-from simpeg_drivers.electricals.direct_current.three_dimensions import (
-    DirectCurrent3DParams,
+from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
+    DC3DInversionOptions,
 )
-from simpeg_drivers.electricals.induced_polarization.three_dimensions import (
-    InducedPolarization3DParams,
+from simpeg_drivers.electricals.induced_polarization.three_dimensions.options import (
+    IP3DInversionOptions,
 )
 
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
@@ -211,7 +211,7 @@ def test_dc_inversion(tmp_path: Path):
     app.write_trigger(None)  # Check that this can run more than once
     ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
 
-    params_reload = DirectCurrent3DParams(ifile)
+    params_reload = DC3DInversionOptions.build(ifile)
 
     for param, value in changes.items():
         if param == "reference_model":
@@ -290,7 +290,7 @@ def test_ip_inversion(tmp_path: Path):
 
         app.write_trigger(None)
     ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
-    params_reload = InducedPolarization3DParams(ifile)
+    params_reload = IP3DInversionOptions.build(ifile)
 
     for param, value in changes.items():
         p_value = getattr(params_reload, param)
