@@ -123,13 +123,6 @@ class InversionApp(PlotSelection2D):
 
                 self.params = self._param_class.build(**app_initializer)
 
-            extras = {
-                key: value
-                for key, value in app_initializer.items()
-                if key not in self.params.param_names
-            }
-            self._app_initializer = extras
-
         self.data_object = self.objects
         self.defaults.update(self.params.to_dict())
 

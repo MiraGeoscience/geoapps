@@ -27,6 +27,7 @@ import numpy as np
 from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
+from geoapps_utils.base import Options
 from geoapps_utils.driver.params import BaseParams
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
@@ -317,8 +318,8 @@ class BaseDashApplication:
 
     @params.setter
     def params(self, params: BaseParams):
-        assert isinstance(params, BaseParams), (
-            f"Input parameters must be an instance of {BaseParams}"
+        assert isinstance(params, BaseParams | Options), (
+            f"Input parameters must be an instance of {BaseParams} or {Options}."
         )
 
         self._params = params

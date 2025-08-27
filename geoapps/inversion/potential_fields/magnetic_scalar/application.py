@@ -14,7 +14,9 @@ import uuid
 
 from dash import Input, Output, State
 from geoh5py.shared.exceptions import AssociationValidationError
-from simpeg_drivers.potential_fields.magnetic_scalar.params import MagneticScalarParams
+from simpeg_drivers.potential_fields.magnetic_scalar.options import (
+    MagneticInversionOptions,
+)
 
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.magnetic_scalar.constants import app_initializer
@@ -30,7 +32,7 @@ class MagneticScalarApp(InversionApp):
     Application for the inversion of potential field data using simpeg
     """
 
-    _param_class = MagneticScalarParams
+    _param_class = MagneticInversionOptions
     _inversion_type = "magnetic scalar"
     _inversion_params = magnetic_scalar_inversion_params
     _layout = magnetic_scalar_layout
@@ -38,26 +40,19 @@ class MagneticScalarApp(InversionApp):
 
     def __init__(self, ui_json=None, **kwargs):
         if ui_json is not None and pathlib.Path(ui_json.path).exists():
-            self.params = self._param_class(ui_json)
+            self.params = self._param_class.build(ui_json)
         else:
             app_initializer.update(kwargs)
 
             try:
-                self.params = self._param_class(**app_initializer)
+                self.params = self._param_class.build(app_initializer)
 
             except AssociationValidationError:
                 for key, value in app_initializer.items():
                     if isinstance(value, uuid.UUID):
                         app_initializer[key] = None
 
-                self.params = self._param_class(**app_initializer)
-
-            extras = {
-                key: value
-                for key, value in app_initializer.items()
-                if key not in self.params.param_names
-            }
-            self._app_initializer = extras
+                self.params = self._param_class.build(app_initializer)
 
         super().__init__()
 

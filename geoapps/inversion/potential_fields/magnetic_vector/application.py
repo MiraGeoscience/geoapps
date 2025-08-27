@@ -52,13 +52,6 @@ class MagneticVectorApp(InversionApp):
 
                 self.params = self._param_class.build(app_initializer)
 
-            extras = {
-                key: value
-                for key, value in app_initializer.items()
-                if key not in self.params.param_names
-            }
-            self._app_initializer = extras
-
         super().__init__()
 
         # Update from ui.json
