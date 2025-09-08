@@ -19,9 +19,12 @@ from time import time
 
 import numpy as np
 from geoh5py.data import Data
-from geoh5py.objects import CurrentElectrode, PotentialElectrode
+from geoh5py.objects import CurrentElectrode, Octree, PotentialElectrode
 from geoh5py.shared.exceptions import AssociationValidationError
-from geoh5py.shared.utils import fetch_active_workspace
+from geoh5py.shared.utils import (
+    fetch_active_workspace,
+    uuid2entity,
+)
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
@@ -37,10 +40,6 @@ from geoapps.base.selection import ObjectDataSelection, TopographyOptions
 from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer,
-)
-from geoapps.inversion.potential_fields.application import (
-    MeshOctreeOptions,
-    ModelOptions,
 )
 from geoapps.shared_utils.utils import DrapeOptions, WindowOptions
 from geoapps.utils import warn_module_not_found
@@ -96,6 +95,7 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using SimPEG
     """
 
+    _app_initializer = app_initializer
     _param_class = DC3DInversionOptions
     _select_multiple = True
     _add_groups = False
@@ -107,24 +107,41 @@ class InversionApp(PlotSelection2D):
     _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, plot_result=True, **kwargs):
+    def __init__(
+        self,
+        ui_json=None,
+        plot_result=True,
+        geoh5: Workspace | str | Path | None = None,
+        **kwargs,
+    ):
         if ui_json is not None and Path(ui_json.path).exists():
             self.params = self._param_class.build(ui_json)
         else:
-            app_initializer.update(kwargs)
+            initializer = self._app_initializer.copy()
+            initializer.update(kwargs)
+
+            if isinstance(geoh5, str | Path | None):
+                geoh5 = Workspace(geoh5)
+
+            initializer["geoh5"] = geoh5
+
+            initializer = {
+                key: uuid2entity(val, initializer["geoh5"])
+                for key, val in initializer.items()
+            }
 
             try:
-                self.params = self._param_class.build(**app_initializer)
+                self.params = self._param_class.build(initializer)
 
             except AssociationValidationError:
-                for key, value in app_initializer.items():
+                for key, value in initializer.items():
                     if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
+                        initializer[key] = None
 
-                self.params = self._param_class.build(**app_initializer)
+                self.params = self._param_class.build(initializer)
 
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict())
+        self.defaults.update(self.params.flatten())
 
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -140,7 +157,7 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict())
+        self.defaults.update(self.params.flatten())
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
@@ -768,31 +785,29 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict()
+        params = self.params.flatten()
         if self.inversion_type.value == "direct current 3d" and not isinstance(
             self.params, DC3DInversionOptions
         ):
             self._param_class = DC3DInversionOptions
-            params["inversion_type"] = "direct current 3d"
-            params["out_group"] = "DCInversion"
             self.option_choices.options = list(self.inversion_options)[1:]
+            params["potential_channel"] = params.pop("chargeability_channel")
+            params["potential_uncertainty"] = params.pop("chargeability_uncertainty")
 
         elif self.inversion_type.value == "induced polarization 3d" and not isinstance(
             self.params, IP3DInversionOptions
         ):
             self._param_class = IP3DInversionOptions
-            params["inversion_type"] = "induced polarization 3d"
-            params["out_group"] = "ChargeabilityInversion"
             self.option_choices.options = list(self.inversion_options)
-
-        self.params = self._param_class.build(
-            # validator_opts={"ignore_requirements": True}
-        )
+            params["chargeability_channel"] = params.pop("potential_channel")
+            params["chargeability_uncertainty"] = params.pop("potential_uncertainty")
 
         if self.inversion_type.value in ["direct current 3d"]:
             data_type_list = ["potential"]
         else:
             data_type_list = ["chargeability"]
+
+        self.params = self._param_class.build(params)
 
         if getattr(self.params, "_out_group", None) is not None:
             self.ga_group_name.value = self.params.out_group.name
@@ -1015,10 +1030,13 @@ class InversionApp(PlotSelection2D):
             return
 
         # Widgets values populate params dictionary
-        param_dict = {}
+        param_dict = self.params.flatten()
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                if (
+                    isinstance(getattr(self, key), Widget)
+                    and key.lstrip("_") in param_dict
+                ):
                     value = getattr(self, key).value
                     if key[0] == "_":
                         key = key[1:]
@@ -1034,7 +1052,7 @@ class InversionApp(PlotSelection2D):
             except AttributeError:
                 continue
 
-        # Create a new workapce and copy objects into it
+        # Create a new workspace and copy objects into it
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
@@ -1074,10 +1092,14 @@ class InversionApp(PlotSelection2D):
                     if not self.forward_only.value:
                         widget = getattr(self, f"{key}_uncertainty_channel")
                         if widget.value is not None:
-                            param_dict[f"{key}_uncertainty"] = str(widget.value)
-                            if new_workspace.get_entity(widget.value)[0] is None:
-                                self.workspace.get_entity(widget.value)[0].copy(
-                                    parent=new_obj, copy_children=False
+                            param_dict[f"{key}_uncertainty"] = new_workspace.get_entity(
+                                widget.value
+                            )[0]
+                            if param_dict[f"{key}_uncertainty"] is None:
+                                param_dict[f"{key}_uncertainty"] = (
+                                    self.workspace.get_entity(widget.value)[0].copy(
+                                        parent=new_obj, copy_children=False
+                                    )
                                 )
                         else:
                             widget = getattr(self, f"{key}_uncertainty_floor")
@@ -1107,7 +1129,7 @@ class InversionApp(PlotSelection2D):
                     value = attr.value
                     if isinstance(value, uuid.UUID):
                         value = new_workspace.get_entity(value)[0]
-                    if hasattr(self.params, key):
+                    if key.lstrip("_") in param_dict:
                         param_dict[key.lstrip("_")] = value
                 else:
                     sub_keys = []
@@ -1125,8 +1147,8 @@ class InversionApp(PlotSelection2D):
                             value = value.value
                         if isinstance(value, uuid.UUID):
                             value = new_workspace.get_entity(value)[0]
-                        if hasattr(self.params, sub_key):
-                            param_dict[sub_key.lstrip("_")] = value
+                        if sub_key in param_dict:
+                            param_dict[sub_key] = value
 
             # Create new params object and write
             param_dict["geoh5"] = new_workspace
@@ -1145,8 +1167,8 @@ class InversionApp(PlotSelection2D):
             drape_options = DrapeOptions(
                 topography_object=param_dict["topography_object"],
                 topography=param_dict["topography"],
-                z_from_topo=param_dict["z_from_topo"],
-                receivers_offset_z=param_dict["receivers_offset_z"],
+                z_from_topo=self.z_from_topo.value,
+                receivers_offset_z=self.receivers_offset_z.value,
                 receivers_radar_drape=receiver_drape,
             )
 
@@ -1160,10 +1182,10 @@ class InversionApp(PlotSelection2D):
             )
             param_dict.update(update_dict)
 
-            self._run_params = self.params.__class__(**param_dict)
-            self._run_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=self.export_directory.selected_path,
+            self._run_params = self.params.__class__.build(param_dict)
+            self._run_params.write_ui_json(
+                Path(self.export_directory.selected_path)
+                / temp_geoh5.replace(".geoh5", ".ui.json"),
             )
 
         self.write.button_style = ""
@@ -1209,7 +1231,7 @@ class InversionApp(PlotSelection2D):
                 )
                 self.params.geoh5.open(mode="r")
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict())
+                self.__populate__(**self.params.flatten())
                 self.refresh.value = True
 
             elif extension == ".geoh5":
@@ -1269,3 +1291,97 @@ class SensorOptions(ObjectDataSelection):
     @property
     def z_from_topo(self):
         return self._z_from_topo
+
+
+class MeshOctreeOptions(ObjectDataSelection):
+    """
+    Widget used for the creation of an octree meshes
+    """
+
+    _object_types = (Octree,)
+    params_keys = [
+        "mesh",
+    ]
+
+    def __init__(self, **kwargs):
+        self._mesh = self.objects
+        self._main = VBox([self.objects])
+
+        super().__init__(**kwargs)
+
+    @property
+    def main(self):
+        return self._main
+
+    @property
+    def mesh(self):
+        return self._mesh
+
+
+class ModelOptions(ObjectDataSelection):
+    """
+    Widgets for the selection of model options
+    """
+
+    def __init__(self, identifier: str | None = None, **kwargs):
+        self._units = "Units"
+        self._identifier = identifier
+        self._object_types = (Octree,)
+        self._options = widgets.RadioButtons(
+            options=["Model", "Constant", "None"],
+            value="Constant",
+            disabled=False,
+        )
+        self._options.observe(self.update_panel, names="value")
+        self.objects.description = "Object"
+
+        self.data.description = "Values"
+        self._constant = FloatText(description=self.units)
+        self._description = Label()
+
+        super().__init__(**kwargs)
+
+        self.objects.observe(self.objects_setter, names="value")
+        self.selection_widget = self.data
+        self._main = widgets.VBox(
+            [self._description, widgets.VBox([self._options, self._constant])]
+        )
+
+    def update_panel(self, _):
+        if self._options.value == "Model":
+            self._main.children[1].children = [self._options, self.selection_widget]
+            self._main.children[1].children[1].layout.visibility = "visible"
+        elif self._options.value == "Constant":
+            self._main.children[1].children = [self._options, self._constant]
+            self._main.children[1].children[1].layout.visibility = "visible"
+        else:
+            self._main.children[1].children[1].layout.visibility = "hidden"
+
+    def objects_setter(self, _):
+        if self.objects.value is not None:
+            self.options.value = "Model"
+
+    @property
+    def constant(self):
+        return self._constant
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def identifier(self):
+        return self._identifier
+
+    @property
+    def options(self):
+        return self._options
+
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, value):
+        self._units = value
+        self._constant.description = value

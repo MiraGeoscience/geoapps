@@ -10,11 +10,10 @@
 
 from __future__ import annotations
 
-import pathlib
-import uuid
-
-from geoh5py.shared.exceptions import AssociationValidationError
-from simpeg_drivers.potential_fields.gravity.options import GravityInversionOptions
+from simpeg_drivers.potential_fields.gravity.options import (
+    GravityForwardOptions,
+    GravityInversionOptions,
+)
 
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.gravity.constants import app_initializer
@@ -31,28 +30,15 @@ class GravityApp(InversionApp):
     """
 
     _param_class = GravityInversionOptions
+    _param_class_forward = GravityForwardOptions
     _inversion_type = "gravity"
     _inversion_params = gravity_inversion_params
     _layout = gravity_layout
+    _app_initializer = app_initializer
     _components = component_list
 
     def __init__(self, ui_json=None, **kwargs):
-        if ui_json is not None and pathlib.Path(ui_json.path).exists():
-            self.params = self._param_class.build(ui_json)
-        else:
-            app_initializer.update(kwargs)
-
-            try:
-                self.params = self._param_class.build(app_initializer)
-
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
-
-                self.params = self._param_class.build(app_initializer)
-
-        super().__init__()
+        super().__init__(ui_json=ui_json, **kwargs)
 
         self.app.callback(
             *self.default_trigger_args,

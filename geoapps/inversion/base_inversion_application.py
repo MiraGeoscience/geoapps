@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import uuid
 import warnings
 import webbrowser
@@ -22,13 +23,17 @@ import numpy as np
 import scipy
 from dash import Dash, Input, Output, State, callback_context, no_update
 from flask import Flask
+from geoh5py import Workspace
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
-from geoh5py.shared.utils import is_uuid
-from geoh5py.workspace import Workspace
+from geoh5py.shared.exceptions import AssociationValidationError
+from geoh5py.shared.utils import (
+    is_uuid,
+    uuid2entity,
+)
 from jupyter_server import serverapp
 from plotly import graph_objects as go
-from simpeg_drivers.options import BaseInversionOptions
+from simpeg_drivers.options import BaseForwardOptions, BaseInversionOptions
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
@@ -47,21 +52,38 @@ class InversionApp(BaseDashApplication):
     """
 
     _param_class = BaseInversionOptions
+    _param_class_forward = BaseForwardOptions
     _inversion_type = None
     _inversion_params = {}
     _run_params = None
     _layout = None
     _components = None
 
-    def __init__(self):
-        super().__init__()
-
-        if getattr(self.params, "_out_group", None) is not None:
-            self.params._ga_group = self.params.out_group.name
+    def __init__(self, ui_json=None, **kwargs):
+        if ui_json is not None and pathlib.Path(ui_json.path).exists():
+            self.params = self._param_class.build(ui_json)
         else:
-            self.params._ga_group = (
-                self.params.inversion_type.title().replace(" ", "") + "Inversion"
-            )
+            app_initializer = self._app_initializer.copy()
+            app_initializer.update(kwargs)
+
+            if not isinstance(app_initializer["geoh5"], Workspace):
+                app_initializer["geoh5"] = Workspace(app_initializer["geoh5"])
+
+            app_initializer = {
+                key: uuid2entity(val, app_initializer["geoh5"])
+                for key, val in app_initializer.items()
+            }
+            try:
+                self.params = self._param_class.build(app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class.build(app_initializer)
+
+        super().__init__()
 
         external_stylesheets = None
         server = Flask(__name__)
@@ -1569,7 +1591,6 @@ class InversionApp(BaseDashApplication):
 
         # Get dict of params from base dash application
         update_dict = {
-            "forward_only": forward_only,
             "alpha_s": alpha_s,
             "length_scale_x": length_scale_x,
             "length_scale_y": length_scale_y,
@@ -1589,7 +1610,7 @@ class InversionApp(BaseDashApplication):
             "n_cpu": n_cpu,
             "store_sensitivities": store_sensitivities,
             "tile_spatial": tile_spatial,
-            "ga_group": ga_group,
+            "out_group": ga_group,
             "monitoring_directory": monitoring_directory,
             "inducing_field_strength": inducing_field_strength,
             "inducing_field_inclination": inducing_field_inclination,
@@ -1609,7 +1630,7 @@ class InversionApp(BaseDashApplication):
             monitoring_directory = Path(self.workspace.h5file).resolve().parent
 
         # Create a new workspace and copy objects into it
-        temp_geoh5 = f"{ga_group}_{time():.0f}.geoh5"
+        temp_geoh5 = f"{self.params.name}_{time():.0f}.geoh5"
         ws, _ = BaseApplication.get_output_workspace(
             live_link=False, workpath=monitoring_directory, name=temp_geoh5
         )
@@ -1648,9 +1669,9 @@ class InversionApp(BaseDashApplication):
                 azimuth=0.0,
             )
 
-            if receivers_radar_drape is not None:
+            if receivers_radar_drape:
                 receivers_radar_drape = self.workspace.get_entity(
-                    uuid.UUID(receivers_radar_drape)
+                    uuid.UUID(receivers_radar_drape[0])
                 )[0]
 
             drape_options = DrapeOptions(
@@ -1675,10 +1696,13 @@ class InversionApp(BaseDashApplication):
             )
             param_dict.update(update_dict)
 
-            self._run_params = self.params.__class__(**param_dict)
-            self._run_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=monitoring_directory,
+            if forward_only:
+                self._run_params = self._param_class_forward.build(param_dict)
+            else:
+                self._run_params = self._param_class.build(param_dict)
+
+            self._run_params.write_ui_json(
+                monitoring_directory / temp_geoh5.replace(".geoh5", ".ui.json")
             )
 
         return ["\nSaved to " + str(Path(monitoring_directory).resolve() / temp_geoh5)]

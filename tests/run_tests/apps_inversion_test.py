@@ -52,27 +52,18 @@ def test_mag_inversion(tmp_path: Path):
     """Tests the dash application for mag-mvi"""
     temp_workspace = tmp_path / "mag_inversion.geoh5"
 
-    with Workspace(PROJECT) as ws:
-        with Workspace(temp_workspace) as new_geoh5:
+    with Workspace(PROJECT, mode="r") as ws:
+        with Workspace.create(temp_workspace) as new_geoh5:
             data_object = ws.get_entity(app_initializer["data_object"])[0]
             data_object.copy(parent=new_geoh5, copy_children=True)
-            tmi = ws.get_entity(app_initializer["tmi_channel"])[0]
+
             mesh = ws.get_entity(app_initializer["mesh"])[0]
             mesh.copy(parent=new_geoh5, copy_children=True)
 
             topography_object = ws.get_entity(app_initializer["topography_object"])[0]
-            topography = ws.get_entity(app_initializer["topography"])[0]
             topography_object.copy(parent=new_geoh5, copy_children=True)
 
-            app = MagneticVectorApp(
-                geoh5=new_geoh5,
-                output_path=str(tmp_path),
-                data_object=data_object,
-                tmi_channel=tmi,
-                topography=topography,
-                mesh=mesh,
-                topography_object=topography_object,
-            )
+            app = MagneticVectorApp(geoh5=new_geoh5)
 
             monitoring_directory = str(tmp_path)
             full_components = {
@@ -167,7 +158,7 @@ def test_mag_inversion(tmp_path: Path):
                 reference_declination_const=None,
             )
 
-    filename = next(tmp_path.glob("MagneticVectorInversion_*.json"))
+    filename = next(tmp_path.glob("Magnetic Vector Inversion_*.json"))
     ifile = InputFile.read_ui_json(filename)
     with ifile.data["geoh5"].open():
         data = ifile.data["data_object"]
@@ -179,8 +170,9 @@ def test_mag_inversion(tmp_path: Path):
 
 def test_dc_inversion(tmp_path: Path):
     """Tests the jupyter application for dc inversion"""
+    temp_geoh5 = tmp_path / f"{__name__}.geoh5"
     with Workspace(PROJECT_DCIP) as ws:
-        with Workspace(tmp_path / "invtest.geoh5") as new_geoh5:
+        with Workspace(temp_geoh5) as new_geoh5:
             new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
                 0
             ].copy(parent=new_geoh5)
@@ -190,16 +182,15 @@ def test_dc_inversion(tmp_path: Path):
             ws.get_entity(UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"))[0].copy(
                 parent=new_geoh5
             )
+
+    app = DCInversionApp(geoh5=temp_geoh5, plot_result=False)
     changes = {
         "topography_object": new_topo.uid,
-        "z_from_topo": False,
         "forward_only": False,
         "starting_model": 0.01,
         "reference_model": None,
     }
     side_effects = {"reference_model": changes["starting_model"], "alpha_s": 0}
-    app = DCInversionApp(geoh5=str(PROJECT_DCIP), plot_result=False)
-    app.geoh5 = str(tmp_path / "invtest.geoh5")
 
     for param, value in changes.items():
         if isinstance(getattr(app, param), Widget):
@@ -211,18 +202,18 @@ def test_dc_inversion(tmp_path: Path):
     app.write_trigger(None)  # Check that this can run more than once
     ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
 
-    params_reload = DC3DInversionOptions.build(ifile)
+    params_reload = DC3DInversionOptions.build(ifile).flatten()
 
     for param, value in changes.items():
         if param == "reference_model":
             continue
 
-        p_value = getattr(params_reload, param)
+        p_value = params_reload[param]
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert p_value == value, f"Parameter {param} not saved and loaded correctly."
 
     for param, value in side_effects.items():
-        p_value = getattr(params_reload, param)
+        p_value = params_reload[param]
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert p_value == value, (
             f"Side effect parameter {param} not saved and loaded correctly."
@@ -269,7 +260,6 @@ def test_ip_inversion(tmp_path: Path):
 
     changes = {
         "topography_object": new_topo.uid,
-        "z_from_topo": False,
         "forward_only": False,
         "mesh": UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"),
         "inversion_type": "induced polarization 3d",
@@ -290,10 +280,10 @@ def test_ip_inversion(tmp_path: Path):
 
         app.write_trigger(None)
     ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
-    params_reload = IP3DInversionOptions.build(ifile)
+    params_reload = IP3DInversionOptions.build(ifile).flatten()
 
     for param, value in changes.items():
-        p_value = getattr(params_reload, param)
+        p_value = params_reload[param]
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         if param == "chargeability_channel":
             assert p_value != value and is_uuid(p_value)
@@ -303,7 +293,7 @@ def test_ip_inversion(tmp_path: Path):
             )
 
     for param, value in side_effects.items():
-        p_value = getattr(params_reload, param)
+        p_value = params_reload[param]
         p_value = p_value.uid if isinstance(p_value, Entity) else p_value
         assert p_value == value, (
             f"Side effect parameter {param} not saved and loaded correctly."
