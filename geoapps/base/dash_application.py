@@ -31,7 +31,7 @@ from geoapps_utils.base import Options
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
-from geoh5py.shared.utils import fetch_active_workspace, is_uuid
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid, str2uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets  # pylint: disable=E0401
@@ -105,15 +105,6 @@ class BaseDashApplication:
                 _, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded, mode="r")
-                # Update self.params with new workspace, but keep unaffected params the same.
-                new_params = self.params.flatten()
-                for key, value in new_params.items():
-                    if isinstance(value, Entity):
-                        new_params[key] = None
-                new_params["geoh5"] = self.workspace
-                self.params = self._param_class.build(new_params)
-                if hasattr(self, "driver"):
-                    self.driver.params = self.params
                 ui_json_data = no_update
             elif trigger == "":
                 # Initialization of app from self.params.
@@ -192,9 +183,14 @@ class BaseDashApplication:
 
         :return output_dict: Dict of current params.
         """
+        param_dict = self.params.flatten()
         for key, value in update_dict.items():
-            setattr(self.params, key, value)
-        return self.params.flatten()
+            if key in param_dict:
+                if is_uuid(value):
+                    value = self.workspace.get_entity(str2uuid(value))[0]
+                param_dict[key] = value
+
+        return param_dict
 
     def update_remainder_from_ui_json(
         self,

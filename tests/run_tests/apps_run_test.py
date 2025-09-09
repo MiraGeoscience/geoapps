@@ -62,18 +62,18 @@ def test_block_model(tmp_path: Path):
         None, None, param_name="objects", trigger=""
     )
     param_list = [
-        "new_grid",
+        "export_as",
         "cell_size_x",
         "cell_size_y",
         "cell_size_z",
         "depth_core",
         "horizontal_padding",
         "bottom_padding",
-        "expansion_fact",
+        "expansion_factor",
         "monitoring_directory",
     ]
     (  # pylint: disable=W0632
-        new_grid,
+        new_name,
         cell_size_x,
         cell_size_y,
         cell_size_z,
@@ -86,15 +86,15 @@ def test_block_model(tmp_path: Path):
         ui_json_data, param_list, trigger="test"
     )
 
-    assert new_grid == block_model.params.new_grid
-    assert objects_uid == "{" + str(block_model.params.objects.uid) + "}"
-    assert cell_size_x == block_model.params.cell_size_x
-    assert cell_size_y == block_model.params.cell_size_y
-    assert cell_size_z == block_model.params.cell_size_z
-    assert depth_core == block_model.params.depth_core
-    assert horizontal_padding == block_model.params.horizontal_padding
-    assert bottom_padding == block_model.params.bottom_padding
-    assert expansion_fact == block_model.params.expansion_fact
+    assert new_name == block_model.params.output.export_as
+    assert objects_uid == "{" + str(block_model.params.source.objects.uid) + "}"
+    assert cell_size_x == block_model.params.creation.cell_size_x
+    assert cell_size_y == block_model.params.creation.cell_size_y
+    assert cell_size_z == block_model.params.creation.cell_size_z
+    assert depth_core == block_model.params.creation.depth_core
+    assert horizontal_padding == block_model.params.creation.horizontal_padding
+    assert bottom_padding == block_model.params.creation.bottom_padding
+    assert expansion_fact == block_model.params.creation.expansion_factor
 
     # Create a second workspace to test file uploads
     temp_workspace2 = tmp_path / "contour2.geoh5"
@@ -114,7 +114,7 @@ def test_block_model(tmp_path: Path):
     # Test export
     block_model.trigger_click(
         n_clicks=0,
-        new_grid=new_grid,
+        new_grid=new_name,
         objects=object_options[0]["value"],
         cell_size_x=cell_size_x,
         cell_size_y=cell_size_y,
@@ -130,7 +130,7 @@ def test_block_model(tmp_path: Path):
 
     filename = next(tmp_path.glob("BlockModel_*.geoh5"))
     with Workspace(filename) as workspace:
-        ent = workspace.get_entity("BlockModel")
+        ent = workspace.get_entity(new_name)
         assert (len(ent) == 1) and (ent[0] is not None)
         assert np.sum([isinstance(c, FilenameData) for c in ent[0].children]) == 1
 

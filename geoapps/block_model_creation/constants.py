@@ -28,7 +28,7 @@ defaults = {
     "horizontal_padding": None,
     "bottom_padding": None,
     "depth_core": None,
-    "expansion_fact": None,
+    "expansion_factor": None,
     "new_grid": None,
     "generate_sweep": False,
     "workspace_geoh5": None,
@@ -102,7 +102,7 @@ default_ui_json.update(
             "value": 0.0,
             "min": 0.0,
         },
-        "expansion_fact": {
+        "expansion_factor": {
             "main": True,
             "label": "Expansion factor",
             "value": 0.0,
@@ -125,7 +125,7 @@ app_initializer = {
     "cell_size_y": 50.0,
     "cell_size_z": 50.0,
     "depth_core": 500.0,
-    "expansion_fact": 1.05,
+    "expansion_factor": 1.05,
     "new_grid": "BlockModel",
     "horizontal_padding": 500.0,
     "bottom_padding": 500.0,
