@@ -51,7 +51,7 @@ GEOH5 = Workspace(PROJECT)
 
 
 def test_block_model(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -136,7 +136,7 @@ def test_block_model(tmp_path: Path):
 
 
 def test_calculator(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
@@ -149,7 +149,7 @@ def test_calculator(tmp_path: Path):
 
 
 def test_coordinate_transformation(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace.create(temp_workspace) as workspace:
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
@@ -167,7 +167,7 @@ def test_geoh5_as_contour_argument(tmp_path):
 
 
 def test_contour_values(tmp_path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         objects = GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
             0
@@ -201,7 +201,7 @@ def test_contour_values(tmp_path):
 
 
 def test_create_surface(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
@@ -223,7 +223,7 @@ def test_create_surface(tmp_path: Path):
 
 
 def test_clustering(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -430,7 +430,7 @@ def test_clustering(tmp_path: Path):
 
 
 def test_data_interpolation(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
@@ -528,7 +528,7 @@ def test_export():
 
 
 def test_iso_surface(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         objects = GEOH5.get_entity(uuid.UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"))[
             0
