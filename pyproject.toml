@@ -83,32 +83,29 @@ pyside2 = {version = ">=5.15.2, <5.16.dev", python = "<3.11"}  # also in peak-fi
 
 ## pip dependencies from Git repositories
 #----------------------------------------
-#geoh5py = {version = ">=0.10.0rc1, <0.11.0a.dev", source = "pypi", allow-prereleases = true}
-geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "develop"}
+geoh5py = {version = ">=0.12.0b5, <0.13.dev", source = "pypi", allow-prereleases = true}
+#geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "develop"}
 
-#curve-apps = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "develop"}
+grid-apps = {version = ">=0.1.0b1, <0.2.dev", source = "pypi", allow-prereleases = true}
+#grid-apps = {git = "https://github.com/MiraGeoscience/grid-apps.git", rev = "develop"}
+
+geoapps-utils = {version = ">=0.6.0b2, <0.7.dev", source = "pypi", allow-prereleases = true}
+#geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
+
+mira-simpeg = {version = ">=0.23.0.2b1, <0.23.1.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
+#mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "develop", extras = ["dask"]}
+
+curve-apps = {version = ">=0.3.0b4, <0.4.0a.dev", source = "pypi", allow-prereleases = true}
+#curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "develop"}
 
 #surface-apps = {version = ">=0.1.0rc1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
 surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "develop"}
 
-#octree-creation-app = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-octree-creation-app = {git = "https://github.com/MiraGeoscience/octree-creation-app.git", rev = "develop"}
-
-#peak-finder-app = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-peak-finder-app = {git = "https://github.com/MiraGeoscience/peak-finder-app.git", rev = "develop"}
-
-#geoapps-utils = {version = ">=0.4.0rc1, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
-geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
-
-#simpeg-drivers = {version = ">=0.2.0rc1, <0.3.0a.dev", source = "pypi", allow-prereleases = true}
-simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "develop"}
+simpeg-drivers = {version = ">=0.4.0b2, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
+#simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "develop"}
 
 simpeg-archive = {version = ">=0.11.0.1, <0.11.0.2", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
-
-#mira-simpeg = {version = ">=0.21.2.1rc1, <0.21.2.2a.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
-mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "develop", extras = ["dask"]}
 
 
 ## about pip dependencies
