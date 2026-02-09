@@ -29,7 +29,7 @@
     },
     "downsampling": {
         "group": "Data Selection",
-        "label": "Population Downsampling (%)",
+        "label": "Population downsampling (%)",
         "main": true,
         "min": 1,
         "max": 100,
@@ -409,7 +409,7 @@
     },
     "size_markers": {
         "group": "Size",
-        "label": "Marker Size",
+        "label": "Marker size",
         "main": true,
         "min": 1,
         "max": 100,

@@ -14,11 +14,11 @@ from pathlib import Path
 from warnings import warn
 
 from geoapps_utils.driver.params import BaseParams
+from geoapps_utils.param_sweeps.driver import SweepParams
+from geoapps_utils.param_sweeps.generate import generate
 from geoh5py import Workspace
 from geoh5py.objects import ObjectBase
 from geoh5py.ui_json import InputFile, monitored_directory_copy
-from param_sweeps.driver import SweepParams
-from param_sweeps.generate import generate
 from semver import Version
 
 from geoapps import __version__

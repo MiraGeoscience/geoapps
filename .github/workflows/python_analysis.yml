@@ -41,7 +41,7 @@ jobs:
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@main
     with:
       package-manager: 'conda'
-      python-versions: '["3.10"]'
+      python-versions: '["3.10", "3.11", "3.12"]'
       os: '["ubuntu-latest", "windows-latest"]'
       lfs: true
       cache-number: 1

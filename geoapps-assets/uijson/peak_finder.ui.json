@@ -48,7 +48,7 @@
         "dataType": "Referenced",
         "group": "Data",
         "main": true,
-        "label": "Line Field",
+        "label": "Line field",
         "parent": "objects",
         "value": ""
     },
@@ -98,31 +98,31 @@
     },
     "min_amplitude": {
         "group": "Detection Parameters",
-        "label": "Minimum Amplitude (%)",
+        "label": "Minimum amplitude (%)",
         "value": 1,
         "main": true
     },
     "min_value": {
         "group": "Detection Parameters",
-        "label": "Minimum Value",
+        "label": "Minimum value",
         "value": 0.0,
         "main": true
     },
     "min_width": {
         "group": "Detection Parameters",
-        "label": "Minimum Width (m)",
+        "label": "Minimum width (m)",
         "value": 100.0,
         "main": true
     },
     "max_migration": {
         "group": "Detection Parameters",
-        "label": "Maximum Peak Migration (m)",
+        "label": "Maximum peak migration (m)",
         "value": 25.0,
         "main": true
     },
     "min_channels": {
         "group": "Detection Parameters",
-        "label": "Minimum # Channels",
+        "label": "Minimum # channels",
         "value": 1,
         "main": true
     },
@@ -130,7 +130,7 @@
         "enabled": true,
         "main": true,
         "group": "Python run preferences",
-        "label": "Save As",
+        "label": "Save as",
         "value": "peak_finder"
     },
     "structural_markers": {

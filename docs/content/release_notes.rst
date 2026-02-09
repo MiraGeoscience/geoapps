@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+Release 0.12.0 (2025-04-14)
+---------------------------
+
+Major release
+
+- GEOPY-378: Allow balancing of octree mesh.
+- GEOPY-440: Fix reference angles in MVI
+- GEOPY-998: Migrate Peak Finder to **peak-finder-app** repository.
+- GEOPY-1072: Implement line refinement for octree mesh.
+- GEOPY-1224: Migrate inversion code to **simpeg-drivers** repository.
+- GEOPY-1484: Migrate edge detection to **curve-apps** repository.
+- General maintenance and bug fixes.
+
+
 Release 0.11.1 (2024-03-04)
 ---------------------------
 

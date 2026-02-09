@@ -66,7 +66,7 @@
     "fixed_contours": {
         "main": true,
         "group": "Contours",
-        "label": "Fixed Contours",
+        "label": "Fixed contours",
         "value": "0",
         "optional": true,
         "enabled": false

@@ -68,7 +68,7 @@
     "depth_core": {
         "enabled": true,
         "group": "1- Core",
-        "label": "Minimum Depth (m)",
+        "label": "Minimum depth (m)",
         "main": true,
         "value": 500.0
     },
