@@ -63,4 +63,4 @@ Third Party Software notices and/or additional terms and conditions are located 
 
 Copyright
 ^^^^^^^^^
-Copyright (c) 2024-2025 Mira Geoscience Ltd.
+Copyright (c) 2024-2026 Mira Geoscience Ltd.
