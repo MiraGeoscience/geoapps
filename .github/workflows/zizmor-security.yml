@@ -23,4 +23,4 @@ jobs:
     permissions:
       contents: read
       actions: read
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-zizmor-security.yml@main
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-zizmor-security.yml@v2
