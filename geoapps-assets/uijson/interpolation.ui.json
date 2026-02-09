@@ -64,7 +64,7 @@
         "enabled": false,
         "value": 0.0,
         "label": "Azimuth (d.dd)",
-        "tooltip": "Overrides default nearest neighbor method."
+        "tooltip": "Overrides default nearest neighbor method"
     },
     "skew_factor": {
         "main": false,
@@ -73,7 +73,7 @@
         "min": 1e-14,
         "value": 1.0,
         "label": "Factor",
-        "tooltip": "Overrides default nearest neighbor method."
+        "tooltip": "Overrides default nearest neighbor method"
     },
     "max_distance": {
         "main": false,
