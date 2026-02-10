@@ -27,7 +27,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-static_analysis.yml@main
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-static_analysis.yml@v2
     with:
       package-manager: 'conda'
       app-name: 'geoapps'
@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@main
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@v2
     with:
       package-manager: 'conda'
       python-versions: '["3.10", "3.11", "3.12"]'
