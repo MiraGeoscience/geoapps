@@ -15,7 +15,7 @@ import uuid
 from pathlib import Path
 from shutil import copyfile
 
-from geoapps_utils.driver.params import BaseParams
+from geoapps_utils.base import Options
 from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import (
@@ -28,7 +28,7 @@ from geoh5py.shared.utils import (
 from geoh5py.ui_json import InputFile
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from simpeg_drivers.params import InversionBaseParams
+from simpeg_drivers.options import BaseInversionOptions
 from traitlets import TraitError
 
 from geoapps.utils import warn_module_not_found
@@ -55,7 +55,7 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
-    _param_class: type[InversionBaseParams] | None = None
+    _param_class: type[BaseInversionOptions] | None = None
     _h5file = None
     _main = None
     _workspace = None
@@ -66,8 +66,8 @@ class BaseApplication:
     _trigger = None
     _figure = None
     _refresh = None
-    _params: BaseParams | None = None
-    _param_class: type[BaseParams] | None = None
+    _params: Options | None = None
+    _param_class: type[Options] | None = None
     _defaults: dict | None = None
     plot_result = False
 
@@ -385,16 +385,16 @@ class BaseApplication:
         return self._export_directory
 
     @property
-    def params(self) -> BaseParams:
+    def params(self) -> Options:
         """
         Application parameters
         """
         return self._params
 
     @params.setter
-    def params(self, params: BaseParams):
-        assert isinstance(params, BaseParams), (
-            f"Input parameters must be an instance of {BaseParams}"
+    def params(self, params: Options):
+        assert isinstance(params, Options), (
+            f"Input parameters must be an instance of {Options}"
         )
 
         self._params = params
@@ -525,7 +525,7 @@ class BaseApplication:
         return new_params
 
     @classmethod
-    def run(cls, params: BaseParams):
+    def run(cls, params: Options):
         """
         Static run method.
         """

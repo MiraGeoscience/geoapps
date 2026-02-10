@@ -9,12 +9,11 @@
 
 from __future__ import annotations
 
-import pathlib
-import uuid
-
 from dash import Input, Output, State
-from geoh5py.shared.exceptions import AssociationValidationError
-from simpeg_drivers.potential_fields.magnetic_vector.params import MagneticVectorParams
+from simpeg_drivers.potential_fields.magnetic_vector.options import (
+    MVIForwardOptions,
+    MVIInversionOptions,
+)
 
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.magnetic_vector.constants import app_initializer
@@ -30,36 +29,16 @@ class MagneticVectorApp(InversionApp):
     Application for the inversion of potential field data using simpeg
     """
 
-    _param_class = MagneticVectorParams
+    _app_initializer = app_initializer
+    _param_class = MVIInversionOptions
+    _param_class_forward = MVIForwardOptions
     _inversion_type = "magnetic vector"
     _inversion_params = magnetic_vector_inversion_params
     _layout = magnetic_vector_layout
     _components = component_list
 
     def __init__(self, ui_json=None, **kwargs):
-        if ui_json is not None and pathlib.Path(ui_json.path).exists():
-            self.params = self._param_class(ui_json)
-        else:
-            app_initializer.update(kwargs)
-
-            try:
-                self.params = self._param_class(**app_initializer)
-
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
-
-                self.params = self._param_class(**app_initializer)
-
-            extras = {
-                key: value
-                for key, value in app_initializer.items()
-                if key not in self.params.param_names
-            }
-            self._app_initializer = extras
-
-        super().__init__()
+        super().__init__(ui_json=ui_json, **kwargs)
 
         # Update from ui.json
         self.app.callback(

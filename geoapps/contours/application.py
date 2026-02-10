@@ -15,7 +15,7 @@ from time import time
 from uuid import UUID
 
 from curve_apps.contours.driver import ContoursDriver
-from curve_apps.contours.params import ContourParameters
+from curve_apps.contours.options import ContourParameters
 from geoh5py.objects import Grid2D
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace

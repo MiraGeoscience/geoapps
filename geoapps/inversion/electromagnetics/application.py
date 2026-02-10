@@ -1482,8 +1482,8 @@ class InversionApp(PlotSelection2D):
             )
             # Update input dict from pre-processing
             line_data = new_workspace.get_entity(self.lines.data.value)[0]
-            input_dict["data"]["name"] = str(update_dict["data_object"])
-            survey = new_workspace.get_entity(update_dict["data_object"])[0]
+            input_dict["data"]["name"] = update_dict["data_object"].name
+            survey = new_workspace.get_entity(update_dict["data_object"].uid)[0]
             new_line_uid = survey.get_entity(line_data.name)[0].uid
             input_dict["lines"] = {
                 str(new_line_uid): input_dict["lines"][str(line_data.uid)]

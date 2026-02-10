@@ -283,8 +283,8 @@ def get_data_dict(workspace: Workspace, param_dict: dict) -> (list[str], dict):
     components = []
     data_dict = {}
     for key, value in param_dict.items():
-        if key.endswith("_channel_bool") and value:
-            comp = key.replace("_channel_bool", "")
+        if key.endswith("_channel") and value:
+            comp = key.replace("_channel", "")
             components.append(comp)
 
             # Add data to data dict
@@ -384,13 +384,13 @@ def preprocess_data(
 
     # Add processed data to data object
     update_dict = {}
-    update_dict["data_object"] = new_data_object.uid
+    update_dict["data_object"] = new_data_object
     for comp in components:
         for key in [comp + "_channel", comp + "_uncertainty"]:
             if key not in data_dict.keys():
                 continue
             data = data_dict[key]
             if key in data_dict.keys():
-                update_dict[key] = new_data_object.get_entity(data["name"])[0].uid
+                update_dict[key] = new_data_object.get_entity(data["name"])[0]
 
     return update_dict

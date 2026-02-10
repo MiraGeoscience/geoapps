@@ -27,11 +27,11 @@ import numpy as np
 from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
-from geoapps_utils.driver.params import BaseParams
+from geoapps_utils.base import Options
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
-from geoh5py.shared.utils import fetch_active_workspace, is_uuid
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid, str2uuid
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
 from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets  # pylint: disable=E0401
@@ -45,7 +45,7 @@ class BaseDashApplication:
     """
 
     _params = None
-    _param_class = BaseParams
+    _param_class = Options
     _driver_class = None
     _workspace = None
     _app_initializer: dict | None = None
@@ -89,8 +89,9 @@ class BaseDashApplication:
                 _, content_string = contents.split(",")
                 decoded = base64.b64decode(content_string)
                 ui_json = json.loads(decoded)
-                self.workspace = Workspace(ui_json["geoh5"], mode="r")
-                self.params = self._param_class(**{"geoh5": self.workspace})
+
+                self.params = self._param_class.build(ui_json)
+                self.workspace = self.params.geoh5
                 if hasattr(self, "driver"):
                     self.driver.params = self.params
                 # Create ifile from ui.json
@@ -104,15 +105,6 @@ class BaseDashApplication:
                 _, content_string = contents.split(",")
                 decoded = io.BytesIO(base64.b64decode(content_string))
                 self.workspace = Workspace(decoded, mode="r")
-                # Update self.params with new workspace, but keep unaffected params the same.
-                new_params = self.params.to_dict()
-                for key, value in new_params.items():
-                    if isinstance(value, Entity):
-                        new_params[key] = None
-                new_params["geoh5"] = self.workspace
-                self.params = self._param_class(**new_params)
-                if hasattr(self, "driver"):
-                    self.driver.params = self.params
                 ui_json_data = no_update
             elif trigger == "":
                 # Initialization of app from self.params.
@@ -120,7 +112,7 @@ class BaseDashApplication:
                     ui_json=self.params.input_file.ui_json,
                     validate=False,
                 )
-                ifile.update_ui_values(self.params.to_dict())
+                ifile.update_ui_values(self.params.flatten())
                 ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
 
                 if self._app_initializer is not None:
@@ -191,35 +183,14 @@ class BaseDashApplication:
 
         :return output_dict: Dict of current params.
         """
-        output_dict = {}
-        # Get validations to know expected type for keys in self.params.
-        validations = self.params.validations
+        param_dict = self.params.flatten()
+        for key, value in update_dict.items():
+            if key in param_dict:
+                if is_uuid(value):
+                    value = self.workspace.get_entity(str2uuid(value))[0]
+                param_dict[key] = value
 
-        # Loop through self.params and update self.params with locals_dict.
-        for key in self.params.to_dict():
-            if key in update_dict:
-                if (
-                    bool in validations[key]["types"] and type(update_dict[key]) == list  # noqa: E721
-                ):
-                    # Convert from dash component checklist to bool
-                    if not update_dict[key]:
-                        output_dict[key] = False
-                    else:
-                        output_dict[key] = True
-                elif (
-                    float in validations[key]["types"]
-                    and int not in validations[key]["types"]
-                    and type(update_dict[key]) == int  # noqa: E721
-                ):
-                    # Checking for values that Dash has given as int when they should be floats.
-                    output_dict[key] = float(update_dict[key])
-                elif is_uuid(update_dict[key]):
-                    output_dict[key] = self.workspace.get_entity(
-                        uuid.UUID(update_dict[key])
-                    )[0]
-                else:
-                    output_dict[key] = update_dict[key]
-        return output_dict
+        return param_dict
 
     def update_remainder_from_ui_json(
         self,
@@ -309,16 +280,16 @@ class BaseDashApplication:
             self.app.run_server(host="127.0.0.1", port=port, debug=False)
 
     @property
-    def params(self) -> BaseParams:
+    def params(self) -> Options:
         """
         Application parameters
         """
         return self._params
 
     @params.setter
-    def params(self, params: BaseParams):
-        assert isinstance(params, BaseParams), (
-            f"Input parameters must be an instance of {BaseParams}"
+    def params(self, params: Options):
+        assert isinstance(params, Options | Options), (
+            f"Input parameters must be an instance of {Options} or {Options}."
         )
 
         self._params = params
@@ -353,12 +324,12 @@ class ObjectSelection:
         app_name: str,
         app_initializer: dict,
         app_class: BaseDashApplication,
-        param_class: BaseParams,
+        param_class: Options,
         **kwargs,
     ):
         self._app_name = None
         self._app_class = BaseDashApplication
-        self._param_class = BaseParams
+        self._param_class = Options
         self._workspace = None
 
         self.app_name = app_name
@@ -511,7 +482,7 @@ class ObjectSelection:
         app_class: BaseDashApplication,
         ui_json: InputFile = None,
         ui_json_data: dict = None,
-        params: BaseParams = None,
+        params: Options = None,
     ):
         """
         Launch dash app server using given port.
@@ -657,7 +628,7 @@ class ObjectSelection:
         self._app_class = val
 
     @property
-    def param_class(self) -> type[BaseParams]:
+    def param_class(self) -> type[Options]:
         """
         The param class associated with the launched app.
         """
@@ -665,9 +636,9 @@ class ObjectSelection:
 
     @param_class.setter
     def param_class(self, val):
-        if not issubclass(val, BaseParams):
+        if not issubclass(val, Options):
             raise TypeError(
-                "Value for attribute `param_class` should be a subclass of :obj:`simpeg_drivers.params.BaseParams`"
+                "Value for attribute `param_class` should be a subclass of :obj:`simpeg_drivers.options.Options`"
             )
         self._param_class = val
 

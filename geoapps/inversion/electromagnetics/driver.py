@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import json
 import multiprocessing
-import sys
 import uuid
 
 import numpy as np
@@ -1091,5 +1090,6 @@ def append_ghost(ind, xyz, z_loc, prisms, layers, column_count, cell_count, ghos
 
 
 if __name__ == "__main__":
-    input_file = sys.argv[1]
+    # input_file = sys.argv[1]
+    input_file = r"C:\Users\dominiquef\Desktop\Tests\Temp\EM1DInversion_1756331920.json"
     inversion(input_file)

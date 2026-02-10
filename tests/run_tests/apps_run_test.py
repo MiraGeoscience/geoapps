@@ -51,7 +51,7 @@ GEOH5 = Workspace(PROJECT)
 
 
 def test_block_model(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -62,18 +62,18 @@ def test_block_model(tmp_path: Path):
         None, None, param_name="objects", trigger=""
     )
     param_list = [
-        "new_grid",
+        "export_as",
         "cell_size_x",
         "cell_size_y",
         "cell_size_z",
         "depth_core",
         "horizontal_padding",
         "bottom_padding",
-        "expansion_fact",
+        "expansion_factor",
         "monitoring_directory",
     ]
     (  # pylint: disable=W0632
-        new_grid,
+        new_name,
         cell_size_x,
         cell_size_y,
         cell_size_z,
@@ -86,15 +86,15 @@ def test_block_model(tmp_path: Path):
         ui_json_data, param_list, trigger="test"
     )
 
-    assert new_grid == block_model.params.new_grid
-    assert objects_uid == "{" + str(block_model.params.objects.uid) + "}"
-    assert cell_size_x == block_model.params.cell_size_x
-    assert cell_size_y == block_model.params.cell_size_y
-    assert cell_size_z == block_model.params.cell_size_z
-    assert depth_core == block_model.params.depth_core
-    assert horizontal_padding == block_model.params.horizontal_padding
-    assert bottom_padding == block_model.params.bottom_padding
-    assert expansion_fact == block_model.params.expansion_fact
+    assert new_name == block_model.params.output.export_as
+    assert objects_uid == "{" + str(block_model.params.source.objects.uid) + "}"
+    assert cell_size_x == block_model.params.creation.cell_size_x
+    assert cell_size_y == block_model.params.creation.cell_size_y
+    assert cell_size_z == block_model.params.creation.cell_size_z
+    assert depth_core == block_model.params.creation.depth_core
+    assert horizontal_padding == block_model.params.creation.horizontal_padding
+    assert bottom_padding == block_model.params.creation.bottom_padding
+    assert expansion_fact == block_model.params.creation.expansion_factor
 
     # Create a second workspace to test file uploads
     temp_workspace2 = tmp_path / "contour2.geoh5"
@@ -114,7 +114,7 @@ def test_block_model(tmp_path: Path):
     # Test export
     block_model.trigger_click(
         n_clicks=0,
-        new_grid=new_grid,
+        new_grid=new_name,
         objects=object_options[0]["value"],
         cell_size_x=cell_size_x,
         cell_size_y=cell_size_y,
@@ -130,13 +130,13 @@ def test_block_model(tmp_path: Path):
 
     filename = next(tmp_path.glob("BlockModel_*.geoh5"))
     with Workspace(filename) as workspace:
-        ent = workspace.get_entity("BlockModel")
+        ent = workspace.get_entity(new_name)
         assert (len(ent) == 1) and (ent[0] is not None)
         assert np.sum([isinstance(c, FilenameData) for c in ent[0].children]) == 1
 
 
 def test_calculator(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
@@ -149,7 +149,7 @@ def test_calculator(tmp_path: Path):
 
 
 def test_coordinate_transformation(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace.create(temp_workspace) as workspace:
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
@@ -167,7 +167,7 @@ def test_geoh5_as_contour_argument(tmp_path):
 
 
 def test_contour_values(tmp_path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         objects = GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
             0
@@ -201,7 +201,7 @@ def test_contour_values(tmp_path):
 
 
 def test_create_surface(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
@@ -223,7 +223,7 @@ def test_create_surface(tmp_path: Path):
 
 
 def test_clustering(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -430,7 +430,7 @@ def test_clustering(tmp_path: Path):
 
 
 def test_data_interpolation(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
@@ -528,7 +528,7 @@ def test_export():
 
 
 def test_iso_surface(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         objects = GEOH5.get_entity(uuid.UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"))[
             0
