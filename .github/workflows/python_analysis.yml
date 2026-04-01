@@ -38,7 +38,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@v2
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@v3
     with:
       package-manager: 'conda'
       python-versions: '["3.10", "3.11", "3.12"]'
