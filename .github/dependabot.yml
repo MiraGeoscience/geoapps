@@ -14,7 +14,7 @@ updates:
       github-actions:
         patterns:
           - actions/*
-      mirageo-ci-actions:
+      mirageo-ci-tools:
         patterns:
           - MiraGeoscience/CI-tools/.github/actions/*
           - MiraGeoscience/CI-tools/.github/workflows/*
