@@ -12,12 +12,12 @@ ci:
 
 repos:
 -   repo: https://github.com/hadialqattan/pycln
-    rev: v2.5.0
+    rev: v2.6.0
     hooks:
     -   id: pycln
         args: [--config=pyproject.toml]
 -   repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.9
+    rev: v0.15.9
     hooks:
     -   id: ruff
         args:
@@ -61,13 +61,13 @@ repos:
         types: [python]
         exclude: ^(devtools|docs)/
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
     -   id: codespell
         exclude: (-lock\.ya?ml|\benvironments/.*\.ya?ml|\.ipynb|^THIRD_PARTY_SOFTWARE\.rst)$
         entry: codespell -I .codespellignore
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
     -   id: trailing-whitespace
         exclude: \.mdj$
@@ -96,7 +96,7 @@ repos:
         exclude_types: [jupyter]
         exclude: ^docs/.*/images/
 -   repo: https://github.com/rstcheck/rstcheck
-    rev: v6.2.4
+    rev: v6.2.5
     hooks:
     -   id: rstcheck
         exclude: ^THIRD_PARTY_SOFTWARE.rst$
