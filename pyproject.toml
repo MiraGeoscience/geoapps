@@ -53,7 +53,10 @@ start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["
 dask = "~2025.3.0"  # also in simpeg[dask]
 discretize = "~0.12.0"  # also in simpeg, grid-apps
 distributed = "~2025.3.0"  # for dask[distributed]
+ipywidgets = "~8.1.8"
+ipyfilechooser = "~0.6.0"
 matplotlib = "~3.10.4"  # also in geoapps-utils
+notebook = "~7.5.7"
 numpy = "~2.4.2"
 openpyxl = "^3.1.2"
 pandas = "^2.2.1"

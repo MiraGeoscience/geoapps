@@ -19,31 +19,149 @@ import numpy as np
 from geoh5py.data import ReferencedData
 from geoh5py.groups import ContainerGroup
 from geoh5py.objects import Curve, DrapeModel, Grid2D
+from geoh5py.objects.surveys.electromagnetics.airborne_fem import (
+    AirborneFEMReceivers,
+    AirborneFEMTransmitters,
+)
+from geoh5py.objects.surveys.electromagnetics.airborne_tem import (
+    AirborneTEMReceivers,
+    AirborneTEMTransmitters,
+)
+from geoh5py.objects.surveys.electromagnetics.base import AirborneEMSurvey
 from geoh5py.workspace import Workspace
 from pymatsolver import PardisoSolver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.sparse import csr_matrix
 from scipy.spatial import cKDTree
-from simpeg_archive import (
-    DataMisfit,
-    Directives,
-    Inversion,
-    InvProblem,
-    Maps,
-    Optimization,
+from simpeg_drivers.electromagnetics.frequency_domain_1d.options import (
+    FDEM1DInversionOptions,
 )
-from simpeg_archive.simpegEM1D import (
-    GlobalEM1DProblemFD,
-    GlobalEM1DProblemTD,
-    GlobalEM1DSurveyFD,
-    GlobalEM1DSurveyTD,
-    LateralConstraint,
-    get_2d_mesh,
+from simpeg_drivers.electromagnetics.time_domain_1d.options import (
+    TDEM1DInversionOptions,
 )
-from simpeg_archive.utils import Counter, mkvc
 
 from geoapps.shared_utils.utils import filter_xy, rotate_xyz
 from geoapps.utils import geophysical_systems
+
+
+def translate_options(input_param: dict):
+    """
+    Translate options from the jupyter notebook to simpeg-drivers inversion options
+    """
+    new_dict = {}
+    if "n_cpu" in input_param:
+        new_dict["n_workers"] = int(input_param["n_cpu"])
+
+    new_dict["lower_bound"] = input_param["lower_bound"][0]
+    new_dict["upper_bound"] = input_param["upper_bound"][0]
+    new_dict["geoh5"] = input_param["workspace"]
+
+    hz_min, expansion, n_cells = input_param["mesh 1D"]
+
+    new_dict["v_cell_size"] = hz_min
+    new_dict["depth_core"] = hz_min
+    new_dict["expansion_factor"] = expansion
+    new_dict["vertical_padding"] = (hz_min * expansion ** np.arange(n_cells)).sum()
+
+    if "model_norms" in input_param:
+        new_dict["s_norms"] = input_param["model_norms"][0]
+        new_dict["x_norms"] = input_param["model_norms"][1]
+        new_dict["z_norms"] = input_param["model_norms"][2]
+
+    if "initial_beta_ratio" in input_param:
+        new_dict["initial_beta_ratio"] = input_param["initial_beta_ratio"]
+
+    if "initial_beta" in input_param:
+        new_dict["initial_beta"] = input_param["initial_beta"]
+
+    if "alphas" in input_param:
+        new_dict["alpha_s"] = input_param["alphas"][0]
+        new_dict["length_scale_x"] = input_param["alphas"][1]
+        new_dict["length_scale_z"] = input_param["alphas"][2]
+
+    if "max_iterations" in input_param:
+        new_dict["max_global_iterations"] = input_param["max_iterations"]
+
+    if "forward_only" in input_param:
+        new_dict["max_global_iterations"] = 0
+
+    if "max_irls_iterations" in input_param:
+        new_dict["max_irls_iterations"] = input_param["max_irls_iterations"]
+
+    if "max_cg_iterations" in input_param:
+        new_dict["max_cg_iterations"] = input_param["max_cg_iterations"]
+
+    if "tol_cg" in input_param:
+        new_dict["tol_cg"] = input_param["tol_cg"]
+
+    return new_dict
+
+
+def unit_direction_from_cells(entity: Curve) -> np.ndarray:
+    """
+    Compute the unit direction vector for each vertex of a Curve object based on its cells and vertices.
+
+    :param entity: Curve object
+
+    return: Array of mean unit-direction at every vertex.
+    """
+    deltas = (
+        entity.vertices[entity.cells[:, 1], :2]
+        - entity.vertices[entity.cells[:, 0], :2]
+    )
+    deltas /= np.linalg.norm(deltas, axis=1)[:, np.newaxis]
+
+    delta_vertices = np.full((entity.vertices.shape[0], 2), np.nan)
+    delta_vertices[entity.cells[:, 0], 0] = deltas
+    delta_vertices[entity.cells[:, 1], 1] = deltas
+    delta_vertices = np.nanmean(delta_vertices, axis=1)
+
+    return delta_vertices
+
+
+def create_survey_from_parameters(entity: Curve, em_specs: dict):
+    """
+    Generate an AirborneEMSurvey object from the parameters provided in the input file.
+    """
+    if not isinstance(entity, Curve):
+        raise TypeError("Input object must be an AirborneEMSurvey or Curve object.")
+
+    deltas = unit_direction_from_cells(entity)
+    vertices = entity.vertices + deltas * np.c_[em_specs["bird_offset"]]
+    channels = np.unique(em_specs["channels"].values())
+
+    if em_specs["type"] == "frequency":
+        receivers = AirborneFEMReceivers(
+            vertices=vertices, cells=entity.cells, channels=channels
+        )
+        tx_verts_blocks = []
+        tx_cells_blocks = []
+        count = 0
+        for ii in range(len(channels)):
+            tx_verts_blocks.append(
+                entity.vertices + deltas * np.c_[em_specs["tx_offsets"][ii]]
+            )
+            tx_cells_blocks.append(entity.cells + count)
+            count += entity.vertices.shape[0]
+
+        transmitters = AirborneFEMTransmitters(
+            vertices=np.vstack(tx_verts_blocks), cells=np.vstack(tx_cells_blocks)
+        )
+    else:
+        receivers = AirborneTEMReceivers(
+            vertices=vertices,
+            cells=entity.cells,
+            channels=channels,
+            waveform=em_specs["waveform"],
+        )
+        transmitters = AirborneTEMTransmitters(
+            vertices=entity.vertices + deltas * np.c_[em_specs["tx_offsets"]],
+            cells=entity.cells,
+        )
+
+    receivers.complement = transmitters
+
+    return receivers
 
 
 def inversion(input_file):
@@ -51,82 +169,24 @@ def inversion(input_file):
     with open(input_file, encoding="utf8") as f:
         input_param = json.load(f)
 
+    options = translate_options(input_param)
+
+    with Workspace(options["geoh5"]) as workspace:
+        entity = workspace.get_entity(uuid.UUID(input_param["data"]["name"]))[0]
+
+        if not isinstance(entity, AirborneEMSurvey):
+            entity = create_survey_from_parameters(
+                entity, geophysical_systems.parameters()[input_param["system"]]
+            )
+
     em_specs = geophysical_systems.parameters()[input_param["system"]]
 
-    if "n_cpu" in input_param:
-        n_cpu = int(input_param["n_cpu"])
-    else:
-        n_cpu = int(multiprocessing.cpu_count() / 2)
-
-    lower_bound = input_param["lower_bound"][0]
-    upper_bound = input_param["upper_bound"][0]
-    workspace = Workspace(input_param["workspace"])
+    # workspace = Workspace(input_param["workspace"])
 
     selection = input_param["lines"]
-    hz_min, expansion, n_cells = input_param["mesh 1D"]
+    # hz_min, expansion, n_cells = input_param["mesh 1D"]
     ignore_values = input_param["ignore_values"]
     resolution = float(input_param["resolution"])
-
-    if "initial_beta_ratio" in list(input_param):
-        initial_beta_ratio = input_param["initial_beta_ratio"]
-    else:
-        initial_beta_ratio = 1e2
-
-    if "initial_beta" in list(input_param):
-        initial_beta = input_param["initial_beta"]
-    else:
-        initial_beta = None
-
-    if "model_norms" in list(input_param):
-        model_norms = input_param["model_norms"]
-    else:
-        model_norms = [2, 2, 2, 2]
-
-    model_norms = np.c_[model_norms].T
-
-    if "alphas" in list(input_param):
-        alphas = input_param["alphas"]
-        if len(alphas) == 4:
-            alphas = alphas * 3
-        else:
-            assert len(alphas) == 12, "Alphas require list of 4 or 12 values"
-    else:
-        alphas = [
-            1,
-            1,
-            1,
-        ]
-
-    if "max_iterations" in list(input_param):
-        max_iterations = input_param["max_iterations"]
-        assert max_iterations >= 0, "Max IRLS iterations must be >= 0"
-    else:
-        if np.all(np.r_[model_norms] == 2):
-            # Cartesian or not sparse
-            max_iterations = 10
-        else:
-            # Spherical or sparse
-            max_iterations = 40
-
-    if "forward_only" in input_param:
-        max_iterations = 0
-
-    if "max_cg_iterations" in list(input_param):
-        max_cg_iterations = input_param["max_cg_iterations"]
-    else:
-        max_cg_iterations = 30
-
-    if "tol_cg" in list(input_param):
-        tol_cg = input_param["tol_cg"]
-    else:
-        tol_cg = 1e-4
-
-    if "max_global_iterations" in list(input_param):
-        max_global_iterations = input_param["max_global_iterations"]
-        assert max_global_iterations >= 0, "Max IRLS iterations must be >= 0"
-    else:
-        # Spherical or sparse
-        max_global_iterations = 100
 
     if "window" in input_param:
         window = input_param["window"]
@@ -135,134 +195,106 @@ def inversion(input_file):
     else:
         window = None
 
-    if "max_irls_iterations" in list(input_param):
-        max_irls_iterations = input_param["max_irls_iterations"]
-        assert max_irls_iterations >= 0, "Max IRLS iterations must be >= 0"
-    else:
-        if np.all(model_norms == 2):
-            # Cartesian or not sparse
-            max_irls_iterations = 1
-        else:
-            # Spherical or sparse
-            max_irls_iterations = 10
-
-    if workspace.get_entity(uuid.UUID(input_param["data"]["name"])):
-        entity = workspace.get_entity(uuid.UUID(input_param["data"]["name"]))[0]
-    else:
-        assert False, (
-            f"Entity {input_param['data']['name']} could not be found in "
-            f"Workspace {workspace.h5file}"
-        )
-
     # Find out which frequency has at least one component selected
+    # data = []
+    # uncertainties = []
+    # channels = {}
+    # channel_values = []
+    # offsets = {}
+    # if input_param["system"] == "Airborne TEM Survey":
+    #     conversion = {
+    #         "Seconds (s)": 1.0,
+    #         "Milliseconds (ms)": 1e-3,
+    #         "Microseconds (us)": 1e-6,
+    #     }
+    #
+    #     em_specs["channels"] = np.r_[entity.channels] * conversion[entity.unit]
+    #     waveform = entity.waveform
+    #     waveform[0, 1] = 1e-8
+    #     waveform[:, 0] -= entity.timing_mark
+    #     waveform[:, 0] *= conversion[entity.unit]
+    #     em_specs["waveform"] = waveform
+    #     data_group = [
+    #         prop_group
+    #         for prop_group in entity.property_groups
+    #         if prop_group.uid == uuid.UUID(input_param["data"]["channels"])
+    #     ][0]
+    #     uncert_group = [
+    #         prop_group
+    #         for prop_group in entity.property_groups
+    #         if prop_group.uid == uuid.UUID(input_param["uncertainty_channel"])
+    #     ][0]
+    #     static_offset = np.r_[
+    #         np.mean(
+    #             np.linalg.norm(
+    #                 entity.transmitters.vertices[:, :2] - entity.vertices[:, :2], axis=1
+    #             )
+    #         ),
+    #         0,
+    #         np.mean(entity.transmitters.vertices[:, 2] - entity.vertices[:, 2]),
+    #     ]
+    #     em_specs["tx_offsets"] = [static_offset]
+    #     em_specs["tx_specs"] = {
+    #         "a": float(entity.loop_radius) if entity.loop_radius is not None else 1.0,
+    #         "I": 1.0,
+    #     }
+    #
+    #     if "Normalization" in entity.metadata["EM Dataset"]:
+    #         em_specs["normalization"] = np.prod(
+    #             entity.metadata["EM Dataset"]["Normalization"]
+    #         )
+    #     else:
+    #         em_specs["normalization"] = 1
+    #
+    #     if np.linalg.norm(static_offset) < 1e-1:
+    #         em_specs["tx_specs"]["type"] = "CircularLoop"
+    #         em_specs["normalization"] *= np.pi * em_specs["tx_specs"]["a"] ** 2.0
+    #     else:
+    #         em_specs["tx_specs"]["type"] = "VMD"
+    #
+    #     for dat_uid, unc_uid in zip(
+    #         data_group.properties, uncert_group.properties, strict=True
+    #     ):
+    #         d_entity = workspace.get_entity(dat_uid)[0]
+    #         u_entity = workspace.get_entity(unc_uid)[0]
+    #         channels[d_entity.name] = True
+    #         data.append(d_entity.values)
+    #         uncertainties.append(u_entity.values)
+    #         offsets[d_entity.name.lower()] = static_offset
+    #
+    #     channel_values = em_specs["channels"]
+    # else:
+    for ind, (key, value) in enumerate(em_specs["channels"].items()):
+        if key in input_param["data"]["channels"]:
+            channels[key] = True
+            parameters = input_param["data"]["channels"][key]
+            uid = uuid.UUID(parameters["name"])
 
-    if em_specs["type"] == "frequency":
-        frequencies = []
-        for ind, key in enumerate(em_specs["channels"]):
-            if key in input_param["data"]["channels"]:
-                frequencies.append(em_specs["channels"][key])
-
-        frequencies = np.unique(np.hstack(frequencies))
-
-    data = []
-    uncertainties = []
-    channels = {}
-    channel_values = []
-    offsets = {}
-    if input_param["system"] == "Airborne TEM Survey":
-        conversion = {
-            "Seconds (s)": 1.0,
-            "Milliseconds (ms)": 1e-3,
-            "Microseconds (us)": 1e-6,
-        }
-
-        em_specs["channels"] = np.r_[entity.channels] * conversion[entity.unit]
-        waveform = entity.waveform
-        waveform[0, 1] = 1e-8
-        waveform[:, 0] -= entity.timing_mark
-        waveform[:, 0] *= conversion[entity.unit]
-        em_specs["waveform"] = waveform
-        data_group = [
-            prop_group
-            for prop_group in entity.property_groups
-            if prop_group.uid == uuid.UUID(input_param["data"]["channels"])
-        ][0]
-        uncert_group = [
-            prop_group
-            for prop_group in entity.property_groups
-            if prop_group.uid == uuid.UUID(input_param["uncertainty_channel"])
-        ][0]
-        static_offset = np.r_[
-            np.mean(
-                np.linalg.norm(
-                    entity.transmitters.vertices[:, :2] - entity.vertices[:, :2], axis=1
+            try:
+                data.append(workspace.get_entity(uid)[0].values)
+            except IndexError:
+                raise IndexError(
+                    f"Data {parameters['name']} could not be found associated with "
+                    f"target {entity.name} object."
                 )
-            ),
-            0,
-            np.mean(entity.transmitters.vertices[:, 2] - entity.vertices[:, 2]),
-        ]
-        em_specs["tx_offsets"] = [static_offset]
-        em_specs["tx_specs"] = {
-            "a": float(entity.loop_radius) if entity.loop_radius is not None else 1.0,
-            "I": 1.0,
-        }
 
-        if "Normalization" in entity.metadata["EM Dataset"]:
-            em_specs["normalization"] = np.prod(
-                entity.metadata["EM Dataset"]["Normalization"]
+            uncertainties.append(
+                np.abs(data[-1]) * parameters["uncertainties"][0]
+                + parameters["uncertainties"][1]
             )
-        else:
-            em_specs["normalization"] = 1
+            channel_values += parameters["value"]
+            offsets[key.lower()] = np.linalg.norm(
+                np.asarray(parameters["offsets"]).astype(float)
+            )
 
-        if np.linalg.norm(static_offset) < 1e-1:
-            em_specs["tx_specs"]["type"] = "CircularLoop"
-            em_specs["normalization"] *= np.pi * em_specs["tx_specs"]["a"] ** 2.0
-        else:
-            em_specs["tx_specs"]["type"] = "VMD"
-
-        for dat_uid, unc_uid in zip(
-            data_group.properties, uncert_group.properties, strict=True
-        ):
-            d_entity = workspace.get_entity(dat_uid)[0]
-            u_entity = workspace.get_entity(unc_uid)[0]
-            channels[d_entity.name] = True
-            data.append(d_entity.values)
-            uncertainties.append(u_entity.values)
-            offsets[d_entity.name.lower()] = static_offset
-
-        channel_values = em_specs["channels"]
-    else:
-        for ind, (key, value) in enumerate(em_specs["channels"].items()):
-            if key in input_param["data"]["channels"]:
-                channels[key] = True
-                parameters = input_param["data"]["channels"][key]
-                uid = uuid.UUID(parameters["name"])
-
-                try:
-                    data.append(workspace.get_entity(uid)[0].values)
-                except IndexError:
-                    raise IndexError(
-                        f"Data {parameters['name']} could not be found associated with "
-                        f"target {entity.name} object."
-                    )
-
-                uncertainties.append(
-                    np.abs(data[-1]) * parameters["uncertainties"][0]
-                    + parameters["uncertainties"][1]
-                )
-                channel_values += parameters["value"]
-                offsets[key.lower()] = np.linalg.norm(
-                    np.asarray(parameters["offsets"]).astype(float)
-                )
-
-            elif em_specs["type"] == "frequency" and value in frequencies:
-                channels[key] = False
-                data.append(np.zeros(entity.n_vertices))
-                uncertainties.append(np.ones(entity.n_vertices) * np.inf)
-                offsets[key.lower()] = np.linalg.norm(
-                    np.asarray(em_specs["tx_offsets"][ind]).astype(float)
-                )
-                channel_values += [value]
+        elif em_specs["type"] == "frequency" and value in frequencies:
+            channels[key] = False
+            data.append(np.zeros(entity.n_vertices))
+            uncertainties.append(np.ones(entity.n_vertices) * np.inf)
+            offsets[key.lower()] = np.linalg.norm(
+                np.asarray(em_specs["tx_offsets"][ind]).astype(float)
+            )
+            channel_values += [value]
 
     offsets = list(offsets.values())
 
@@ -1091,5 +1123,5 @@ def append_ghost(ind, xyz, z_loc, prisms, layers, column_count, cell_count, ghos
 
 if __name__ == "__main__":
     # input_file = sys.argv[1]
-    input_file = r"C:\Users\dominiquef\Desktop\Tests\Temp\EM1DInversion_1756331920.json"
+    input_file = r"C:\Users\dominiquef\Documents\GIT\geoapps\geoapps-assets\Temp\EM1DInversion_1781544845.json"
     inversion(input_file)
