@@ -50,61 +50,68 @@ classifiers = [
 start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["apps"] }
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.13"
-
-fiona = "~1.9.2"
-gdal = "^3.6.3"
-matplotlib = "~3.8.4"  # also in simpeg and geoana
-
-dask = {version = "2025.3.*", extras = ["distributed"]}  # also in simpeg[dask]
-discretize = "0.11.*"  # also in simpeg, octree-creation-app
-numpy = "~1.26.0" # also in geoh5py, simpeg
-scipy = "~1.14.0"
-
-## dependencies for UI
-#---------------------
-dash = "^3.0.4"
-dash-daq = "*"
-flask = "~3.0.3"
-ipyfilechooser = "0.6.*"
-ipywidgets = "^7.8.0"
+dask = "~2025.3.0"  # also in simpeg[dask]
+discretize = "~0.12.0"  # also in simpeg, grid-apps
+distributed = "~2025.3.0"  # for dask[distributed]
+matplotlib = "~3.10.4"  # also in geoapps-utils
+numpy = "~2.4.2"
+openpyxl = "^3.1.2"
+pandas = "^2.2.1"
+pydantic = "~2.12.0"  # also in geoh5py, curve-apps, geoapps-utils
+pydiso = "~0.2.0"
+python-mumps = "0.0.6.*"
+rtree = "~1.4.0"
+scikit-learn = "~1.8.0"
+scipy = "~1.17.0"
 tqdm = "^4.66.1"
-notebook = "~7.3.2"
-plotly = "~5.19.0"
+trimesh = "~4.1.3"
 
-# Note about packages for pyside2 and pyqtwebengine:
-#   - latest version for pip packages is 5.12.2, while Conda has more recent 5.* versions
-#   - pip packages only exists for python < 3.11, while Conda has them for Python 3.11 and 3.12
-#   - limit below to Python < 3.11 is ignored by conda-lock,
-#   => conda-lock resolves to the latest version available in conda-forge for any Python versions
-#      and this dependency definition is still compatible for a pip install
-pyqtwebengine = {version = ">=5.15.2, <5.16.dev", python = "<3.11"}  # also in peak-finder-app
-pyside2 = {version = ">=5.15.2, <5.16.dev", python = "<3.11"}  # also in peak-finder-app
+dash = "^3.4.0"
+dash-ag-grid = "^32.3.1"
+dash-bootstrap-components = "^2.0.3"
+dash-daq = "0.6.*"
+waitress = "^3.0.2"
+dash-core-components = "2.*"
+dash-html-components = "2.*"
+dash-table = "5.*"
+
+## For a native GUI window
+#-------------------------
+# not in conda, to be installed through pip only
+pywebview = { version = "^6.0", source="pypi", optional = true }
+
+## indirect dependencies though pywebview,
+# optional and forcing them through conda
+#--------------------------------------------------------
+bottle = { version = "*", optional = true }
+proxy-tools = { version = "*", optional = true }
+pythonnet = { version = "*", optional = true }
+
 
 ## pip dependencies from Git repositories
 #----------------------------------------
-geoh5py = {version = ">=0.12.0b5, <0.13.dev", source = "pypi", allow-prereleases = true}
-#geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "develop"}
+#geoh5py = {version = ">=0.12.0b5, <0.13.dev", source = "pypi", allow-prereleases = true}
+geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "release/GA_4.8"}
 
-grid-apps = {version = ">=0.1.0b1, <0.2.dev", source = "pypi", allow-prereleases = true}
-#grid-apps = {git = "https://github.com/MiraGeoscience/grid-apps.git", rev = "develop"}
+#grid-apps = {version = ">=0.1.0b1, <0.2.dev", source = "pypi", allow-prereleases = true}
+grid-apps = {git = "https://github.com/MiraGeoscience/grid-apps.git", rev = "release/GA_4.8"}
 
-geoapps-utils = {version = ">=0.6.0b2, <0.7.dev", source = "pypi", allow-prereleases = true}
-#geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "develop"}
+#geoapps-utils = {version = ">=0.6.0b2, <0.7.dev", source = "pypi", allow-prereleases = true}
+geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "release/GA_4.8"}
 
-mira-simpeg = {version = ">=0.23.0.2b1, <0.23.1.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
-#mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "develop", extras = ["dask"]}
+#mira-simpeg = {version = ">=0.23.0.2b1, <0.23.1.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
+mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "release/GA_4.8", extras = ["dask"]}
 
-curve-apps = {version = ">=0.3.0b4, <0.4.0a.dev", source = "pypi", allow-prereleases = true}
-#curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "develop"}
+#curve-apps = {version = ">=0.3.0b4, <0.4.0a.dev", source = "pypi", allow-prereleases = true}
+curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "release/GA_4.8"}
 
 #surface-apps = {version = ">=0.1.0rc1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
-surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "develop"}
+surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "GEOPY-2911"}
 
-simpeg-drivers = {version = ">=0.4.0b2, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
-#simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "develop"}
+#simpeg-drivers = {version = ">=0.4.0b2, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
+simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "release/GA_4.8"}
 
-simpeg-archive = {version = ">=0.11.0.1, <0.11.0.2", source = "pypi", allow-prereleases = true}
+#simpeg-archive = {version = ">=0.11.0.1, <0.11.0.2", source = "pypi", allow-prereleases = true}
 #simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
 
 
@@ -126,25 +133,14 @@ jupyter_client = ">=8.6.0"
 
 ## indirect dependencies, forcing them here for installation through Conda not pip
 #---------------------------------------------------------------------------------
-bokeh = ">=3.6.0, <3.7.dev"  # from simpeg
-distributed = "2025.3.*"  # because conda-lock doesn't take dask extras into account
-empymod = ">=2.2.1, <2.3.dev"  # from simpeg and geoana
-fsspec = "2022.*"  # from simpeg[dask]
-geoana = ">=0.7.0, <0.8.dev"  # from simpeg
-h5py = ">=3.2.1, <4.0.dev"  # from geoh5py
-pandas = ">=2.2.1, <2.3.dev"  # from SimPEG, also used by targeting-workflow, petro-lingo
-Pillow = ">=10.3.0, <10.4.dev"  # from geoh5py
-properties = ">=0.6.1, <0.7.dev"  # from simpeg-archive
-pydantic = ">=2.5.2, <3.0.dev"  # from geoh5py, geoapps-utils
-pydiso = ">=0.1.0, <0.2.dev"  # from simpeg-drivers (solver for SimPEG)
-pymatsolver = ">=0.3.0, <0.4.dev"  # from simpeg
-python-mumps = ">=0.0.3, <0.0.4.dev"  # from simpeg-drivers (solver for SimPEG)
-Rtree = ">=1.2.0, <1.3.dev"  # from simpeg-drivers
-scikit-image = ">=0.25.2, <0.26.dev"  # from curve-apps, peak-finder-app
-scikit-learn = ">=1.6.0, <1.7.dev"  # from SimPEG, also used by geo-unsup-mapper, petro-lingo
-trimesh = ">=4.1.3, <4.2.dev"  # from simpeg-drivers
-zarr = ">=2.14.2, <2.15.dev"  # from simpeg[dask]
-
+bokeh = "3.6.*"   # optional, for dask reporting
+fsspec = ">=2022.0"  # from simpeg[dask]
+geoana = "0.8.*"  # from simpeg
+h5py = ">=3.15.1, 3.*"  # from geoh5py
+pillow = ">=12.1.0, 12.*"  # from geoh5py
+psutil = ">=7.2.2, 7.2.*"  # from geoh5py
+pymatsolver = "0.3.*"  # from simpeg
+zarr = ">=2.14.2, 2.14.*"  # from simpeg[dask]
 
 [tool.poetry.group.dev.dependencies]
 Pygments = "*"
@@ -158,12 +154,20 @@ semver = "*"
 sphinx = "^5.0"
 tomli = "*"
 
+[tool.poetry.extras]
+webview = [
+    "pywebview",
+    "bottle",
+    "proxy-tools",
+    "pythonnet",
+]
+
 [tool.conda-lock]
 platforms = ['win-64', 'linux-64']
 channels = ['conda-forge']
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py312"
 
 [tool.ruff.lint]
 ignore = [

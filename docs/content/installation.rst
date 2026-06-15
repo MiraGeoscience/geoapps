@@ -21,7 +21,7 @@ Install Conda for Python 3.10 or higher. Follow this link to download its Window
     :align: center
     :width: 200
 
-Registering the Conda distribution as the default Python 3.10 interpreter is optional.
+Registering the Conda distribution as the default Python 3.12 interpreter is optional.
 Preferably uncheck that box if you already have Python 3 installed on your system.
 
 .. note:: We recommend installing **Miniforge**: beyond being smaller,
