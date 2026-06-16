@@ -18,12 +18,11 @@ import sys
 import tempfile
 import threading
 import uuid
-import webbrowser
-from os import environ
 from pathlib import Path
 from time import time
 
 import numpy as np
+import webview
 from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from flask import Flask
@@ -31,12 +30,86 @@ from geoapps_utils.base import Options
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
 from geoh5py.shared import Entity
-from geoh5py.shared.utils import fetch_active_workspace, is_uuid, str2uuid
+from geoh5py.shared.utils import fetch_active_workspace, is_uuid, str2uuid, stringify
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from PySide2 import QtCore, QtWebEngineWidgets, QtWidgets  # pylint: disable=E0401
+from waitress import serve
 
 from geoapps.base.layout import object_selection_layout
+
+
+class DashWindow:
+    """
+    A window to run and display a Dash app using pywebview.
+
+    :param app: The Dash app to display.
+    :param title: The window title.
+    :param port: The port to run the Dash server on (default: 8050).
+    :param host: The host to run the Dash server (default: 127.0.0.1)
+    """
+
+    def __init__(
+        self, app: Dash, title: str, port: int | None = None, host: str = "127.0.0.1"
+    ):
+        self._app = app
+        self._title = title
+        self._port = self.get_port(port)
+        self._host = host
+        self._url = f"http://{self._host}:{self._port}"
+        self._window_open: bool = False
+        self._window: webview.Window | None = None
+
+    @staticmethod
+    def get_port(port) -> int:
+        """
+        Loop through a list of ports to find an available port.
+
+        :return port: Available port.
+        """
+        if isinstance(port, int):
+            return port
+
+        for p in np.arange(8050, 8101):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                in_use = s.connect_ex(("localhost", p)) == 0
+            if in_use is False:
+                port = p
+                break
+        if port is None:
+            print("No open port found.")
+        return port
+
+    def _run_server(self):
+        # run Dash in a thread, blocking=False
+        serve(self._app.server, host=self._host, port=self._port)
+
+    def show(self, size: tuple[int, int] = (1200, 800)):
+        """
+        Show the Dash app in a pywebview window.
+        """
+        # Start Dash server in a separate thread
+        thread = threading.Thread(target=self._run_server, daemon=False)
+        thread.start()
+
+        # Open webview pointing to the Dash app
+        self._window = webview.create_window(
+            self._title,
+            url=self._url,
+            width=size[0],
+            height=size[1],
+            confirm_close=True,
+        )
+
+        # the icon cannot work because not in QT
+        webview.start()
+
+    @classmethod
+    def show_dash_app(cls, app: Dash, title: str, size=(1200, 800)):
+        """
+        Show a Dash app in a PyWebView window.
+        """
+        window = cls(app, title)
+        window.show(size)
 
 
 class BaseDashApplication:
@@ -97,7 +170,7 @@ class BaseDashApplication:
                 # Create ifile from ui.json
                 ifile = InputFile(ui_json=ui_json)
                 # Demote ifile data so it can be stored as a string
-                ui_json_data = ifile.demote(ifile.data)
+                ui_json_data = stringify(ifile.data)
                 # Get new object value for dropdown from ui.json
                 object_value = ui_json_data[param_name]
             elif filename is not None and filename.endswith(".geoh5"):
@@ -113,10 +186,12 @@ class BaseDashApplication:
                     validate=False,
                 )
                 ifile.update_ui_values(self.params.flatten())
-                ui_json_data = ifile.demote(ifile.data)  # pylint: disable=W0212
+                ui_json_data = ifile.data  # pylint: disable=W0212
 
                 if self._app_initializer is not None:
                     ui_json_data.update(self._app_initializer)
+
+                ui_json_data = stringify(ui_json_data)
 
                 object_value = ui_json_data[param_name]
 
@@ -183,11 +258,16 @@ class BaseDashApplication:
 
         :return output_dict: Dict of current params.
         """
-        param_dict = self.params.flatten()
+        param_dict = {}
+        keys = list(self.params.flatten().keys())
         for key, value in update_dict.items():
-            if key in param_dict:
+            if key in keys:
                 if is_uuid(value):
                     value = self.workspace.get_entity(str2uuid(value))[0]
+
+                if value is None:
+                    continue
+
                 param_dict[key] = value
 
         return param_dict
@@ -248,36 +328,11 @@ class BaseDashApplication:
 
         return tuple(outputs)
 
-    @staticmethod
-    def get_port() -> int:
-        """
-        Loop through a list of ports to find an available port.
-
-        :return port: Available port.
-        """
-        port = None
-        for p in np.arange(8050, 8101):
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                in_use = s.connect_ex(("localhost", p)) == 0
-            if in_use is False:
-                port = p
-                break
-        if port is None:
-            print("No open port found.")
-        return port
-
     def run(self):
         """
         Open a browser with the correct url and run the dash.
         """
-        port = BaseDashApplication.get_port()
-        if port is not None:
-            # The reloader has not yet run - open the browser
-            if not environ.get("WERKZEUG_RUN_MAIN"):
-                webbrowser.open_new("http://127.0.0.1:" + str(port) + "/")
-
-            # Otherwise, continue as normal
-            self.app.run_server(host="127.0.0.1", port=port, debug=False)
+        DashWindow.show_dash_app(self.app, title=__name__)
 
     @property
     def params(self) -> Options:
@@ -420,7 +475,7 @@ class ObjectSelection:
                     ifile = InputFile(ui_json=ui_json)
                     self.params = self.param_class(ifile)
                     # Demote ifile data so it can be stored as a string
-                    ui_json_data = ifile.demote(ifile.data.copy())
+                    ui_json_data = stringify(ifile.data.copy())
                     # Get new object value for dropdown from ui.json
                     object_value = ui_json_data["objects"]
                 elif filename.endswith(".geoh5"):
@@ -442,9 +497,11 @@ class ObjectSelection:
                     validate=False,
                 )
                 ifile.update_ui_values(self.params.to_dict())
-                ui_json_data = ifile.demote(ifile.data)
+                ui_json_data = ifile.data
                 if self._app_initializer is not None:
                     ui_json_data.update(self._app_initializer)
+
+                ui_json_data = stringify(ui_json_data)
                 object_value = ui_json_data["objects"]
 
             # Get new options for object dropdown
@@ -457,74 +514,6 @@ class ObjectSelection:
             ]
 
         return object_options, object_value, ui_json_data, None, None
-
-    @staticmethod
-    def get_port() -> int:
-        """
-        Loop through a list of ports to find an available port.
-
-        :return port: Available port.
-        """
-        port = None
-        for p in np.arange(8050, 8101):
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                in_use = s.connect_ex(("localhost", p)) == 0
-            if in_use is False:
-                port = p
-                break
-        if port is None:
-            print("No open port found.")
-        return port
-
-    @staticmethod
-    def start_server(
-        port: int,
-        app_class: BaseDashApplication,
-        ui_json: InputFile = None,
-        ui_json_data: dict = None,
-        params: Options = None,
-    ):
-        """
-        Launch dash app server using given port.
-
-        :param port: Port for where to launch server.
-        :param app_class: Type of app to create.
-        :param ui_json: ifile corresponding to the ui_json_data.
-        :param ui_json_data: Dict of current params to provide to app init.
-        :param params: Current params to pass to new app.
-        """
-        app = app_class(ui_json=ui_json, ui_json_data=ui_json_data, params=params)
-        if port is not None:
-            app.app.run(host="127.0.0.1", port=port)
-
-    @staticmethod
-    def make_qt_window(app_name: str, port: int):
-        """
-        Make Qt window and load dash url with the given port.
-
-        :param app_name: App name to display as Qt window title.
-        :param port: Port where the dash app has been launched.
-        """
-        app = QtWidgets.QApplication(sys.argv)  # pylint: disable=c-extension-no-member
-        browser = (
-            QtWebEngineWidgets.QWebEngineView()  # pylint: disable=c-extension-no-member
-        )
-
-        browser.setWindowTitle(app_name)
-        localhost_url = QtCore.QUrl(  # pylint: disable=c-extension-no-member
-            "http://127.0.0.1:" + str(port)
-        )
-        browser.load(localhost_url)
-        # Brings Qt window to the front
-        browser.setWindowFlags(
-            QtCore.Qt.WindowStaysOnTopHint  # pylint: disable=c-extension-no-member
-        )
-        # Setting window size
-        browser.resize(1200, 800)
-        browser.show()
-
-        app.exec_()  # running the Qt app
-        os.kill(os.getpid(), signal.SIGTERM)  # shut down dash server and notebook
 
     def launch_qt(self, objects: str, n_clicks: int) -> str:  # pylint: disable=W0613
         """
@@ -565,18 +554,13 @@ class ObjectSelection:
                 validate=False,
             )
             ifile = InputFile.read_ui_json(ui_json_path)
-            ui_json_data = ifile.demote(ifile.data)
+            ui_json_data = stringify(ifile.data)
 
             # Start server
-            port = BaseDashApplication.get_port()
-            threading.Thread(
-                target=self.start_server,
-                args=(port, self.app_class, ifile, ui_json_data, new_params),
-                daemon=True,
-            ).start()
+            app = self.app_class(
+                ui_json=ifile, ui_json_data=ui_json_data, params=new_params
+            )
 
-            # Make Qt window
-            self.make_qt_window(self.app_name, port)
         return ""
 
     @staticmethod

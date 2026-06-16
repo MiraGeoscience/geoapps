@@ -314,6 +314,7 @@ def preprocess_data(
     data_object: ObjectBase,
     window_options: WindowOptions,
     drape_options: DrapeOptions | None = None,
+    forward_only: bool = False,
     resolution: float | None = None,
     ignore_values: str | None = None,
     detrend_type: str | None = None,
@@ -330,6 +331,7 @@ def preprocess_data(
     :param resolution: Resolution for downsampling.
     :param window_options: Windowing options.
     :param drape_options: Topography options.
+    :param forward_only: Flag for forward or inversion
     :param ignore_values: Values to be ignored.
     :param detrend_type: Method to be used for the detrending.
     :param detrend_order: Order of the polynomial to be used for detrend.
@@ -358,7 +360,7 @@ def preprocess_data(
     if ignore_values is not None:
         data_dict = set_infinity_uncertainties(
             ignore_values,
-            param_dict["forward_only"],
+            forward_only,
             components,
             data_dict,
         )

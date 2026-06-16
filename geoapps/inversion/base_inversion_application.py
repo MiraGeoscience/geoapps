@@ -767,10 +767,9 @@ class InversionApp(BaseDashApplication):
         """
         dropdown_options = no_update
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
-
+        full_components = {}
         if "ui_json_data" in triggers:
             # Fill in full_components dict from ui.json.
-            full_components = {}
             for comp in component_options:
                 # Get channel value
                 if comp + "_channel" in ui_json_data and is_uuid(
@@ -1302,15 +1301,12 @@ class InversionApp(BaseDashApplication):
         """
         param_dict = {}
         for key, value in inversion_params_dict.items():
-            param_dict[key] = None
             if value["options"] == "Model":
                 if is_uuid(value["data"]) and mesh_object is not None:
-                    param_dict[key] = self.workspace.get_entity(
-                        uuid.UUID(value["data"])
-                    )[0]
+                    entity = self.workspace.get_entity(uuid.UUID(value["data"]))[0]
                     if (
-                        param_dict[key] is not None
-                        and new_workspace.get_entity(param_dict[key].uid)[0] is None
+                        entity is not None
+                        and new_workspace.get_entity(entity.uid)[0] is None
                     ):
                         param_dict[key].copy(parent=mesh_object)
             elif value["options"] == "Constant":
@@ -1400,13 +1396,10 @@ class InversionApp(BaseDashApplication):
                     "const": update_dict[param + "_const"],
                 }
 
-        param_dict = {}
-        # Update bounds, models
-        param_dict.update(
-            self.get_general_inversion_params(
-                new_workspace, input_param_dict, mesh_object
-            )
+        param_dict = self.get_general_inversion_params(
+            new_workspace, input_param_dict, mesh_object
         )
+
         # Update channel params
         param_dict.update(
             self.get_full_component_params(
@@ -1610,7 +1603,7 @@ class InversionApp(BaseDashApplication):
             "n_cpu": n_cpu,
             "store_sensitivities": store_sensitivities,
             "tile_spatial": tile_spatial,
-            "out_group": ga_group,
+            "title": ga_group,
             "monitoring_directory": monitoring_directory,
             "inducing_field_strength": inducing_field_strength,
             "inducing_field_inclination": inducing_field_inclination,
@@ -1688,6 +1681,7 @@ class InversionApp(BaseDashApplication):
                 param_dict,
                 param_dict["data_object"],
                 window_options,
+                forward_only=any(forward_only),
                 drape_options=drape_options,
                 resolution=resolution,
                 ignore_values=ignore_values,
@@ -1699,6 +1693,15 @@ class InversionApp(BaseDashApplication):
             if forward_only:
                 self._run_params = self._param_class_forward.build(param_dict)
             else:
+                if self._inversion_type == "gravity" and "gz_channel" not in param_dict:
+                    param_dict["gz_channel"] = None
+
+                if (
+                    "magnetic" in self._inversion_type
+                    and "tmi_channel" not in param_dict
+                ):
+                    param_dict["tmi_channel"] = None
+
                 self._run_params = self._param_class.build(param_dict)
 
             self._run_params.write_ui_json(
@@ -1725,5 +1728,5 @@ class InversionApp(BaseDashApplication):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m {params.run_command} "
-            + f'"{params.input_file.path_name}"'
+            + f'"{params.geoh5.h5file.with_suffix(".ui.json")}"'
         )

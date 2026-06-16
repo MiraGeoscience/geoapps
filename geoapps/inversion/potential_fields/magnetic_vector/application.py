@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from dash import Input, Output, State
 from simpeg_drivers.potential_fields.magnetic_vector.options import (
-    MVIForwardOptions,
-    MVIInversionOptions,
+    MagneticVectorForwardOptions,
+    MagneticVectorInversionOptions,
 )
 
 from geoapps.inversion.base_inversion_application import InversionApp
@@ -30,8 +30,8 @@ class MagneticVectorApp(InversionApp):
     """
 
     _app_initializer = app_initializer
-    _param_class = MVIInversionOptions
-    _param_class_forward = MVIForwardOptions
+    _param_class = MagneticVectorInversionOptions
+    _param_class_forward = MagneticVectorForwardOptions
     _inversion_type = "magnetic vector"
     _inversion_params = magnetic_vector_inversion_params
     _layout = magnetic_vector_layout
