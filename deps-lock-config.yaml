@@ -2,3 +2,6 @@ include_dev: True
 py_versions:
   - "3.12"
   - "3.13"
+suffix_for_extras:
+  "": ["webview"]
+  "raw": [""]
