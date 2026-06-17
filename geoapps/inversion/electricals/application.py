@@ -1179,7 +1179,7 @@ class InversionApp(PlotSelection2D):
                 param_dict["data_object"],
                 window_options,
                 drape_options=drape_options,
-                forward_only=forward_only
+                forward_only=forward_only,
             )
             param_dict.update(update_dict)
 
