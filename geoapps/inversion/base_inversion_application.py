@@ -1312,7 +1312,7 @@ class InversionApp(BaseDashApplication):
                         entity is not None
                         and new_workspace.get_entity(entity.uid)[0] is None
                     ):
-                        param_dict[key].copy(parent=mesh_object)
+                        param_dict[key] = entity.copy(parent=mesh_object)
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
 
@@ -1576,9 +1576,6 @@ class InversionApp(BaseDashApplication):
 
         :return: Output message with save location.
         """
-        if mesh is None:
-            print("A mesh must be selected to write the input file.")
-            return no_update
         if data_object is None:
             print("An object with data must be selected to write the input file.")
             return no_update
@@ -1637,10 +1634,14 @@ class InversionApp(BaseDashApplication):
             param_dict["geoh5"] = workspace
 
             # Copy mesh to workspace
-            mesh = self.workspace.get_entity(uuid.UUID(mesh))[0]
-            param_dict["mesh"] = workspace.get_entity(mesh.uid)[0]
-            if param_dict["mesh"] is None:
-                param_dict["mesh"] = mesh.copy(parent=workspace, copy_children=False)
+            param_dict["mesh"] = None
+            if mesh is not None:
+                mesh = self.workspace.get_entity(uuid.UUID(mesh))[0]
+                param_dict["mesh"] = workspace.get_entity(mesh.uid)[0]
+                if param_dict["mesh"] is None:
+                    param_dict["mesh"] = mesh.copy(
+                        parent=workspace, copy_children=False
+                    )
 
             # Copy data object to workspace
             data_object = self.workspace.get_entity(uuid.UUID(data_object))[0]
