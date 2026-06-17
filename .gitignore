@@ -162,3 +162,4 @@ poetry.lock
 /tests/run_tests/Temp/
 tests/**/*.geoh5
 /devtools/pyproject-sha.toml
+/devtools/conda_env_pylint.bat
