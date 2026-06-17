@@ -53,7 +53,7 @@ class InversionApp(BaseDashApplication):
 
     _param_class = BaseInversionOptions
     _param_class_forward = BaseForwardOptions
-    _inversion_type = None
+    _inversion_type: str
     _inversion_params = {}
     _run_params = None
     _layout = None
@@ -767,8 +767,9 @@ class InversionApp(BaseDashApplication):
         """
         dropdown_options = no_update
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
-        full_components = {}
+
         if "ui_json_data" in triggers:
+            full_components = {}
             # Fill in full_components dict from ui.json.
             for comp in component_options:
                 # Get channel value
@@ -837,12 +838,15 @@ class InversionApp(BaseDashApplication):
                 uncertainty_channel = full_components[component]["uncertainty_channel"]
         elif "data_object" in triggers:
             # On object change, clear full_components and update data dropdown options.
-            for comp in full_components:
-                full_components[comp]["channel_bool"] = []
-                full_components[comp]["channel"] = None
-                full_components[comp]["uncertainty_type"] = "Floor"
-                full_components[comp]["uncertainty_floor"] = None
-                full_components[comp]["uncertainty_channel"] = None
+            full_components = {}
+            for comp in component_options:
+                full_components[comp] = {
+                    "channel_bool": [],
+                    "channel": None,
+                    "uncertainty_type": "Floor",
+                    "uncertainty_floor": None,
+                    "uncertainty_channel": None,
+                }
             channel_bool = []
             channel = None
             uncertainty_type = "Floor"
