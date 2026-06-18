@@ -18,9 +18,9 @@ from pathlib import Path
 from time import time
 
 import numpy as np
+from geoapps_utils.utils.importing import GeoAppsError
 from geoh5py.data import Data
 from geoh5py.objects import CurrentElectrode, Octree, PotentialElectrode
-from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import (
     fetch_active_workspace,
     uuid2entity,
@@ -33,6 +33,7 @@ from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
 from simpeg_drivers.electricals.induced_polarization.three_dimensions.options import (
     IP3DInversionOptions,
 )
+from simpeg_drivers.uijson import SimPEGDriversUIJson
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
@@ -120,11 +121,13 @@ class InversionApp(PlotSelection2D):
             initializer = self._app_initializer.copy()
             initializer.update(kwargs)
 
-            if isinstance(geoh5, str | Path | None):
+            if geoh5 is None:
+                geoh5 = initializer["geoh5"]
+
+            if isinstance(geoh5, str | Path):
                 geoh5 = Workspace(geoh5)
 
             initializer["geoh5"] = geoh5
-
             initializer = {
                 key: uuid2entity(val, initializer["geoh5"])
                 for key, val in initializer.items()
@@ -132,13 +135,8 @@ class InversionApp(PlotSelection2D):
 
             try:
                 self.params = self._param_class.build(initializer)
-
-            except AssociationValidationError:
-                for key, value in initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        initializer[key] = None
-
-                self.params = self._param_class.build(initializer)
+            except GeoAppsError:
+                self.params = self._param_class.model_construct(geoh5=geoh5)
 
         self.data_object = self.objects
         self.defaults.update(self.params.flatten())
@@ -1032,6 +1030,9 @@ class InversionApp(PlotSelection2D):
         # Widgets values populate params dictionary
         param_dict = self.params.flatten()
         for key in self.__dict__:
+            if key not in param_dict:
+                continue
+
             try:
                 if (
                     isinstance(getattr(self, key), Widget)
@@ -1179,11 +1180,18 @@ class InversionApp(PlotSelection2D):
                 param_dict["data_object"],
                 window_options,
                 drape_options=drape_options,
-                forward_only=forward_only,
+                forward_only=self.forward_only.value,
             )
             param_dict.update(update_dict)
 
-            self._run_params = self.params.__class__.build(param_dict)
+            clean_dict = {}
+            raw_class = SimPEGDriversUIJson.read(self.params.default_ui_json)
+            for key, value in param_dict.items():
+                if value is None or key not in raw_class.model_fields:
+                    continue
+                clean_dict[key] = value
+
+            self._run_params = self.params.__class__.build(clean_dict)
             self._run_params.write_ui_json(
                 Path(self.export_directory.selected_path)
                 / temp_geoh5.replace(".geoh5", ".ui.json"),

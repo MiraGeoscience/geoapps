@@ -19,7 +19,7 @@ from dash._utils import AttributeDict
 from geoh5py.objects import Points
 from geoh5py.shared import Entity
 from geoh5py.shared.utils import is_uuid
-from geoh5py.ui_json.input_file import InputFile
+from geoh5py.ui_json import BaseUIJson
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
@@ -159,13 +159,14 @@ def test_mag_inversion(tmp_path: Path):
             )
 
     filename = next(tmp_path.glob("Magnetic Vector Inversion_*.json"))
-    ifile = InputFile.read_ui_json(filename)
-    with ifile.data["geoh5"].open():
-        data = ifile.data["data_object"]
+    ui_json = BaseUIJson.read(filename)
+    ui_data = ui_json.to_params()
+    with ui_data["geoh5"].open():
+        data = ui_data["data_object"]
         assert isinstance(data, Points)
         assert data.n_vertices == 418
-        assert ifile.data["mesh"].uid == mesh.uid
-        assert ifile.data["topography_object"].uid == topography_object.uid
+        assert ui_data["mesh"].uid == mesh.uid
+        assert ui_data["topography_object"].uid == topography_object.uid
 
 
 def test_dc_inversion(tmp_path: Path):
@@ -200,9 +201,13 @@ def test_dc_inversion(tmp_path: Path):
 
     app.write_trigger(None)
     app.write_trigger(None)  # Check that this can run more than once
-    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
+    file = next(
+        f for f in (tmp_path / "Temp").iterdir() if f.is_file() and f.suffix == ".json"
+    )
+    ui_json = BaseUIJson.read(file)
+    ui_data = ui_json.to_params()
 
-    params_reload = DC3DInversionOptions.build(ifile).flatten()
+    params_reload = DC3DInversionOptions.build(**ui_data).flatten()
 
     for param, value in changes.items():
         if param == "reference_model":
@@ -279,8 +284,13 @@ def test_ip_inversion(tmp_path: Path):
                 setattr(app, param, value)
 
         app.write_trigger(None)
-    ifile = InputFile.read_ui_json(app._run_params.input_file.path_name)
-    params_reload = IP3DInversionOptions.build(ifile).flatten()
+
+    file = next(
+        f for f in (tmp_path / "Temp").iterdir() if f.is_file() and f.suffix == ".json"
+    )
+    ui_json = BaseUIJson.read(file)
+    ui_data = ui_json.to_params()
+    params_reload = IP3DInversionOptions.build(**ui_data).flatten()
 
     for param, value in changes.items():
         p_value = params_reload[param]
