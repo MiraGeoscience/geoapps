@@ -12,9 +12,7 @@ import base64
 import io
 import json
 import os
-import signal
 import socket
-import sys
 import tempfile
 import threading
 import uuid
