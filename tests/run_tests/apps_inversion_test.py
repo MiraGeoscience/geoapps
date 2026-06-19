@@ -172,7 +172,7 @@ def test_mag_inversion(tmp_path: Path):
 def test_dc_inversion(tmp_path: Path):
     """Tests the jupyter application for dc inversion"""
     temp_geoh5 = tmp_path / f"{__name__}.geoh5"
-    with Workspace(PROJECT_DCIP) as ws:
+    with Workspace(PROJECT_DCIP, mode="r") as ws:
         with Workspace(temp_geoh5) as new_geoh5:
             new_topo = ws.get_entity(UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"))[
                 0
@@ -184,12 +184,16 @@ def test_dc_inversion(tmp_path: Path):
                 parent=new_geoh5
             )
 
-    app = DCInversionApp(geoh5=temp_geoh5, plot_result=False)
+    app = DCInversionApp(plot_result=False)
+    app.file_browser._filename.value = str(temp_geoh5)
+    app.file_browser._apply_selection()
+    app.file_browser_change(temp_geoh5)
     changes = {
         "topography_object": new_topo.uid,
         "forward_only": False,
         "starting_model": 0.01,
         "reference_model": None,
+        "mesh": None,
     }
     side_effects = {"reference_model": changes["starting_model"], "alpha_s": 0}
 
