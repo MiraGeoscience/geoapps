@@ -38,10 +38,10 @@ from simpeg_drivers.uijson import SimPEGDriversUIJson
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.components.preprocessing import preprocess_data
 from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
     app_initializer,
 )
+from geoapps.inversion.utils import preprocess_data
 from geoapps.shared_utils.utils import DrapeOptions, WindowOptions
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
@@ -742,12 +742,12 @@ class InversionApp(PlotSelection2D):
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace
-        self.sensor.workspace = workspace
-        self._topography_group.workspace = workspace
-        self._reference_model_group.workspace = workspace
-        self._starting_model_group.workspace = workspace
-        self._conductivity_model_group.workspace = workspace
-        self._mesh_octree.workspace = workspace
+        self.sensor._workspace = workspace  # pylint: disable=protected-access
+        self._topography_group._workspace = workspace  # pylint: disable=protected-access
+        self._reference_model_group._workspace = workspace  # pylint: disable=protected-access
+        self._starting_model_group._workspace = workspace  # pylint: disable=protected-access
+        self._conductivity_model_group._workspace = workspace  # pylint: disable=protected-access
+        self._mesh_octree._workspace = workspace  # pylint: disable=protected-access
         self.plotting_data = None
 
     @property
@@ -1211,7 +1211,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m {params.run_command} "
-            + f'"{params.input_file.path_name}"'
+            + f'"{params.geoh5.h5file.with_suffix(".ui.json")}"'
         )
 
     def file_browser_change(self, _):

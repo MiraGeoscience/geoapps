@@ -37,7 +37,7 @@ from simpeg_drivers.options import BaseForwardOptions, BaseInversionOptions
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.inversion.components.preprocessing import preprocess_data
+from geoapps.inversion.utils import preprocess_data
 from geoapps.shared_utils.utils import (
     DrapeOptions,
     WindowOptions,

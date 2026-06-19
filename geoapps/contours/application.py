@@ -24,7 +24,7 @@ from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, Widget
 
 from geoapps import assets_path
 from geoapps.base.plot import PlotSelection2D
-from geoapps.inversion.components.preprocessing import grid_to_points
+from geoapps.inversion.utils import grid_to_points
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
 

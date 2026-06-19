@@ -35,7 +35,7 @@ from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import LineOptions, ObjectDataSelection, TopographyOptions
-from geoapps.inversion.components.preprocessing import preprocess_data
+from geoapps.inversion.utils import preprocess_data
 from geoapps.shared_utils.utils import WindowOptions
 from geoapps.utils import geophysical_systems, warn_module_not_found
 from geoapps.utils.list import find_value
