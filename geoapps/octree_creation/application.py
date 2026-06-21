@@ -19,12 +19,11 @@ from time import time
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
-from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import BaseUIJson
 from geoh5py.workspace import Workspace
-from octree_creation_app.driver import OctreeDriver
-from octree_creation_app.params import OctreeParams
+from grid_apps.octree_creation.driver import OctreeDriver
+from grid_apps.octree_creation.options import OctreeOptions
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
@@ -52,33 +51,30 @@ class OctreeMesh(ObjectDataSelection):
     Widget used for the creation of an octree mesh
     """
 
-    _param_class = OctreeParams
+    _param_class = OctreeOptions
     _object_types = (Curve, Octree, Points, Surface)
-    _u_cell_size = None
-    _v_cell_size = None
-    _w_cell_size = None
-    _depth_core = None
-    _horizontal_padding = None
-    _vertical_padding = None
-    _diagonal_balance = None
-    _minimum_level = None
+    _refinement_keywords = ("refinement_object", "levels", "horizon", "distance")
 
     def __init__(self, ui_json=None, **kwargs):
+        self._u_cell_size = None
+        self._v_cell_size = None
+        self._w_cell_size = None
+        self._depth_core = None
+        self._horizontal_padding = None
+        self._vertical_padding = None
+        self._diagonal_balance = None
+        self._minimum_level = None
+
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
+            ui_json = BaseUIJson.read(ui_json)
+            self.params = self._param_class.build(**ui_json.to_params())
         else:
-            try:
-                self.params = self._param_class(**app_initializer)
+            ui_json = BaseUIJson.read(self._param_class.default_ui_json)
+            ui_json.set_values(**app_initializer)
+            self.params = self._param_class.build(**ui_json.to_params())
 
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
-
-                self.params = self._param_class(**app_initializer)
-
-        for key, value in self.params.to_dict().items():
+        for key, value in self.params.model_dump().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
             else:
@@ -126,7 +122,7 @@ class OctreeMesh(ObjectDataSelection):
         super().__populate__(**kwargs)
 
         refinement_list = []
-        for label in self.params.free_parameter_dict:
+        for label in range(len(self.params.refinements)):
             refinement_list += [self.add_refinement_widget(label)]
 
         self.refinement_list.children = refinement_list
@@ -261,12 +257,23 @@ class OctreeMesh(ObjectDataSelection):
 
     def trigger_click(self, _):
         param_dict = {}
+
+        out_ui_json = BaseUIJson.read(self.params.default_ui_json)
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                alias = key
+                if alias[0] == "_":
+                    alias = alias[1:]
+
+                matches = [True for word in self._refinement_keywords if word in alias]
+                if any(matches):
+                    alias = alias.replace("refinement_", "")
+                    alias = "Refinement " + alias
+
+                if isinstance(getattr(self, key), Widget) and hasattr(
+                    out_ui_json, alias
+                ):
                     value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
 
                     if (
                         isinstance(value, uuid.UUID)
@@ -274,7 +281,7 @@ class OctreeMesh(ObjectDataSelection):
                     ):
                         value = self.workspace.get_entity(value)[0]
 
-                    param_dict[key] = value
+                    param_dict[alias] = value
 
             except AttributeError:
                 continue
@@ -292,20 +299,25 @@ class OctreeMesh(ObjectDataSelection):
                         obj = new_workspace.get_entity(value.uid)[0]
                         if obj is None:
                             obj = value.copy(parent=new_workspace, copy_children=True)
-                        param_dict[key] = obj
+                        param_dict[key] = obj.uid
 
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-        new_params = OctreeParams(**param_dict)
-        new_params.write_input_file(name=temp_geoh5.replace(".geoh5", ".ui.json"))
-        self.run(new_params)
+            out_ui_json.set_values(**param_dict)
+            out_path = Path(self.export_directory.selected_path) / temp_geoh5
+            out_ui_json.write(out_path.with_suffix(".ui.json"))
+            new_params = OctreeOptions.build(
+                out_ui_json.to_params(workspace=new_workspace)
+            )
+
+            self.run(new_params)
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
 
     @classmethod
-    def run(cls, params: OctreeParams) -> Octree:
+    def run(cls, params: OctreeOptions) -> Octree:
         """
         Create an octree mesh from input values
         """
@@ -316,14 +328,15 @@ class OctreeMesh(ObjectDataSelection):
 
         return octree
 
-    def add_refinement_widget(self, label: str):
+    def add_refinement_widget(self, ind: int):
         """
         Add a refinement from dictionary
         """
+        label = "ABC"[ind]
         widget_list = [Label(label)]
-        for key in self.params.free_parameter_keys:
+        for key in self._refinement_keywords:
             attr_name = label + f" {key}"
-            value = getattr(self.params, attr_name)
+            value = getattr(self.params.refinements[ind], key)
             if "object" in key:
                 setattr(
                     self,
@@ -343,7 +356,9 @@ class OctreeMesh(ObjectDataSelection):
                 setattr(
                     self,
                     attr_name,
-                    Text(description=key.capitalize(), value=value),
+                    Text(
+                        description=key.capitalize(), value=", ".join(map(str, value))
+                    ),
                 )
             elif "horizon" in key:
                 setattr(
@@ -367,5 +382,6 @@ if __name__ == "__main__":
         "'geoapps.octree_creation.driver' in version 0.7.0. "
         "This warning is likely due to the execution of older ui.json files. Please update."
     )
-    params_class = OctreeParams(InputFile.read_ui_json(file))
+    uijson = BaseUIJson.read(file)
+    params_class = OctreeOptions(**uijson.to_params())
     OctreeMesh.run(params_class)
