@@ -598,4 +598,5 @@ class ScatterPlots(BaseDashApplication):
 if __name__ == "__main__":
     print("Building the plotly scatterplot . . .")
     file = sys.argv[1]
-    ScatterPlots(file)
+    app = ScatterPlots(file)
+    app.run()
