@@ -41,17 +41,18 @@ class BlockModelCreation(BaseDashApplication):
 
     _param_class = BlockModelOptions
     _driver_class = Driver
+    _app_initializer = app_initializer
 
-    def __init__(self, ui_json=None, geoh5=str | Path | None | Workspace, **kwargs):
+    def __init__(self, ui_json=None, **kwargs):
         if ui_json is not None and Path(ui_json.path).exists():
             self.params = self._param_class.build(ui_json)
         else:
-            if isinstance(geoh5, str | Path | None):
-                geoh5 = Workspace(geoh5)
-
-            initializer = app_initializer.copy()
-            initializer["geoh5"] = geoh5
+            initializer = self._app_initializer.copy()
             initializer.update(kwargs)
+
+            if not isinstance(initializer["geoh5"], Workspace):
+                initializer["geoh5"] = Workspace(initializer["geoh5"])
+
             initializer = {
                 key: uuid2entity(val, initializer["geoh5"])
                 for key, val in initializer.items()
@@ -89,7 +90,7 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="depth_core", component_property="value"),
             Output(component_id="horizontal_padding", component_property="value"),
             Output(component_id="bottom_padding", component_property="value"),
-            Output(component_id="expansion_fact", component_property="value"),
+            Output(component_id="expansion_factor", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
@@ -104,7 +105,7 @@ class BlockModelCreation(BaseDashApplication):
             State(component_id="depth_core", component_property="value"),
             State(component_id="horizontal_padding", component_property="value"),
             State(component_id="bottom_padding", component_property="value"),
-            State(component_id="expansion_fact", component_property="value"),
+            State(component_id="expansion_factor", component_property="value"),
             State(component_id="live_link", component_property="value"),
             State(component_id="monitoring_directory", component_property="value"),
         )(self.trigger_click)
@@ -120,7 +121,7 @@ class BlockModelCreation(BaseDashApplication):
         depth_core: float,
         horizontal_padding: float,
         bottom_padding: float,
-        expansion_fact: float,
+        expansion_factor: float,
         live_link: list,
         monitoring_directory: str,
         trigger: str | None = None,
@@ -137,7 +138,7 @@ class BlockModelCreation(BaseDashApplication):
         :param depth_core: Depth of core mesh below input object.
         :param horizontal_padding: Horizontal padding distance.
         :param bottom_padding: Bottom padding distance.
-        :param expansion_fact: Expansion factor for padding cells.
+        :param expansion_factor: Expansion factor for padding cells.
         :param live_link: Checkbox for using monitoring directory.
         :param monitoring_directory: Output path for exporting block model.
         :param trigger: Dash component which triggered the callback.
