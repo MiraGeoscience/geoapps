@@ -12,10 +12,10 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import uuid
 import warnings
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 import numpy as np
 from geoapps_utils.utils.importing import GeoAppsError
@@ -35,12 +35,10 @@ from simpeg_drivers.electricals.induced_polarization.three_dimensions.options im
 )
 from simpeg_drivers.uijson import SimPEGDriversUIJson
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
-    app_initializer,
-)
 from geoapps.inversion.utils import preprocess_data
 from geoapps.shared_utils.utils import DrapeOptions, WindowOptions
 from geoapps.utils import warn_module_not_found
@@ -61,6 +59,33 @@ with warn_module_not_found():
         VBox,
         Widget,
     )
+
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon_dcip.geoh5"),
+    "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
+    "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
+    "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
+    "mesh": UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"),
+    "reference_model": 1e-1,
+    "starting_model": 1e-1,
+    "octree_levels_topo": [0, 0, 0, 2],
+    "octree_levels_obs": [5, 5, 5, 5],
+    "depth_core": 500.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "upper_bound": 100.0,
+    "lower_bound": 1e-5,
+    "max_global_iterations": 25,
+    "sens_wts_threshold": 0.001,
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
+    "z_from_topo": True,
+    "receivers_offset_z": 0.0,
+}
 
 
 def inversion_defaults():
@@ -96,7 +121,7 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _app_initializer = app_initializer
+    _app_initializer = APP_INITIALIZER
     _param_class = DC3DInversionOptions
     _select_multiple = True
     _add_groups = False
@@ -916,7 +941,7 @@ class InversionApp(PlotSelection2D):
                         getattr(self, key + "_floor").value = value
                     else:
                         getattr(self, key + "_channel").value = (
-                            uuid.UUID(value) if isinstance(value, str) else value
+                            UUID(value) if isinstance(value, str) else value
                         )
 
                 setattr(InversionApp, f"{key}_uncertainty", (value_setter))
@@ -1043,7 +1068,7 @@ class InversionApp(PlotSelection2D):
                         key = key[1:]
 
                     if (
-                        isinstance(value, uuid.UUID)
+                        isinstance(value, UUID)
                         and self.workspace.get_entity(value)[0] is not None
                     ):
                         value = self.workspace.get_entity(value)[0]
@@ -1128,7 +1153,7 @@ class InversionApp(PlotSelection2D):
                 attr = getattr(self, key)
                 if isinstance(attr, Widget) and hasattr(attr, "value"):
                     value = attr.value
-                    if isinstance(value, uuid.UUID):
+                    if isinstance(value, UUID):
                         value = new_workspace.get_entity(value)[0]
                     if key.lstrip("_") in param_dict:
                         param_dict[key.lstrip("_")] = value
@@ -1146,7 +1171,7 @@ class InversionApp(PlotSelection2D):
                         value = getattr(attr, sub_key)
                         if isinstance(value, Widget) and hasattr(value, "value"):
                             value = value.value
-                        if isinstance(value, uuid.UUID):
+                        if isinstance(value, UUID):
                             value = new_workspace.get_entity(value)[0]
                         if sub_key in param_dict:
                             param_dict[sub_key] = value
