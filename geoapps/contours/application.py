@@ -29,25 +29,28 @@ from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
 
 
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "interval_min": -400.0,
+    "interval_max": 2000.0,
+    "interval_spacing": 100.0,
+    "fixed_contours": "-240",
+    "resolution": 50.0,
+    "z_value": False,
+    "export_as": "Contours",
+    "out_group": None,
+}
+
+
 class ContourValues(PlotSelection2D):
     """
     Application for 2D contouring of spatial data.
     """
 
     _param_class = ContourParameters
-    _initializer = {
-        "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-        "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-        "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
-        "interval_min": -400.0,
-        "interval_max": 2000.0,
-        "interval_spacing": 100.0,
-        "fixed_contours": "-240",
-        "resolution": 50.0,
-        "z_value": False,
-        "export_as": "Contours",
-        "out_group": None,
-    }
+    _initializer = APP_INITIALIZER
 
     def __init__(
         self,
