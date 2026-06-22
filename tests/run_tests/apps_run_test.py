@@ -38,6 +38,7 @@ from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
 from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
+from geoapps.octree_creation.application import OctreeMesh
 from geoapps.peak_finder.application import PeakFinder
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
@@ -80,7 +81,7 @@ def test_block_model(tmp_path: Path):
         depth_core,
         horizontal_padding,
         bottom_padding,
-        expansion_fact,
+        expansion_factor,
         _,
     ) = block_model.update_remainder_from_ui_json(
         ui_json_data, param_list, trigger="test"
@@ -94,7 +95,7 @@ def test_block_model(tmp_path: Path):
     assert depth_core == block_model.params.creation.depth_core
     assert horizontal_padding == block_model.params.creation.horizontal_padding
     assert bottom_padding == block_model.params.creation.bottom_padding
-    assert expansion_fact == block_model.params.creation.expansion_factor
+    assert expansion_factor == block_model.params.creation.expansion_factor
 
     # Create a second workspace to test file uploads
     temp_workspace2 = tmp_path / "contour2.geoh5"
@@ -122,7 +123,7 @@ def test_block_model(tmp_path: Path):
         depth_core=depth_core,
         horizontal_padding=horizontal_padding,
         bottom_padding=bottom_padding,
-        expansion_fact=expansion_fact,
+        expansion_factor=expansion_factor,
         live_link=[],
         monitoring_directory=str(tmp_path),
         trigger="export",
@@ -568,3 +569,12 @@ def test_peak_finder():
     app = PeakFinder(geoh5=PROJECT_TEM)
     assert app.objects.value == uuid.UUID("{34698019-cde6-4b43-8d53-a040b25c989a}")
     assert app.data.value == uuid.UUID("{22a9cf91-5cff-42b5-8bbb-2f1c6a559204}")
+
+
+def test_octree_creation(tmp_path):
+    app = OctreeMesh()
+
+    app.export_directory._filename.value = str(tmp_path)
+    app.export_directory._apply_selection()
+
+    app.trigger_click(None)
