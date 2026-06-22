@@ -13,9 +13,9 @@ from __future__ import annotations
 
 import os
 import sys
-import uuid
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 import numpy as np
 import plotly.graph_objects as go
@@ -23,14 +23,45 @@ from dash import Dash, callback_context, dcc, no_update
 from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
-from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json import InputFile
+from geoh5py.shared.utils import fetch_active_workspace, stringify
+from geoh5py.ui_json import BaseUIJson
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
-from geoapps.base.dash_application import BaseDashApplication, ObjectSelection
+from geoapps.base.dash_application import BaseDashApplication
 from geoapps.scatter_plot.driver import ScatterPlotDriver
 from geoapps.scatter_plot.layout import scatter_layout
 from geoapps.scatter_plot.params import ScatterPlotParams
+
+
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{79b719bc-d996-4f52-9af0-10aa9c7bb941}"),
+    "x": UUID("{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"),
+    "x_log": False,
+    "x_min": -17.0,
+    "x_max": 25.5,
+    "y": UUID("{18c2560c-6161-468a-8571-5d9d59649535}"),
+    "y_log": True,
+    "y_min": -17.0,
+    "y_max": 29.8,
+    "z": UUID("{cb35da1c-7ea4-44f0-8817-e3d80e8ba98c}"),
+    "z_log": True,
+    "z_min": -20.0,
+    "z_max": 3200.0,
+    "color": UUID("{94a150e8-16d9-4784-a7aa-e6271df3a3ef}"),
+    "color_log": True,
+    "color_min": -17.0,
+    "color_max": 640.0,
+    "color_maps": "inferno",
+    "size": UUID("{41d51965-3670-43ba-8a10-d399070689e3}"),
+    "size_log": False,
+    "size_min": -17.0,
+    "size_max": 24.8,
+    "downsampling": 80,
+    "size_markers": 20,
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
+}
 
 
 class ScatterPlots(BaseDashApplication):
@@ -41,19 +72,19 @@ class ScatterPlots(BaseDashApplication):
     _param_class = ScatterPlotParams
     _driver_class = ScatterPlotDriver
 
-    def __init__(self, ui_json=None, ui_json_data=None, params=None):
-        if params is not None:
-            # Launched from notebook
-            # Params for initialization are coming from params
-            # ui_json_data is provided
-            self.params = params
-        elif ui_json is not None and Path(ui_json.path).exists():
+    def __init__(self, ui_json: str | Path | None = None):
+        if ui_json is not None and Path(ui_json).exists():
             # Launched from terminal
             # Params for initialization are coming from ui_json
             # ui_json_data starts as None
-            self.params = self._param_class(ui_json)
-            ui_json_data = self.params.input_file.demote(self.params.to_dict())
+            ui_json = BaseUIJson.read(ui_json)
+        else:
+            ui_json = BaseUIJson.read(self._param_class.default_ui_json)
+            ui_json.set_values(**APP_INITIALIZER)
 
+        self.params = self._param_class.build(**ui_json.to_params())
+
+        ui_json_data = stringify(ui_json.to_params(workspace=self.params.geoh5))
         super().__init__()
 
         # Start flask server
@@ -291,9 +322,9 @@ class ScatterPlots(BaseDashApplication):
             data = kmeans
         elif (
             channel is not None
-            and self.workspace.get_entity(uuid.UUID(channel))[0] is not None
+            and self.workspace.get_entity(UUID(channel))[0] is not None
         ):
-            data = self.workspace.get_entity(uuid.UUID(channel))[0].values
+            data = self.workspace.get_entity(UUID(channel))[0].values
 
         if data is not None:
             cmin = float(f"{np.nanmin(data):.2e}")
@@ -443,28 +474,28 @@ class ScatterPlots(BaseDashApplication):
         :param downsampling: Percent of total values to plot.
         :param objects: UUID of selected object.
         :param x: UUID of selected x data.
-        :param x_log: Whether or not to plot the log of x data.
+        :param x_log: Whether to plot the log of x data.
         :param x_thresh: X threshold.
         :param x_min: Minimum value for x data.
         :param x_max: Maximum value for x data.
         :param y: UUID of selected y data.
-        :param y_log: Whether or not to plot the log of y data.
+        :param y_log: Whether to plot the log of y data.
         :param y_thresh: Y threshold.
         :param y_min: Minimum value for y data.
         :param y_max: Maximum value for y data.
         :param z: UUID of selected z data.
-        :param z_log: Whether or not to plot the log of z data.
+        :param z_log: Whether to plot the log of z data.
         :param z_thresh: Z threshold.
         :param z_min: Minimum value for z data.
         :param z_max: Maximum value for x data.
         :param color: UUID of selected color data.
-        :param color_log: Whether or not to plot the log of color data.
+        :param color_log: Whether to plot the log of color data.
         :param color_thresh: Color threshold.
         :param color_min: Minimum value for color data.
         :param color_max: Maximum value for color data.
         :param color_maps: Color map.
         :param size: UUID of selected size data.
-        :param size_log: Whether or not to plot the log of size data.
+        :param size_log: Whether to plot the log of size data.
         :param size_thresh: Size threshold.
         :param size_min: Minimum value for size data.
         :param size_max: Maximum value for size data.
@@ -475,7 +506,12 @@ class ScatterPlots(BaseDashApplication):
         update_dict = {}
         # Get list of parameters to update in self.params, from callback trigger.
         for item in callback_context.triggered:
-            update_dict[item["prop_id"].split(".")[0]] = item["value"]
+            value = item["value"]
+
+            if isinstance(value, list):
+                value = any(value)
+
+            update_dict[item["prop_id"].split(".")[0]] = value
 
         # Don't update plot if objects triggered the callback, but use objects to update self.params.
         if "objects" in update_dict and len(update_dict) == 1:
@@ -484,9 +520,11 @@ class ScatterPlots(BaseDashApplication):
             update_dict.update({"objects": objects})
 
         # Update self.params
-        param_dict = self.get_params_dict(update_dict)
-        self.params.update(param_dict)
-
+        update_dict = self.get_params_dict(update_dict)
+        param_dict = self.params.flatten()
+        param_dict.update(update_dict)
+        self.params = ScatterPlotParams.build(param_dict)
+        self.driver.params = self.params
         # Run driver to get updated scatter plot.
         figure = go.Figure(self.driver.run())
 
@@ -508,7 +546,7 @@ class ScatterPlots(BaseDashApplication):
 
         trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
         if trigger == "export":
-            param_dict = self.params.to_dict()
+            param_dict = self.params.flatten()
 
             # Get output path.
             if (
@@ -536,11 +574,11 @@ class ScatterPlots(BaseDashApplication):
                             )
 
                 # Write output uijson.
-                new_params = ScatterPlotParams(**param_dict)
-                new_params.write_input_file(
-                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                    path=param_dict["monitoring_directory"],
-                    validate=False,
+                new_params = ScatterPlotParams.build(param_dict)
+                new_params.write_ui_json(
+                    (Path(param_dict["monitoring_directory"]) / temp_geoh5).with_suffix(
+                        ".ui.json"
+                    ),
                 )
 
                 go.Figure(figure).write_html(
@@ -558,10 +596,6 @@ class ScatterPlots(BaseDashApplication):
 
 
 if __name__ == "__main__":
-    print("Loading geoh5 file . . .")
+    print("Building the plotly scatterplot . . .")
     file = sys.argv[1]
-    ifile = InputFile.read_ui_json(file)
-    ifile.workspace.open("r")
-    print("Loaded. Building the plotly scatterplot . . .")
-    ObjectSelection.run("Scatter Plots", ScatterPlots, ifile)
-    print("Done")
+    ScatterPlots(file)

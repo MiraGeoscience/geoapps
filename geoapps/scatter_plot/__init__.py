@@ -9,5 +9,4 @@
 
 # flake8: noqa
 
-from .constants import app_initializer
 from .params import ScatterPlotParams

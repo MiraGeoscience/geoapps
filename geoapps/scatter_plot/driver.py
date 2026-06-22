@@ -11,17 +11,15 @@ from __future__ import annotations
 
 import numpy as np
 import plotly.graph_objects as go
-from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.base import Driver
 
-from geoapps.scatter_plot.constants import validations
 from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils.plotting import format_axis, normalize, symlog
 from geoapps.utils.statistics import random_sampling
 
 
-class ScatterPlotDriver(BaseDriver):
+class ScatterPlotDriver(Driver):
     _params_class = ScatterPlotParams
-    _validations = validations
 
     def __init__(self, params: ScatterPlotParams):
         super().__init__(params)
