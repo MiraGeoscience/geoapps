@@ -16,6 +16,7 @@ import uuid
 import warnings
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
 from geoh5py.shared import Entity
@@ -25,9 +26,9 @@ from geoh5py.workspace import Workspace
 from grid_apps.octree_creation.driver import OctreeDriver
 from grid_apps.octree_creation.options import OctreeOptions
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.octree_creation.constants import app_initializer
 from geoapps.utils import warn_module_not_found
 
 
@@ -44,6 +45,20 @@ with warn_module_not_found():
         Widget,
     )
     from ipywidgets.widgets.widget_selection import TraitError
+
+
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "Refinement A object": UUID("{656acd40-25de-4865-814c-cb700f6ee51a}"),
+    "Refinement A levels": "4, 4, 4",
+    "Refinement A horizon": False,
+    "Refinement A distance": None,
+    "Refinement B object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "Refinement B levels": "0, 0, 4",
+    "Refinement B horizon": True,
+    "Refinement B distance": 1200.0,
+}
 
 
 class OctreeMesh(ObjectDataSelection):
@@ -65,13 +80,13 @@ class OctreeMesh(ObjectDataSelection):
         self._diagonal_balance = None
         self._minimum_level = None
 
-        app_initializer.update(kwargs)
+        APP_INITIALIZER.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
             ui_json = BaseUIJson.read(ui_json)
             self.params = self._param_class.build(**ui_json.to_params())
         else:
             ui_json = BaseUIJson.read(self._param_class.default_ui_json)
-            ui_json.set_values(**app_initializer)
+            ui_json.set_values(**APP_INITIALIZER)
             self.params = self._param_class.build(**ui_json.to_params())
 
         for key, value in self.params.model_dump().items():
