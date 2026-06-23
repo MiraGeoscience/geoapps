@@ -88,32 +88,28 @@ APP_INITIALIZER = {
 }
 
 
-def inversion_defaults():
-    """
-    Get defaults for DCIP inversion
-    """
-    return {
-        "units": {
-            "direct current 3d": "S/m",
-            "induced polarization 3d": "V/V",
-        },
-        "property": {
-            "direct current 3d": "conductivity",
-            "induced polarization 3d": "chargeability",
-        },
-        "reference_value": {
-            "direct current 3d": 1e-1,
-            "induced polarization 3d": 0.0,
-        },
-        "starting_value": {
-            "direct current 3d": 1e-1,
-            "induced polarization 3d": 1e-4,
-        },
-        "component": {
-            "direct current 3d": "potential",
-            "induced polarization 3d": "chargeability",
-        },
-    }
+INVERSION_DEFAULTS = {
+    "units": {
+        "direct current 3d": "S/m",
+        "induced polarization 3d": "V/V",
+    },
+    "property": {
+        "direct current 3d": "conductivity",
+        "induced polarization 3d": "chargeability",
+    },
+    "reference_value": {
+        "direct current 3d": 1e-1,
+        "induced polarization 3d": 0.0,
+    },
+    "starting_value": {
+        "direct current 3d": 1e-1,
+        "induced polarization 3d": 1e-4,
+    },
+    "component": {
+        "direct current 3d": "potential",
+        "induced polarization 3d": "chargeability",
+    },
+}
 
 
 class InversionApp(PlotSelection2D):
@@ -840,21 +836,21 @@ class InversionApp(PlotSelection2D):
             )
 
         flag = self.inversion_type.value
-        self._reference_model_group.units = inversion_defaults()["units"][flag]
+        self._reference_model_group.units = INVERSION_DEFAULTS["units"][flag]
         self._reference_model_group.options.value = "Constant"
-        self._reference_model_group.constant.value = inversion_defaults()[
+        self._reference_model_group.constant.value = INVERSION_DEFAULTS[
             "reference_value"
         ][flag]
         self._reference_model_group.description.value = (
-            "Reference " + inversion_defaults()["property"][flag]
+            "Reference " + INVERSION_DEFAULTS["property"][flag]
         )
-        self._starting_model_group.units = inversion_defaults()["units"][flag]
+        self._starting_model_group.units = INVERSION_DEFAULTS["units"][flag]
         self._starting_model_group.options.value = "Constant"
-        self._starting_model_group.constant.value = inversion_defaults()[
+        self._starting_model_group.constant.value = INVERSION_DEFAULTS[
             "starting_value"
         ][flag]
         self._starting_model_group.description.value = (
-            "Starting " + inversion_defaults()["property"][flag]
+            "Starting " + INVERSION_DEFAULTS["property"][flag]
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
@@ -980,7 +976,7 @@ class InversionApp(PlotSelection2D):
                 ["", None]
             ] + options
 
-        self.data_channel_choices.value = inversion_defaults()["component"][
+        self.data_channel_choices.value = INVERSION_DEFAULTS["component"][
             self.inversion_type.value
         ]
         self.data_channel_choices.data_channel_options = data_channel_options

@@ -25,10 +25,13 @@ class ScatterPlotDriver(Driver):
         super().__init__(params)
         self.params: ScatterPlotParams = params
 
-    def run(self):
+    def run(self, color_maps: list | None = None):
         """
         Create a scatter plot from input values
         """
+        if color_maps is None:
+            color_maps = self.params.color_maps
+
         figure = go.Figure()
 
         if (self.params.x is not None) & (self.params.y is not None):
@@ -142,7 +145,7 @@ class ScatterPlotDriver(Driver):
                     marker={
                         "color": color,
                         "size": size,
-                        "colorscale": self.params.color_maps,
+                        "colorscale": color_maps,
                         "line_width": 0,
                     },
                 )
@@ -174,7 +177,7 @@ class ScatterPlotDriver(Driver):
                     marker={
                         "color": color,
                         "size": size,
-                        "colorscale": self.params.color_maps,
+                        "colorscale": color_maps,
                         "line_width": 0,
                     },
                 )

@@ -71,16 +71,14 @@ class ScatterPlots(BaseDashApplication):
 
     _param_class = ScatterPlotParams
     _driver_class = ScatterPlotDriver
+    _app_initializer = APP_INITIALIZER
 
-    def __init__(self, ui_json: str | Path | None = None):
-        if ui_json is not None and Path(ui_json).exists():
-            # Launched from terminal
-            # Params for initialization are coming from ui_json
-            # ui_json_data starts as None
+    def __init__(self, ui_json: BaseUIJson | str | Path | None = None):
+        if isinstance(ui_json, str | Path) and Path(ui_json).exists():
             ui_json = BaseUIJson.read(ui_json)
-        else:
+        elif ui_json is None:
             ui_json = BaseUIJson.read(self._param_class.default_ui_json)
-            ui_json.set_values(**APP_INITIALIZER)
+            ui_json.set_values(**self._app_initializer)
 
         self.params = self._param_class.build(**ui_json.to_params())
 
