@@ -13,7 +13,6 @@
 from __future__ import annotations
 
 import os
-import uuid
 from pathlib import Path
 from time import time
 
@@ -21,15 +20,18 @@ from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from flask import Flask
+from geoh5py import Workspace
 from geoh5py.objects.object_base import ObjectBase
-from geoh5py.shared.exceptions import AssociationValidationError
+from geoh5py.shared.utils import (
+    uuid2entity,
+)
+from grid_apps.block_models.driver import Driver
+from grid_apps.block_models.options import BlockModelOptions
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
 from geoapps.block_model_creation.constants import app_initializer
-from geoapps.block_model_creation.driver import BlockModelDriver
 from geoapps.block_model_creation.layout import block_model_layout
-from geoapps.block_model_creation.params import BlockModelParams
 
 
 class BlockModelCreation(BaseDashApplication):
@@ -37,29 +39,26 @@ class BlockModelCreation(BaseDashApplication):
     Dash app used for the creation of a BlockModel.
     """
 
-    _param_class = BlockModelParams
-    _driver_class = BlockModelDriver
+    _param_class = BlockModelOptions
+    _driver_class = Driver
+    _app_initializer = app_initializer
 
     def __init__(self, ui_json=None, **kwargs):
         if ui_json is not None and Path(ui_json.path).exists():
-            self.params = self._param_class(ui_json)
+            self.params = self._param_class.build(ui_json)
         else:
-            app_initializer.update(kwargs)
-            try:
-                self.params = self._param_class(**app_initializer)
+            initializer = self._app_initializer.copy()
+            initializer.update(kwargs)
 
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
+            if not isinstance(initializer["geoh5"], Workspace):
+                initializer["geoh5"] = Workspace(initializer["geoh5"])
 
-                self.params = self._param_class(**app_initializer)
-            extras = {
-                key: value
-                for key, value in app_initializer.items()
-                if key not in self.params.param_names
+            initializer = {
+                key: uuid2entity(val, initializer["geoh5"])
+                for key, val in initializer.items()
             }
-            self._app_initializer = extras
+
+            self.params = self._param_class.build(initializer)
 
         super().__init__()
 
@@ -91,7 +90,7 @@ class BlockModelCreation(BaseDashApplication):
             Output(component_id="depth_core", component_property="value"),
             Output(component_id="horizontal_padding", component_property="value"),
             Output(component_id="bottom_padding", component_property="value"),
-            Output(component_id="expansion_fact", component_property="value"),
+            Output(component_id="expansion_factor", component_property="value"),
             Output(component_id="monitoring_directory", component_property="value"),
             Input(component_id="ui_json_data", component_property="data"),
         )(self.update_remainder_from_ui_json)
@@ -106,7 +105,7 @@ class BlockModelCreation(BaseDashApplication):
             State(component_id="depth_core", component_property="value"),
             State(component_id="horizontal_padding", component_property="value"),
             State(component_id="bottom_padding", component_property="value"),
-            State(component_id="expansion_fact", component_property="value"),
+            State(component_id="expansion_factor", component_property="value"),
             State(component_id="live_link", component_property="value"),
             State(component_id="monitoring_directory", component_property="value"),
         )(self.trigger_click)
@@ -122,7 +121,7 @@ class BlockModelCreation(BaseDashApplication):
         depth_core: float,
         horizontal_padding: float,
         bottom_padding: float,
-        expansion_fact: float,
+        expansion_factor: float,
         live_link: list,
         monitoring_directory: str,
         trigger: str | None = None,
@@ -139,7 +138,7 @@ class BlockModelCreation(BaseDashApplication):
         :param depth_core: Depth of core mesh below input object.
         :param horizontal_padding: Horizontal padding distance.
         :param bottom_padding: Bottom padding distance.
-        :param expansion_fact: Expansion factor for padding cells.
+        :param expansion_factor: Expansion factor for padding cells.
         :param live_link: Checkbox for using monitoring directory.
         :param monitoring_directory: Output path for exporting block model.
         :param trigger: Dash component which triggered the callback.
@@ -186,11 +185,10 @@ class BlockModelCreation(BaseDashApplication):
                         )
 
                 # Write output uijson.
-                new_params = BlockModelParams(**param_dict)
-                new_params.write_input_file(
-                    name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                    path=monitoring_directory,
-                    validate=False,
+                new_params = BlockModelOptions.build(param_dict)
+                new_params.write_ui_json(
+                    Path(monitoring_directory)
+                    / temp_geoh5.replace(".geoh5", ".ui.json"),
                 )
                 # Run driver.
                 self.driver.params = new_params

@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import uuid
 import warnings
 import webbrowser
@@ -22,17 +23,21 @@ import numpy as np
 import scipy
 from dash import Dash, Input, Output, State, callback_context, no_update
 from flask import Flask
+from geoh5py import Workspace
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
-from geoh5py.shared.utils import is_uuid
-from geoh5py.workspace import Workspace
+from geoh5py.shared.exceptions import AssociationValidationError
+from geoh5py.shared.utils import (
+    is_uuid,
+    uuid2entity,
+)
 from jupyter_server import serverapp
 from plotly import graph_objects as go
-from simpeg_drivers import InversionBaseParams
+from simpeg_drivers.options import BaseForwardOptions, BaseInversionOptions
 
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.inversion.components.preprocessing import preprocess_data
+from geoapps.inversion.utils import preprocess_data
 from geoapps.shared_utils.utils import (
     DrapeOptions,
     WindowOptions,
@@ -46,22 +51,39 @@ class InversionApp(BaseDashApplication):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = InversionBaseParams
-    _inversion_type = None
+    _param_class = BaseInversionOptions
+    _param_class_forward = BaseForwardOptions
+    _inversion_type: str
     _inversion_params = {}
     _run_params = None
     _layout = None
     _components = None
 
-    def __init__(self):
-        super().__init__()
-
-        if getattr(self.params, "_out_group", None) is not None:
-            self.params._ga_group = self.params.out_group.name
+    def __init__(self, ui_json=None, **kwargs):
+        if ui_json is not None and pathlib.Path(ui_json.path).exists():
+            self.params = self._param_class.build(ui_json)
         else:
-            self.params._ga_group = (
-                self.params.inversion_type.title().replace(" ", "") + "Inversion"
-            )
+            app_initializer = self._app_initializer.copy()
+            app_initializer.update(kwargs)
+
+            if not isinstance(app_initializer["geoh5"], Workspace):
+                app_initializer["geoh5"] = Workspace(app_initializer["geoh5"])
+
+            app_initializer = {
+                key: uuid2entity(val, app_initializer["geoh5"])
+                for key, val in app_initializer.items()
+            }
+            try:
+                self.params = self._param_class.build(app_initializer)
+
+            except AssociationValidationError:
+                for key, value in app_initializer.items():
+                    if isinstance(value, uuid.UUID):
+                        app_initializer[key] = None
+
+                self.params = self._param_class.build(app_initializer)
+
+        super().__init__()
 
         external_stylesheets = None
         server = Flask(__name__)
@@ -747,8 +769,8 @@ class InversionApp(BaseDashApplication):
         triggers = [c["prop_id"].split(".")[0] for c in callback_context.triggered]
 
         if "ui_json_data" in triggers:
-            # Fill in full_components dict from ui.json.
             full_components = {}
+            # Fill in full_components dict from ui.json.
             for comp in component_options:
                 # Get channel value
                 if comp + "_channel" in ui_json_data and is_uuid(
@@ -816,12 +838,15 @@ class InversionApp(BaseDashApplication):
                 uncertainty_channel = full_components[component]["uncertainty_channel"]
         elif "data_object" in triggers:
             # On object change, clear full_components and update data dropdown options.
-            for comp in full_components:
-                full_components[comp]["channel_bool"] = []
-                full_components[comp]["channel"] = None
-                full_components[comp]["uncertainty_type"] = "Floor"
-                full_components[comp]["uncertainty_floor"] = None
-                full_components[comp]["uncertainty_channel"] = None
+            full_components = {}
+            for comp in component_options:
+                full_components[comp] = {
+                    "channel_bool": [],
+                    "channel": None,
+                    "uncertainty_type": "Floor",
+                    "uncertainty_floor": None,
+                    "uncertainty_channel": None,
+                }
             channel_bool = []
             channel = None
             uncertainty_type = "Floor"
@@ -1280,17 +1305,14 @@ class InversionApp(BaseDashApplication):
         """
         param_dict = {}
         for key, value in inversion_params_dict.items():
-            param_dict[key] = None
             if value["options"] == "Model":
                 if is_uuid(value["data"]) and mesh_object is not None:
-                    param_dict[key] = self.workspace.get_entity(
-                        uuid.UUID(value["data"])
-                    )[0]
+                    entity = self.workspace.get_entity(uuid.UUID(value["data"]))[0]
                     if (
-                        param_dict[key] is not None
-                        and new_workspace.get_entity(param_dict[key].uid)[0] is None
+                        entity is not None
+                        and new_workspace.get_entity(entity.uid)[0] is None
                     ):
-                        param_dict[key].copy(parent=mesh_object)
+                        param_dict[key] = entity.copy(parent=mesh_object)
             elif value["options"] == "Constant":
                 param_dict[key] = value["const"]
 
@@ -1378,13 +1400,10 @@ class InversionApp(BaseDashApplication):
                     "const": update_dict[param + "_const"],
                 }
 
-        param_dict = {}
-        # Update bounds, models
-        param_dict.update(
-            self.get_general_inversion_params(
-                new_workspace, input_param_dict, mesh_object
-            )
+        param_dict = self.get_general_inversion_params(
+            new_workspace, input_param_dict, mesh_object
         )
+
         # Update channel params
         param_dict.update(
             self.get_full_component_params(
@@ -1557,9 +1576,6 @@ class InversionApp(BaseDashApplication):
 
         :return: Output message with save location.
         """
-        if mesh is None:
-            print("A mesh must be selected to write the input file.")
-            return no_update
         if data_object is None:
             print("An object with data must be selected to write the input file.")
             return no_update
@@ -1569,7 +1585,6 @@ class InversionApp(BaseDashApplication):
 
         # Get dict of params from base dash application
         update_dict = {
-            "forward_only": forward_only,
             "alpha_s": alpha_s,
             "length_scale_x": length_scale_x,
             "length_scale_y": length_scale_y,
@@ -1589,7 +1604,7 @@ class InversionApp(BaseDashApplication):
             "n_cpu": n_cpu,
             "store_sensitivities": store_sensitivities,
             "tile_spatial": tile_spatial,
-            "ga_group": ga_group,
+            "title": ga_group,
             "monitoring_directory": monitoring_directory,
             "inducing_field_strength": inducing_field_strength,
             "inducing_field_inclination": inducing_field_inclination,
@@ -1609,7 +1624,7 @@ class InversionApp(BaseDashApplication):
             monitoring_directory = Path(self.workspace.h5file).resolve().parent
 
         # Create a new workspace and copy objects into it
-        temp_geoh5 = f"{ga_group}_{time():.0f}.geoh5"
+        temp_geoh5 = f"{self.params.name}_{time():.0f}.geoh5"
         ws, _ = BaseApplication.get_output_workspace(
             live_link=False, workpath=monitoring_directory, name=temp_geoh5
         )
@@ -1619,10 +1634,14 @@ class InversionApp(BaseDashApplication):
             param_dict["geoh5"] = workspace
 
             # Copy mesh to workspace
-            mesh = self.workspace.get_entity(uuid.UUID(mesh))[0]
-            param_dict["mesh"] = workspace.get_entity(mesh.uid)[0]
-            if param_dict["mesh"] is None:
-                param_dict["mesh"] = mesh.copy(parent=workspace, copy_children=False)
+            param_dict["mesh"] = None
+            if mesh is not None:
+                mesh = self.workspace.get_entity(uuid.UUID(mesh))[0]
+                param_dict["mesh"] = workspace.get_entity(mesh.uid)[0]
+                if param_dict["mesh"] is None:
+                    param_dict["mesh"] = mesh.copy(
+                        parent=workspace, copy_children=False
+                    )
 
             # Copy data object to workspace
             data_object = self.workspace.get_entity(uuid.UUID(data_object))[0]
@@ -1648,9 +1667,9 @@ class InversionApp(BaseDashApplication):
                 azimuth=0.0,
             )
 
-            if receivers_radar_drape is not None:
+            if receivers_radar_drape:
                 receivers_radar_drape = self.workspace.get_entity(
-                    uuid.UUID(receivers_radar_drape)
+                    uuid.UUID(receivers_radar_drape[0])
                 )[0]
 
             drape_options = DrapeOptions(
@@ -1667,6 +1686,7 @@ class InversionApp(BaseDashApplication):
                 param_dict,
                 param_dict["data_object"],
                 window_options,
+                forward_only=any(forward_only),
                 drape_options=drape_options,
                 resolution=resolution,
                 ignore_values=ignore_values,
@@ -1675,10 +1695,22 @@ class InversionApp(BaseDashApplication):
             )
             param_dict.update(update_dict)
 
-            self._run_params = self.params.__class__(**param_dict)
-            self._run_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=monitoring_directory,
+            if forward_only:
+                self._run_params = self._param_class_forward.build(param_dict)
+            else:
+                if self._inversion_type == "gravity" and "gz_channel" not in param_dict:
+                    param_dict["gz_channel"] = None
+
+                if (
+                    "magnetic" in self._inversion_type
+                    and "tmi_channel" not in param_dict
+                ):
+                    param_dict["tmi_channel"] = None
+
+                self._run_params = self._param_class.build(param_dict)
+
+            self._run_params.write_ui_json(
+                monitoring_directory / temp_geoh5.replace(".geoh5", ".ui.json")
             )
 
         return ["\nSaved to " + str(Path(monitoring_directory).resolve() / temp_geoh5)]
@@ -1701,5 +1733,5 @@ class InversionApp(BaseDashApplication):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m {params.run_command} "
-            + f'"{params.input_file.path_name}"'
+            + f'"{params.geoh5.h5file.with_suffix(".ui.json")}"'
         )

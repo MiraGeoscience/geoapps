@@ -10,11 +10,10 @@
 
 from __future__ import annotations
 
-import pathlib
-import uuid
-
-from geoh5py.shared.exceptions import AssociationValidationError
-from simpeg_drivers.potential_fields.gravity.params import GravityParams
+from simpeg_drivers.potential_fields.gravity.options import (
+    GravityForwardOptions,
+    GravityInversionOptions,
+)
 
 from geoapps.inversion.base_inversion_application import InversionApp
 from geoapps.inversion.potential_fields.gravity.constants import app_initializer
@@ -30,36 +29,16 @@ class GravityApp(InversionApp):
     Application for the inversion of potential field data using simpeg
     """
 
-    _param_class = GravityParams
+    _param_class = GravityInversionOptions
+    _param_class_forward = GravityForwardOptions
     _inversion_type = "gravity"
     _inversion_params = gravity_inversion_params
     _layout = gravity_layout
+    _app_initializer = app_initializer
     _components = component_list
 
     def __init__(self, ui_json=None, **kwargs):
-        if ui_json is not None and pathlib.Path(ui_json.path).exists():
-            self.params = self._param_class(ui_json)
-        else:
-            app_initializer.update(kwargs)
-
-            try:
-                self.params = self._param_class(**app_initializer)
-
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
-
-                self.params = self._param_class(**app_initializer)
-
-            extras = {
-                key: value
-                for key, value in app_initializer.items()
-                if key not in self.params.param_names
-            }
-            self._app_initializer = extras
-
-        super().__init__()
+        super().__init__(ui_json=ui_json, **kwargs)
 
         self.app.callback(
             *self.default_trigger_args,

@@ -31,7 +31,7 @@ jobs:
     with:
       package-manager: 'conda'
       app-name: 'geoapps'
-      python-version: '3.10'
+      python-version: '3.12'
 
   call-workflow-pytest:
     name: Pytest
@@ -41,11 +41,11 @@ jobs:
     uses: MiraGeoscience/CI-tools/.github/workflows/reusable-python-pytest.yml@v3
     with:
       package-manager: 'conda'
-      python-versions: '["3.10", "3.11", "3.12"]'
+      python-versions: '["3.12", "3.13"]'
       os: '["ubuntu-latest", "windows-latest"]'
       lfs: true
       cache-number: 1
-      codecov-reference-python-version: '3.10'
+      codecov-reference-python-version: '3.12'
       codecov-reference-os: '["windows-latest"]'
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

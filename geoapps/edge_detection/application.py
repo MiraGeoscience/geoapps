@@ -15,7 +15,7 @@ from time import time
 from uuid import UUID
 
 from curve_apps.edges.driver import EdgesDriver
-from curve_apps.edges.params import EdgeParameters
+from curve_apps.edges.options import EdgeParameters
 from geoh5py import Workspace
 from geoh5py.data import FloatData
 from geoh5py.objects import Grid2D, ObjectBase

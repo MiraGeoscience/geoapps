@@ -170,7 +170,7 @@ block_model_layout = html.Div(
                     style={"width": "25%", "display": "inline-block"},
                 ),
                 dcc.Input(
-                    id="expansion_fact",
+                    id="expansion_factor",
                     type="number",
                     style={
                         "width": "50%",
