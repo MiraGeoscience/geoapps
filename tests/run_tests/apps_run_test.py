@@ -40,6 +40,7 @@ from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
 from geoapps.octree_creation.application import OctreeMesh
 from geoapps.peak_finder.application import PeakFinder
+from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
 from tests import PROJECT, PROJECT_TEM
@@ -573,8 +574,14 @@ def test_peak_finder():
 
 def test_octree_creation(tmp_path):
     app = OctreeMesh()
-
-    app.export_directory._filename.value = str(tmp_path)
-    app.export_directory._apply_selection()
-
+    app.export_directory._selected_path = str(tmp_path)
     app.trigger_click(None)
+    assert len([file for file in tmp_path.iterdir()]) == 2
+
+
+def test_scatter_plot(tmp_path):
+    app = ScatterPlots()
+    figure = app.update_plot("", trigger="")
+    app.trigger_click(1, str(tmp_path), figure, trigger="export")
+
+    assert len([file for file in tmp_path.iterdir()]) == 3

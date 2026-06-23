@@ -165,8 +165,8 @@ class ScatterPlots(BaseDashApplication):
         )(self.update_remainder_from_ui_json)
         self.app.callback(
             Output(component_id="crossplot", component_property="figure"),
-            Input(component_id="downsampling", component_property="value"),
             Input(component_id="objects", component_property="data"),
+            Input(component_id="downsampling", component_property="value"),
             Input(component_id="x", component_property="value"),
             Input(component_id="x_log", component_property="value"),
             Input(component_id="x_thresh", component_property="value"),
@@ -224,46 +224,14 @@ class ScatterPlots(BaseDashApplication):
         :return color-style: Color axis style dict.
         :return size-style: Size axis style dict.
         """
-        if axis == "x":
-            return (
-                {"display": "block"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif axis == "y":
-            return (
-                {"display": "none"},
-                {"display": "block"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif axis == "z":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "block"},
-                {"display": "none"},
-                {"display": "none"},
-            )
-        elif axis == "color":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "block"},
-                {"display": "none"},
-            )
-        elif axis == "size":
-            return (
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "none"},
-                {"display": "block"},
-            )
+        display = []
+        for ax in ["x", "y", "z", "color", "size"]:
+            if axis == ax:
+                display.append({"display": "block"})
+            else:
+                display.append({"display": "none"})
+
+        return tuple(display)
 
     def update_data_options(self, ui_json_data: dict):
         """
@@ -438,86 +406,35 @@ class ScatterPlots(BaseDashApplication):
 
     def update_plot(
         self,
-        downsampling: int,
         objects: str,
-        x: str,
-        x_log: list,
-        x_thresh: float,
-        x_min: float,
-        x_max: float,
-        y: str,
-        y_log: list,
-        y_thresh: float,
-        y_min: float,
-        y_max: float,
-        z: str,
-        z_log: list,
-        z_thresh: float,
-        z_min: float,
-        z_max: float,
-        color: str,
-        color_log: list,
-        color_thresh: float,
-        color_min: float,
-        color_max: float,
-        color_maps: str,
-        size: str,
-        size_log: list,
-        size_thresh: float,
-        size_min: float,
-        size_max: float,
-        size_markers: int,
+        *_,
+        trigger: str | None = None,
     ) -> go.Figure:
         """
         Run scatter plot driver, and if export was clicked save the figure as html.
 
-        :param downsampling: Percent of total values to plot.
         :param objects: UUID of selected object.
-        :param x: UUID of selected x data.
-        :param x_log: Whether to plot the log of x data.
-        :param x_thresh: X threshold.
-        :param x_min: Minimum value for x data.
-        :param x_max: Maximum value for x data.
-        :param y: UUID of selected y data.
-        :param y_log: Whether to plot the log of y data.
-        :param y_thresh: Y threshold.
-        :param y_min: Minimum value for y data.
-        :param y_max: Maximum value for y data.
-        :param z: UUID of selected z data.
-        :param z_log: Whether to plot the log of z data.
-        :param z_thresh: Z threshold.
-        :param z_min: Minimum value for z data.
-        :param z_max: Maximum value for x data.
-        :param color: UUID of selected color data.
-        :param color_log: Whether to plot the log of color data.
-        :param color_thresh: Color threshold.
-        :param color_min: Minimum value for color data.
-        :param color_max: Maximum value for color data.
-        :param color_maps: Color map.
-        :param size: UUID of selected size data.
-        :param size_log: Whether to plot the log of size data.
-        :param size_thresh: Size threshold.
-        :param size_min: Minimum value for size data.
-        :param size_max: Maximum value for size data.
-        :param size_markers: Max size for markers.
+        :param *_: All other parameters triggering the callback.
+        :param trigger: Optional parameter to trigger the callback.
 
         :return figure: Scatter plot.
         """
         update_dict = {}
         # Get list of parameters to update in self.params, from callback trigger.
-        for item in callback_context.triggered:
-            value = item["value"]
+        if trigger is None:
+            for item in callback_context.triggered:
+                value = item["value"]
 
-            if isinstance(value, list):
-                value = any(value)
+                if isinstance(value, list):
+                    value = any(value)
 
-            update_dict[item["prop_id"].split(".")[0]] = value
+                update_dict[item["prop_id"].split(".")[0]] = value
 
-        # Don't update plot if objects triggered the callback, but use objects to update self.params.
-        if "objects" in update_dict and len(update_dict) == 1:
-            return go.Figure()
-        elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
-            update_dict.update({"objects": objects})
+            # Don't update plot if objects triggered the callback, but use objects to update self.params.
+            if "objects" in update_dict and len(update_dict) == 1:
+                return go.Figure()
+            elif set(update_dict.keys()).intersection({"x", "y", "z", "color", "size"}):
+                update_dict.update({"objects": objects})
 
         # Update self.params
         update_dict = self.get_params_dict(update_dict)
@@ -525,16 +442,16 @@ class ScatterPlots(BaseDashApplication):
         param_dict.update(update_dict)
         self.params = ScatterPlotParams.build(param_dict)
         self.driver.params = self.params
-        # Run driver to get updated scatter plot.
-        figure = go.Figure(self.driver.run())
 
-        return figure
+        # Run driver to get updated scatter plot.
+        return self.driver.run()
 
     def trigger_click(
         self,
         n_clicks: int,
         monitoring_directory: str,
         figure: go.Figure | None = None,
+        trigger: str | None = None,
     ):
         """
         Save the plot as html, write out ui.json.
@@ -542,55 +459,59 @@ class ScatterPlots(BaseDashApplication):
         :param n_clicks: Trigger export from button.
         :param monitoring_directory: Output path.
         :param figure: Figure created by update_plots.
+        :param trigger: Trigger from button.
         """
+        if trigger is None:
+            trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
 
-        trigger = callback_context.triggered[0]["prop_id"].split(".")[0]
-        if trigger == "export":
-            param_dict = self.params.flatten()
+        if trigger != "export":
+            return no_update
 
-            # Get output path.
-            if (
-                monitoring_directory is not None
-                and monitoring_directory != ""
-                and Path(monitoring_directory).is_dir()
-            ):
-                param_dict["monitoring_directory"] = str(
-                    Path(monitoring_directory).resolve()
-                )
-                temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
+        param_dict = self.params.flatten()
 
-                # Get output workspace.
-                ws, _ = BaseApplication.get_output_workspace(
-                    False, param_dict["monitoring_directory"], temp_geoh5
-                )
+        # Get output path.
+        if (
+            monitoring_directory is not None
+            and monitoring_directory != ""
+            and Path(monitoring_directory).is_dir()
+        ):
+            param_dict["monitoring_directory"] = str(
+                Path(monitoring_directory).resolve()
+            )
+            temp_geoh5 = f"Scatterplot_{time():.0f}.geoh5"
 
-                with fetch_active_workspace(ws, mode="r") as new_workspace:
-                    # Put entities in output workspace.
-                    param_dict["geoh5"] = new_workspace
-                    for key, value in param_dict.items():
-                        if isinstance(value, ObjectBase):
-                            param_dict[key] = value.copy(
-                                parent=new_workspace, copy_children=True
-                            )
+            # Get output workspace.
+            ws, _ = BaseApplication.get_output_workspace(
+                False, param_dict["monitoring_directory"], temp_geoh5
+            )
 
-                # Write output uijson.
-                new_params = ScatterPlotParams.build(param_dict)
-                new_params.write_ui_json(
+            with fetch_active_workspace(ws, mode="r") as new_workspace:
+                # Put entities in output workspace.
+                param_dict["geoh5"] = new_workspace
+                for key, value in param_dict.items():
+                    if isinstance(value, ObjectBase):
+                        param_dict[key] = value.copy(
+                            parent=new_workspace, copy_children=True
+                        )
+
+            # Write output uijson.
+            new_params = ScatterPlotParams.build(param_dict)
+            new_params.write_ui_json(
+                (Path(param_dict["monitoring_directory"]) / temp_geoh5).with_suffix(
+                    ".ui.json"
+                ),
+            )
+
+            go.Figure(figure).write_html(
+                str(
                     (Path(param_dict["monitoring_directory"]) / temp_geoh5).with_suffix(
-                        ".ui.json"
-                    ),
-                )
-
-                go.Figure(figure).write_html(
-                    str(
-                        (
-                            Path(param_dict["monitoring_directory"]) / temp_geoh5
-                        ).with_suffix(".html")
+                        ".html"
                     )
                 )
-                print("Saved to " + param_dict["monitoring_directory"])
-            else:
-                print("Invalid output path.")
+            )
+            print("Saved to " + param_dict["monitoring_directory"])
+        else:
+            print("Invalid output path.")
 
         return no_update
 

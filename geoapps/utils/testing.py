@@ -31,11 +31,10 @@ from geoh5py.objects import (
     TipperReceivers,
 )
 from geoh5py.workspace import Workspace
-from octree_creation_app.driver import OctreeDriver
-from octree_creation_app.utils import treemesh_2_octree
+from grid_apps.octree_creation.driver import OctreeDriver
+from grid_apps.utils import treemesh_2_octree
 from scipy.spatial import Delaunay
 from simpeg import utils
-from simpeg_drivers.utils.utils import get_drape_model
 
 
 class Geoh5Tester:
@@ -394,50 +393,32 @@ def setup_inversion_workspace(
         )
 
     # Create a mesh
+    padDist = np.ones((3, 2)) * padding_distance
+    mesh = mesh_builder_xyz(
+        vertices - np.r_[cell_size] / 2.0,
+        cell_size,
+        depth_core=100.0,
+        padding_distance=padDist,
+        mesh_type="TREE",
+    )
+    mesh = OctreeDriver.refine_tree_from_surface(
+        mesh,
+        topography,
+        levels=refinement,
+        finalize=False,
+    )
 
-    if "2d" in inversion_type:
-        lines = survey.get_entity("line_ids")[0].values
-        entity, mesh, _ = get_drape_model(  # pylint: disable=W0632
-            geoh5,
-            "Models",
-            survey.vertices[np.unique(survey.cells[lines == 101, :]), :],
-            [cell_size[0], cell_size[2]],
-            100.0,
-            [padding_distance] * 2 + [padding_distance] * 2,
-            1.1,
-            parent=None,
-            return_colocated_mesh=True,
-            return_sorting=True,
-        )
-        active = active_from_xyz(entity, topography.vertices, grid_reference="top")
-
-    else:
-        padDist = np.ones((3, 2)) * padding_distance
-        mesh = mesh_builder_xyz(
-            vertices - np.r_[cell_size] / 2.0,
-            cell_size,
-            depth_core=100.0,
-            padding_distance=padDist,
-            mesh_type="TREE",
-        )
-        mesh = OctreeDriver.refine_tree_from_surface(
+    if inversion_type in ["fem", "airborne_tem"]:
+        mesh = OctreeDriver.refine_tree_from_points(
             mesh,
-            topography,
-            levels=refinement,
+            vertices,
+            levels=[2],
             finalize=False,
         )
 
-        if inversion_type in ["fem", "airborne_tem"]:
-            mesh = OctreeDriver.refine_tree_from_points(
-                mesh,
-                vertices,
-                levels=[2],
-                finalize=False,
-            )
-
-        mesh.finalize()
-        entity = treemesh_2_octree(geoh5, mesh, name="mesh")
-        active = active_from_xyz(entity, topography.vertices, grid_reference="top")
+    mesh.finalize()
+    entity = treemesh_2_octree(geoh5, mesh, name="mesh")
+    active = active_from_xyz(entity, topography.vertices, grid_reference="top")
 
     # Model
     if flatten:
