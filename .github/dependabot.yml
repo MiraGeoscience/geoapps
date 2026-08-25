@@ -12,3 +12,11 @@ updates:
       interval: "weekly"
     cooldown:
       default-days: 4
+    groups:
+      github-actions:
+        patterns:
+          - actions/*
+      mirageo-ci-tools:
+        patterns:
+          - MiraGeoscience/CI-tools/.github/actions/*
+          - MiraGeoscience/CI-tools/.github/workflows/*
