@@ -7,8 +7,8 @@ fail_fast: false
 
 ci:
     skip: [pylint]
-    autoupdate_branch: develop
-    autoupdate_schedule: monthly
+    autoupdate_branch: _
+    autoupdate_schedule: quarterly
 
 repos:
 -   repo: https://github.com/hadialqattan/pycln
