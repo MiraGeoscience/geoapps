@@ -51,7 +51,7 @@ def get_object_selection_layout(inversion_type, component_list):
     if inversion_type in ["magnetic vector", "magnetic scalar"]:
         object_selection_layout = html.Div(
             [
-                dcc.Markdown("##### **Object/Data Selection**"),
+                dcc.Markdown("## **Object/Data Selection**"),
                 standard_layout,
                 inducing_params_div,
                 input_data_layout,
@@ -65,7 +65,7 @@ def get_object_selection_layout(inversion_type, component_list):
     else:
         object_selection_layout = html.Div(
             [
-                dcc.Markdown("##### **Object/Data Selection**"),
+                dcc.Markdown("## **Object/Data Selection**"),
                 standard_layout,
                 input_data_layout,
             ],
@@ -99,7 +99,7 @@ def generate_model_component(
 
     component = html.Div(
         [
-            dcc.Markdown("**" + label_prefix + param_label + "**"),
+            dcc.Markdown("#### **" + label_prefix + param_label + "**"),
             html.Div(
                 [
                     dcc.RadioItems(
@@ -172,20 +172,18 @@ def get_inversion_params_layout(inversion_params):
 
     starting_model = html.Div(
         id="starting_model_div",
-        children=[dcc.Markdown("###### **Starting Model**")]
-        + starting_model_components,
+        children=[dcc.Markdown("## **Starting Model**")] + starting_model_components,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
     reference_model = html.Div(
         id="reference_model_div",
-        children=[dcc.Markdown("###### **Reference Model**")]
-        + reference_model_components,
+        children=[dcc.Markdown("## **Reference Model**")] + reference_model_components,
         style={"display": "inline-block", "vertical-align": "top", "width": "50%"},
     )
 
     inversion_params_layout = html.Div(
         [
-            dcc.Markdown("##### **Inversion Parameters**"),
+            dcc.Markdown("## **Inversion Parameters**"),
             dcc.Checklist(
                 id="core_params",
                 options=[{"label": "Core parameters", "value": True}],
@@ -201,9 +199,10 @@ def get_inversion_params_layout(inversion_params):
                 id="core_params_div",
                 children=[
                     topography_layout,
-                    starting_model,
                     html.Hr(),
                     mesh,
+                    html.Hr(),
+                    starting_model,
                     html.Hr(),
                     reference_model,
                 ],
@@ -291,7 +290,7 @@ inducing_params_div = html.Div(
 
 plot_layout = html.Div(
     [
-        dcc.Markdown("##### **Window Data**"),
+        dcc.Markdown("## **Window Data**"),
         html.Div(
             [
                 html.Div(
@@ -570,7 +569,7 @@ def get_input_data_layout(component_list):
 
 topography_layout = html.Div(
     [
-        dcc.Markdown("###### **Topography**"),
+        dcc.Markdown("### **Topography**"),
         html.Div(
             [
                 html.Div(
@@ -679,7 +678,7 @@ topography_layout = html.Div(
 mesh = html.Div(
     id="mesh_div",
     children=[
-        dcc.Markdown("###### **Mesh**"),
+        dcc.Markdown("### **Mesh (Optional)**"),
         html.Button(id="open_mesh", children=["Open Mesh Creation"]),
         html.Div(
             [
@@ -708,7 +707,7 @@ mesh = html.Div(
 regularization = html.Div(
     id="regularization_div",
     children=[
-        dcc.Markdown("###### **Regularization**"),
+        dcc.Markdown("### **Regularization**"),
         html.Div(
             [
                 html.Div(
@@ -808,7 +807,7 @@ regularization = html.Div(
 upper_lower_bounds = html.Div(
     id="upper_lower_bound_div",
     children=[
-        dcc.Markdown("###### **Upper-Lower Bounds**"),
+        dcc.Markdown("### **Upper-Lower Bounds**"),
         generate_model_component("lower_bound", "Lower Bounds", "Units"),
         generate_model_component("upper_bound", "Upper Bounds", "Units"),
     ],
@@ -818,7 +817,7 @@ upper_lower_bounds = html.Div(
 ignore_values = html.Div(
     id="ignore_values_div",
     children=[
-        dcc.Markdown("###### **Ignore Values**"),
+        dcc.Markdown("### **Ignore Values**"),
         html.Div(
             [
                 dcc.Markdown(
@@ -838,7 +837,7 @@ ignore_values = html.Div(
 optimization = html.Div(
     id="optimization_div",
     children=[
-        dcc.Markdown("###### **Optimization**"),
+        dcc.Markdown("### **Optimization**"),
         html.Div(
             [
                 dcc.Markdown(
@@ -992,7 +991,7 @@ optimization = html.Div(
 detrend = html.Div(
     id="detrend_div",
     children=[
-        dcc.Markdown("###### **Detrend**"),
+        dcc.Markdown("### **Detrend**"),
         html.Div(
             [
                 html.Div(
@@ -1043,8 +1042,8 @@ inversion_parameters_dropdown = html.Div(
         dcc.Dropdown(
             id="param_dropdown",
             options=[
-                "starting model",
                 "mesh",
+                "starting model",
                 "reference model",
                 "regularization",
                 "upper-lower bounds",
@@ -1065,7 +1064,7 @@ inversion_parameters_dropdown = html.Div(
 
 output_layout = html.Div(
     [
-        dcc.Markdown("##### **Output**"),
+        dcc.Markdown("## **Output**"),
         html.Div(
             [
                 dcc.Markdown(

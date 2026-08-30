@@ -12,36 +12,34 @@ from __future__ import annotations
 import json
 import multiprocessing
 import os
-import uuid
 import warnings
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 import numpy as np
+from geoapps_utils.utils.importing import GeoAppsError
 from geoh5py.data import Data
-from geoh5py.objects import CurrentElectrode, PotentialElectrode
-from geoh5py.shared.exceptions import AssociationValidationError
-from geoh5py.shared.utils import fetch_active_workspace
+from geoh5py.objects import CurrentElectrode, Octree, PotentialElectrode
+from geoh5py.shared.utils import (
+    fetch_active_workspace,
+    uuid2entity,
+)
 from geoh5py.ui_json import InputFile
 from geoh5py.workspace import Workspace
-from simpeg_drivers.electricals.direct_current.three_dimensions.params import (
-    DirectCurrent3DParams,
+from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
+    DC3DInversionOptions,
 )
-from simpeg_drivers.electricals.induced_polarization.three_dimensions.params import (
-    InducedPolarization3DParams,
+from simpeg_drivers.electricals.induced_polarization.three_dimensions.options import (
+    IP3DInversionOptions,
 )
+from simpeg_drivers.uijson import SimPEGDriversUIJson
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.plot import PlotSelection2D
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.inversion.components.preprocessing import preprocess_data
-from geoapps.inversion.electricals.direct_current.three_dimensions.constants import (
-    app_initializer,
-)
-from geoapps.inversion.potential_fields.application import (
-    MeshOctreeOptions,
-    ModelOptions,
-)
+from geoapps.inversion.utils import preprocess_data
 from geoapps.shared_utils.utils import DrapeOptions, WindowOptions
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.list import find_value
@@ -62,33 +60,56 @@ with warn_module_not_found():
         Widget,
     )
 
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon_dcip.geoh5"),
+    "data_object": UUID("{6e14de2c-9c2f-4976-84c2-b330d869cb82}"),
+    "potential_channel": UUID("{502e7256-aafa-4016-969f-5cc3a4f27315}"),
+    "potential_uncertainty": UUID("{62746129-3d82-427e-a84c-78cded00c0bc}"),
+    "mesh": UUID("{eab26a47-6050-4e72-bb95-bd4457b65f47}"),
+    "reference_model": 1e-1,
+    "starting_model": 1e-1,
+    "octree_levels_topo": [0, 0, 0, 2],
+    "octree_levels_obs": [5, 5, 5, 5],
+    "depth_core": 500.0,
+    "horizontal_padding": 1000.0,
+    "vertical_padding": 1000.0,
+    "s_norm": 0.0,
+    "x_norm": 2.0,
+    "y_norm": 2.0,
+    "z_norm": 2.0,
+    "upper_bound": 100.0,
+    "lower_bound": 1e-5,
+    "max_global_iterations": 25,
+    "sens_wts_threshold": 0.001,
+    "topography_object": UUID("{ab3c2083-6ea8-4d31-9230-7aad3ec09525}"),
+    "topography": UUID("{a603a762-f6cb-4b21-afda-3160e725bf7d}"),
+    "z_from_topo": True,
+    "receivers_offset_z": 0.0,
+}
 
-def inversion_defaults():
-    """
-    Get defaults for DCIP inversion
-    """
-    return {
-        "units": {
-            "direct current 3d": "S/m",
-            "induced polarization 3d": "V/V",
-        },
-        "property": {
-            "direct current 3d": "conductivity",
-            "induced polarization 3d": "chargeability",
-        },
-        "reference_value": {
-            "direct current 3d": 1e-1,
-            "induced polarization 3d": 0.0,
-        },
-        "starting_value": {
-            "direct current 3d": 1e-1,
-            "induced polarization 3d": 1e-4,
-        },
-        "component": {
-            "direct current 3d": "potential",
-            "induced polarization 3d": "chargeability",
-        },
-    }
+
+INVERSION_DEFAULTS = {
+    "units": {
+        "direct current 3d": "S/m",
+        "induced polarization 3d": "V/V",
+    },
+    "property": {
+        "direct current 3d": "conductivity",
+        "induced polarization 3d": "chargeability",
+    },
+    "reference_value": {
+        "direct current 3d": 1e-1,
+        "induced polarization 3d": 0.0,
+    },
+    "starting_value": {
+        "direct current 3d": 1e-1,
+        "induced polarization 3d": 1e-4,
+    },
+    "component": {
+        "direct current 3d": "potential",
+        "induced polarization 3d": "chargeability",
+    },
+}
 
 
 class InversionApp(PlotSelection2D):
@@ -96,7 +117,8 @@ class InversionApp(PlotSelection2D):
     Application for the inversion of potential field data using SimPEG
     """
 
-    _param_class = DirectCurrent3DParams
+    _app_initializer = APP_INITIALIZER
+    _param_class = DC3DInversionOptions
     _select_multiple = True
     _add_groups = False
     _sensor = None
@@ -107,31 +129,38 @@ class InversionApp(PlotSelection2D):
     _exclusion_types = (CurrentElectrode,)
     inversion_parameters = None
 
-    def __init__(self, ui_json=None, plot_result=True, **kwargs):
+    def __init__(
+        self,
+        ui_json=None,
+        plot_result=True,
+        geoh5: Workspace | str | Path | None = None,
+        **kwargs,
+    ):
         if ui_json is not None and Path(ui_json.path).exists():
-            self.params = self._param_class(ui_json)
+            self.params = self._param_class.build(ui_json)
         else:
-            app_initializer.update(kwargs)
+            initializer = self._app_initializer.copy()
+            initializer.update(kwargs)
+
+            if geoh5 is None:
+                geoh5 = initializer["geoh5"]
+
+            if isinstance(geoh5, str | Path):
+                geoh5 = Workspace(geoh5)
+
+            initializer["geoh5"] = geoh5
+            initializer = {
+                key: uuid2entity(val, initializer["geoh5"])
+                for key, val in initializer.items()
+            }
 
             try:
-                self.params = self._param_class(**app_initializer)
-
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
-
-                self.params = self._param_class(**app_initializer)
-
-            extras = {
-                key: value
-                for key, value in app_initializer.items()
-                if key not in self.params.param_names
-            }
-            self._app_initializer = extras
+                self.params = self._param_class.build(initializer)
+            except GeoAppsError:
+                self.params = self._param_class.model_construct(geoh5=geoh5)
 
         self.data_object = self.objects
-        self.defaults.update(self.params.to_dict())
+        self.defaults.update(self.params.flatten())
 
         self._data_count = (Label("Data Count: 0"),)
         self._forward_only = Checkbox(
@@ -147,7 +176,7 @@ class InversionApp(PlotSelection2D):
             button_style="warning",
             icon="check",
         )
-        self.defaults.update(self.params.to_dict())
+        self.defaults.update(self.params.flatten())
         self._ga_group_name = widgets.Text(
             value="Inversion_", description="Save as:", disabled=False
         )
@@ -734,12 +763,12 @@ class InversionApp(PlotSelection2D):
         self.base_workspace_changes(workspace)
         self.update_objects_list()
         # self.lines.workspace = workspace
-        self.sensor.workspace = workspace
-        self._topography_group.workspace = workspace
-        self._reference_model_group.workspace = workspace
-        self._starting_model_group.workspace = workspace
-        self._conductivity_model_group.workspace = workspace
-        self._mesh_octree.workspace = workspace
+        self.sensor._workspace = workspace  # pylint: disable=protected-access
+        self._topography_group._workspace = workspace  # pylint: disable=protected-access
+        self._reference_model_group._workspace = workspace  # pylint: disable=protected-access
+        self._starting_model_group._workspace = workspace  # pylint: disable=protected-access
+        self._conductivity_model_group._workspace = workspace  # pylint: disable=protected-access
+        self._mesh_octree._workspace = workspace  # pylint: disable=protected-access
         self.plotting_data = None
 
     @property
@@ -775,31 +804,29 @@ class InversionApp(PlotSelection2D):
         """
         Change the application on change of system
         """
-        params = self.params.to_dict()
+        params = self.params.flatten()
         if self.inversion_type.value == "direct current 3d" and not isinstance(
-            self.params, DirectCurrent3DParams
+            self.params, DC3DInversionOptions
         ):
-            self._param_class = DirectCurrent3DParams
-            params["inversion_type"] = "direct current 3d"
-            params["out_group"] = "DCInversion"
+            self._param_class = DC3DInversionOptions
             self.option_choices.options = list(self.inversion_options)[1:]
+            params["potential_channel"] = params.pop("chargeability_channel")
+            params["potential_uncertainty"] = params.pop("chargeability_uncertainty")
 
         elif self.inversion_type.value == "induced polarization 3d" and not isinstance(
-            self.params, InducedPolarization3DParams
+            self.params, IP3DInversionOptions
         ):
-            self._param_class = InducedPolarization3DParams
-            params["inversion_type"] = "induced polarization 3d"
-            params["out_group"] = "ChargeabilityInversion"
+            self._param_class = IP3DInversionOptions
             self.option_choices.options = list(self.inversion_options)
-
-        self.params = self._param_class(
-            # validator_opts={"ignore_requirements": True}
-        )
+            params["chargeability_channel"] = params.pop("potential_channel")
+            params["chargeability_uncertainty"] = params.pop("potential_uncertainty")
 
         if self.inversion_type.value in ["direct current 3d"]:
             data_type_list = ["potential"]
         else:
             data_type_list = ["chargeability"]
+
+        self.params = self._param_class.build(params)
 
         if getattr(self.params, "_out_group", None) is not None:
             self.ga_group_name.value = self.params.out_group.name
@@ -809,21 +836,21 @@ class InversionApp(PlotSelection2D):
             )
 
         flag = self.inversion_type.value
-        self._reference_model_group.units = inversion_defaults()["units"][flag]
+        self._reference_model_group.units = INVERSION_DEFAULTS["units"][flag]
         self._reference_model_group.options.value = "Constant"
-        self._reference_model_group.constant.value = inversion_defaults()[
+        self._reference_model_group.constant.value = INVERSION_DEFAULTS[
             "reference_value"
         ][flag]
         self._reference_model_group.description.value = (
-            "Reference " + inversion_defaults()["property"][flag]
+            "Reference " + INVERSION_DEFAULTS["property"][flag]
         )
-        self._starting_model_group.units = inversion_defaults()["units"][flag]
+        self._starting_model_group.units = INVERSION_DEFAULTS["units"][flag]
         self._starting_model_group.options.value = "Constant"
-        self._starting_model_group.constant.value = inversion_defaults()[
+        self._starting_model_group.constant.value = INVERSION_DEFAULTS[
             "starting_value"
         ][flag]
         self._starting_model_group.description.value = (
-            "Starting " + inversion_defaults()["property"][flag]
+            "Starting " + INVERSION_DEFAULTS["property"][flag]
         )
         data_channel_options = {}
         self.data_channel_choices.options = data_type_list
@@ -910,7 +937,7 @@ class InversionApp(PlotSelection2D):
                         getattr(self, key + "_floor").value = value
                     else:
                         getattr(self, key + "_channel").value = (
-                            uuid.UUID(value) if isinstance(value, str) else value
+                            UUID(value) if isinstance(value, str) else value
                         )
 
                 setattr(InversionApp, f"{key}_uncertainty", (value_setter))
@@ -949,7 +976,7 @@ class InversionApp(PlotSelection2D):
                 ["", None]
             ] + options
 
-        self.data_channel_choices.value = inversion_defaults()["component"][
+        self.data_channel_choices.value = INVERSION_DEFAULTS["component"][
             self.inversion_type.value
         ]
         self.data_channel_choices.data_channel_options = data_channel_options
@@ -1022,16 +1049,22 @@ class InversionApp(PlotSelection2D):
             return
 
         # Widgets values populate params dictionary
-        param_dict = {}
+        param_dict = self.params.flatten()
         for key in self.__dict__:
+            if key not in param_dict:
+                continue
+
             try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                if (
+                    isinstance(getattr(self, key), Widget)
+                    and key.lstrip("_") in param_dict
+                ):
                     value = getattr(self, key).value
                     if key[0] == "_":
                         key = key[1:]
 
                     if (
-                        isinstance(value, uuid.UUID)
+                        isinstance(value, UUID)
                         and self.workspace.get_entity(value)[0] is not None
                     ):
                         value = self.workspace.get_entity(value)[0]
@@ -1041,7 +1074,7 @@ class InversionApp(PlotSelection2D):
             except AttributeError:
                 continue
 
-        # Create a new workapce and copy objects into it
+        # Create a new workspace and copy objects into it
         temp_geoh5 = f"{self.ga_group_name.value}_{time():.0f}.geoh5"
         ws, self.live_link.value = BaseApplication.get_output_workspace(
             self.live_link.value, self.export_directory.selected_path, temp_geoh5
@@ -1081,10 +1114,14 @@ class InversionApp(PlotSelection2D):
                     if not self.forward_only.value:
                         widget = getattr(self, f"{key}_uncertainty_channel")
                         if widget.value is not None:
-                            param_dict[f"{key}_uncertainty"] = str(widget.value)
-                            if new_workspace.get_entity(widget.value)[0] is None:
-                                self.workspace.get_entity(widget.value)[0].copy(
-                                    parent=new_obj, copy_children=False
+                            param_dict[f"{key}_uncertainty"] = new_workspace.get_entity(
+                                widget.value
+                            )[0]
+                            if param_dict[f"{key}_uncertainty"] is None:
+                                param_dict[f"{key}_uncertainty"] = (
+                                    self.workspace.get_entity(widget.value)[0].copy(
+                                        parent=new_obj, copy_children=False
+                                    )
                                 )
                         else:
                             widget = getattr(self, f"{key}_uncertainty_floor")
@@ -1112,9 +1149,9 @@ class InversionApp(PlotSelection2D):
                 attr = getattr(self, key)
                 if isinstance(attr, Widget) and hasattr(attr, "value"):
                     value = attr.value
-                    if isinstance(value, uuid.UUID):
+                    if isinstance(value, UUID):
                         value = new_workspace.get_entity(value)[0]
-                    if hasattr(self.params, key):
+                    if key.lstrip("_") in param_dict:
                         param_dict[key.lstrip("_")] = value
                 else:
                     sub_keys = []
@@ -1130,10 +1167,10 @@ class InversionApp(PlotSelection2D):
                         value = getattr(attr, sub_key)
                         if isinstance(value, Widget) and hasattr(value, "value"):
                             value = value.value
-                        if isinstance(value, uuid.UUID):
+                        if isinstance(value, UUID):
                             value = new_workspace.get_entity(value)[0]
-                        if hasattr(self.params, sub_key):
-                            param_dict[sub_key.lstrip("_")] = value
+                        if sub_key in param_dict:
+                            param_dict[sub_key] = value
 
             # Create new params object and write
             param_dict["geoh5"] = new_workspace
@@ -1152,8 +1189,8 @@ class InversionApp(PlotSelection2D):
             drape_options = DrapeOptions(
                 topography_object=param_dict["topography_object"],
                 topography=param_dict["topography"],
-                z_from_topo=param_dict["z_from_topo"],
-                receivers_offset_z=param_dict["receivers_offset_z"],
+                z_from_topo=self.z_from_topo.value,
+                receivers_offset_z=self.receivers_offset_z.value,
                 receivers_radar_drape=receiver_drape,
             )
 
@@ -1164,13 +1201,21 @@ class InversionApp(PlotSelection2D):
                 param_dict["data_object"],
                 window_options,
                 drape_options=drape_options,
+                forward_only=self.forward_only.value,
             )
             param_dict.update(update_dict)
 
-            self._run_params = self.params.__class__(**param_dict)
-            self._run_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                path=self.export_directory.selected_path,
+            clean_dict = {}
+            raw_class = SimPEGDriversUIJson.read(self.params.default_ui_json)
+            for key, value in param_dict.items():
+                if value is None or key not in raw_class.model_fields:
+                    continue
+                clean_dict[key] = value
+
+            self._run_params = self.params.__class__.build(clean_dict)
+            self._run_params.write_ui_json(
+                Path(self.export_directory.selected_path)
+                / temp_geoh5.replace(".geoh5", ".ui.json"),
             )
 
         self.write.button_style = ""
@@ -1178,7 +1223,7 @@ class InversionApp(PlotSelection2D):
 
     @staticmethod
     def run(params):
-        if not isinstance(params, (DirectCurrent3DParams, InducedPolarization3DParams)):
+        if not isinstance(params, (DC3DInversionOptions, IP3DInversionOptions)):
             raise TypeError(
                 "Parameter 'inversion_type' must be one of "
                 "'direct current 3d' or 'induced polarization 3d'"
@@ -1187,7 +1232,7 @@ class InversionApp(PlotSelection2D):
         os.system(
             "start cmd.exe @cmd /k "
             + f"python -m {params.run_command} "
-            + f'"{params.input_file.path_name}"'
+            + f'"{params.geoh5.h5file.with_suffix(".ui.json")}"'
         )
 
     def file_browser_change(self, _):
@@ -1206,17 +1251,17 @@ class InversionApp(PlotSelection2D):
                     data = json.load(f)
 
                 if data["inversion_type"] == "direct current 3d":
-                    self._param_class = DirectCurrent3DParams
+                    self._param_class = DC3DInversionOptions
 
                 elif data["inversion_type"] == "induced polarization 3d":
-                    self._param_class = InducedPolarization3DParams
+                    self._param_class = IP3DInversionOptions
 
-                self.params = self._param_class(
+                self.params = self._param_class.build(
                     InputFile.read_ui_json(self.file_browser.selected)
                 )
                 self.params.geoh5.open(mode="r")
                 self.refresh.value = False
-                self.__populate__(**self.params.to_dict())
+                self.__populate__(**self.params.flatten())
                 self.refresh.value = True
 
             elif extension == ".geoh5":
@@ -1276,3 +1321,97 @@ class SensorOptions(ObjectDataSelection):
     @property
     def z_from_topo(self):
         return self._z_from_topo
+
+
+class MeshOctreeOptions(ObjectDataSelection):
+    """
+    Widget used for the creation of an octree meshes
+    """
+
+    _object_types = (Octree,)
+    params_keys = [
+        "mesh",
+    ]
+
+    def __init__(self, **kwargs):
+        self._mesh = self.objects
+        self._main = VBox([self.objects])
+
+        super().__init__(**kwargs)
+
+    @property
+    def main(self):
+        return self._main
+
+    @property
+    def mesh(self):
+        return self._mesh
+
+
+class ModelOptions(ObjectDataSelection):
+    """
+    Widgets for the selection of model options
+    """
+
+    def __init__(self, identifier: str | None = None, **kwargs):
+        self._units = "Units"
+        self._identifier = identifier
+        self._object_types = (Octree,)
+        self._options = widgets.RadioButtons(
+            options=["Model", "Constant", "None"],
+            value="Constant",
+            disabled=False,
+        )
+        self._options.observe(self.update_panel, names="value")
+        self.objects.description = "Object"
+
+        self.data.description = "Values"
+        self._constant = FloatText(description=self.units)
+        self._description = Label()
+
+        super().__init__(**kwargs)
+
+        self.objects.observe(self.objects_setter, names="value")
+        self.selection_widget = self.data
+        self._main = widgets.VBox(
+            [self._description, widgets.VBox([self._options, self._constant])]
+        )
+
+    def update_panel(self, _):
+        if self._options.value == "Model":
+            self._main.children[1].children = [self._options, self.selection_widget]
+            self._main.children[1].children[1].layout.visibility = "visible"
+        elif self._options.value == "Constant":
+            self._main.children[1].children = [self._options, self._constant]
+            self._main.children[1].children[1].layout.visibility = "visible"
+        else:
+            self._main.children[1].children[1].layout.visibility = "hidden"
+
+    def objects_setter(self, _):
+        if self.objects.value is not None:
+            self.options.value = "Model"
+
+    @property
+    def constant(self):
+        return self._constant
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def identifier(self):
+        return self._identifier
+
+    @property
+    def options(self):
+        return self._options
+
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, value):
+        self._units = value
+        self._constant.description = value

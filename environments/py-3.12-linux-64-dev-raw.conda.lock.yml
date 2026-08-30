@@ -36,7 +36,6 @@ dependencies:
   - bleach-with-css=6.4.0=hac0b51c_0
   - blinker=1.9.0=pyhff2d567_0
   - bokeh=3.6.3=pyhd8ed1ab_0
-  - bottle=0.13.4=pyhe01879c_0
   - brotli=1.2.0=hed03a55_1
   - brotli-bin=1.2.0=hb03c661_1
   - brotli-python=1.2.0=py312hdb49522_1
@@ -50,7 +49,6 @@ dependencies:
   - charset-normalizer=3.4.7=pyhd8ed1ab_0
   - click=8.4.1=pyhc90fa1f_0
   - cloudpickle=3.1.2=pyhcf101f3_1
-  - clr_loader=0.3.1=pyhd8ed1ab_0
   - colorama=0.4.6=pyhd8ed1ab_1
   - comm=0.2.3=pyhe01879c_0
   - contourpy=1.3.3=py312h0a2e395_4
@@ -228,7 +226,6 @@ dependencies:
   - pluggy=1.6.0=pyhf9edf01_1
   - prometheus_client=0.25.0=pyhd8ed1ab_0
   - prompt-toolkit=3.0.52=pyha770c72_0
-  - proxy-tools=0.1.0=pyhd8ed1ab_0
   - psutil=7.2.2=py312h5253ce2_0
   - pthread-stubs=0.4=hb9d3cd8_1002
   - ptyprocess=0.7.0=pyhd8ed1ab_1
@@ -255,7 +252,6 @@ dependencies:
   - python-mumps=0.0.6=nompi_h4762de1
   - python-tzdata=2026.2=pyhd8ed1ab_0
   - python_abi=3.12=8_cp312
-  - pythonnet=3.1.0=pyhd8ed1ab_0
   - pytz=2026.2=pyhcf101f3_0
   - pyyaml=6.0.3=py312h8a5da7c_1
   - pyzmq=27.1.0=py312hda471dd_3
@@ -351,7 +347,6 @@ dependencies:
     - lazy-loader == 0.5
     - mira-simpeg @ git+https://github.com/MiraGeoscience/simpeg.git@c243521d9448737ccb3fa1447843b25949840698
     - networkx == 3.6.1
-    - pywebview == 6.2.1
     - scikit-image == 0.26.0
     - simpeg-drivers @ git+https://github.com/MiraGeoscience/simpeg-drivers.git@9a0176111b4978d6fab795490ef495a9010989db
     - surface-apps @ git+https://github.com/MiraGeoscience/surface-apps.git@47174aed2702afab968ce42e48c3e42c09972cc1

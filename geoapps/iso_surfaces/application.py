@@ -18,7 +18,7 @@ from geoh5py.groups import UIJsonGroup
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
 from geoh5py.ui_json import InputFile
-from surface_apps.iso_surfaces.driver import IsoSurfacesDriver
+from surface_apps.iso_surfaces.driver import Driver
 from surface_apps.iso_surfaces.params import IsoSurfaceParameters
 
 from geoapps import assets_path
@@ -155,7 +155,7 @@ class IsoSurface(ObjectDataSelection):
             new_params.input_file.write_ui_json(
                 name=temp_geoh5.replace(".geoh5", ".ui.json")
             )
-            driver = IsoSurfacesDriver(new_params)
+            driver = Driver(new_params)
             driver.run()
 
         if self.live_link.value:

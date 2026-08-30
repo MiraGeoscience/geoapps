@@ -11,10 +11,7 @@ import copy
 
 import numpy as np
 
-from geoapps.inversion.components.preprocessing import (
-    parse_ignore_values,
-    set_infinity_uncertainties,
-)
+from geoapps.inversion.utils import parse_ignore_values, set_infinity_uncertainties
 
 
 def test_parse_ignore_values():
