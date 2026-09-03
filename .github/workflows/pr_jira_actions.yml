@@ -6,7 +6,7 @@ on:
 
 jobs:
   call-workflow-pr_jira_actions:
-    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-pr_actions.yml@v3
+    uses: MiraGeoscience/CI-tools/.github/workflows/reusable-jira-pr_actions.yml@7241532854727d993872b67fc761139b8438615b # v3.12.0
     permissions:
       contents: read
       pull-requests: write
