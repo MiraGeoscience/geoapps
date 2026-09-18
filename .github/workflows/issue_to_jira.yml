@@ -12,14 +12,14 @@ jobs:
 
     steps:
     - name: JIRA Login
-      uses: atlassian/gajira-login@v3.0.1
+      uses: atlassian/gajira-login@45fd029b9f1d6d8926c6f04175aa80c0e42c9026 # v3.0.1
       env:
         JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
         JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
         JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
     - name: Jira Create issue
       id: create_jira_issue
-      uses: atlassian/gajira-create@v3.0.1
+      uses: atlassian/gajira-create@59e177c4f6451399df5b4911c2211104f171e669 # v3.0.1
       with:
         project: GEOPY
         issuetype: Story
@@ -28,7 +28,7 @@ jobs:
         # Additional fields in JSON format
         fields: '{"components": [{"name": "geoapps"}]}'
     - name: Post JIRA link
-      uses: peter-evans/create-or-update-comment@v4
+      uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
       with:
         # The number of the issue or pull request in which to create a comment.
         issue-number: ${{ github.event.issue.number }}
