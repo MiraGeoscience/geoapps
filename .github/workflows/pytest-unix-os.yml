@@ -24,6 +24,8 @@ concurrency:
 jobs:
   pytest:
     name: pytest (Unix)
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     strategy:
       fail-fast: false
@@ -43,6 +45,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           lfs: true
+          persist-credentials: false
       - name: Setup conda env
         uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
         with:
