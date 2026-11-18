@@ -27,6 +27,8 @@ env:
 jobs:
   pylint:
     name: pylint
+    permissions:
+      contents: read
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     defaults:
@@ -39,6 +41,8 @@ jobs:
       CONDA_LOCK_ENV_FILE: environments/py-3.10-linux-64-dev.conda.lock.yml
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Setup conda env
         uses: mamba-org/setup-micromamba@4b9113af4fba0e9e1124b252dd6497a419e7396d # v1.11.0
         with:
@@ -47,10 +51,12 @@ jobs:
           cache-downloads: true
       - name: capture modified files
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: >-
-          git fetch --deepen=500 origin ${{github.base_ref}}
+          git fetch --deepen=500 origin "$BASE_REF"
           && echo "FILES_PARAM=$(
-          git diff --diff-filter=AM --name-only refs/remotes/origin/${{github.base_ref}}... -- | grep -E "^(${source_dir}|tests)/.*\.py$" | xargs
+          git diff --diff-filter=AM --name-only "refs/remotes/origin/${BASE_REF}..." -- | grep -E "^(${source_dir}|tests)/.*\.py$" | xargs
           )" >> $GITHUB_ENV
       - name: Run pylint on modified files
         if: github.event_name == 'pull_request' && env.FILES_PARAM

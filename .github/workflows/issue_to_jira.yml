@@ -9,6 +9,8 @@ on:
 jobs:
   new_jira_issue:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
 
     steps:
     - name: JIRA Login
