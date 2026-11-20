@@ -9,9 +9,8 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, Literal
-
 from pathlib import Path
+from typing import ClassVar, Literal
 
 from geoapps_utils.base import Options
 from geoh5py.data import Data
@@ -19,13 +18,15 @@ from geoh5py.objects import ObjectBase
 
 from geoapps import assets_path
 
+
 class DataInterpolationParams(Options):
     """
     Parameter class for data interpolation application.
     """
+
     name: ClassVar[str] = "data_interpolation"
     default_ui_json: ClassVar[Path] = (
-            assets_path() / "uijson/implicit_modelling.ui.json"
+        assets_path() / "uijson/implicit_modelling.ui.json"
     )
     title: str = "Geoapps - Data Interpolation"
     run_command: str = "geoapps.interpolation.driver"

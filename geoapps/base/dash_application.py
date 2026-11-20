@@ -549,9 +549,7 @@ class ObjectSelection:
             ui_json_data = stringify(ifile.to_params())
 
             # Start server
-            self.app_class(
-                ui_json=ifile, ui_json_data=ui_json_data, params=new_params
-            )
+            self.app_class(ui_json=ifile, ui_json_data=ui_json_data, params=new_params)
 
         return ""
 
