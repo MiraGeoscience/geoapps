@@ -24,7 +24,7 @@ from dash.dependencies import Input, Output
 from flask import Flask
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace, stringify
-from geoh5py.ui_json import BaseUIJson
+from geoh5py.ui_json import UIJson
 
 from geoapps import assets_path
 from geoapps.base.application import BaseApplication
@@ -73,11 +73,11 @@ class ScatterPlots(BaseDashApplication):
     _driver_class = ScatterPlotDriver
     _app_initializer = APP_INITIALIZER
 
-    def __init__(self, ui_json: BaseUIJson | str | Path | None = None):
+    def __init__(self, ui_json: UIJson | str | Path | None = None):
         if isinstance(ui_json, str | Path) and Path(ui_json).exists():
-            ui_json = BaseUIJson.read(ui_json)
+            ui_json = UIJson.read(ui_json)
         elif ui_json is None:
-            ui_json = BaseUIJson.read(self._param_class.default_ui_json)
+            ui_json = UIJson.read(self._param_class.default_ui_json)
             ui_json.set_values(**self._app_initializer)
 
         self.params = self._param_class.build(**ui_json.to_params())

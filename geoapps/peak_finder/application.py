@@ -14,12 +14,12 @@ from uuid import UUID
 
 from curve_apps.peak_finder.application import PeakFinder as DashPeakFinder
 from curve_apps.peak_finder.params import PeakFinderParams
-
+from geoapps_utils.utils.importing import GeoAppsError
+from geoapps.base.dash_application import ObjectSelection
 from geoh5py.data import ReferencedData
 from geoh5py.objects import ObjectBase
-from geoh5py.shared import Entity
-from geoh5py.shared.exceptions import AssociationValidationError, OptionalValidationError
-from geoh5py.ui_json import InputFile
+from geoh5py.shared.entity import Entity
+from geoh5py.ui_json import UIJson
 from ipywidgets import Dropdown, VBox
 
 from geoapps import assets_path
@@ -44,12 +44,15 @@ class PeakFinder(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         APP_INITIALIZER.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
+            self.params = self._param_class.build(UIJson.read(ui_json))
         else:
             try:
-                self.params = self._param_class(**APP_INITIALIZER)
+                options = self._param_class.collect_input_from_dict(
+                    self._param_class, APP_INITIALIZER
+                )
+                self.params = self._param_class(**options)
 
-            except (AssociationValidationError, OptionalValidationError):
+            except GeoAppsError:
                 for key, value in APP_INITIALIZER.items():
                     if isinstance(value, UUID):
                         APP_INITIALIZER[key] = None

@@ -19,17 +19,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 from curve_apps import assets_path as curve_apps_assets_path
-
 from geoh5py.data import FilenameData
 from geoh5py.objects import Curve, Surface
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 from surface_apps import assets_path as surface_apps_assets_path
 
 from geoapps import assets_path
 from geoapps.block_model_creation.application import BlockModelCreation
 from geoapps.calculator import Calculator
-
 from geoapps.contours.application import ContourValues
 from geoapps.coordinate_transformation import CoordinateTransformation
 from geoapps.edge_detection.application import EdgeDetectionApp
@@ -176,16 +174,18 @@ def test_contour_values(tmp_path):
         data = workspace.get_entity(
             uuid.UUID("{44822654-b6ae-45b0-8886-2d845f80f422}")
         )[0]
-        ifile = InputFile.read_ui_json(
+        ifile = UIJson.read(
             curve_apps_assets_path() / "uijson/contours.ui.json", validate=False
         )
-        ifile.set_data_value("geoh5", workspace)
-        ifile.set_data_value("objects", objects)
-        ifile.set_data_value("data", data)
-        ifile.set_data_value("interval_min", -400.0)
-        ifile.set_data_value("interval_max", 2000.0)
-        ifile.set_data_value("interval_spacing", 100.0)
-        ifile.set_data_value("fixed_contours", "-240")
+        ifile.set_values(
+            geoh5=workspace,
+            objects=objects,
+            data=data,
+            interval_min=-400.0,
+            interval_max=2000.0,
+            interval_spacing=100.0,
+            fixed_contours="-240",
+        )
 
     app = ContourValues(ui_json=ifile, plot_result=False)
     app.trigger_click(None)
@@ -196,7 +196,8 @@ def test_contour_values(tmp_path):
         # TODO the double value here is due to package conflicts locally and on github
         # Once we switch from matplotlib to scikit-image, this should be a single value.
         assert (
-            len([child for child in output.children if isinstance(child, FilenameData)]) == 1
+            len([child for child in output.children if isinstance(child, FilenameData)])
+            == 1
         )
 
 
@@ -330,17 +331,17 @@ def test_iso_surface(tmp_path: Path):
         data = workspace.get_entity(
             uuid.UUID("{f3e36334-be0a-4210-b13e-06933279de25}")
         )[0]
-        ifile = InputFile.read_ui_json(
-            surface_apps_assets_path() / "uijson/iso_surfaces.ui.json", validate=False
+        ifile = UIJson.read(surface_apps_assets_path() / "uijson/iso_surfaces.ui.json")
+        ifile.set_values(
+            geoh5=workspace,
+            objects=objects,
+            data=data,
+            max_distance=500.0,
+            resolution=50.0,
+            interval_min=0.005,
+            interval_max=0.02,
+            interval_spacing=0.005,
         )
-        ifile.set_data_value("geoh5", workspace)
-        ifile.set_data_value("objects", objects)
-        ifile.set_data_value("data", data)
-        ifile.set_data_value("max_distance", 500.0)
-        ifile.set_data_value("resolution", 50.0)
-        ifile.set_data_value("interval_min", 0.005)
-        ifile.set_data_value("interval_max", 0.02)
-        ifile.set_data_value("interval_spacing", 0.005)
 
     app = IsoSurface(ui_json=ifile)
     app.trigger_click(None)

@@ -23,10 +23,10 @@ import numpy as np
 import scipy
 from dash import Dash, Input, Output, State, callback_context, no_update
 from flask import Flask
+from geoapps_utils.utils.importing import GeoAppsError
 from geoh5py import Workspace
 from geoh5py.data import Data
 from geoh5py.objects import Curve, Grid2D, ObjectBase, Octree, Points, Surface
-from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import (
     is_uuid,
     uuid2entity,
@@ -76,7 +76,7 @@ class InversionApp(BaseDashApplication):
             try:
                 self.params = self._param_class.build(app_initializer)
 
-            except AssociationValidationError:
+            except GeoAppsError:
                 for key, value in app_initializer.items():
                     if isinstance(value, uuid.UUID):
                         app_initializer[key] = None

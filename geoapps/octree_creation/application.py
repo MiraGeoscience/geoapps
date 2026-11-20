@@ -19,9 +19,9 @@ from time import time
 from uuid import UUID
 
 from geoh5py.objects import Curve, ObjectBase, Octree, Points, Surface
-from geoh5py.shared import Entity
+from geoh5py.shared.entity import Entity
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json import BaseUIJson
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 from grid_apps.octree_creation.driver import OctreeDriver
 from grid_apps.octree_creation.options import OctreeOptions
@@ -82,10 +82,10 @@ class OctreeMesh(ObjectDataSelection):
 
         APP_INITIALIZER.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            ui_json = BaseUIJson.read(ui_json)
+            ui_json = UIJson.read(ui_json)
             self.params = self._param_class.build(**ui_json.to_params())
         else:
-            ui_json = BaseUIJson.read(self._param_class.default_ui_json)
+            ui_json = UIJson.read(self._param_class.default_ui_json)
             ui_json.set_values(**APP_INITIALIZER)
             self.params = self._param_class.build(**ui_json.to_params())
 
@@ -273,7 +273,7 @@ class OctreeMesh(ObjectDataSelection):
     def trigger_click(self, _):
         param_dict = {}
 
-        out_ui_json = BaseUIJson.read(self.params.default_ui_json)
+        out_ui_json = UIJson.read(self.params.default_ui_json)
         for key in self.__dict__:
             try:
                 alias = key
@@ -397,6 +397,6 @@ if __name__ == "__main__":
         "'geoapps.octree_creation.driver' in version 0.7.0. "
         "This warning is likely due to the execution of older ui.json files. Please update."
     )
-    uijson = BaseUIJson.read(file)
+    uijson = UIJson.read(file)
     params_class = OctreeOptions(**uijson.to_params())
     OctreeMesh.run(params_class)

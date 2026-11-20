@@ -16,14 +16,12 @@ from geoapps_utils.driver.driver import BaseDriver
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
-from geoapps.interpolation.constants import validations
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.shared_utils.utils import weighted_average
 
 
 class DataInterpolationDriver(BaseDriver):
     _params_class = DataInterpolationParams
-    _validations = validations
 
     def __init__(self, params: DataInterpolationParams):
         super().__init__(params)

@@ -13,11 +13,11 @@ import uuid
 from pathlib import Path
 from time import time
 
+from geoapps_utils.utils.importing import GeoAppsError
 from geoh5py.objects import ObjectBase
 from geoh5py.objects.object_base import Entity
-from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json.input_file import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
@@ -42,19 +42,19 @@ class DataInterpolation(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
+            self.params = self._param_class.build(UIJson.read(ui_json))
         else:
             try:
                 self.params = self._param_class(**app_initializer)
 
-            except AssociationValidationError:
+            except GeoAppsError:
                 for key, value in app_initializer.items():
                     if isinstance(value, uuid.UUID):
                         app_initializer[key] = None
 
                 self.params = self._param_class(**app_initializer)
 
-        for key, value in self.params.to_dict().items():
+        for key, value in self.params.flatten().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
             else:

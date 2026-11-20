@@ -27,9 +27,9 @@ from flask import Flask
 from geoapps_utils.base import Options
 from geoh5py.data import Data
 from geoh5py.objects import ObjectBase
-from geoh5py.shared import Entity
+from geoh5py.shared.entity import Entity
 from geoh5py.shared.utils import fetch_active_workspace, is_uuid, str2uuid, stringify
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 from waitress import serve
 
@@ -166,9 +166,9 @@ class BaseDashApplication:
                 if hasattr(self, "driver"):
                     self.driver.params = self.params
                 # Create ifile from ui.json
-                ifile = InputFile(ui_json=ui_json)
+                ifile = UIJson.from_dict(ui_json)
                 # Demote ifile data so it can be stored as a string
-                ui_json_data = stringify(ifile.data)
+                ui_json_data = stringify(ifile.to_params)
                 # Get new object value for dropdown from ui.json
                 object_value = ui_json_data[param_name]
             elif filename is not None and filename.endswith(".geoh5"):
@@ -179,12 +179,9 @@ class BaseDashApplication:
                 ui_json_data = no_update
             elif trigger == "":
                 # Initialization of app from self.params.
-                ifile = InputFile(
-                    ui_json=self.params.input_file.ui_json,
-                    validate=False,
-                )
-                ifile.update_ui_values(self.params.flatten())
-                ui_json_data = ifile.data  # pylint: disable=W0212
+                ifile = self.params.ui_json
+
+                ui_json_data = ifile.to_params(workspace=self.workspace)  # pylint: disable=W0212
 
                 if self._app_initializer is not None:
                     ui_json_data.update(self._app_initializer)
@@ -470,10 +467,10 @@ class ObjectSelection:
                     ui_json = json.loads(decoded)
                     self.workspace = Workspace(ui_json["geoh5"], mode="r")
                     # Create ifile from ui.json
-                    ifile = InputFile(ui_json=ui_json)
-                    self.params = self.param_class(ifile)
+                    ifile = UIJson.from_dict(ui_json)
+                    self.params = self.param_class.build(ifile)
                     # Demote ifile data so it can be stored as a string
-                    ui_json_data = stringify(ifile.data.copy())
+                    ui_json_data = stringify(ifile.to_params())
                     # Get new object value for dropdown from ui.json
                     object_value = ui_json_data["objects"]
                 elif filename.endswith(".geoh5"):
@@ -482,7 +479,7 @@ class ObjectSelection:
                     decoded = io.BytesIO(base64.b64decode(content_string))
                     self.workspace = Workspace(decoded, mode="r")
                     # Update self.params with new workspace, but keep unaffected params the same.
-                    new_params = self.params.to_dict()
+                    new_params = self.params.fl()
                     for key, value in new_params.items():
                         if isinstance(value, Entity):
                             new_params[key] = None
@@ -490,12 +487,9 @@ class ObjectSelection:
                     self.params = self.param_class(**new_params)
             elif trigger == "":
                 # Initialization of app from self.params.
-                ifile = InputFile(
-                    ui_json=self.params.input_file.ui_json,
-                    validate=False,
-                )
-                ifile.update_ui_values(self.params.to_dict())
-                ui_json_data = ifile.data
+                ifile = self.params.ui_json
+
+                ui_json_data = ifile.to_params()
                 if self._app_initializer is not None:
                     ui_json_data.update(self._app_initializer)
 
@@ -551,18 +545,18 @@ class ObjectSelection:
                 path=temp_dir,
                 validate=False,
             )
-            ifile = InputFile.read_ui_json(ui_json_path)
-            ui_json_data = stringify(ifile.data)
+            ifile = UIJson.read(ui_json_path)
+            ui_json_data = stringify(ifile.to_params())
 
             # Start server
-            app = self.app_class(
+            self.app_class(
                 ui_json=ifile, ui_json_data=ui_json_data, params=new_params
             )
 
         return ""
 
     @staticmethod
-    def run(app_name: str, app_class: BaseDashApplication, ui_json: InputFile):
+    def run(app_name: str, app_class: BaseDashApplication, ui_json: UIJson):
         """
         Launch Qt app from terminal.
 

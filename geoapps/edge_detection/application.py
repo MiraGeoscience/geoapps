@@ -20,7 +20,7 @@ from geoh5py import Workspace
 from geoh5py.data import FloatData
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 
 from geoapps import assets_path
 from geoapps.base.application import BaseApplication
@@ -95,9 +95,9 @@ class EdgeDetectionApp(PlotSelection2D):
                     raise FileNotFoundError(
                         f"Provided uijson path {ui_json} not does not exist."
                     )
-                defaults = InputFile.read_ui_json(ui_json).data
-            elif isinstance(ui_json, InputFile):
-                defaults = ui_json.data
+                defaults = UIJson.read(ui_json).to_params()
+            elif isinstance(ui_json, UIJson):
+                defaults = ui_json.to_params()
 
         if not defaults:
             if Path(self._initializer["geoh5"]).exists():

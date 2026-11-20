@@ -25,7 +25,7 @@ from geoh5py.shared.utils import (
     fetch_active_workspace,
     uuid2entity,
 )
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
     DC3DInversionOptions,
@@ -1257,7 +1257,7 @@ class InversionApp(PlotSelection2D):
                     self._param_class = IP3DInversionOptions
 
                 self.params = self._param_class.build(
-                    InputFile.read_ui_json(self.file_browser.selected)
+                    UIJson.read(self.file_browser.selected)
                 )
                 self.params.geoh5.open(mode="r")
                 self.refresh.value = False

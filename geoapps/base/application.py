@@ -25,7 +25,7 @@ from geoh5py.shared.utils import (
     list2str,
     str2uuid,
 )
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
 from simpeg_drivers.options import BaseInversionOptions
@@ -188,7 +188,7 @@ class BaseApplication:
 
         if extension == ".json" and self._param_class is not None:
             self.params = self._param_class.build(
-                InputFile.read_ui_json(self.file_browser.selected)
+                UIJson.read(self.file_browser.selected)
             )
             self.refresh.value = False
             self.params.geoh5.open(mode="r")
