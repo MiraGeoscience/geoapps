@@ -58,7 +58,6 @@ Geophysical Data Inversion
     :reversed:
 
     applications/dcip_inversion
-    applications/em1d_inversion
     applications/grav_mag_inversion
 
 
@@ -95,10 +94,6 @@ Need help? Contact us at support@mirageoscience.com
     :width: 0
 
 .. figure:: applications/images/data_interp_thumbnail.png
-    :align: center
-    :width: 0
-
-.. figure:: applications/images/inversion_em1d_thumbnail.png
     :align: center
     :width: 0
 

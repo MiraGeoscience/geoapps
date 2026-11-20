@@ -9,21 +9,28 @@
 
 from __future__ import annotations
 
-import uuid
 from pathlib import Path
+from uuid import UUID
 
+from curve_apps.peak_finder.application import PeakFinder as DashPeakFinder
+from curve_apps.peak_finder.params import PeakFinderParams
+from geoapps_utils.utils.importing import GeoAppsError
 from geoh5py.data import ReferencedData
 from geoh5py.objects import ObjectBase
-from geoh5py.shared import Entity
-from geoh5py.shared.exceptions import AssociationValidationError
-from geoh5py.ui_json import InputFile
+from geoh5py.shared.entity import Entity
+from geoh5py.ui_json import UIJson
 from ipywidgets import Dropdown, VBox
-from peak_finder.application import PeakFinder as DashPeakFinder
-from peak_finder.dash_application import ObjectSelection
-from peak_finder.params import PeakFinderParams
 
+from geoapps import assets_path
+from geoapps.base.dash_application import ObjectSelection
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.peak_finder.constants import app_initializer
+
+
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon_airborne_tem.geoh5"),
+    "objects": UUID("{34698019-cde6-4b43-8d53-a040b25c989a}"),
+    "group_a_data": UUID("{22a9cf91-5cff-42b5-8bbb-2f1c6a559204}"),
+}
 
 
 class PeakFinder(ObjectDataSelection):
@@ -35,19 +42,22 @@ class PeakFinder(ObjectDataSelection):
     _add_groups = "only"
 
     def __init__(self, ui_json=None, **kwargs):
-        app_initializer.update(kwargs)
+        APP_INITIALIZER.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
+            self.params = self._param_class.build(UIJson.read(ui_json))
         else:
             try:
-                self.params = self._param_class(**app_initializer)
+                options = self._param_class.collect_input_from_dict(
+                    self._param_class, APP_INITIALIZER
+                )
+                self.params = self._param_class(**options)
 
-            except AssociationValidationError:
-                for key, value in app_initializer.items():
-                    if isinstance(value, uuid.UUID):
-                        app_initializer[key] = None
+            except GeoAppsError:
+                for key, value in APP_INITIALIZER.items():
+                    if isinstance(value, UUID):
+                        APP_INITIALIZER[key] = None
 
-                self.params = self._param_class(**app_initializer)
+                self.params = self._param_class(**APP_INITIALIZER)
 
         for key, value in self.params.to_dict().items():
             if isinstance(value, Entity):

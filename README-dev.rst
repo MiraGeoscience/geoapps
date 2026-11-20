@@ -45,17 +45,17 @@ The python versions are specified at the beginning of the ``devtools/run_conda_l
 
 .. code-block:: python
 
-    _PYTHON_VERSIONS = ["3.10", "3.11"]
+    _PYTHON_VERSIONS = ["3.12", "3.13"]
 
-The ``Install_or_Update.bat`` and the ``setup-dev.bat`` will use them to install the environment.
+The ``install.bat`` will use them to install the environment.
 
 
 Install the Conda environment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------------
 
-For development, you need a **Conda** environments. you can install it running the ``setup-dev.bat`` or::
+For development, you need a **Conda** environment. From the root of the project, run the command::
 
-    $ [path\to\geoapps]\devtools\setup-dev.bat
+    $ create-dev-env
 
 This command install a local environment at the base of your repository: ``.conda-env``.
 This environment should automatically be recognized by the Conda installation.
@@ -69,13 +69,10 @@ Updating dependencies
 ^^^^^^^^^^^^^^^^^^^^^
 
 Dependencies are listed in `pyproject.toml`_ with version constraints.
-Versions are then locked using ``conda-lock`` as previously described.
+Versions are then locked using ``deps-lock`` as previously described.
 
 Anytime dependencies are added to or removed from the ``pyproject.toml`` file,
-regenerate the Conda environment lock files, using ``devtools\run_conda_lock.bat``,
-or directly from command line::
-
-    (base) $ python devtools/run_conda_lock.py
+regenerate the Conda environment lock files, re-running ``deps-lock`` from command line.
 
 Regenerate the Conda environment lock files as well when you want to fetch newly
 available versions of the dependencies (typically patches, still in accordance with

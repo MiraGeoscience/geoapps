@@ -15,7 +15,7 @@ from time import time
 from uuid import UUID
 
 from curve_apps.contours.driver import ContoursDriver
-from curve_apps.contours.params import ContourParameters
+from curve_apps.contours.options import ContourParameters
 from geoh5py.objects import Grid2D
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
@@ -24,9 +24,24 @@ from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, Widget
 
 from geoapps import assets_path
 from geoapps.base.plot import PlotSelection2D
-from geoapps.inversion.components.preprocessing import grid_to_points
+from geoapps.inversion.utils import grid_to_points
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
+
+
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "interval_min": -400.0,
+    "interval_max": 2000.0,
+    "interval_spacing": 100.0,
+    "fixed_contours": "-240",
+    "resolution": 50.0,
+    "z_value": False,
+    "export_as": "Contours",
+    "out_group": None,
+}
 
 
 class ContourValues(PlotSelection2D):
@@ -35,19 +50,7 @@ class ContourValues(PlotSelection2D):
     """
 
     _param_class = ContourParameters
-    _initializer = {
-        "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-        "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-        "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
-        "interval_min": -400.0,
-        "interval_max": 2000.0,
-        "interval_spacing": 100.0,
-        "fixed_contours": "-240",
-        "resolution": 50.0,
-        "z_value": False,
-        "export_as": "Contours",
-        "out_group": None,
-    }
+    _initializer = APP_INITIALIZER
 
     def __init__(
         self,

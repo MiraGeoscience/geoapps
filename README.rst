@@ -66,7 +66,7 @@ Current sponsors
 
 Installation
 ^^^^^^^^^^^^
-**geoapps** is currently written for Python 3.10.
+**geoapps** is currently written for Python 3.12.
 
 Install Conda
 -------------

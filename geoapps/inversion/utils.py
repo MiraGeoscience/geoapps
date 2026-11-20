@@ -9,27 +9,23 @@
 
 from __future__ import annotations
 
-import warnings
+import uuid
 
 import numpy as np
-from discretize import TreeMesh
-from scipy.spatial import ConvexHull, cKDTree
-from simpeg.electromagnetics.frequency_domain.sources import (
-    LineCurrent as FEMLineCurrent,
-)
-from simpeg.electromagnetics.time_domain.sources import LineCurrent as TEMLineCurrent
-from simpeg.survey import BaseSurvey
-from simpeg.utils import mkvc
+from geoh5py import Workspace
+from geoh5py.data import Data, NumericData
+from geoh5py.objects import Grid2D, ObjectBase, Points
+from geoh5py.shared.utils import is_uuid
+from scipy.interpolate import LinearNDInterpolator
+from scipy.spatial import ConvexHull
 
-from geoapps.utils.surveys import get_intersecting_cells, get_unique_locations
+from geoapps.shared_utils.utils import DrapeOptions, WindowOptions, filter_xy
 
 
-def calculate_2D_trend(
+def calculate_2d_trend(
     points: np.ndarray, values: np.ndarray, order: int = 0, method: str = "all"
 ):
     """
-    detrend2D(points, values, order=0, method='all')
-
     Function to remove a trend from 2D scatter points with values
 
     Parameters:
@@ -112,225 +108,376 @@ def calculate_2D_trend(
     return data_trend, params
 
 
-def create_nested_mesh(
-    survey: BaseSurvey,
-    base_mesh: TreeMesh,
-    padding_cells: int = 8,
-    minimum_level: int = 3,
-    finalize: bool = True,
-):
+def preprocess_data(
+    workspace: Workspace,
+    param_dict: dict,
+    data_object: ObjectBase,
+    window_options: WindowOptions,
+    drape_options: DrapeOptions | None = None,
+    forward_only: bool = False,
+    resolution: float | None = None,
+    ignore_values: str | None = None,
+    detrend_type: str | None = None,
+    detrend_order: int | None = None,
+    components: list | None = None,
+    data_dict: dict | None = None,
+) -> dict:
     """
-    Create a nested mesh with the same extent as the input global mesh.
-    Refinement levels are preserved only around the input locations (local survey).
+    All data and object transformation not supported by the inversion driver.
 
-    Parameters
-    ----------
+    :param workspace: Parent workspace for data_object and data components.
+    :param param_dict: Dictionary of params to run the inversion.
+    :param data_object: Parent object for data components.
+    :param resolution: Resolution for downsampling.
+    :param window_options: Windowing options.
+    :param drape_options: Topography options.
+    :param forward_only: Flag for forward or inversion
+    :param ignore_values: Values to be ignored.
+    :param detrend_type: Method to be used for the detrending.
+    :param detrend_order: Order of the polynomial to be used for detrend.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
 
-    locations: Array of coordinates for the local survey shape(*, 3).
-    base_mesh: Input global TreeMesh object.
-    padding_cells: Used for 'method'= 'padding_cells'. Number of cells in each concentric shell.
-    minimum_level: Minimum octree level to preserve everywhere outside the local survey area.
-    finalize: Return a finalized local treemesh.
+    :return: Updated data_dict with processed data.
     """
-    locations = get_unique_locations(survey)
-    nested_mesh = TreeMesh(
-        [base_mesh.h[0], base_mesh.h[1], base_mesh.h[2]], x0=base_mesh.x0
-    )
-    base_level = base_mesh.max_level - minimum_level
-    base_refinement = base_mesh.cell_levels_by_index(np.arange(base_mesh.nC))
-    base_refinement[base_refinement > base_level] = base_level
-    nested_mesh.insert_cells(
-        base_mesh.gridCC,
-        base_refinement,
-        finalize=False,
-    )
-    base_cell = np.min([base_mesh.h[0][0], base_mesh.h[1][0]])
-    tx_loops = []
-    for source in survey.source_list:
-        if isinstance(source, (TEMLineCurrent, FEMLineCurrent)):
-            mesh_indices = get_intersecting_cells(source.location, base_mesh)
-            tx_loops.append(base_mesh.cell_centers[mesh_indices, :])
+    if data_dict is None:
+        components, data_dict = get_data_dict(workspace, param_dict)
 
-    if tx_loops:
-        locations = np.vstack([locations] + tx_loops)
+    # Windowing
+    new_data_object, data_dict, locations = window_data(
+        data_object,
+        components,
+        data_dict,
+        window_options.azimuth,
+        window_options.center_x,
+        window_options.center_y,
+        window_options.width,
+        window_options.height,
+        resolution,
+    )
 
-    tree = cKDTree(locations[:, :2])
-    rad, _ = tree.query(base_mesh.gridCC[:, :2])
-    pad_distance = 0.0
-    for ii in range(minimum_level):
-        pad_distance += base_cell * 2**ii * padding_cells
-        indices = np.where(rad < pad_distance)[0]
-        levels = base_mesh.cell_levels_by_index(indices)
-        levels[levels > (base_mesh.max_level - ii)] = base_mesh.max_level - ii
-        nested_mesh.insert_cells(
-            base_mesh.gridCC[indices, :],
-            levels,
-            finalize=False,
+    # Ignore values
+    if ignore_values is not None:
+        data_dict = set_infinity_uncertainties(
+            ignore_values,
+            forward_only,
+            components,
+            data_dict,
+        )
+    # Detrending
+    if detrend_type is not None and detrend_order is not None:
+        data_dict = detrend_data(
+            detrend_type,
+            detrend_order,
+            components,
+            data_dict,
+            locations,
         )
 
-    if finalize:
-        nested_mesh.finalize()
+    if drape_options is not None:
+        new_data_object = transform_elevation(
+            new_data_object,
+            drape_options.topography_object,
+            drape_options.topography,
+            drape_options.receivers_offset_z,
+            drape_options.z_from_topo,
+            drape_options.receivers_radar_drape,
+        )
 
-    return nested_mesh
+    # Add processed data to data object
+    update_dict = {}
+    update_dict["data_object"] = new_data_object
+    for comp in components:
+        for key in [comp + "_channel", comp + "_uncertainty"]:
+            if key not in data_dict.keys():
+                continue
+            data = data_dict[key]
+            if key in data_dict.keys():
+                update_dict[key] = new_data_object.get_entity(data["name"])[0]
+
+    return update_dict
 
 
-def tile_locations(
-    locations,
-    n_tiles,
-    minimize=True,
-    method="kmeans",
-    bounding_box=False,
-    count=False,
-    unique_id=False,
-):
+def get_data_dict(workspace: Workspace, param_dict: dict) -> (list[str], dict):
     """
-    Function to tile a survey points into smaller square subsets of points
+    Get dictionary of active components from param_dict.
 
-    :param numpy.ndarray locations: n x 2 array of locations [x,y]
-    :param integer n_tiles: number of tiles (for 'cluster'), or number of
-        refinement steps ('other')
-    :param Bool minimize: shrink tile sizes to minimum
-    :param string method: set to 'kmeans' to use better quality clustering, or anything
-        else to use more memory efficient method for large problems
-    :param bounding_box: bool [False]
-        Return the SW and NE corners of each tile.
-    :param count: bool [False]
-        Return the number of locations in each tile.
-    :param unique_id: bool [False]
-        Return the unique identifiers of all tiles.
+    :param workspace: Workspace that the data belong to.
+    :param param_dict: Dictionary of params to run the inversion.
 
-    RETURNS:
-    :param list: Return a list of arrays with the for the SW and NE
-                        limits of each tiles
-    :param integer binCount: Number of points in each tile
-    :param list labels: Cluster index of each point n=0:(nTargetTiles-1)
-    :param numpy.array tile_numbers: Vector of tile numbers for each count in binCount
-
-    NOTE: All X Y and xy products are legacy now values, and are only used
-    for plotting functions. They are not used in any calculations and could
-    be dropped from the return calls in future versions.
-
-
+    :return: List of active components.
+    :return: Dictionary of active channels and uncertainties.
     """
+    # Get components
+    components = []
+    data_dict = {}
+    for key, value in param_dict.items():
+        if key.endswith("_channel") and value:
+            comp = key.replace("_channel", "")
+            components.append(comp)
 
-    if method == "kmeans":
-        # Best for smaller problems
-        # Cluster
-        # TODO turn off filter once sklearn has dealt with the issue causing the warning
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=UserWarning)
-            from sklearn.cluster import KMeans
+            # Add data to data dict
+            data = param_dict[comp + "_channel"]
+            data_dict[comp + "_channel"] = {
+                "name": data.name,
+            }
 
-            cluster = KMeans(n_clusters=n_tiles, random_state=0, n_init="auto")
-            cluster.fit_predict(locations[:, :2])
+            # Add uncertainties to data dict
+            if comp + "_uncertainty" in param_dict:
+                unc = param_dict[comp + "_uncertainty"]
+                if isinstance(unc, Data):
+                    data_dict[comp + "_uncertainty"] = {
+                        "name": param_dict[comp + "_uncertainty"].name,
+                    }
+                elif is_uuid(unc):
+                    data_dict[comp + "_uncertainty"] = {
+                        "name": workspace.get_entity(uuid.UUID(unc))[0].name,
+                    }
 
-        labels = cluster.labels_
+    return components, data_dict
 
-        # nData in each tile
-        binCount = np.zeros(int(n_tiles))
 
-        # x and y limits on each tile
-        X1 = np.zeros_like(binCount)
-        X2 = np.zeros_like(binCount)
-        Y1 = np.zeros_like(binCount)
-        Y2 = np.zeros_like(binCount)
+def parse_ignore_values(ignore_values: str, forward_only: bool) -> tuple[float, str]:
+    """
+    Returns an ignore value and type ('<', '>', or '=') from params data.
 
-        for ii in range(int(n_tiles)):
-            mask = cluster.labels_ == ii
-            X1[ii] = locations[mask, 0].min()
-            X2[ii] = locations[mask, 0].max()
-            Y1[ii] = locations[mask, 1].min()
-            Y2[ii] = locations[mask, 1].max()
-            binCount[ii] = mask.sum()
+    :param ignore_values: Values to be ignored.
+    :param forward_only: Forward inversion only.
 
-        xy1 = np.c_[X1[binCount > 0], Y1[binCount > 0]]
-        xy2 = np.c_[X2[binCount > 0], Y2[binCount > 0]]
+    :return: Float value to be ignored.
+    :return: Ignore type ('<', '>', or '=').
+    """
+    if forward_only:
+        return None, None
 
-        # Get the tile numbers that exist, for compatibility with the next method
-        tile_id = np.unique(cluster.labels_)
-
+    if ignore_values is None:
+        return None, None
+    ignore_type = [k for k in ignore_values if k in ["<", ">"]]
+    ignore_type = "=" if not ignore_type else ignore_type[0]
+    if ignore_type in ["<", ">"]:
+        ignore_value = float(ignore_values.split(ignore_type)[1])
     else:
-        # Works on larger problems
-        # Initialize variables
-        # Test each refinement level for maximum space coverage
-        nTx = 1
-        nTy = 1
-        for ii in range(int(n_tiles + 1)):
-            nTx += 1
-            nTy += 1
+        try:
+            ignore_value = float(ignore_values)
+        except ValueError:
+            return None, None
 
-            testx = np.percentile(locations[:, 0], np.arange(0, 100, 100 / nTx))
-            testy = np.percentile(locations[:, 1], np.arange(0, 100, 100 / nTy))
+    return ignore_value, ignore_type
 
-            # if ii > 0:
-            dx = testx[:-1] - testx[1:]
-            dy = testy[:-1] - testy[1:]
 
-            if np.mean(dx) > np.mean(dy):
-                nTx -= 1
-            else:
-                nTy -= 1
+def transform_elevation(
+    data_object: Points,
+    topography_object: Points | Grid2D,
+    topography: NumericData | None,
+    offset: float,
+    from_topo: bool,
+    radar_drape: NumericData | None,
+):
+    """
+    Transform elevation of the receivers based on topography if requested.
 
-            print(nTx, nTy)
-        tilex = np.percentile(locations[:, 0], np.arange(0, 100, 100 / nTx))
-        tiley = np.percentile(locations[:, 1], np.arange(0, 100, 100 / nTy))
+    :param data_object: Data object to copy to new workspace.
+    :param topography_object: Topography object.
+    :param topography: Topography data for elevation.
+    :param offset: Offset to apply to elevation.
+    :param from_topo: Checkbox for getting z from topography.
+    :param radar_drape: Radar drape data.
 
-        X1, Y1 = np.meshgrid(tilex, tiley)
-        X2, Y2 = np.meshgrid(
-            np.r_[tilex[1:], locations[:, 0].max()],
-            np.r_[tiley[1:], locations[:, 1].max()],
+    :return: Updated data object.
+    """
+    elevations = data_object.locations[:, 2]
+
+    if from_topo:
+        dem = topography_object.locations
+        if topography is not None:
+            dem[:, 2] = topography.values
+
+        # Interpolate elevation from DEM
+        interp = LinearNDInterpolator(dem[:, :2], dem[:, 2])
+        elevations = interp(data_object.locations[:, :2])
+
+        if radar_drape is not None:
+            elevations += radar_drape.values
+
+    if offset != 0:
+        elevations += offset
+
+    # Update data object with new elevations
+    data_object.vertices = np.c_[data_object.locations[:, :2], elevations]
+
+    return data_object
+
+
+def set_infinity_uncertainties(
+    ignore_values: str,
+    forward_only: bool,
+    components: list[str],
+    data_dict: dict,
+) -> dict:
+    """
+    Use ignore_value ignore_type to set uncertainties to infinity.
+
+    :param ignore_values: Values to be set to infinity.
+    :param forward_only: Forward inversion only.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
+
+    :return: Updated data_dict with uncertainties set to infinity.
+    """
+    ignore_value, ignore_type = parse_ignore_values(ignore_values, forward_only)
+
+    for comp in components:
+        if comp + "_uncertainty" not in data_dict:
+            continue
+        data = data_dict[comp + "_channel"]["values"]
+        uncertainty = data_dict[comp + "_uncertainty"]["values"]
+        uncertainty[np.isnan(data)] = np.inf
+
+        if ignore_value is None:
+            continue
+        elif ignore_type == "<":
+            uncertainty[data <= ignore_value] = np.inf
+        elif ignore_type == ">":
+            uncertainty[data >= ignore_value] = np.inf
+        elif ignore_type == "=":
+            uncertainty[data == ignore_value] = np.inf
+        else:
+            msg = f"Unrecognized ignore type: {ignore_type}."
+            raise (ValueError(msg))
+
+        data_dict[comp + "_uncertainty"]["values"] = uncertainty
+
+    return data_dict
+
+
+def detrend_data(
+    detrend_type: str,
+    detrend_order: int,
+    components: list[str],
+    data_dict: dict,
+    locations: np.ndarray,
+) -> dict:
+    """
+    Detrend data in data_dict.
+
+    :param detrend_type: Method to be used for the detrending.
+        "all": Use all points.
+        "perimeter": Only use points on the convex hull .
+    :param detrend_order: Order of the polynomial to be used.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
+    :param locations: Vertices of the data object.
+
+    :return: Updated data_dict with detrended data values.
+    """
+    if detrend_type == "none" or detrend_type is None or detrend_order is None:
+        return data_dict
+
+    for comp in components:
+        data = data_dict[comp + "_channel"]
+        # Get data trend
+        values = data["values"]
+        data_trend, _ = calculate_2d_trend(
+            locations,
+            values,
+            detrend_order,
+            detrend_type,
+        )
+        # Update data values and add to object
+        data["values"] -= data_trend
+    return data_dict
+
+
+def window_data(
+    data_object: ObjectBase,
+    components: list[str],
+    data_dict: dict,
+    window_azimuth: float,
+    window_center_x: float,
+    window_center_y: float,
+    window_width: float,
+    window_height: float,
+    resolution: float,
+) -> (ObjectBase, dict, np.ndarray):
+    """
+    Window, downsample, and rotate data_object. Update data_dict with new data uids.
+
+    :param data_object: Data object to be windowed.
+    :param components: List of active data components.
+    :param data_dict: Dictionary of data components and uncertainties.
+    :param window_azimuth: Azimuth of the window.
+    :param window_center_x: X center of the window.
+    :param window_center_y: Y center of the window.
+    :param window_width: Width of the window.
+    :param window_height: Height of the window.
+    :param resolution: Resolution for downsampling.
+
+    :return: Windowed data object.
+    :return: Updated data dict.
+    :return: Vertices or centroids of the windowed data object.
+    """
+
+    if not isinstance(data_object, ObjectBase):
+        raise TypeError(
+            f"'data_object' must be an {ObjectBase}, found '{type(data_object)}' instead."
         )
 
-        # Plot data and tiles
-        X1, Y1, X2, Y2 = mkvc(X1), mkvc(Y1), mkvc(X2), mkvc(Y2)
-        binCount = np.zeros_like(X1)
-        labels = np.zeros_like(locations[:, 0])
-        for ii in range(X1.shape[0]):
-            mask = (
-                (locations[:, 0] >= X1[ii])
-                * (locations[:, 0] <= X2[ii])
-                * (locations[:, 1] >= Y1[ii])
-                * (locations[:, 1] <= Y2[ii])
-            ) == 1
+    if isinstance(data_object, Grid2D):
+        data_object = grid_to_points(data_object)
 
-            # Re-adjust the window size for tight fit
-            if minimize:
-                if mask.sum():
-                    X1[ii], X2[ii] = (
-                        locations[:, 0][mask].min(),
-                        locations[:, 0][mask].max(),
-                    )
-                    Y1[ii], Y2[ii] = (
-                        locations[:, 1][mask].min(),
-                        locations[:, 1][mask].max(),
-                    )
+    # Get locations
+    locations = data_object.locations
 
-            labels[mask] = ii
-            binCount[ii] = mask.sum()
+    # Get window
+    window = {
+        "azimuth": window_azimuth,
+        "center_x": window_center_x,
+        "center_y": window_center_y,
+        "width": window_width,
+        "height": window_height,
+        "center": [
+            window_center_x,
+            window_center_y,
+        ],
+        "size": [window_width, window_height],
+    }
 
-        xy1 = np.c_[X1[binCount > 0], Y1[binCount > 0]]
-        xy2 = np.c_[X2[binCount > 0], Y2[binCount > 0]]
+    # Get mask
+    mask = filter_xy(
+        locations[:, 0],
+        locations[:, 1],
+        window=window,
+        distance=resolution,
+    )
 
-        # Get the tile numbers that exist
-        # Since some tiles may have 0 data locations, and are removed by
-        # [binCount > 0], the tile numbers are no longer contiguous 0:nTiles
-        tile_id = np.unique(labels)
+    new_data_object = data_object.copy(
+        parent=data_object.workspace,
+        copy_children=True,
+        clear_cache=False,
+        mask=mask,
+        name=data_object.name + "_processed",
+    )
 
-    tiles = []
-    for tid in tile_id.tolist():
-        tiles += [np.where(labels == tid)[0]]
+    # Update data dict
+    for comp in components:
+        data_dict[comp + "_channel"]["values"] = new_data_object.get_entity(
+            data_dict[comp + "_channel"]["name"]
+        )[0].values
+        if comp + "_uncertainty" in data_dict:
+            data_dict[comp + "_uncertainty"]["values"] = new_data_object.get_entity(
+                data_dict[comp + "_uncertainty"]["name"]
+            )[0].values
 
-    out = [tiles]
+    return new_data_object, data_dict, new_data_object.locations
 
-    if bounding_box:
-        out.append([xy1, xy2])
 
-    if count:
-        out.append(binCount[binCount > 0])
+def grid_to_points(grid2d: Grid2D) -> Points:
+    """"""
+    points = Points.create(
+        grid2d.workspace, vertices=grid2d.centroids, name=grid2d.name
+    )
+    for child in grid2d.children:
+        if isinstance(child, NumericData):
+            child.copy(parent=points, association="VERTEX")
 
-    if unique_id:
-        out.append(tile_id)
-
-    if len(out) == 1:
-        return out[0]
-    return tuple(out)
+    return points

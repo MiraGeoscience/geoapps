@@ -20,7 +20,7 @@ from discretize import CylindricalMesh, TreeMesh
 from geoapps_utils.utils.numerical import running_mean
 from geoh5py.objects import Curve, Grid2D
 from geoh5py.workspace import Workspace
-from octree_creation_app.utils import treemesh_2_octree
+from grid_apps.utils import treemesh_2_octree
 from simpeg_drivers.utils.utils import (
     calculate_2D_trend,
     drape_2_tensor,
@@ -90,33 +90,6 @@ def test_floating_active():
     active[21] = 0
     active[27] = 1  # Corner cell
     assert floating_active(mesh, active)
-
-
-def test_get_drape_model(tmp_path: Path):
-    ws = Workspace.create(tmp_path / "test.geoh5")
-    x = np.arange(11)
-    y = -x + 10
-    locs = np.c_[x, y, np.zeros_like(x)].astype(float)
-    h = [0.5, 0.5]
-    depth_core = 5.0
-    pads = [0, 0, 0, 0]  # [5, 5, 3, 1]
-    expansion_factor = 1.1
-    model, mesh, sorting = get_drape_model(  # pylint: disable=W0632
-        ws,
-        "drape_test",
-        locs,
-        h,
-        depth_core,
-        pads,
-        expansion_factor,
-        return_colocated_mesh=True,
-        return_sorting=True,
-    )
-    ws.close()
-    resorted_mesh_centers = mesh.cell_centers[sorting, :]
-    model_centers = compute_alongline_distance(model.centroids)
-    model_centers[:, 0] += h[0] / 2
-    assert np.allclose(model_centers, resorted_mesh_centers)
 
 
 def test_find_unique_tops_xz():

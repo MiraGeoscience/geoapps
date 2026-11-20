@@ -17,9 +17,9 @@ from uuid import UUID
 from geoh5py.groups import UIJsonGroup
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json import InputFile
-from surface_apps.iso_surfaces.driver import IsoSurfacesDriver
-from surface_apps.iso_surfaces.params import IsoSurfaceParameters
+from geoh5py.ui_json import UIJson
+from surface_apps.iso_surfaces.driver import Driver
+from surface_apps.iso_surfaces.options import IsoSurfaceParameters
 
 from geoapps import assets_path
 from geoapps.base.application import BaseApplication
@@ -70,9 +70,9 @@ class IsoSurface(ObjectDataSelection):
                     raise FileNotFoundError(
                         f"Provided uijson path {ui_json} not does not exist."
                     )
-                defaults = InputFile.read_ui_json(ui_json).data
-            elif isinstance(ui_json, InputFile):
-                defaults = ui_json.data
+                defaults = UIJson.read(ui_json).to_params()
+            elif isinstance(ui_json, UIJson):
+                defaults = ui_json.to_params()
 
         if not defaults:
             if Path(self._initializer["geoh5"]).exists():
@@ -155,7 +155,7 @@ class IsoSurface(ObjectDataSelection):
             new_params.input_file.write_ui_json(
                 name=temp_geoh5.replace(".geoh5", ".ui.json")
             )
-            driver = IsoSurfacesDriver(new_params)
+            driver = Driver(new_params)
             driver.run()
 
         if self.live_link.value:
