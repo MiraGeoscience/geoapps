@@ -17,9 +17,9 @@ from uuid import UUID
 from dash._callback_context import context_value
 from dash._utils import AttributeDict
 from geoh5py.objects import Points
-from geoh5py.shared import Entity
+from geoh5py.shared.entity import Entity
 from geoh5py.shared.utils import is_uuid
-from geoh5py.ui_json import BaseUIJson
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 from ipywidgets import Widget
 from simpeg_drivers.electricals.direct_current.three_dimensions.options import (
@@ -30,9 +30,6 @@ from simpeg_drivers.electricals.induced_polarization.three_dimensions.options im
 )
 
 from geoapps.inversion.electricals.application import InversionApp as DCInversionApp
-from geoapps.inversion.electromagnetics.application import (
-    InversionApp as EMInversionApp,
-)
 from geoapps.inversion.potential_fields.magnetic_vector.application import (
     MagneticVectorApp,
 )
@@ -40,7 +37,6 @@ from geoapps.inversion.potential_fields.magnetic_vector.constants import app_ini
 from tests import (  # pylint: disable=no-name-in-module
     PROJECT,
     PROJECT_DCIP,
-    PROJECT_TEM,
 )
 
 
@@ -159,7 +155,7 @@ def test_mag_inversion(tmp_path: Path):
             )
 
     filename = next(tmp_path.glob("Magnetic Vector Inversion_*.json"))
-    ui_json = BaseUIJson.read(filename)
+    ui_json = UIJson.read(filename)
     ui_data = ui_json.to_params()
     with ui_data["geoh5"].open():
         data = ui_data["data_object"]
@@ -208,7 +204,7 @@ def test_dc_inversion(tmp_path: Path):
     file = next(
         f for f in (tmp_path / "Temp").iterdir() if f.is_file() and f.suffix == ".json"
     )
-    ui_json = BaseUIJson.read(file)
+    ui_json = UIJson.read(file)
     ui_data = ui_json.to_params()
 
     params_reload = DC3DInversionOptions.build(**ui_data).flatten()
@@ -292,7 +288,7 @@ def test_ip_inversion(tmp_path: Path):
     file = next(
         f for f in (tmp_path / "Temp").iterdir() if f.is_file() and f.suffix == ".json"
     )
-    ui_json = BaseUIJson.read(file)
+    ui_json = UIJson.read(file)
     ui_data = ui_json.to_params()
     params_reload = IP3DInversionOptions.build(**ui_data).flatten()
 
@@ -334,53 +330,3 @@ def test_ip_inversion(tmp_path: Path):
             assert getattr(app, "_" + group + "_group").options.value == "None", (
                 f"Property group {group} did not reset to 'None'"
             )
-
-
-def test_em1d_inversion(tmp_path: Path):
-    """Tests the jupyter application for em1d inversion."""
-    with Workspace(PROJECT_TEM) as ws:
-        with Workspace(tmp_path / "invtest.geoh5") as new_geoh5:
-            new_obj = ws.get_entity(UUID("34698019-cde6-4b43-8d53-a040b25c989a"))[
-                0
-            ].copy(parent=new_geoh5)
-
-            data_group_uid = new_obj.find_or_create_property_group("dbdt_z").uid
-            uncert_group_uid = new_obj.find_or_create_property_group(
-                "dbdt_z_uncert"
-            ).uid
-
-            line_id = new_obj.add_data(
-                {
-                    "Line": {
-                        "values": new_obj.parts + 1,
-                        "type": "referenced",
-                        "value_map": {ii + 1: f"Line{ii + 1}" for ii in range(5)},
-                    }
-                }
-            )
-    changes = {
-        "objects": new_obj.uid,
-        "data": data_group_uid,
-        "_uncertainties": uncert_group_uid,
-    }
-    side_effects = {"system": "Airborne TEM Survey"}
-    app = EMInversionApp(geoh5=PROJECT_TEM, plot_result=False)
-    app.workspace = new_geoh5
-
-    for param, value in changes.items():
-        if isinstance(getattr(app, param), Widget):
-            getattr(app, param).value = value
-        else:
-            setattr(app, param, value)
-
-    for param, value in {
-        "data": line_id.uid,
-        "lines": [2, 3],
-    }.items():
-        getattr(app.lines, param).value = value
-
-    for key, value in side_effects.items():
-        assert getattr(app, key).value == value, f"Failed to change {key} with {value}."
-
-    app.topography.options.value = "Constant"
-    app.write_trigger(None)
