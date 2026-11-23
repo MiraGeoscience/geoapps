@@ -221,9 +221,7 @@ class ContourValues(PlotSelection2D):
                 )[0]
 
                 new_params = ContourParameters.build(param_dict)
-                ui_json = new_params.write_ui_json(
-                    Path(temp_geoh5).with_suffix(".ui.json")
-                )
+                ui_json = new_params.write_ui_json(ws.h5file.with_suffix(".ui.json"))
 
         ContoursDriver.start(ui_json)
 

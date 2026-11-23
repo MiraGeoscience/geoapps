@@ -215,7 +215,8 @@ def test_create_surface(tmp_path: Path):
     app.elevations.data.value = [
         p_g.uid for p_g in new_obj.property_groups if p_g.name == "ELEV"
     ][0]
-
+    app.export_directory._set_form_values(str(tmp_path), "")
+    app.export_directory._apply_selection()
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
@@ -235,6 +236,8 @@ def test_data_interpolation(tmp_path: Path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = DataInterpolation(geoh5=str(temp_workspace))
+    app.export_directory._set_form_values(str(tmp_path), "")
+    app.export_directory._apply_selection()
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:

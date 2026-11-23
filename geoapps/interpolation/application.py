@@ -288,16 +288,9 @@ class DataInterpolation(ObjectDataSelection):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = DataInterpolationParams(**param_dict)
-            new_params.method = self.method.value
-
-            new_params.write_ui_json(
-                Path(temp_geoh5).with_suffix(".ui.json"),
-            )
-
-            driver = DataInterpolationDriver(new_params)
-            print("Running data transfer . . .")
-            driver.run()
+        new_params = DataInterpolationParams.build(param_dict)
+        ui_json = new_params.write_ui_json(ws.h5file.with_suffix(".ui.json"))
+        DataInterpolationDriver.start(ui_json)
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
