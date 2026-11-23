@@ -1049,7 +1049,7 @@ class InversionApp(PlotSelection2D):
             return
 
         # Widgets values populate params dictionary
-        param_dict = self.params.flatten()
+        param_dict = self.params.flatten(exclude_unset=False)
         for key in self.__dict__:
             if key not in param_dict:
                 continue

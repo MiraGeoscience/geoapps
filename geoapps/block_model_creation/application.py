@@ -186,14 +186,13 @@ class BlockModelCreation(BaseDashApplication):
 
                 # Write output uijson.
                 new_params = BlockModelOptions.build(param_dict)
-                new_params.write_ui_json(
+                ui_json = new_params.write_ui_json(
                     Path(monitoring_directory)
                     / temp_geoh5.replace(".geoh5", ".ui.json"),
                 )
-                # Run driver.
-                self.driver.params = new_params
-                print("Creating block model . . .")
-                self.driver.run()
+
+            # Run driver.
+            self.driver.start(ui_json)
 
             if live_link:
                 print("Live link active. Check your ANALYST session for new mesh.")

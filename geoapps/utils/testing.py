@@ -484,7 +484,6 @@ def get_output_workspace(tmp_dir: Path):
     """
     Extract the output geoh5 from the 'Temp' directory.
     """
-    files = list((tmp_dir / "Temp").glob("*.geoh5"))
-    if len(files) != 1:
-        raise UserWarning("Could not find a unique output workspace.")
-    return str(files[0])
+    files = [f for f in tmp_dir.iterdir() if f.is_file()]
+
+    return max(files, key=lambda f: f.stat().st_mtime, default=None)

@@ -170,17 +170,15 @@ def test_contour_values(tmp_path):
         objects = GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
             0
         ]
-        objects.copy(parent=workspace, copy_children=True)
+        grid = objects.copy(parent=workspace, copy_children=True)
         data = workspace.get_entity(
             uuid.UUID("{44822654-b6ae-45b0-8886-2d845f80f422}")
         )[0]
-        ifile = UIJson.read(
-            curve_apps_assets_path() / "uijson/contours.ui.json", validate=False
-        )
+        ifile = UIJson.read(curve_apps_assets_path() / "uijson/contours.ui.json")
         ifile.set_values(
             geoh5=workspace,
-            objects=objects,
-            data=data,
+            objects=grid.uid,
+            data=data.uid,
             interval_min=-400.0,
             interval_max=2000.0,
             interval_spacing=100.0,
@@ -188,6 +186,9 @@ def test_contour_values(tmp_path):
         )
 
     app = ContourValues(ui_json=ifile, plot_result=False)
+    app.export_directory._set_form_values(str(tmp_path), "")
+    app.export_directory._apply_selection()
+
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:

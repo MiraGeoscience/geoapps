@@ -221,11 +221,11 @@ class ContourValues(PlotSelection2D):
                 )[0]
 
                 new_params = ContourParameters.build(param_dict)
-                new_params.input_file.write_ui_json(
-                    name=temp_geoh5.replace(".geoh5", ".ui.json")
+                ui_json = new_params.write_ui_json(
+                    Path(temp_geoh5).with_suffix(".ui.json")
                 )
-                driver = ContoursDriver(new_params)
-                driver.run()
+
+        ContoursDriver.start(ui_json)
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

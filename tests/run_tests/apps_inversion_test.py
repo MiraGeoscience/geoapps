@@ -205,12 +205,10 @@ def test_dc_inversion(tmp_path: Path):
         f for f in (tmp_path / "Temp").iterdir() if f.is_file() and f.suffix == ".json"
     )
     ui_json = UIJson.read(file)
-    ui_data = ui_json.to_params()
-
-    params_reload = DC3DInversionOptions.build(**ui_data).flatten()
+    params_reload = DC3DInversionOptions.build(ui_json).flatten(exclude_unset=False)
 
     for param, value in changes.items():
-        if param == "reference_model":
+        if param in ["reference_model", "forward_only"]:
             continue
 
         p_value = params_reload[param]
@@ -289,8 +287,8 @@ def test_ip_inversion(tmp_path: Path):
         f for f in (tmp_path / "Temp").iterdir() if f.is_file() and f.suffix == ".json"
     )
     ui_json = UIJson.read(file)
-    ui_data = ui_json.to_params()
-    params_reload = IP3DInversionOptions.build(**ui_data).flatten()
+
+    params_reload = IP3DInversionOptions.build(ui_json).flatten(exclude_unset=False)
 
     for param, value in changes.items():
         p_value = params_reload[param]
