@@ -21,7 +21,7 @@ from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.interpolation.constants import app_initializer
+from geoapps.interpolation.constants import app_initializer, default_ui_json
 from geoapps.interpolation.driver import DataInterpolationDriver
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.utils import warn_module_not_found
@@ -45,21 +45,26 @@ class DataInterpolation(ObjectDataSelection):
             self.params = self._param_class.build(UIJson.read(ui_json))
         else:
             try:
-                self.params = self._param_class(**app_initializer)
+                ui_json = UIJson.from_dict(default_ui_json)
+                ui_json.set_values(**app_initializer)
+                self.params = self._param_class.build(ui_json)
 
             except GeoAppsError:
                 for key, value in app_initializer.items():
                     if isinstance(value, uuid.UUID):
                         app_initializer[key] = None
-
-                self.params = self._param_class(**app_initializer)
+                ui_json.set_values(**app_initializer)
+                self.params = self._param_class.build(ui_json)
 
         for key, value in self.params.flatten().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
-        self.defaults["topography"] = self.params.topography
+        self.defaults["topography"] = {
+            "objects": self.params.topography_objects.uid,
+            "data": self.params.topography_data.uid,
+        }
 
         super().__init__(**self.defaults)
 
@@ -286,18 +291,8 @@ class DataInterpolation(ObjectDataSelection):
             new_params = DataInterpolationParams(**param_dict)
             new_params.method = self.method.value
 
-            if new_params.method == "Nearest":
-                new_params.skew_angle = None
-                new_params.skew_factor = None
-                new_params.input_file.ui_json["skew_angle"]["enabled"] = False
-                new_params.input_file.ui_json["skew_factor"]["enabled"] = False
-            elif new_params.method == "Inverse Distance":
-                new_params.input_file.ui_json["skew_angle"]["enabled"] = True
-                new_params.input_file.ui_json["skew_factor"]["enabled"] = True
-
-            new_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                validate=False,
+            new_params.write_ui_json(
+                Path(temp_geoh5).with_suffix(".ui.json"),
             )
 
             driver = DataInterpolationDriver(new_params)

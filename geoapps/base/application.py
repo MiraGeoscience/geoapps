@@ -150,10 +150,14 @@ class BaseApplication:
                             if hasattr(widget, "style"):
                                 widget.style = {"description_width": "initial"}
 
-                        elif isinstance(value, BaseApplication) and isinstance(
+                        elif isinstance(
                             getattr(self, "_" + key, None), BaseApplication
                         ):
-                            setattr(self, "_" + key, value)
+                            if isinstance(value, BaseApplication):
+                                setattr(self, "_" + key, value)
+                            elif isinstance(value, dict):
+                                getattr(self, "_" + key).__populate__(**value)
+
                         elif type(getattr(self, key, None)) is types.MethodType:
                             getattr(self, key, None)(key, value)
                         else:
@@ -558,10 +562,11 @@ class BaseApplication:
         param_dict = {}
         for key in self.__dict__:
             try:
+                if key[0] == "_":
+                    key = key[1:]
+
                 if self.is_computational(key):
                     value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
 
                     if (
                         isinstance(value, uuid.UUID)

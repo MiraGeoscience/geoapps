@@ -188,7 +188,6 @@ def test_contour_values(tmp_path):
     app = ContourValues(ui_json=ifile, plot_result=False)
     app.export_directory._set_form_values(str(tmp_path), "")
     app.export_directory._apply_selection()
-
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
@@ -219,9 +218,9 @@ def test_create_surface(tmp_path: Path):
 
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
-        group = workspace.get_entity("CDI")[0]
-        assert len(group.children) == 1
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
+        surf = workspace.get_entity("CDI_")[0]
+        assert surf.n_vertices == 40000
 
 
 def test_data_interpolation(tmp_path: Path):
@@ -238,7 +237,7 @@ def test_data_interpolation(tmp_path: Path):
     app = DataInterpolation(geoh5=str(temp_workspace))
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         assert len(workspace.get_entity("Iteration_7_model_Interp")) == 1
 
 

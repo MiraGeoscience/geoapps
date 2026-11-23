@@ -49,7 +49,6 @@ default_ui_json = {
     "workspace": "",
     "objects": {
         "meshType": [
-            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
@@ -74,7 +73,6 @@ default_ui_json = {
     },
     "out_object": {
         "meshType": [
-            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
@@ -87,6 +85,13 @@ default_ui_json = {
         "group": "Destination",
         "label": "Object",
         "value": None,
+    },
+    "method": {
+        "main": False,
+        "group": "Inverse Distance",
+        "value": "Inverse Distance",
+        "choiceList": ["Inverse Distance", "Nearest"],
+        "label": "Method",
     },
     "skew_angle": {
         "main": False,
@@ -116,7 +121,6 @@ default_ui_json = {
     },
     "xy_extent": {
         "meshType": [
-            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
@@ -130,11 +134,10 @@ default_ui_json = {
         "enabled": False,
         "group": "Horizontal Extent",
         "label": "Object hull",
-        "value": None,
+        "value": "",
     },
     "topography_objects": {
         "meshType": [
-            "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
             "{202C5DB1-A56D-4004-9CAD-BAAFD8899406}",
             "{6A057FDC-B355-11E3-95BE-FD84A7FFCB88}",
             "{F26FEBA3-ADED-494B-B9E9-B2BBCBE298E1}",
@@ -183,7 +186,7 @@ default_ui_json = {
     },
     "ga_group_name": {
         "main": True,
-        "label": "Output Label",
+        "label": "Name suffix",
         "value": "_Interp",
         "group": "Python run preferences",
     },
@@ -197,6 +200,7 @@ default_ui_json = {
 
 
 app_initializer = {
+    "title": "Data Transfer",
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
     "data": UUID("{f3e36334-be0a-4210-b13e-06933279de25}"),
