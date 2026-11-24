@@ -486,14 +486,19 @@ class BaseApplication:
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
 
-    def collect_parameter_values(self):
+    def collect_parameter_values(self, **kwargs):
         param_dict = {}
+
+        if kwargs is not None:
+            param_dict.update(kwargs)
+
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                if key[0] == "_":
+                    key = key[1:]
+
+                if isinstance(getattr(self, key), Widget):
                     value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
 
                     if (
                         isinstance(value, uuid.UUID)
@@ -524,7 +529,7 @@ class BaseApplication:
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-        new_params = type(self.params)(**param_dict)
+        new_params = self._param_class.build(param_dict)
 
         return new_params
 
