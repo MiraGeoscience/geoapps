@@ -793,7 +793,9 @@ class InversionApp(BaseDashApplication):
                     uncertainty_type = "Floor"
                     uncertainty_floor = ui_json_data[comp + "_uncertainty"]
                     uncertainty_channel = None
-                elif is_uuid(ui_json_data[comp + "_uncertainty"]):
+                elif comp + "_uncertainty" in ui_json_data and is_uuid(
+                    ui_json_data[comp + "_uncertainty"]
+                ):
                     uncertainty_type = "Channel"
                     uncertainty_floor = None
                     uncertainty_channel = str(ui_json_data[comp + "_uncertainty"])

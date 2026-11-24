@@ -20,6 +20,7 @@ app_initializer = {
     "monitoring_directory": str((assets_path() / "Temp").resolve()),
     "forward_only": False,
     "data_object": UUID("{7aaf00be-adbf-4540-8333-8ac2c2a3c31a}"),
+    "gz_channel": None,
     "gxx_channel": UUID("{3d7ace18-e9c5-4cef-9ca3-8adc12fd53c4}"),
     "gxx_uncertainty": 1.0,
     "gyy_channel": UUID("{1d001501-3d84-4afb-8e24-6be267827ae0}"),
