@@ -314,9 +314,9 @@ class Export(ObjectDataSelection):
 
             # Move the origin to the bottom SW corner
             mesh.x0 = [
-                entity.origin["x"] + entity.u_cells[entity.u_cells < 0].sum(),
-                entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
-                entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
+                entity.origin[0] + entity.u_cells[entity.u_cells < 0].sum(),
+                entity.origin[1] + entity.v_cells[entity.v_cells < 0].sum(),
+                entity.origin[2] + entity.z_cells[entity.z_cells < 0].sum(),
             ]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
             mesh.write_UBC(name)
@@ -324,7 +324,7 @@ class Export(ObjectDataSelection):
 
             if any(data_values):
                 for key, item in data_values.items():
-                    if mesh.x0[2] == entity.origin["z"]:
+                    if mesh.x0[2] == entity.origin[2]:
                         values = item.copy()
                         values = values.reshape(
                             (

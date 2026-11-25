@@ -15,6 +15,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 from time import time
+from uuid import UUID
 
 from dash import Dash, callback_context, no_update
 from dash.dependencies import Input, Output, State
@@ -28,10 +29,25 @@ from geoh5py.shared.utils import (
 from grid_apps.block_models.driver import Driver
 from grid_apps.block_models.options import BlockModelOptions
 
+from geoapps import assets_path
 from geoapps.base.application import BaseApplication
 from geoapps.base.dash_application import BaseDashApplication
-from geoapps.block_model_creation.constants import app_initializer
 from geoapps.block_model_creation.layout import block_model_layout
+
+
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "monitoring_directory": str((assets_path() / "Temp").resolve()),
+    "objects": UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"),
+    "cell_size_x": 50.0,
+    "cell_size_y": 50.0,
+    "cell_size_z": 50.0,
+    "depth_core": 500.0,
+    "expansion_factor": 1.05,
+    "new_grid": "BlockModel",
+    "horizontal_padding": 500.0,
+    "bottom_padding": 500.0,
+}
 
 
 class BlockModelCreation(BaseDashApplication):
@@ -41,7 +57,7 @@ class BlockModelCreation(BaseDashApplication):
 
     _param_class = BlockModelOptions
     _driver_class = Driver
-    _app_initializer = app_initializer
+    _app_initializer = APP_INITIALIZER
 
     def __init__(self, ui_json=None, **kwargs):
         if ui_json is not None and Path(ui_json.path).exists():

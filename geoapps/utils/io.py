@@ -111,10 +111,10 @@ def export_grid_2_geotiff(
 
     dataset.SetGeoTransform(
         (
-            grid2d.origin["x"],
+            grid2d.origin[0],
             vec[0, 0] * grid2d.u_cell_size,
             vec[0, 1] * grid2d.v_cell_size,
-            grid2d.origin["y"],
+            grid2d.origin[1],
             vec[1, 0] * grid2d.u_cell_size,
             vec[1, 1] * grid2d.v_cell_size,
         )
