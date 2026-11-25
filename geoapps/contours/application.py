@@ -193,6 +193,12 @@ class ContourValues(PlotSelection2D):
                             parent=new_workspace, copy_children=True
                         )
 
+                if param_dict.get("objects") is None:
+                    print(
+                        "Contour generation requires an input object. Please select an object and try again."
+                    )
+                    return
+
                 param_dict["geoh5"] = new_workspace
                 param_dict["conda_environment"] = "geoapps"
 
@@ -216,6 +222,13 @@ class ContourValues(PlotSelection2D):
                     angle=self.window_azimuth.value,
                 )
                 param_dict["objects"] = param_dict["objects"].copy(mask=indices)
+
+                if param_dict.get("data") is None:
+                    print(
+                        "Contour generation requires an input data. Please select a data and try again."
+                    )
+                    return
+
                 param_dict["data"] = param_dict["objects"].get_data(
                     param_dict["data"].name
                 )[0]

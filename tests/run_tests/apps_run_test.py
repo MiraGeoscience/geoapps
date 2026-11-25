@@ -185,7 +185,7 @@ def test_contour_values(tmp_path):
             fixed_contours="-240",
         )
 
-    app = ContourValues(ui_json=ifile, plot_result=False)
+    app = ContourValues(ui_json=ifile, plot_result=True)
     app.export_directory._set_form_values(str(tmp_path), "")
     app.export_directory._apply_selection()
     app.trigger_click(None)

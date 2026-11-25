@@ -270,11 +270,11 @@ class EdgeDetectionApp(PlotSelection2D):
                 )
 
             new_params = EdgeParameters.build(param_dict)
-            new_params.input_file.write_ui_json(
-                name=temp_geoh5.replace(".geoh5", ".ui.json")
+            ui_json = new_params.write_ui_json(
+                new_workspace.h5file.with_suffix(".ui.json")
             )
-            driver = EdgesDriver(new_params)
-            driver.run()
+
+        EdgesDriver.start(ui_json)
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

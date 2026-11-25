@@ -172,12 +172,12 @@ def plot_plan_data_selection(entity, data, **kwargs):
         and getattr(data.entity_type, "color_map", None) is not None
     ):
         new_cmap = data.entity_type.color_map.values
-        map_vals = new_cmap[0].copy()
+        map_vals = new_cmap[:, 0]
         cmap = colors.ListedColormap(
             np.c_[
-                new_cmap[1] / 255,
-                new_cmap[2] / 255,
-                new_cmap[3] / 255,
+                new_cmap[:, 1] / 255,
+                new_cmap[:, 2] / 255,
+                new_cmap[:, 3] / 255,
             ]
         )
         color_norm = colors.BoundaryNorm(map_vals, cmap.N)

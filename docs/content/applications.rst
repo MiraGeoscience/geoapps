@@ -46,7 +46,6 @@ Machine Learning
     :reversed:
 
     applications/edge_detection
-    applications/clustering
     applications/peak_finder
 
 Geophysical Data Inversion
