@@ -50,16 +50,16 @@ classifiers = [
 start_notebook = { callable = "geoapps.scripts.start_notebook:main", extras = ["apps"] }
 
 [tool.poetry.dependencies]
-dask = "~2025.3.0"  # also in simpeg[dask]
+dask = "~2026.1.0"  # also in simpeg[dask]
 discretize = "~0.12.0"  # also in simpeg, grid-apps
-distributed = "~2025.3.0"  # for dask[distributed]
+distributed = "~2026.1.0"  # for dask[distributed]
 ipywidgets = "~8.1.8"
 ipyfilechooser = "~0.6.0"
 matplotlib = "~3.10.4"  # also in geoapps-utils
 notebook = "~7.5.7"
 numpy = "~2.4.2"
 openpyxl = "^3.1.2"
-pandas = "^2.2.1"
+pandas = "^2.3.1"
 pydantic = "~2.12.0"  # also in geoh5py, curve-apps, geoapps-utils
 pydiso = "~0.2.0"
 python-mumps = "0.0.6.*"
@@ -80,42 +80,29 @@ dash-table = "5.*"
 
 ## For a native GUI window
 #-------------------------
-# not in conda, to be installed through pip only
-pywebview = { version = "^6.0", source="pypi", optional = true }
-
-## indirect dependencies though pywebview,
-# optional and forcing them through conda
-#--------------------------------------------------------
-bottle = { version = "*", optional = true }
-proxy-tools = { version = "*", optional = true }
-pythonnet = { version = "*", optional = true }
-
 
 ## pip dependencies from Git repositories
 #----------------------------------------
 #geoh5py = {version = ">=0.12.0b5, <0.13.dev", source = "pypi", allow-prereleases = true}
-geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "release/GA_4.8"}
+geoh5py = {git = "https://github.com/MiraGeoscience/geoh5py.git", rev = "release/ga-4.9"}
 
 #grid-apps = {version = ">=0.1.0b1, <0.2.dev", source = "pypi", allow-prereleases = true}
-grid-apps = {git = "https://github.com/MiraGeoscience/grid-apps.git", rev = "release/GA_4.8"}
+grid-apps = {git = "https://github.com/MiraGeoscience/grid-apps.git", rev = "release/ga-4.9"}
 
 #geoapps-utils = {version = ">=0.6.0b2, <0.7.dev", source = "pypi", allow-prereleases = true}
-geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "release/GA_4.8"}
+geoapps-utils = {git = "https://github.com/MiraGeoscience/geoapps-utils.git", rev = "release/ga-4.9"}
 
 #mira-simpeg = {version = ">=0.23.0.2b1, <0.23.1.dev", source="pypi", allow-prereleases = true, extras = ["dask"]}
-mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "release/GA_4.8", extras = ["dask"]}
+mira-simpeg = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "release/ga-4.9", extras = ["dask"]}
 
 #curve-apps = {version = ">=0.3.0b4, <0.4.0a.dev", source = "pypi", allow-prereleases = true}
-curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "release/GA_4.8"}
+curve-apps = {git = "https://github.com/MiraGeoscience/curve-apps.git", rev = "release/ga-4.9"}
 
 #surface-apps = {version = ">=0.1.0rc1, <0.2.0a.dev", source = "pypi", allow-prereleases = true}
-surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "GEOPY-2911"}
+surface-apps = {git = "https://github.com/MiraGeoscience/surface-apps.git", rev = "release/ga-4.9"}
 
 #simpeg-drivers = {version = ">=0.4.0b2, <0.5.0a.dev", source = "pypi", allow-prereleases = true}
-simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "release/GA_4.8"}
-
-#simpeg-archive = {version = ">=0.11.0.1, <0.11.0.2", source = "pypi", allow-prereleases = true}
-#simpeg-archive = {git = "https://github.com/MiraGeoscience/simpeg.git", rev = "feature/simpeg_archive"}
+simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", rev = "release/ga-4.9"}
 
 
 ## about pip dependencies
@@ -126,6 +113,10 @@ simpeg-drivers = {git = "https://github.com/MiraGeoscience/simpeg-drivers.git", 
 #   - for a branch: my_package = { url = "https://github.com/ORGANISATION/REPO/archive/refs/heads/BRANCH.tar.gz" }
 # - to actually lock on a revision: my_package = { git = "https://github.com/ORGANISATION/REPO.git", rev = "GIT_REV" }
 #   (where rev value is a tag, a branch name or a commit hash). Can also use ``branch`` or ``tag`` instead of ``rev``
+[project.optional-dependencies]
+# not in conda, to be installed through pip only
+webview = ["pywebview>=6.0,<7.0", "bottle", "proxy-tools", "pythonnet"]
+
 
 [tool.conda-lock.dependencies]
 libblas = "*=*mkl"  # because simpeg already brings in the MKL

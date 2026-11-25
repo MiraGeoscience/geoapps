@@ -106,7 +106,7 @@ class IsoSurface(ObjectDataSelection):
             continuous_update=False,
         )
         self._export_as = Text("Iso_", description="Surface:")
-        self.ga_group_name.value = self.defaults["out_group"] or "ISO"
+        self.ga_group_name.value = self.defaults.get("out_group") or "ISO"
         self.data.observe(self.data_change, names="value")
         self.data.description = "Value fields: "
         self.trigger.on_click(self.trigger_click)

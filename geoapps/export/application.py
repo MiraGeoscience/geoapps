@@ -16,10 +16,10 @@ from uuid import UUID
 import discretize
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
+from grid_apps.utils import octree_2_treemesh
 
 from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.shared_utils.utils import octree_2_treemesh
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection

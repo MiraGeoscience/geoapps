@@ -18,14 +18,12 @@ import numpy as np
 import pytest
 from discretize import CylindricalMesh, TreeMesh
 from geoapps_utils.utils.numerical import running_mean
+from geoapps_utils.utils.transformations import rotate_xyz
 from geoh5py.objects import Curve, Grid2D
 from geoh5py.workspace import Workspace
-from grid_apps.utils import treemesh_2_octree
 from simpeg_drivers.utils.utils import (
     calculate_2D_trend,
-    drape_2_tensor,
     floating_active,
-    get_drape_model,
 )
 
 from geoapps.shared_utils.utils import (
@@ -33,9 +31,6 @@ from geoapps.shared_utils.utils import (
     downsample_grid,
     downsample_xy,
     filter_xy,
-    get_neighbouring_cells,
-    rotate_xyz,
-    weighted_average,
     window_xy,
 )
 from geoapps.utils import warn_module_not_found
@@ -49,7 +44,7 @@ from geoapps.utils.surveys import (
     new_neighbors,
     split_dcip_survey,
 )
-from geoapps.utils.testing import Geoh5Tester, generate_dc_survey
+from geoapps.utils.testing import generate_dc_survey
 from geoapps.utils.workspace import sorted_children_dict
 
 from . import PROJECT
@@ -388,133 +383,6 @@ def test_running_mean():
     ), "Centered averaging does not match expected values."
 
 
-def test_weigted_average():
-    # in loc == out loc -> in val == out val
-    xyz_out = np.array([[0, 0, 0]])
-    xyz_in = np.array([[0, 0, 0]])
-    values = [np.array([99])]
-    out = weighted_average(xyz_in, xyz_out, values)
-    assert out[0] == 99
-
-    # two point same distance away -> arithmetic mean
-    xyz_in = np.array([[1, 0, 0], [0, 1, 0]])
-    values = [np.array([99, 100])]
-    out = weighted_average(xyz_in, xyz_out, values)
-    assert (out[0] - 99.5) < 1e-10
-
-    # two points different distance away but close to infinity -> arithmetic mean
-    xyz_in = np.array([[1e30, 0, 0], [1e30 + 1, 0, 0]])
-    values = [np.array([99, 100])]
-    out = weighted_average(xyz_in, xyz_out, values)
-    assert (out[0] - 99.5) < 1e-10
-
-    # one point close to infinity, one not -> out val is near-field value
-    xyz_in = np.array([[1, 0, 0], [1e30, 0, 0]])
-    values = [np.array([99, 100])]
-    out = weighted_average(xyz_in, xyz_out, values)
-    assert (out[0] - 99.0) < 1e-10
-
-    # one values vector and n out locs -> one out vector of length 20
-    xyz_in = np.random.rand(10, 3)
-    xyz_out = np.random.rand(20, 3)
-    values = [np.random.rand(10)]
-    out = weighted_average(xyz_in, xyz_out, values)
-    assert len(out) == 1
-    assert len(out[0]) == 20
-
-    # two values vectors and n out locs -> two out vectors of length 20 each
-    xyz_in = np.random.rand(10, 3)
-    xyz_out = np.random.rand(20, 3)
-    values = [np.random.rand(10), np.random.rand(10)]
-    out = weighted_average(xyz_in, xyz_out, values)
-    assert len(out) == 2
-    assert len(out[0]) == 20
-    assert len(out[1]) == 20
-
-    # max distance keeps out points from average
-    xyz_in = np.array([[1, 0, 0], [3, 0, 0]])
-    xyz_out = np.array([[0, 0, 0]])
-    values = [np.array([1, 100])]
-    out = weighted_average(xyz_in, xyz_out, values, max_distance=2)
-    assert out[0] == 1
-
-    # n caps the number of points that go into the average
-    xyz_in = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-    xyz_out = np.array([[0, 0, 0]])
-    values = [np.array([1, 2, 3])]
-    out = weighted_average(xyz_in, xyz_out, values, n=3)
-    assert out[0] == 2
-    out = weighted_average(xyz_in, xyz_out, values, n=2)
-    assert out[0] == 1.5
-
-    # return indices with n=1 returns closest in loc to the out loc
-    xyz_in = np.array([[2, 0, 0], [0, 1, 0], [0, 0, 2]])
-    xyz_out = np.array([[0, 0, 0]])
-    values = [np.array([1, 2, 3])]
-    out, ind = weighted_average(xyz_in, xyz_out, values, n=1, return_indices=True)
-    assert ind[0][0] == 1
-
-    # threshold >> r -> arithmetic mean
-    xyz_in = np.array([[1, 0, 0], [0, 100, 0], [0, 0, 1000]])
-    xyz_out = np.array([[0, 0, 0]])
-    values = [np.array([1, 2, 3])]
-    out = weighted_average(xyz_in, xyz_out, values, threshold=1e30)
-    assert out[0] == 2
-
-
-def test_treemesh_2_octree(tmp_path: Path):
-    geotest = Geoh5Tester(geoh5, tmp_path, "test.geoh5")
-    with geotest.make() as workspace:
-        mesh = TreeMesh([[10] * 16, [10] * 4, [10] * 8], [0, 0, 0])
-        mesh.insert_cells([10, 10, 10], mesh.max_level, finalize=True)
-        omesh = treemesh_2_octree(workspace, mesh, name="test_mesh")
-        assert omesh.n_cells == mesh.n_cells
-        assert np.all((omesh.centroids - mesh.cell_centers[mesh._ubc_order]) < 1e-14)  # pylint: disable=protected-access
-        expected_refined_cells = [
-            (0, 0, 6),
-            (0, 0, 7),
-            (1, 0, 6),
-            (1, 0, 7),
-            (0, 1, 6),
-            (0, 1, 7),
-            (1, 1, 6),
-            (1, 1, 7),
-        ]
-        ijk_refined = omesh.octree_cells[["I", "J", "K"]][
-            omesh.octree_cells["NCells"] == 1
-        ].tolist()
-        assert np.all([k in ijk_refined for k in expected_refined_cells])
-        assert np.all([k in expected_refined_cells for k in ijk_refined])
-
-
-def test_drape_2_tensormesh(tmp_path: Path):
-    ws = Workspace.create(tmp_path / "test.geoh5")
-    x = np.linspace(358600, 359500, 10)
-    y = np.linspace(5885500, 5884600, 10)
-    z = 300 * np.ones_like(x)
-    locs = np.c_[x, y, z]
-    h = [20, 40]
-    depth_core = 200
-    pads = [500] * 4
-    expfact = 1.4
-    drape, tensor, _ = get_drape_model(  # pylint: disable=W0632
-        ws,
-        "test_drape",
-        locs,
-        h,
-        depth_core,
-        pads,
-        expansion_factor=expfact,
-        parent=None,
-        return_colocated_mesh=True,
-        return_sorting=True,
-    )
-
-    new_tensor = drape_2_tensor(drape)
-
-    assert np.allclose(new_tensor.cell_centers, tensor.cell_centers)
-
-
 def test_window_xy():
     x, y = np.meshgrid(np.arange(11), np.arange(11))
     x = x.ravel()
@@ -677,33 +545,3 @@ def test_densify_curve(tmp_path: Path):
         )
         locations = densify_curve(curve, 2)
         assert locations.shape[0] == 11
-
-
-def test_get_neighbouring_cells():
-    """
-    Check that the neighbouring cells are correctly identified and output
-    of the right shape.
-    """
-    mesh = TreeMesh([[10] * 16, [10] * 16, [10] * 16], [0, 0, 0])
-    mesh.insert_cells([100, 100, 100], mesh.max_level, finalize=True)
-    ind = mesh._get_containing_cell_indexes(  # pylint: disable=protected-access
-        [95.0, 95.0, 95.0]
-    )
-
-    with pytest.raises(
-        TypeError, match="Input 'indices' must be a list or numpy.ndarray of indices."
-    ):
-        get_neighbouring_cells(mesh, ind)
-
-    with pytest.raises(
-        TypeError, match="Input 'mesh' must be a discretize.TreeMesh object."
-    ):
-        get_neighbouring_cells(1, [ind])
-
-    neighbours = get_neighbouring_cells(mesh, [ind])
-
-    assert len(neighbours) == 3, "Incorrect number of neighbours axes returned."
-    assert all(len(axis) == 2 for axis in neighbours), (
-        "Incorrect number of neighbours returned."
-    )
-    assert np.allclose(np.r_[neighbours].flatten(), np.r_[76, 78, 75, 79, 73, 81])

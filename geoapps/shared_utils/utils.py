@@ -14,15 +14,14 @@ from dataclasses import dataclass
 from uuid import UUID
 
 import numpy as np
-from discretize import TensorMesh, TreeMesh
+from geoapps_utils.utils.transformations import rotate_xyz
 from geoh5py.data import FloatData
-from geoh5py.objects import Curve, DrapeModel
+from geoh5py.objects import Curve
 from geoh5py.workspace import Workspace
 from scipy.interpolate import interp1d
 from scipy.spatial import cKDTree
 
 from geoapps.utils.string import string_to_numeric
-from geoapps.utils.surveys import compute_alongline_distance
 
 
 def hex_to_rgb(hex_color):
@@ -31,96 +30,6 @@ def hex_to_rgb(hex_color):
     """
     code = hex_color.lstrip("#")
     return [int(code[i : i + 2], 16) for i in (0, 2, 4)]
-
-
-def get_neighbouring_cells(mesh: TreeMesh, indices: list | np.ndarray) -> tuple:
-    """
-    Get the indices of neighbouring cells along a given axis for a given list of
-    cell indices.
-
-    :param mesh: discretize.TreeMesh object.
-    :param indices: List of cell indices.
-
-    :return: Two lists of neighbouring cell indices for every axis.
-        axis[0] = (west, east)
-        axis[1] = (south, north)
-        axis[2] = (down, up)
-    """
-    if not isinstance(indices, (list, np.ndarray)):
-        raise TypeError("Input 'indices' must be a list or numpy.ndarray of indices.")
-
-    if not isinstance(mesh, TreeMesh):
-        raise TypeError("Input 'mesh' must be a discretize.TreeMesh object.")
-
-    neighbors = {ax: [[], []] for ax in range(mesh.dim)}
-
-    for ind in indices:
-        for ax in range(mesh.dim):
-            neighbors[ax][0].append(np.r_[mesh[ind].neighbors[ax * 2]])
-            neighbors[ax][1].append(np.r_[mesh[ind].neighbors[ax * 2 + 1]])
-
-    return tuple(
-        (np.r_[tuple(neighbors[ax][0])], np.r_[tuple(neighbors[ax][1])])
-        for ax in range(mesh.dim)
-    )
-
-
-def weighted_average(
-    xyz_in: np.ndarray,
-    xyz_out: np.ndarray,
-    values: list,
-    max_distance: float = np.inf,
-    n: int = 8,
-    return_indices: bool = False,
-    threshold: float = 1e-1,
-) -> list:
-    """
-    Perform a inverse distance weighted averaging on a list of values.
-
-    :param xyz_in: shape(*, 3) Input coordinate locations.
-    :param xyz_out: shape(*, 3) Output coordinate locations.
-    :param values: Values to be averaged from the input to output locations.
-    :param max_distance: Maximum averaging distance beyond which values do not contribute to the average.
-    :param n: Number of nearest neighbours used in the weighted average.
-    :param return_indices: If True, return the indices of the nearest neighbours from the input locations.
-    :param threshold: Small value added to the radial distance to avoid zero division.
-        The value can also be used to smooth the interpolation.
-
-    :return avg_values: List of values averaged to the output coordinates
-    """
-    n = np.min([xyz_in.shape[0], n])
-    assert isinstance(values, list), "Input 'values' must be a list of numpy.ndarrays"
-
-    assert all([vals.shape[0] == xyz_in.shape[0] for vals in values]), (
-        "Input 'values' must have the same shape as input 'locations'"
-    )
-
-    avg_values = []
-    for value in values:
-        sub = ~np.isnan(value)
-        tree = cKDTree(xyz_in[sub, :])
-        rad, ind = tree.query(xyz_out, n)
-        ind = np.c_[ind]
-        rad = np.c_[rad]
-        rad[rad > max_distance] = np.nan
-
-        values_interp = np.zeros(xyz_out.shape[0])
-        weight = np.zeros(xyz_out.shape[0])
-
-        for i in range(n):
-            v = value[sub][ind[:, i]] / (rad[:, i] + threshold)
-            values_interp = np.nansum([values_interp, v], axis=0)
-            w = 1.0 / (rad[:, i] + threshold)
-            weight = np.nansum([weight, w], axis=0)
-
-        values_interp[weight > 0] = values_interp[weight > 0] / weight[weight > 0]
-        values_interp[weight == 0] = np.nan
-        avg_values += [values_interp]
-
-    if return_indices:
-        return avg_values, ind
-
-    return avg_values
 
 
 def window_xy(
@@ -332,123 +241,6 @@ def filter_xy(
             mask, _, _ = downsample_xy(x, y, distance, mask=mask)
 
     return mask
-
-
-def rotate_xyz(xyz: np.ndarray, center: list, theta: float, phi: float = 0.0):
-    """
-    Perform a counterclockwise rotation of scatter points around the z-axis, then x-axis, about a center point.
-
-    :param xyz: shape(*, 2) or shape(*, 3) Input coordinates.
-    :param center: len(2) or len(3) Coordinates for the center of rotation.
-    :param theta: Angle of rotation around z-axis in degrees.
-    :param phi: Angle of rotation around x-axis in degrees.
-    """
-    return2d = False
-    locs = xyz.copy()
-
-    # If the input is 2-dimensional, add zeros in the z column.
-    if len(center) == 2:
-        center.append(0)
-    if locs.shape[1] == 2:
-        locs = np.concatenate((locs, np.zeros((locs.shape[0], 1))), axis=1)
-        return2d = True
-
-    locs = np.subtract(locs, center)
-    phi = np.deg2rad(phi)
-    theta = np.deg2rad(theta)
-
-    # Construct rotation matrix
-    Rx = np.r_[
-        np.c_[1, 0, 0],
-        np.c_[0, np.cos(phi), -np.sin(phi)],
-        np.c_[0, np.sin(phi), np.cos(phi)],
-    ]
-    Rz = np.r_[
-        np.c_[np.cos(theta), -np.sin(theta), 0],
-        np.c_[np.sin(theta), np.cos(theta), 0],
-        np.c_[0, 0, 1],
-    ]
-    R = Rz.dot(Rx)
-
-    xyz_rot = R.dot(locs.T).T
-    xyz_out = xyz_rot + center
-
-    if return2d:
-        # Return 2-dimensional data if the input xyz was 2-dimensional.
-        return xyz_out[:, :2]
-    else:
-        return xyz_out
-
-
-def drape_2_tensor(drape_model: DrapeModel, return_sorting: bool = False) -> tuple:
-    """
-    Convert a geoh5 drape model to discretize.TensorMesh.
-
-    :param: drape_model: geoh5py.DrapeModel object.
-    :param: return_sorting: If True then return an index array that would
-        re-sort a model in TensorMesh order to DrapeModel order.
-    """
-    prisms = drape_model.prisms
-    layers = drape_model.layers
-    z = np.append(np.unique(layers[:, 2]), prisms[:, 2].max())
-    x = compute_alongline_distance(prisms[:, :2])
-    dx = np.diff(x)
-    end_core = [np.argmin(dx.round(1)), len(dx) - np.argmin(dx[::-1].round(1))]
-    core = dx[end_core[0]]
-    exp_fact = dx[0] / dx[1]
-    cell_width = np.r_[
-        core * exp_fact ** np.arange(end_core[0], 0, -1),
-        core * np.ones(end_core[1] - end_core[0] + 1),
-        core * exp_fact ** np.arange(1, len(dx) - end_core[1] + 1),
-    ]
-    h = [cell_width, np.diff(z)]
-    origin = [-cell_width[: end_core[0]].sum(), layers[:, 2].min()]
-    mesh = TensorMesh(h, origin)
-
-    if return_sorting:
-        sorting = np.arange(mesh.n_cells)
-        sorting = sorting.reshape(mesh.shape_cells[1], mesh.shape_cells[0], order="C")
-        sorting = sorting[::-1].T.flatten()
-        return (mesh, sorting)
-    else:
-        return mesh
-
-
-def octree_2_treemesh(mesh):
-    """
-    Convert a geoh5 octree mesh to discretize.TreeMesh
-    Modified code from module discretize.TreeMesh.readUBC function.
-    """
-    tsw_corner = np.asarray(mesh.origin.tolist())
-    small_cell = [mesh.u_cell_size, mesh.v_cell_size, mesh.w_cell_size]
-    n_cell_dim = [mesh.u_count, mesh.v_count, mesh.w_count]
-    cell_sizes = [
-        np.ones(nr) * sz for nr, sz in zip(n_cell_dim, small_cell, strict=False)
-    ]
-    u_shift, v_shift, w_shift = (np.sum(h[h < 0]) for h in cell_sizes)
-    h1, h2, h3 = (np.abs(h) for h in cell_sizes)
-    x0 = tsw_corner + np.array([u_shift, v_shift, w_shift])
-    ls = np.log2(n_cell_dim).astype(int)
-
-    if ls[0] == ls[1] and ls[1] == ls[2]:
-        max_level = ls[0]
-    else:
-        max_level = min(ls) + 1
-
-    treemesh = TreeMesh([h1, h2, h3], x0=x0)
-
-    # Convert array_ind to points in coordinates of underlying cpp tree
-    # array_ind is ix, iy, iz(top-down) need it in ix, iy, iz (bottom-up)
-    cells = np.vstack(mesh.octree_cells.tolist())
-    levels = cells[:, -1]
-    array_ind = cells[:, :-1]
-    array_ind = 2 * array_ind + levels[:, None]  # get cell center index
-    array_ind[:, 2] = 2 * n_cell_dim[2] - array_ind[:, 2]  # switch direction of iz
-    levels = max_level - np.log2(levels)  # calculate level
-
-    treemesh.__setstate__((array_ind, levels))
-
-    return treemesh
 
 
 def get_contours(

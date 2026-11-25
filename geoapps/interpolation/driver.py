@@ -13,11 +13,11 @@ import sys
 
 import numpy as np
 from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.utils.numerical import weighted_average
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.shared_utils.utils import weighted_average
 
 
 class DataInterpolationDriver(BaseDriver):

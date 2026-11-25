@@ -141,7 +141,7 @@ def test_calculator(tmp_path: Path):
     app = Calculator(geoh5=str(temp_workspace))
     app.trigger.click()
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         output = workspace.get_entity("NewChannel")[0]
         assert output.values.shape[0] == 4438, "Change in output. Need to verify."
 
@@ -155,7 +155,7 @@ def test_coordinate_transformation(tmp_path: Path):
     app = CoordinateTransformation(geoh5=str(temp_workspace))
     app.trigger.click()
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         assert len(workspace.objects) == 3, "Coordinate transform failed."
 
 
@@ -185,7 +185,7 @@ def test_contour_values(tmp_path):
             fixed_contours="-240",
         )
 
-    app = ContourValues(ui_json=ifile, plot_result=True)
+    app = ContourValues(ui_json=ifile, plot_result=False)
     app.export_directory._set_form_values(str(tmp_path), "")
     app.export_directory._apply_selection()
     app.trigger_click(None)
@@ -219,7 +219,7 @@ def test_create_surface(tmp_path: Path):
     app.export_directory._apply_selection()
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
+    with Workspace(get_output_workspace(tmp_path)) as workspace:
         surf = workspace.get_entity("CDI_")[0]
         assert surf.n_vertices == 40000
 
@@ -273,7 +273,7 @@ def test_edge_detection(tmp_path: Path):
     app.compute_trigger(None)
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         assert (
             len(
                 [
@@ -349,7 +349,7 @@ def test_iso_surface(tmp_path: Path):
     app = IsoSurface(ui_json=ifile)
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         group = workspace.get_entity("ISO")[0]
         assert len(group.children) == 5
         assert np.sum([isinstance(c, FilenameData) for c in group.children]) == 1
