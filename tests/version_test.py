@@ -9,60 +9,77 @@
 
 from __future__ import annotations
 
-import warnings
+import importlib
+from pathlib import Path
 
 import pytest
-from geoh5py import Workspace
-from geoh5py.ui_json.constants import default_ui_json
-from geoh5py.ui_json.input_file import InputFile
-from semver import Version
+import yaml
+from packaging.version import InvalidVersion, Version
 
-from geoapps import __version__
-from geoapps.driver_base.driver import BaseDriver
-from geoapps.driver_base.params import BaseParams
+import geoapps
 
 
-def test_version_is_consistent(pyproject: dict[str]):
-    assert Version.parse(__version__) == Version.parse(
-        pyproject["tool"]["poetry"]["version"]
-    )
+def get_conda_recipe_version():
+    recipe_path = Path(__file__).resolve().parents[1] / "recipe.yaml"
+
+    with recipe_path.open(encoding="utf-8") as file:
+        recipe = yaml.safe_load(file)
+    return recipe["context"]["version"]
 
 
-def test_version_is_semver():
-    assert Version.is_valid(__version__)
+def test_version_is_consistent():
+    project_version = Version(geoapps.__version__)
+    conda_version = Version(get_conda_recipe_version())
+    assert conda_version.base_version == project_version.base_version
 
 
-def test_input_file_version(tmp_path):
-    ui_json = default_ui_json.copy()
-    ui_json["version"] = "0.0.1"
-    geoh5 = Workspace.create(tmp_path / "test.geoh5")
-    params = BaseParams(
-        geoh5=geoh5.h5file,
-        input_file=InputFile(ui_json=ui_json),
-    )
-    app_version = Version.parse(__version__)
-    version_in_file = app_version.replace(minor=app_version.minor + 1)
-    params.version = str(version_in_file)
-    params.write_input_file("test.ui.json", tmp_path)
+def _version_module_exists():
+    try:
+        importlib.import_module("geoapps._version")
+        return True
+    except ModuleNotFoundError:
+        return False
 
-    class TestDriver(BaseDriver):
-        _validations = None
 
-        def run(self):
-            pass
+@pytest.mark.skipif(
+    _version_module_exists(),
+    reason="geoapps._version can be found: package is built",
+)
+def test_fallback_version_is_zero():
+    project_version = Version(geoapps.__version__)
+    fallback_version = Version("0.0.0.dev0")
+    assert project_version.base_version == fallback_version.base_version
+    assert project_version.pre is None
+    assert project_version.post is None
+    assert project_version.dev == fallback_version.dev
 
-    with pytest.warns(
-        UserWarning, match=f"Input file version '{version_in_file}' is ahead"
-    ):
-        TestDriver.start(tmp_path / "test.ui.json")
 
-    if app_version.minor > 0:
-        version_in_file = app_version.replace(minor=app_version.minor - 1)
-    else:
-        version_in_file = app_version.replace(major=app_version.major - 1)
+@pytest.mark.skipif(
+    not _version_module_exists(),
+    reason="geoapps._version cannot be found: uses a fallback version",
+)
+def test_conda_version_is_consistent():
+    project_version = Version(geoapps.__version__)
+    conda_version = Version(get_conda_recipe_version())
 
-    params.version = str(version_in_file)
-    params.write_input_file("test.ui.json", tmp_path)
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        TestDriver.start(tmp_path / "test.ui.json")
+    assert conda_version.is_devrelease == project_version.is_devrelease
+    assert conda_version.is_prerelease == project_version.is_prerelease
+    assert conda_version.is_postrelease == project_version.is_postrelease
+    assert conda_version == project_version
+
+
+def test_conda_version_is_pep440():
+    version = Version(get_conda_recipe_version())
+    assert version is not None
+
+
+def validate_version(version_str):
+    try:
+        version = Version(version_str)
+        return (version.major, version.minor, version.micro, version.pre, version.post)
+    except InvalidVersion:
+        return None
+
+
+def test_version_is_valid():
+    assert validate_version(geoapps.__version__) is not None

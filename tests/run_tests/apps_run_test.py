@@ -19,26 +19,24 @@ from pathlib import Path
 import numpy as np
 import pytest
 from curve_apps import assets_path as curve_apps_assets_path
-from dash._callback_context import context_value
-from dash._utils import AttributeDict
 from geoh5py.data import FilenameData
 from geoh5py.objects import Curve, Surface
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 from surface_apps import assets_path as surface_apps_assets_path
 
 from geoapps import assets_path
 from geoapps.block_model_creation.application import BlockModelCreation
 from geoapps.calculator import Calculator
-from geoapps.clustering import ClusteringParams
-from geoapps.clustering.application import Clustering
 from geoapps.contours.application import ContourValues
 from geoapps.coordinate_transformation import CoordinateTransformation
 from geoapps.edge_detection.application import EdgeDetectionApp
 from geoapps.export.application import Export
 from geoapps.interpolation.application import DataInterpolation
 from geoapps.iso_surfaces.application import IsoSurface
+from geoapps.octree_creation.application import OctreeMesh
 from geoapps.peak_finder.application import PeakFinder
+from geoapps.scatter_plot.application import ScatterPlots
 from geoapps.triangulated_surfaces.application import Surface2D
 from geoapps.utils.testing import get_output_workspace
 from tests import PROJECT, PROJECT_TEM
@@ -51,7 +49,7 @@ GEOH5 = Workspace(PROJECT)
 
 
 def test_block_model(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in ["{2e814779-c35f-4da0-ad6a-39a6912361f9}"]:
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
@@ -62,39 +60,39 @@ def test_block_model(tmp_path: Path):
         None, None, param_name="objects", trigger=""
     )
     param_list = [
-        "new_grid",
+        "export_as",
         "cell_size_x",
         "cell_size_y",
         "cell_size_z",
         "depth_core",
         "horizontal_padding",
         "bottom_padding",
-        "expansion_fact",
+        "expansion_factor",
         "monitoring_directory",
     ]
     (  # pylint: disable=W0632
-        new_grid,
+        new_name,
         cell_size_x,
         cell_size_y,
         cell_size_z,
         depth_core,
         horizontal_padding,
         bottom_padding,
-        expansion_fact,
+        expansion_factor,
         _,
     ) = block_model.update_remainder_from_ui_json(
         ui_json_data, param_list, trigger="test"
     )
 
-    assert new_grid == block_model.params.new_grid
-    assert objects_uid == "{" + str(block_model.params.objects.uid) + "}"
-    assert cell_size_x == block_model.params.cell_size_x
-    assert cell_size_y == block_model.params.cell_size_y
-    assert cell_size_z == block_model.params.cell_size_z
-    assert depth_core == block_model.params.depth_core
-    assert horizontal_padding == block_model.params.horizontal_padding
-    assert bottom_padding == block_model.params.bottom_padding
-    assert expansion_fact == block_model.params.expansion_fact
+    assert new_name == block_model.params.output.export_as
+    assert objects_uid == "{" + str(block_model.params.source.objects.uid) + "}"
+    assert cell_size_x == block_model.params.creation.cell_size_x
+    assert cell_size_y == block_model.params.creation.cell_size_y
+    assert cell_size_z == block_model.params.creation.cell_size_z
+    assert depth_core == block_model.params.creation.depth_core
+    assert horizontal_padding == block_model.params.creation.horizontal_padding
+    assert bottom_padding == block_model.params.creation.bottom_padding
+    assert expansion_factor == block_model.params.creation.expansion_factor
 
     # Create a second workspace to test file uploads
     temp_workspace2 = tmp_path / "contour2.geoh5"
@@ -114,7 +112,7 @@ def test_block_model(tmp_path: Path):
     # Test export
     block_model.trigger_click(
         n_clicks=0,
-        new_grid=new_grid,
+        new_grid=new_name,
         objects=object_options[0]["value"],
         cell_size_x=cell_size_x,
         cell_size_y=cell_size_y,
@@ -122,7 +120,7 @@ def test_block_model(tmp_path: Path):
         depth_core=depth_core,
         horizontal_padding=horizontal_padding,
         bottom_padding=bottom_padding,
-        expansion_fact=expansion_fact,
+        expansion_factor=expansion_factor,
         live_link=[],
         monitoring_directory=str(tmp_path),
         trigger="export",
@@ -130,26 +128,26 @@ def test_block_model(tmp_path: Path):
 
     filename = next(tmp_path.glob("BlockModel_*.geoh5"))
     with Workspace(filename) as workspace:
-        ent = workspace.get_entity("BlockModel")
+        ent = workspace.get_entity(new_name)
         assert (len(ent) == 1) and (ent[0] is not None)
         assert np.sum([isinstance(c, FilenameData) for c in ent[0].children]) == 1
 
 
 def test_calculator(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         GEOH5.get_entity("geochem")[0].copy(parent=workspace)
 
     app = Calculator(geoh5=str(temp_workspace))
     app.trigger.click()
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         output = workspace.get_entity("NewChannel")[0]
         assert output.values.shape[0] == 4438, "Change in output. Need to verify."
 
 
 def test_coordinate_transformation(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace.create(temp_workspace) as workspace:
         GEOH5.get_entity("Gravity_Magnetics_drape60m")[0].copy(parent=workspace)
         GEOH5.get_entity("Data_TEM_pseudo3D")[0].copy(parent=workspace)
@@ -157,8 +155,8 @@ def test_coordinate_transformation(tmp_path: Path):
     app = CoordinateTransformation(geoh5=str(temp_workspace))
     app.trigger.click()
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
-        assert len(workspace.objects) == 4, "Coordinate transform failed."
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
+        assert len(workspace.objects) == 3, "Coordinate transform failed."
 
 
 def test_geoh5_as_contour_argument(tmp_path):
@@ -167,41 +165,44 @@ def test_geoh5_as_contour_argument(tmp_path):
 
 
 def test_contour_values(tmp_path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         objects = GEOH5.get_entity(uuid.UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"))[
             0
         ]
-        objects.copy(parent=workspace, copy_children=True)
+        grid = objects.copy(parent=workspace, copy_children=True)
         data = workspace.get_entity(
             uuid.UUID("{44822654-b6ae-45b0-8886-2d845f80f422}")
         )[0]
-        ifile = InputFile.read_ui_json(
-            curve_apps_assets_path() / "uijson/contours.ui.json", validate=False
+        ifile = UIJson.read(curve_apps_assets_path() / "uijson/contours.ui.json")
+        ifile.set_values(
+            geoh5=workspace,
+            objects=grid.uid,
+            data=data.uid,
+            interval_min=-400.0,
+            interval_max=2000.0,
+            interval_spacing=100.0,
+            fixed_contours="-240",
         )
-        ifile.set_data_value("geoh5", workspace)
-        ifile.set_data_value("objects", objects)
-        ifile.set_data_value("data", data)
-        ifile.set_data_value("interval_min", -400.0)
-        ifile.set_data_value("interval_max", 2000.0)
-        ifile.set_data_value("interval_spacing", 100.0)
-        ifile.set_data_value("fixed_contours", "-240")
 
     app = ContourValues(ui_json=ifile, plot_result=False)
+    app.export_directory._set_form_values(str(tmp_path), "")
+    app.export_directory._apply_selection()
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
-        output = [k for k in workspace.objects if isinstance(k, Curve)][0]
+        output = next(k for k in workspace.objects if isinstance(k, Curve))
         assert output.n_vertices == 4984, "Change in output. Need to verify."
         # TODO the double value here is due to package conflicts locally and on github
         # Once we switch from matplotlib to scikit-image, this should be a single value.
         assert (
-            np.sum([isinstance(c, FilenameData) for c in output.parent.children]) == 1
+            len([child for child in output.children if isinstance(child, FilenameData)])
+            == 1
         )
 
 
 def test_create_surface(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{5fa66412-3a4c-440c-8b87-6f10cb5f1c7f}",
@@ -214,223 +215,17 @@ def test_create_surface(tmp_path: Path):
     app.elevations.data.value = [
         p_g.uid for p_g in new_obj.property_groups if p_g.name == "ELEV"
     ][0]
-
+    app.export_directory._set_form_values(str(tmp_path), "")
+    app.export_directory._apply_selection()
     app.trigger_click(None)
 
     with Workspace(get_output_workspace(tmp_path)) as workspace:
-        group = workspace.get_entity("CDI")[0]
-        assert len(group.children) == 1
-
-
-def test_clustering(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
-    with Workspace(temp_workspace) as workspace:
-        for uid in ["{79b719bc-d996-4f52-9af0-10aa9c7bb941}"]:
-            GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
-
-    params = ClusteringParams(geoh5=str(temp_workspace), output_path=str(tmp_path))
-    app = Clustering(params=params)
-
-    # Set test variables
-    n_clicks = 0
-    live_link = []
-    n_clusters = 3
-    objects = "{79b719bc-d996-4f52-9af0-10aa9c7bb941}"
-    data_subset = [
-        "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}",
-        "{18c2560c-6161-468a-8571-5d9d59649535}",
-    ]
-    color_pickers = ["#FF5733", "#33FF9D", "#E433FF"]
-    downsampling = 80
-    full_scales = {}
-    full_lower_bounds = {}
-    full_upper_bounds = {}
-    x = "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"
-    x_log = [False]
-    x_thresh = 0.1
-    x_min = -17.0
-    x_max = 25.5
-    y = "{18c2560c-6161-468a-8571-5d9d59649535}"
-    y_log = [True]
-    y_thresh = 0.1
-    y_min = -17.0
-    y_max = 29.8
-    z = None
-    z_log = [True]
-    z_thresh = 0.1
-    z_min = 0
-    z_max = 0
-    color = None
-    color_log = [True]
-    color_thresh = 0.1
-    color_min = 0
-    color_max = 0
-    size = None
-    size_log = [True]
-    size_thresh = 0.1
-    size_min = 0
-    size_max = 0
-    size_markers = 20
-    channel = "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"
-    channel_options = [
-        {"label": "Al2O3", "value": "{cdd7668a-4b5b-49ac-9365-c9ce4fddf733}"},
-        {"label": "CaO", "value": "{18c2560c-6161-468a-8571-5d9d59649535}"},
-    ]
-    ga_group_name = "Clusters"
-    monitoring_directory = str(tmp_path)
-    trigger = "export"
-    clusters = {}
-
-    with app.workspace.open():
-        dataframe_dict, mapping, indices = app.update_dataframe(
-            downsampling, data_subset
-        )
-
-        # Set a callback since callback_context is used by run_clustering
-        context_value.set(
-            AttributeDict(
-                **{"triggered_inputs": [{"prop_id": "n_clusters.value", "value": 3}]}
-            )
-        )
-        kmeans, clusters = app.run_clustering(
-            dataframe_dict,
-            n_clusters,
-            full_scales,
-            clusters,
-            mapping,
-        )
-        color_maps = "kmeans"
-
-        # Set a callback since callback_context is used by scatter plot
-        context_value.set(
-            AttributeDict(
-                **{"triggered_inputs": [{"prop_id": "downsampling.value", "value": 80}]}
-            )
-        )
-
-        # Test scatter plot output
-        figure = app.make_scatter_plot(
-            n_clusters,
-            dataframe_dict,
-            kmeans,
-            indices,
-            color_pickers,
-            channel_options,
-            x,
-            x_log,
-            x_thresh,
-            x_min,
-            x_max,
-            y,
-            y_log,
-            y_thresh,
-            y_min,
-            y_max,
-            z,
-            z_log,
-            z_thresh,
-            z_min,
-            z_max,
-            color,
-            color_log,
-            color_thresh,
-            color_min,
-            color_max,
-            color_maps,
-            size,
-            size_log,
-            size_thresh,
-            size_min,
-            size_max,
-            size_markers,
-        )
-        assert len(figure["data"]) != 0
-
-        # Test inertia plot
-        figure = app.make_inertia_plot(n_clusters, clusters)
-        assert len(figure["data"]) != 0
-
-        # Test histogram
-        figure = app.make_hist_plot(
-            dataframe_dict,
-            channel,
-            channel_options,
-            lower_bounds=x_min,
-            upper_bounds=x_max,
-        )
-        assert len(figure["data"]) != 0
-
-        # Test boxplot
-        figure = app.make_boxplot(
-            n_clusters,
-            channel,
-            channel_options,
-            color_pickers,
-            kmeans,
-            indices,
-        )
-        assert len(figure["data"]) != 0
-
-        # Test stats table
-        table = app.make_stats_table(dataframe_dict)
-        assert table is not None
-
-        # Test heatmap
-        figure = app.make_heatmap(dataframe_dict)
-        assert len(figure["data"]) != 0
-
-        # Test export
-        app.trigger_click(
-            n_clicks,
-            monitoring_directory,
-            live_link,
-            n_clusters,
-            objects,
-            data_subset,
-            color_pickers,
-            downsampling,
-            full_scales,
-            full_lower_bounds,
-            full_upper_bounds,
-            x,
-            x_log,
-            x_thresh,
-            x_min,
-            x_max,
-            y,
-            y_log,
-            y_thresh,
-            y_min,
-            y_max,
-            z,
-            z_log,
-            z_thresh,
-            z_min,
-            z_max,
-            color,
-            color_log,
-            color_thresh,
-            color_min,
-            color_max,
-            color_maps,
-            size,
-            size_log,
-            size_thresh,
-            size_min,
-            size_max,
-            size_markers,
-            channel,
-            ga_group_name,
-            trigger,
-        )
-
-    filename = next(tmp_path.glob("Clustering_*.geoh5"))
-    with Workspace(filename) as workspace:
-        assert len(workspace.get_entity("Clusters")) == 1
+        surf = workspace.get_entity("CDI_")[0]
+        assert surf.n_vertices == 40000
 
 
 def test_data_interpolation(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         for uid in [
             "{2e814779-c35f-4da0-ad6a-39a6912361f9}",
@@ -441,9 +236,11 @@ def test_data_interpolation(tmp_path: Path):
             GEOH5.get_entity(uuid.UUID(uid))[0].copy(parent=workspace)
 
     app = DataInterpolation(geoh5=str(temp_workspace))
+    app.export_directory._set_form_values(str(tmp_path), "")
+    app.export_directory._apply_selection()
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         assert len(workspace.get_entity("Iteration_7_model_Interp")) == 1
 
 
@@ -476,7 +273,7 @@ def test_edge_detection(tmp_path: Path):
     app.compute_trigger(None)
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         assert (
             len(
                 [
@@ -528,7 +325,7 @@ def test_export():
 
 
 def test_iso_surface(tmp_path: Path):
-    temp_workspace = tmp_path / "contour.geoh5"
+    temp_workspace = tmp_path / f"{__name__}.geoh5"
     with Workspace(temp_workspace) as workspace:
         objects = GEOH5.get_entity(uuid.UUID("{2e814779-c35f-4da0-ad6a-39a6912361f9}"))[
             0
@@ -537,22 +334,22 @@ def test_iso_surface(tmp_path: Path):
         data = workspace.get_entity(
             uuid.UUID("{f3e36334-be0a-4210-b13e-06933279de25}")
         )[0]
-        ifile = InputFile.read_ui_json(
-            surface_apps_assets_path() / "uijson/iso_surfaces.ui.json", validate=False
+        ifile = UIJson.read(surface_apps_assets_path() / "uijson/iso_surfaces.ui.json")
+        ifile.set_values(
+            geoh5=workspace,
+            objects=objects,
+            data=data,
+            max_distance=500.0,
+            resolution=50.0,
+            interval_min=0.005,
+            interval_max=0.02,
+            interval_spacing=0.005,
         )
-        ifile.set_data_value("geoh5", workspace)
-        ifile.set_data_value("objects", objects)
-        ifile.set_data_value("data", data)
-        ifile.set_data_value("max_distance", 500.0)
-        ifile.set_data_value("resolution", 50.0)
-        ifile.set_data_value("interval_min", 0.005)
-        ifile.set_data_value("interval_max", 0.02)
-        ifile.set_data_value("interval_spacing", 0.005)
 
     app = IsoSurface(ui_json=ifile)
     app.trigger_click(None)
 
-    with Workspace(get_output_workspace(tmp_path)) as workspace:
+    with Workspace(get_output_workspace(tmp_path / "Temp")) as workspace:
         group = workspace.get_entity("ISO")[0]
         assert len(group.children) == 5
         assert np.sum([isinstance(c, FilenameData) for c in group.children]) == 1
@@ -566,5 +363,21 @@ def test_iso_surface(tmp_path: Path):
 
 def test_peak_finder():
     app = PeakFinder(geoh5=PROJECT_TEM)
+    app()
     assert app.objects.value == uuid.UUID("{34698019-cde6-4b43-8d53-a040b25c989a}")
     assert app.data.value == uuid.UUID("{22a9cf91-5cff-42b5-8bbb-2f1c6a559204}")
+
+
+def test_octree_creation(tmp_path):
+    app = OctreeMesh()
+    app.export_directory._selected_path = str(tmp_path)
+    app.trigger_click(None)
+    assert len([file for file in tmp_path.iterdir()]) == 2
+
+
+def test_scatter_plot(tmp_path):
+    app = ScatterPlots()
+    figure = app.update_plot("", trigger="")
+    app.trigger_click(1, str(tmp_path), figure, trigger="export")
+
+    assert len([file for file in tmp_path.iterdir()]) == 3

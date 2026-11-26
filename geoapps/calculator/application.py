@@ -27,7 +27,7 @@ with warn_module_not_found():
     from ipywidgets.widgets import Button, HBox, Layout, Text, Textarea, VBox
 
 
-app_initializer = {
+APP_INITIALIZER = {
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": UUID("{79b719bc-d996-4f52-9af0-10aa9c7bb941}"),
     "data": ["Al2O3", "CaO"],
@@ -43,7 +43,7 @@ class Calculator(ObjectDataSelection):
     _select_multiple = True
 
     def __init__(self, **kwargs):
-        self.defaults.update(**app_initializer)
+        self.defaults.update(**APP_INITIALIZER)
         self.defaults.update(**kwargs)
         self.var = {}
         self._channel = Text(description="Name: ")

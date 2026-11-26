@@ -45,7 +45,7 @@ with warn_module_not_found():
     from .utils import geotiff_2_grid
 
 
-app_initializer = {
+APP_INITIALIZER = {
     "ga_group_name": "CoordinateTransformation",
     "geoh5": str(assets_path() / "FlinFlon.geoh5"),
     "objects": [
@@ -61,7 +61,7 @@ class CoordinateTransformation(ObjectDataSelection):
     """Re-project entities between known coordinate systems."""
 
     def __init__(self, **kwargs):
-        self.defaults.update(**app_initializer)
+        self.defaults.update(**APP_INITIALIZER)
         self.defaults.update(**kwargs)
         self._code_in = Text(description="Input Projection:", continuous_update=False)
         self._code_out = Text(description="Output Projection:", continuous_update=False)
@@ -121,11 +121,13 @@ class CoordinateTransformation(ObjectDataSelection):
                     if isinstance(input_copy, Grid2D):
                         count = 0
                         for child in input_copy.children:
-                            temp_file = (
+                            temp_file = workspace.h5file.parent / (
                                 child.name
                                 + f"_{self.code_in.value.replace(':', '_')}.tif"
                             )
-                            temp_file_out = child.name + ".tif"
+                            temp_file_out = workspace.h5file.parent / (
+                                child.name + ".tif"
+                            )
 
                             if isinstance(child, FloatData):
                                 export_grid_2_geotiff(

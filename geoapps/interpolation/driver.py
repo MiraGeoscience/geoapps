@@ -13,17 +13,15 @@ import sys
 
 import numpy as np
 from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.utils.numerical import weighted_average
 from scipy.interpolate import LinearNDInterpolator
 from scipy.spatial import cKDTree
 
-from geoapps.interpolation.constants import validations
 from geoapps.interpolation.params import DataInterpolationParams
-from geoapps.shared_utils.utils import weighted_average
 
 
 class DataInterpolationDriver(BaseDriver):
     _params_class = DataInterpolationParams
-    _validations = validations
 
     def __init__(self, params: DataInterpolationParams):
         super().__init__(params)
@@ -111,14 +109,14 @@ class DataInterpolationDriver(BaseDriver):
             raise ValueError(f"Unrecognized method: {self.params.method}.")
         top = np.zeros(xyz_out.shape[0], dtype="bool")
         bottom = np.zeros(xyz_out.shape[0], dtype="bool")
-        if self.params.topography["objects"] is not None:
-            if getattr(self.params.topography["objects"], "vertices", None) is not None:
-                topo = self.params.topography["objects"].vertices
+        if self.params.topography_objects is not None:
+            if getattr(self.params.topography_objects, "vertices", None) is not None:
+                topo = self.params.topography_objects.vertices
             else:
-                topo = self.params.topography["objects"].centroids
+                topo = self.params.topography_objects.centroids
 
-            if self.params.topography["data"] is not None:
-                topo[:, 2] = self.params.topography["data"].values
+            if self.params.topography_data is not None:
+                topo[:, 2] = self.params.topography_data.values
 
             lin_interp = LinearNDInterpolator(topo[:, :2], topo[:, 2])
             z_interp = lin_interp(xyz_out_orig[:, :2])

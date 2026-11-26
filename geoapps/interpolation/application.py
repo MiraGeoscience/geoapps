@@ -13,15 +13,15 @@ import uuid
 from pathlib import Path
 from time import time
 
+from geoapps_utils.utils.importing import GeoAppsError
 from geoh5py.objects import ObjectBase
 from geoh5py.objects.object_base import Entity
-from geoh5py.shared.exceptions import AssociationValidationError
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json.input_file import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.workspace import Workspace
 
 from geoapps.base.selection import ObjectDataSelection, TopographyOptions
-from geoapps.interpolation.constants import app_initializer
+from geoapps.interpolation.constants import app_initializer, default_ui_json
 from geoapps.interpolation.driver import DataInterpolationDriver
 from geoapps.interpolation.params import DataInterpolationParams
 from geoapps.utils import warn_module_not_found
@@ -42,24 +42,29 @@ class DataInterpolation(ObjectDataSelection):
     def __init__(self, ui_json=None, **kwargs):
         app_initializer.update(kwargs)
         if ui_json is not None and Path(ui_json).is_file():
-            self.params = self._param_class(input_file=InputFile(ui_json=ui_json))
+            self.params = self._param_class.build(UIJson.read(ui_json))
         else:
             try:
-                self.params = self._param_class(**app_initializer)
+                ui_json = UIJson.from_dict(default_ui_json)
+                ui_json.set_values(**app_initializer)
+                self.params = self._param_class.build(ui_json)
 
-            except AssociationValidationError:
+            except GeoAppsError:
                 for key, value in app_initializer.items():
                     if isinstance(value, uuid.UUID):
                         app_initializer[key] = None
+                ui_json.set_values(**app_initializer)
+                self.params = self._param_class.build(ui_json)
 
-                self.params = self._param_class(**app_initializer)
-
-        for key, value in self.params.to_dict().items():
+        for key, value in self.params.flatten().items():
             if isinstance(value, Entity):
                 self.defaults[key] = value.uid
             else:
                 self.defaults[key] = value
-        self.defaults["topography"] = self.params.topography
+        self.defaults["topography"] = {
+            "objects": self.params.topography_objects.uid,
+            "data": self.params.topography_data.uid,
+        }
 
         super().__init__(**self.defaults)
 
@@ -283,26 +288,9 @@ class DataInterpolation(ObjectDataSelection):
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-            new_params = DataInterpolationParams(**param_dict)
-            new_params.method = self.method.value
-
-            if new_params.method == "Nearest":
-                new_params.skew_angle = None
-                new_params.skew_factor = None
-                new_params.input_file.ui_json["skew_angle"]["enabled"] = False
-                new_params.input_file.ui_json["skew_factor"]["enabled"] = False
-            elif new_params.method == "Inverse Distance":
-                new_params.input_file.ui_json["skew_angle"]["enabled"] = True
-                new_params.input_file.ui_json["skew_factor"]["enabled"] = True
-
-            new_params.write_input_file(
-                name=temp_geoh5.replace(".geoh5", ".ui.json"),
-                validate=False,
-            )
-
-            driver = DataInterpolationDriver(new_params)
-            print("Running data transfer . . .")
-            driver.run()
+        new_params = DataInterpolationParams.build(param_dict)
+        ui_json = new_params.write_ui_json(ws.h5file.with_suffix(".ui.json"))
+        DataInterpolationDriver.start(ui_json)
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

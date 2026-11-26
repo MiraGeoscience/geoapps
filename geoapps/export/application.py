@@ -16,10 +16,10 @@ from uuid import UUID
 import discretize
 import numpy as np
 from geoh5py.objects import BlockModel, Curve, Octree
+from grid_apps.utils import octree_2_treemesh
 
 from geoapps import assets_path
 from geoapps.base.selection import ObjectDataSelection
-from geoapps.shared_utils.utils import octree_2_treemesh
 from geoapps.utils import warn_module_not_found
 from geoapps.utils.io import export_grid_2_geotiff
 from geoapps.utils.plotting import plot_plan_data_selection
@@ -314,9 +314,9 @@ class Export(ObjectDataSelection):
 
             # Move the origin to the bottom SW corner
             mesh.x0 = [
-                entity.origin["x"] + entity.u_cells[entity.u_cells < 0].sum(),
-                entity.origin["y"] + entity.v_cells[entity.v_cells < 0].sum(),
-                entity.origin["z"] + entity.z_cells[entity.z_cells < 0].sum(),
+                entity.origin[0] + entity.u_cells[entity.u_cells < 0].sum(),
+                entity.origin[1] + entity.v_cells[entity.v_cells < 0].sum(),
+                entity.origin[2] + entity.z_cells[entity.z_cells < 0].sum(),
             ]
             name = f"{Path(self.export_directory.selected_path) / self.export_as.value}.msh"
             mesh.write_UBC(name)
@@ -324,7 +324,7 @@ class Export(ObjectDataSelection):
 
             if any(data_values):
                 for key, item in data_values.items():
-                    if mesh.x0[2] == entity.origin["z"]:
+                    if mesh.x0[2] == entity.origin[2]:
                         values = item.copy()
                         values = values.reshape(
                             (

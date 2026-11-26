@@ -15,18 +15,33 @@ from time import time
 from uuid import UUID
 
 from curve_apps.contours.driver import ContoursDriver
-from curve_apps.contours.params import ContourParameters
+from curve_apps.contours.options import ContourParameters
 from geoh5py.objects import Grid2D
 from geoh5py.objects.object_base import ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json.input_file import InputFile
+from geoh5py.ui_json import UIJson
 from ipywidgets import Checkbox, HBox, Label, Layout, Text, VBox, Widget
 
 from geoapps import assets_path
 from geoapps.base.plot import PlotSelection2D
-from geoapps.inversion.components.preprocessing import grid_to_points
+from geoapps.inversion.utils import grid_to_points
 from geoapps.shared_utils.utils import filter_xy
 from geoapps.utils.formatters import string_name
+
+
+APP_INITIALIZER = {
+    "geoh5": str(assets_path() / "FlinFlon.geoh5"),
+    "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
+    "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
+    "interval_min": -400.0,
+    "interval_max": 2000.0,
+    "interval_spacing": 100.0,
+    "fixed_contours": "-240",
+    "resolution": 50.0,
+    "z_value": False,
+    "export_as": "Contours",
+    "out_group": None,
+}
 
 
 class ContourValues(PlotSelection2D):
@@ -35,23 +50,11 @@ class ContourValues(PlotSelection2D):
     """
 
     _param_class = ContourParameters
-    _initializer = {
-        "geoh5": str(assets_path() / "FlinFlon.geoh5"),
-        "objects": UUID("{538a7eb1-2218-4bec-98cc-0a759aa0ef4f}"),
-        "data": UUID("{44822654-b6ae-45b0-8886-2d845f80f422}"),
-        "interval_min": -400.0,
-        "interval_max": 2000.0,
-        "interval_spacing": 100.0,
-        "fixed_contours": "-240",
-        "resolution": 50.0,
-        "z_value": False,
-        "export_as": "Contours",
-        "out_group": None,
-    }
+    _initializer = APP_INITIALIZER
 
     def __init__(
         self,
-        ui_json: InputFile | str | None = None,
+        ui_json: UIJson | str | None = None,
         plot_result=True,
         geoh5: str | None = None,
     ):
@@ -69,9 +72,9 @@ class ContourValues(PlotSelection2D):
                     raise FileNotFoundError(
                         f"Provided uijson path {ui_json} not does not exist."
                     )
-                defaults = InputFile.read_ui_json(ui_json).data
-            elif isinstance(ui_json, InputFile):
-                defaults = ui_json.data
+                defaults = UIJson.read(ui_json).to_params()
+            elif isinstance(ui_json, UIJson):
+                defaults = ui_json.to_params()
 
         if not defaults:
             if Path(self._initializer["geoh5"]).exists():
@@ -190,6 +193,12 @@ class ContourValues(PlotSelection2D):
                             parent=new_workspace, copy_children=True
                         )
 
+                if param_dict.get("objects") is None:
+                    print(
+                        "Contour generation requires an input object. Please select an object and try again."
+                    )
+                    return
+
                 param_dict["geoh5"] = new_workspace
                 param_dict["conda_environment"] = "geoapps"
 
@@ -213,16 +222,21 @@ class ContourValues(PlotSelection2D):
                     angle=self.window_azimuth.value,
                 )
                 param_dict["objects"] = param_dict["objects"].copy(mask=indices)
+
+                if param_dict.get("data") is None:
+                    print(
+                        "Contour generation requires an input data. Please select a data and try again."
+                    )
+                    return
+
                 param_dict["data"] = param_dict["objects"].get_data(
                     param_dict["data"].name
                 )[0]
 
                 new_params = ContourParameters.build(param_dict)
-                new_params.input_file.write_ui_json(
-                    name=temp_geoh5.replace(".geoh5", ".ui.json")
-                )
-                driver = ContoursDriver(new_params)
-                driver.run()
+                ui_json = new_params.write_ui_json(ws.h5file.with_suffix(".ui.json"))
+
+        ContoursDriver.start(ui_json)
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

@@ -348,7 +348,7 @@
         "group": "Color",
         "label": "Colormap",
         "main": true,
-        "value": "",
+        "value": "inferno",
         "enabled": false,
         "optional": true,
         "visible": false

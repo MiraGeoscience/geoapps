@@ -117,7 +117,7 @@ def get_block_model(
     )
 
     top_padding = find_top_padding(object_out, h[2])
-    object_out.origin["z"] += top_padding
+    object_out.origin[0] += top_padding
 
     return object_out
 
@@ -242,7 +242,7 @@ def get_octree_attributes(mesh: Octree | TreeMesh) -> dict[str, list]:
                 dimensions.append(
                     getattr(mesh, f"{dim}_cell_size") * getattr(mesh, f"{dim}_count")
                 )
-            origin = np.r_[mesh.origin["x"], mesh.origin["y"], mesh.origin["z"]]
+            origin = mesh.origin
 
     extent = np.r_[origin, origin + np.r_[dimensions]]
 

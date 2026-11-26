@@ -11,26 +11,27 @@ from __future__ import annotations
 
 import numpy as np
 import plotly.graph_objects as go
-from geoapps_utils.driver.driver import BaseDriver
+from geoapps_utils.base import Driver
 
-from geoapps.scatter_plot.constants import validations
 from geoapps.scatter_plot.params import ScatterPlotParams
 from geoapps.utils.plotting import format_axis, normalize, symlog
 from geoapps.utils.statistics import random_sampling
 
 
-class ScatterPlotDriver(BaseDriver):
+class ScatterPlotDriver(Driver):
     _params_class = ScatterPlotParams
-    _validations = validations
 
     def __init__(self, params: ScatterPlotParams):
         super().__init__(params)
         self.params: ScatterPlotParams = params
 
-    def run(self):
+    def run(self, color_maps: list | None = None):
         """
         Create a scatter plot from input values
         """
+        if color_maps is None:
+            color_maps = self.params.color_maps
+
         figure = go.Figure()
 
         if (self.params.x is not None) & (self.params.y is not None):
@@ -144,7 +145,7 @@ class ScatterPlotDriver(BaseDriver):
                     marker={
                         "color": color,
                         "size": size,
-                        "colorscale": self.params.color_maps,
+                        "colorscale": color_maps,
                         "line_width": 0,
                     },
                 )
@@ -176,7 +177,7 @@ class ScatterPlotDriver(BaseDriver):
                     marker={
                         "color": color,
                         "size": size,
-                        "colorscale": self.params.color_maps,
+                        "colorscale": color_maps,
                         "line_width": 0,
                     },
                 )

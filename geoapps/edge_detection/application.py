@@ -15,12 +15,12 @@ from time import time
 from uuid import UUID
 
 from curve_apps.edges.driver import EdgesDriver
-from curve_apps.edges.params import EdgeParameters
+from curve_apps.edges.options import EdgeParameters
 from geoh5py import Workspace
 from geoh5py.data import FloatData
 from geoh5py.objects import Grid2D, ObjectBase
 from geoh5py.shared.utils import fetch_active_workspace
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 
 from geoapps import assets_path
 from geoapps.base.application import BaseApplication
@@ -95,9 +95,9 @@ class EdgeDetectionApp(PlotSelection2D):
                     raise FileNotFoundError(
                         f"Provided uijson path {ui_json} not does not exist."
                     )
-                defaults = InputFile.read_ui_json(ui_json).data
-            elif isinstance(ui_json, InputFile):
-                defaults = ui_json.data
+                defaults = UIJson.read(ui_json).to_params()
+            elif isinstance(ui_json, UIJson):
+                defaults = ui_json.to_params()
 
         if not defaults:
             if Path(self._initializer["geoh5"]).exists():
@@ -270,11 +270,11 @@ class EdgeDetectionApp(PlotSelection2D):
                 )
 
             new_params = EdgeParameters.build(param_dict)
-            new_params.input_file.write_ui_json(
-                name=temp_geoh5.replace(".geoh5", ".ui.json")
+            ui_json = new_params.write_ui_json(
+                new_workspace.h5file.with_suffix(".ui.json")
             )
-            driver = EdgesDriver(new_params)
-            driver.run()
+
+        EdgesDriver.start(ui_json)
 
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")

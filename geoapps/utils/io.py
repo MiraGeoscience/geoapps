@@ -10,11 +10,10 @@
 from __future__ import annotations
 
 import numpy as np
+from geoapps_utils.utils.transformations import rotate_xyz
 from geoh5py.objects import Grid2D
 from geoh5py.objects.object_base import Entity
 from scipy.interpolate import interp1d
-
-from geoapps.shared_utils.utils import rotate_xyz
 
 
 def export_grid_2_geotiff(
@@ -111,10 +110,10 @@ def export_grid_2_geotiff(
 
     dataset.SetGeoTransform(
         (
-            grid2d.origin["x"],
+            grid2d.origin[0],
             vec[0, 0] * grid2d.u_cell_size,
             vec[0, 1] * grid2d.v_cell_size,
-            grid2d.origin["y"],
+            grid2d.origin[1],
             vec[1, 0] * grid2d.u_cell_size,
             vec[1, 1] * grid2d.v_cell_size,
         )

@@ -12,7 +12,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from geoh5py.data import FloatData, IntegerData
-from geoh5py.shared import Entity
+from geoh5py.shared.entity import Entity
 from geoh5py.workspace import Workspace
 
 from geoapps.utils.list import sorted_alphanumeric_list

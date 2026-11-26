@@ -15,7 +15,7 @@ import uuid
 from pathlib import Path
 from shutil import copyfile
 
-from geoapps_utils.driver.params import BaseParams
+from geoapps_utils.base import Options
 from geoh5py.groups import Group
 from geoh5py.objects import ObjectBase
 from geoh5py.shared.utils import (
@@ -25,10 +25,10 @@ from geoh5py.shared.utils import (
     list2str,
     str2uuid,
 )
-from geoh5py.ui_json import InputFile
+from geoh5py.ui_json import UIJson
 from geoh5py.ui_json.utils import monitored_directory_copy
 from geoh5py.workspace import Workspace
-from simpeg_drivers.params import InversionBaseParams
+from simpeg_drivers.options import BaseInversionOptions
 from traitlets import TraitError
 
 from geoapps.utils import warn_module_not_found
@@ -55,7 +55,7 @@ class BaseApplication:
     Base class for geoapps applications
     """
 
-    _param_class: type[InversionBaseParams] | None = None
+    _param_class: type[BaseInversionOptions] | None = None
     _h5file = None
     _main = None
     _workspace = None
@@ -66,8 +66,8 @@ class BaseApplication:
     _trigger = None
     _figure = None
     _refresh = None
-    _params: BaseParams | None = None
-    _param_class: type[BaseParams] | None = None
+    _params: Options | None = None
+    _param_class: type[Options] | None = None
     _defaults: dict | None = None
     plot_result = False
 
@@ -150,10 +150,14 @@ class BaseApplication:
                             if hasattr(widget, "style"):
                                 widget.style = {"description_width": "initial"}
 
-                        elif isinstance(value, BaseApplication) and isinstance(
+                        elif isinstance(
                             getattr(self, "_" + key, None), BaseApplication
                         ):
-                            setattr(self, "_" + key, value)
+                            if isinstance(value, BaseApplication):
+                                setattr(self, "_" + key, value)
+                            elif isinstance(value, dict):
+                                getattr(self, "_" + key).__populate__(**value)
+
                         elif type(getattr(self, key, None)) is types.MethodType:
                             getattr(self, key, None)(key, value)
                         else:
@@ -188,7 +192,7 @@ class BaseApplication:
 
         if extension == ".json" and self._param_class is not None:
             self.params = self._param_class.build(
-                InputFile.read_ui_json(self.file_browser.selected)
+                UIJson.read(self.file_browser.selected)
             )
             self.refresh.value = False
             self.params.geoh5.open(mode="r")
@@ -385,16 +389,16 @@ class BaseApplication:
         return self._export_directory
 
     @property
-    def params(self) -> BaseParams:
+    def params(self) -> Options:
         """
         Application parameters
         """
         return self._params
 
     @params.setter
-    def params(self, params: BaseParams):
-        assert isinstance(params, BaseParams), (
-            f"Input parameters must be an instance of {BaseParams}"
+    def params(self, params: Options):
+        assert isinstance(params, Options), (
+            f"Input parameters must be an instance of {Options}"
         )
 
         self._params = params
@@ -482,14 +486,19 @@ class BaseApplication:
         if self.live_link.value:
             print("Live link active. Check your ANALYST session for new mesh.")
 
-    def collect_parameter_values(self):
+    def collect_parameter_values(self, **kwargs):
         param_dict = {}
+
+        if kwargs is not None:
+            param_dict.update(kwargs)
+
         for key in self.__dict__:
             try:
-                if isinstance(getattr(self, key), Widget) and hasattr(self.params, key):
+                if key[0] == "_":
+                    key = key[1:]
+
+                if isinstance(getattr(self, key), Widget):
                     value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
 
                     if (
                         isinstance(value, uuid.UUID)
@@ -520,12 +529,12 @@ class BaseApplication:
             if self.live_link.value:
                 param_dict["monitoring_directory"] = self.monitoring_directory
 
-        new_params = type(self.params)(**param_dict)
+        new_params = self._param_class.build(param_dict)
 
         return new_params
 
     @classmethod
-    def run(cls, params: BaseParams):
+    def run(cls, params: Options):
         """
         Static run method.
         """
@@ -558,10 +567,11 @@ class BaseApplication:
         param_dict = {}
         for key in self.__dict__:
             try:
+                if key[0] == "_":
+                    key = key[1:]
+
                 if self.is_computational(key):
                     value = getattr(self, key).value
-                    if key[0] == "_":
-                        key = key[1:]
 
                     if (
                         isinstance(value, uuid.UUID)
